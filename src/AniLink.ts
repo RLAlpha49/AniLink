@@ -1,7 +1,7 @@
 import { UserQuery } from './apis/anilist/query/User';
 import { UpdateUserMutation } from './apis/anilist/mutation/UpdateUser';
 
-export class AniLink {
+class AniLink {
   public anilist: {
     query: {
       user: UserQuery;
@@ -22,3 +22,5 @@ export class AniLink {
     };
   }
 }
+
+module.exports = AniLink;

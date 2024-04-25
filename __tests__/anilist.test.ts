@@ -1,4 +1,4 @@
-import { AniLink } from '../src/AniLink';
+import AniLink from '../dist/AniLink.js';
 
 describe('Anilist API', () => {
   let aniLink: AniLink;
@@ -9,7 +9,6 @@ describe('Anilist API', () => {
 
   test('user query', async () => {
     const response = await aniLink.anilist.query.user.user({ id: 1, isHTML: false });
-    console.log(response);
     expect(response).toBeDefined();
   });
 });
