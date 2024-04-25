@@ -1,5 +1,6 @@
 // @ts-ignore
 import AniLink from '../dist/AniLink.js';
+// import AniLink from '../src/AniLink';
 
 describe('Anilist API Query', () => {
     let aniLink: AniLink;
@@ -16,6 +17,19 @@ describe('Anilist API Query', () => {
     test('user query should handle errors', async () => {
         try {
             await aniLink.anilist.query.user({id: 'invalid', isHTML: false});
+        } catch (error: any) {
+            expect(error).toBeDefined();
+        }
+    });
+
+    test('media query', async () => {
+        const response = await aniLink.anilist.query.media({id: 1, type: 'ANIME'});
+        expect(response).toBeDefined();
+    });
+
+    test('media query should handle errors', async () => {
+        try {
+            await aniLink.anilist.query.media({id: 'invalid', type: 'ANIME'});
         } catch (error: any) {
             expect(error).toBeDefined();
         }

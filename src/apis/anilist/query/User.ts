@@ -117,6 +117,37 @@ export class UserQuery extends APIWrapper {
                 }
                 characters (perPage: 50) {
                   edges {
+                    id
+                    role
+                    name
+                    voiceActors {
+                      id
+                      name {
+                        first
+                        last
+                        full
+                        native
+                      }
+                      image {
+                        large
+                      }
+                    }
+                    media {
+                      id
+                      title {
+                        romaji
+                        english
+                        native
+                        userPreferred
+                      }
+                      coverImage {
+                        extraLarge
+                        large
+                        medium
+                        color
+                      }
+                    }
+                    favouriteOrder
                     node {
                       id
                       name {
@@ -124,27 +155,18 @@ export class UserQuery extends APIWrapper {
                         last
                         full
                         native
-                        alternative
-                        alternativeSpoiler
-                        userPreferred
                       }
-                    }
-                  }
-                  nodes {
-                    id
-                    name {
-                      first
-                      last
-                      full
-                      native
-                      alternative
-                      alternativeSpoiler
-                      userPreferred
+                      image {
+                        large
+                      }
                     }
                   }
                 }
                 staff (perPage: 50) {
                   edges {
+                    id
+                    role
+                    favouriteOrder
                     node {
                       id
                       name {
@@ -152,33 +174,24 @@ export class UserQuery extends APIWrapper {
                         last
                         full
                         native
-                        alternative
-                        userPreferred
                       }
-                    }
-                  }
-                  nodes {
-                    id
-                    name {
-                      first
-                      last
-                      full
-                      native
-                      alternative
-                      userPreferred
+                      image {
+                        large
+                      }
                     }
                   }
                 }
                 studios (perPage: 50) {
                   edges {
+                    id
+                    isMain
+                    favouriteOrder
                     node {
                       id
                       name
+                      isAnimationStudio
+                      siteUrl
                     }
-                  }
-                  nodes {
-                    id
-                    name
                   }
                 }
               }
