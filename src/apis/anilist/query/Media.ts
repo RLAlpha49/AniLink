@@ -8,7 +8,7 @@ interface MediaVariables {
   endDate?: number
   season?: string
   seasonYear?: number
-  type?: string
+  type?: 'ANIME' | 'MANGA'
   format?: string
   status?: string
   episodes?: number

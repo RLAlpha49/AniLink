@@ -1,5 +1,6 @@
 import { UserQuery } from './apis/anilist/query/User'
 import { MediaQuery } from './apis/anilist/query/Media'
+import { MediaTrendQuery } from './apis/anilist/query/MediaTrend'
 import {
   ListActivityOptionInput,
   MediaListOptionsInput,
@@ -14,6 +15,7 @@ class AniLink {
     query: {
       user: () => Promise<any>
       media: () => Promise<any>
+      mediaTrend: () => Promise<any>
     }
     mutation: {
       updateUser: (variables: {
@@ -40,11 +42,13 @@ class AniLink {
   constructor () {
     const userQueryInstance = new UserQuery()
     const mediaQueryInstance = new MediaQuery()
+    const mediaTrendQueryInstance = new MediaTrendQuery()
     const updateUserMutationInstance = new UpdateUserMutation()
     this.anilist = {
       query: {
         user: userQueryInstance.user.bind(userQueryInstance),
-        media: mediaQueryInstance.media.bind(mediaQueryInstance)
+        media: mediaQueryInstance.media.bind(mediaQueryInstance),
+        mediaTrend: mediaTrendQueryInstance.mediaTrend.bind(mediaTrendQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)

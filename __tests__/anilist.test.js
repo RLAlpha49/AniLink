@@ -30,6 +30,19 @@ describe('Anilist API Query', () => {
       expect(error).toBeDefined()
     }
   })
+
+  test('media trend query should return a response', async () => {
+    const response = await aniLink.anilist.query.mediaTrend({ mediaId: 1, type: 'ANIME' })
+    expect(response).toBeDefined()
+  })
+
+  test('media trend query should handle errors', async () => {
+    try {
+      await aniLink.anilist.query.mediaTrend({ mediaId: 'invalid', type: 'ANIME' })
+    } catch (error) {
+      expect(error).toBeDefined()
+    }
+  })
 })
 
 describe('Anilist API Mutation', () => {
