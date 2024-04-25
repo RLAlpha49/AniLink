@@ -1,25 +1,99 @@
-import {APIWrapper} from '../../../base/APIWrapper';
-import {RequestHandler} from '../../../base/RequestHandler';
+import { APIWrapper } from '../../../base/APIWrapper'
+import { sendRequest } from '../../../base/RequestHandler'
 
 interface UserVariables {
-    id?: number;
-    name?: string;
-    isModerator?: boolean;
-    search?: string;
-    sort?: string[];
-    isHTML?: boolean;
+  id?: number
+  name?: string
+  isModerator?: boolean
+  search?: string
+  sort?: string[]
+  isHTML?: boolean
+}
+
+interface UserResponse {
+  id: number
+  name: string
+  about: string
+  avatar: {
+    large: string
+    medium: string
+  }
+  bannerImage: string
+  isFollowing: boolean
+  isFollower: boolean
+  isBlocked: boolean
+  bans: any[]
+  options: {
+    titleLanguage: string
+    displayAdultContent: boolean
+    airingNotifications: boolean
+    profileColor: string
+    notificationOptions: Array<{
+      type: string
+      enabled: boolean
+    }>
+    timezone: string
+    activityMergeTime: number
+    staffNameLanguage: string
+    restrictMessagesToFollowing: boolean
+    disabledListActivity: Array<{
+      disabled: boolean
+      type: string
+    }>
+  }
+  mediaListOptions: {
+    scoreFormat: string
+    rowOrder: string
+    animeList: {
+      sectionOrder: string[]
+      splitCompletedSectionByFormat: boolean
+      customLists: string[]
+      advancedScoring: string[]
+      advancedScoringEnabled: boolean
+    }
+    mangaList: {
+      sectionOrder: string[]
+      splitCompletedSectionByFormat: boolean
+      customLists: string[]
+      advancedScoring: string[]
+      advancedScoringEnabled: boolean
+    }
+  }
+  favourites: {
+    anime: any[]
+    manga: any[]
+    characters: any[]
+    staff: any[]
+    studios: any[]
+  }
+  statistics: {
+    anime: any
+    manga: any
+  }
+  unreadNotificationCount: number
+  siteUrl: string
+  donatorTier: number
+  donatorBadge: string
+  moderatorRoles: string[]
+  createdAt: number
+  updatedAt: number
+  previousNames: Array<{
+    name: string
+    createdAt: number
+    updatedAt: number
+  }>
 }
 
 export class UserQuery extends APIWrapper {
-    constructor() {
-        super('https://graphql.anilist.co');
-    }
+  constructor () {
+    super('https://graphql.anilist.co')
+  }
 
-    async user(variables?: UserVariables) {
-        // If isHTML is not provided in variables, default it to true
-        const {isHTML = true, ...rest} = variables || {};
+  async user (variables?: UserVariables): Promise<UserResponse> {
+    // If isHTML is not provided in variables, default it to true
+    const { isHTML = true, ...rest } = variables != null ? variables : {}
 
-        let query = `
+    const query = `
           query ($id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $isHTML: Boolean) {
             User (id: $id, name: $name, isModerator: $isModerator, search: $search, sort: $sort) {
               id
@@ -441,9 +515,9 @@ export class UserQuery extends APIWrapper {
               }
             }
           }
-        `;
+        `
 
-        const data = {query, variables: {isHTML, ...rest}};
-        return RequestHandler.sendRequest(this.baseURL, 'POST', data);
-    }
+    const data = { query, variables: { isHTML, ...rest } }
+    return await sendRequest(this.baseURL, 'POST', data)
+  }
 }

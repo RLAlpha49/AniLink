@@ -1,7 +1,7 @@
 export class APIWrapper {
-  protected baseURL: string;
+  protected baseURL: string
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
+  constructor (baseURL: string) {
+    this.baseURL = baseURL
   }
 }
