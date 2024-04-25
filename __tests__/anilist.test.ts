@@ -46,6 +46,19 @@ describe('Anilist API Query', () => {
       expect(error).toBeDefined()
     }
   })
+
+  test('airing schedule query should return a response', async () => {
+    const response = await aniLink.anilist.query.airingSchedule({ mediaId: 130590 }) // id needs to be an airing anime
+    expect(response).toBeDefined()
+  })
+
+  test('airing schedule query should handle errors', async () => {
+    try {
+      await aniLink.anilist.query.airingSchedule({ mediaId: 'invalid' })
+    } catch (error) {
+      expect(error).toBeDefined()
+    }
+  })
 })
 
 describe('Anilist API Mutation', () => {

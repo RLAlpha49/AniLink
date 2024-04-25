@@ -1,6 +1,7 @@
 import { UserQuery } from './apis/anilist/query/User'
 import { MediaQuery } from './apis/anilist/query/Media'
 import { MediaTrendQuery } from './apis/anilist/query/MediaTrend'
+import { AiringScheduleQuery } from './apis/anilist/query/AiringSchedule'
 import {
   ListActivityOptionInput,
   MediaListOptionsInput,
@@ -16,6 +17,7 @@ class AniLink {
       user: () => Promise<any>
       media: () => Promise<any>
       mediaTrend: () => Promise<any>
+      airingSchedule: () => Promise<any>
     }
     mutation: {
       updateUser: (variables: {
@@ -43,12 +45,14 @@ class AniLink {
     const userQueryInstance = new UserQuery()
     const mediaQueryInstance = new MediaQuery()
     const mediaTrendQueryInstance = new MediaTrendQuery()
+    const airingScheduleQueryInstance = new AiringScheduleQuery()
     const updateUserMutationInstance = new UpdateUserMutation()
     this.anilist = {
       query: {
         user: userQueryInstance.user.bind(userQueryInstance),
         media: mediaQueryInstance.media.bind(mediaQueryInstance),
-        mediaTrend: mediaTrendQueryInstance.mediaTrend.bind(mediaTrendQueryInstance)
+        mediaTrend: mediaTrendQueryInstance.mediaTrend.bind(mediaTrendQueryInstance),
+        airingSchedule: airingScheduleQueryInstance.airingSchedule.bind(airingScheduleQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)
