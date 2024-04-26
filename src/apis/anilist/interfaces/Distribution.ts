@@ -1,4 +1,4 @@
 export interface Distribution {
-  status: string;
-  amount: number;
+  status: string
+  amount: number
 }

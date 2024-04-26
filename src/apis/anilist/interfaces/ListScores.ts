@@ -1,4 +1,4 @@
 export interface ListScores {
-  meanScore: number;
-  standardDeviation: number;
+  meanScore: number
+  standardDeviation: number
 }

@@ -1,6 +1,6 @@
-import {Name} from "./Name";
+import { Name } from './Name'
 
 export interface Staff {
-  id: number;
-  name: Name;
+  id: number
+  name: Name
 }

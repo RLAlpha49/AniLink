@@ -1,5 +1,5 @@
 export interface ActivityHistory {
-  date: number;
-  amount: number;
-  level: number;
+  date: number
+  amount: number
+  level: number
 }

@@ -1,6 +1,6 @@
 import { Image } from '../Image'
-import {Statistics} from "../Statistics";
-import {UserStats} from "../UserStats";
+import { Statistics } from '../Statistics'
+import { UserStats } from '../UserStats'
 
 export interface UserResponse {
   id: number
