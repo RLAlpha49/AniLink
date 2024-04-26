@@ -10,7 +10,8 @@ describe('Anilist API Query', () => {
 
   test('user query', async () => {
     try {
-      const response = await aniLink.anilist.query.user({ id: 1, isHTML: false })
+      const response = await aniLink.anilist.query.user({ id: 542244, isHTML: true })
+      console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
       if (error.response.data) {
@@ -32,6 +33,7 @@ describe('Anilist API Query', () => {
   test('media query', async () => {
     try {
       const response = await aniLink.anilist.query.media({ id: 1, type: 'ANIME' })
+      console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
       if (error.response.data) {
@@ -53,6 +55,7 @@ describe('Anilist API Query', () => {
   test('media trend query', async () => {
     try {
       const response = await aniLink.anilist.query.mediaTrend({ mediaId: 1, type: 'ANIME' })
+      console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
       if (error.response.data) {
@@ -74,6 +77,7 @@ describe('Anilist API Query', () => {
   test('airing schedule query should return a response', async () => {
     try {
       const response = await aniLink.anilist.query.airingSchedule({ mediaId: 130590 }) // id needs to be an airing anime
+      console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
       if (error.response.data) {
@@ -95,6 +99,7 @@ describe('Anilist API Query', () => {
   test('character query should return a response', async () => {
     try {
       const response = await aniLink.anilist.query.character({ id: 1, asHtml: true, mediaSort: ['POPULARITY_DESC'], mediaType: 'ANIME', mediaOnList: true, mediaPage: 1, mediaPerPage: 10 })
+      console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
       if (error.response.data) {
@@ -131,6 +136,7 @@ describe('Anilist API Query', () => {
         characterMediaPage: 1,
         characterMediaPerPage: 10
       })
+      console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
       if (error.response.data) {
@@ -154,6 +160,7 @@ describe('Anilist API Query', () => {
     test('media list query should return a response', async () => {
       try {
         const response = await aniLink.anilist.query.mediaList({ userId: 542244 })
+        console.log(response)
         expect(response).toBeDefined()
       } catch (error: any) {
         if (error.response.data) {
@@ -200,6 +207,7 @@ describe('Anilist API Mutation', () => {
         restrictMessagesToFollowing: false,
         disabledListActivity: [{ type: 'CURRENT', disabled: false }]
       })
+      console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
       if (error.response.data) {
