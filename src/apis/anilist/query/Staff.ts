@@ -1,5 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
+import { StaffResponse } from '../interfaces/responses/Staff'
 
 interface StaffVariables {
   id?: number
@@ -22,91 +23,6 @@ interface StaffVariables {
   characterMediaOnList?: boolean
   characterMediaPage?: number
   characterMediaPerPage?: number
-}
-
-interface StaffResponse {
-  id: number
-  name: {
-    first: string
-    last: string
-    full: string
-    native: string
-  }
-  languageV2: string
-  image: {
-    large: string
-    medium: string
-  }
-  description: string
-  primaryOccupations: string[]
-  gender: string
-  dateOfBirth: {
-    year: number
-    month: number
-    day: number
-  }
-  dateOfDeath: {
-    year: number
-    month: number
-    day: number
-  }
-  age: number
-  yearsActive: number[]
-  homeTown: string
-  bloodType: string
-  isFavourite: boolean
-  isFavouriteBlocked: boolean
-  siteUrl: string
-  staffMedia: {
-    nodes: Array<{
-      id: number
-      title: {
-        romaji: string
-        english: string
-        native: string
-        userPreferred: string
-      }
-    }>
-  }
-  characters: {
-    nodes: Array<{
-      id: number
-      name: {
-        first: string
-        last: string
-        full: string
-        native: string
-      }
-    }>
-  }
-  characterMedia: {
-    nodes: Array<{
-      id: number
-      title: {
-        romaji: string
-        english: string
-        native: string
-        userPreferred: string
-      }
-    }>
-  }
-  staff: {
-    id: number
-    name: {
-      first: string
-      last: string
-      full: string
-      native: string
-    }
-  }
-  submitter: {
-    id: number
-    name: string
-  }
-  submissionStatus: number
-  submissionNotes: string
-  favourites: number
-  modNotes: string
 }
 
 export class StaffQuery extends APIWrapper {

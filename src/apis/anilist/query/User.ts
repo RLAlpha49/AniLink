@@ -1,5 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
+import { UserResponse } from '../interfaces/responses/User'
 
 interface UserVariables {
   id?: number
@@ -8,80 +9,6 @@ interface UserVariables {
   search?: string
   sort?: string[]
   isHTML?: boolean
-}
-
-interface UserResponse {
-  id: number
-  name: string
-  about: string
-  avatar: {
-    large: string
-    medium: string
-  }
-  bannerImage: string
-  isFollowing: boolean
-  isFollower: boolean
-  isBlocked: boolean
-  bans: any[]
-  options: {
-    titleLanguage: string
-    displayAdultContent: boolean
-    airingNotifications: boolean
-    profileColor: string
-    notificationOptions: Array<{
-      type: string
-      enabled: boolean
-    }>
-    timezone: string
-    activityMergeTime: number
-    staffNameLanguage: string
-    restrictMessagesToFollowing: boolean
-    disabledListActivity: Array<{
-      disabled: boolean
-      type: string
-    }>
-  }
-  mediaListOptions: {
-    scoreFormat: string
-    rowOrder: string
-    animeList: {
-      sectionOrder: string[]
-      splitCompletedSectionByFormat: boolean
-      customLists: string[]
-      advancedScoring: string[]
-      advancedScoringEnabled: boolean
-    }
-    mangaList: {
-      sectionOrder: string[]
-      splitCompletedSectionByFormat: boolean
-      customLists: string[]
-      advancedScoring: string[]
-      advancedScoringEnabled: boolean
-    }
-  }
-  favourites: {
-    anime: any[]
-    manga: any[]
-    characters: any[]
-    staff: any[]
-    studios: any[]
-  }
-  statistics: {
-    anime: any
-    manga: any
-  }
-  unreadNotificationCount: number
-  siteUrl: string
-  donatorTier: number
-  donatorBadge: string
-  moderatorRoles: string[]
-  createdAt: number
-  updatedAt: number
-  previousNames: Array<{
-    name: string
-    createdAt: number
-    updatedAt: number
-  }>
 }
 
 export class UserQuery extends APIWrapper {

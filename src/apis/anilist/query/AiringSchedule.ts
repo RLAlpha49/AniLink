@@ -1,5 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
+import { AiringScheduleResponse } from '../interfaces/responses/AiringSchedule'
 
 interface AiringScheduleVariables {
   id?: number
@@ -21,123 +22,6 @@ interface AiringScheduleVariables {
   airingAt_greater?: number
   airingAt_lesser?: number
   sort?: string[]
-}
-
-interface AiringScheduleResponse {
-  id: number
-  airingAt: number
-  timeUntilAiring: number
-  episode: number
-  mediaId: number
-  media: {
-    id: number
-    idMal: number
-    title: {
-      romaji: string
-      english: string
-      native: string
-      userPreferred: string
-    }
-    type: string
-    format: string
-    status: string
-    description: string
-    startDate: {
-      year: number
-      month: number
-      day: number
-    }
-    endDate: {
-      year: number
-      month: number
-      day: number
-    }
-    season: string
-    seasonYear: number
-    seasonInt: number
-    episodes?: number
-    duration?: number
-    countryOfOrigin: string
-    isLicensed: boolean
-    source: string
-    hashtag: string
-    trailer: {
-      id: string
-      site: string
-      thumbnail: string
-    }
-    updatedAt: number
-    coverImage: {
-      extraLarge: string
-      large: string
-      medium: string
-      color: string
-    }
-    bannerImage: string
-    genres: string[]
-    synonyms: string[]
-    averageScore: number
-    meanScore: number
-    popularity: number
-    isLocked: boolean
-    trending: number
-    favourites: number
-    tags: Array<{
-      id: number
-      name: string
-      description: string
-      rank: number
-      isGeneralSpoiler: boolean
-      isMediaSpoiler: boolean
-      isAdult: boolean
-    }>
-    isFavourite: boolean
-    isAdult: boolean
-    nextAiringEpisode: {
-      airingAt: number
-      timeUntilAiring: number
-      episode: number
-    }
-    externalLinks: Array<{
-      id: number
-      url: string
-      site: string
-    }>
-    streamingEpisodes: Array<{
-      title: string
-      thumbnail: string
-      url: string
-      site: string
-    }>
-    rankings: Array<{
-      id: number
-      rank: number
-      type: string
-      format: string
-      year: number
-      season: string
-      allTime: boolean
-      context: string
-    }>
-    mediaListEntry: {
-      id: number
-      status: string
-    }
-    stats: {
-      scoreDistribution: Array<{
-        score: number
-        amount: number
-      }>
-      statusDistribution: Array<{
-        status: string
-        amount: number
-      }>
-    }
-    siteUrl: string
-    autoCreateForumThread: boolean
-    isRecommendationBlocked: boolean
-    modNotes: string
-  }
 }
 
 export class AiringScheduleQuery extends APIWrapper {

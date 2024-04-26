@@ -1,5 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
+import { CharacterResponse } from '../interfaces/responses/Character'
 
 interface CharacterVariables {
   id?: number
@@ -16,45 +17,6 @@ interface CharacterVariables {
   mediaPerPage?: number
 }
 
-interface CharacterResponse {
-  id: number
-  name: {
-    first: string
-    last: string
-    full: string
-    native: string
-  }
-  image: {
-    large: string
-    medium: string
-  }
-  description: string
-  gender: string
-  dateOfBirth: {
-    year: number
-    month: number
-    day: number
-  }
-  age: string
-  bloodType: string
-  isFavourite: boolean
-  isFavouriteBlocked: boolean
-  siteUrl: string
-  media: {
-    nodes: Array<{
-      id: number
-      title: {
-        romaji: string
-        english: string
-        native: string
-        userPreferred: string
-      }
-    }>
-  }
-  favourites: number
-  modNotes: string
-}
-
 export class CharacterQuery extends APIWrapper {
   constructor () {
     super('https://graphql.anilist.co')
@@ -62,7 +24,7 @@ export class CharacterQuery extends APIWrapper {
 
   async character (variables?: CharacterVariables): Promise<CharacterResponse> {
     const query = `
-      query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [CharacterSort]) {
+      query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [CharacterSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int) {
         Character (id: $id, isBirthday: $isBirthday, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {
           id
           name {
@@ -75,7 +37,7 @@ export class CharacterQuery extends APIWrapper {
             large
             medium
           }
-          description(asHtml: true)
+          description(asHtml: $asHtml)
           gender
           dateOfBirth {
             year
@@ -87,7 +49,7 @@ export class CharacterQuery extends APIWrapper {
           isFavourite
           isFavouriteBlocked
           siteUrl
-          media(sort: $sort, onList: $onList, page: $page, perPage: $perPage) {
+          media(sort: $mediaSort, onList: $mediaOnList, page: $mediaPage, perPage: $mediaPerPage) {
             nodes {
               id
               title {
