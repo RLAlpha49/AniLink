@@ -174,27 +174,57 @@ describe('Anilist API Query', () => {
     }
   })
 
-    test('media list query should return a response', async () => {
-      try {
-        const response = await handleRateLimit(() => aniLink.anilist.query.mediaList({ userId: 542244 }))
-        console.log(response)
-        expect(response).toBeDefined()
-      } catch (error: any) {
-        if (error.response.data) {
-          throw error.response.data
-        } else {
-          throw error.response
-        }
+  test('media list query should return a response', async () => {
+    try {
+      const response = await handleRateLimit(() => aniLink.anilist.query.mediaList({ userId: 542244 }))
+      console.log(response)
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
       }
-    })
+    }
+  })
 
-    test('media list query should handle errors', async () => {
-        try {
-            await handleRateLimit(() => aniLink.anilist.query.mediaList({ userId: 'invalid' }))
-        } catch (error) {
-            expect(error).toBeDefined()
-        }
-    })
+  test('media list query should handle errors', async () => {
+      try {
+          await handleRateLimit(() => aniLink.anilist.query.mediaList({ userId: 'invalid' }))
+      } catch (error) {
+          expect(error).toBeDefined()
+      }
+  })
+
+  test('media list collection query should return a response', async () => {
+    try {
+      const response = await handleRateLimit(() => aniLink.anilist.query.mediaListCollection({
+        userId: 542244,
+        type: 'ANIME',
+        status: 'COMPLETED',
+        chunk: 1,
+        perChunk: 10
+      }))
+      console.log(response)
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
+  })
+
+  test('media list collection query should handle errors', async () => {
+    try {
+      await handleRateLimit(() => aniLink.anilist.query.mediaListCollection({
+        userId: 'invalid'
+      }))
+    } catch (error) {
+      expect(error).toBeDefined()
+    }
+  })
 })
 
 describe('Anilist API Mutation', () => {
