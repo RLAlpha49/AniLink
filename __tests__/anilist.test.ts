@@ -9,8 +9,16 @@ describe('Anilist API Query', () => {
   })
 
   test('user query', async () => {
-    const response = await aniLink.anilist.query.user({ id: 1, isHTML: false })
-    expect(response).toBeDefined()
+    try {
+      const response = await aniLink.anilist.query.user({ id: 1, isHTML: false })
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
   })
 
   test('user query should handle errors', async () => {
@@ -22,8 +30,16 @@ describe('Anilist API Query', () => {
   })
 
   test('media query', async () => {
-    const response = await aniLink.anilist.query.media({ id: 1, type: 'ANIME' })
-    expect(response).toBeDefined()
+    try {
+      const response = await aniLink.anilist.query.media({ id: 1, type: 'ANIME' })
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
   })
 
   test('media query should handle errors', async () => {
@@ -35,8 +51,16 @@ describe('Anilist API Query', () => {
   })
 
   test('media trend query', async () => {
-    const response = await aniLink.anilist.query.mediaTrend({ mediaId: 1, type: 'ANIME' })
-    expect(response).toBeDefined()
+    try {
+      const response = await aniLink.anilist.query.mediaTrend({ mediaId: 1, type: 'ANIME' })
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
   })
 
   test('media trend query should handle errors', async () => {
@@ -48,8 +72,16 @@ describe('Anilist API Query', () => {
   })
 
   test('airing schedule query should return a response', async () => {
-    const response = await aniLink.anilist.query.airingSchedule({ mediaId: 130590 }) // id needs to be an airing anime
-    expect(response).toBeDefined()
+    try {
+      const response = await aniLink.anilist.query.airingSchedule({ mediaId: 130590 }) // id needs to be an airing anime
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
   })
 
   test('airing schedule query should handle errors', async () => {
@@ -61,8 +93,16 @@ describe('Anilist API Query', () => {
   })
 
   test('character query should return a response', async () => {
-    const response = await aniLink.anilist.query.character({ id: 1, asHtml: true, mediaSort: ['POPULARITY_DESC'], mediaType: 'ANIME', mediaOnList: true, mediaPage: 1, mediaPerPage: 10 })
-    expect(response).toBeDefined()
+    try {
+      const response = await aniLink.anilist.query.character({ id: 1, asHtml: true, mediaSort: ['POPULARITY_DESC'], mediaType: 'ANIME', mediaOnList: true, mediaPage: 1, mediaPerPage: 10 })
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
   })
 
   test('character query should handle errors', async () => {
@@ -74,23 +114,31 @@ describe('Anilist API Query', () => {
   })
 
   test('staff query should return a response', async () => {
-    const response = await aniLink.anilist.query.staff({
-      id: 132186,
-      asHtml: true,
-      staffMediaSort: ['POPULARITY_DESC'],
-      staffMediaType: 'ANIME',
-      staffMediaOnList: true,
-      staffMediaPage: 1,
-      staffMediaPerPage: 10,
-      charactersSort: ['ID'],
-      charactersPage: 1,
-      charactersPerPage: 10,
-      characterMediaSort: ['POPULARITY_DESC'],
-      characterMediaOnList: true,
-      characterMediaPage: 1,
-      characterMediaPerPage: 10
-    })
-    expect(response).toBeDefined()
+    try {
+      const response = await aniLink.anilist.query.staff({
+        id: 132186,
+        asHtml: true,
+        staffMediaSort: ['POPULARITY_DESC'],
+        staffMediaType: 'ANIME',
+        staffMediaOnList: true,
+        staffMediaPage: 1,
+        staffMediaPerPage: 10,
+        charactersSort: ['ID'],
+        charactersPage: 1,
+        charactersPerPage: 10,
+        characterMediaSort: ['POPULARITY_DESC'],
+        characterMediaOnList: true,
+        characterMediaPage: 1,
+        characterMediaPerPage: 10
+      })
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
   })
 
   test('staff query should handle errors', async () => {
@@ -104,8 +152,24 @@ describe('Anilist API Query', () => {
   })
 
     test('media list query should return a response', async () => {
+      try {
         const response = await aniLink.anilist.query.mediaList({ userId: 542244 })
         expect(response).toBeDefined()
+      } catch (error: any) {
+        if (error.response.data) {
+          throw error.response.data
+        } else {
+          throw error.response
+        }
+      }
+    })
+
+    test('media list query should handle errors', async () => {
+        try {
+            await aniLink.anilist.query.mediaList({ userId: 'invalid' })
+        } catch (error) {
+            expect(error).toBeDefined()
+        }
     })
 })
 
@@ -117,24 +181,32 @@ describe('Anilist API Mutation', () => {
   })
 
   test('update user', async () => {
-    const response = await aniLink.anilist.mutation.updateUser({
-      about: 'New about text',
-      titleLanguage: 'ENGLISH',
-      displayAdultContent: true,
-      airingNotifications: true,
-      scoreFormat: 'POINT_10',
-      rowOrder: 'title',
-      profileColor: 'blue',
-      donatorBadge: 'Supporter',
-      notificationOptions: [{ type: 'ANIME_AIRING', enabled: true }],
-      timezone: 'GMT',
-      activityMergeTime: 30,
-      animeListOptions: { scoreFormat: 'POINT_10', rowOrder: 'title', animeList: {}, mangaList: {} },
-      mangaListOptions: { scoreFormat: 'POINT_10', rowOrder: 'title', animeList: {}, mangaList: {} },
-      staffNameLanguage: 'ENGLISH',
-      restrictMessagesToFollowing: false,
-      disabledListActivity: ['ANIME_LIST']
-    })
-    expect(response).toBeDefined()
+    try {
+      const response = await aniLink.anilist.mutation.updateUser({
+        about: 'New about text',
+        titleLanguage: 'ENGLISH',
+        displayAdultContent: true,
+        airingNotifications: true,
+        scoreFormat: 'POINT_10',
+        rowOrder: 'title',
+        profileColor: 'blue',
+        donatorBadge: 'Supporter',
+        notificationOptions: [{ type: 'ANIME_AIRING', enabled: true }],
+        timezone: 'GMT',
+        activityMergeTime: 30,
+        animeListOptions: { scoreFormat: 'POINT_10', rowOrder: 'title', animeList: {}, mangaList: {} },
+        mangaListOptions: { scoreFormat: 'POINT_10', rowOrder: 'title', animeList: {}, mangaList: {} },
+        staffNameLanguage: 'ENGLISH',
+        restrictMessagesToFollowing: false,
+        disabledListActivity: ['ANIME_LIST']
+      })
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
   })
 })
