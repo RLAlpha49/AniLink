@@ -3,6 +3,7 @@ import { MediaQuery } from './apis/anilist/query/Media'
 import { MediaTrendQuery } from './apis/anilist/query/MediaTrend'
 import { AiringScheduleQuery } from './apis/anilist/query/AiringSchedule'
 import { CharacterQuery } from './apis/anilist/query/Character'
+import { MediaListQuery } from './apis/anilist/query/MediaList'
 import { StaffQuery } from './apis/anilist/query/Staff'
 import {
   ListActivityOptionInput,
@@ -22,6 +23,7 @@ class AniLink {
       airingSchedule: () => Promise<any>
       character: () => Promise<any>
       staff: () => Promise<any>
+      mediaList: () => Promise<any>
     }
     mutation: {
       updateUser: (variables: {
@@ -52,6 +54,7 @@ class AniLink {
     const airingScheduleQueryInstance = new AiringScheduleQuery()
     const characterQueryInstance = new CharacterQuery()
     const staffQueryInstance = new StaffQuery()
+    const mediaListQueryInstance = new MediaListQuery()
     const updateUserMutationInstance = new UpdateUserMutation()
     this.anilist = {
       query: {
@@ -60,7 +63,8 @@ class AniLink {
         mediaTrend: mediaTrendQueryInstance.mediaTrend.bind(mediaTrendQueryInstance),
         airingSchedule: airingScheduleQueryInstance.airingSchedule.bind(airingScheduleQueryInstance),
         character: characterQueryInstance.character.bind(characterQueryInstance),
-        staff: staffQueryInstance.staff.bind(staffQueryInstance)
+        staff: staffQueryInstance.staff.bind(staffQueryInstance),
+        mediaList: mediaListQueryInstance.mediaList.bind(mediaListQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)

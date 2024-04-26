@@ -96,25 +96,17 @@ describe('Anilist API Query', () => {
   test('staff query should handle errors', async () => {
     try {
       await aniLink.anilist.query.staff({
-        id: 'invalid',
-        asHtml: true,
-        staffMediaSort: ['POPULARITY_DESC'],
-        staffMediaType: 'ANIME',
-        staffMediaOnList: true,
-        staffMediaPage: 1,
-        staffMediaPerPage: 10,
-        charactersSort: ['POPULARITY_DESC'],
-        charactersPage: 1,
-        charactersPerPage: 10,
-        characterMediaSort: ['POPULARITY_DESC'],
-        characterMediaOnList: true,
-        characterMediaPage: 1,
-        characterMediaPerPage: 10
+        id: 'invalid'
       })
     } catch (error) {
       expect(error).toBeDefined()
     }
   })
+
+    test('media list query should return a response', async () => {
+        const response = await aniLink.anilist.query.mediaList({ userId: 542244 })
+        expect(response).toBeDefined()
+    })
 })
 
 describe('Anilist API Mutation', () => {
