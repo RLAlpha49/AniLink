@@ -3,4 +3,6 @@ export interface Name {
   last: string
   full: string
   native: string
+  alternative: string
+  userPreferred: string
 }

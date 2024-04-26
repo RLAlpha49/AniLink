@@ -9,6 +9,10 @@ interface UserVariables {
   search?: string
   sort?: string[]
   isHTML?: boolean
+  animeStatLimit?: number
+  mangaStatLimit?: number
+  animeStatSort?: string[]
+  mangaStatSort?: string[]
 }
 
 export class UserQuery extends APIWrapper {
@@ -21,7 +25,7 @@ export class UserQuery extends APIWrapper {
     const { isHTML = true, ...rest } = variables != null ? variables : {}
 
     const query = `
-          query ($id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $isHTML: Boolean) {
+          query ($id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $isHTML: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
             User (id: $id, name: $name, isModerator: $isModerator, search: $search, sort: $sort) {
               id
               name
@@ -203,56 +207,56 @@ export class UserQuery extends APIWrapper {
                   standardDeviation
                   minutesWatched
                   episodesWatched
-                  formats {
+                  formats (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
                     mediaIds
                     format
                   }
-                  statuses {
+                  statuses (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
                     mediaIds
                     status
                   }
-                  scores {
+                  scores (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
                     mediaIds
                     score
                   }
-                  lengths {
+                  lengths (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
                     mediaIds
                     length
                   }
-                  releaseYears {
+                  releaseYears (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
                     mediaIds
                     releaseYear
                   }
-                  startYears {
+                  startYears (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
                     mediaIds
                     startYear
                   }
-                  genres {
+                  genres (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
                     mediaIds
                     genre
                   }
-                  tags {
+                  tags (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
@@ -268,14 +272,14 @@ export class UserQuery extends APIWrapper {
                       isAdult
                     }
                   }
-                  countries {
+                  countries (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
                     mediaIds
                     country
                   }
-                  voiceActors {
+                  voiceActors (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
@@ -293,7 +297,7 @@ export class UserQuery extends APIWrapper {
                     }
                     characterIds
                   }
-                  staff {
+                  staff (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
@@ -310,7 +314,7 @@ export class UserQuery extends APIWrapper {
                       }
                     }
                   }
-                  studios {
+                  studios (limit: $animeStatLimit, sort: $animeStatSort) {
                     count
                     meanScore
                     minutesWatched
@@ -327,56 +331,56 @@ export class UserQuery extends APIWrapper {
                   standardDeviation
                   chaptersRead
                   volumesRead
-                  formats {
+                  formats (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
                     mediaIds
                     format
                   }
-                  statuses {
+                  statuses (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
                     mediaIds
                     status
                   }
-                  scores {
+                  scores (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
                     mediaIds
                     score
                   }
-                  lengths {
+                  lengths (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
                     mediaIds
                     length
                   }
-                  releaseYears {
+                  releaseYears (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
                     mediaIds
                     releaseYear
                   }
-                  startYears {
+                  startYears (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
                     mediaIds
                     startYear
                   }
-                  genres {
+                  genres (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
                     mediaIds
                     genre
                   }
-                  tags {
+                  tags (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
@@ -392,14 +396,14 @@ export class UserQuery extends APIWrapper {
                       isAdult
                     }
                   }
-                  countries {
+                  countries (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
                     mediaIds
                     country
                   }
-                  staff {
+                  staff (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
@@ -416,7 +420,7 @@ export class UserQuery extends APIWrapper {
                       }
                     }
                   }
-                  studios {
+                  studios (limit: $mangaStatLimit, sort: $mangaStatSort) {
                     count
                     meanScore
                     chaptersRead
@@ -426,6 +430,116 @@ export class UserQuery extends APIWrapper {
                       name
                     }
                   }
+                }
+              }
+              stats {
+                watchedTime
+                chaptersRead
+                activityHistory {
+                  date
+                  amount
+                  level
+                }
+                animeStatusDistribution {
+                  status
+                  amount
+                }
+                mangaStatusDistribution {
+                  status
+                  amount
+                }
+                animeScoreDistribution {
+                  score
+                  amount
+                }
+                mangaScoreDistribution {
+                  score
+                  amount
+                }
+                animeListScores {
+                  meanScore
+                  standardDeviation
+                }
+                mangaListScores {
+                  meanScore
+                  standardDeviation
+                }
+                favouredGenresOverview {
+                  genre
+                  amount
+                  meanScore
+                  timeWatched
+                }
+                favouredGenres {
+                  genre
+                  amount
+                  meanScore
+                  timeWatched
+                }
+                favouredTags {
+                  tag {
+                    id
+                    name
+                    description
+                    category
+                    rank
+                    isGeneralSpoiler
+                    isMediaSpoiler
+                    isAdult
+                  }
+                  amount
+                  meanScore
+                  timeWatched
+                }
+                favouredActors {
+                  staff {
+                    id
+                    name {
+                      first
+                      last
+                      full
+                      native
+                      alternative
+                      userPreferred
+                    }
+                  }
+                  amount
+                  meanScore
+                  timeWatched
+                }
+                favouredStaff {
+                  staff {
+                    id
+                    name {
+                      first
+                      last
+                      full
+                      native
+                      alternative
+                      userPreferred
+                    }
+                  }
+                  amount
+                  meanScore
+                  timeWatched
+                }
+                favouredStudios {
+                  studio {
+                    id
+                    name
+                  }
+                  amount
+                  meanScore
+                  timeWatched
+                }
+                favouredYears {
+                  year
+                  amount
+                  meanScore
+                }
+                favouredFormats {
+                  format
+                  amount
                 }
               }
               unreadNotificationCount

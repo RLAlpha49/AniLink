@@ -1,4 +1,6 @@
 import { Image } from '../Image'
+import {Statistics} from "../Statistics";
+import {UserStats} from "../UserStats";
 
 export interface UserResponse {
   id: number
@@ -53,10 +55,8 @@ export interface UserResponse {
     staff: any[]
     studios: any[]
   }
-  statistics: {
-    anime: any
-    manga: any
-  }
+  statistics: Statistics
+  stats: UserStats
   unreadNotificationCount: number
   siteUrl: string
   donatorTier: number

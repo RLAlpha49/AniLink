@@ -7,7 +7,7 @@ import { NextAiringEpisode } from '../NextAiringEpisode'
 import { ExternalLink } from '../ExternalLink'
 import { StreamingEpisode } from '../StreamingEpisode'
 import { Ranking } from '../Ranking'
-import { Stats } from '../Stats'
+import { MediaStats } from '../MediaStats'
 import { MediaListEntry } from '../MediaListEntry'
 import { Name } from '../Name'
 import { Image } from '../Image'
@@ -110,7 +110,7 @@ export interface MediaResponse {
   streamingEpisodes: StreamingEpisode[]
   rankings: Ranking[]
   mediaListEntry: MediaListEntry
-  stats: Stats
+  stats: MediaStats
   siteUrl: string
   autoCreateForumThread: boolean
   isRecommendationBlocked: boolean
