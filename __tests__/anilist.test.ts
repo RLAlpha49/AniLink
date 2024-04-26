@@ -2,6 +2,21 @@ require('dotenv').config()
 import AniLink from '../dist/AniLink.js'
 // import AniLink from '../src/AniLink'
 
+async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
+  try {
+    return await apiCall();
+  } catch (error: any) {
+    if (error.response && error.response.status === 429) {
+      console.log('Rate limit exceeded, waiting for 1 minute before retrying...');
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      console.log('Retrying...');
+      return handleRateLimit(apiCall, retryAfter);
+    } else {
+      throw error;
+    }
+  }
+}
+
 describe('Anilist API Query', () => {
   let aniLink: AniLink
 
@@ -12,7 +27,7 @@ describe('Anilist API Query', () => {
 
   test('user query', async () => {
     try {
-      const response = await aniLink.anilist.query.user({ id: 542244, isHTML: true })
+      const response = await handleRateLimit(() => aniLink.anilist.query.user({ id: 542244, isHTML: true }))
       console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
@@ -26,7 +41,7 @@ describe('Anilist API Query', () => {
 
   test('user query should handle errors', async () => {
     try {
-      await aniLink.anilist.query.user({ id: 'invalid', isHTML: false })
+      await handleRateLimit(() => aniLink.anilist.query.user({ id: 'invalid', isHTML: false }))
     } catch (error: any) {
       expect(error).toBeDefined()
     }
@@ -34,7 +49,7 @@ describe('Anilist API Query', () => {
 
   test('media query', async () => {
     try {
-      const response = await aniLink.anilist.query.media({ id: 1, type: 'ANIME' })
+      const response = await handleRateLimit(() => aniLink.anilist.query.media({ id: 1, type: 'ANIME' }))
       console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
@@ -48,7 +63,7 @@ describe('Anilist API Query', () => {
 
   test('media query should handle errors', async () => {
     try {
-      await aniLink.anilist.query.media({ id: 'invalid', type: 'ANIME' })
+      await handleRateLimit(() => aniLink.anilist.query.media({ id: 'invalid', type: 'ANIME' }))
     } catch (error: any) {
       expect(error).toBeDefined()
     }
@@ -56,7 +71,7 @@ describe('Anilist API Query', () => {
 
   test('media trend query', async () => {
     try {
-      const response = await aniLink.anilist.query.mediaTrend({ mediaId: 1, type: 'ANIME' })
+      const response = await handleRateLimit(() => aniLink.anilist.query.mediaTrend({ mediaId: 1, type: 'ANIME' }))
       console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
@@ -70,7 +85,7 @@ describe('Anilist API Query', () => {
 
   test('media trend query should handle errors', async () => {
     try {
-      await aniLink.anilist.query.mediaTrend({ mediaId: 'invalid', type: 'ANIME' })
+      await handleRateLimit(() => aniLink.anilist.query.mediaTrend({ mediaId: 'invalid', type: 'ANIME' }))
     } catch (error: any) {
       expect(error).toBeDefined()
     }
@@ -78,7 +93,7 @@ describe('Anilist API Query', () => {
 
   test('airing schedule query should return a response', async () => {
     try {
-      const response = await aniLink.anilist.query.airingSchedule({ mediaId: 130590 }) // id needs to be an airing anime
+      const response = await handleRateLimit(() => aniLink.anilist.query.airingSchedule({ mediaId: 130590 })) // id needs to be an airing anime
       console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
@@ -92,7 +107,7 @@ describe('Anilist API Query', () => {
 
   test('airing schedule query should handle errors', async () => {
     try {
-      await aniLink.anilist.query.airingSchedule({ mediaId: 'invalid' })
+      await handleRateLimit(() => aniLink.anilist.query.airingSchedule({ mediaId: 'invalid' }))
     } catch (error) {
       expect(error).toBeDefined()
     }
@@ -100,7 +115,7 @@ describe('Anilist API Query', () => {
 
   test('character query should return a response', async () => {
     try {
-      const response = await aniLink.anilist.query.character({ id: 1, asHtml: true, mediaSort: ['POPULARITY_DESC'], mediaType: 'ANIME', mediaOnList: true, mediaPage: 1, mediaPerPage: 10 })
+      const response = await handleRateLimit(() => aniLink.anilist.query.character({ id: 1, asHtml: true, mediaSort: ['POPULARITY_DESC'], mediaType: 'ANIME', mediaOnList: true, mediaPage: 1, mediaPerPage: 10 }))
       console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
@@ -114,7 +129,7 @@ describe('Anilist API Query', () => {
 
   test('character query should handle errors', async () => {
     try {
-      await aniLink.anilist.query.character({ id: 'invalid', asHtml: true, mediaSort: ['POPULARITY_DESC'], mediaOnList: true, mediaPage: 1, mediaPerPage: 10 })
+      await handleRateLimit(() => aniLink.anilist.query.character({ id: 'invalid', asHtml: true, mediaSort: ['POPULARITY_DESC'], mediaOnList: true, mediaPage: 1, mediaPerPage: 10 }))
     } catch (error) {
       expect(error).toBeDefined()
     }
@@ -122,7 +137,7 @@ describe('Anilist API Query', () => {
 
   test('staff query should return a response', async () => {
     try {
-      const response = await aniLink.anilist.query.staff({
+      const response = await handleRateLimit(() => aniLink.anilist.query.staff({
         id: 132186,
         asHtml: true,
         staffMediaSort: ['POPULARITY_DESC'],
@@ -137,7 +152,7 @@ describe('Anilist API Query', () => {
         characterMediaOnList: true,
         characterMediaPage: 1,
         characterMediaPerPage: 10
-      })
+      }))
       console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
@@ -151,9 +166,9 @@ describe('Anilist API Query', () => {
 
   test('staff query should handle errors', async () => {
     try {
-      await aniLink.anilist.query.staff({
+      await handleRateLimit(() => aniLink.anilist.query.staff({
         id: 'invalid'
-      })
+      }))
     } catch (error) {
       expect(error).toBeDefined()
     }
@@ -161,7 +176,7 @@ describe('Anilist API Query', () => {
 
     test('media list query should return a response', async () => {
       try {
-        const response = await aniLink.anilist.query.mediaList({ userId: 542244 })
+        const response = await handleRateLimit(() => aniLink.anilist.query.mediaList({ userId: 542244 }))
         console.log(response)
         expect(response).toBeDefined()
       } catch (error: any) {
@@ -175,7 +190,7 @@ describe('Anilist API Query', () => {
 
     test('media list query should handle errors', async () => {
         try {
-            await aniLink.anilist.query.mediaList({ userId: 'invalid' })
+            await handleRateLimit(() => aniLink.anilist.query.mediaList({ userId: 'invalid' }))
         } catch (error) {
             expect(error).toBeDefined()
         }
@@ -192,7 +207,7 @@ describe('Anilist API Mutation', () => {
 
   test('update user', async () => {
     try {
-      const response = await aniLink.anilist.mutation.updateUser({
+      const response = await handleRateLimit(() => aniLink.anilist.mutation.updateUser({
         about: 'New about text',
         titleLanguage: 'ENGLISH',
         displayAdultContent: true,
@@ -209,7 +224,7 @@ describe('Anilist API Mutation', () => {
         staffNameLanguage: 'ROMAJI',
         restrictMessagesToFollowing: false,
         disabledListActivity: [{ type: 'CURRENT', disabled: false }]
-      })
+      }))
       console.log(response)
       expect(response).toBeDefined()
     } catch (error: any) {
