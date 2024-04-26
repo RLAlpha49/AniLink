@@ -186,7 +186,8 @@ describe('Anilist API Mutation', () => {
   let aniLink: AniLink
 
   beforeAll(() => {
-    aniLink = new AniLink()
+    const token = process.env.ANILIST_TOKEN
+    aniLink = new AniLink(token)
   })
 
   test('update user', async () => {
@@ -201,7 +202,7 @@ describe('Anilist API Mutation', () => {
         profileColor: 'blue',
         donatorBadge: 'Supporter',
         notificationOptions: [{ type: 'AIRING', enabled: true }],
-        timezone: 'GMT',
+        timezone: '-06:00',
         activityMergeTime: 30,
         animeListOptions: { sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false },
         mangaListOptions: { sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false },
