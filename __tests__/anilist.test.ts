@@ -191,14 +191,14 @@ describe('Anilist API Mutation', () => {
         rowOrder: 'title',
         profileColor: 'blue',
         donatorBadge: 'Supporter',
-        notificationOptions: [{ type: 'ANIME_AIRING', enabled: true }],
+        notificationOptions: [{ type: 'AIRING', enabled: true }],
         timezone: 'GMT',
         activityMergeTime: 30,
-        animeListOptions: { scoreFormat: 'POINT_10', rowOrder: 'title', animeList: {}, mangaList: {} },
-        mangaListOptions: { scoreFormat: 'POINT_10', rowOrder: 'title', animeList: {}, mangaList: {} },
-        staffNameLanguage: 'ENGLISH',
+        animeListOptions: { sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false },
+        mangaListOptions: { sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false },
+        staffNameLanguage: 'ROMAJI',
         restrictMessagesToFollowing: false,
-        disabledListActivity: ['ANIME_LIST']
+        disabledListActivity: [{ type: 'CURRENT', disabled: false }]
       })
       expect(response).toBeDefined()
     } catch (error: any) {

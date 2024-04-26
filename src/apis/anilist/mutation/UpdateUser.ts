@@ -57,7 +57,6 @@ interface UpdateUserResponse {
     displayAdultContent: boolean
     airingNotifications: boolean
     profileColor: string
-    donatorBadge: string
     notificationOptions: Array<{
       type: string
       enabled: boolean
@@ -86,6 +85,7 @@ interface UpdateUserResponse {
   unreadNotificationCount: number
   siteUrl: string
   donatorTier: number
+  donatorBadge: string
   moderatorRoles: string[]
   createdAt: number
   updatedAt: number
@@ -117,7 +117,6 @@ export class UpdateUserMutation extends APIWrapper {
                 displayAdultContent
                 airingNotifications
                 profileColor
-                donatorBadge
                 notificationOptions {
                   type
                   enabled
@@ -146,6 +145,7 @@ export class UpdateUserMutation extends APIWrapper {
               unreadNotificationCount
               siteUrl
               donatorTier
+              donatorBadge
               moderatorRoles
               createdAt
               updatedAt
