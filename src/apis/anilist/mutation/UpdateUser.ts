@@ -92,8 +92,11 @@ interface UpdateUserResponse {
 }
 
 export class UpdateUserMutation extends APIWrapper {
-  constructor () {
+  private readonly authToken: string
+
+  constructor (authToken: string) {
     super('https://graphql.anilist.co')
+    this.authToken = authToken
   }
 
   async updateUser (variables: UpdateUserVariables): Promise<UpdateUserResponse> {
@@ -154,6 +157,6 @@ export class UpdateUserMutation extends APIWrapper {
         `
 
     const data = { query: mutation, variables }
-    return await sendRequest(this.baseURL, 'POST', data)
+    return await sendRequest(this.baseURL, 'POST', data, this.authToken)
   }
 }

@@ -1,3 +1,4 @@
+require('dotenv').config()
 import AniLink from '../dist/AniLink.js'
 // import AniLink from '../src/AniLink'
 
@@ -5,7 +6,8 @@ describe('Anilist API Query', () => {
   let aniLink: AniLink
 
   beforeAll(() => {
-    aniLink = new AniLink()
+    const token = process.env.ANILIST_TOKEN
+    aniLink = new AniLink(token)
   })
 
   test('user query', async () => {

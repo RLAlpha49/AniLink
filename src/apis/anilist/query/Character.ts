@@ -18,8 +18,11 @@ interface CharacterVariables {
 }
 
 export class CharacterQuery extends APIWrapper {
-  constructor () {
+  private readonly authToken: string
+
+  constructor (authToken: string) {
     super('https://graphql.anilist.co')
+    this.authToken = authToken
   }
 
   async character (variables?: CharacterVariables): Promise<CharacterResponse> {
@@ -67,6 +70,6 @@ export class CharacterQuery extends APIWrapper {
     `
 
     const data = { query, variables }
-    return await sendRequest(this.baseURL, 'POST', data)
+    return await sendRequest(this.baseURL, 'POST', data, this.authToken)
   }
 }

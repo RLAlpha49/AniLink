@@ -32,8 +32,11 @@ interface MediaTrendVariables {
 }
 
 export class MediaTrendQuery extends APIWrapper {
-  constructor () {
+  private readonly authToken: string
+
+  constructor (authToken: string) {
     super('https://graphql.anilist.co')
+    this.authToken = authToken
   }
 
   async mediaTrend (variables?: MediaTrendVariables): Promise<MediaTrendResponse> {
@@ -161,6 +164,6 @@ export class MediaTrendQuery extends APIWrapper {
     `
 
     const data = { query, variables }
-    return await sendRequest(this.baseURL, 'POST', data)
+    return await sendRequest(this.baseURL, 'POST', data, this.authToken)
   }
 }

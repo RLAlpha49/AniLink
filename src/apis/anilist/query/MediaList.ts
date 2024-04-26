@@ -34,8 +34,11 @@ interface MediaListVariables {
 }
 
 export class MediaListQuery extends APIWrapper {
-  constructor () {
+  private readonly authToken: string
+
+  constructor (authToken: string) {
     super('https://graphql.anilist.co')
+    this.authToken = authToken
   }
 
   async mediaList (variables?: MediaListVariables): Promise<MediaListResponse> {
@@ -184,6 +187,6 @@ export class MediaListQuery extends APIWrapper {
     `
 
     const data = { query, variables }
-    return await sendRequest(this.baseURL, 'POST', data)
+    return await sendRequest(this.baseURL, 'POST', data, this.authToken)
   }
 }

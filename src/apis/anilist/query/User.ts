@@ -16,8 +16,11 @@ interface UserVariables {
 }
 
 export class UserQuery extends APIWrapper {
-  constructor () {
+  private readonly authToken: string
+
+  constructor (authToken: string) {
     super('https://graphql.anilist.co')
+    this.authToken = authToken
   }
 
   async user (variables?: UserVariables): Promise<UserResponse> {
@@ -559,6 +562,6 @@ export class UserQuery extends APIWrapper {
         `
 
     const data = { query, variables: { isHTML, ...rest } }
-    return await sendRequest(this.baseURL, 'POST', data)
+    return await sendRequest(this.baseURL, 'POST', data, this.authToken)
   }
 }

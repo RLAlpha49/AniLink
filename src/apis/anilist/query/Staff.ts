@@ -26,8 +26,11 @@ interface StaffVariables {
 }
 
 export class StaffQuery extends APIWrapper {
-  constructor () {
+  private readonly authToken: string
+
+  constructor (authToken: string) {
     super('https://graphql.anilist.co')
+    this.authToken = authToken
   }
 
   async staff (variables?: StaffVariables): Promise<StaffResponse> {
@@ -114,6 +117,6 @@ export class StaffQuery extends APIWrapper {
     `
 
     const data = { query, variables }
-    return await sendRequest(this.baseURL, 'POST', data)
+    return await sendRequest(this.baseURL, 'POST', data, this.authToken)
   }
 }

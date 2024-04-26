@@ -47,15 +47,15 @@ class AniLink {
     }
   }
 
-  constructor () {
-    const userQueryInstance = new UserQuery()
-    const mediaQueryInstance = new MediaQuery()
-    const mediaTrendQueryInstance = new MediaTrendQuery()
-    const airingScheduleQueryInstance = new AiringScheduleQuery()
-    const characterQueryInstance = new CharacterQuery()
-    const staffQueryInstance = new StaffQuery()
-    const mediaListQueryInstance = new MediaListQuery()
-    const updateUserMutationInstance = new UpdateUserMutation()
+  constructor (authToken: string) {
+    const userQueryInstance = new UserQuery(authToken)
+    const mediaQueryInstance = new MediaQuery(authToken)
+    const mediaTrendQueryInstance = new MediaTrendQuery(authToken)
+    const airingScheduleQueryInstance = new AiringScheduleQuery(authToken)
+    const characterQueryInstance = new CharacterQuery(authToken)
+    const staffQueryInstance = new StaffQuery(authToken)
+    const mediaListQueryInstance = new MediaListQuery(authToken)
+    const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
       query: {
         user: userQueryInstance.user.bind(userQueryInstance),
