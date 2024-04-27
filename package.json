@@ -5,7 +5,8 @@
   "main": "dist/AniLink.js",
   "scripts": {
     "test": "jest",
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "anilist",
