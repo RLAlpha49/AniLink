@@ -225,6 +225,48 @@ describe('Anilist API Query', () => {
       expect(error).toBeDefined()
     }
   })
+
+  test('genre collection query should return a response', async () => {
+    try {
+      const response = await handleRateLimit(() => aniLink.anilist.query.genreCollection())
+      console.log(response)
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
+  })
+
+  test('media tag collection query should return a response', async () => {
+    try {
+      const response = await handleRateLimit(() => aniLink.anilist.query.mediaTagCollection())
+      console.log(response)
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
+  })
+
+  test('viewer query should return a response', async () => {
+    try {
+      const response = await handleRateLimit(() => aniLink.anilist.query.viewer({ isHTML: true }))
+      console.log(response)
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
+  })
 })
 
 describe('Anilist API Mutation', () => {

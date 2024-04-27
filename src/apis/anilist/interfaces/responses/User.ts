@@ -80,7 +80,7 @@ export interface UserResponse {
 export const UserSchema = `
   id
   name
-  about(asHtml: $isHTML)
+  about(asHtml: $asHtml)
   avatar {
     large
     medium

@@ -7,14 +7,17 @@ export interface Tag {
   isGeneralSpoiler: boolean
   isMediaSpoiler: boolean
   isAdult: boolean
+  userId: number
 }
 
 export const TagSchema = `
   id
   name
   description
+  category
   rank
   isGeneralSpoiler
   isMediaSpoiler
   isAdult
+  userId
 `

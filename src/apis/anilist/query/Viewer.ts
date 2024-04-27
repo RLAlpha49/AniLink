@@ -2,12 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { UserResponse, UserSchema } from '../interfaces/responses/User'
 
-interface UserVariables {
-  id?: number
-  name?: string
-  isModerator?: boolean
-  search?: string
-  sort?: string[]
+interface ViewerVariables {
   asHtml?: boolean
   animeStatLimit?: number
   mangaStatLimit?: number
@@ -15,7 +10,7 @@ interface UserVariables {
   mangaStatSort?: string[]
 }
 
-export class UserQuery extends APIWrapper {
+export class ViewerQuery extends APIWrapper {
   private readonly authToken: string
 
   constructor (authToken: string) {
@@ -23,10 +18,10 @@ export class UserQuery extends APIWrapper {
     this.authToken = authToken
   }
 
-  async user (variables?: UserVariables): Promise<UserResponse> {
+  async viewer (variables?: ViewerVariables): Promise<UserResponse> {
     const query = `
-      query ($id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
-        User (id: $id, name: $name, isModerator: $isModerator, search: $search, sort: $sort) {
+      query ($asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
+        Viewer {
           ${UserSchema}
         }
       }

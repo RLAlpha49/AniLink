@@ -6,6 +6,7 @@ import { CharacterQuery } from './apis/anilist/query/Character'
 import { MediaListQuery } from './apis/anilist/query/MediaList'
 import { StaffQuery } from './apis/anilist/query/Staff'
 import { MediaListCollectionQuery } from './apis/anilist/query/MediaListCollection'
+import { GenreCollectionQuery } from './apis/anilist/query/GenreCollection'
 import {
   ListActivityOptionInput,
   MediaListOptionsInput,
@@ -14,6 +15,8 @@ import {
   UpdateUserMutation,
   UserTitleLanguage
 } from './apis/anilist/mutation/UpdateUser'
+import { MediaTagCollectionQuery } from './apis/anilist/query/MediaTagCollection'
+import { ViewerQuery } from './apis/anilist/query/Viewer'
 
 class AniLink {
   public anilist: {
@@ -26,6 +29,9 @@ class AniLink {
       staff: () => Promise<any>
       mediaList: () => Promise<any>
       mediaListCollection: () => Promise<any>
+      genreCollection: () => Promise<any>
+      mediaTagCollection: () => Promise<any>
+      viewer: () => Promise<any>
     }
     mutation: {
       updateUser: (variables: {
@@ -58,6 +64,10 @@ class AniLink {
     const staffQueryInstance = new StaffQuery(authToken)
     const mediaListQueryInstance = new MediaListQuery(authToken)
     const mediaListCollectionQueryInstance = new MediaListCollectionQuery(authToken)
+    const genreCollectionQueryInstance = new GenreCollectionQuery(authToken)
+    const mediaTagCollectionQueryInstance = new MediaTagCollectionQuery(authToken)
+    const viewerQueryInstance = new ViewerQuery(authToken)
+
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
       query: {
@@ -68,7 +78,10 @@ class AniLink {
         character: characterQueryInstance.character.bind(characterQueryInstance),
         staff: staffQueryInstance.staff.bind(staffQueryInstance),
         mediaList: mediaListQueryInstance.mediaList.bind(mediaListQueryInstance),
-        mediaListCollection: mediaListCollectionQueryInstance.mediaListCollection.bind(mediaListQueryInstance)
+        mediaListCollection: mediaListCollectionQueryInstance.mediaListCollection.bind(mediaListQueryInstance),
+        genreCollection: genreCollectionQueryInstance.genreCollection.bind(genreCollectionQueryInstance),
+        mediaTagCollection: mediaTagCollectionQueryInstance.mediaTagCollection.bind(mediaTagCollectionQueryInstance),
+        viewer: viewerQueryInstance.viewer.bind(viewerQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)
