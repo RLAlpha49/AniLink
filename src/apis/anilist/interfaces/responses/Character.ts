@@ -1,7 +1,7 @@
-import { FuzzyDate } from '../FuzzyDate'
-import { Name } from '../Name'
-import { Image } from '../Image'
-import { Title } from '../Title'
+import { FuzzyDate, FuzzyDateSchema } from '../FuzzyDate'
+import { Name, NameSchema } from '../Name'
+import { Image, ImageSchema } from '../Image'
+import { Title, TitleSchema } from '../Title'
 
 export interface CharacterResponse {
   id: number
@@ -24,3 +24,27 @@ export interface CharacterResponse {
   favourites: number
   modNotes: string
 }
+
+export const CharacterSchema = `
+  id
+  ${NameSchema}
+  ${ImageSchema}
+  description(asHtml: $asHtml)
+  gender
+  dateOfBirth {
+    ${FuzzyDateSchema}
+  }
+  age
+  bloodType
+  isFavourite
+  isFavouriteBlocked
+  siteUrl
+  media(sort: $mediaSort, onList: $mediaOnList, page: $mediaPage, perPage: $mediaPerPage) {
+    nodes {
+      id
+      ${TitleSchema}
+    }
+  }
+  favourites
+  modNotes
+`

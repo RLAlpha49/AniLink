@@ -1,4 +1,5 @@
 import { Media } from '../Media'
+import { MediaSchema } from './Media'
 
 export interface MediaTrendResponse {
   mediaId: number
@@ -11,3 +12,17 @@ export interface MediaTrendResponse {
   episode: number
   media: Media
 }
+
+export const MediaTrendSchema = `
+  mediaId
+  date
+  trending
+  averageScore
+  popularity
+  inProgress
+  releasing
+  episode
+  media {
+    ${MediaSchema}
+  }
+`

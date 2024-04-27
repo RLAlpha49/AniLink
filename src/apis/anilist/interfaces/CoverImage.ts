@@ -4,3 +4,12 @@ export interface CoverImage {
   medium: string
   color: string
 }
+
+export const CoverImageSchema = `
+  coverImage {
+    extraLarge
+    large
+    medium
+    color
+  }
+`

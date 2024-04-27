@@ -6,3 +6,12 @@ export interface Name {
   alternative: string
   userPreferred: string
 }
+
+export const NameSchema = `
+  name {
+    first
+    last
+    full
+    native
+  }
+`

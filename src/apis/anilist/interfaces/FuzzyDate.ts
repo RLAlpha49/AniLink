@@ -3,3 +3,9 @@ export interface FuzzyDate {
   month: number
   day: number
 }
+
+export const FuzzyDateSchema = `
+  year
+  month
+  day
+`

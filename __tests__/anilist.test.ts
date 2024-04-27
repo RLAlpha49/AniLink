@@ -203,7 +203,7 @@ describe('Anilist API Query', () => {
         type: 'ANIME',
         status: 'COMPLETED',
         chunk: 1,
-        perChunk: 10
+        perChunk: 10000
       }))
       console.log(response)
       expect(response).toBeDefined()

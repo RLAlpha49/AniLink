@@ -3,3 +3,11 @@ export interface NextAiringEpisode {
   timeUntilAiring: number
   episode: number
 }
+
+export const NextAiringEpisodeSchema = `
+  nextAiringEpisode {
+    airingAt
+    timeUntilAiring
+    episode
+  }
+`

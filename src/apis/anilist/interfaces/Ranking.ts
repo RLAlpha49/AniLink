@@ -8,3 +8,16 @@ export interface Ranking {
   allTime: boolean
   context: string
 }
+
+export const RankingSchema = `
+  rankings {
+    id
+    rank
+    type
+    format
+    year
+    season
+    allTime
+    context
+  }
+`

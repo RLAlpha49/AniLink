@@ -3,3 +3,11 @@ export interface Trailer {
   site: string
   thumbnail: string
 }
+
+export const TrailerSchema = `
+  trailer {
+    id
+    site
+    thumbnail
+  }
+`

@@ -4,3 +4,12 @@ export interface Title {
   native: string
   userPreferred: string
 }
+
+export const TitleSchema = `
+  title {
+    romaji
+    english
+    native
+    userPreferred
+  }
+`

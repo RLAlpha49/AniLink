@@ -23,3 +23,17 @@ export interface UserStats {
   favouredYears: Favoured[]
   favouredFormats: Favoured[]
 }
+
+export const UserAnimeStatsSchema = `
+  count
+  meanScore
+  minutesWatched
+  mediaIds
+`
+
+export const UserMangaStatsSchema = `
+  count
+  meanScore
+  chaptersRead
+  mediaIds
+`

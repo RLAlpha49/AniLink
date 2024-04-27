@@ -8,3 +8,13 @@ export interface Tag {
   isMediaSpoiler: boolean
   isAdult: boolean
 }
+
+export const TagSchema = `
+  id
+  name
+  description
+  rank
+  isGeneralSpoiler
+  isMediaSpoiler
+  isAdult
+`

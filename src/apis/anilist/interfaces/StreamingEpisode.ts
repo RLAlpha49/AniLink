@@ -4,3 +4,12 @@ export interface StreamingEpisode {
   url: string
   site: string
 }
+
+export const StreamingEpisodeSchema = `
+  streamingEpisodes {
+    title
+    thumbnail
+    url
+    site
+  }
+`

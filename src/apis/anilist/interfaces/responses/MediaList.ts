@@ -1,4 +1,6 @@
 import { Media } from '../Media'
+import { FuzzyDateSchema } from '../FuzzyDate'
+import { MediaSchema } from './Media'
 
 export interface MediaListResponse {
   id: number
@@ -22,3 +24,31 @@ export interface MediaListResponse {
   media: Media
   user: any
 }
+
+export const MediaListSchema = `
+  id
+  userId
+  mediaId
+  status
+  score (format: $ScoreFormat)
+  progress
+  progressVolumes
+  repeat
+  priority
+  private
+  notes
+  hiddenFromStatusLists
+  customLists (asArray: $asArray)
+  advancedScores
+  startedAt {
+    ${FuzzyDateSchema}
+  }
+  completedAt {
+    ${FuzzyDateSchema}
+  }
+  updatedAt
+  createdAt
+  media {
+    ${MediaSchema}
+  }
+`
