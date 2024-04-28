@@ -42,8 +42,10 @@ import { ThreadResponse } from './apis/anilist/interfaces/responses/Thread'
 import { ThreadQuery } from './apis/anilist/query/Thread'
 import { ThreadCommentQuery } from './apis/anilist/query/ThreadComment'
 import { ThreadCommentResponse } from './apis/anilist/interfaces/responses/ThreadComment'
-import {RecommendationResponse} from "./apis/anilist/interfaces/responses/Recommendation";
+import { RecommendationResponse } from './apis/anilist/interfaces/responses/Recommendation'
 import { RecommendationQuery } from './apis/anilist/query/Recommendation'
+import { BasicUser } from './apis/anilist/interfaces/BasicUser'
+import { LikesQuery } from './apis/anilist/query/page/Likes'
 
 class AniLink {
   public anilist: {
@@ -69,6 +71,10 @@ class AniLink {
       thread: () => Promise<ThreadResponse>
       threadComment: () => Promise<ThreadCommentResponse>
       recommendation: () => Promise<RecommendationResponse>
+
+      page: {
+        likes: () => Promise<BasicUser>
+      }
     }
     mutation: {
       updateUser: (variables: {
@@ -115,6 +121,8 @@ class AniLink {
     const threadCommentQueryInstance = new ThreadCommentQuery(authToken)
     const recommendationQueryInstance = new RecommendationQuery(authToken)
 
+    const likesQueryInstance = new LikesQuery(authToken)
+
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
       query: {
@@ -138,7 +146,11 @@ class AniLink {
         follower: followerQueryInstance.follower.bind(followerQueryInstance),
         thread: threadQueryInstance.thread.bind(threadQueryInstance),
         threadComment: threadCommentQueryInstance.threadComment.bind(threadCommentQueryInstance),
-        recommendation: recommendationQueryInstance.recommmendation.bind(recommendationQueryInstance)
+        recommendation: recommendationQueryInstance.recommmendation.bind(recommendationQueryInstance),
+
+        page: {
+          likes: likesQueryInstance.likes.bind(likesQueryInstance)
+        }
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)
