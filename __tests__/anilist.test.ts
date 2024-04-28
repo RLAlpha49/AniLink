@@ -160,6 +160,11 @@ describe('Anilist API Query', () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.threadComment({id: 2555166, asHtml: true}))
     expect(response).toBeDefined()
   })
+
+  test('Reccomendation Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.recommendation({mediaId: 156822, asHtml: true}))
+    expect(response).toBeDefined()
+  })
 })
 
 describe('Anilist API Mutation', () => {

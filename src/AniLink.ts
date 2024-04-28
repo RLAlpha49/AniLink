@@ -42,6 +42,8 @@ import { ThreadResponse } from './apis/anilist/interfaces/responses/Thread'
 import { ThreadQuery } from './apis/anilist/query/Thread'
 import { ThreadCommentQuery } from './apis/anilist/query/ThreadComment'
 import { ThreadCommentResponse } from './apis/anilist/interfaces/responses/ThreadComment'
+import {RecommendationResponse} from "./apis/anilist/interfaces/responses/Recommendation";
+import { RecommendationQuery } from './apis/anilist/query/Recommendation'
 
 class AniLink {
   public anilist: {
@@ -66,6 +68,7 @@ class AniLink {
       follower: () => Promise<UserResponse>
       thread: () => Promise<ThreadResponse>
       threadComment: () => Promise<ThreadCommentResponse>
+      recommendation: () => Promise<RecommendationResponse>
     }
     mutation: {
       updateUser: (variables: {
@@ -110,6 +113,7 @@ class AniLink {
     const followerQueryInstance = new FollowerQuery(authToken)
     const threadQueryInstance = new ThreadQuery(authToken)
     const threadCommentQueryInstance = new ThreadCommentQuery(authToken)
+    const recommendationQueryInstance = new RecommendationQuery(authToken)
 
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
@@ -133,7 +137,8 @@ class AniLink {
         following: followingQueryInstance.following.bind(followingQueryInstance),
         follower: followerQueryInstance.follower.bind(followerQueryInstance),
         thread: threadQueryInstance.thread.bind(threadQueryInstance),
-        threadComment: threadCommentQueryInstance.threadComment.bind(threadCommentQueryInstance)
+        threadComment: threadCommentQueryInstance.threadComment.bind(threadCommentQueryInstance),
+        recommendation: recommendationQueryInstance.recommmendation.bind(recommendationQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)
