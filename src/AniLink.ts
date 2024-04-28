@@ -36,6 +36,8 @@ import { Activity } from './apis/anilist/interfaces/Activity'
 import { ActivityQuery } from './apis/anilist/query/Activity'
 import { ActivityReply } from './apis/anilist/interfaces/ActivityReply'
 import { ActivityReplyQuery } from './apis/anilist/query/ActivityReply'
+import { FollowingQuery } from './apis/anilist/query/Following'
+import { FollowerQuery } from './apis/anilist/query/Follower'
 
 class AniLink {
   public anilist: {
@@ -56,6 +58,8 @@ class AniLink {
       review: () => Promise<ReviewResponse>
       activity: () => Promise<Activity>
       activityReply: () => Promise<ActivityReply>
+      following: () => Promise<UserResponse>
+      follower: () => Promise<UserResponse>
     }
     mutation: {
       updateUser: (variables: {
@@ -96,6 +100,8 @@ class AniLink {
     const reviewQueryInstance = new ReviewQuery(authToken)
     const activityQueryInstance = new ActivityQuery(authToken)
     const activityReplyQueryInstance = new ActivityReplyQuery(authToken)
+    const followingQueryInstance = new FollowingQuery(authToken)
+    const followerQueryInstance = new FollowerQuery(authToken)
 
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
@@ -115,7 +121,9 @@ class AniLink {
         studio: studioQueryInstance.studio.bind(studioQueryInstance),
         review: reviewQueryInstance.review.bind(reviewQueryInstance),
         activity: activityQueryInstance.activity.bind(activityQueryInstance),
-        activityReply: activityReplyQueryInstance.activityReply.bind(activityReplyQueryInstance)
+        activityReply: activityReplyQueryInstance.activityReply.bind(activityReplyQueryInstance),
+        following: followingQueryInstance.following.bind(followingQueryInstance),
+        follower: followerQueryInstance.follower.bind(followerQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)

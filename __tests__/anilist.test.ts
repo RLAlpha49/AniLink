@@ -269,6 +269,34 @@ describe('Anilist API Query', () => {
       }
     }
   })
+
+  test('following query should return a response', async () => {
+    try {
+      const response = await handleRateLimit(() => aniLink.anilist.query.following({ userId: 542244, asHtml: true }))
+      console.log(response)
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
+  })
+
+  test('follower query should return a response', async () => {
+    try {
+      const response = await handleRateLimit(() => aniLink.anilist.query.follower({ userId: 542244, asHtml: true }))
+      console.log(response)
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
+  })
 })
 
 describe('Anilist API Mutation', () => {
