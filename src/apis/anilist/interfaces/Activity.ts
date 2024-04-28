@@ -1,3 +1,6 @@
+import { BasicUser, BasicUserSchema } from './BasicUser'
+import { ActivityReply, ActivityReplySchema } from './ActivityReply'
+
 export interface Activity {
   TextActivity: {
     id: number
@@ -12,6 +15,9 @@ export interface Activity {
     isLiked: boolean
     isPinned: boolean
     createdAt: number
+    user: BasicUser
+    replies: ActivityReply[]
+    likes: BasicUser[]
   }
   ListActivity: {
     id: number
@@ -34,6 +40,9 @@ export interface Activity {
         english: string
       }
     }
+    user: BasicUser
+    replies: ActivityReply[]
+    likes: BasicUser[]
   }
   MessageActivity: {
     id: number
@@ -49,6 +58,10 @@ export interface Activity {
     isPrivate: boolean
     siteUrl: string
     createdAt: number
+    recipient: BasicUser
+    messenger: BasicUser
+    replies: ActivityReply[]
+    likes: BasicUser[]
   }
 }
 
@@ -104,6 +117,90 @@ export const ActivitySchema = `
       isPrivate
       siteUrl
       createdAt
+    }
+  }
+`
+
+export const ActivityWithRepliesSchema = `
+  ... on TextActivity {
+    id
+    userId
+    type
+    replyCount
+    text (asHtml: $asHtml)
+    siteUrl
+    isLocked
+    isSubscribed
+    likeCount
+    isLiked
+    isPinned
+    createdAt
+    user {
+      ${BasicUserSchema}
+    }
+    replies {
+      ${ActivityReplySchema}
+    }
+    likes {
+      ${BasicUserSchema}
+    }
+  }
+  ... on ListActivity {
+    id
+    userId
+    type
+    replyCount
+    status
+    progress
+    isLocked
+    isSubscribed
+    likeCount
+    isLiked
+    isPinned
+    siteUrl
+    createdAt
+    media {
+      id
+      title {
+        romaji
+        english
+      }
+    }
+    user {
+      ${BasicUserSchema}
+    }
+    replies {
+      ${ActivityReplySchema}
+    }
+    likes {
+      ${BasicUserSchema}
+    }
+  }
+  ... on MessageActivity {
+    id
+    recipientId
+    messengerId
+    type
+    replyCount
+    message (asHtml: $asHtml)
+    isLocked
+    isSubscribed
+    likeCount
+    isLiked
+    isPrivate
+    siteUrl
+    createdAt
+    recipient {
+      ${BasicUserSchema}
+    }
+    messenger {
+      ${BasicUserSchema}
+    }
+    replies {
+      ${ActivityReplySchema}
+    }
+    likes {
+      ${BasicUserSchema}
     }
   }
 `
