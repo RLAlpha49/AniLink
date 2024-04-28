@@ -4,7 +4,9 @@ import AniLink from '../dist/AniLink.js'
 
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
   try {
-    return await apiCall();
+    const response = await apiCall();
+    console.log(response);
+    return response;
   } catch (error: any) {
     if (error.response && error.response.status === 429) {
       console.log('Rate limit exceeded, waiting for 1 minute before retrying...');
@@ -12,7 +14,11 @@ async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
       console.log('Retrying...');
       return handleRateLimit(apiCall, retryAfter);
     } else {
-      throw error;
+      if (error.response.data) {
+        throw error.response.data;
+      } else {
+        throw error.response;
+      }
     }
   }
 }
@@ -20,335 +26,177 @@ async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
 describe('Anilist API Query', () => {
   let aniLink: AniLink
 
-  beforeAll(() => {
-    const token = process.env.ANILIST_TOKEN
-    aniLink = new AniLink(token)
+  beforeEach(() => {
+    const token = process.env.ANILIST_TOKEN;
+    aniLink = new AniLink(token);
+  });
+
+  test('User Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.user({id: 542244, isHTML: true}))
+    expect(response).toBeDefined()
   })
 
-  test('user query', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.user({ id: 542244, isHTML: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Media Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.media({id: 1, type: 'ANIME'}))
+    expect(response).toBeDefined()
   })
 
-  test('media query', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.media({ id: 1, type: 'ANIME' }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Media Trend Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.mediaTrend({mediaId: 1, type: 'ANIME'}))
+    expect(response).toBeDefined()
   })
 
-  test('media trend query', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.mediaTrend({ mediaId: 1, type: 'ANIME' }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Airing Schedule Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.airingSchedule({mediaId: 130590})) // id needs to be an airing anime
+    expect(response).toBeDefined()
+
   })
 
-  test('airing schedule query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.airingSchedule({ mediaId: 130590 })) // id needs to be an airing anime
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Character Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.character({
+      id: 1,
+      asHtml: true,
+      mediaSort: ['POPULARITY_DESC'],
+      mediaType: 'ANIME',
+      mediaOnList: true,
+      mediaPage: 1,
+      mediaPerPage: 10
+    }))
+    expect(response).toBeDefined()
   })
 
-  test('character query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.character({ id: 1, asHtml: true, mediaSort: ['POPULARITY_DESC'], mediaType: 'ANIME', mediaOnList: true, mediaPage: 1, mediaPerPage: 10 }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Staff Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.staff({
+      id: 132186,
+      asHtml: true,
+      staffMediaSort: ['POPULARITY_DESC'],
+      staffMediaType: 'ANIME',
+      staffMediaOnList: true,
+      staffMediaPage: 1,
+      staffMediaPerPage: 10,
+      charactersSort: ['ID'],
+      charactersPage: 1,
+      charactersPerPage: 10,
+      characterMediaSort: ['POPULARITY_DESC'],
+      characterMediaOnList: true,
+      characterMediaPage: 1,
+      characterMediaPerPage: 10
+    }))
+    expect(response).toBeDefined()
   })
 
-  test('staff query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.staff({
-        id: 132186,
-        asHtml: true,
-        staffMediaSort: ['POPULARITY_DESC'],
-        staffMediaType: 'ANIME',
-        staffMediaOnList: true,
-        staffMediaPage: 1,
-        staffMediaPerPage: 10,
-        charactersSort: ['ID'],
-        charactersPage: 1,
-        charactersPerPage: 10,
-        characterMediaSort: ['POPULARITY_DESC'],
-        characterMediaOnList: true,
-        characterMediaPage: 1,
-        characterMediaPerPage: 10
-      }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Media List Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.mediaList({userId: 542244}))
+    expect(response).toBeDefined()
+
   })
 
-  test('media list query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.mediaList({ userId: 542244 }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Media List Collection Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.mediaListCollection({
+      userId: 542244,
+      type: 'ANIME',
+      status: 'COMPLETED',
+      chunk: 1,
+      perChunk: 10000
+    }))
+    expect(response).toBeDefined()
+
   })
 
-  test('media list collection query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.mediaListCollection({
-        userId: 542244,
-        type: 'ANIME',
-        status: 'COMPLETED',
-        chunk: 1,
-        perChunk: 10000
-      }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Genre Collection Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.genreCollection())
+    expect(response).toBeDefined()
+
   })
 
-  test('genre collection query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.genreCollection())
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Media Tag Collection Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.mediaTagCollection())
+    expect(response).toBeDefined()
+
   })
 
-  test('media tag collection query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.mediaTagCollection())
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Viewer Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.viewer({isHTML: true}))
+    expect(response).toBeDefined()
+
   })
 
-  test('viewer query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.viewer({ isHTML: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Notification Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.notification({asHtml: true}))
+    expect(response).toBeDefined()
+
   })
 
-  test('notification query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.notification({ asHtml: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Studio Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.studio({id: 561, asHtml: true}))
+    expect(response).toBeDefined()
+
   })
 
-  test('studio query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.studio({ id: 561, asHtml: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Review Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.review({id: 8008, asHtml: true}))
+    expect(response).toBeDefined()
+
   })
 
-  test('review query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.review({ id: 8008, asHtml: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Activity Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.activity({id: 723235883, asHtml: true}))
+    expect(response).toBeDefined()
+
   })
 
-  test('activity query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.activity({ id: 723235883, asHtml: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Activity Reply Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.activityReply({id: 12191046, asHtml: true}))
+    expect(response).toBeDefined()
+
   })
 
-  test('activity reply query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.activityReply({ id: 12191046, asHtml: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Following Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.following({userId: 542244, asHtml: true}))
+    expect(response).toBeDefined()
+
   })
 
-  test('following query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.following({ userId: 542244, asHtml: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Follower Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.follower({userId: 542244, asHtml: true}))
+    expect(response).toBeDefined()
+
   })
 
-  test('follower query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.follower({ userId: 542244, asHtml: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
-  })
+  test('Thread Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.thread({id: 71881, asHtml: true}))
+    expect(response).toBeDefined()
 
-test('thread query should return a response', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.query.thread({ id: 71881, asHtml: true }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
   })
 })
 
 describe('Anilist API Mutation', () => {
   let aniLink: AniLink
 
-  beforeAll(() => {
+  beforeEach(() => {
     const token = process.env.ANILIST_TOKEN
     aniLink = new AniLink(token)
   })
 
-  test('update user', async () => {
-    try {
-      const response = await handleRateLimit(() => aniLink.anilist.mutation.updateUser({
-        about: 'New about text',
-        titleLanguage: 'ENGLISH',
-        displayAdultContent: true,
-        airingNotifications: true,
-        scoreFormat: 'POINT_10',
-        rowOrder: 'title',
-        profileColor: 'blue',
-        donatorBadge: 'Supporter',
-        notificationOptions: [{ type: 'AIRING', enabled: true }],
-        timezone: '-06:00',
-        activityMergeTime: 30,
-        animeListOptions: { sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false },
-        mangaListOptions: { sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false },
-        staffNameLanguage: 'ROMAJI',
-        restrictMessagesToFollowing: false,
-        disabledListActivity: [{ type: 'CURRENT', disabled: false }]
-      }))
-      console.log(response)
-      expect(response).toBeDefined()
-    } catch (error: any) {
-      if (error.response.data) {
-        throw error.response.data
-      } else {
-        throw error.response
-      }
-    }
+  test('Update User', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.updateUser({
+      about: 'New about text',
+      titleLanguage: 'ENGLISH',
+      displayAdultContent: true,
+      airingNotifications: true,
+      scoreFormat: 'POINT_10',
+      rowOrder: 'title',
+      profileColor: 'blue',
+      donatorBadge: 'Supporter',
+      notificationOptions: [{type: 'AIRING', enabled: true}],
+      timezone: '-06:00',
+      activityMergeTime: 30,
+      animeListOptions: {sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false},
+      mangaListOptions: {sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false},
+      staffNameLanguage: 'ROMAJI',
+      restrictMessagesToFollowing: false,
+      disabledListActivity: [{type: 'CURRENT', disabled: false}]
+    }))
+    expect(response).toBeDefined()
   })
 })
