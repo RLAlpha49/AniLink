@@ -17,6 +17,7 @@ import {
 } from './apis/anilist/mutation/UpdateUser'
 import { MediaTagCollectionQuery } from './apis/anilist/query/MediaTagCollection'
 import { ViewerQuery } from './apis/anilist/query/Viewer'
+import { NotificationQuery } from './apis/anilist/query/Notification'
 
 class AniLink {
   public anilist: {
@@ -32,6 +33,7 @@ class AniLink {
       genreCollection: () => Promise<any>
       mediaTagCollection: () => Promise<any>
       viewer: () => Promise<any>
+      notification: () => Promise<any>
     }
     mutation: {
       updateUser: (variables: {
@@ -67,6 +69,7 @@ class AniLink {
     const genreCollectionQueryInstance = new GenreCollectionQuery(authToken)
     const mediaTagCollectionQueryInstance = new MediaTagCollectionQuery(authToken)
     const viewerQueryInstance = new ViewerQuery(authToken)
+    const notificationQueryInstance = new NotificationQuery(authToken)
 
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
@@ -81,7 +84,8 @@ class AniLink {
         mediaListCollection: mediaListCollectionQueryInstance.mediaListCollection.bind(mediaListQueryInstance),
         genreCollection: genreCollectionQueryInstance.genreCollection.bind(genreCollectionQueryInstance),
         mediaTagCollection: mediaTagCollectionQueryInstance.mediaTagCollection.bind(mediaTagCollectionQueryInstance),
-        viewer: viewerQueryInstance.viewer.bind(viewerQueryInstance)
+        viewer: viewerQueryInstance.viewer.bind(viewerQueryInstance),
+        notification: notificationQueryInstance.notification.bind(notificationQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)
