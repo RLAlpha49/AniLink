@@ -30,6 +30,8 @@ import { MediaListCollectionResponse } from './apis/anilist/interfaces/responses
 import { MediaTagCollectionResponse } from './apis/anilist/interfaces/responses/MediaTagCollection'
 import { NotificationResponse } from './apis/anilist/interfaces/responses/Notification'
 import { StudioResponse } from './apis/anilist/interfaces/responses/Studio'
+import { ReviewResponse } from './apis/anilist/interfaces/responses/Review'
+import { ReviewQuery } from './apis/anilist/query/Review'
 
 class AniLink {
   public anilist: {
@@ -47,6 +49,7 @@ class AniLink {
       viewer: () => Promise<UserResponse>
       notification: () => Promise<NotificationResponse>
       studio: () => Promise<StudioResponse>
+      review: () => Promise<ReviewResponse>
     }
     mutation: {
       updateUser: (variables: {
@@ -84,6 +87,7 @@ class AniLink {
     const viewerQueryInstance = new ViewerQuery(authToken)
     const notificationQueryInstance = new NotificationQuery(authToken)
     const studioQueryInstance = new StudioQuery(authToken)
+    const reviewQueryInstance = new ReviewQuery(authToken)
 
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
@@ -100,7 +104,8 @@ class AniLink {
         mediaTagCollection: mediaTagCollectionQueryInstance.mediaTagCollection.bind(mediaTagCollectionQueryInstance),
         viewer: viewerQueryInstance.viewer.bind(viewerQueryInstance),
         notification: notificationQueryInstance.notification.bind(notificationQueryInstance),
-        studio: studioQueryInstance.studio.bind(studioQueryInstance)
+        studio: studioQueryInstance.studio.bind(studioQueryInstance),
+        review: reviewQueryInstance.review.bind(reviewQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)
