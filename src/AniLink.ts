@@ -46,6 +46,9 @@ import { RecommendationResponse } from './apis/anilist/interfaces/responses/Reco
 import { RecommendationQuery } from './apis/anilist/query/Recommendation'
 import { BasicUser } from './apis/anilist/interfaces/BasicUser'
 import { LikesQuery } from './apis/anilist/query/page/Likes'
+import { MarkdownQuery } from './apis/anilist/query/Markdown'
+import { AniChartUserResponse } from './apis/anilist/interfaces/responses/AniChartUser'
+import { AniChartUserQuery } from './apis/anilist/query/AniChartUser'
 
 class AniLink {
   public anilist: {
@@ -71,6 +74,8 @@ class AniLink {
       thread: () => Promise<ThreadResponse>
       threadComment: () => Promise<ThreadCommentResponse>
       recommendation: () => Promise<RecommendationResponse>
+      markdown: () => Promise<string>
+      aniChartUser: () => Promise<AniChartUserResponse>
 
       page: {
         likes: () => Promise<BasicUser>
@@ -120,6 +125,8 @@ class AniLink {
     const threadQueryInstance = new ThreadQuery(authToken)
     const threadCommentQueryInstance = new ThreadCommentQuery(authToken)
     const recommendationQueryInstance = new RecommendationQuery(authToken)
+    const markdownQueryInstance = new MarkdownQuery(authToken)
+    const aniChartUserQueryInstance = new AniChartUserQuery(authToken)
 
     const likesQueryInstance = new LikesQuery(authToken)
 
@@ -147,6 +154,8 @@ class AniLink {
         thread: threadQueryInstance.thread.bind(threadQueryInstance),
         threadComment: threadCommentQueryInstance.threadComment.bind(threadCommentQueryInstance),
         recommendation: recommendationQueryInstance.recommmendation.bind(recommendationQueryInstance),
+        markdown: markdownQueryInstance.markdown.bind(markdownQueryInstance),
+        aniChartUser: aniChartUserQueryInstance.aniChartUser.bind(aniChartUserQueryInstance),
 
         page: {
           likes: likesQueryInstance.likes.bind(likesQueryInstance)
