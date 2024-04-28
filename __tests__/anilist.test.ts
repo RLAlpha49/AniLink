@@ -255,6 +255,20 @@ describe('Anilist API Query', () => {
       }
     }
   })
+
+  test('activity reply query should return a response', async () => {
+    try {
+      const response = await handleRateLimit(() => aniLink.anilist.query.activityReply({ id: 12191046, asHtml: true }))
+      console.log(response)
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
+  })
 })
 
 describe('Anilist API Mutation', () => {

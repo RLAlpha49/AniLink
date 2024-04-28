@@ -34,6 +34,8 @@ import { ReviewResponse } from './apis/anilist/interfaces/responses/Review'
 import { ReviewQuery } from './apis/anilist/query/Review'
 import { Activity } from './apis/anilist/interfaces/Activity'
 import { ActivityQuery } from './apis/anilist/query/Activity'
+import { ActivityReply } from './apis/anilist/interfaces/ActivityReply'
+import { ActivityReplyQuery } from './apis/anilist/query/ActivityReply'
 
 class AniLink {
   public anilist: {
@@ -53,6 +55,7 @@ class AniLink {
       studio: () => Promise<StudioResponse>
       review: () => Promise<ReviewResponse>
       activity: () => Promise<Activity>
+      activityReply: () => Promise<ActivityReply>
     }
     mutation: {
       updateUser: (variables: {
@@ -92,6 +95,7 @@ class AniLink {
     const studioQueryInstance = new StudioQuery(authToken)
     const reviewQueryInstance = new ReviewQuery(authToken)
     const activityQueryInstance = new ActivityQuery(authToken)
+    const activityReplyQueryInstance = new ActivityReplyQuery(authToken)
 
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
@@ -110,7 +114,8 @@ class AniLink {
         notification: notificationQueryInstance.notification.bind(notificationQueryInstance),
         studio: studioQueryInstance.studio.bind(studioQueryInstance),
         review: reviewQueryInstance.review.bind(reviewQueryInstance),
-        activity: activityQueryInstance.activity.bind(activityQueryInstance)
+        activity: activityQueryInstance.activity.bind(activityQueryInstance),
+        activityReply: activityReplyQueryInstance.activityReply.bind(activityReplyQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)
