@@ -49,6 +49,8 @@ import { LikesQuery } from './apis/anilist/query/page/Likes'
 import { MarkdownQuery } from './apis/anilist/query/Markdown'
 import { AniChartUserResponse } from './apis/anilist/interfaces/responses/AniChartUser'
 import { AniChartUserQuery } from './apis/anilist/query/AniChartUser'
+import { SiteStatisticsResponse } from './apis/anilist/interfaces/responses/SiteStatistics'
+import { SiteStatisticsQuery } from './apis/anilist/query/SiteStatistics'
 
 class AniLink {
   public anilist: {
@@ -76,6 +78,7 @@ class AniLink {
       recommendation: () => Promise<RecommendationResponse>
       markdown: () => Promise<string>
       aniChartUser: () => Promise<AniChartUserResponse>
+      siteStatistics: () => Promise<SiteStatisticsResponse>
 
       page: {
         likes: () => Promise<BasicUser>
@@ -127,6 +130,7 @@ class AniLink {
     const recommendationQueryInstance = new RecommendationQuery(authToken)
     const markdownQueryInstance = new MarkdownQuery(authToken)
     const aniChartUserQueryInstance = new AniChartUserQuery(authToken)
+    const siteStatisticsQueryInstance = new SiteStatisticsQuery(authToken)
 
     const likesQueryInstance = new LikesQuery(authToken)
 
@@ -156,6 +160,7 @@ class AniLink {
         recommendation: recommendationQueryInstance.recommmendation.bind(recommendationQueryInstance),
         markdown: markdownQueryInstance.markdown.bind(markdownQueryInstance),
         aniChartUser: aniChartUserQueryInstance.aniChartUser.bind(aniChartUserQueryInstance),
+        siteStatistics: siteStatisticsQueryInstance.siteStatistics.bind(siteStatisticsQueryInstance),
 
         page: {
           likes: likesQueryInstance.likes.bind(likesQueryInstance)

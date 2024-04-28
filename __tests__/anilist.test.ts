@@ -21,6 +21,7 @@ import {MediaListCollectionResponse} from "../src/apis/anilist/interfaces/respon
 import {MediaTrendResponse} from "../src/apis/anilist/interfaces/responses/MediaTrend"
 import {MediaResponse} from "../src/apis/anilist/interfaces/responses/Media"
 import {AniChartUserResponse} from "../src/apis/anilist/interfaces/responses/AniChartUser"
+import {SiteStatisticsResponse} from "../src/apis/anilist/interfaces/responses/SiteStatistics";
 
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
   try {
@@ -217,6 +218,12 @@ describe('Anilist API Query', () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.aniChartUser())
     expect(response).toBeDefined()
     return response.data.AniChartUser
+  })
+
+  test('Site Statistics Query', async (): Promise<SiteStatisticsResponse> => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.siteStatistics())
+    expect(response).toBeDefined()
+    return response.data.SiteStatistics
   })
 
 
