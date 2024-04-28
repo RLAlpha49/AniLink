@@ -173,12 +173,6 @@ export const NotificationSchema = `
       isPrivate
       siteUrl
       createdAt
-      recipient {
-        ${BasicUserSchema}
-      }
-      messenger {
-        ${BasicUserSchema}
-      }
       replies {
         id
         userId
