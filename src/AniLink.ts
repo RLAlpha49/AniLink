@@ -18,22 +18,35 @@ import {
 import { MediaTagCollectionQuery } from './apis/anilist/query/MediaTagCollection'
 import { ViewerQuery } from './apis/anilist/query/Viewer'
 import { NotificationQuery } from './apis/anilist/query/Notification'
+import { StudioQuery } from './apis/anilist/query/Studio'
+import { UserResponse } from './apis/anilist/interfaces/responses/User'
+import { MediaResponse } from './apis/anilist/interfaces/responses/Media'
+import { MediaTrendResponse } from './apis/anilist/interfaces/responses/MediaTrend'
+import { AiringScheduleResponse } from './apis/anilist/interfaces/responses/AiringSchedule'
+import { CharacterResponse } from './apis/anilist/interfaces/responses/Character'
+import { StaffResponse } from './apis/anilist/interfaces/responses/Staff'
+import { MediaListResponse } from './apis/anilist/interfaces/responses/MediaList'
+import { MediaListCollectionResponse } from './apis/anilist/interfaces/responses/MediaListCollectionResponse'
+import { MediaTagCollectionResponse } from './apis/anilist/interfaces/responses/MediaTagCollection'
+import { NotificationResponse } from './apis/anilist/interfaces/responses/Notification'
+import { StudioResponse } from './apis/anilist/interfaces/responses/Studio'
 
 class AniLink {
   public anilist: {
     query: {
-      user: () => Promise<any>
-      media: () => Promise<any>
-      mediaTrend: () => Promise<any>
-      airingSchedule: () => Promise<any>
-      character: () => Promise<any>
-      staff: () => Promise<any>
-      mediaList: () => Promise<any>
-      mediaListCollection: () => Promise<any>
-      genreCollection: () => Promise<any>
-      mediaTagCollection: () => Promise<any>
-      viewer: () => Promise<any>
-      notification: () => Promise<any>
+      user: () => Promise<UserResponse>
+      media: () => Promise<MediaResponse>
+      mediaTrend: () => Promise<MediaTrendResponse>
+      airingSchedule: () => Promise<AiringScheduleResponse>
+      character: () => Promise<CharacterResponse>
+      staff: () => Promise<StaffResponse>
+      mediaList: () => Promise<MediaListResponse>
+      mediaListCollection: () => Promise<MediaListCollectionResponse>
+      genreCollection: () => Promise<String>
+      mediaTagCollection: () => Promise<MediaTagCollectionResponse>
+      viewer: () => Promise<UserResponse>
+      notification: () => Promise<NotificationResponse>
+      studio: () => Promise<StudioResponse>
     }
     mutation: {
       updateUser: (variables: {
@@ -70,6 +83,7 @@ class AniLink {
     const mediaTagCollectionQueryInstance = new MediaTagCollectionQuery(authToken)
     const viewerQueryInstance = new ViewerQuery(authToken)
     const notificationQueryInstance = new NotificationQuery(authToken)
+    const studioQueryInstance = new StudioQuery(authToken)
 
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
@@ -85,7 +99,8 @@ class AniLink {
         genreCollection: genreCollectionQueryInstance.genreCollection.bind(genreCollectionQueryInstance),
         mediaTagCollection: mediaTagCollectionQueryInstance.mediaTagCollection.bind(mediaTagCollectionQueryInstance),
         viewer: viewerQueryInstance.viewer.bind(viewerQueryInstance),
-        notification: notificationQueryInstance.notification.bind(notificationQueryInstance)
+        notification: notificationQueryInstance.notification.bind(notificationQueryInstance),
+        studio: studioQueryInstance.studio.bind(studioQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)

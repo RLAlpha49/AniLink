@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { MediaTagCollection } from '../interfaces/responses/MediaTagCollection'
+import { MediaTagCollectionResponse } from '../interfaces/responses/MediaTagCollection'
 import { TagSchema } from '../interfaces/Tag'
 
 interface MediaTagCollectionVariables {
@@ -15,7 +15,7 @@ export class MediaTagCollectionQuery extends APIWrapper {
     this.authToken = authToken
   }
 
-  async mediaTagCollection (variables?: MediaTagCollectionVariables): Promise<MediaTagCollection> {
+  async mediaTagCollection (variables?: MediaTagCollectionVariables): Promise<MediaTagCollectionResponse> {
     const query = `
       query ($status: Int) {
         MediaTagCollection (status: $status) {

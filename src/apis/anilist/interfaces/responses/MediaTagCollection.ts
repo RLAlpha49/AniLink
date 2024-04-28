@@ -1,5 +1,5 @@
 import { Tag } from '../Tag'
 
-export interface MediaTagCollection {
+export interface MediaTagCollectionResponse {
   MediaTag: Tag
 }
