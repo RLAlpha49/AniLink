@@ -297,6 +297,20 @@ describe('Anilist API Query', () => {
       }
     }
   })
+
+test('thread query should return a response', async () => {
+    try {
+      const response = await handleRateLimit(() => aniLink.anilist.query.thread({ id: 71881, asHtml: true }))
+      console.log(response)
+      expect(response).toBeDefined()
+    } catch (error: any) {
+      if (error.response.data) {
+        throw error.response.data
+      } else {
+        throw error.response
+      }
+    }
+  })
 })
 
 describe('Anilist API Mutation', () => {

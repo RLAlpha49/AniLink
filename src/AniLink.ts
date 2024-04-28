@@ -38,6 +38,8 @@ import { ActivityReply } from './apis/anilist/interfaces/ActivityReply'
 import { ActivityReplyQuery } from './apis/anilist/query/ActivityReply'
 import { FollowingQuery } from './apis/anilist/query/Following'
 import { FollowerQuery } from './apis/anilist/query/Follower'
+import { ThreadResponse } from './apis/anilist/interfaces/responses/Thread'
+import { ThreadQuery } from './apis/anilist/query/Thread'
 
 class AniLink {
   public anilist: {
@@ -60,6 +62,7 @@ class AniLink {
       activityReply: () => Promise<ActivityReply>
       following: () => Promise<UserResponse>
       follower: () => Promise<UserResponse>
+      thread: () => Promise<ThreadResponse>
     }
     mutation: {
       updateUser: (variables: {
@@ -102,6 +105,7 @@ class AniLink {
     const activityReplyQueryInstance = new ActivityReplyQuery(authToken)
     const followingQueryInstance = new FollowingQuery(authToken)
     const followerQueryInstance = new FollowerQuery(authToken)
+    const threadQueryInstance = new ThreadQuery(authToken)
 
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     this.anilist = {
@@ -123,7 +127,8 @@ class AniLink {
         activity: activityQueryInstance.activity.bind(activityQueryInstance),
         activityReply: activityReplyQueryInstance.activityReply.bind(activityReplyQueryInstance),
         following: followingQueryInstance.following.bind(followingQueryInstance),
-        follower: followerQueryInstance.follower.bind(followerQueryInstance)
+        follower: followerQueryInstance.follower.bind(followerQueryInstance),
+        thread: threadQueryInstance.thread.bind(threadQueryInstance)
       },
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)
