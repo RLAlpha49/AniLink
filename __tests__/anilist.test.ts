@@ -1,3 +1,5 @@
+import {ExternalLinkSourceCollectionQuery} from "../src/apis/anilist/query/ExternalLinkSourceCollection";
+
 require('dotenv').config()
 import AniLink from '../dist/AniLink.js'
 // import AniLink from '../src/AniLink'
@@ -224,6 +226,12 @@ describe('Anilist API Query', () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.siteStatistics())
     expect(response).toBeDefined()
     return response.data.SiteStatistics
+  })
+
+  test('External Link Source Collection Query', async (): Promise<ExternalLinkSourceCollectionQuery> => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.externalLinkSourceCollection())
+    expect(response).toBeDefined()
+    return response.data.ExternalLinkSourceCollection
   })
 
 
