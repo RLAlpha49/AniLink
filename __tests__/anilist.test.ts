@@ -5,7 +5,7 @@ import AniLink from '../dist/AniLink.js'
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
   try {
     const response = await apiCall();
-    console.log(response);
+    console.log(response.data);
     return response;
   } catch (error: any) {
     if (error.response && error.response.status === 429) {
@@ -88,7 +88,6 @@ describe('Anilist API Query', () => {
   test('Media List Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.mediaList({userId: 542244}))
     expect(response).toBeDefined()
-
   })
 
   test('Media List Collection Query', async () => {
@@ -100,73 +99,66 @@ describe('Anilist API Query', () => {
       perChunk: 10000
     }))
     expect(response).toBeDefined()
-
   })
 
   test('Genre Collection Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.genreCollection())
     expect(response).toBeDefined()
-
   })
 
   test('Media Tag Collection Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.mediaTagCollection())
     expect(response).toBeDefined()
-
   })
 
   test('Viewer Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.viewer({isHTML: true}))
     expect(response).toBeDefined()
-
   })
 
   test('Notification Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.notification({asHtml: true}))
     expect(response).toBeDefined()
-
   })
 
   test('Studio Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.studio({id: 561, asHtml: true}))
     expect(response).toBeDefined()
-
   })
 
   test('Review Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.review({id: 8008, asHtml: true}))
     expect(response).toBeDefined()
-
   })
 
   test('Activity Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.activity({id: 723235883, asHtml: true}))
     expect(response).toBeDefined()
-
   })
 
   test('Activity Reply Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.activityReply({id: 12191046, asHtml: true}))
     expect(response).toBeDefined()
-
   })
 
   test('Following Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.following({userId: 542244, asHtml: true}))
     expect(response).toBeDefined()
-
   })
 
   test('Follower Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.follower({userId: 542244, asHtml: true}))
     expect(response).toBeDefined()
-
   })
 
   test('Thread Query', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.thread({id: 71881, asHtml: true}))
     expect(response).toBeDefined()
+  })
 
+  test('Thread Comment Query', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.query.threadComment({id: 2555166, asHtml: true}))
+    expect(response).toBeDefined()
   })
 })
 
