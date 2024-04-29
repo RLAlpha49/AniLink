@@ -24,7 +24,7 @@ import {MediaTrendResponse} from "../src/apis/anilist/interfaces/responses/query
 import {MediaResponse} from "../src/apis/anilist/interfaces/responses/query/Media"
 import {AniChartUserResponse} from "../src/apis/anilist/interfaces/responses/query/AniChartUser"
 import {SiteStatisticsResponse} from "../src/apis/anilist/interfaces/responses/query/SiteStatistics";
-import { MediaListStatus } from "../src/apis/anilist/interfaces/MediaListEntry";
+import {MediaListStatus} from "../src/apis/anilist/interfaces/MediaListEntry";
 
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
   try {
