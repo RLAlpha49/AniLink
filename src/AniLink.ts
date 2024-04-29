@@ -53,6 +53,23 @@ import { SiteStatisticsResponse } from './apis/anilist/interfaces/responses/Site
 import { SiteStatisticsQuery } from './apis/anilist/query/SiteStatistics'
 import { ExternalLinkSourceCollectionResponse } from './apis/anilist/interfaces/responses/ExternalLinkSourceCollection'
 import { ExternalLinkSourceCollectionQuery } from './apis/anilist/query/ExternalLinkSourceCollection'
+import { UsersQuery } from './apis/anilist/query/page/Users'
+import { MediasQuery } from './apis/anilist/query/page/Medias'
+import { CharactersQuery } from './apis/anilist/query/page/Characters'
+import { StaffsQuery } from './apis/anilist/query/page/Staffs'
+import { StudiosQuery } from './apis/anilist/query/page/Studios'
+import { MediaListsQuery } from './apis/anilist/query/page/MediaLists'
+import { AiringSchedulesQuery } from './apis/anilist/query/page/AiringSchedules'
+import { MediaTrendsQuery } from './apis/anilist/query/page/MediaTrends'
+import { NotificationsQuery } from './apis/anilist/query/page/Notifications'
+import { FollowersQuery } from './apis/anilist/query/page/Followers'
+import { FollowingsQuery } from './apis/anilist/query/page/Followings'
+import { ActivityRepliesQuery } from './apis/anilist/query/page/ActivityReplies'
+import { ActivitiesQuery } from './apis/anilist/query/page/Activities'
+import { ThreadsQuery } from './apis/anilist/query/page/Threads'
+import { ThreadCommentsQuery } from './apis/anilist/query/page/ThreadCommments'
+import { ReviewsQuery } from './apis/anilist/query/page/Reviews'
+import { RecommendationsQuery } from './apis/anilist/query/page/Recommendations'
 
 class AniLink {
   public anilist: {
@@ -84,6 +101,23 @@ class AniLink {
       externalLinkSourceCollection: () => Promise<ExternalLinkSourceCollectionResponse>
 
       page: {
+        users: () => Promise<UserResponse>
+        medias: () => Promise<MediaResponse>
+        characters: () => Promise<CharacterResponse>
+        staffs: () => Promise<StaffResponse>
+        studios: () => Promise<StudioResponse>
+        mediaLists: () => Promise<MediaListResponse>
+        airingSchedules: () => Promise<AiringScheduleResponse>
+        mediaTrends: () => Promise<MediaTrendResponse>
+        notifications: () => Promise<NotificationResponse>
+        followers: () => Promise<UserResponse>
+        following: () => Promise<UserResponse>
+        activities: () => Promise<Activity>
+        activityReplies: () => Promise<ActivityReply>
+        threads: () => Promise<ThreadResponse>
+        threadComments: () => Promise<ThreadCommentResponse>
+        reviews: () => Promise<ReviewResponse>
+        recommendations: () => Promise<RecommendationResponse>
         likes: () => Promise<BasicUser>
       }
     }
@@ -136,6 +170,23 @@ class AniLink {
     const siteStatisticsQueryInstance = new SiteStatisticsQuery(authToken)
     const externalLinkSourceCollectionQueryInstance = new ExternalLinkSourceCollectionQuery(authToken)
 
+    const usersQueryInstance = new UsersQuery(authToken)
+    const mediasQueryInstance = new MediasQuery(authToken)
+    const charactersQueryInstance = new CharactersQuery(authToken)
+    const staffsQueryInstance = new StaffsQuery(authToken)
+    const studiosQueryInstance = new StudiosQuery(authToken)
+    const mediaListsQueryInstance = new MediaListsQuery(authToken)
+    const airingSchedulesQueryInstance = new AiringSchedulesQuery(authToken)
+    const mediaTrendsQueryInstance = new MediaTrendsQuery(authToken)
+    const notificationsQueryInstance = new NotificationsQuery(authToken)
+    const followersQueryInstance = new FollowersQuery(authToken)
+    const followingsQueryInstance = new FollowingsQuery(authToken)
+    const activitiesQueryInstance = new ActivitiesQuery(authToken)
+    const activityRepliesQueryInstance = new ActivityRepliesQuery(authToken)
+    const threadsQueryInstance = new ThreadsQuery(authToken)
+    const threadCommentsQueryInstance = new ThreadCommentsQuery(authToken)
+    const reviewsQueryInstance = new ReviewsQuery(authToken)
+    const recommendationsQueryInstance = new RecommendationsQuery(authToken)
     const likesQueryInstance = new LikesQuery(authToken)
 
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
@@ -168,6 +219,23 @@ class AniLink {
         externalLinkSourceCollection: externalLinkSourceCollectionQueryInstance.externalLinkSourceCollection.bind(externalLinkSourceCollectionQueryInstance),
 
         page: {
+          users: usersQueryInstance.users.bind(usersQueryInstance),
+          medias: mediasQueryInstance.medias.bind(mediasQueryInstance),
+          characters: charactersQueryInstance.characters.bind(charactersQueryInstance),
+          staffs: staffsQueryInstance.staffs.bind(staffsQueryInstance),
+          studios: studiosQueryInstance.studios.bind(studiosQueryInstance),
+          mediaLists: mediaListsQueryInstance.mediaLists.bind(mediaListsQueryInstance),
+          airingSchedules: airingSchedulesQueryInstance.airingSchedules.bind(airingSchedulesQueryInstance),
+          mediaTrends: mediaTrendsQueryInstance.mediaTrends.bind(mediaTrendsQueryInstance),
+          notifications: notificationsQueryInstance.notifications.bind(notificationsQueryInstance),
+          followers: followersQueryInstance.followers.bind(followersQueryInstance),
+          following: followingsQueryInstance.followings.bind(followingsQueryInstance),
+          activities: activitiesQueryInstance.activities.bind(activitiesQueryInstance),
+          activityReplies: activityRepliesQueryInstance.activityReplies.bind(activityRepliesQueryInstance),
+          threads: threadsQueryInstance.threads.bind(threadsQueryInstance),
+          threadComments: threadCommentsQueryInstance.threadComments.bind(threadCommentsQueryInstance),
+          reviews: reviewsQueryInstance.reviews.bind(reviewsQueryInstance),
+          recommendations: recommendationsQueryInstance.recommendations.bind(recommendationsQueryInstance),
           likes: likesQueryInstance.likes.bind(likesQueryInstance)
         }
       },

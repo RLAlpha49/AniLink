@@ -3,16 +3,16 @@ import { sendRequest } from '../../../base/RequestHandler'
 import { RecommendationResponse, RecommendationSchema } from '../interfaces/responses/Recommendation'
 
 interface RecommendationVariables {
-  id: number
-  mediaId: number
-  mediaRecommendationId: number
-  userId: number
-  rating: number
-  onList: boolean
-  rating_greater: number
-  rating_lesser: number
-  sort: string[]
-  asHtml: boolean
+  id?: number
+  mediaId?: number
+  mediaRecommendationId?: number
+  userId?: number
+  rating?: number
+  onList?: boolean
+  rating_greater?: number
+  rating_lesser?: number
+  sort?: string[]
+  asHtml?: boolean
 }
 
 export class RecommendationQuery extends APIWrapper {
