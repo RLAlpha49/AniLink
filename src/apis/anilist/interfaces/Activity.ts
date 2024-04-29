@@ -1,5 +1,5 @@
-import {BasicUser, BasicUserSchema} from './BasicUser'
-import {ActivityReply, ActivityReplySchema} from './ActivityReply'
+import { BasicUser, BasicUserSchema } from './BasicUser'
+import { ActivityReply, ActivityReplySchema } from './ActivityReply'
 
 /**
  * `ListActivityOptionInput` is a type representing the options for a list activity in an anime or manga list.
