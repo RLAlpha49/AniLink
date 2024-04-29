@@ -1,8 +1,16 @@
 import { BasicUser, BasicUserSchema } from './BasicUser'
 import { ActivityReply, ActivityReplySchema } from './ActivityReply'
 
+/**
+ * `ListActivityOptionInput` is a type representing the options for a list activity in an anime or manga list.
+ * It can take either 'ANIME_LIST' or 'MANGA_LIST' as its value.
+ */
 export type ListActivityOptionInput = 'ANIME_LIST' | 'MANGA_LIST'
 
+/**
+ * `Activity` is an interface representing the response from an activity query.
+ * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties.
+ */
 export interface Activity {
   TextActivity: {
     id: number
@@ -67,6 +75,10 @@ export interface Activity {
   }
 }
 
+/**
+ * `ActivitySchema` is a constant representing the GraphQL schema for an activity query.
+ * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties.
+ */
 export const ActivitySchema = `
   activity {
     ... on TextActivity {
@@ -123,6 +135,10 @@ export const ActivitySchema = `
   }
 `
 
+/**
+ * `ActivityWithRepliesSchema` is a constant representing the GraphQL schema for an activity query with replies.
+ * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties and replies.
+ */
 export const ActivityWithRepliesSchema = `
   ... on TextActivity {
     id

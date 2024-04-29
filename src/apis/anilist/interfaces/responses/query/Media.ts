@@ -14,6 +14,10 @@ import { Image, ImageSchema } from '../../Image'
 import { StatusDistributionSchema } from '../../StatusDistribution'
 import { ScoreDistributionSchema } from '../../ScoreDistribution'
 
+/**
+ * `MediaResponse` is an interface representing the response from a media query.
+ * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, relations, characters, staff, studios, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
+ */
 export interface MediaResponse {
   id: number
   idMal: number
@@ -126,6 +130,10 @@ export interface MediaResponse {
   modNotes: string
 }
 
+/**
+ * `MediaWithRelationsSchema` is a constant representing the GraphQL schema for a media query with relations.
+ * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, relations, characters, staff, studios, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
+ */
 export const MediaWithRelationsSchema = `
   id
   idMal
@@ -264,6 +272,10 @@ export const MediaWithRelationsSchema = `
   modNotes
 `
 
+/**
+ * `MediaSchema` is a constant representing the GraphQL schema for a media query.
+ * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
+ */
 export const MediaSchema = `
   id
   idMal

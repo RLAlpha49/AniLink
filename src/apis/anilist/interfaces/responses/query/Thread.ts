@@ -1,6 +1,10 @@
 import { MediaResponse, MediaSchema } from './Media'
 import { BasicUser, BasicUserSchema } from '../../BasicUser'
 
+/**
+ * `ThreadResponse` is an interface representing the response from a thread query.
+ * It includes the thread's id, title, body, userId, replyUserId, replyCommentId, replyCount, viewCount, isLocked status, isSticky status, isSubscribed status, likeCount, isLiked status, repliedAt, createdAt, updatedAt, user of type `BasicUser`, replyUser of type `BasicUser`, likes of type `BasicUser[]`, siteUrl, categories, and mediaCategories of type `MediaResponse[]`.
+ */
 export interface ThreadResponse {
   id: number
   title: string
@@ -29,6 +33,10 @@ export interface ThreadResponse {
   mediaCategories: MediaResponse[]
 }
 
+/**
+ * `ThreadSchema` is a constant representing the GraphQL schema for a thread query.
+ * It includes the thread's id, title, body, userId, replyUserId, replyCommentId, replyCount, viewCount, isLocked status, isSticky status, isSubscribed status, likeCount, isLiked status, repliedAt, createdAt, updatedAt, user of type `BasicUser`, replyUser of type `BasicUser`, likes of type `BasicUser[]`, siteUrl, categories, and mediaCategories of type `MediaResponse[]`.
+ */
 export const ThreadSchema = `
   id
   title

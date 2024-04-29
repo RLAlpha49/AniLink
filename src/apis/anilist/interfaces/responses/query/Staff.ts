@@ -3,6 +3,10 @@ import { Image, ImageSchema } from '../../Image'
 import { FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
 import { Title, TitleSchema } from '../../Title'
 
+/**
+ * `NotificationSchema` is a constant representing the GraphQL schema for a notification query.
+ * It includes various types of notifications such as AiringNotification, FollowingNotification, ActivityMessageNotification, ActivityMentionNotification, ActivityReplyNotification, ActivityReplySubscribedNotification, ActivityLikeNotification, ActivityReplyLikeNotification, ThreadCommentMentionNotification, ThreadCommentReplyNotification, ThreadCommentSubscribedNotification, ThreadCommentLikeNotification, ThreadLikeNotification, RelatedMediaAdditionNotification, MediaDataChangeNotification, MediaMergeNotification, and MediaDeletionNotification.
+ */
 export interface StaffResponse {
   id: number
   name: Name
@@ -52,6 +56,10 @@ export interface StaffResponse {
   modNotes: string
 }
 
+/**
+ * `StaffSchema` is a constant representing the GraphQL schema for a staff query.
+ * It includes the staff's id, name, language, image, description, primary occupations, gender, date of birth, date of death, age, years active, hometown, blood type, favourite status, favourite blocked status, site url, staff media, characters, character media, staff, submitter, submission status, submission notes, favourites, and mod notes.
+ */
 export const StaffSchema = `
   id
   ${NameSchema}

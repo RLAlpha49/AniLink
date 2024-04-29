@@ -6,6 +6,10 @@ import { Staff } from '../../Staff'
 import { NameSchema } from '../../Name'
 import { ImageSchema } from '../../Image'
 
+/**
+ * `StudioResponse` is an interface representing the response from a studio query.
+ * It includes the studio's id, name, animation studio status, media, site url, favourite status, and favourites count.
+ */
 export interface StudioResponse {
   id: number
   name: string
@@ -35,6 +39,10 @@ export interface StudioResponse {
   favourites: number
 }
 
+/**
+ * `StudioSchema` is a constant representing the GraphQL schema for a studio query.
+ * It includes the studio's id, name, animation studio status, media, site url, favourite status, and favourites count.
+ */
 export const StudioSchema = `
   id
   name

@@ -5,6 +5,10 @@ import { BasicThread, BasicThreadSchema } from '../../BasicThread'
 import { BasicComment, BasicCommentSchema } from '../../BasicComment'
 import { ThreadNotification, ThreadNotificationSchema } from '../../ThreadNotification'
 
+/**
+ * `NotificationResponse` is an interface representing the response from a notification query.
+ * It includes various types of notifications such as AiringNotification, FollowingNotification, ActivityMessageNotification, ActivityMentionNotification, ActivityReplyNotification, ActivityReplySubscribedNotification, ActivityLikeNotification, ActivityReplyLikeNotification, ThreadCommentMentionNotification, ThreadCommentReplyNotification, ThreadCommentSubscribedNotification, ThreadCommentLikeNotification, ThreadLikeNotification, RelatedMediaAdditionNotification, MediaDataChangeNotification, MediaMergeNotification, and MediaDeletionNotification.
+ */
 export interface NotificationResponse {
   AiringNotification: {
     id: number
@@ -129,6 +133,10 @@ export interface NotificationResponse {
   }
 }
 
+/**
+ * `NotificationSchema` is a constant representing the GraphQL schema for a notification query.
+ * It includes various types of notifications such as AiringNotification, FollowingNotification, ActivityMessageNotification, ActivityMentionNotification, ActivityReplyNotification, ActivityReplySubscribedNotification, ActivityLikeNotification, ActivityReplyLikeNotification, ThreadCommentMentionNotification, ThreadCommentReplyNotification, ThreadCommentSubscribedNotification, ThreadCommentLikeNotification, ThreadLikeNotification, RelatedMediaAdditionNotification, MediaDataChangeNotification, MediaMergeNotification, and MediaDeletionNotification.
+ */
 export const NotificationSchema = `
   ... on AiringNotification {
     id

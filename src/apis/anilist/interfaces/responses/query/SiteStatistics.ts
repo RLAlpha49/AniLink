@@ -1,5 +1,9 @@
 import { SiteTrendConnection, SiteTrendConnectionSchema } from '../../SiteTrendConnection'
 
+/**
+ * `SiteStatisticsResponse` is an interface representing the response from a site statistics query.
+ * It includes users, anime, manga, characters, staff, studios, and reviews of type `SiteTrendConnection`.
+ */
 export interface SiteStatisticsResponse {
   users: SiteTrendConnection
   anime: SiteTrendConnection
@@ -10,6 +14,10 @@ export interface SiteStatisticsResponse {
   reviews: SiteTrendConnection
 }
 
+/**
+ * `SiteStatisticsSchema` is a constant representing the GraphQL schema for a site statistics query.
+ * It includes users, anime, manga, characters, staff, studios, and reviews of type `SiteTrendConnection`.
+ */
 export const SiteStatisticsSchema = `
   users (sort: $usersSort, page: $usersPage, perPage: $usersPerPage) {
     ${SiteTrendConnectionSchema}
