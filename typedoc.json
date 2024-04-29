@@ -1,0 +1,12 @@
+{
+  "out": "./docs",
+  "entryPoints": ["./src"],
+  "exclude": ["**/__tests__/**", "**/*.spec.ts"],
+  "name": "My Project",
+  "readme": "README.md",
+  "theme": "default",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "includeVersion": true
+}
