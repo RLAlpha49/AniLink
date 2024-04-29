@@ -31,6 +31,7 @@ interface MediaListCollectionVariables {
   sort?: string[]
   scoreFormat?: string
   asArray?: boolean
+  asHtml?: boolean
 }
 
 export class MediaListCollectionQuery extends APIWrapper {
