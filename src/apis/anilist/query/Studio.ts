@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { StudioResponse, StudioSchema } from '../interfaces/responses/query/Studio'
 
-interface StudioVariables {
+export interface StudioVariables {
   id?: number
   search?: string
   id_not?: number

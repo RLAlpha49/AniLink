@@ -52,6 +52,9 @@ describe('Anilist API query', () => {
 
   beforeEach(() => {
     const token = process.env.ANILIST_TOKEN
+    if (!token) {
+      throw new Error('ANILIST_TOKEN is not defined')
+    }
     aniLink = new AniLink(token)
   })
 
@@ -363,6 +366,9 @@ describe('Anilist API mutation', () => {
 
   beforeEach(() => {
     const token = process.env.ANILIST_TOKEN
+    if (!token) {
+      throw new Error('ANILIST_TOKEN is not defined')
+    }
     aniLink = new AniLink(token)
   })
 

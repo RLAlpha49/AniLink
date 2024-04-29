@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { StaffResponse, StaffSchema } from '../../interfaces/responses/query/Staff'
 
-interface StaffsVariables {
+export interface StaffsVariables {
   page?: number
   perPage?: number
   id?: number

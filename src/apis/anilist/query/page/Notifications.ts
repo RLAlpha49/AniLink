@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { NotificationResponse, NotificationSchema } from '../../interfaces/responses/query/Notification'
 
-interface NotificationsVariables {
+export interface NotificationsVariables {
   page?: number
   perPage?: number
   type?: string

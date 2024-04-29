@@ -1,0 +1,15 @@
+{
+  "out": "./docs",
+  "entryPoints": ["./src"],
+  "entryPointStrategy": "expand",
+  "exclude": ["**/__tests__/**"],
+  "name": "AniLink",
+  "readme": "README.md",
+  "plugin": ["typedoc-theme-hierarchy"],
+  "theme": "hierarchy",
+  "tsconfig": "./tsconfig.json",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "includeVersion": true
+}

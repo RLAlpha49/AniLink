@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { SiteStatisticsResponse, SiteStatisticsSchema } from '../interfaces/responses/query/SiteStatistics'
 
-interface SiteStatisticsVariables {
+export interface SiteStatisticsVariables {
   usersSort?: string
   usersPage?: number
   usersPerPage?: number

@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { ReviewResponse, ReviewSchema } from '../interfaces/responses/query/Review'
 
-interface ReviewVariables {
+export interface ReviewVariables {
   id?: number
   mediaId?: number
   userId?: number

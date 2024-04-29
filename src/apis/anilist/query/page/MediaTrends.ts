@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { MediaTrendResponse, MediaTrendSchema } from '../../interfaces/responses/query/MediaTrend'
 
-interface MediaTrendsVariables {
+export interface MediaTrendsVariables {
   page?: number
   perPage?: number
   mediaId?: number

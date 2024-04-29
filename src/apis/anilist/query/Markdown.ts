@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 
-interface MarkdownVariables {
+export interface MarkdownVariables {
   markdown?: string
 }
 

@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { RecommendationResponse, RecommendationSchema } from '../../interfaces/responses/query/Recommendation'
 
-interface RecommendationsVariables {
+export interface RecommendationsVariables {
   page?: number
   perPage?: number
   id?: number

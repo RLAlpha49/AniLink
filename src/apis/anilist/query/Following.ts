@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { UserResponse, UserSchema } from '../interfaces/responses/query/User'
 
-interface FollowingVariables {
+export interface FollowingVariables {
   userId?: number
   sort?: string
   animeStatLimit?: number

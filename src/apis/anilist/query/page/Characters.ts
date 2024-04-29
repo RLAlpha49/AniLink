@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { CharacterResponse, CharacterSchema } from '../../interfaces/responses/query/Character'
 
-interface CharactersVariables {
+export interface CharactersVariables {
   page?: number
   perPage?: number
   id?: number

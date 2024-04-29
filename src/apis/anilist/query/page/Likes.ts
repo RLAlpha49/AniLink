@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { BasicUser, BasicUserSchema } from '../../interfaces/BasicUser'
 
-interface LikesVariables {
+export interface LikesVariables {
   likeableId?: number
   type?: string
   page?: number

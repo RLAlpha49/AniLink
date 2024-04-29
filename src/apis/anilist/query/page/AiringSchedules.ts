@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { AiringScheduleResponse, AiringScheduleSchema } from '../../interfaces/responses/query/AiringSchedule'
 
-interface AiringSchedulesVariables {
+export interface AiringSchedulesVariables {
   page?: number
   perPage?: number
   id?: number

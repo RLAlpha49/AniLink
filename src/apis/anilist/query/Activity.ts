@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { Activity, ActivityWithRepliesSchema } from '../interfaces/Activity'
 
-interface ActivityVariables {
+export interface ActivityVariables {
   id?: number
   userId?: number
   messengerId?: number
