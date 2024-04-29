@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { ExternalLinkSourceCollectionResponse } from '../interfaces/responses/ExternalLinkSourceCollection'
+import { ExternalLinkSourceCollectionResponse } from '../interfaces/responses/query/ExternalLinkSourceCollection'
 
 interface ExternalLinkSourceCollectionVariables {
   id?: number

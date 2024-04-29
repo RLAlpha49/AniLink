@@ -1,5 +1,5 @@
 import { ThreadResponse, ThreadSchema } from './Thread'
-import { BasicUser, BasicUserSchema } from '../BasicUser'
+import { BasicUser, BasicUserSchema } from '../../BasicUser'
 
 export interface ThreadCommentResponse {
   id: number

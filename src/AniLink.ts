@@ -1,75 +1,70 @@
-import { UserQuery } from './apis/anilist/query/User'
-import { MediaQuery } from './apis/anilist/query/Media'
-import { MediaTrendQuery } from './apis/anilist/query/MediaTrend'
-import { AiringScheduleQuery } from './apis/anilist/query/AiringSchedule'
-import { CharacterQuery } from './apis/anilist/query/Character'
-import { MediaListQuery } from './apis/anilist/query/MediaList'
-import { StaffQuery } from './apis/anilist/query/Staff'
-import { MediaListCollectionQuery } from './apis/anilist/query/MediaListCollection'
-import { GenreCollectionQuery } from './apis/anilist/query/GenreCollection'
-import {
-  ListActivityOptionInput,
-  MediaListOptionsInput,
-  NotificationOptionInput,
-  ScoreFormat,
-  UpdateUserMutation,
-  UserTitleLanguage
-} from './apis/anilist/mutation/UpdateUser'
-import { MediaTagCollectionQuery } from './apis/anilist/query/MediaTagCollection'
-import { ViewerQuery } from './apis/anilist/query/Viewer'
-import { NotificationQuery } from './apis/anilist/query/Notification'
-import { StudioQuery } from './apis/anilist/query/Studio'
-import { UserResponse } from './apis/anilist/interfaces/responses/User'
-import { MediaResponse } from './apis/anilist/interfaces/responses/Media'
-import { MediaTrendResponse } from './apis/anilist/interfaces/responses/MediaTrend'
-import { AiringScheduleResponse } from './apis/anilist/interfaces/responses/AiringSchedule'
-import { CharacterResponse } from './apis/anilist/interfaces/responses/Character'
-import { StaffResponse } from './apis/anilist/interfaces/responses/Staff'
-import { MediaListResponse } from './apis/anilist/interfaces/responses/MediaList'
-import { MediaListCollectionResponse } from './apis/anilist/interfaces/responses/MediaListCollectionResponse'
-import { MediaTagCollectionResponse } from './apis/anilist/interfaces/responses/MediaTagCollection'
-import { NotificationResponse } from './apis/anilist/interfaces/responses/Notification'
-import { StudioResponse } from './apis/anilist/interfaces/responses/Studio'
-import { ReviewResponse } from './apis/anilist/interfaces/responses/Review'
-import { ReviewQuery } from './apis/anilist/query/Review'
 import { Activity } from './apis/anilist/interfaces/Activity'
 import { ActivityQuery } from './apis/anilist/query/Activity'
 import { ActivityReply } from './apis/anilist/interfaces/ActivityReply'
 import { ActivityReplyQuery } from './apis/anilist/query/ActivityReply'
-import { FollowingQuery } from './apis/anilist/query/Following'
-import { FollowerQuery } from './apis/anilist/query/Follower'
-import { ThreadResponse } from './apis/anilist/interfaces/responses/Thread'
-import { ThreadQuery } from './apis/anilist/query/Thread'
-import { ThreadCommentQuery } from './apis/anilist/query/ThreadComment'
-import { ThreadCommentResponse } from './apis/anilist/interfaces/responses/ThreadComment'
-import { RecommendationResponse } from './apis/anilist/interfaces/responses/Recommendation'
-import { RecommendationQuery } from './apis/anilist/query/Recommendation'
-import { BasicUser } from './apis/anilist/interfaces/BasicUser'
-import { LikesQuery } from './apis/anilist/query/page/Likes'
-import { MarkdownQuery } from './apis/anilist/query/Markdown'
-import { AniChartUserResponse } from './apis/anilist/interfaces/responses/AniChartUser'
-import { AniChartUserQuery } from './apis/anilist/query/AniChartUser'
-import { SiteStatisticsResponse } from './apis/anilist/interfaces/responses/SiteStatistics'
-import { SiteStatisticsQuery } from './apis/anilist/query/SiteStatistics'
-import { ExternalLinkSourceCollectionResponse } from './apis/anilist/interfaces/responses/ExternalLinkSourceCollection'
-import { ExternalLinkSourceCollectionQuery } from './apis/anilist/query/ExternalLinkSourceCollection'
-import { UsersQuery } from './apis/anilist/query/page/Users'
-import { MediasQuery } from './apis/anilist/query/page/Medias'
-import { CharactersQuery } from './apis/anilist/query/page/Characters'
-import { StaffsQuery } from './apis/anilist/query/page/Staffs'
-import { StudiosQuery } from './apis/anilist/query/page/Studios'
-import { MediaListsQuery } from './apis/anilist/query/page/MediaLists'
-import { AiringSchedulesQuery } from './apis/anilist/query/page/AiringSchedules'
-import { MediaTrendsQuery } from './apis/anilist/query/page/MediaTrends'
-import { NotificationsQuery } from './apis/anilist/query/page/Notifications'
-import { FollowersQuery } from './apis/anilist/query/page/Followers'
-import { FollowingsQuery } from './apis/anilist/query/page/Followings'
 import { ActivityRepliesQuery } from './apis/anilist/query/page/ActivityReplies'
 import { ActivitiesQuery } from './apis/anilist/query/page/Activities'
-import { ThreadsQuery } from './apis/anilist/query/page/Threads'
-import { ThreadCommentsQuery } from './apis/anilist/query/page/ThreadCommments'
-import { ReviewsQuery } from './apis/anilist/query/page/Reviews'
+import { AiringScheduleQuery } from './apis/anilist/query/AiringSchedule'
+import { AiringScheduleResponse } from './apis/anilist/interfaces/responses/query/AiringSchedule'
+import { AiringSchedulesQuery } from './apis/anilist/query/page/AiringSchedules'
+import { AniChartUserQuery } from './apis/anilist/query/AniChartUser'
+import { AniChartUserResponse } from './apis/anilist/interfaces/responses/query/AniChartUser'
+import { BasicUser } from './apis/anilist/interfaces/BasicUser'
+import { CharacterQuery } from './apis/anilist/query/Character'
+import { CharacterResponse } from './apis/anilist/interfaces/responses/query/Character'
+import { CharactersQuery } from './apis/anilist/query/page/Characters'
+import { ExternalLinkSourceCollectionQuery } from './apis/anilist/query/ExternalLinkSourceCollection'
+import { ExternalLinkSourceCollectionResponse } from './apis/anilist/interfaces/responses/query/ExternalLinkSourceCollection'
+import { FollowerQuery } from './apis/anilist/query/Follower'
+import { FollowersQuery } from './apis/anilist/query/page/Followers'
+import { FollowingQuery } from './apis/anilist/query/Following'
+import { FollowingsQuery } from './apis/anilist/query/page/Followings'
+import { GenreCollectionQuery } from './apis/anilist/query/GenreCollection'
+import { LikesQuery } from './apis/anilist/query/page/Likes'
+import { MarkdownQuery } from './apis/anilist/query/Markdown'
+import { MediaListCollectionQuery } from './apis/anilist/query/MediaListCollection'
+import { MediaListCollectionResponse } from './apis/anilist/interfaces/responses/query/MediaListCollectionResponse'
+import { MediaListQuery } from './apis/anilist/query/MediaList'
+import { MediaListResponse } from './apis/anilist/interfaces/responses/query/MediaList'
+import { MediaListsQuery } from './apis/anilist/query/page/MediaLists'
+import { MediaQuery } from './apis/anilist/query/Media'
+import { MediaResponse } from './apis/anilist/interfaces/responses/query/Media'
+import { MediaTagCollectionQuery } from './apis/anilist/query/MediaTagCollection'
+import { MediaTagCollectionResponse } from './apis/anilist/interfaces/responses/query/MediaTagCollection'
+import { MediaTrendQuery } from './apis/anilist/query/MediaTrend'
+import { MediaTrendResponse } from './apis/anilist/interfaces/responses/query/MediaTrend'
+import { MediaTrendsQuery } from './apis/anilist/query/page/MediaTrends'
+import { MediasQuery } from './apis/anilist/query/page/Medias'
+import { NotificationQuery } from './apis/anilist/query/Notification'
+import { NotificationResponse } from './apis/anilist/interfaces/responses/query/Notification'
+import { NotificationsQuery } from './apis/anilist/query/page/Notifications'
+import { RecommendationQuery } from './apis/anilist/query/Recommendation'
+import { RecommendationResponse } from './apis/anilist/interfaces/responses/query/Recommendation'
 import { RecommendationsQuery } from './apis/anilist/query/page/Recommendations'
+import { ReviewQuery } from './apis/anilist/query/Review'
+import { ReviewResponse } from './apis/anilist/interfaces/responses/query/Review'
+import { ReviewsQuery } from './apis/anilist/query/page/Reviews'
+import { SaveMediaListEntryMutation, SaveMediaListEntryVariables } from './apis/anilist/mutation/SaveMediaListEntry'
+import { SiteStatisticsQuery } from './apis/anilist/query/SiteStatistics'
+import { SiteStatisticsResponse } from './apis/anilist/interfaces/responses/query/SiteStatistics'
+import { StaffQuery } from './apis/anilist/query/Staff'
+import { StaffResponse } from './apis/anilist/interfaces/responses/query/Staff'
+import { StaffsQuery } from './apis/anilist/query/page/Staffs'
+import { StudioQuery } from './apis/anilist/query/Studio'
+import { StudioResponse } from './apis/anilist/interfaces/responses/query/Studio'
+import { StudiosQuery } from './apis/anilist/query/page/Studios'
+import { ThreadCommentQuery } from './apis/anilist/query/ThreadComment'
+import { ThreadCommentResponse } from './apis/anilist/interfaces/responses/query/ThreadComment'
+import { ThreadCommentsQuery } from './apis/anilist/query/page/ThreadCommments'
+import { ThreadQuery } from './apis/anilist/query/Thread'
+import { ThreadResponse } from './apis/anilist/interfaces/responses/query/Thread'
+import { ThreadsQuery } from './apis/anilist/query/page/Threads'
+import { UpdateMediaListEntriesMutation, UpdateMediaListEntriesVariables } from './apis/anilist/mutation/UpdateMediaListEntries'
+import { UpdateUserMutation, UpdateUserVariables } from './apis/anilist/mutation/UpdateUser'
+import { UserQuery } from './apis/anilist/query/User'
+import { UserResponse } from './apis/anilist/interfaces/responses/query/User'
+import { UsersQuery } from './apis/anilist/query/page/Users'
+import { ViewerQuery } from './apis/anilist/query/Viewer'
 
 class AniLink {
   public anilist: {
@@ -122,24 +117,9 @@ class AniLink {
       }
     }
     mutation: {
-      updateUser: (variables: {
-        about?: string
-        titleLanguage?: UserTitleLanguage
-        displayAdultContent?: boolean
-        airingNotifications?: boolean
-        scoreFormat?: ScoreFormat
-        rowOrder?: string
-        profileColor?: string
-        donatorBadge?: string
-        notificationOptions?: NotificationOptionInput[]
-        timezone?: string
-        activityMergeTime?: number
-        animeListOptions?: MediaListOptionsInput
-        mangaListOptions?: MediaListOptionsInput
-        staffNameLanguage?: UserTitleLanguage
-        restrictMessagesToFollowing?: boolean
-        disabledListActivity?: ListActivityOptionInput[]
-      }) => Promise<any>
+      updateUser: (variables: UpdateUserVariables) => Promise<any>
+      saveMediaListEntry: (variables: SaveMediaListEntryVariables) => Promise<any>
+      updateMediaListEntries: (variables: UpdateMediaListEntriesVariables) => Promise<any>
     }
   }
 
@@ -190,6 +170,9 @@ class AniLink {
     const likesQueryInstance = new LikesQuery(authToken)
 
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
+    const saveMediaListEntryMutationInstance = new SaveMediaListEntryMutation(authToken)
+    const updateMediaListEntriesMutationInstance = new UpdateMediaListEntriesMutation(authToken)
+
     this.anilist = {
       query: {
         user: userQueryInstance.user.bind(userQueryInstance),
@@ -240,7 +223,9 @@ class AniLink {
         }
       },
       mutation: {
-        updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance)
+        updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance),
+        saveMediaListEntry: saveMediaListEntryMutationInstance.saveMediaListEntry.bind(saveMediaListEntryMutationInstance),
+        updateMediaListEntries: updateMediaListEntriesMutationInstance.updateMediaListEntries.bind(updateMediaListEntriesMutationInstance)
       }
     }
   }

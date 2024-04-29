@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { ThreadCommentResponse, ThreadCommentSchema } from '../../interfaces/responses/ThreadComment'
+import { ThreadCommentResponse, ThreadCommentSchema } from '../../interfaces/responses/query/ThreadComment'
 
 interface ThreadCommentsVariables {
   page?: number

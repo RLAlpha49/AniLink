@@ -1,6 +1,6 @@
 {
   "name": "anilink-api-wrapper",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "Anilist API Wrapper",
   "main": "dist/AniLink.js",
   "scripts": {

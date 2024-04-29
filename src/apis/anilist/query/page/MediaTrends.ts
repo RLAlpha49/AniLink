@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { MediaTrendResponse, MediaTrendSchema } from '../../interfaces/responses/MediaTrend'
+import { MediaTrendResponse, MediaTrendSchema } from '../../interfaces/responses/query/MediaTrend'
 
 interface MediaTrendsVariables {
   page?: number

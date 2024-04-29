@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { ThreadResponse, ThreadSchema } from '../interfaces/responses/Thread'
+import { ThreadResponse, ThreadSchema } from '../interfaces/responses/query/Thread'
 
 interface ThreadVariables {
   id?: number

@@ -3,7 +3,7 @@ import { sendRequest } from '../../../base/RequestHandler'
 import {
   MediaListCollectionQuerySchema,
   MediaListCollectionResponse
-} from '../interfaces/responses/MediaListCollectionResponse'
+} from '../interfaces/responses/query/MediaListCollectionResponse'
 
 // import { MediaListCollectionResponse } from '../interfaces/responses/MediaListCollection'
 

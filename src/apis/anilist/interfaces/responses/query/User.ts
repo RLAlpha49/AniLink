@@ -1,12 +1,10 @@
-import { Image, ImageSchema } from '../Image'
-import { Statistics } from '../Statistics'
-import { UserAnimeStatsSchema, UserMangaStatsSchema, UserStats } from '../UserStats'
-import { TitleSchema } from '../Title'
-import { NameSchema } from '../Name'
-
-import { CoverImageSchema } from '../CoverImage'
-
-import { TagSchema } from '../Tag'
+import { Image, ImageSchema } from '../../Image'
+import { Statistics } from '../../Statistics'
+import { UserAnimeStatsSchema, UserMangaStatsSchema, UserStats } from '../../UserStats'
+import { TitleSchema } from '../../Title'
+import { NameSchema } from '../../Name'
+import { CoverImageSchema } from '../../CoverImage'
+import { TagSchema } from '../../Tag'
 
 export interface UserResponse {
   id: number

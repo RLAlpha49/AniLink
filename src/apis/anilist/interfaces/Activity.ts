@@ -1,6 +1,8 @@
 import { BasicUser, BasicUserSchema } from './BasicUser'
 import { ActivityReply, ActivityReplySchema } from './ActivityReply'
 
+export type ListActivityOptionInput = 'ANIME_LIST' | 'MANGA_LIST'
+
 export interface Activity {
   TextActivity: {
     id: number

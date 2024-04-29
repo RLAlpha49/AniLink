@@ -1,4 +1,4 @@
-import { SiteTrendConnection, SiteTrendConnectionSchema } from '../SiteTrendConnection'
+import { SiteTrendConnection, SiteTrendConnectionSchema } from '../../SiteTrendConnection'
 
 export interface SiteStatisticsResponse {
   users: SiteTrendConnection

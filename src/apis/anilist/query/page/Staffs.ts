@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { StaffResponse, StaffSchema } from '../../interfaces/responses/Staff'
+import { StaffResponse, StaffSchema } from '../../interfaces/responses/query/Staff'
 
 interface StaffsVariables {
   page?: number

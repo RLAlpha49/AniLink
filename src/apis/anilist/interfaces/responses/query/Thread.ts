@@ -1,5 +1,5 @@
 import { MediaResponse, MediaSchema } from './Media'
-import { BasicUser, BasicUserSchema } from '../BasicUser'
+import { BasicUser, BasicUserSchema } from '../../BasicUser'
 
 export interface ThreadResponse {
   id: number

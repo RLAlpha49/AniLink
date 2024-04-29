@@ -1,4 +1,4 @@
-import { BasicUser, BasicUserSchema } from '../BasicUser'
+import { BasicUser, BasicUserSchema } from '../../BasicUser'
 import { MediaResponse, MediaSchema } from './Media'
 
 export interface RecommendationResponse {

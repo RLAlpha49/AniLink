@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { SiteStatisticsResponse, SiteStatisticsSchema } from '../interfaces/responses/SiteStatistics'
+import { SiteStatisticsResponse, SiteStatisticsSchema } from '../interfaces/responses/query/SiteStatistics'
 
 interface SiteStatisticsVariables {
   usersSort?: string

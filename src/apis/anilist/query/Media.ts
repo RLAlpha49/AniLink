@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { MediaResponse, MediaWithRelationsSchema } from '../interfaces/responses/Media'
+import { MediaResponse, MediaWithRelationsSchema } from '../interfaces/responses/query/Media'
 
 interface MediaVariables {
   id?: number

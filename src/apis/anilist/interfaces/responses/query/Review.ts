@@ -1,6 +1,6 @@
+import { BasicUser, BasicUserSchema } from '../../BasicUser'
+import { Media } from '../../Media'
 import { MediaSchema } from './Media'
-import { BasicUser, BasicUserSchema } from '../BasicUser'
-import { Media } from '../Media'
 
 export interface ReviewResponse {
   id: number

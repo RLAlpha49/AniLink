@@ -1,7 +1,7 @@
-import { FuzzyDate, FuzzyDateSchema } from '../FuzzyDate'
-import { Name, NameSchema } from '../Name'
-import { Image, ImageSchema } from '../Image'
-import { Title, TitleSchema } from '../Title'
+import { FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
+import { Name, NameSchema } from '../../Name'
+import { Image, ImageSchema } from '../../Image'
+import { Title, TitleSchema } from '../../Title'
 
 export interface CharacterResponse {
   id: number

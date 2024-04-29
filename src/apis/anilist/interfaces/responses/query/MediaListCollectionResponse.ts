@@ -1,5 +1,5 @@
-import { FuzzyDate, FuzzyDateSchema } from '../FuzzyDate'
-import { Media } from '../Media'
+import { FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
+import { Media } from '../../Media'
 import { UserResponse } from './User'
 
 export interface MediaListCollectionResponse {

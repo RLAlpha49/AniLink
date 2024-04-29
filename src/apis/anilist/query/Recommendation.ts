@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { RecommendationResponse, RecommendationSchema } from '../interfaces/responses/Recommendation'
+import { RecommendationResponse, RecommendationSchema } from '../interfaces/responses/query/Recommendation'
 
 interface RecommendationVariables {
   id?: number

@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { ReviewResponse, ReviewSchema } from '../../interfaces/responses/Review'
+import { ReviewResponse, ReviewSchema } from '../../interfaces/responses/query/Review'
 
 interface ReviewsVariables {
   id?: number

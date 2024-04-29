@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { AiringScheduleResponse, AiringScheduleSchema } from '../interfaces/responses/AiringSchedule'
+import { AiringScheduleResponse, AiringScheduleSchema } from '../interfaces/responses/query/AiringSchedule'
 
 interface AiringScheduleVariables {
   id?: number

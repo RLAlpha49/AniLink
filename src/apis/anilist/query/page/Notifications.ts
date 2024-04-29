@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { NotificationResponse, NotificationSchema } from '../../interfaces/responses/Notification'
+import { NotificationResponse, NotificationSchema } from '../../interfaces/responses/query/Notification'
 
 interface NotificationsVariables {
   page?: number

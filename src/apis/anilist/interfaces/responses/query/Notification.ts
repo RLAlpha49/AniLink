@@ -1,9 +1,9 @@
-import { Title, TitleSchema } from '../Title'
-import { ActivityNotification, ActivityNotificationSchema } from '../ActivityNotification'
-import { BasicUser, BasicUserSchema } from '../BasicUser'
-import { BasicThread, BasicThreadSchema } from '../BasicThread'
-import { BasicComment, BasicCommentSchema } from '../BasicComment'
-import { ThreadNotification, ThreadNotificationSchema } from '../ThreadNotification'
+import { Title, TitleSchema } from '../../Title'
+import { ActivityNotification, ActivityNotificationSchema } from '../../ActivityNotification'
+import { BasicUser, BasicUserSchema } from '../../BasicUser'
+import { BasicThread, BasicThreadSchema } from '../../BasicThread'
+import { BasicComment, BasicCommentSchema } from '../../BasicComment'
+import { ThreadNotification, ThreadNotificationSchema } from '../../ThreadNotification'
 
 export interface NotificationResponse {
   AiringNotification: {

@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { StudioResponse, StudioSchema } from '../../interfaces/responses/Studio'
+import { StudioResponse, StudioSchema } from '../../interfaces/responses/query/Studio'
 
 interface StudiosVariables {
   page?: number

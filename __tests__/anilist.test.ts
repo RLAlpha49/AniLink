@@ -5,25 +5,26 @@ import AniLink from '../dist/AniLink.js'
 // import AniLink from '../src/AniLink'
 
 import {BasicUser} from "../src/apis/anilist/interfaces/BasicUser"
-import {RecommendationResponse} from "../src/apis/anilist/interfaces/responses/Recommendation"
-import {ThreadCommentResponse} from "../src/apis/anilist/interfaces/responses/ThreadComment"
-import {ThreadResponse} from "../src/apis/anilist/interfaces/responses/Thread"
-import {UserResponse} from "../src/apis/anilist/interfaces/responses/User"
+import {RecommendationResponse} from "../src/apis/anilist/interfaces/responses/query/Recommendation"
+import {ThreadCommentResponse} from "../src/apis/anilist/interfaces/responses/query/ThreadComment"
+import {ThreadResponse} from "../src/apis/anilist/interfaces/responses/query/Thread"
+import {UserResponse} from "../src/apis/anilist/interfaces/responses/query/User"
 import {Activity} from "../src/apis/anilist/interfaces/Activity"
 import {ActivityReply} from "../src/apis/anilist/interfaces/ActivityReply"
-import {ReviewResponse} from "../src/apis/anilist/interfaces/responses/Review"
-import {StudioResponse} from "../src/apis/anilist/interfaces/responses/Studio"
-import {NotificationResponse} from "../src/apis/anilist/interfaces/responses/Notification"
-import {MediaTagCollectionResponse} from "../src/apis/anilist/interfaces/responses/MediaTagCollection"
-import {MediaListResponse} from "../src/apis/anilist/interfaces/responses/MediaList"
-import {StaffResponse} from "../src/apis/anilist/interfaces/responses/Staff"
-import {CharacterResponse} from "../src/apis/anilist/interfaces/responses/Character"
-import {AiringScheduleResponse} from "../src/apis/anilist/interfaces/responses/AiringSchedule"
-import {MediaListCollectionResponse} from "../src/apis/anilist/interfaces/responses/MediaListCollectionResponse"
-import {MediaTrendResponse} from "../src/apis/anilist/interfaces/responses/MediaTrend"
-import {MediaResponse} from "../src/apis/anilist/interfaces/responses/Media"
-import {AniChartUserResponse} from "../src/apis/anilist/interfaces/responses/AniChartUser"
-import {SiteStatisticsResponse} from "../src/apis/anilist/interfaces/responses/SiteStatistics";
+import {ReviewResponse} from "../src/apis/anilist/interfaces/responses/query/Review"
+import {StudioResponse} from "../src/apis/anilist/interfaces/responses/query/Studio"
+import {NotificationResponse} from "../src/apis/anilist/interfaces/responses/query/Notification"
+import {MediaTagCollectionResponse} from "../src/apis/anilist/interfaces/responses/query/MediaTagCollection"
+import {MediaListResponse} from "../src/apis/anilist/interfaces/responses/query/MediaList"
+import {StaffResponse} from "../src/apis/anilist/interfaces/responses/query/Staff"
+import {CharacterResponse} from "../src/apis/anilist/interfaces/responses/query/Character"
+import {AiringScheduleResponse} from "../src/apis/anilist/interfaces/responses/query/AiringSchedule"
+import {MediaListCollectionResponse} from "../src/apis/anilist/interfaces/responses/query/MediaListCollectionResponse"
+import {MediaTrendResponse} from "../src/apis/anilist/interfaces/responses/query/MediaTrend"
+import {MediaResponse} from "../src/apis/anilist/interfaces/responses/query/Media"
+import {AniChartUserResponse} from "../src/apis/anilist/interfaces/responses/query/AniChartUser"
+import {SiteStatisticsResponse} from "../src/apis/anilist/interfaces/responses/query/SiteStatistics";
+import { MediaListStatus } from "../src/apis/anilist/interfaces/MediaListEntry";
 
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
   try {
@@ -46,7 +47,7 @@ async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
   }
 }
 
-describe('Anilist API Query', () => {
+describe('Anilist API query', () => {
   let aniLink: AniLink
 
   beforeEach(() => {
@@ -54,32 +55,32 @@ describe('Anilist API Query', () => {
     aniLink = new AniLink(token)
   })
 
-  test('User Query', async (): Promise<UserResponse> => {
+  test('User query', async (): Promise<UserResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.user({id: 542244, isHTML: true}))
     expect(response).toBeDefined()
     return response.data.User
   })
 
-  test('Media Query', async (): Promise<MediaResponse> => {
+  test('Media query', async (): Promise<MediaResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.media({id: 1, type: 'ANIME'}))
     expect(response).toBeDefined()
     return response.data.Media
   })
 
-  test('Media Trend Query', async (): Promise<MediaTrendResponse> => {
+  test('Media Trend query', async (): Promise<MediaTrendResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.mediaTrend({mediaId: 1, type: 'ANIME'}))
     expect(response).toBeDefined()
     return response.data.MediaTrend
   })
 
-  test('Airing Schedule Query', async (): Promise<AiringScheduleResponse> => {
+  test('Airing Schedule query', async (): Promise<AiringScheduleResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.airingSchedule({mediaId: 130590})) // id needs to be an airing anime
     expect(response).toBeDefined()
     return response.data.AiringSchedule
 
   })
 
-  test('Character Query', async (): Promise<CharacterResponse> => {
+  test('Character query', async (): Promise<CharacterResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.character({
       id: 1,
       asHtml: true,
@@ -93,7 +94,7 @@ describe('Anilist API Query', () => {
     return response.data.Character
   })
 
-  test('Staff Query', async (): Promise<StaffResponse> => {
+  test('Staff query', async (): Promise<StaffResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.staff({
       id: 132186,
       asHtml: true,
@@ -114,13 +115,13 @@ describe('Anilist API Query', () => {
     return response.data.Staff
   })
 
-  test('Media List Query', async (): Promise<MediaListResponse> => {
+  test('Media List query', async (): Promise<MediaListResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.mediaList({userId: 542244}))
     expect(response).toBeDefined()
     return response.data.MediaList
   })
 
-  test('Media List Collection Query', async (): Promise<MediaListCollectionResponse> => {
+  test('Media List Collection query', async (): Promise<MediaListCollectionResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.mediaListCollection({
       userId: 542244,
       type: 'ANIME',
@@ -132,182 +133,182 @@ describe('Anilist API Query', () => {
     return response.data.MediaListCollection
   })
 
-  test('Genre Collection Query', async (): Promise<String> => {
+  test('Genre Collection query', async (): Promise<String> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.genreCollection())
     expect(response).toBeDefined()
     return response.data.GenreCollection
   })
 
-  test('Media Tag Collection Query', async (): Promise<MediaTagCollectionResponse> => {
+  test('Media Tag Collection query', async (): Promise<MediaTagCollectionResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.mediaTagCollection())
     expect(response).toBeDefined()
     return response.data.MediaTagCollection
   })
 
-  test('Viewer Query', async (): Promise<UserResponse> => {
+  test('Viewer query', async (): Promise<UserResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.viewer({isHTML: true}))
     expect(response).toBeDefined()
     return response.data.Viewer
   })
 
-  test('Notification Query', async (): Promise<NotificationResponse> => {
+  test('Notification query', async (): Promise<NotificationResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.notification({asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Notification
   })
 
-  test('Studio Query', async (): Promise<StudioResponse> => {
+  test('Studio query', async (): Promise<StudioResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.studio({id: 561, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Studio
   })
 
-  test('Review Query', async (): Promise<ReviewResponse> => {
+  test('Review query', async (): Promise<ReviewResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.review({id: 8008, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Review
   })
 
-  test('Activity Query', async (): Promise<Activity> => {
+  test('Activity query', async (): Promise<Activity> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.activity({id: 723235883, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Activity
   })
 
-  test('Activity Reply Query', async (): Promise<ActivityReply> => {
+  test('Activity Reply query', async (): Promise<ActivityReply> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.activityReply({id: 12191046, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.ActivityReply
   })
 
-  test('Following Query', async (): Promise<UserResponse> => {
+  test('Following query', async (): Promise<UserResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.following({userId: 542244, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Following
   })
 
-  test('Follower Query', async (): Promise<UserResponse> => {
+  test('Follower query', async (): Promise<UserResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.follower({userId: 542244, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Follower
   })
 
-  test('Thread Query', async (): Promise<ThreadResponse> => {
+  test('Thread query', async (): Promise<ThreadResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.thread({id: 71881, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Thread
   })
 
-  test('Thread Comment Query', async (): Promise<ThreadCommentResponse> => {
+  test('Thread Comment query', async (): Promise<ThreadCommentResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.threadComment({id: 2555166, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.ThreadComment
   })
 
-  test('Reccomendation Query', async (): Promise<RecommendationResponse> => {
+  test('Reccomendation query', async (): Promise<RecommendationResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.recommendation({mediaId: 156822, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Recommendation
   })
 
-  test('Markdown Query', async (): Promise<String> => {
+  test('Markdown query', async (): Promise<String> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.markdown({markdown: 'Hello'}))
     expect(response).toBeDefined()
     return response.data.Markdown.html
   })
 
-  test('AniChartUser Query', async (): Promise<AniChartUserResponse> => {
+  test('AniChartUser query', async (): Promise<AniChartUserResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.aniChartUser())
     expect(response).toBeDefined()
     return response.data.AniChartUser
   })
 
-  test('Site Statistics Query', async (): Promise<SiteStatisticsResponse> => {
+  test('Site Statistics query', async (): Promise<SiteStatisticsResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.siteStatistics())
     expect(response).toBeDefined()
     return response.data.SiteStatistics
   })
 
-  test('External Link Source Collection Query', async (): Promise<ExternalLinkSourceCollectionQuery> => {
+  test('External Link Source Collection query', async (): Promise<ExternalLinkSourceCollectionQuery> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.externalLinkSourceCollection())
     expect(response).toBeDefined()
     return response.data.ExternalLinkSourceCollection
   })
 
 
-  test('Users Page Query', async (): Promise<BasicUser> => {
+  test('Users Page query', async (): Promise<BasicUser> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.users({id: 542244, isHTML: true}))
     expect(response).toBeDefined()
     return response.data.Page.users
   })
 
-  test('Media Page Query', async (): Promise<MediaResponse> => {
+  test('Media Page query', async (): Promise<MediaResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.medias({id: 1, type: 'ANIME'}))
     expect(response).toBeDefined()
     return response.data.Page.media
   })
 
-  test('Character Page Query', async (): Promise<CharacterResponse> => {
+  test('Character Page query', async (): Promise<CharacterResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.characters({id: 1, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.characters
   })
 
-  test('Staff Page Query', async (): Promise<StaffResponse> => {
+  test('Staff Page query', async (): Promise<StaffResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.staffs({id: 132186, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.staff
   })
 
-  test('Studio Page Query', async (): Promise<StudioResponse> => {
+  test('Studio Page query', async (): Promise<StudioResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.studios({id: 561, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.studios
   })
 
-  test('Media List Page Query', async (): Promise<MediaListResponse> => {
+  test('Media List Page query', async (): Promise<MediaListResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.mediaLists({userId: 542244}))
     expect(response).toBeDefined()
     return response.data.Page.mediaList
   })
 
-  test('Airing Schedule Page Query', async (): Promise<AiringScheduleResponse> => {
+  test('Airing Schedule Page query', async (): Promise<AiringScheduleResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.airingSchedules({mediaId: 130590}))
     expect(response).toBeDefined()
     return response.data.Page.airingSchedules
   })
 
-  test('Media Trend Page Query', async (): Promise<MediaTrendResponse> => {
+  test('Media Trend Page query', async (): Promise<MediaTrendResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.mediaTrends({mediaId: 1, type: 'ANIME'}))
     expect(response).toBeDefined()
     return response.data.Page.mediaTrends
   })
 
-  test('Notification Page Query', async (): Promise<NotificationResponse> => {
+  test('Notification Page query', async (): Promise<NotificationResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.notifications({asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.notifications
   })
 
-  test('Follower Page Query', async (): Promise<UserResponse> => {
+  test('Follower Page query', async (): Promise<UserResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.followers({userId: 542244, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.followers
   })
 
-  test('Following Page Query', async (): Promise<UserResponse> => {
+  test('Following Page query', async (): Promise<UserResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.following({userId: 542244, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.following
   })
 
-  test('Activity Page Query', async (): Promise<Activity> => {
+  test('Activity Page query', async (): Promise<Activity> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.activities({id: 723235883, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.activities
   })
 
-  test('Activity Reply Page Query', async (): Promise<ActivityReply> => {
+  test('Activity Reply Page query', async (): Promise<ActivityReply> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.activityReplies({
       id: 12191046,
       asHtml: true
@@ -316,13 +317,13 @@ describe('Anilist API Query', () => {
     return response.data.Page.activityReplies
   })
 
-  test('Thread Page Query', async (): Promise<ThreadResponse> => {
+  test('Thread Page query', async (): Promise<ThreadResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.threads({id: 71881, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.threads
   })
 
-  test('Thread Comment Page Query', async (): Promise<ThreadCommentResponse> => {
+  test('Thread Comment Page query', async (): Promise<ThreadCommentResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.threadComments({
       threadId: 71881,
       asHtml: true
@@ -331,13 +332,13 @@ describe('Anilist API Query', () => {
     return response.data.Page.threadComments
   })
 
-  test('Review Page Query', async (): Promise<ReviewResponse> => {
+  test('Review Page query', async (): Promise<ReviewResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.reviews({id: 8008, asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.reviews
   })
 
-  test('Recommendation Page Query', async (): Promise<RecommendationResponse> => {
+  test('Recommendation Page query', async (): Promise<RecommendationResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.recommendations({
       mediaId: 156822,
       asHtml: true
@@ -346,7 +347,7 @@ describe('Anilist API Query', () => {
     return response.data.Page.recommendations
   })
 
-  test('Likes Page Query', async (): Promise<BasicUser> => {
+  test('Likes Page query', async (): Promise<BasicUser> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.page.likes({
       likeableId: 723422275,
       type: 'ACTIVITY',
@@ -357,7 +358,7 @@ describe('Anilist API Query', () => {
   })
 })
 
-describe('Anilist API Mutation', () => {
+describe('Anilist API mutation', () => {
   let aniLink: AniLink
 
   beforeEach(() => {
@@ -387,4 +388,28 @@ describe('Anilist API Mutation', () => {
     expect(response).toBeDefined()
     return response.data.UpdateUser
   })
+
+  test('Save Media List Entries', async () => {
+    const variables = {
+      mediaId: 1,
+      status: 'CURRENT' as MediaListStatus,
+      score: 8.5,
+      progress: 3,
+    };
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveMediaListEntry(variables))
+    expect(response).toBeDefined();
+    return response.data.SaveMediaListEntry;
+  });
+
+  test('Update Media List Entries', async () => {
+    const variables = {
+      status: 'CURRENT' as MediaListStatus,
+      score: 8.5,
+      progress: 3,
+      ids: [143271, 156822, 170890],
+    };
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.updateMediaListEntries(variables))
+    expect(response).toBeDefined();
+    return response.data.UpdateMediaListEntries;
+  });
 })

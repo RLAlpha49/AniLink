@@ -1,10 +1,10 @@
 import { CharacterSchema } from './Character'
 import { StaffSchema } from './Staff'
 import { MediaSchema } from './Media'
-import { Media } from '../Media'
-import { Staff } from '../Staff'
-import { NameSchema } from '../Name'
-import { ImageSchema } from '../Image'
+import { Media } from '../../Media'
+import { Staff } from '../../Staff'
+import { NameSchema } from '../../Name'
+import { ImageSchema } from '../../Image'
 
 export interface StudioResponse {
   id: number

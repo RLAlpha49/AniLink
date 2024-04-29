@@ -1,7 +1,7 @@
-import { Name, NameSchema } from '../Name'
-import { Image, ImageSchema } from '../Image'
-import { FuzzyDate, FuzzyDateSchema } from '../FuzzyDate'
-import { Title, TitleSchema } from '../Title'
+import { Name, NameSchema } from '../../Name'
+import { Image, ImageSchema } from '../../Image'
+import { FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
+import { Title, TitleSchema } from '../../Title'
 
 export interface StaffResponse {
   id: number
