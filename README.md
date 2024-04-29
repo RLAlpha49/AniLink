@@ -4,8 +4,6 @@ For full documentation on methods and parameters, please refer to the [AniLink d
 
 AniLink is a TypeScript library for interacting with the AniList API. It provides methods for querying and mutating data, making it easier to integrate AniList's features into your own applications.
 
-
-
 ## Installation
 
 To install AniLink, you can use npm:
