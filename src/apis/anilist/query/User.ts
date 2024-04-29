@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { UserResponse, UserSchema } from '../interfaces/responses/query/User'
 
-interface UserVariables {
+export interface UserVariables {
   id?: number
   name?: string
   isModerator?: boolean

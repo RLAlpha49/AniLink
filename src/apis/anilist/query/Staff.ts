@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { StaffResponse, StaffSchema } from '../interfaces/responses/query/Staff'
 
-interface StaffVariables {
+export interface StaffVariables {
   id?: number
   isBirthday?: boolean
   search?: string

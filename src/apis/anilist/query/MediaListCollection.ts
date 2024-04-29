@@ -5,9 +5,7 @@ import {
   MediaListCollectionResponse
 } from '../interfaces/responses/query/MediaListCollectionResponse'
 
-// import { MediaListCollectionResponse } from '../interfaces/responses/MediaListCollection'
-
-interface MediaListCollectionVariables {
+export interface MediaListCollectionVariables {
   userId?: number
   userName?: string
   type?: string

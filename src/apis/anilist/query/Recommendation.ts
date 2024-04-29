@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { RecommendationResponse, RecommendationSchema } from '../interfaces/responses/query/Recommendation'
 
-interface RecommendationVariables {
+export interface RecommendationVariables {
   id?: number
   mediaId?: number
   mediaRecommendationId?: number

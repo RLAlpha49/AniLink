@@ -3,7 +3,7 @@ import { sendRequest } from '../../../base/RequestHandler'
 import { MediaTagCollectionResponse } from '../interfaces/responses/query/MediaTagCollection'
 import { TagSchema } from '../interfaces/Tag'
 
-interface MediaTagCollectionVariables {
+export interface MediaTagCollectionVariables {
   status?: number
 }
 

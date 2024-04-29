@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { MediaResponse, MediaWithRelationsSchema } from '../interfaces/responses/query/Media'
 
-interface MediaVariables {
+export interface MediaVariables {
   id?: number
   idMal?: number
   startDate?: number

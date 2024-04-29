@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { CharacterResponse, CharacterSchema } from '../interfaces/responses/query/Character'
 
-interface CharacterVariables {
+export interface CharacterVariables {
   id?: number
   isBirthday?: boolean
   search?: string

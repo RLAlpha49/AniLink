@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { MediaListResponse, MediaListSchema } from '../interfaces/responses/query/MediaList'
 
-interface MediaListVariables {
+export interface MediaListVariables {
   id?: number
   userId?: number
   userName?: string

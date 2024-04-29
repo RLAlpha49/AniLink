@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { ExternalLinkSourceCollectionResponse } from '../interfaces/responses/query/ExternalLinkSourceCollection'
 
-interface ExternalLinkSourceCollectionVariables {
+export interface ExternalLinkSourceCollectionVariables {
   id?: number
   type?: string
   mediaType?: string

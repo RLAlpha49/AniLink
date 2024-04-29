@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { MediaResponse, MediaWithRelationsSchema } from '../../interfaces/responses/query/Media'
 
-interface MediasVariables {
+export interface MediasVariables {
   page?: number
   perPage?: number
   id?: number

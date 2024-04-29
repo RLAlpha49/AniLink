@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { StudioResponse, StudioSchema } from '../../interfaces/responses/query/Studio'
 
-interface StudiosVariables {
+export interface StudiosVariables {
   page?: number
   perPage?: number
   id?: number

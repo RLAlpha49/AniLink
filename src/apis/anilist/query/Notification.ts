@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { NotificationResponse, NotificationSchema } from '../interfaces/responses/query/Notification'
 
-interface NotificationVariables {
+export interface NotificationVariables {
   type?: string
   resetNotificationCount?: boolean
   type_in?: string[]

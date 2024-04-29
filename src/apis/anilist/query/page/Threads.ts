@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { ThreadResponse, ThreadSchema } from '../../interfaces/responses/query/Thread'
 
-interface ThreadsVariables {
+export interface ThreadsVariables {
   page?: number
   perPage?: number
   id?: number

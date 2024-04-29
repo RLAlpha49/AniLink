@@ -74,7 +74,7 @@ import {ViewerQuery} from './apis/anilist/query/Viewer'
 /**
  * AniLink class for interacting with the Anilist API.
  */
-class AniLink {
+export class AniLink {
   /**
    * Anilist API methods.
    * @public

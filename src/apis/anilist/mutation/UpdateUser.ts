@@ -26,7 +26,7 @@ export interface UpdateUserVariables {
   disabledListActivity?: ListActivityOptionInput[]
 }
 
-interface UpdateUserResponse {
+export interface UpdateUserResponse {
   id: number
   name: string
   about: string
