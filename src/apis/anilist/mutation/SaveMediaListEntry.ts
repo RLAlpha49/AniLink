@@ -3,33 +3,118 @@ import { sendRequest } from '../../../base/RequestHandler'
 import { FuzzyDateInput, FuzzyDateSchema } from '../interfaces/FuzzyDate'
 import { MediaListStatus } from '../types/MediaListStatus'
 
+/**
+ * `SaveMediaListEntryVariables` is an interface representing the variables for the `SaveMediaListEntryMutation`.
+ * It includes optional id, media id, status, score, raw score, progress, progress volumes, repeat, priority, private status, notes, hidden from status lists status, custom lists, advanced scores, started at date, and completed at date.
+ */
 export interface SaveMediaListEntryVariables {
+  /**
+   * `id` is a number representing the id of the media list entry.
+   */
   id?: number
+
+  /**
+   * `mediaId` is a number representing the id of the media associated with the media list entry.
+   */
   mediaId: number
+
+  /**
+   * `status` is a `MediaListStatus` representing the status of the media list entry.
+   */
   status?: MediaListStatus
+
+  /**
+   * `score` is a number representing the score of the media list entry.
+   */
   score?: number
+
+  /**
+   * `scoreRaw` is a number representing the raw score of the media list entry.
+   */
   scoreRaw?: number
+
+  /**
+   * `progress` is a number representing the progress of the media list entry.
+   */
   progress?: number
+
+  /**
+   * `progressVolumes` is a number representing the progress volumes of the media list entry.
+   */
   progressVolumes?: number
+
+  /**
+   * `repeat` is a number representing the repeat status of the media list entry.
+   */
   repeat?: number
+
+  /**
+   * `priority` is a number representing the priority of the media list entry.
+   */
   priority?: number
+
+  /**
+   * `private` is a boolean representing the privacy status of the media list entry.
+   */
   private?: boolean
+
+  /**
+   * `notes` is a string representing the notes of the media list entry.
+   */
   notes?: string
+
+  /**
+   * `hiddenFromStatusLists` is a boolean representing whether the media list entry is hidden from status lists.
+   */
   hiddenFromStatusLists?: boolean
+
+  /**
+   * `customLists` is an array of strings representing the custom lists of the media list entry.
+   */
   customLists?: string[]
+
+  /**
+   * `advancedScores` is an array of numbers representing the advanced scores of the media list entry.
+   */
   advancedScores?: number[]
+
+  /**
+   * `startedAt` is a `FuzzyDateInput` representing when the media list entry started.
+   */
   startedAt?: FuzzyDateInput
+
+  /**
+   * `completedAt` is a `FuzzyDateInput` representing when the media list entry was completed.
+   */
   completedAt?: FuzzyDateInput
 }
 
+/**
+ * `SaveMediaListEntryMutation` is a class representing a mutation to save a media list entry.
+ * It includes a method to save a media list entry.
+ */
 export class SaveMediaListEntryMutation extends APIWrapper {
+  /**
+   * `authToken` is a string representing the authentication token.
+   */
   private readonly authToken: string
 
+  /**
+   * Constructs a new `SaveMediaListEntryMutation` instance.
+   *
+   * @param authToken - The authentication token.
+   */
   constructor (authToken: string) {
     super('https://graphql.anilist.co')
     this.authToken = authToken
   }
 
+  /**
+   * `saveMediaListEntry` is a method that sends a mutation request to save a media list entry.
+   *
+   * @param variables - The variables for the mutation.
+   * @returns The response from the mutation request.
+   */
   async saveMediaListEntry (variables: SaveMediaListEntryVariables): Promise<any> {
     const mutation = `
       mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Float, $scoreRaw: Int, $progress: Int, $progressVolumes: Int, $repeat: Int, $priority: Int, $private: Boolean, $notes: String, $hiddenFromStatusLists: Boolean, $customLists: [String], $advancedScores: [Float], $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput) {

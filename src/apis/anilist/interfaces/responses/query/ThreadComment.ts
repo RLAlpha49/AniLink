@@ -3,36 +3,77 @@ import { BasicUser, BasicUserSchema } from '../../BasicUser'
 
 /**
  * `ThreadCommentResponse` is an interface representing the response from a thread comment query.
- *
- * @property `id` is a number representing the id of the thread comment.
- * @property `userId` is a number representing the id of the user who made the comment.
- * @property `threadId` is a number representing the id of the thread where the comment was made.
- * @property `comment` is a string representing the content of the comment.
- * @property `likeCount` is a number representing the number of likes the comment has received.
- * @property `isLiked` is a boolean indicating whether the comment is liked by the user.
- * @property `siteUrl` is a string representing the URL of the comment on the site.
- * @property `createdAt` is a number representing the timestamp when the comment was created.
- * @property `updatedAt` is a number representing the timestamp when the comment was last updated.
- * @property `thread` is an instance of `ThreadResponse` representing the thread where the comment was made.
- * @property `user` is an instance of `BasicUser` representing the user who made the comment.
- * @property `likes` is an array of `BasicUser` representing the users who liked the comment.
- * @property `childComments` is an array of `ThreadCommentResponse` representing the child comments of the comment.
- * @property `isLocked` is a boolean indicating whether the comment is locked.
+ * It includes the comment's id, userId, threadId, comment, likeCount, isLiked status, siteUrl, createdAt, updatedAt, thread of type `ThreadResponse`, user of type `BasicUser`, likes of type `BasicUser[]`, childComments of type `ThreadCommentResponse[]`, and isLocked status.
  */
 export interface ThreadCommentResponse {
+  /**
+   * `id` is a number representing the id of the thread comment.
+   */
   id: number
+
+  /**
+   * `userId` is a number representing the id of the user who made the comment.
+   */
   userId: number
+
+  /**
+   * `threadId` is a number representing the id of the thread where the comment was made.
+   */
   threadId: number
+
+  /**
+   * `comment` is a string representing the content of the comment.
+   */
   comment: string
+
+  /**
+   * `likeCount` is a number representing the number of likes the comment has received.
+   */
   likeCount: number
+
+  /**
+   * `isLiked` is a boolean indicating whether the comment is liked by the user.
+   */
   isLiked: boolean
+
+  /**
+   * `siteUrl` is a string representing the URL of the comment on the site.
+   */
   siteUrl: string
+
+  /**
+   * `createdAt` is a number representing the timestamp when the comment was created.
+   */
   createdAt: number
+
+  /**
+   * `updatedAt` is a number representing the timestamp when the comment was last updated.
+   */
   updatedAt: number
+
+  /**
+   * `thread` is an instance of `ThreadResponse` representing the thread where the comment was made.
+   */
   thread: ThreadResponse
+
+  /**
+   * `user` is an instance of `BasicUser` representing the user who made the comment.
+   */
   user: BasicUser
+
+  /**
+   * `likes` is an array of `BasicUser` representing the users who liked the comment.
+   */
   likes: BasicUser[]
+
+  /**
+   * `childComments` is an array of `ThreadCommentResponse` representing the child comments of the comment.
+   */
   childComments: ThreadCommentResponse[]
+
+  /**
+   * `isLocked` is a boolean indicating whether the comment is locked.
+   */
   isLocked: boolean
 }
 

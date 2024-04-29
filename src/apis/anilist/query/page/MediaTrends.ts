@@ -2,6 +2,10 @@ import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { MediaTrendResponse, MediaTrendSchema } from '../../interfaces/responses/query/MediaTrend'
 
+/**
+ * `MediaTrendsVariables` is an interface representing the variables for the `MediaTrendsQuery`.
+ * It includes optional page, per page, media id, date, trending, average score, popularity, episode, releasing, media id not, media id in, media id not in, date greater, date lesser, trending greater, trending lesser, trending not, average score greater, average score lesser, average score not, popularity greater, popularity lesser, popularity not, episode greater, episode lesser, episode not, sort, and as html.
+ */
 export interface MediaTrendsVariables {
   page?: number
   perPage?: number
@@ -33,14 +37,32 @@ export interface MediaTrendsVariables {
   asHtml?: boolean
 }
 
+/**
+ * `MediaTrendsQuery` is a class representing a query for media trends.
+ * It includes a method to get media trends.
+ */
 export class MediaTrendsQuery extends APIWrapper {
+  /**
+   * `authToken` is a string representing the authentication token.
+   */
   private readonly authToken: string
 
+  /**
+   * Constructs a new `MediaTrendsQuery` instance.
+   *
+   * @param authToken - The authentication token.
+   */
   constructor (authToken: string) {
     super('https://graphql.anilist.co')
     this.authToken = authToken
   }
 
+  /**
+   * `mediaTrends` is a method that sends a query request to get media trends.
+   *
+   * @param variables - The variables for the query.
+   * @returns The response from the query request.
+   */
   async mediaTrends (variables?: MediaTrendsVariables): Promise<MediaTrendResponse> {
     const query = `
       query ($page: Int, $perPage: Int, $mediaId: Int, $date: Int, $trending: Int, $averageScore: Int, $popularity: Int, $episode: Int, $releasing: Boolean, $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $date_greater: Int, $date_lesser: Int, $trending_greater: Int, $trending_lesser: Int, $trending_not: Int, $averageScore_greater: Int, $averageScore_lesser: Int, $averageScore_not: Int, $popularity_greater: Int, $popularity_lesser: Int, $popularity_not: Int, $episode_greater: Int, $episode_lesser: Int, $episode_not: Int, $sort: [MediaTrendSort], $asHtml: Boolean) {
