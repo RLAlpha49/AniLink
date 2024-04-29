@@ -2,9 +2,9 @@
 name: "CodeQL"
 on:
   push:
-    branches: ["master"]
+    branches: [ "master" ]
   pull_request:
-    branches: ["master"]
+    branches: [ "master" ]
   schedule:
     - cron: '0 7 * * 1'
 
@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['javascript-typescript']
+        language: [ 'javascript-typescript' ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

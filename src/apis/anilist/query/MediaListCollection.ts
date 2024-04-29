@@ -1,6 +1,9 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { MediaListCollectionResponse, MediaListCollectionQuerySchema } from '../interfaces/responses/MediaListCollectionResponse'
+import {
+  MediaListCollectionQuerySchema,
+  MediaListCollectionResponse
+} from '../interfaces/responses/MediaListCollectionResponse'
 
 // import { MediaListCollectionResponse } from '../interfaces/responses/MediaListCollection'
 

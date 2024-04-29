@@ -1,6 +1,6 @@
 import { Image, ImageSchema } from '../Image'
 import { Statistics } from '../Statistics'
-import { UserStats, UserAnimeStatsSchema, UserMangaStatsSchema } from '../UserStats'
+import { UserAnimeStatsSchema, UserMangaStatsSchema, UserStats } from '../UserStats'
 import { TitleSchema } from '../Title'
 import { NameSchema } from '../Name'
 

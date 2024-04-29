@@ -308,7 +308,10 @@ describe('Anilist API Query', () => {
   })
 
   test('Activity Reply Page Query', async (): Promise<ActivityReply> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.page.activityReplies({id: 12191046, asHtml: true}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.page.activityReplies({
+      id: 12191046,
+      asHtml: true
+    }))
     expect(response).toBeDefined()
     return response.data.Page.activityReplies
   })
@@ -320,7 +323,10 @@ describe('Anilist API Query', () => {
   })
 
   test('Thread Comment Page Query', async (): Promise<ThreadCommentResponse> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.page.threadComments({threadId: 71881, asHtml: true}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.page.threadComments({
+      threadId: 71881,
+      asHtml: true
+    }))
     expect(response).toBeDefined()
     return response.data.Page.threadComments
   })
@@ -332,13 +338,20 @@ describe('Anilist API Query', () => {
   })
 
   test('Recommendation Page Query', async (): Promise<RecommendationResponse> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.page.recommendations({mediaId: 156822, asHtml: true}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.page.recommendations({
+      mediaId: 156822,
+      asHtml: true
+    }))
     expect(response).toBeDefined()
     return response.data.Page.recommendations
   })
 
   test('Likes Page Query', async (): Promise<BasicUser> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.page.likes({likeableId: 723422275, type: 'ACTIVITY', asHtml: true}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.page.likes({
+      likeableId: 723422275,
+      type: 'ACTIVITY',
+      asHtml: true
+    }))
     expect(response).toBeDefined()
     return response.data.Page.likes
   })

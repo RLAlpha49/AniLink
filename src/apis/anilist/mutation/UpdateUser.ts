@@ -2,22 +2,33 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 
 export type UserTitleLanguage =
-    'ROMAJI'
-    | 'ENGLISH'
-    | 'NATIVE'
-    | 'ROMAJI_STYLISED'
-    | 'ENGLISH_STYLISED'
-    | 'NATIVE_STYLISED'
+  'ROMAJI'
+  | 'ENGLISH'
+  | 'NATIVE'
+  | 'ROMAJI_STYLISED'
+  | 'ENGLISH_STYLISED'
+  | 'NATIVE_STYLISED'
 export type ScoreFormat = 'POINT_100' | 'POINT_10_DECIMAL' | 'POINT_10' | 'POINT_5' | 'POINT_3'
 export type UserStaffNameLanguage =
-    'ROMAJI'
-    | 'ENGLISH'
-    | 'NATIVE'
-    | 'ROMAJI_STYLISED'
-    | 'ENGLISH_STYLISED'
-    | 'NATIVE_STYLISED'
-export interface NotificationOptionInput { type: string, enabled: boolean }
-export interface MediaListOptionsInput { scoreFormat: ScoreFormat, rowOrder: string, animeList: any, mangaList: any }
+  'ROMAJI'
+  | 'ENGLISH'
+  | 'NATIVE'
+  | 'ROMAJI_STYLISED'
+  | 'ENGLISH_STYLISED'
+  | 'NATIVE_STYLISED'
+
+export interface NotificationOptionInput {
+  type: string
+  enabled: boolean
+}
+
+export interface MediaListOptionsInput {
+  scoreFormat: ScoreFormat
+  rowOrder: string
+  animeList: any
+  mangaList: any
+}
+
 export type ListActivityOptionInput = 'ANIME_LIST' | 'MANGA_LIST'
 
 interface UpdateUserVariables {
