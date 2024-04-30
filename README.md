@@ -108,6 +108,83 @@ List of methods in `anilist.mutation`:
 - saveMediaListEntry
 - updateMediaListEntries
 
+## Error Handling
+
+AniLink will throw an error if the AniList API returns an error. You can catch these errors using a try-catch block.
+
+```typescript
+try {
+  const user = await aniLink.anilist.query.user({id: 542244});
+  console.log(user);
+} catch (error) {
+  console.error(error);
+}
+```
+
+This includes status codes and error messages returned by the AniList API. Here is an example rate limit handler to catch the errors thrown by AniLink:
+
+### Typescript
+
+```typescript
+async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
+  try {
+    let response;
+    try {
+      response = await apiCall();
+    } catch (error) {
+      throw error;
+    }
+    console.log(response.data);
+    return response;
+  } catch (error: any) {
+    if (error.response && error.response.status === 429) {
+      console.log('Rate limit exceeded, waiting for 1 minute before retrying...');
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      console.log('Retrying...');
+      return handleRateLimit(apiCall, retryAfter);
+    } else {
+      if (error.response && error.response.data) {
+        throw error.response.data;
+      } else {
+        throw error.response || error;
+      }
+    }
+  }
+}
+```
+
+### Javascript
+
+```javascript
+async function handleRateLimit(apiCall, retryAfter = 60) {
+    // Same as above
+}
+```
+
+The possible error codes returned by the AniList API are:
+- 400: Bad Request (e.g. missing variables, invalid variables, or invalid query)
+- 401: Unauthorized (e.g. invalid authentication token)
+- 404: Not Found (e.g. user not found)
+- 429: Too Many Requests (e.g. rate limit exceeded)
+- 500: Internal Server Error (e.g. AniList server error)
+
+### Missing or Invalid Variables
+
+AniLink will also throw an error if any variables are missing or invalid. For example, if you try to query a user providing a string instead of ID, AniLink will throw an error. Most variables are optional however there a few that are required.
+```typescript
+try {
+  const user = await aniLink.anilist.query.user({id: '542244'});
+  console.log(user);
+} catch (error) {
+  console.error(error);
+}
+```
+
+Example Error Thrown:
+
+```typescript
+  Invalid id: 542244. Expected type: number
+```
 
 ## Examples
 

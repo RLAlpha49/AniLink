@@ -1,7 +1,9 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { FuzzyDateInput, FuzzyDateSchema } from '../interfaces/FuzzyDate'
-import { MediaListStatus } from '../types/MediaListStatus'
+import { FuzzyDateSchema } from '../interfaces/FuzzyDate'
+import { MediaListStatus, MediaListStatusMappings } from '../types/MediaListStatus'
+import { FuzzyDateInput, FuzzyDateMappings } from '../types/FuzzyDate'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `SaveMediaListEntryVariables` is an interface representing the variables for the `SaveMediaListEntryMutation`.
@@ -112,10 +114,32 @@ export class SaveMediaListEntryMutation extends APIWrapper {
   /**
    * `saveMediaListEntry` is a method that sends a mutation request to save a media list entry.
    *
-   * @param variables - The variables for the mutation.
-   * @returns The response from the mutation request.
+   * @param variables - An object of type `SaveMediaListEntryVariables` representing the variables for the mutation.
+   * @returns A Promise that resolves to the response from the mutation request.
+   * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    */
   async saveMediaListEntry (variables: SaveMediaListEntryVariables): Promise<any> {
+    const variableTypeMappings = {
+      id: 'number',
+      mediaId: 'number',
+      status: MediaListStatusMappings,
+      score: 'number',
+      scoreRaw: 'number',
+      progress: 'number',
+      progressVolumes: 'number',
+      repeat: 'number',
+      priority: 'number',
+      private: 'boolean',
+      notes: 'string',
+      hiddenFromStatusLists: 'boolean',
+      customLists: 'string[]',
+      advancedScores: 'number[]',
+      startedAt: FuzzyDateMappings,
+      completedAt: FuzzyDateMappings
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const mutation = `
       mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Float, $scoreRaw: Int, $progress: Int, $progressVolumes: Int, $repeat: Int, $priority: Int, $private: Boolean, $notes: String, $hiddenFromStatusLists: Boolean, $customLists: [String], $advancedScores: [Float], $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput) {
         SaveMediaListEntry(id: $id, mediaId: $mediaId, status: $status, score: $score, scoreRaw: $scoreRaw, progress: $progress, progressVolumes: $progressVolumes, repeat: $repeat, priority: $priority, private: $private, notes: $notes, hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists, advancedScores: $advancedScores, startedAt: $startedAt, completedAt: $completedAt) {

@@ -3,7 +3,7 @@
  * It includes a `disabled` field which is a boolean indicating whether the activity is disabled or not,
  * and a `type` field which is a string representing the type of the activity.
  */
-export type DisabledListActivity = {
+export interface DisabledListActivity {
   /**
    * A boolean indicating whether the activity is disabled or not.
    */

@@ -12,7 +12,13 @@ export function validateVariables (variables: any, variableTypeMappings: { [key:
   for (const [variable, value] of Object.entries(variables)) {
     const expectedType = variableTypeMappings[variable]
     if (expectedType) {
-      if (Array.isArray(expectedType)) {
+      if (typeof expectedType === 'string' && expectedType.endsWith('[]')) {
+        // If the expected type is an array, check if the actual value is an array and if its elements are of the correct type
+        const elementType = expectedType.slice(0, -2); // Remove the '[]' from the end
+        if (!Array.isArray(value) || !value.every((element: any) => typeof element === elementType)) {
+          errors.push(`Invalid ${variable}: ${value}. Expected type: ${expectedType}`);
+        }
+      } else if (Array.isArray(expectedType)) {
         // If the value is an object, validate its properties
         if (typeof value === 'object' && value !== null) {
           for (const [prop, propValue] of Object.entries(value)) {

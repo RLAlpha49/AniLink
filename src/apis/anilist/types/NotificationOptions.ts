@@ -3,7 +3,7 @@
  * It includes a `type` field which is a string representing the type of notification,
  * and an `enabled` field which is a boolean indicating whether the notification is enabled or not.
  */
-export type NotificationOptions = {
+export interface NotificationOptions {
   /**
    * `type` is a string representing the type of notification.
    */

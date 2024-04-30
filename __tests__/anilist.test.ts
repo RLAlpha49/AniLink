@@ -403,7 +403,7 @@ describe('Anilist API mutation', () => {
   test('Save Media List Entries', async () => {
     const variables = {
       mediaId: 1,
-      status: 'CURRENT' as MediaListStatus,
+      status: 'CURRENT',
       score: 8.5,
       progress: 3,
     };
@@ -414,7 +414,7 @@ describe('Anilist API mutation', () => {
 
   test('Update Media List Entries', async () => {
     const variables = {
-      status: 'CURRENT' as MediaListStatus,
+      status: 'CURRENT',
       score: 8.5,
       progress: 3,
       ids: [143271, 156822, 170890],
