@@ -2,12 +2,6 @@ import { BasicUser, BasicUserSchema } from './BasicUser'
 import { ActivityReply, ActivityReplySchema } from './ActivityReply'
 
 /**
- * `ListActivityOptionInput` is a type representing the options for a list activity in an anime or manga list.
- * It can take either 'ANIME_LIST' or 'MANGA_LIST' as its value.
- */
-export type ListActivityOptionInput = 'ANIME_LIST' | 'MANGA_LIST'
-
-/**
  * `Activity` is an interface representing the response from an activity query.
  * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties.
  */

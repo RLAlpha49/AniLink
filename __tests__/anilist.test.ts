@@ -28,20 +28,25 @@ import {MediaListStatus} from "../src/apis/anilist/interfaces/MediaListEntry";
 
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
   try {
-    const response = await apiCall()
-    console.log(response.data)
-    return response
+    let response;
+    try {
+      response = await apiCall();
+    } catch (error) {
+      throw error;
+    }
+    console.log(response.data);
+    return response;
   } catch (error: any) {
     if (error.response && error.response.status === 429) {
-      console.log('Rate limit exceeded, waiting for 1 minute before retrying...')
-      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
-      console.log('Retrying...')
-      return handleRateLimit(apiCall, retryAfter)
+      console.log('Rate limit exceeded, waiting for 1 minute before retrying...');
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      console.log('Retrying...');
+      return handleRateLimit(apiCall, retryAfter);
     } else {
-      if (error.response.data) {
-        throw error.response.data
+      if (error.response && error.response.data) {
+        throw error.response.data;
       } else {
-        throw error.response
+        throw error.response || error;
       }
     }
   }

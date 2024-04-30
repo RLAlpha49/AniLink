@@ -1,96 +1,97 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { ListActivityOptionInput } from '../interfaces/Activity'
-import { MediaListOptionsInput } from '../interfaces/MediaListEntry'
-import { NotificationOptionInput } from '../interfaces/Notification'
-import { ScoreFormat } from '../types/ScoreFormat'
-import { UserStaffNameLanguage } from '../types/UserStaffNameLanguage'
-import { UserTitleLanguage } from '../types/UserTitleLanguage'
+import { ScoreFormat, ScoreFormatMapping } from '../types/ScoreFormat'
+import { UserStaffNameLanguage, UserStaffNameLanguageMapping } from '../types/UserStaffNameLanguage'
+import { UserTitleLanguage, UserTitleLanguageMapping } from '../types/UserTitleLanguage'
+import { validateVariables } from '../../../base/ValidateVariables'
+import { NotificationOptions, NotificationOptionsMapping } from '../types/NotificationOptions'
+import { MediaListOptions, MediaListOptionsMapping } from '../types/MediaListOptions'
+import { DisabledListActivity, DisabledListActivityMapping } from '../types/DisabledListActivity'
 
 /**
  * `UpdateUserVariables` is an interface representing the variables for the `UpdateUserMutation`.
- * It includes optional about, title language, display adult content, airing notifications, score format, row order, profile color, donator badge, notification options, timezone, activity merge time, anime list options, manga list options, staff name language, restrict messages to following, and disabled list activity.
+ * It includes optional fields for updating user details.
  */
 export interface UpdateUserVariables {
   /**
-   * `about` is a string representing the about section of the user.
+   * `about` is a string representing the updated about section of the user.
    */
   about?: string
 
   /**
-   * `titleLanguage` is a `UserTitleLanguage` representing the title language of the user.
+   * `titleLanguage` is a `UserTitleLanguage` representing the updated title language preference of the user.
    */
   titleLanguage?: UserTitleLanguage
 
   /**
-   * `displayAdultContent` is a boolean representing whether the user displays adult content.
+   * `displayAdultContent` is a boolean representing the updated preference of the user for displaying adult content.
    */
   displayAdultContent?: boolean
 
   /**
-   * `airingNotifications` is a boolean representing whether the user has airing notifications enabled.
+   * `airingNotifications` is a boolean representing the updated preference of the user for receiving airing notifications.
    */
   airingNotifications?: boolean
 
   /**
-   * `scoreFormat` is a `ScoreFormat` representing the score format of the user.
+   * `scoreFormat` is a `ScoreFormat` representing the updated score format preference of the user.
    */
   scoreFormat?: ScoreFormat
 
   /**
-   * `rowOrder` is a string representing the row order of the user.
+   * `rowOrder` is a string representing the updated row order preference of the user.
    */
   rowOrder?: string
 
   /**
-   * `profileColor` is a string representing the profile color of the user.
+   * `profileColor` is a string representing the updated profile color preference of the user.
    */
   profileColor?: string
 
   /**
-   * `donatorBadge` is a string representing the donator badge of the user.
+   * `donatorBadge` is a string representing the updated donator badge of the user.
    */
   donatorBadge?: string
 
   /**
-   * `notificationOptions` is an array of `NotificationOptionInput` representing the notification options of the user.
+   * `notificationOptions` is an array of `NotificationOptions` representing the updated notification options of the user.
    */
-  notificationOptions?: NotificationOptionInput[]
+  notificationOptions?: NotificationOptions[]
 
   /**
-   * `timezone` is a string representing the timezone of the user.
+   * `timezone` is a string representing the updated timezone of the user.
    */
   timezone?: string
 
   /**
-   * `activityMergeTime` is a number representing the activity merge time of the user.
+   * `activityMergeTime` is a number representing the updated activity merge time of the user.
    */
   activityMergeTime?: number
 
   /**
-   * `animeListOptions` is a `MediaListOptionsInput` representing the anime list options of the user.
+   * `animeListOptions` is a `MediaListOptions` representing the updated anime list options of the user.
    */
-  animeListOptions?: MediaListOptionsInput
+  animeListOptions?: MediaListOptions
 
   /**
-   * `mangaListOptions` is a `MediaListOptionsInput` representing the manga list options of the user.
+   * `mangaListOptions` is a `MediaListOptions` representing the updated manga list options of the user.
    */
-  mangaListOptions?: MediaListOptionsInput
+  mangaListOptions?: MediaListOptions
 
   /**
-   * `staffNameLanguage` is a `UserStaffNameLanguage` representing the staff name language of the user.
+   * `staffNameLanguage` is a `UserStaffNameLanguage` representing the updated staff name language preference of the user.
    */
   staffNameLanguage?: UserStaffNameLanguage
 
   /**
-   * `restrictMessagesToFollowing` is a boolean representing whether the user restricts messages to following.
+   * `restrictMessagesToFollowing` is a boolean representing the updated preference of the user for restricting messages to following.
    */
   restrictMessagesToFollowing?: boolean
 
   /**
-   * `disabledListActivity` is an array of `ListActivityOptionInput` representing the disabled list activity of the user.
+   * `disabledListActivity` is an array of `DisabledListActivity` representing the updated disabled list activity preferences of the user.
    */
-  disabledListActivity?: ListActivityOptionInput[]
+  disabledListActivity?: DisabledListActivity[]
 }
 
 /**
@@ -337,10 +338,32 @@ export class UpdateUserMutation extends APIWrapper {
   /**
    * `updateUser` is a method that sends a mutation request to update a user.
    *
-   * @param variables - The variables for the mutation.
-   * @returns The response from the mutation request.
+   * @param variables - An object of type `UpdateUserVariables` representing the variables for the mutation.
+   * @returns A Promise that resolves to an object of type `UpdateUserResponse`. This object includes the updated user details
+   * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    */
   async updateUser (variables: UpdateUserVariables): Promise<UpdateUserResponse> {
+    const variableTypeMappings = {
+      about: 'string',
+      titleLanguage: UserTitleLanguageMapping,
+      displayAdultContent: 'boolean',
+      airingNotifications: 'boolean',
+      scoreFormat: ScoreFormatMapping,
+      rowOrder: 'string',
+      profileColor: 'string',
+      donatorBadge: 'string',
+      notificationOptions: NotificationOptionsMapping,
+      timezone: 'string',
+      activityMergeTime: 'number',
+      animeListOptions: MediaListOptionsMapping,
+      mangaListOptions: MediaListOptionsMapping,
+      staffNameLanguage: UserStaffNameLanguageMapping,
+      restrictMessagesToFollowing: 'boolean',
+      disabledListActivity: DisabledListActivityMapping
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const mutation = `
       mutation ($about: String, $titleLanguage: UserTitleLanguage, $displayAdultContent: Boolean, $airingNotifications: Boolean, $scoreFormat: ScoreFormat, $rowOrder: String, $profileColor: String, $donatorBadge: String, $notificationOptions: [NotificationOptionInput], $timezone: String, $activityMergeTime: Int, $animeListOptions: MediaListOptionsInput, $mangaListOptions: MediaListOptionsInput, $staffNameLanguage: UserStaffNameLanguage, $restrictMessagesToFollowing: Boolean, $disabledListActivity: [ListActivityOptionInput]) {
         UpdateUser(about: $about, titleLanguage: $titleLanguage, displayAdultContent: $displayAdultContent, airingNotifications: $airingNotifications, scoreFormat: $scoreFormat, rowOrder: $rowOrder, profileColor: $profileColor, donatorBadge: $donatorBadge, notificationOptions: $notificationOptions, timezone: $timezone, activityMergeTime: $activityMergeTime, animeListOptions: $animeListOptions, mangaListOptions: $mangaListOptions, staffNameLanguage: $staffNameLanguage, restrictMessagesToFollowing: $restrictMessagesToFollowing, disabledListActivity: $disabledListActivity) {
