@@ -109,6 +109,12 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    *  */
   async updateMediaListEntries (variables: UpdateMediaListEntriesVariables): Promise<any> {
+    if (Object.keys(variables).length === 0) {
+      throw new Error('No variables were provided')
+    }
+    if (!variables.ids || variables.ids.length === 0) {
+      throw new Error('ids must be an array of at least one number')
+    }
     const variableTypeMappings = {
       status: MediaListStatusMappings,
       score: 'number',

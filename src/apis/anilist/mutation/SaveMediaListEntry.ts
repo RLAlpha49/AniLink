@@ -119,6 +119,13 @@ export class SaveMediaListEntryMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    */
   async saveMediaListEntry (variables: SaveMediaListEntryVariables): Promise<any> {
+    if (Object.keys(variables).length === 0) {
+      throw new Error('No variables were provided')
+    }
+    if (variables.mediaId === undefined) {
+      throw new Error('mediaId is required for SaveMediaListEntryMutation')
+    }
+
     const variableTypeMappings = {
       id: 'number',
       mediaId: 'number',

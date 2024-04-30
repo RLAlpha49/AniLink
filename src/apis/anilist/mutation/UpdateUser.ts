@@ -343,6 +343,9 @@ export class UpdateUserMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    */
   async updateUser (variables: UpdateUserVariables): Promise<UpdateUserResponse> {
+    if (Object.keys(variables).length === 0) {
+      throw new Error('No variables were provided')
+    }
     const variableTypeMappings = {
       about: 'string',
       titleLanguage: UserTitleLanguageMapping,

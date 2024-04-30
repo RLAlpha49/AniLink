@@ -110,6 +110,8 @@ List of methods in `anilist.mutation`:
 
 ## Error Handling
 
+### Anilist Errors
+
 AniLink will throw an error if the AniList API returns an error. You can catch these errors using a try-catch block.
 
 ```typescript
@@ -123,7 +125,7 @@ try {
 
 This includes status codes and error messages returned by the AniList API. Here is an example rate limit handler to catch the errors thrown by AniLink:
 
-### Typescript
+#### Typescript
 
 ```typescript
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
@@ -153,7 +155,7 @@ async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
 }
 ```
 
-### Javascript
+#### Javascript
 
 ```javascript
 async function handleRateLimit(apiCall, retryAfter = 60) {
@@ -170,7 +172,7 @@ The possible error codes returned by the AniList API are:
 
 ### Missing or Invalid Variables
 
-AniLink will also throw an error if any variables are missing or invalid. For example, if you try to query a user providing a string instead of ID, AniLink will throw an error. Most variables are optional however there a few that are required.
+AniLink will also throw an error if any variables are missing or invalid. For example, if you try to query a user providing a string instead of a number for ID, AniLink will throw an error. Most variables are optional however there a few that are required.
 ```typescript
 try {
   const user = await aniLink.anilist.query.user({id: '542244'});
