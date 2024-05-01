@@ -1,6 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type RecommendationResponse, RecommendationSchema } from '../interfaces/responses/query/Recommendation'
+import {RecommendationSort, RecommendationSortMappings} from "../types/Sort";
 
 /**
  * `RecommendationVariables` is an interface representing the variables for the `RecommendationQuery`.
@@ -50,7 +51,7 @@ export interface RecommendationVariables {
   /**
    * `sort` is an array of strings representing the sort order of the recommendation.
    */
-  sort?: string[]
+  sort?: RecommendationSort[]
 
   /**
    * `asHtml` is a boolean indicating whether to return the result as HTML.
@@ -79,12 +80,28 @@ export class RecommendationQuery extends APIWrapper {
   }
 
   /**
-   * `recommmendation` is a method that sends a query request to get recommendation data.
+   * `recommendation` is a method that sends a query request to get recommendation data.
    *
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async recommmendation (variables?: RecommendationVariables): Promise<RecommendationResponse> {
+  async recommendation (variables: RecommendationVariables): Promise<RecommendationResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      mediaId: 'number',
+      mediaRecommendationId: 'number',
+      userId: 'number',
+      rating: 'number',
+      onList: 'boolean',
+      rating_greater: 'number',
+      rating_lesser: 'number',
+      sort: RecommendationSortMappings,
+      asHtml: 'boolean'
+    }
+
     const query = `
       query ($id: Int, $mediaId: Int, $mediaRecommendationId: Int, $userId: Int, $rating: Int, $onList: Boolean, $rating_greater: Int, $rating_lesser: Int, $sort: [RecommendationSort], $asHtml: Boolean) {
         Recommendation (id: $id, mediaId: $mediaId, mediaRecommendationId: $mediaRecommendationId, userId: $userId, rating: $rating, onList: $onList, rating_greater: $rating_greater, rating_lesser: $rating_lesser, sort: $sort) {

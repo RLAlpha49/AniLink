@@ -218,3 +218,20 @@ export const CharacterSortMappings = [
   'FAVOURITES_DESC',
   'RELEVANCE'
 ]
+
+/**
+ * `RecommendationSort` is a type that represents the sorting options for the `Recommendation` query.
+ * It can be one of the following: 'ID', 'ID_DESC', 'RATING', 'RATING_DESC'.
+ */
+export type RecommendationSort = 'ID' | 'ID_DESC' | 'RATING' | 'RATING_DESC'
+
+/**
+ * `RecommendationSortMappings` is a mapping of `RecommendationSort` enum values to their corresponding string values.
+ * It can be one of the following: 'ID', 'ID_DESC', 'RATING', 'RATING_DESC'.
+ */
+export const RecommendationSortMappings = [
+  'ID',
+  'ID_DESC',
+  'RATING',
+  'RATING_DESC'
+]

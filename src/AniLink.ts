@@ -40,7 +40,7 @@ import { MediasQuery } from './apis/anilist/query/page/Medias'
 import {NotificationQuery, NotificationVariables} from './apis/anilist/query/Notification'
 import { type NotificationResponse } from './apis/anilist/interfaces/responses/query/Notification'
 import { NotificationsQuery } from './apis/anilist/query/page/Notifications'
-import { RecommendationQuery } from './apis/anilist/query/Recommendation'
+import {RecommendationQuery, RecommendationVariables} from './apis/anilist/query/Recommendation'
 import { type RecommendationResponse } from './apis/anilist/interfaces/responses/query/Recommendation'
 import { RecommendationsQuery } from './apis/anilist/query/page/Recommendations'
 import { ReviewQuery } from './apis/anilist/query/Review'
@@ -219,7 +219,7 @@ export class AniLink {
        * Fetches recommendation data from the Anilist API.
        * @returns {Promise<RecommendationResponse>} A promise that resolves to the recommendation data.
        */
-      recommendation: () => Promise<RecommendationResponse>
+      recommendation: (variables: RecommendationVariables) => Promise<RecommendationResponse>
 
       /**
        * Fetches markdown data from the Anilist API.
@@ -459,7 +459,7 @@ export class AniLink {
         follower: followerQueryInstance.follower.bind(followerQueryInstance),
         thread: threadQueryInstance.thread.bind(threadQueryInstance),
         threadComment: threadCommentQueryInstance.threadComment.bind(threadCommentQueryInstance),
-        recommendation: recommendationQueryInstance.recommmendation.bind(recommendationQueryInstance),
+        recommendation: recommendationQueryInstance.recommendation.bind(recommendationQueryInstance),
         markdown: markdownQueryInstance.markdown.bind(markdownQueryInstance),
         aniChartUser: aniChartUserQueryInstance.aniChartUser.bind(aniChartUserQueryInstance),
         siteStatistics: siteStatisticsQueryInstance.siteStatistics.bind(siteStatisticsQueryInstance),
