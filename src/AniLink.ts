@@ -1,7 +1,7 @@
 import { type Activity } from './apis/anilist/interfaces/Activity'
 import { ActivityQuery, type ActivityVariables } from './apis/anilist/query/Activity'
 import { type ActivityReply } from './apis/anilist/interfaces/ActivityReply'
-import { ActivityReplyQuery } from './apis/anilist/query/ActivityReply'
+import {ActivityReplyQuery, ActivityReplyVariables} from './apis/anilist/query/ActivityReply'
 import { ActivityRepliesQuery } from './apis/anilist/query/page/ActivityReplies'
 import { ActivitiesQuery } from './apis/anilist/query/page/Activities'
 import { AiringScheduleQuery } from './apis/anilist/query/AiringSchedule'
@@ -178,9 +178,10 @@ export class AniLink {
 
       /**
        * Fetches activity reply data from the Anilist API.
+       * @param {ActivityReplyVariables} variables - The variables for the query.
        * @returns {Promise<ActivityReply>} A promise that resolves to the activity reply data.
        */
-      activityReply: () => Promise<ActivityReply>
+      activityReply: (variables: ActivityReplyVariables) => Promise<ActivityReply>
 
       /**
        * Fetches following data from the Anilist API.
