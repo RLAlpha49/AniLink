@@ -3,9 +3,11 @@ __tests__/
 src/
 .idea/
 docs/
-.eslintignore
 babel.config.js
 jest.config.js
 tsconfig.json
 typedoc.json
 .env
+.eslintignore
+.eslintrc.js
+.gitattributes
