@@ -2,6 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type CharacterResponse, CharacterSchema } from '../interfaces/responses/query/Character'
 import {CharacterSort, CharacterSortMappings, MediaSort, MediaSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `CharacterVariables` is an interface representing the variables for the `CharacterQuery`.
@@ -113,6 +114,8 @@ export class CharacterQuery extends APIWrapper {
       mediaPage: 'number',
       mediaPerPage: 'number'
     }
+
+    validateVariables(variables, variableTypeMappings)
 
     const query = `
       query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [CharacterSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int) {
