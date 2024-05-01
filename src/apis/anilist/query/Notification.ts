@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type NotificationResponse, NotificationSchema } from '../interfaces/responses/query/Notification'
+import {NotificationType, NotificationTypeMappings} from "../types/Type";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `NotificationVariables` is an interface representing the variables for the `NotificationQuery`.
@@ -10,7 +12,7 @@ export interface NotificationVariables {
   /**
    * `type` is a string representing the type of the notification.
    */
-  type?: string
+  type?: NotificationType
 
   /**
    * `resetNotificationCount` is a boolean indicating whether to reset the notification count.
@@ -20,7 +22,7 @@ export interface NotificationVariables {
   /**
    * `type_in` is an array of strings representing the types of the notifications.
    */
-  type_in?: string[]
+  type_in?: NotificationType[]
 
   /**
    * `asHtml` is a boolean indicating whether to return the result as HTML.
@@ -54,7 +56,19 @@ export class NotificationQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async notification (variables?: NotificationVariables): Promise<NotificationResponse> {
+  async notification (variables: NotificationVariables): Promise<NotificationResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      type: NotificationTypeMappings,
+      resetNotificationCount: 'Boolean',
+      type_in: NotificationTypeMappings,
+      asHtml: 'Boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($type: NotificationType, $resetNotificationCount: Boolean, $type_in: [NotificationType], $asHtml: Boolean) {
         Notification (type: $type, resetNotificationCount: $resetNotificationCount, type_in: $type_in) {
