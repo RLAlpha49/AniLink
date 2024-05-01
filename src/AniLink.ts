@@ -10,7 +10,7 @@ import { AiringSchedulesQuery } from './apis/anilist/query/page/AiringSchedules'
 import { AniChartUserQuery } from './apis/anilist/query/AniChartUser'
 import { type AniChartUserResponse } from './apis/anilist/interfaces/responses/query/AniChartUser'
 import { type BasicUser } from './apis/anilist/interfaces/BasicUser'
-import { CharacterQuery } from './apis/anilist/query/Character'
+import {CharacterQuery, CharacterVariables} from './apis/anilist/query/Character'
 import { type CharacterResponse } from './apis/anilist/interfaces/responses/query/Character'
 import { CharactersQuery } from './apis/anilist/query/page/Characters'
 import { ExternalLinkSourceCollectionQuery } from './apis/anilist/query/ExternalLinkSourceCollection'
@@ -114,7 +114,7 @@ export class AniLink {
        * Fetches character data from the Anilist API.
        * @returns {Promise<CharacterResponse>} A promise that resolves to the character data.
        */
-      character: () => Promise<CharacterResponse>
+      character: (variables: CharacterVariables) => Promise<CharacterResponse>
 
       /**
        * Fetches staff data from the Anilist API.

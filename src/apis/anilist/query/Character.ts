@@ -1,6 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type CharacterResponse, CharacterSchema } from '../interfaces/responses/query/Character'
+import {CharacterSort, CharacterSortMappings, MediaSort, MediaSortMappings} from "../types/Sort";
 
 /**
  * `CharacterVariables` is an interface representing the variables for the `CharacterQuery`.
@@ -10,7 +11,7 @@ export interface CharacterVariables {
   /**
    * `id` is a number representing the id of the character.
    */
-  id?: number
+  id: number
 
   /**
    * `isBirthday` is a boolean representing whether it is the character's birthday.
@@ -20,27 +21,27 @@ export interface CharacterVariables {
   /**
    * `search` is a string representing the search term.
    */
-  search?: string
+  search: string
 
   /**
    * `id_not` is a number representing the id of the character that should not be included.
    */
-  id_not?: number
+  id_not: number
 
   /**
    * `id_in` is an array of numbers representing the ids of the characters that should be included.
    */
-  id_in?: number[]
+  id_in: number[]
 
   /**
    * `id_not_in` is an array of numbers representing the ids of the characters that should not be included.
    */
-  id_not_in?: number[]
+  id_not_in: number[]
 
   /**
    * `sort` is an array of strings representing the sort order.
    */
-  sort?: string[]
+  sort?: CharacterSort[]
 
   /**
    * `asHtml` is a boolean representing whether to return the result as HTML.
@@ -50,7 +51,7 @@ export interface CharacterVariables {
   /**
    * `mediaSort` is an array of strings representing the sort order for media.
    */
-  mediaSort?: string[]
+  mediaSort?: MediaSort[]
 
   /**
    * `mediaOnList` is a boolean representing whether the media is on the list.
@@ -94,7 +95,25 @@ export class CharacterQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async character (variables?: CharacterVariables): Promise<CharacterResponse> {
+  async character (variables: CharacterVariables): Promise<CharacterResponse> {
+    if (!variables.id && !variables.id_not && !variables.id_in && !variables.id_not_in && !variables.search) {
+      throw new Error('At least one of the following must be provided: id, id_not, id_in, id_not_in, search')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      isBirthday: 'boolean',
+      search: 'string',
+      id_not: 'number',
+      id_in: 'number[]',
+      id_not_in: 'number[]',
+      sort: CharacterSortMappings,
+      asHtml: 'boolean',
+      mediaSort: MediaSortMappings,
+      mediaOnList: 'boolean',
+      mediaPage: 'number',
+      mediaPerPage: 'number'
+    }
+
     const query = `
       query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [CharacterSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int) {
         Character (id: $id, isBirthday: $isBirthday, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {

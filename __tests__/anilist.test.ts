@@ -89,13 +89,13 @@ describe('Anilist API query', () => {
 
   test('Character query', async (): Promise<CharacterResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.query.character({
-      id: 1,
       asHtml: true,
       mediaSort: ['POPULARITY_DESC'],
       mediaType: 'ANIME',
       mediaOnList: true,
       mediaPage: 1,
-      mediaPerPage: 10
+      mediaPerPage: 10,
+      search: 'Rimuru Tempest'
     }))
     expect(response).toBeDefined()
     return response.data.Character
