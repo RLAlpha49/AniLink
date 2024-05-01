@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type MediaTrendResponse, MediaTrendSchema } from '../interfaces/responses/query/MediaTrend'
+import {MediaTrendSort, MediaTrendSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `MediaTrendVariables` is an interface representing the variables for the `MediaTrendQuery`.
@@ -130,7 +132,7 @@ export interface MediaTrendVariables {
   /**
    * `sort` is an array of strings representing the sort order of the media.
    */
-  sort?: string[]
+  sort?: MediaTrendSort[]
 
   /**
    * `asHtml` is a boolean indicating whether to return the result as HTML.
@@ -164,7 +166,41 @@ export class MediaTrendQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async mediaTrend (variables?: MediaTrendVariables): Promise<MediaTrendResponse> {
+  async mediaTrend (variables: MediaTrendVariables): Promise<MediaTrendResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      mediaId: 'number',
+      date: 'number',
+      trending: 'number',
+      averageScore: 'number',
+      popularity: 'number',
+      episode: 'number',
+      releasing: 'boolean',
+      mediaId_not: 'number',
+      mediaId_in: 'number[]',
+      mediaId_not_in: 'number[]',
+      date_greater: 'number',
+      date_lesser: 'number',
+      trending_greater: 'number',
+      trending_lesser: 'number',
+      trending_not: 'number',
+      averageScore_greater: 'number',
+      averageScore_lesser: 'number',
+      averageScore_not: 'number',
+      popularity_greater: 'number',
+      popularity_lesser: 'number',
+      popularity_not: 'number',
+      episode_greater: 'number',
+      episode_lesser: 'number',
+      episode_not: 'number',
+      sort: MediaTrendSortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($mediaId: Int, $date: Int, $trending: Int, $averageScore: Int, $popularity: Int, $episode: Int, $releasing: Boolean, $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $date_greater: Int, $date_lesser: Int, $trending_greater: Int, $trending_lesser: Int, $trending_not: Int, $averageScore_greater: Int, $averageScore_lesser: Int, $averageScore_not: Int, $popularity_greater: Int, $popularity_lesser: Int, $popularity_not: Int, $episode_greater: Int, $episode_lesser: Int, $episode_not: Int, $sort: [MediaTrendSort], $asHtml: Boolean) {
         MediaTrend (mediaId: $mediaId, date: $date, trending: $trending, averageScore: $averageScore, popularity: $popularity, episode: $episode, releasing: $releasing, mediaId_not: $mediaId_not, mediaId_in: $mediaId_in, mediaId_not_in: $mediaId_not_in, date_greater: $date_greater, date_lesser: $date_lesser, trending_greater: $trending_greater, trending_lesser: $trending_lesser, trending_not: $trending_not, averageScore_greater: $averageScore_greater, averageScore_lesser: $averageScore_lesser, averageScore_not: $averageScore_not, popularity_greater: $popularity_greater, popularity_lesser: $popularity_lesser, popularity_not: $popularity_not, episode_greater: $episode_greater, episode_lesser: $episode_lesser, episode_not: $episode_not, sort: $sort) {

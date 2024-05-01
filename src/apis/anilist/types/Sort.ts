@@ -92,6 +92,33 @@ export const MediaListSortMappings = [
 ]
 
 /**
+ * `MediaTrendSort` is a type that represents the sorting options for the `MediaTrend` query.
+ * It can be one of the following: 'ID', 'ID_DESC', 'MEDIA_ID', 'MEDIA_ID_DESC', 'DATE', 'DATE_DESC', 'SCORE', 'SCORE_DESC', 'POPULARITY', 'POPULARITY_DESC', 'TRENDING', 'TRENDING_DESC', 'EPISODE', 'EPISODE_DESC'.
+ */
+export type MediaTrendSort = 'ID' | 'ID_DESC' | 'MEDIA_ID' | 'MEDIA_ID_DESC' | 'DATE' | 'DATE_DESC' | 'SCORE' | 'SCORE_DESC' | 'POPULARITY' | 'POPULARITY_DESC' | 'TRENDING' | 'TRENDING_DESC' | 'EPISODE' | 'EPISODE_DESC'
+
+/**
+ * `MediaTrendSortMappings` is a mapping of `MediaTrendSort` enum values to their corresponding string values.
+ * It can be one of the following: 'ID', 'ID_DESC', 'MEDIA_ID', 'MEDIA_ID_DESC', 'DATE', 'DATE_DESC', 'SCORE', 'SCORE_DESC', 'POPULARITY', 'POPULARITY_DESC', 'TRENDING', 'TRENDING_DESC', 'EPISODE', 'EPISODE_DESC'.
+ */
+export const MediaTrendSortMappings = [
+  'ID',
+  'ID_DESC',
+  'MEDIA_ID',
+  'MEDIA_ID_DESC',
+  'DATE',
+  'DATE_DESC',
+  'SCORE',
+  'SCORE_DESC',
+  'POPULARITY',
+  'POPULARITY_DESC',
+  'TRENDING',
+  'TRENDING_DESC',
+  'EPISODE',
+  'EPISODE_DESC'
+]
+
+/**
  * `UserSort` is a type that represents the sorting options for the `User` query.
  * It can be one of the following: 'ID', 'ID_DESC', 'USERNAME', 'USERNAME_DESC', 'WATCHED_TIME', 'WATCHED_TIME_DESC', 'CHAPTERS_READ', 'CHAPTERS_READ_DESC', 'SEARCH_MATCH'.
  */
