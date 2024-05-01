@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type MediaTrendResponse, MediaTrendSchema } from '../../interfaces/responses/query/MediaTrend'
+import {MediaTrendSortMappings} from "../../types/Sort";
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `MediaTrendsVariables` is an interface representing the variables for the `MediaTrendsQuery`.
@@ -174,7 +176,43 @@ export class MediaTrendsQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async mediaTrends (variables?: MediaTrendsVariables): Promise<MediaTrendResponse> {
+  async mediaTrends (variables: MediaTrendsVariables): Promise<MediaTrendResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      page: 'number',
+      perPage: 'number',
+      mediaId: 'number',
+      date: 'number',
+      trending: 'number',
+      averageScore: 'number',
+      popularity: 'number',
+      episode: 'number',
+      releasing: 'boolean',
+      mediaId_not: 'number',
+      mediaId_in: 'number[]',
+      mediaId_not_in: 'number[]',
+      date_greater: 'number',
+      date_lesser: 'number',
+      trending_greater: 'number',
+      trending_lesser: 'number',
+      trending_not: 'number',
+      averageScore_greater: 'number',
+      averageScore_lesser: 'number',
+      averageScore_not: 'number',
+      popularity_greater: 'number',
+      popularity_lesser: 'number',
+      popularity_not: 'number',
+      episode_greater: 'number',
+      episode_lesser: 'number',
+      episode_not: 'number',
+      sort: MediaTrendSortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($page: Int, $perPage: Int, $mediaId: Int, $date: Int, $trending: Int, $averageScore: Int, $popularity: Int, $episode: Int, $releasing: Boolean, $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $date_greater: Int, $date_lesser: Int, $trending_greater: Int, $trending_lesser: Int, $trending_not: Int, $averageScore_greater: Int, $averageScore_lesser: Int, $averageScore_not: Int, $popularity_greater: Int, $popularity_lesser: Int, $popularity_not: Int, $episode_greater: Int, $episode_lesser: Int, $episode_not: Int, $sort: [MediaTrendSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {

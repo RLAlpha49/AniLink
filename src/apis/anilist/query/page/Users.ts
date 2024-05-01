@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type UserResponse, UserSchema } from '../../interfaces/responses/query/User'
+import {UserSortMappings, UserStatisticSortMappings} from "../../types/Sort";
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `UsersVariables` is an interface representing the variables for the `UsersQuery`.
@@ -94,7 +96,27 @@ export class UsersQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async users (variables?: UsersVariables): Promise<UserResponse> {
+  async users (variables: UsersVariables): Promise<UserResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be provided')
+    }
+    const variableTypeMappings = {
+      page: 'number',
+      perPage: 'number',
+      id: 'number',
+      name: 'string',
+      isModerator: 'boolean',
+      search: 'string',
+      sort: UserSortMappings,
+      asHtml: 'boolean',
+      animeStatLimit: 'number',
+      mangaStatLimit: 'number',
+      animeStatSort: UserStatisticSortMappings,
+      mangaStatSort: UserStatisticSortMappings
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($page: Int, $perPage: Int, $id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Page (page: $page, perPage: $perPage) {

@@ -2,65 +2,65 @@ import { type Activity } from './apis/anilist/interfaces/Activity'
 import { ActivityQuery, type ActivityVariables } from './apis/anilist/query/Activity'
 import { type ActivityReply } from './apis/anilist/interfaces/ActivityReply'
 import { ActivityReplyQuery, type ActivityReplyVariables } from './apis/anilist/query/ActivityReply'
-import { ActivityRepliesQuery } from './apis/anilist/query/page/ActivityReplies'
-import { ActivitiesQuery } from './apis/anilist/query/page/Activities'
+import {ActivityRepliesQuery, ActivityRepliesVariables} from './apis/anilist/query/page/ActivityReplies'
+import {ActivitiesQuery, ActivitiesVariables} from './apis/anilist/query/page/Activities'
 import { AiringScheduleQuery, type AiringScheduleVariables } from './apis/anilist/query/AiringSchedule'
 import { type AiringScheduleResponse } from './apis/anilist/interfaces/responses/query/AiringSchedule'
-import { AiringSchedulesQuery } from './apis/anilist/query/page/AiringSchedules'
+import {AiringSchedulesQuery, AiringSchedulesVariables} from './apis/anilist/query/page/AiringSchedules'
 import { AniChartUserQuery } from './apis/anilist/query/AniChartUser'
 import { type AniChartUserResponse } from './apis/anilist/interfaces/responses/query/AniChartUser'
 import { type BasicUser } from './apis/anilist/interfaces/BasicUser'
 import { CharacterQuery, type CharacterVariables } from './apis/anilist/query/Character'
 import { type CharacterResponse } from './apis/anilist/interfaces/responses/query/Character'
-import { CharactersQuery } from './apis/anilist/query/page/Characters'
+import {CharactersQuery, CharactersVariables} from './apis/anilist/query/page/Characters'
 import { ExternalLinkSourceCollectionQuery } from './apis/anilist/query/ExternalLinkSourceCollection'
 import {
   type ExternalLinkSourceCollectionResponse
 } from './apis/anilist/interfaces/responses/query/ExternalLinkSourceCollection'
 import { FollowerQuery, type FollowerVariables } from './apis/anilist/query/Follower'
-import { FollowersQuery } from './apis/anilist/query/page/Followers'
+import {FollowersQuery, FollowersVariables} from './apis/anilist/query/page/Followers'
 import { FollowingQuery, type FollowingVariables } from './apis/anilist/query/Following'
-import { FollowingsQuery } from './apis/anilist/query/page/Followings'
+import {FollowingsQuery, FollowingsVariables} from './apis/anilist/query/page/Followings'
 import { GenreCollectionQuery } from './apis/anilist/query/GenreCollection'
-import { LikesQuery } from './apis/anilist/query/page/Likes'
+import {LikesQuery, LikesVariables} from './apis/anilist/query/page/Likes'
 import { MarkdownQuery, type MarkdownVariables } from './apis/anilist/query/Markdown'
 import {MediaListCollectionQuery, MediaListCollectionVariables} from './apis/anilist/query/MediaListCollection'
 import { type MediaListCollectionResponse } from './apis/anilist/interfaces/responses/query/MediaListCollectionResponse'
 import { MediaListQuery, type MediaListVariables } from './apis/anilist/query/MediaList'
 import { type MediaListResponse } from './apis/anilist/interfaces/responses/query/MediaList'
-import { MediaListsQuery } from './apis/anilist/query/page/MediaLists'
+import {MediaListsQuery, MediaListsVariables} from './apis/anilist/query/page/MediaLists'
 import { MediaQuery, type MediaVariables } from './apis/anilist/query/Media'
 import { type MediaResponse } from './apis/anilist/interfaces/responses/query/Media'
 import { MediaTagCollectionQuery } from './apis/anilist/query/MediaTagCollection'
 import { type MediaTagCollectionResponse } from './apis/anilist/interfaces/responses/query/MediaTagCollection'
 import {MediaTrendQuery, MediaTrendVariables} from './apis/anilist/query/MediaTrend'
 import { type MediaTrendResponse } from './apis/anilist/interfaces/responses/query/MediaTrend'
-import { MediaTrendsQuery } from './apis/anilist/query/page/MediaTrends'
-import { MediasQuery } from './apis/anilist/query/page/Medias'
+import {MediaTrendsQuery, MediaTrendsVariables} from './apis/anilist/query/page/MediaTrends'
+import {MediasQuery, MediasVariables} from './apis/anilist/query/page/Medias'
 import {NotificationQuery, NotificationVariables} from './apis/anilist/query/Notification'
 import { type NotificationResponse } from './apis/anilist/interfaces/responses/query/Notification'
-import { NotificationsQuery } from './apis/anilist/query/page/Notifications'
+import {NotificationsQuery, NotificationsVariables} from './apis/anilist/query/page/Notifications'
 import {RecommendationQuery, RecommendationVariables} from './apis/anilist/query/Recommendation'
 import { type RecommendationResponse } from './apis/anilist/interfaces/responses/query/Recommendation'
-import { RecommendationsQuery } from './apis/anilist/query/page/Recommendations'
+import {RecommendationsQuery, RecommendationsVariables} from './apis/anilist/query/page/Recommendations'
 import {ReviewQuery, ReviewVariables} from './apis/anilist/query/Review'
 import { type ReviewResponse } from './apis/anilist/interfaces/responses/query/Review'
-import { ReviewsQuery } from './apis/anilist/query/page/Reviews'
+import {ReviewsQuery, ReviewsVariables} from './apis/anilist/query/page/Reviews'
 import { SaveMediaListEntryMutation, type SaveMediaListEntryVariables } from './apis/anilist/mutation/SaveMediaListEntry'
 import { SiteStatisticsQuery } from './apis/anilist/query/SiteStatistics'
 import { type SiteStatisticsResponse } from './apis/anilist/interfaces/responses/query/SiteStatistics'
 import {StaffQuery, StaffVariables} from './apis/anilist/query/Staff'
 import { type StaffResponse } from './apis/anilist/interfaces/responses/query/Staff'
-import { StaffsQuery } from './apis/anilist/query/page/Staffs'
+import {StaffsQuery, StaffsVariables} from './apis/anilist/query/page/Staffs'
 import {StudioQuery, StudioVariables} from './apis/anilist/query/Studio'
 import { type StudioResponse } from './apis/anilist/interfaces/responses/query/Studio'
-import { StudiosQuery } from './apis/anilist/query/page/Studios'
+import {StudiosQuery, StudiosVariables} from './apis/anilist/query/page/Studios'
 import {ThreadCommentQuery, ThreadCommentVariables} from './apis/anilist/query/ThreadComment'
 import { type ThreadCommentResponse } from './apis/anilist/interfaces/responses/query/ThreadComment'
-import { ThreadCommentsQuery } from './apis/anilist/query/page/ThreadCommments'
+import {ThreadCommentsQuery, ThreadCommentsVariables} from './apis/anilist/query/page/ThreadCommments'
 import {ThreadQuery, ThreadVariables} from './apis/anilist/query/Thread'
 import { type ThreadResponse } from './apis/anilist/interfaces/responses/query/Thread'
-import { ThreadsQuery } from './apis/anilist/query/page/Threads'
+import {ThreadsQuery, ThreadsVariables} from './apis/anilist/query/page/Threads'
 import {
   UpdateMediaListEntriesMutation,
   type UpdateMediaListEntriesVariables
@@ -68,7 +68,7 @@ import {
 import { UpdateUserMutation, type UpdateUserVariables } from './apis/anilist/mutation/UpdateUser'
 import {UserQuery, UserVariables} from './apis/anilist/query/User'
 import { type UserResponse } from './apis/anilist/interfaces/responses/query/User'
-import { UsersQuery } from './apis/anilist/query/page/Users'
+import {UsersQuery, UsersVariables} from './apis/anilist/query/page/Users'
 import { ViewerQuery } from './apis/anilist/query/Viewer'
 
 /**
@@ -257,111 +257,129 @@ export class AniLink {
       page: {
         /**
          * Fetches users data from the Anilist API.
+         * @param {UsersVariables} variables - The variables for the query.
          * @returns {Promise<UserResponse>} A promise that resolves to the users data.
          */
-        users: () => Promise<UserResponse>
+        users: (variables: UsersVariables) => Promise<UserResponse>
 
         /**
          * Fetches medias data from the Anilist API.
+         * @param {MediasVariables} variables - The variables for the query.
          * @returns {Promise<MediaResponse>} A promise that resolves to the medias data.
          */
-        medias: () => Promise<MediaResponse>
+        medias: (variables: MediasVariables) => Promise<MediaResponse>
 
         /**
          * Fetches characters data from the Anilist API.
+         * @param {CharactersVariables} variables - The variables for the query.
          * @returns {Promise<CharacterResponse>} A promise that resolves to the characters data.
          */
-        characters: () => Promise<CharacterResponse>
+        characters: (variables: CharactersVariables) => Promise<CharacterResponse>
 
         /**
          * Fetches staffs data from the Anilist API.
+         * @param {StaffsVariables} variables - The variables for the query.
          * @returns {Promise<StaffResponse>} A promise that resolves to the staffs data.
          */
-        staffs: () => Promise<StaffResponse>
+        staffs: (variables: StaffsVariables) => Promise<StaffResponse>
 
         /**
          * Fetches studios data from the Anilist API.
+         * @param {StudiosVariables} variables - The variables for the query.
          * @returns {Promise<StudioResponse>} A promise that resolves to the studios data.
          */
-        studios: () => Promise<StudioResponse>
+        studios: (variables: StudiosVariables) => Promise<StudioResponse>
 
         /**
          * Fetches media lists data from the Anilist API.
+         * @param {MediaListsVariables} variables - The variables for the query.
          * @returns {Promise<MediaListResponse>} A promise that resolves to the media lists data.
          */
-        mediaLists: () => Promise<MediaListResponse>
+        mediaLists: (variables: MediaListsVariables) => Promise<MediaListResponse>
 
         /**
          * Fetches airing schedules data from the Anilist API.
+         * @param {AiringSchedulesVariables} variables - The variables for the query.
          * @returns {Promise<AiringScheduleResponse>} A promise that resolves to the airing schedules data.
          */
-        airingSchedules: () => Promise<AiringScheduleResponse>
+        airingSchedules: (variables: AiringSchedulesVariables) => Promise<AiringScheduleResponse>
 
         /**
          * Fetches media trends data from the Anilist API.
+         * @param {MediaTrendsVariables} variables - The variables for the query.
          * @returns {Promise<MediaTrendResponse>} A promise that resolves to the media trends data.
          */
-        mediaTrends: () => Promise<MediaTrendResponse>
+        mediaTrends: (variables: MediaTrendsVariables) => Promise<MediaTrendResponse>
 
         /**
          * Fetches notifications data from the Anilist API.
+         * @param {NotificationsVariables} variables - The variables for the query.
          * @returns {Promise<NotificationResponse>} A promise that resolves to the notifications data.
          */
-        notifications: () => Promise<NotificationResponse>
+        notifications: (variables: NotificationsVariables) => Promise<NotificationResponse>
 
         /**
          * Fetches followers data from the Anilist API.
+         * @param {FollowersVariables} variables - The variables for the query.
          * @returns {Promise<UserResponse>} A promise that resolves to the followers data.
          */
-        followers: () => Promise<UserResponse>
+        followers: (variables: FollowersVariables) => Promise<UserResponse>
 
         /**
          * Fetches following data from the Anilist API.
+         * @param {FollowingsVariables} variables - The variables for the query.
          * @returns {Promise<UserResponse>} A promise that resolves to the following data.
          */
-        following: () => Promise<UserResponse>
+        following: (variables: FollowingsVariables) => Promise<UserResponse>
 
         /**
          * Fetches activities data from the Anilist API.
+         * @param {ActivitiesVariables} variables - The variables for the query.
          * @returns {Promise<Activity>} A promise that resolves to the activities data.
          */
-        activities: () => Promise<Activity>
+        activities: (variables: ActivitiesVariables) => Promise<Activity>
 
         /**
          * Fetches activity replies data from the Anilist API.
+         * @param {ActivityRepliesVariables} variables - The variables for the query.
          * @returns {Promise<ActivityReply>} A promise that resolves to the activity replies data.
          */
-        activityReplies: () => Promise<ActivityReply>
+        activityReplies: (variables: ActivityRepliesVariables) => Promise<ActivityReply>
 
         /**
          * Fetches threads data from the Anilist API.
+         * @param {ThreadsVariables} variables - The variables for the query.
          * @returns {Promise<ThreadResponse>} A promise that resolves to the threads data.
          */
-        threads: () => Promise<ThreadResponse>
+        threads: (variables: ThreadsVariables) => Promise<ThreadResponse>
 
         /**
          * Fetches thread comments data from the Anilist API.
+         * @param {ThreadCommentsVariables} variables - The variables for the query.
          * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the thread comments data.
          */
-        threadComments: () => Promise<ThreadCommentResponse>
+        threadComments: (variables: ThreadCommentsVariables) => Promise<ThreadCommentResponse>
 
         /**
          * Fetches reviews data from the Anilist API.
+         * @param {ReviewsVariables} variables - The variables for the query.
          * @returns {Promise<ReviewResponse>} A promise that resolves to the reviews data.
          */
-        reviews: () => Promise<ReviewResponse>
+        reviews: (variables: ReviewsVariables) => Promise<ReviewResponse>
 
         /**
          * Fetches recommendations data from the Anilist API.
+         * @param {RecommendationsVariables} variables - The variables for the query.
          * @returns {Promise<RecommendationResponse>} A promise that resolves to the recommendations data.
          */
-        recommendations: () => Promise<RecommendationResponse>
+        recommendations: (variables: RecommendationsVariables) => Promise<RecommendationResponse>
 
         /**
          * Fetches likes data from the Anilist API.
+         * @param {LikesVariables} variables - The variables for the query.
          * @returns {Promise<BasicUser>} A promise that resolves to the likes data.
          */
-        likes: () => Promise<BasicUser>
+        likes: (variables: LikesVariables) => Promise<BasicUser>
       }
     }
     /**

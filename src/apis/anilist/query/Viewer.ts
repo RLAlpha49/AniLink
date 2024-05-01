@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type UserResponse, UserSchema } from '../interfaces/responses/query/User'
-import {UserSortMappings, UserStatisticSort, UserStatisticSortMappings} from "../types/Sort";
+import {UserStatisticSort, UserStatisticSortMappings} from "../types/Sort";
 import {validateVariables} from "../../../base/ValidateVariables";
 
 /**

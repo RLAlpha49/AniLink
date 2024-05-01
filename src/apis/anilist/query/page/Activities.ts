@@ -1,6 +1,9 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type Activity, ActivityWithRepliesSchema } from '../../interfaces/Activity'
+import {ActivityTypeMappings} from "../../types/ActivityType";
+import {ActivitySortMappings} from "../../types/Sort";
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `ActivitiesVariables` is an interface representing the variables for the `ActivitiesQuery`.
@@ -179,7 +182,44 @@ export class ActivitiesQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async activities (variables?: ActivitiesVariables): Promise<Activity> {
+  async activities (variables: ActivitiesVariables): Promise<Activity> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      page: 'number',
+      perPage: 'number',
+      id: 'number',
+      userId: 'number',
+      messengerId: 'number',
+      mediaId: 'number',
+      type: ActivityTypeMappings,
+      isFollowing: 'boolean',
+      hasReplies: 'boolean',
+      hasRepliesOrTypeText: 'boolean',
+      createdAt: 'number',
+      id_not: 'number',
+      id_in: 'number[]',
+      id_not_in: 'number[]',
+      userId_not: 'number',
+      userId_in: 'number[]',
+      userId_not_in: 'number[]',
+      messengerId_not: 'number',
+      messengerId_in: 'number[]',
+      messengerId_not_in: 'number[]',
+      mediaId_not: 'number',
+      mediaId_in: 'number[]',
+      mediaId_not_in: 'number[]',
+      type_not: ActivityTypeMappings,
+      type_in: ActivityTypeMappings,
+      type_not_in: ActivityTypeMappings,
+      createdAt_greater: 'number',
+      sort: ActivitySortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($page: Int, $perPage: Int, $id: Int, $userId: Int, $messengerId: Int, $mediaId: Int, $type: ActivityType, $isFollowing: Boolean, $hasReplies: Boolean, $hasRepliesOrTypeText: Boolean, $createdAt: Int, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $userId_not: Int, $userId_in: [Int], $userId_not_in: [Int], $messengerId_not: Int, $messengerId_in: [Int], $messengerId_not_in: [Int], $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $type_not: ActivityType, $type_in: [ActivityType], $type_not_in: [ActivityType], $createdAt_greater: Int, $sort: [ActivitySort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {

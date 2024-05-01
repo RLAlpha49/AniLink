@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type BasicUser, BasicUserSchema } from '../../interfaces/BasicUser'
+import {LikeableType, LikeableTypeMappings} from "../../types/Type";
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `LikesVariables` is an interface representing the variables for the `LikesQuery`.
@@ -15,7 +17,7 @@ export interface LikesVariables {
   /**
    * `type` is a string representing the type of the likeable item.
    */
-  type?: string
+  type?: LikeableType
 
   /**
    * `page` is a number representing the page number.
@@ -54,7 +56,19 @@ export class LikesQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async likes (variables?: LikesVariables): Promise<BasicUser> {
+  async likes (variables: LikesVariables): Promise<BasicUser> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      likeableId: 'number',
+      type: LikeableTypeMappings,
+      page: 'number',
+      perPage: 'number'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+    
     const query = `
       query ($likeableId: Int, $type: LikeableType, $page: Int, $perPage: Int) {
         Page (page: $page, perPage: $perPage) {

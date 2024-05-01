@@ -1,6 +1,7 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type ActivityReply, ActivityReplySchema } from '../../interfaces/ActivityReply'
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `ActivityRepliesVariables` is an interface representing the variables for the `ActivityRepliesQuery`.
@@ -59,7 +60,20 @@ export class ActivityRepliesQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async activityReplies (variables?: ActivityRepliesVariables): Promise<ActivityReply> {
+  async activityReplies (variables: ActivityRepliesVariables): Promise<ActivityReply> {
+    if (!variables.id) {
+      throw new Error('The id is required')
+    }
+    const variableTypeMappings = {
+      page: 'number',
+      perPage: 'number',
+      id: 'number',
+      activityId: 'number',
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($page: Int, $perPage: Int, $id: Int, $activityId: Int, $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {

@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type RecommendationResponse, RecommendationSchema } from '../../interfaces/responses/query/Recommendation'
+import {RecommendationSortMappings} from "../../types/Sort";
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `RecommendationsVariables` is an interface representing the variables for the `RecommendationsQuery`.
@@ -94,7 +96,27 @@ export class RecommendationsQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async recommendations (variables?: RecommendationsVariables): Promise<RecommendationResponse> {
+  async recommendations (variables: RecommendationsVariables): Promise<RecommendationResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      page: 'number',
+      perPage: 'number',
+      id: 'number',
+      mediaId: 'number',
+      mediaRecommendationId: 'number',
+      userId: 'number',
+      rating: 'number',
+      onList: 'boolean',
+      rating_greater: 'number',
+      rating_lesser: 'number',
+      sort: RecommendationSortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($page: Int, $perPage: Int, $id: Int, $mediaId: Int, $mediaRecommendationId: Int, $userId: Int, $rating: Int, $onList: Boolean, $rating_greater: Int, $rating_lesser: Int, $sort: [RecommendationSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {

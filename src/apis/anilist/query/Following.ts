@@ -80,6 +80,7 @@ export class FollowingQuery extends APIWrapper {
     }
 
     validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($userId: Int!, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Following (userId: $userId, sort: $sort) {

@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type UserResponse, UserSchema } from '../../interfaces/responses/query/User'
+import {UserSortMappings, UserStatisticSortMappings} from "../../types/Sort";
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `FollowingsVariables` is an interface representing the variables for the `FollowingsQuery`.
@@ -74,7 +76,23 @@ export class FollowingsQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async followings (variables?: FollowingsVariables): Promise<UserResponse> {
+  async followings (variables: FollowingsVariables): Promise<UserResponse> {
+    if (!variables.userId) {
+      throw new Error('userId is required')
+    }
+    const variableTypeMappings = {
+      page: 'number',
+      perPage: 'number',
+      userId: 'number',
+      sort: UserSortMappings,
+      animeStatLimit: 'number',
+      mangaStatLimit: 'number',
+      animeStatSort: UserStatisticSortMappings,
+      mangaStatSort: UserStatisticSortMappings
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($page: Int, $perPage: Int, $userId: Int!, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Page (page: $page, perPage: $perPage) {

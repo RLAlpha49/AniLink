@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type CharacterResponse, CharacterSchema } from '../../interfaces/responses/query/Character'
+import {CharacterSortMappings, MediaSortMappings} from "../../types/Sort";
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `CharactersVariables` is an interface representing the variables for the `CharactersQuery`.
@@ -104,7 +106,29 @@ export class CharactersQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async characters (variables?: CharactersVariables): Promise<CharacterResponse> {
+  async characters (variables: CharactersVariables): Promise<CharacterResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      page: 'number',
+      perPage: 'number',
+      id: 'number',
+      isBirthday: 'boolean',
+      search: 'string',
+      id_not: 'number',
+      id_in: 'number[]',
+      id_not_in: 'number[]',
+      sort: CharacterSortMappings,
+      asHtml: 'boolean',
+      mediaSort: MediaSortMappings,
+      mediaOnList: 'boolean',
+      mediaPage: 'number',
+      mediaPerPage: 'number'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($page: Int, $perPage: Int, $id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [CharacterSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int) {
         Page (page: $page, perPage: $perPage) {

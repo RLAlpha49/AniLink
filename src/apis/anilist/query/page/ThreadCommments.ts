@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type ThreadCommentResponse, ThreadCommentSchema } from '../../interfaces/responses/query/ThreadComment'
+import {ThreadSortMappings} from "../../types/Sort";
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `ThreadCommentsVariables` is an interface representing the variables for the `ThreadCommentsQuery`.
@@ -69,7 +71,22 @@ export class ThreadCommentsQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async threadComments (variables?: ThreadCommentsVariables): Promise<ThreadCommentResponse> {
+  async threadComments (variables: ThreadCommentsVariables): Promise<ThreadCommentResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be provided')
+    }
+    const variableTypeMappings = {
+      page: 'number',
+      perPage: 'number',
+      id: 'number',
+      threadId: 'number',
+      userId: 'number',
+      sort: ThreadSortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($page: Int, $perPage: Int, $id: Int, $threadId: Int, $userId: Int, $sort: [ThreadCommentSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {

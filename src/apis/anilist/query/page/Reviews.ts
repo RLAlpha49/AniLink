@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type ReviewResponse, ReviewSchema } from '../../interfaces/responses/query/Review'
+import {ReviewSortMappings} from "../../types/Sort";
+import {validateVariables} from "../../../../base/ValidateVariables";
 
 /**
  * `ReviewsVariables` is an interface representing the variables for the `ReviewsQuery`.
@@ -64,7 +66,23 @@ export class ReviewsQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async reviews (variables?: ReviewsVariables): Promise<ReviewResponse> {
+  async reviews (variables: ReviewsVariables): Promise<ReviewResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      page: 'number',
+      perPage: 'number',
+      id: 'number',
+      mediaId: 'number',
+      userId: 'number',
+      mediaType: 'string',
+      sort: ReviewSortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($page: Int, $perPage: Int, $id: Int, $mediaId: Int, $userId: Int, $mediaType: MediaType, $sort: [ReviewSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {

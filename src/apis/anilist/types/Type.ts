@@ -42,3 +42,20 @@ export const NotificationTypeMappings = [
   'MEDIA_MERGE',
   'MEDIA_DELETION'
 ]
+
+/**
+ * `LikeableType` is a type that represents the type of likeable item.
+ * It can be one of the following: 'THREAD', 'THREAD_COMMENT', 'ACTIVITY', 'ACTIVITY_REPLY'.
+ */
+export type LikeableType = 'THREAD' | 'THREAD_COMMENT' | 'ACTIVITY' | 'ACTIVITY_REPLY'
+
+/**
+ * `LikeableTypeMappings` is a mapping of `LikeableType` enum values to their corresponding string values.
+ * It can be one of the following: 'THREAD', 'THREAD_COMMENT', 'ACTIVITY', 'ACTIVITY_REPLY'.
+ */
+export const LikeableTypeMappings = [
+  'THREAD',
+  'THREAD_COMMENT',
+  'ACTIVITY',
+  'ACTIVITY_REPLY'
+]
