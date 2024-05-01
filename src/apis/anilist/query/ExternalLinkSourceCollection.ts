@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type ExternalLinkSourceCollectionResponse } from '../interfaces/responses/query/ExternalLinkSourceCollection'
-import {validateVariables} from "../../../base/ValidateVariables";
-import {MediaType, MediaTypeMappings} from "../types/Type";
+import { validateVariables } from '../../../base/ValidateVariables'
+import { type MediaType, MediaTypeMappings } from '../types/Type'
 
 /**
  * `ExternalLinkSourceCollectionVariables` is an interface representing the variables for the `ExternalLinkSourceCollectionQuery`.

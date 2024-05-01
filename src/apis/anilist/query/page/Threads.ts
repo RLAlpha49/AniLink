@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type ThreadResponse, ThreadSchema } from '../../interfaces/responses/query/Thread'
-import {ThreadSortMappings} from "../../types/Sort";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { ThreadSortMappings } from '../../types/Sort'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `ThreadsVariables` is an interface representing the variables for the `ThreadsQuery`.

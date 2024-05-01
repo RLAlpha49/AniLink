@@ -1,9 +1,9 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type ReviewResponse, ReviewSchema } from '../interfaces/responses/query/Review'
-import {MediaType} from "../types/Type";
-import {ReviewSort, ReviewSortMappings} from "../types/Sort";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type MediaType } from '../types/Type'
+import { type ReviewSort, ReviewSortMappings } from '../types/Sort'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `ReviewVariables` is an interface representing the variables for the `ReviewQuery`.

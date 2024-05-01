@@ -1,9 +1,9 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type Activity, ActivityWithRepliesSchema } from '../../interfaces/Activity'
-import {ActivityTypeMappings} from "../../types/ActivityType";
-import {ActivitySortMappings} from "../../types/Sort";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { ActivityTypeMappings } from '../../types/ActivityType'
+import { ActivitySortMappings } from '../../types/Sort'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `ActivitiesVariables` is an interface representing the variables for the `ActivitiesQuery`.

@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type UserResponse, UserSchema } from '../../interfaces/responses/query/User'
-import {UserSortMappings, UserStatisticSortMappings} from "../../types/Sort";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { UserSortMappings, UserStatisticSortMappings } from '../../types/Sort'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `FollowingsVariables` is an interface representing the variables for the `FollowingsQuery`.

@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type NotificationResponse, NotificationSchema } from '../interfaces/responses/query/Notification'
-import {NotificationType, NotificationTypeMappings} from "../types/Type";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type NotificationType, NotificationTypeMappings } from '../types/Type'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `NotificationVariables` is an interface representing the variables for the `NotificationQuery`.

@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type MediaTagCollectionResponse } from '../interfaces/responses/query/MediaTagCollection'
 import { TagSchema } from '../interfaces/Tag'
-import {validateVariables} from "../../../base/ValidateVariables";
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `MediaTagCollectionVariables` is an interface representing the variables for the `MediaTagCollectionQuery`.

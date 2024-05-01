@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type ThreadCommentResponse, ThreadCommentSchema } from '../interfaces/responses/query/ThreadComment'
-import {ThreadSort, ThreadSortMappings} from "../types/Sort";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type ThreadSort, ThreadSortMappings } from '../types/Sort'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `ThreadCommentVariables` is an interface representing the variables for the `ThreadCommentQuery`.

@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type RecommendationResponse, RecommendationSchema } from '../../interfaces/responses/query/Recommendation'
-import {RecommendationSortMappings} from "../../types/Sort";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { RecommendationSortMappings } from '../../types/Sort'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `RecommendationsVariables` is an interface representing the variables for the `RecommendationsQuery`.

@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type MediaTrendResponse, MediaTrendSchema } from '../../interfaces/responses/query/MediaTrend'
-import {MediaTrendSortMappings} from "../../types/Sort";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { MediaTrendSortMappings } from '../../types/Sort'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `MediaTrendsVariables` is an interface representing the variables for the `MediaTrendsQuery`.

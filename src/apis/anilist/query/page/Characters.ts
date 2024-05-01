@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type CharacterResponse, CharacterSchema } from '../../interfaces/responses/query/Character'
-import {CharacterSortMappings, MediaSortMappings} from "../../types/Sort";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { CharacterSortMappings, MediaSortMappings } from '../../types/Sort'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `CharactersVariables` is an interface representing the variables for the `CharactersQuery`.

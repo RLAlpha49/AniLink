@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type AiringScheduleResponse, AiringScheduleSchema } from '../../interfaces/responses/query/AiringSchedule'
-import {AiringSortMappings} from "../../types/Sort";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { AiringSortMappings } from '../../types/Sort'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `AiringSchedulesVariables` is an interface representing the variables for the `AiringSchedulesQuery`.

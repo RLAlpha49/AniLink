@@ -4,12 +4,12 @@ import {
   MediaListCollectionQuerySchema,
   type MediaListCollectionResponse
 } from '../interfaces/responses/query/MediaListCollectionResponse'
-import {MediaType, MediaTypeMappings} from "../types/Type";
-import {MediaListStatus, MediaListStatusMappings} from "../types/Status";
-import {FuzzyDateInput, FuzzyDateMappings} from "../types/FuzzyDate";
-import {MediaListSort, MediaListSortMappings} from "../types/Sort";
-import {ScoreFormat} from "../types/Format";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type MediaType, MediaTypeMappings } from '../types/Type'
+import { type MediaListStatus, MediaListStatusMappings } from '../types/Status'
+import { type FuzzyDateInput, FuzzyDateMappings } from '../types/FuzzyDate'
+import { type MediaListSort, MediaListSortMappings } from '../types/Sort'
+import { type ScoreFormat } from '../types/Format'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `MediaListCollectionVariables` is an interface representing the variables for the `MediaListCollectionQuery`.

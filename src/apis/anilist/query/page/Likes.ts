@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type BasicUser, BasicUserSchema } from '../../interfaces/BasicUser'
-import {LikeableType, LikeableTypeMappings} from "../../types/Type";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { type LikeableType, LikeableTypeMappings } from '../../types/Type'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `LikesVariables` is an interface representing the variables for the `LikesQuery`.
@@ -68,7 +68,7 @@ export class LikesQuery extends APIWrapper {
     }
 
     validateVariables(variables, variableTypeMappings)
-    
+
     const query = `
       query ($likeableId: Int, $type: LikeableType, $page: Int, $perPage: Int) {
         Page (page: $page, perPage: $perPage) {

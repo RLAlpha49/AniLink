@@ -1,12 +1,12 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type MediaListResponse, MediaListSchema } from '../../interfaces/responses/query/MediaList'
-import {MediaTypeMappings} from "../../types/Type";
-import {MediaListStatusMappings} from "../../types/Status";
-import {FuzzyDateMappings} from "../../types/FuzzyDate";
-import {MediaListSortMappings} from "../../types/Sort";
-import {ScoreFormatMapping} from "../../types/Format";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { MediaTypeMappings } from '../../types/Type'
+import { MediaListStatusMappings } from '../../types/Status'
+import { FuzzyDateMappings } from '../../types/FuzzyDate'
+import { MediaListSortMappings } from '../../types/Sort'
+import { ScoreFormatMapping } from '../../types/Format'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `MediaListsVariables` is an interface representing the variables for the `MediaListsQuery`.

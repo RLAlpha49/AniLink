@@ -2,15 +2,15 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type StaffResponse, StaffSchema } from '../interfaces/responses/query/Staff'
 import {
-  CharacterSort,
+  type CharacterSort,
   CharacterSortMappings,
-  MediaSort,
+  type MediaSort,
   MediaSortMappings,
-  StaffSort,
+  type StaffSort,
   StaffSortMappings
-} from "../types/Sort";
-import {MediaType, MediaTypeMappings} from "../types/Type";
-import {validateVariables} from "../../../base/ValidateVariables";
+} from '../types/Sort'
+import { type MediaType, MediaTypeMappings } from '../types/Type'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `StaffVariables` is an interface representing the variables for the `StaffQuery`.

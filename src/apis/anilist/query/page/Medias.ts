@@ -1,14 +1,14 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type MediaResponse, MediaWithRelationsSchema } from '../../interfaces/responses/query/Media'
-import {FuzzyDateMappings} from "../../types/FuzzyDate";
-import {MediaSeasonMappings} from "../../types/Season";
-import {MediaTypeMappings} from "../../types/Type";
-import {MediaFormatMappings} from "../../types/Format";
-import {MediaStatusMappings} from "../../types/Status";
-import {MediaSourceMappings} from "../../types/Source";
-import {MediaSortMappings} from "../../types/Sort";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { FuzzyDateMappings } from '../../types/FuzzyDate'
+import { MediaSeasonMappings } from '../../types/Season'
+import { MediaTypeMappings } from '../../types/Type'
+import { MediaFormatMappings } from '../../types/Format'
+import { MediaStatusMappings } from '../../types/Status'
+import { MediaSourceMappings } from '../../types/Source'
+import { MediaSortMappings } from '../../types/Sort'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `MediasVariables` is an interface representing the variables for the `MediasQuery`.

@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type SiteStatisticsResponse, SiteStatisticsSchema } from '../interfaces/responses/query/SiteStatistics'
-import {SiteTrendSort, SiteTrendSortMappings} from "../types/Sort";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type SiteTrendSort, SiteTrendSortMappings } from '../types/Sort'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `SiteStatisticsVariables` is an interface representing the variables for the `SiteStatisticsQuery`.

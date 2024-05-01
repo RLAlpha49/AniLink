@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
 import { type StudioResponse, StudioSchema } from '../../interfaces/responses/query/Studio'
-import {CharacterSortMappings, MediaSortMappings, StudioSortMappings} from "../../types/Sort";
-import {validateVariables} from "../../../../base/ValidateVariables";
+import { CharacterSortMappings, MediaSortMappings, StudioSortMappings } from '../../types/Sort'
+import { validateVariables } from '../../../../base/ValidateVariables'
 
 /**
  * `StudiosVariables` is an interface representing the variables for the `StudiosQuery`.

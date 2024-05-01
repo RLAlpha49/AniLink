@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type UserResponse, UserSchema } from '../interfaces/responses/query/User'
-import {UserSort, UserSortMappings, UserStatisticSort, UserStatisticSortMappings} from "../types/Sort";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type UserSort, UserSortMappings, type UserStatisticSort, UserStatisticSortMappings } from '../types/Sort'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `UserVariables` is an interface representing the variables for the `UserQuery`.
