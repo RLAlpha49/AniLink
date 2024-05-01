@@ -300,3 +300,23 @@ export const StaffSortMappings = [
   'FAVOURITES_DESC',
   'RELEVANCE'
 ]
+
+/**
+ * `StudioSort` is a type that represents the sorting options for the `Studio` query.
+ * It can be one of the following: 'ID', 'ID_DESC', 'NAME', 'NAME_DESC', 'SEARCH_MATCH', 'FAVOURITES', 'FAVOURITES_DESC'.
+ */
+export type StudioSort = 'ID' | 'ID_DESC' | 'NAME' | 'NAME_DESC' | 'SEARCH_MATCH' | 'FAVOURITES' | 'FAVOURITES_DESC'
+
+/**
+ * `StudioSortMappings` is a mapping of `StudioSort` enum values to their corresponding string values.
+ * It can be one of the following: 'ID', 'ID_DESC', 'NAME', 'NAME_DESC', 'SEARCH_MATCH', 'FAVOURITES', 'FAVOURITES_DESC'.
+ */
+export const StudioSortMappings = [
+  'ID',
+  'ID_DESC',
+  'NAME',
+  'NAME_DESC',
+  'SEARCH_MATCH',
+  'FAVOURITES',
+  'FAVOURITES_DESC'
+]

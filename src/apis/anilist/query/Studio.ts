@@ -1,6 +1,15 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type StudioResponse, StudioSchema } from '../interfaces/responses/query/Studio'
+import {
+  CharacterSort,
+  CharacterSortMappings,
+  MediaSort,
+  MediaSortMappings,
+  StudioSort,
+  StudioSortMappings
+} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `StudioVariables` is an interface representing the variables for the `StudioQuery`.
@@ -35,7 +44,7 @@ export interface StudioVariables {
   /**
    * `sort` is an array of strings representing the sort order of the studio.
    */
-  sort?: string[]
+  sort?: StudioSort[]
 
   /**
    * `asHtml` is a boolean indicating whether to return the result as HTML.
@@ -45,7 +54,7 @@ export interface StudioVariables {
   /**
    * `mediaSort` is an array of strings representing the sort order of the media.
    */
-  mediaSort?: string[]
+  mediaSort?: MediaSort[]
 
   /**
    * `mediaIsMain` is a boolean indicating whether the media is main.
@@ -70,7 +79,7 @@ export interface StudioVariables {
   /**
    * `staffMediaSort` is an array of strings representing the sort order of the staff media.
    */
-  staffMediaSort?: string[]
+  staffMediaSort?: MediaSort[]
 
   /**
    * `staffMediaType` is a string representing the type of the staff media.
@@ -95,7 +104,7 @@ export interface StudioVariables {
   /**
    * `charactersSort` is an array of strings representing the sort order of the characters.
    */
-  charactersSort?: string[]
+  charactersSort?: CharacterSort[]
 
   /**
    * `charactersPage` is a number representing the page number of the characters.
@@ -110,7 +119,7 @@ export interface StudioVariables {
   /**
    * `characterMediaSort` is an array of strings representing the sort order of the character media.
    */
-  characterMediaSort?: string[]
+  characterMediaSort?: MediaSort[]
 
   /**
    * `characterMediaOnList` is a boolean indicating whether the character media is on the list.
@@ -154,7 +163,39 @@ export class StudioQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async studio (variables?: StudioVariables): Promise<StudioResponse> {
+  async studio (variables: StudioVariables): Promise<StudioResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be provided')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      search: 'string',
+      id_not: 'number',
+      id_in: 'number[]',
+      id_not_in: 'number[]',
+      sort: StudioSortMappings,
+      asHtml: 'boolean',
+      mediaSort: MediaSortMappings,
+      mediaIsMain: 'boolean',
+      mediaOnList: 'boolean',
+      mediaPage: 'number',
+      mediaPerPage: 'number',
+      staffMediaSort: MediaSortMappings,
+      staffMediaType: 'string',
+      staffMediaOnList: 'boolean',
+      staffMediaPage: 'number',
+      staffMediaPerPage: 'number',
+      charactersSort: CharacterSortMappings,
+      charactersPage: 'number',
+      charactersPerPage: 'number',
+      characterMediaSort: MediaSortMappings,
+      characterMediaOnList: 'boolean',
+      characterMediaPage: 'number',
+      characterMediaPerPage: 'number'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($id: Int, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StudioSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaIsMain: Boolean, $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Studio (id: $id, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {

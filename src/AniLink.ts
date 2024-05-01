@@ -52,7 +52,7 @@ import { type SiteStatisticsResponse } from './apis/anilist/interfaces/responses
 import {StaffQuery, StaffVariables} from './apis/anilist/query/Staff'
 import { type StaffResponse } from './apis/anilist/interfaces/responses/query/Staff'
 import { StaffsQuery } from './apis/anilist/query/page/Staffs'
-import { StudioQuery } from './apis/anilist/query/Studio'
+import {StudioQuery, StudioVariables} from './apis/anilist/query/Studio'
 import { type StudioResponse } from './apis/anilist/interfaces/responses/query/Studio'
 import { StudiosQuery } from './apis/anilist/query/page/Studios'
 import { ThreadCommentQuery } from './apis/anilist/query/ThreadComment'
@@ -168,7 +168,7 @@ export class AniLink {
        * Fetches studio data from the Anilist API.
        * @returns {Promise<StudioResponse>} A promise that resolves to the studio data.
        */
-      studio: () => Promise<StudioResponse>
+      studio: (variables: StudioVariables) => Promise<StudioResponse>
 
       /**
        * Fetches review data from the Anilist API.
