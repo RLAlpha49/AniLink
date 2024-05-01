@@ -349,3 +349,18 @@ export const ThreadSortMappings = [
   'IS_STICKY',
   'SEARCH_MATCH'
 ]
+
+/**
+ * `ThreadCommentSort` is a type that represents the sorting options for the `ThreadComment` query.
+ * It can be one of the following: 'ID', 'ID_DESC'.
+ */
+export type ThreadCommentSort = 'ID' | 'ID_DESC'
+
+/**
+ * `ThreadCommentSortMappings` is a mapping of `ThreadCommentSort` enum values to their corresponding string values.
+ * It can be one of the following: 'ID', 'ID_DESC'.
+ */
+export const ThreadCommentSortMappings = [
+  'ID',
+  'ID_DESC'
+]

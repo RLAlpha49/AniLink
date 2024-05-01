@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type ThreadCommentResponse, ThreadCommentSchema } from '../interfaces/responses/query/ThreadComment'
+import {ThreadSort, ThreadSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `ThreadCommentVariables` is an interface representing the variables for the `ThreadCommentQuery`.
@@ -25,7 +27,7 @@ export interface ThreadCommentVariables {
   /**
    * `sort` is an array of strings representing the sort order of the thread comment.
    */
-  sort?: string[]
+  sort?: ThreadSort[]
 
   /**
    * `asHtml` is a boolean indicating whether to return the result as HTML.
@@ -59,7 +61,20 @@ export class ThreadCommentQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async threadComment (variables?: ThreadCommentVariables): Promise<ThreadCommentResponse> {
+  async threadComment (variables: ThreadCommentVariables): Promise<ThreadCommentResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be provided')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      threadId: 'number',
+      userId: 'number',
+      sort: ThreadSortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($id: Int, $threadId: Int, $userId: Int, $sort: [ThreadCommentSort], $asHtml: Boolean) {
         ThreadComment (id: $id, threadId: $threadId, userId: $userId, sort: $sort) {

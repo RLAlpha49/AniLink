@@ -55,7 +55,7 @@ import { StaffsQuery } from './apis/anilist/query/page/Staffs'
 import {StudioQuery, StudioVariables} from './apis/anilist/query/Studio'
 import { type StudioResponse } from './apis/anilist/interfaces/responses/query/Studio'
 import { StudiosQuery } from './apis/anilist/query/page/Studios'
-import { ThreadCommentQuery } from './apis/anilist/query/ThreadComment'
+import {ThreadCommentQuery, ThreadCommentVariables} from './apis/anilist/query/ThreadComment'
 import { type ThreadCommentResponse } from './apis/anilist/interfaces/responses/query/ThreadComment'
 import { ThreadCommentsQuery } from './apis/anilist/query/page/ThreadCommments'
 import {ThreadQuery, ThreadVariables} from './apis/anilist/query/Thread'
@@ -214,7 +214,7 @@ export class AniLink {
        * Fetches thread comment data from the Anilist API.
        * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the thread comment data.
        */
-      threadComment: () => Promise<ThreadCommentResponse>
+      threadComment: (variables: ThreadCommentVariables) => Promise<ThreadCommentResponse>
 
       /**
        * Fetches recommendation data from the Anilist API.
