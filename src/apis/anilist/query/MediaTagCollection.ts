@@ -2,6 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type MediaTagCollectionResponse } from '../interfaces/responses/query/MediaTagCollection'
 import { TagSchema } from '../interfaces/Tag'
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `MediaTagCollectionVariables` is an interface representing the variables for the `MediaTagCollectionQuery`.
@@ -41,6 +42,12 @@ export class MediaTagCollectionQuery extends APIWrapper {
  * @returns The response from the query request.
  */
   async mediaTagCollection (variables: MediaTagCollectionVariables = {}): Promise<MediaTagCollectionResponse> {
+    const variableTypeMappings = {
+      status: 'number'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($status: Int) {
         MediaTagCollection (status: $status) {

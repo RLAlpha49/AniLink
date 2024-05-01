@@ -2,6 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type RecommendationResponse, RecommendationSchema } from '../interfaces/responses/query/Recommendation'
 import {RecommendationSort, RecommendationSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `RecommendationVariables` is an interface representing the variables for the `RecommendationQuery`.
@@ -101,6 +102,8 @@ export class RecommendationQuery extends APIWrapper {
       sort: RecommendationSortMappings,
       asHtml: 'boolean'
     }
+
+    validateVariables(variables, variableTypeMappings)
 
     const query = `
       query ($id: Int, $mediaId: Int, $mediaRecommendationId: Int, $userId: Int, $rating: Int, $onList: Boolean, $rating_greater: Int, $rating_lesser: Int, $sort: [RecommendationSort], $asHtml: Boolean) {

@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type SiteStatisticsResponse, SiteStatisticsSchema } from '../interfaces/responses/query/SiteStatistics'
+import {SiteTrendSort, SiteTrendSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `SiteStatisticsVariables` is an interface representing the variables for the `SiteStatisticsQuery`.
@@ -10,7 +12,7 @@ export interface SiteStatisticsVariables {
   /**
    * `usersSort` is a string representing the sort order of the users.
    */
-  usersSort?: string
+  usersSort?: SiteTrendSort[]
 
   /**
    * `usersPage` is a number representing the page number of the users.
@@ -25,7 +27,7 @@ export interface SiteStatisticsVariables {
   /**
    * `animeSort` is a string representing the sort order of the anime.
    */
-  animeSort?: string
+  animeSort?: SiteTrendSort[]
 
   /**
    * `animePage` is a number representing the page number of the anime.
@@ -40,7 +42,7 @@ export interface SiteStatisticsVariables {
   /**
    * `mangaSort` is a string representing the sort order of the manga.
    */
-  mangaSort?: string
+  mangaSort?: SiteTrendSort[]
 
   /**
    * `mangaPage` is a number representing the page number of the manga.
@@ -55,7 +57,7 @@ export interface SiteStatisticsVariables {
   /**
    * `charactersSort` is a string representing the sort order of the characters.
    */
-  charactersSort?: string
+  charactersSort?: SiteTrendSort[]
 
   /**
    * `charactersPage` is a number representing the page number of the characters.
@@ -70,7 +72,7 @@ export interface SiteStatisticsVariables {
   /**
    * `staffSort` is a string representing the sort order of the staff.
    */
-  staffSort?: string
+  staffSort?: SiteTrendSort[]
 
   /**
    * `staffPage` is a number representing the page number of the staff.
@@ -85,7 +87,7 @@ export interface SiteStatisticsVariables {
   /**
    * `studiosSort` is a string representing the sort order of the studios.
    */
-  studiosSort?: string
+  studiosSort?: SiteTrendSort[]
 
   /**
    * `studiosPage` is a number representing the page number of the studios.
@@ -100,7 +102,7 @@ export interface SiteStatisticsVariables {
   /**
    * `reviewsSort` is a string representing the sort order of the reviews.
    */
-  reviewsSort?: string
+  reviewsSort?: SiteTrendSort[]
 
   /**
    * `reviewsPage` is a number representing the page number of the reviews.
@@ -140,6 +142,32 @@ export class SiteStatisticsQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async siteStatistics (variables: SiteStatisticsVariables = {}): Promise<SiteStatisticsResponse> {
+    const variableTypeMappings = {
+      usersSort: SiteTrendSortMappings,
+      usersPage: 'number',
+      usersPerPage: 'number',
+      animeSort: SiteTrendSortMappings,
+      animePage: 'number',
+      animePerPage: 'number',
+      mangaSort: SiteTrendSortMappings,
+      mangaPage: 'number',
+      mangaPerPage: 'number',
+      charactersSort: SiteTrendSortMappings,
+      charactersPage: 'number',
+      charactersPerPage: 'number',
+      staffSort: SiteTrendSortMappings,
+      staffPage: 'number',
+      staffPerPage: 'number',
+      studiosSort: SiteTrendSortMappings,
+      studiosPage: 'number',
+      studiosPerPage: 'number',
+      reviewsSort: SiteTrendSortMappings,
+      reviewsPage: 'number',
+      reviewsPerPage: 'number'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($usersSort: [SiteTrendSort], $usersPage: Int, $usersPerPage: Int, $animeSort: [SiteTrendSort], $animePage: Int, $animePerPage: Int, $mangaSort: [SiteTrendSort], $mangaPage: Int, $mangaPerPage: Int, $charactersSort: [SiteTrendSort], $charactersPage: Int, $charactersPerPage: Int, $staffSort: [SiteTrendSort], $staffPage: Int, $staffPerPage: Int, $studiosSort: [SiteTrendSort], $studiosPage: Int, $studiosPerPage: Int, $reviewsSort: [SiteTrendSort], $reviewsPage: Int, $reviewsPerPage: Int) {
         SiteStatistics {

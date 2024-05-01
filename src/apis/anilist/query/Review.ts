@@ -3,6 +3,7 @@ import { sendRequest } from '../../../base/RequestHandler'
 import { type ReviewResponse, ReviewSchema } from '../interfaces/responses/query/Review'
 import {MediaType} from "../types/Type";
 import {ReviewSort, ReviewSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `ReviewVariables` is an interface representing the variables for the `ReviewQuery`.
@@ -78,6 +79,8 @@ export class ReviewQuery extends APIWrapper {
       sort: ReviewSortMappings,
       asHtml: 'boolean'
     }
+
+    validateVariables(variables, variableTypeMappings)
 
     const query = `
       query ($id: Int, $mediaId: Int, $userId: Int, $mediaType: MediaType, $sort: [ReviewSort], $asHtml: Boolean) {

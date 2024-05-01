@@ -260,3 +260,22 @@ export const ReviewSortMappings = [
   'UPDATED_AT',
   'UPDATED_AT_DESC'
 ]
+
+/**
+ * `SiteTrendSort` is a type that represents the sorting options for the `SiteTrend` query.
+ * It can be one of the following: 'DATE', 'DATE_DESC', 'COUNT', 'COUNT_DESC', 'CHANGE', 'CHANGE_DESC'.
+ */
+export type SiteTrendSort = 'DATE' | 'DATE_DESC' | 'COUNT' | 'COUNT_DESC' | 'CHANGE' | 'CHANGE_DESC'
+
+/**
+ * `SiteTrendSortMappings` is a mapping of `SiteTrendSort` enum values to their corresponding string values.
+ * It can be one of the following: 'DATE', 'DATE_DESC', 'COUNT', 'COUNT_DESC', 'CHANGE', 'CHANGE_DESC'.
+ */
+export const SiteTrendSortMappings = [
+  'DATE',
+  'DATE_DESC',
+  'COUNT',
+  'COUNT_DESC',
+  'CHANGE',
+  'CHANGE_DESC'
+]
