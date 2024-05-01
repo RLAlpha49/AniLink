@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type UserResponse, UserSchema } from '../interfaces/responses/query/User'
+import {UserSortMappings, UserStatisticSort, UserStatisticSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `ViewerVariables` is an interface representing the variables for the `ViewerQuery`.
@@ -25,12 +27,12 @@ export interface ViewerVariables {
   /**
    * `animeStatSort` is an array of strings representing the sort order of the anime statistics.
    */
-  animeStatSort?: string[]
+  animeStatSort?: UserStatisticSort[]
 
   /**
    * `mangaStatSort` is an array of strings representing the sort order of the manga statistics.
    */
-  mangaStatSort?: string[]
+  mangaStatSort?: UserStatisticSort[]
 }
 
 /**
@@ -59,7 +61,19 @@ export class ViewerQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async viewer (variables?: ViewerVariables): Promise<UserResponse> {
+  async viewer (variables: ViewerVariables = {}): Promise<UserResponse> {
+    const variableTypeMappings = {
+      asHtml: 'boolean',
+      animeStatLimit: 'number',
+      mangaStatLimit: 'number',
+      animeStatSort: UserStatisticSortMappings,
+      mangaStatSort: UserStatisticSortMappings
+    }
+
+    if (Object(variables).length > 0) {
+      validateVariables(variables, variableTypeMappings)
+    }
+
     const query = `
       query ($asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Viewer {
