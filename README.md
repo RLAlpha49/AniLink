@@ -49,11 +49,13 @@ You can also initialize AniLink without an authentication token
 const aniLink = new AniLink();
 ```
 
-## Structure
+## AniList API
+
+### Structure
 
 AniLink for AniList is divided into two main sections: `anilist.query` and `anilist.mutation`. The `anilist.query` section contains methods for querying data from the AniList API, while the `anilist.mutation` section contains methods for mutating data.
 
-### Query Methods
+#### Query Methods
 
 The `anilist.query` section is further divided into main query methods and page query methods. The main query methods return a single piece of data, while the page query methods return pages of data.
 
@@ -106,7 +108,7 @@ List of page query methods in `anilist.query.page`:
 - recommendations
 - likes
 
-### Mutation Methods
+#### Mutation Methods
 
 List of methods in `anilist.mutation`:
 
@@ -114,9 +116,7 @@ List of methods in `anilist.mutation`:
 - saveMediaListEntry
 - updateMediaListEntries
 
-## Error Handling
-
-### Anilist Errors
+### Error Handling
 
 AniLink will throw an error if the AniList API returns an error. You can catch these errors using a try-catch block.
 
@@ -131,7 +131,7 @@ try {
 
 This includes status codes and error messages returned by the AniList API. Here is an example rate limit handler to catch the errors thrown by AniLink:
 
-#### Typescript
+##### Typescript
 
 ```typescript
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
@@ -161,7 +161,7 @@ async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
 }
 ```
 
-#### Javascript
+##### Javascript
 
 ```javascript
 async function handleRateLimit(apiCall, retryAfter = 60) {
@@ -176,7 +176,7 @@ The possible error codes returned by the AniList API are:
 - 429: Too Many Requests (e.g. rate limit exceeded)
 - 500: Internal Server Error (e.g. AniList server error)
 
-### Missing or Invalid Variables
+#### Missing or Invalid Variables
 
 AniLink will also throw an error if any variables are missing or invalid. For example, if you try to query a user providing a string instead of a number for ID, AniLink will throw an error. Most variables are optional however there a few that are required.
 ```typescript
@@ -194,11 +194,11 @@ Example Error Thrown:
   Invalid id: 542244. Expected type: number
 ```
 
-## Examples
+### Examples
 
 Here are examples of how to use AniLink to interact with the AniList API:
 
-### Querying user data
+#### Querying user data
 
 ```typescript
 // Querying user data
@@ -364,7 +364,7 @@ aniLink.anilist.query.page.likes({likeableId: 723422275, type: 'ACTIVITY', asHtm
 });
 ```
 
-### Mutating user data
+#### Mutating user data
 
 ```typescript
 // Updating a user
@@ -403,3 +403,7 @@ aniLink.anilist.mutation.updateMediaListEntries({
   ids: [143271, 156822, 170890],
 });
 ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
