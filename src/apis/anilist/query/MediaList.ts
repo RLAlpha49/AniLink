@@ -1,6 +1,12 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type MediaListResponse, MediaListSchema } from '../interfaces/responses/query/MediaList'
+import { type MediaType, MediaTypeMappings } from '../types/Type'
+import { type MediaListStatus, MediaListStatusMappings } from '../types/Status'
+import { type FuzzyDateInput, FuzzyDateMappings } from '../types/FuzzyDate'
+import { type MediaListSort, MediaListSortMappings } from '../types/Sort'
+import { type ScoreFormat, ScoreFormatMapping } from '../types/Format'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `MediaListVariables` is an interface representing the variables for the `MediaListQuery`.
@@ -25,12 +31,12 @@ export interface MediaListVariables {
   /**
    * `type` is a string representing the type of the media.
    */
-  type?: string
+  type?: MediaType
 
   /**
    * `status` is a string representing the status of the media.
    */
-  status?: string
+  status?: MediaListStatus
 
   /**
    * `mediaId` is a number representing the id of the media.
@@ -50,12 +56,12 @@ export interface MediaListVariables {
   /**
    * `startedAt` is a number representing the start date of the media.
    */
-  startedAt?: number
+  startedAt?: FuzzyDateInput
 
   /**
    * `completedAt` is a number representing the completion date of the media.
    */
-  completedAt?: number
+  completedAt?: FuzzyDateInput
 
   /**
    * `compareWithAuthList` is a boolean indicating whether to compare with the authenticated list.
@@ -70,17 +76,17 @@ export interface MediaListVariables {
   /**
    * `status_in` is an array of strings representing the statuses of the media.
    */
-  status_in?: string[]
+  status_in?: MediaListStatus[]
 
   /**
    * `status_not_in` is an array of strings representing the statuses not included in the media.
    */
-  status_not_in?: string[]
+  status_not_in?: MediaListStatus[]
 
   /**
    * `status_not` is a string representing the status not included in the media.
    */
-  status_not?: string
+  status_not?: MediaListStatus
 
   /**
    * `mediaId_in` is an array of numbers representing the ids of the media.
@@ -100,12 +106,12 @@ export interface MediaListVariables {
   /**
    * `startedAt_greater` is a number representing the start date greater than the media.
    */
-  startedAt_greater?: number
+  startedAt_greater?: FuzzyDateInput
 
   /**
    * `startedAt_lesser` is a number representing the start date lesser than the media.
    */
-  startedAt_lesser?: number
+  startedAt_lesser?: FuzzyDateInput
 
   /**
    * `startedAt_like` is a string representing the start date similar to the media.
@@ -115,12 +121,12 @@ export interface MediaListVariables {
   /**
    * `completedAt_greater` is a number representing the completion date greater than the media.
    */
-  completedAt_greater?: number
+  completedAt_greater?: FuzzyDateInput
 
   /**
    * `completedAt_lesser` is a number representing the completion date lesser than the media.
    */
-  completedAt_lesser?: number
+  completedAt_lesser?: FuzzyDateInput
 
   /**
    * `completedAt_like` is a string representing the completion date similar to the media.
@@ -130,12 +136,12 @@ export interface MediaListVariables {
   /**
    * `sort` is an array of strings representing the sort order of the media.
    */
-  sort?: string[]
+  sort?: MediaListSort[]
 
   /**
    * `scoreFormat` is a string representing the format of the score of the media.
    */
-  scoreFormat?: string
+  scoreFormat?: ScoreFormat
 
   /**
    * `asArray` is a boolean indicating whether to return the result as an array.
@@ -174,7 +180,43 @@ export class MediaListQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async mediaList (variables?: MediaListVariables): Promise<MediaListResponse> {
+  async mediaList (variables: MediaListVariables): Promise<MediaListResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      userId: 'number',
+      userName: 'string',
+      type: MediaTypeMappings,
+      status: MediaListStatusMappings,
+      mediaId: 'number',
+      isFollowing: 'boolean',
+      notes: 'string',
+      startedAt: FuzzyDateMappings,
+      completedAt: FuzzyDateMappings,
+      compareWithAuthList: 'boolean',
+      userId_in: 'number[]',
+      status_in: MediaListStatusMappings,
+      status_not_in: MediaListStatusMappings,
+      status_not: MediaListStatusMappings,
+      mediaId_in: 'number[]',
+      mediaId_not_in: 'number[]',
+      notes_like: 'string',
+      startedAt_greater: FuzzyDateMappings,
+      startedAt_lesser: FuzzyDateMappings,
+      startedAt_like: 'string',
+      completedAt_greater: FuzzyDateMappings,
+      completedAt_lesser: FuzzyDateMappings,
+      completedAt_like: 'string',
+      sort: MediaListSortMappings,
+      scoreFormat: ScoreFormatMapping,
+      asArray: 'boolean',
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($id: Int, $userId: Int, $userName: String, $type: MediaType, $status: MediaListStatus, $mediaId: Int, $isFollowing: Boolean, $notes: String, $startedAt: FuzzyDateInt, $completedAt: FuzzyDateInt, $compareWithAuthList: Boolean, $userId_in: [Int], $status_in: [MediaListStatus], $status_not_in: [MediaListStatus], $status_not: MediaListStatus, $mediaId_in: [Int], $mediaId_not_in: [Int], $notes_like: String, $startedAt_greater: FuzzyDateInt, $startedAt_lesser: FuzzyDateInt, $startedAt_like: String, $completedAt_greater: FuzzyDateInt, $completedAt_lesser: FuzzyDateInt, $completedAt_like: String, $ScoreFormat: ScoreFormat, $asArray: Boolean, $asHtml: Boolean) {
         MediaList (id: $id, userId: $userId, userName: $userName, type: $type, status: $status, mediaId: $mediaId, isFollowing: $isFollowing, notes: $notes, startedAt: $startedAt, completedAt: $completedAt, compareWithAuthList: $compareWithAuthList, userId_in: $userId_in, status_in: $status_in, status_not_in: $status_not_in, status_not: $status_not, mediaId_in: $mediaId_in, mediaId_not_in: $mediaId_not_in, notes_like: $notes_like, startedAt_greater: $startedAt_greater, startedAt_lesser: $startedAt_lesser, startedAt_like: $startedAt_like, completedAt_greater: $completedAt_greater, completedAt_lesser: $completedAt_lesser, completedAt_like: $completedAt_like) {

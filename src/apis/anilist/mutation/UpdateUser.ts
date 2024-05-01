@@ -1,12 +1,12 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { type ScoreFormat, ScoreFormatMapping } from '../types/ScoreFormat'
 import { type UserStaffNameLanguage, UserStaffNameLanguageMapping } from '../types/UserStaffNameLanguage'
 import { type UserTitleLanguage, UserTitleLanguageMapping } from '../types/UserTitleLanguage'
 import { validateVariables } from '../../../base/ValidateVariables'
 import { type NotificationOptions, NotificationOptionsMapping } from '../types/NotificationOptions'
 import { type MediaListOptions, MediaListOptionsMapping } from '../types/MediaListOptions'
 import { type DisabledListActivity, DisabledListActivityMapping } from '../types/DisabledListActivity'
+import { type ScoreFormat, ScoreFormatMapping } from '../types/Format'
 
 /**
  * `UpdateUserVariables` is an interface representing the variables for the `UpdateUserMutation`.

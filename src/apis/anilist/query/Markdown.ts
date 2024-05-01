@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import {validateVariables} from "../../../base/ValidateVariables";
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `MarkdownVariables` is an interface representing the variables for the `MarkdownQuery`.
@@ -34,7 +34,7 @@ export class MarkdownQuery extends APIWrapper {
   }
 
   /**
-   * `markdown` is a method that sends a query request to convert markdown text to HTML.
+   * `markdown` is a method that sends a query request to convert Markdown text to HTML.
    *
    * @param variables - The variables for the query.
    * @returns The response from the query request.

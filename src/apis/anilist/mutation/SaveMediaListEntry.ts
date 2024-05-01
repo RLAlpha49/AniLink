@@ -1,9 +1,9 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { FuzzyDateSchema } from '../interfaces/FuzzyDate'
-import { type MediaListStatus, MediaListStatusMappings } from '../types/MediaListStatus'
 import { type FuzzyDateInput, FuzzyDateMappings } from '../types/FuzzyDate'
 import { validateVariables } from '../../../base/ValidateVariables'
+import { type MediaListStatus, MediaListStatusMappings } from '../types/Status'
 
 /**
  * `SaveMediaListEntryVariables` is an interface representing the variables for the `SaveMediaListEntryMutation`.

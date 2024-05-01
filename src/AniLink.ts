@@ -1,35 +1,35 @@
 import { type Activity } from './apis/anilist/interfaces/Activity'
 import { ActivityQuery, type ActivityVariables } from './apis/anilist/query/Activity'
 import { type ActivityReply } from './apis/anilist/interfaces/ActivityReply'
-import {ActivityReplyQuery, ActivityReplyVariables} from './apis/anilist/query/ActivityReply'
+import { ActivityReplyQuery, type ActivityReplyVariables } from './apis/anilist/query/ActivityReply'
 import { ActivityRepliesQuery } from './apis/anilist/query/page/ActivityReplies'
 import { ActivitiesQuery } from './apis/anilist/query/page/Activities'
-import {AiringScheduleQuery, AiringScheduleVariables} from './apis/anilist/query/AiringSchedule'
+import { AiringScheduleQuery, type AiringScheduleVariables } from './apis/anilist/query/AiringSchedule'
 import { type AiringScheduleResponse } from './apis/anilist/interfaces/responses/query/AiringSchedule'
 import { AiringSchedulesQuery } from './apis/anilist/query/page/AiringSchedules'
 import { AniChartUserQuery } from './apis/anilist/query/AniChartUser'
 import { type AniChartUserResponse } from './apis/anilist/interfaces/responses/query/AniChartUser'
 import { type BasicUser } from './apis/anilist/interfaces/BasicUser'
-import {CharacterQuery, CharacterVariables} from './apis/anilist/query/Character'
+import { CharacterQuery, type CharacterVariables } from './apis/anilist/query/Character'
 import { type CharacterResponse } from './apis/anilist/interfaces/responses/query/Character'
 import { CharactersQuery } from './apis/anilist/query/page/Characters'
 import { ExternalLinkSourceCollectionQuery } from './apis/anilist/query/ExternalLinkSourceCollection'
 import {
   type ExternalLinkSourceCollectionResponse
 } from './apis/anilist/interfaces/responses/query/ExternalLinkSourceCollection'
-import {FollowerQuery, FollowerVariables} from './apis/anilist/query/Follower'
+import { FollowerQuery, type FollowerVariables } from './apis/anilist/query/Follower'
 import { FollowersQuery } from './apis/anilist/query/page/Followers'
-import {FollowingQuery, FollowingVariables} from './apis/anilist/query/Following'
+import { FollowingQuery, type FollowingVariables } from './apis/anilist/query/Following'
 import { FollowingsQuery } from './apis/anilist/query/page/Followings'
 import { GenreCollectionQuery } from './apis/anilist/query/GenreCollection'
 import { LikesQuery } from './apis/anilist/query/page/Likes'
-import {MarkdownQuery, MarkdownVariables} from './apis/anilist/query/Markdown'
+import { MarkdownQuery, type MarkdownVariables } from './apis/anilist/query/Markdown'
 import { MediaListCollectionQuery } from './apis/anilist/query/MediaListCollection'
 import { type MediaListCollectionResponse } from './apis/anilist/interfaces/responses/query/MediaListCollectionResponse'
-import { MediaListQuery } from './apis/anilist/query/MediaList'
+import { MediaListQuery, type MediaListVariables } from './apis/anilist/query/MediaList'
 import { type MediaListResponse } from './apis/anilist/interfaces/responses/query/MediaList'
 import { MediaListsQuery } from './apis/anilist/query/page/MediaLists'
-import {MediaQuery, MediaVariables} from './apis/anilist/query/Media'
+import { MediaQuery, type MediaVariables } from './apis/anilist/query/Media'
 import { type MediaResponse } from './apis/anilist/interfaces/responses/query/Media'
 import { MediaTagCollectionQuery } from './apis/anilist/query/MediaTagCollection'
 import { type MediaTagCollectionResponse } from './apis/anilist/interfaces/responses/query/MediaTagCollection'
@@ -126,9 +126,10 @@ export class AniLink {
 
       /**
        * Fetches media list data from the Anilist API.
+       * @param {MediaListVariables} variables - The variables for the query.
        * @returns {Promise<MediaListResponse>} A promise that resolves to the media list data.
        */
-      mediaList: () => Promise<MediaListResponse>
+      mediaList: (variables: MediaListVariables) => Promise<MediaListResponse>
 
       /**
        * Fetches media list collection data from the Anilist API.

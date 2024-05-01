@@ -1,14 +1,14 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type MediaResponse, MediaWithRelationsSchema } from '../interfaces/responses/query/Media'
-import {FuzzyDateInput, FuzzyDateMappings} from "../types/FuzzyDate";
-import {MediaType, MediaTypeMappings} from "../types/Type";
-import {MediaSeason, MediaSeasonMappings} from "../types/Season";
-import {MediaFormat, MediaFormatMappings} from "../types/Format";
-import {MediaStatus, MediaStatusMappings} from "../types/Status";
-import {MediaSource, MediaSourceMappings} from "../types/Source";
-import {MediaSort, MediaSortMappings} from "../types/Sort";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type FuzzyDateInput, FuzzyDateMappings } from '../types/FuzzyDate'
+import { type MediaType, MediaTypeMappings } from '../types/Type'
+import { type MediaSeason, MediaSeasonMappings } from '../types/Season'
+import { type MediaFormat, MediaFormatMappings } from '../types/Format'
+import { type MediaStatus, MediaStatusMappings } from '../types/Status'
+import { type MediaSource, MediaSourceMappings } from '../types/Source'
+import { type MediaSort, MediaSortMappings } from '../types/Sort'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `MediaVariables` is an interface representing the variables for the `MediaQuery`.
@@ -393,7 +393,6 @@ export class MediaQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async media (variables: MediaVariables): Promise<MediaResponse> {
-    // One variable must be set
     if (!variables) {
       throw new Error('At least one variable must be set')
     }

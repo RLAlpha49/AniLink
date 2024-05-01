@@ -173,8 +173,8 @@ export class ActivityQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async activity (variables: ActivityVariables): Promise<Activity> {
-    if (variables.id === undefined) {
-      throw new Error('The id variable is required')
+    if (!variables) {
+      throw new Error('At least one variable must be set')
     }
     const variableTypeMappings = {
       id: 'number',

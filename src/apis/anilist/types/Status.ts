@@ -15,3 +15,22 @@ export const MediaStatusMappings = [
   'CANCELLED',
   'HIATUS'
 ]
+
+/**
+ * `MediaListStatus` is a type that represents the status of a media list.
+ * It can be one of the following: 'CURRENT', 'PLANNING', 'COMPLETED', 'DROPPED', 'PAUSED', 'REPEATING'.
+ */
+export type MediaListStatus = 'CURRENT' | 'PLANNING' | 'COMPLETED' | 'DROPPED' | 'PAUSED' | 'REPEATING'
+
+/**
+ * `MediaListStatusMappings` is a mapping of `MediaListStatus` enum values to their corresponding string values.
+ * It can be one of the following: 'CURRENT', 'PLANNING', 'COMPLETED', 'DROPPED', 'PAUSED', 'REPEATING'.
+ */
+export const MediaListStatusMappings = [
+  'CURRENT',
+  'PLANNING',
+  'COMPLETED',
+  'DROPPED',
+  'PAUSED',
+  'REPEATING'
+]

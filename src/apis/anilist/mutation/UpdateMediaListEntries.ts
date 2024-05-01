@@ -1,9 +1,9 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type FuzzyDate, FuzzyDateSchema } from '../interfaces/FuzzyDate'
-import { type MediaListStatus, MediaListStatusMappings } from '../types/MediaListStatus'
 import { validateVariables } from '../../../base/ValidateVariables'
 import { FuzzyDateMappings } from '../types/FuzzyDate'
+import { type MediaListStatus, MediaListStatusMappings } from '../types/Status'
 
 /**
  * `UpdateMediaListEntriesVariables` is an interface representing the variables for the `UpdateMediaListEntriesMutation`.

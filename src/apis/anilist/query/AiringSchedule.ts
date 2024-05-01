@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type AiringScheduleResponse, AiringScheduleSchema } from '../interfaces/responses/query/AiringSchedule'
-import {AiringSort, AiringSortMappings} from "../types/Sort";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type AiringSort, AiringSortMappings } from '../types/Sort'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `AiringScheduleVariables` is an interface representing the variables for the `AiringScheduleQuery`.
@@ -137,8 +137,8 @@ export class AiringScheduleQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async airingSchedule (variables: AiringScheduleVariables): Promise<AiringScheduleResponse> {
-    if (!variables.id && !variables.mediaId) {
-      throw new Error('The id or mediaId variables are required')
+    if (!variables) {
+      throw new Error('At least one variable must be set')
     }
     const variableTypeMappings = {
       id: 'number',

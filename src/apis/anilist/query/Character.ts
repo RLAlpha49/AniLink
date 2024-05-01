@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type CharacterResponse, CharacterSchema } from '../interfaces/responses/query/Character'
-import {CharacterSort, CharacterSortMappings, MediaSort, MediaSortMappings} from "../types/Sort";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type CharacterSort, CharacterSortMappings, type MediaSort, MediaSortMappings } from '../types/Sort'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `CharacterVariables` is an interface representing the variables for the `CharacterQuery`.
@@ -97,8 +97,8 @@ export class CharacterQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async character (variables: CharacterVariables): Promise<CharacterResponse> {
-    if (!variables.id && !variables.id_not && !variables.id_in && !variables.id_not_in && !variables.search) {
-      throw new Error('At least one of the following must be provided: id, id_not, id_in, id_not_in, search')
+    if (!variables) {
+      throw new Error('At least one variable must be set')
     }
     const variableTypeMappings = {
       id: 'number',

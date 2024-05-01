@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type ActivityReply, ActivityReplySchema } from '../interfaces/ActivityReply'
-import {validateVariables} from "../../../base/ValidateVariables";
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `ActivityReplyVariables` is an interface representing the variables for the `ActivityReplyQuery`.
@@ -51,7 +51,7 @@ export class ActivityReplyQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async activityReply (variables: ActivityReplyVariables): Promise<ActivityReply> {
-    if (variables.id === undefined) {
+    if (!variables.id) {
       throw new Error('The id is required')
     }
     const variableTypeMappings = {

@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type UserResponse, UserSchema } from '../interfaces/responses/query/User'
-import {UserSort, UserSortMappings, UserStatisticSort, UserStatisticSortMappings} from "../types/Sort";
-import {validateVariables} from "../../../base/ValidateVariables";
+import { type UserSort, UserSortMappings, type UserStatisticSort, UserStatisticSortMappings } from '../types/Sort'
+import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
  * `FollowerVariables` is an interface representing the variables for the `FollowerQuery`.
@@ -67,7 +67,7 @@ export class FollowerQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async follower (variables: FollowerVariables): Promise<UserResponse> {
-    if (variables.userId === undefined) {
+    if (!variables.userId) {
       throw new Error('userId is required')
     }
     const variableTypeMappings = {
