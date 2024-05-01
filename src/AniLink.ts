@@ -29,7 +29,7 @@ import { type MediaListCollectionResponse } from './apis/anilist/interfaces/resp
 import { MediaListQuery } from './apis/anilist/query/MediaList'
 import { type MediaListResponse } from './apis/anilist/interfaces/responses/query/MediaList'
 import { MediaListsQuery } from './apis/anilist/query/page/MediaLists'
-import { MediaQuery } from './apis/anilist/query/Media'
+import {MediaQuery, MediaVariables} from './apis/anilist/query/Media'
 import { type MediaResponse } from './apis/anilist/interfaces/responses/query/Media'
 import { MediaTagCollectionQuery } from './apis/anilist/query/MediaTagCollection'
 import { type MediaTagCollectionResponse } from './apis/anilist/interfaces/responses/query/MediaTagCollection'
@@ -93,9 +93,10 @@ export class AniLink {
 
       /**
        * Fetches media data from the Anilist API.
+       * @param {MediaVariables} variables - The variables for the query.
        * @returns {Promise<MediaResponse>} A promise that resolves to the media data.
        */
-      media: () => Promise<MediaResponse>
+      media: (variables: MediaVariables) => Promise<MediaResponse>
 
       /**
        * Fetches media trend data from the Anilist API.

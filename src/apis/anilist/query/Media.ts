@@ -1,6 +1,14 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type MediaResponse, MediaWithRelationsSchema } from '../interfaces/responses/query/Media'
+import {FuzzyDateInput, FuzzyDateMappings} from "../types/FuzzyDate";
+import {MediaType, MediaTypeMappings} from "../types/Type";
+import {MediaSeason, MediaSeasonMappings} from "../types/Season";
+import {MediaFormat, MediaFormatMappings} from "../types/Format";
+import {MediaStatus, MediaStatusMappings} from "../types/Status";
+import {MediaSource, MediaSourceMappings} from "../types/Source";
+import {MediaSort, MediaSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `MediaVariables` is an interface representing the variables for the `MediaQuery`.
@@ -20,17 +28,17 @@ export interface MediaVariables {
   /**
    * `startDate` is a number representing the start date of the media.
    */
-  startDate?: number
+  startDate?: FuzzyDateInput
 
   /**
    * `endDate` is a number representing the end date of the media.
    */
-  endDate?: number
+  endDate?: FuzzyDateInput
 
   /**
    * `season` is a string representing the season of the media.
    */
-  season?: string
+  season?: MediaSeason
 
   /**
    * `seasonYear` is a number representing the year of the season of the media.
@@ -40,17 +48,17 @@ export interface MediaVariables {
   /**
    * `type` is a string representing the type of the media. It can be either 'ANIME' or 'MANGA'.
    */
-  type?: 'ANIME' | 'MANGA'
+  type?: MediaType
 
   /**
    * `format` is a string representing the format of the media.
    */
-  format?: string
+  format?: MediaFormat
 
   /**
    * `status` is a string representing the status of the media.
    */
-  status?: string
+  status?: MediaStatus
 
   /**
    * `episodes` is a number representing the number of episodes of the media.
@@ -125,7 +133,7 @@ export interface MediaVariables {
   /**
    * `source` is a string representing the source of the media.
    */
-  source?: string
+  source?: MediaSource
 
   /**
    * `countryOfOrigin` is a string representing the country of origin of the media.
@@ -205,32 +213,32 @@ export interface MediaVariables {
   /**
    * `format_in` is an array of strings representing the formats of the media that should be included.
    */
-  format_in?: string[]
+  format_in?: MediaFormat[]
 
   /**
    * `format_not` is a string representing the format of the media that should not be included.
    */
-  format_not?: string
+  format_not?: MediaFormat
 
   /**
    * `format_not_in` is an array of strings representing the formats of the media that should not be included.
    */
-  format_not_in?: string[]
+  format_not_in?: MediaFormat[]
 
   /**
    * `status_in` is an array of strings representing the statuses of the media that should be included.
    */
-  status_in?: string[]
+  status_in?: MediaStatus[]
 
   /**
    * `status_not` is a string representing the status of the media that should not be included.
    */
-  status_not?: string
+  status_not?: MediaStatus
 
   /**
    * `status_not_in` is an array of strings representing the statuses of the media that should not be included.
    */
-  status_not_in?: string[]
+  status_not_in?: MediaStatus[]
 
   /**
    * `episodes_greater` is a number representing the number of episodes of the media that should be greater.
@@ -345,12 +353,12 @@ export interface MediaVariables {
   /**
    * `source_in` is an array of strings representing the sources of the media that should be included.
    */
-  source_in?: string[]
+  source_in?: MediaSource[]
 
   /**
    * `sort` is an array of strings representing the sorting of the media.
    */
-  sort?: string[]
+  sort?: MediaSort[]
 
   /**
    * `asHtml` is a boolean representing whether the media should be returned as HTML.
@@ -384,7 +392,86 @@ export class MediaQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async media (variables?: MediaVariables): Promise<MediaResponse> {
+  async media (variables: MediaVariables): Promise<MediaResponse> {
+    // One variable must be set
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      idMal: 'number',
+      startDate: FuzzyDateMappings,
+      endDate: FuzzyDateMappings,
+      season: MediaSeasonMappings,
+      seasonYear: 'number',
+      type: MediaTypeMappings,
+      format: MediaFormatMappings,
+      status: MediaStatusMappings,
+      episodes: 'number',
+      duration: 'number',
+      chapters: 'number',
+      volumes: 'number',
+      isAdult: 'boolean',
+      genre: 'string',
+      tag: 'string',
+      minimumTagRank: 'number',
+      tagCategory: 'string',
+      onList: 'boolean',
+      licensedBy: 'string',
+      licensedById: 'number',
+      averageScore: 'number',
+      popularity: 'number',
+      source: MediaSourceMappings,
+      countryOfOrigin: 'CountryCode',
+      isLicensed: 'boolean',
+      search: 'string',
+      id_not: 'number',
+      id_in: 'number[]',
+      id_not_in: 'number[]',
+      idMal_not: 'number',
+      idMal_in: 'number[]',
+      idMal_not_in: 'number[]',
+      startDate_greater: FuzzyDateMappings,
+      startDate_lesser: FuzzyDateMappings,
+      startDate_like: 'string',
+      endDate_greater: FuzzyDateMappings,
+      endDate_lesser: FuzzyDateMappings,
+      endDate_like: 'string',
+      format_in: MediaFormatMappings,
+      format_not: MediaFormatMappings,
+      format_not_in: MediaFormatMappings,
+      status_in: MediaStatusMappings,
+      status_not: MediaStatusMappings,
+      status_not_in: MediaStatusMappings,
+      episodes_greater: 'number',
+      episodes_lesser: 'number',
+      duration_greater: 'number',
+      duration_lesser: 'number',
+      chapters_greater: 'number',
+      chapters_lesser: 'number',
+      volumes_greater: 'number',
+      volumes_lesser: 'number',
+      genre_in: 'string[]',
+      genre_not_in: 'string[]',
+      tag_in: 'string[]',
+      tag_not_in: 'string[]',
+      tagCategory_in: 'string[]',
+      tagCategory_not_in: 'string[]',
+      licensedBy_in: 'string[]',
+      licensedById_in: 'number[]',
+      averageScore_not: 'number',
+      averageScore_greater: 'number',
+      averageScore_lesser: 'number',
+      popularity_not: 'number',
+      popularity_greater: 'number',
+      popularity_lesser: 'number',
+      source_in: MediaSourceMappings,
+      sort: MediaSortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($id: Int, $idMal: Int, $startDate: FuzzyDateInt, $endDate: FuzzyDateInt, $season: MediaSeason, $seasonYear: Int, $type: MediaType, $format: MediaFormat, $status: MediaStatus, $episodes: Int, $duration: Int, $chapters: Int, $volumes: Int, $isAdult: Boolean, $genre: String, $tag: String, $minimumTagRank: Int, $tagCategory: String, $onList: Boolean, $licensedBy: String, $licensedById: Int, $averageScore: Int, $popularity: Int, $source: MediaSource, $countryOfOrigin: CountryCode, $isLicensed: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $idMal_not: Int, $idMal_in: [Int], $idMal_not_in: [Int], $startDate_greater: FuzzyDateInt, $startDate_lesser: FuzzyDateInt, $startDate_like: String, $endDate_greater: FuzzyDateInt, $endDate_lesser: FuzzyDateInt, $endDate_like: String, $format_in: [MediaFormat], $format_not: MediaFormat, $format_not_in: [MediaFormat], $status_in: [MediaStatus], $status_not: MediaStatus, $status_not_in: [MediaStatus], $episodes_greater: Int, $episodes_lesser: Int, $duration_greater: Int, $duration_lesser: Int, $chapters_greater: Int, $chapters_lesser: Int, $volumes_greater: Int, $volumes_lesser: Int, $genre_in: [String], $genre_not_in: [String], $tag_in: [String], $tag_not_in: [String], $tagCategory_in: [String], $tagCategory_not_in: [String], $licensedBy_in: [String], $licensedById_in: [Int], $averageScore_not: Int, $averageScore_greater: Int, $averageScore_lesser: Int, $popularity_not: Int, $popularity_greater: Int, $popularity_lesser: Int, $source_in: [MediaSource], $sort: [MediaSort], $asHtml: Boolean) {
         Media (id: $id, idMal: $idMal, startDate: $startDate, endDate: $endDate, season: $season, seasonYear: $seasonYear, type: $type, format: $format, status: $status, episodes: $episodes, duration: $duration, chapters: $chapters, volumes: $volumes, isAdult: $isAdult, genre: $genre, tag: $tag, minimumTagRank: $minimumTagRank, tagCategory: $tagCategory, onList: $onList, licensedBy: $licensedBy, licensedById: $licensedById, averageScore: $averageScore, popularity: $popularity, source: $source, countryOfOrigin: $countryOfOrigin, isLicensed: $isLicensed, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, idMal_not: $idMal_not, idMal_in: $idMal_in, idMal_not_in: $idMal_not_in, startDate_greater: $startDate_greater, startDate_lesser: $startDate_lesser, startDate_like: $startDate_like, endDate_greater: $endDate_greater, endDate_lesser: $endDate_lesser, endDate_like: $endDate_like, format_in: $format_in, format_not: $format_not, format_not_in: $format_not_in, status_in: $status_in, status_not: $status_not, status_not_in: $status_not_in, episodes_greater: $episodes_greater, episodes_lesser: $episodes_lesser, duration_greater: $duration_greater, duration_lesser: $duration_lesser, chapters_greater: $chapters_greater, chapters_lesser: $chapters_lesser, volumes_greater: $volumes_greater, volumes_lesser: $volumes_lesser, genre_in: $genre_in, genre_not_in: $genre_not_in, tag_in: $tag_in, tag_not_in: $tag_not_in, tagCategory_in: $tagCategory_in, tagCategory_not_in: $tagCategory_not_in, licensedBy_in: $licensedBy_in, licensedById_in: $licensedById_in, averageScore_not: $averageScore_not, averageScore_greater: $averageScore_greater, averageScore_lesser: $averageScore_lesser, popularity_not: $popularity_not, popularity_greater: $popularity_greater, popularity_lesser: $popularity_lesser, source_in: $source_in, sort: $sort) {
