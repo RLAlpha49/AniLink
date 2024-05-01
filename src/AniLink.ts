@@ -24,7 +24,7 @@ import { FollowingsQuery } from './apis/anilist/query/page/Followings'
 import { GenreCollectionQuery } from './apis/anilist/query/GenreCollection'
 import { LikesQuery } from './apis/anilist/query/page/Likes'
 import { MarkdownQuery, type MarkdownVariables } from './apis/anilist/query/Markdown'
-import { MediaListCollectionQuery } from './apis/anilist/query/MediaListCollection'
+import {MediaListCollectionQuery, MediaListCollectionVariables} from './apis/anilist/query/MediaListCollection'
 import { type MediaListCollectionResponse } from './apis/anilist/interfaces/responses/query/MediaListCollectionResponse'
 import { MediaListQuery, type MediaListVariables } from './apis/anilist/query/MediaList'
 import { type MediaListResponse } from './apis/anilist/interfaces/responses/query/MediaList'
@@ -133,9 +133,10 @@ export class AniLink {
 
       /**
        * Fetches media list collection data from the Anilist API.
+       * @param {MediaListCollectionVariables} variables - The variables for the query.
        * @returns {Promise<MediaListCollectionResponse>} A promise that resolves to the media list collection data.
        */
-      mediaListCollection: () => Promise<MediaListCollectionResponse>
+      mediaListCollection: (variables: MediaListCollectionVariables) => Promise<MediaListCollectionResponse>
 
       /**
        * Fetches genre collection data from the Anilist API.

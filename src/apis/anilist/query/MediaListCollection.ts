@@ -4,6 +4,12 @@ import {
   MediaListCollectionQuerySchema,
   type MediaListCollectionResponse
 } from '../interfaces/responses/query/MediaListCollectionResponse'
+import {MediaType, MediaTypeMappings} from "../types/Type";
+import {MediaListStatus, MediaListStatusMappings} from "../types/Status";
+import {FuzzyDateInput, FuzzyDateMappings} from "../types/FuzzyDate";
+import {MediaListSort, MediaListSortMappings} from "../types/Sort";
+import {ScoreFormat} from "../types/Format";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `MediaListCollectionVariables` is an interface representing the variables for the `MediaListCollectionQuery`.
@@ -23,12 +29,12 @@ export interface MediaListCollectionVariables {
   /**
    * `type` is a string representing the type of the media.
    */
-  type?: string
+  type?: MediaType
 
   /**
    * `status` is a string representing the status of the media.
    */
-  status?: string
+  status?: MediaListStatus
 
   /**
    * `notes` is a string representing any notes about the media.
@@ -38,12 +44,12 @@ export interface MediaListCollectionVariables {
   /**
    * `startedAt` is a number representing the start date of the media.
    */
-  startedAt?: number
+  startedAt?: FuzzyDateInput
 
   /**
    * `completedAt` is a number representing the completion date of the media.
    */
-  completedAt?: number
+  completedAt?: FuzzyDateInput
 
   /**
    * `forceSingleCompletedList` is a boolean indicating whether to force a single completed list.
@@ -63,17 +69,17 @@ export interface MediaListCollectionVariables {
   /**
    * `status_in` is an array of strings representing the statuses of the media.
    */
-  status_in?: string[]
+  status_in?: MediaListStatus[]
 
   /**
    * `status_not_in` is an array of strings representing the statuses not included in the media.
    */
-  status_not_in?: string[]
+  status_not_in?: MediaListStatus[]
 
   /**
    * `status_not` is a string representing the status not included in the media.
    */
-  status_not?: string
+  status_not?: MediaListStatus
 
   /**
    * `notes_like` is a string representing the notes similar to the media.
@@ -83,12 +89,12 @@ export interface MediaListCollectionVariables {
   /**
    * `startedAt_greater` is a number representing the start date greater than the media.
    */
-  startedAt_greater?: number
+  startedAt_greater?: FuzzyDateInput
 
   /**
    * `startedAt_lesser` is a number representing the start date lesser than the media.
    */
-  startedAt_lesser?: number
+  startedAt_lesser?: FuzzyDateInput
 
   /**
    * `startedAt_like` is a string representing the start date similar to the media.
@@ -98,12 +104,12 @@ export interface MediaListCollectionVariables {
   /**
    * `completedAt_greater` is a number representing the completion date greater than the media.
    */
-  completedAt_greater?: number
+  completedAt_greater?: FuzzyDateInput
 
   /**
    * `completedAt_lesser` is a number representing the completion date lesser than the media.
    */
-  completedAt_lesser?: number
+  completedAt_lesser?: FuzzyDateInput
 
   /**
    * `completedAt_like` is a string representing the completion date similar to the media.
@@ -113,12 +119,12 @@ export interface MediaListCollectionVariables {
   /**
    * `sort` is an array of strings representing the sort order of the media.
    */
-  sort?: string[]
+  sort?: MediaListSort[]
 
   /**
    * `scoreFormat` is a string representing the format of the score of the media.
    */
-  scoreFormat?: string
+  scoreFormat?: ScoreFormat
 
   /**
    * `asArray` is a boolean indicating whether to return the result as an array.
@@ -157,7 +163,36 @@ export class MediaListCollectionQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async mediaListCollection (variables?: MediaListCollectionVariables): Promise<MediaListCollectionResponse> {
+  async mediaListCollection (variables: MediaListCollectionVariables): Promise<MediaListCollectionResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      userId: 'number',
+      userName: 'string',
+      type: MediaTypeMappings,
+      status: 'string',
+      notes: 'string',
+      startedAt: FuzzyDateMappings,
+      completedAt: FuzzyDateMappings,
+      forceSingleCompletedList: 'boolean',
+      chunk: 'number',
+      perChunk: 'number',
+      status_in: MediaListStatusMappings,
+      status_not_in: MediaListStatusMappings,
+      status_not: MediaListStatusMappings,
+      notes_like: 'string',
+      startedAt_greater: FuzzyDateMappings,
+      startedAt_lesser: FuzzyDateMappings,
+      startedAt_like: 'string',
+      completedAt_greater: FuzzyDateMappings,
+      completedAt_lesser: FuzzyDateMappings,
+      completedAt_like: 'string',
+      sort: MediaListSortMappings
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = MediaListCollectionQuerySchema
 
     const data = { query, variables }
