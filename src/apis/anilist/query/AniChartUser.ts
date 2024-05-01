@@ -21,6 +21,9 @@ export class AniChartUserQuery extends APIWrapper {
   constructor (authToken: string) {
     super('https://graphql.anilist.co')
     this.authToken = authToken
+    if (!this.authToken) {
+      throw new Error('AniChartUserQuery requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
+    }
   }
 
   /**
