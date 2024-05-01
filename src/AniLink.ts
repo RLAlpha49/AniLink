@@ -4,7 +4,7 @@ import { type ActivityReply } from './apis/anilist/interfaces/ActivityReply'
 import {ActivityReplyQuery, ActivityReplyVariables} from './apis/anilist/query/ActivityReply'
 import { ActivityRepliesQuery } from './apis/anilist/query/page/ActivityReplies'
 import { ActivitiesQuery } from './apis/anilist/query/page/Activities'
-import { AiringScheduleQuery } from './apis/anilist/query/AiringSchedule'
+import {AiringScheduleQuery, AiringScheduleVariables} from './apis/anilist/query/AiringSchedule'
 import { type AiringScheduleResponse } from './apis/anilist/interfaces/responses/query/AiringSchedule'
 import { AiringSchedulesQuery } from './apis/anilist/query/page/AiringSchedules'
 import { AniChartUserQuery } from './apis/anilist/query/AniChartUser'
@@ -105,9 +105,10 @@ export class AniLink {
 
       /**
        * Fetches airing schedule data from the Anilist API.
+       * @param {AiringScheduleVariables} variables - The variables for the query.
        * @returns {Promise<AiringScheduleResponse>} A promise that resolves to the airing schedule data.
        */
-      airingSchedule: () => Promise<AiringScheduleResponse>
+      airingSchedule: (variables: AiringScheduleVariables) => Promise<AiringScheduleResponse>
 
       /**
        * Fetches character data from the Anilist API.
