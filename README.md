@@ -6,10 +6,16 @@ AniLink is a TypeScript library for interacting with the AniList API. It provide
 
 ## Installation
 
-To install AniLink, you can use npm:
+To install AniLink, you can use npm or yarn.:
 
 ```bash
 npm install anilink-api-wrapper
+```
+
+or
+
+```bash
+yarn add anilink-api-wrapper
 ```
 
 ## Initialization
