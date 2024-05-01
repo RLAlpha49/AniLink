@@ -279,3 +279,24 @@ export const SiteTrendSortMappings = [
   'CHANGE',
   'CHANGE_DESC'
 ]
+
+/**
+ * `StaffSort` is a type that represents the sorting options for the `Staff` query.
+ * It can be one of the following: 'ID', 'ID_DESC', 'ROLE', 'ROLE_DESC', 'SEARCH_MATCH', 'FAVOURITES', 'FAVOURITES_DESC', 'RELEVANCE'.
+ */
+export type StaffSort = 'ID' | 'ID_DESC' | 'ROLE' | 'ROLE_DESC' | 'SEARCH_MATCH' | 'FAVOURITES' | 'FAVOURITES_DESC' | 'RELEVANCE'
+
+/**
+ * `StaffSortMappings` is a mapping of `StaffSort` enum values to their corresponding string values.
+ * It can be one of the following: 'ID', 'ID_DESC', 'ROLE', 'ROLE_DESC', 'SEARCH_MATCH', 'FAVOURITES', 'FAVOURITES_DESC', 'RELEVANCE'.
+ */
+export const StaffSortMappings = [
+  'ID',
+  'ID_DESC',
+  'ROLE',
+  'ROLE_DESC',
+  'SEARCH_MATCH',
+  'FAVOURITES',
+  'FAVOURITES_DESC',
+  'RELEVANCE'
+]

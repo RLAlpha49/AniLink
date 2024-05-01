@@ -1,6 +1,16 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type StaffResponse, StaffSchema } from '../interfaces/responses/query/Staff'
+import {
+  CharacterSort,
+  CharacterSortMappings,
+  MediaSort,
+  MediaSortMappings,
+  StaffSort,
+  StaffSortMappings
+} from "../types/Sort";
+import {MediaType, MediaTypeMappings} from "../types/Type";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `StaffVariables` is an interface representing the variables for the `StaffQuery`.
@@ -40,7 +50,7 @@ export interface StaffVariables {
   /**
    * `sort` is an array of strings representing the sort order of the staff.
    */
-  sort?: string[]
+  sort?: StaffSort[]
 
   /**
    * `asHtml` is a boolean indicating whether to return the result as HTML.
@@ -50,12 +60,12 @@ export interface StaffVariables {
   /**
    * `staffMediaSort` is an array of strings representing the sort order of the staff media.
    */
-  staffMediaSort?: string[]
+  staffMediaSort?: MediaSort[]
 
   /**
    * `staffMediaType` is a string representing the type of the staff media.
    */
-  staffMediaType?: string
+  staffMediaType?: MediaType
 
   /**
    * `staffMediaOnList` is a boolean indicating whether the staff media is on the list.
@@ -75,7 +85,7 @@ export interface StaffVariables {
   /**
    * `charactersSort` is an array of strings representing the sort order of the characters.
    */
-  charactersSort?: string[]
+  charactersSort?: CharacterSort[]
 
   /**
    * `charactersPage` is a number representing the page number of the characters.
@@ -90,7 +100,7 @@ export interface StaffVariables {
   /**
    * `characterMediaSort` is an array of strings representing the sort order of the character media.
    */
-  characterMediaSort?: string[]
+  characterMediaSort?: MediaSort[]
 
   /**
    * `characterMediaOnList` is a boolean indicating whether the character media is on the list.
@@ -134,7 +144,35 @@ export class StaffQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async staff (variables?: StaffVariables): Promise<StaffResponse> {
+  async staff (variables: StaffVariables): Promise<StaffResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      isBirthday: 'boolean',
+      search: 'String',
+      id_not: 'number',
+      id_in: 'number[]',
+      id_not_in: 'number[]',
+      sort: StaffSortMappings,
+      asHtml: 'boolean',
+      staffMediaSort: MediaSortMappings,
+      staffMediaType: MediaTypeMappings,
+      staffMediaOnList: 'boolean',
+      staffMediaPage: 'number',
+      staffMediaPerPage: 'number',
+      charactersSort: CharacterSortMappings,
+      charactersPage: 'number',
+      charactersPerPage: 'number',
+      characterMediaSort: MediaSortMappings,
+      characterMediaOnList: 'boolean',
+      characterMediaPage: 'number',
+      characterMediaPerPage: 'number'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StaffSort], $asHtml: Boolean, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Staff (id: $id, isBirthday: $isBirthday, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {

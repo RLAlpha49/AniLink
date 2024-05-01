@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type ExternalLinkSourceCollectionResponse } from '../interfaces/responses/query/ExternalLinkSourceCollection'
+import {validateVariables} from "../../../base/ValidateVariables";
+import {MediaType, MediaTypeMappings} from "../types/Type";
 
 /**
  * `ExternalLinkSourceCollectionVariables` is an interface representing the variables for the `ExternalLinkSourceCollectionQuery`.
@@ -20,7 +22,7 @@ export interface ExternalLinkSourceCollectionVariables {
   /**
    * `mediaType` is a string representing the media type of the external link source collection.
    */
-  mediaType?: string
+  mediaType?: MediaType
 }
 
 /**
@@ -50,6 +52,16 @@ export class ExternalLinkSourceCollectionQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async externalLinkSourceCollection (variables: ExternalLinkSourceCollectionVariables = {}): Promise<ExternalLinkSourceCollectionResponse> {
+    const variableTypeMappings = {
+      id: 'number',
+      type: 'string',
+      mediaType: MediaTypeMappings
+    }
+
+    if (Object(variables).length > 0) {
+      validateVariables(variables, variableTypeMappings)
+    }
+
     const query = `
       query ($id: Int, $type: ExternalLinkType, $mediaType: ExternalLinkMediaType) {
         ExternalLinkSourceCollection (id: $id, type: $type, mediaType: $mediaType) {

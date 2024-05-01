@@ -49,7 +49,7 @@ import { ReviewsQuery } from './apis/anilist/query/page/Reviews'
 import { SaveMediaListEntryMutation, type SaveMediaListEntryVariables } from './apis/anilist/mutation/SaveMediaListEntry'
 import { SiteStatisticsQuery } from './apis/anilist/query/SiteStatistics'
 import { type SiteStatisticsResponse } from './apis/anilist/interfaces/responses/query/SiteStatistics'
-import { StaffQuery } from './apis/anilist/query/Staff'
+import {StaffQuery, StaffVariables} from './apis/anilist/query/Staff'
 import { type StaffResponse } from './apis/anilist/interfaces/responses/query/Staff'
 import { StaffsQuery } from './apis/anilist/query/page/Staffs'
 import { StudioQuery } from './apis/anilist/query/Studio'
@@ -121,9 +121,10 @@ export class AniLink {
 
       /**
        * Fetches staff data from the Anilist API.
+       * @param {StaffVariables} variables - The variables for the query.
        * @returns {Promise<StaffResponse>} A promise that resolves to the staff data.
        */
-      staff: () => Promise<StaffResponse>
+      staff: (variables: StaffVariables) => Promise<StaffResponse>
 
       /**
        * Fetches media list data from the Anilist API.

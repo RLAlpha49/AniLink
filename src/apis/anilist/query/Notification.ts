@@ -62,9 +62,9 @@ export class NotificationQuery extends APIWrapper {
     }
     const variableTypeMappings = {
       type: NotificationTypeMappings,
-      resetNotificationCount: 'Boolean',
+      resetNotificationCount: 'boolean',
       type_in: NotificationTypeMappings,
-      asHtml: 'Boolean'
+      asHtml: 'boolean'
     }
 
     validateVariables(variables, variableTypeMappings)
