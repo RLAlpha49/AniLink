@@ -17,9 +17,9 @@ import { ExternalLinkSourceCollectionQuery } from './apis/anilist/query/External
 import {
   type ExternalLinkSourceCollectionResponse
 } from './apis/anilist/interfaces/responses/query/ExternalLinkSourceCollection'
-import { FollowerQuery } from './apis/anilist/query/Follower'
+import {FollowerQuery, FollowerVariables} from './apis/anilist/query/Follower'
 import { FollowersQuery } from './apis/anilist/query/page/Followers'
-import { FollowingQuery } from './apis/anilist/query/Following'
+import {FollowingQuery, FollowingVariables} from './apis/anilist/query/Following'
 import { FollowingsQuery } from './apis/anilist/query/page/Followings'
 import { GenreCollectionQuery } from './apis/anilist/query/GenreCollection'
 import { LikesQuery } from './apis/anilist/query/page/Likes'
@@ -188,13 +188,13 @@ export class AniLink {
        * Fetches following data from the Anilist API.
        * @returns {Promise<UserResponse>} A promise that resolves to the following data.
        */
-      following: () => Promise<UserResponse>
+      following: (variables: FollowingVariables) => Promise<UserResponse>
 
       /**
        * Fetches follower data from the Anilist API.
        * @returns {Promise<UserResponse>} A promise that resolves to the follower data.
        */
-      follower: () => Promise<UserResponse>
+      follower: (variables: FollowerVariables) => Promise<UserResponse>
 
       /**
        * Fetches thread data from the Anilist API.

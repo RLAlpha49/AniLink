@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type UserResponse, UserSchema } from '../interfaces/responses/query/User'
+import {UserSort, UserSortMappings, UserStatisticSort, UserStatisticSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `FollowingVariables` is an interface representing the variables for the `FollowingQuery`.
@@ -10,12 +12,12 @@ export interface FollowingVariables {
   /**
    * `userId` is a number representing the id of the user.
    */
-  userId?: number
+  userId: number
 
   /**
    * `sort` is a string representing the sort order.
    */
-  sort?: string
+  sort?: UserSort
 
   /**
    * `animeStatLimit` is a number representing the limit for anime statistics.
@@ -30,12 +32,12 @@ export interface FollowingVariables {
   /**
    * `animeStatSort` is an array of strings representing the sort order for anime statistics.
    */
-  animeStatSort?: string[]
+  animeStatSort?: UserStatisticSort[]
 
   /**
    * `mangaStatSort` is an array of strings representing the sort order for manga statistics.
    */
-  mangaStatSort?: string[]
+  mangaStatSort?: UserStatisticSort[]
 }
 
 /**
@@ -64,7 +66,20 @@ export class FollowingQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async following (variables?: FollowingVariables): Promise<UserResponse> {
+  async following (variables: FollowingVariables): Promise<UserResponse> {
+    if (variables.userId === undefined) {
+      throw new Error('userId is required')
+    }
+    const variableTypeMappings = {
+      userId: 'number',
+      sort: UserSortMappings,
+      animeStatLimit: 'number',
+      mangaStatLimit: 'number',
+      animeStatSort: UserStatisticSortMappings,
+      mangaStatSort: UserStatisticSortMappings
+    }
+
+    validateVariables(variables, variableTypeMappings)
     const query = `
       query ($userId: Int!, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Following (userId: $userId, sort: $sort) {

@@ -49,6 +49,49 @@ export const MediaSortMappings = [
 ]
 
 /**
+ * `UserSort` is a type that represents the sorting options for the `User` query.
+ * It can be one of the following: 'ID', 'ID_DESC', 'USERNAME', 'USERNAME_DESC', 'WATCHED_TIME', 'WATCHED_TIME_DESC', 'CHAPTERS_READ', 'CHAPTERS_READ_DESC', 'SEARCH_MATCH'.
+ */
+export type UserSort = 'ID' | 'ID_DESC' | 'USERNAME' | 'USERNAME_DESC' | 'WATCHED_TIME' | 'WATCHED_TIME_DESC' | 'CHAPTERS_READ' | 'CHAPTERS_READ_DESC' | 'SEARCH_MATCH'
+
+/**
+ * `UserSortMappings` is a mapping of `UserSort` enum values to their corresponding string values.
+ * It can be one of the following: 'ID', 'ID_DESC', 'USERNAME', 'USERNAME_DESC', 'WATCHED_TIME', 'WATCHED_TIME_DESC', 'CHAPTERS_READ', 'CHAPTERS_READ_DESC', 'SEARCH_MATCH'.
+ */
+export const UserSortMappings = [
+  'ID',
+  'ID_DESC',
+  'USERNAME',
+  'USERNAME_DESC',
+  'WATCHED_TIME',
+  'WATCHED_TIME_DESC',
+  'CHAPTERS_READ',
+  'CHAPTERS_READ_DESC',
+  'SEARCH_MATCH'
+]
+
+/**
+ * `UserStatisticSort` is a type that represents the sorting options for the `UserStatistic` query.
+ * It can be one of the following: 'ID', 'ID_DESC', 'COUNT', 'COUNT_DESC', 'PROGRESS', 'PROGRESS_DESC', 'MEAN_SCORE', 'MEAN_SCORE_DESC'.
+ */
+export type UserStatisticSort = 'ID' | 'ID_DESC' | 'COUNT' | 'COUNT_DESC' | 'PROGRESS' | 'PROGRESS_DESC' | 'MEAN_SCORE' | 'MEAN_SCORE_DESC'
+
+/**
+ * `UserStatisticSortMappings` is a mapping of `UserStatisticSort` enum values to their corresponding string values.
+ * It can be one of the following: 'ID', 'ID_DESC', 'COUNT', 'COUNT_DESC', 'PROGRESS', 'PROGRESS_DESC', 'MEAN_SCORE', 'MEAN_SCORE_DESC'.
+ */
+export const UserStatisticSortMappings = [
+  'ID',
+  'ID_DESC',
+  'COUNT',
+  'COUNT_DESC',
+  'PROGRESS',
+  'PROGRESS_DESC',
+  'MEAN_SCORE',
+  'MEAN_SCORE_DESC'
+]
+
+/**
  * `ActivitySort` is a type that represents the sorting options for the `Activity` query.
  * It can be one of the following: 'ID', 'ID_DESC', 'PINNED'.
  */
