@@ -320,3 +320,32 @@ export const StudioSortMappings = [
   'FAVOURITES',
   'FAVOURITES_DESC'
 ]
+
+/**
+ * `ThreadSort` is a type that represents the sorting options for the `Thread` query.
+ * It can be one of the following: 'ID', 'ID_DESC', 'TITLE', 'TITLE_DESC', 'CREATED_AT', 'CREATED_AT_DESC', 'UPDATED_AT', 'UPDATED_AT_DESC', 'REPLIED_AT', 'REPLIED_AT_DESC', 'REPLY_COUNT', 'REPLY_COUNT_DESC', 'VIEW_COUNT', 'VIEW_COUNT_DESC', 'IS_STICKY', 'SEARCH_MATCH'.
+ */
+export type ThreadSort = 'ID' | 'ID_DESC' | 'TITLE' | 'TITLE_DESC' | 'CREATED_AT' | 'CREATED_AT_DESC' | 'UPDATED_AT' | 'UPDATED_AT_DESC' | 'REPLIED_AT' | 'REPLIED_AT_DESC' | 'REPLY_COUNT' | 'REPLY_COUNT_DESC' | 'VIEW_COUNT' | 'VIEW_COUNT_DESC' | 'IS_STICKY' | 'SEARCH_MATCH'
+
+/**
+ * `ThreadSortMappings` is a mapping of `ThreadSort` enum values to their corresponding string values.
+ * It can be one of the following: 'ID', 'ID_DESC', 'TITLE', 'TITLE_DESC', 'CREATED_AT', 'CREATED_AT_DESC', 'UPDATED_AT', 'UPDATED_AT_DESC', 'REPLIED_AT', 'REPLIED_AT_DESC', 'REPLY_COUNT', 'REPLY_COUNT_DESC', 'VIEW_COUNT', 'VIEW_COUNT_DESC', 'IS_STICKY', 'SEARCH_MATCH'.
+ */
+export const ThreadSortMappings = [
+  'ID',
+  'ID_DESC',
+  'TITLE',
+  'TITLE_DESC',
+  'CREATED_AT',
+  'CREATED_AT_DESC',
+  'UPDATED_AT',
+  'UPDATED_AT_DESC',
+  'REPLIED_AT',
+  'REPLIED_AT_DESC',
+  'REPLY_COUNT',
+  'REPLY_COUNT_DESC',
+  'VIEW_COUNT',
+  'VIEW_COUNT_DESC',
+  'IS_STICKY',
+  'SEARCH_MATCH'
+]

@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type ThreadResponse, ThreadSchema } from '../interfaces/responses/query/Thread'
+import {ThreadSort, ThreadSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `ThreadVariables` is an interface representing the variables for the `ThreadQuery`.
@@ -50,7 +52,7 @@ export interface ThreadVariables {
   /**
    * `sort` is an array of strings representing the sort order of the thread.
    */
-  sort?: string[]
+  sort?: ThreadSort[]
 
   /**
    * `asHtml` is a boolean indicating whether to return the result as HTML.
@@ -84,7 +86,25 @@ export class ThreadQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async thread (variables?: ThreadVariables): Promise<ThreadResponse> {
+  async thread (variables: ThreadVariables): Promise<ThreadResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be provided')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      userId: 'number',
+      replyUserId: 'number',
+      subscribed: 'boolean',
+      categoryId: 'number',
+      mediaCategoryId: 'number',
+      search: 'string',
+      id_in: 'number[]',
+      sort: ThreadSortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($id: Int, $userId: Int, $replyUserId: Int, $subscribed: Boolean, $categoryId: Int, $mediaCategoryId: Int, $search: String, $id_in: [Int], $sort: [ThreadSort], $asHtml: Boolean) {
         Thread (id: $id, userId: $userId, replyUserId: $replyUserId, subscribed: $subscribed, categoryId: $categoryId, mediaCategoryId: $mediaCategoryId, search: $search, id_in: $id_in, sort: $sort) {
