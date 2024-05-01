@@ -137,7 +137,7 @@ export class AiringScheduleQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async airingSchedule (variables: AiringScheduleVariables): Promise<AiringScheduleResponse> {
-    if (!variables.id || !variables.mediaId) {
+    if (!variables.id && !variables.mediaId) {
       throw new Error('The id or mediaId variables are required')
     }
     const variableTypeMappings = {
