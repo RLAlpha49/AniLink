@@ -66,7 +66,7 @@ import {
   type UpdateMediaListEntriesVariables
 } from './apis/anilist/mutation/UpdateMediaListEntries'
 import { UpdateUserMutation, type UpdateUserVariables } from './apis/anilist/mutation/UpdateUser'
-import { UserQuery } from './apis/anilist/query/User'
+import {UserQuery, UserVariables} from './apis/anilist/query/User'
 import { type UserResponse } from './apis/anilist/interfaces/responses/query/User'
 import { UsersQuery } from './apis/anilist/query/page/Users'
 import { ViewerQuery } from './apis/anilist/query/Viewer'
@@ -87,9 +87,10 @@ export class AniLink {
     query: {
       /**
        * Fetches user data from the Anilist API.
+       * @param {UserVariables} variables - The variables for the query.
        * @returns {Promise<UserResponse>} A promise that resolves to the user's data.
        */
-      user: () => Promise<UserResponse>
+      user: (variables: UserVariables) => Promise<UserResponse>
 
       /**
        * Fetches media data from the Anilist API.
@@ -160,18 +161,21 @@ export class AniLink {
 
       /**
        * Fetches notification data from the Anilist API.
+       * @param {NotificationVariables} variables - The variables for the query.
        * @returns {Promise<NotificationResponse>} A promise that resolves to the notification data.
        */
       notification: (variables: NotificationVariables) => Promise<NotificationResponse>
 
       /**
        * Fetches studio data from the Anilist API.
+       * @param {StudioVariables} variables - The variables for the query.
        * @returns {Promise<StudioResponse>} A promise that resolves to the studio data.
        */
       studio: (variables: StudioVariables) => Promise<StudioResponse>
 
       /**
        * Fetches review data from the Anilist API.
+       * @param {ReviewVariables} variables - The variables for the query.
        * @returns {Promise<ReviewResponse>} A promise that resolves to the review data.
        */
       review: (variables: ReviewVariables) => Promise<ReviewResponse>
@@ -206,18 +210,21 @@ export class AniLink {
 
       /**
        * Fetches thread data from the Anilist API.
+       * @param {ThreadVariables} variables - The variables for the query.
        * @returns {Promise<ThreadResponse>} A promise that resolves to the thread data.
        */
       thread: (variables: ThreadVariables) => Promise<ThreadResponse>
 
       /**
        * Fetches thread comment data from the Anilist API.
+       * @param {ThreadCommentVariables} variables - The variables for the query.
        * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the thread comment data.
        */
       threadComment: (variables: ThreadCommentVariables) => Promise<ThreadCommentResponse>
 
       /**
        * Fetches recommendation data from the Anilist API.
+       * @param {RecommendationVariables} variables - The variables for the query.
        * @returns {Promise<RecommendationResponse>} A promise that resolves to the recommendation data.
        */
       recommendation: (variables: RecommendationVariables) => Promise<RecommendationResponse>

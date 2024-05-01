@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type UserResponse, UserSchema } from '../interfaces/responses/query/User'
+import {UserSort, UserSortMappings, UserStatisticSort, UserStatisticSortMappings} from "../types/Sort";
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `UserVariables` is an interface representing the variables for the `UserQuery`.
@@ -30,7 +32,7 @@ export interface UserVariables {
   /**
    * `sort` is an array of strings representing the sort order of the user.
    */
-  sort?: string[]
+  sort?: UserSort[]
 
   /**
    * `asHtml` is a boolean indicating whether to return the result as HTML.
@@ -50,12 +52,12 @@ export interface UserVariables {
   /**
    * `animeStatSort` is an array of strings representing the sort order of the anime statistics.
    */
-  animeStatSort?: string[]
+  animeStatSort?: UserStatisticSort[]
 
   /**
    * `mangaStatSort` is an array of strings representing the sort order of the manga statistics.
    */
-  mangaStatSort?: string[]
+  mangaStatSort?: UserStatisticSort[]
 }
 
 /**
@@ -84,7 +86,25 @@ export class UserQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async user (variables?: UserVariables): Promise<UserResponse> {
+  async user (variables: UserVariables): Promise<UserResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be provided')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      name: 'string',
+      isModerator: 'boolean',
+      search: 'string',
+      sort: UserSortMappings,
+      asHtml: 'boolean',
+      animeStatLimit: 'number',
+      mangaStatLimit: 'number',
+      animeStatSort: UserStatisticSortMappings,
+      mangaStatSort: UserStatisticSortMappings
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         User (id: $id, name: $name, isModerator: $isModerator, search: $search, sort: $sort) {
