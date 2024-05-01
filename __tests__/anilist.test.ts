@@ -24,7 +24,6 @@ import {MediaTrendResponse} from "../src/apis/anilist/interfaces/responses/query
 import {MediaResponse} from "../src/apis/anilist/interfaces/responses/query/Media"
 import {AniChartUserResponse} from "../src/apis/anilist/interfaces/responses/query/AniChartUser"
 import {SiteStatisticsResponse} from "../src/apis/anilist/interfaces/responses/query/SiteStatistics";
-import {MediaListStatus} from "../src/apis/anilist/interfaces/MediaListEntry";
 
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
   try {
@@ -178,7 +177,7 @@ describe('Anilist API query', () => {
   })
 
   test('Activity query', async (): Promise<Activity> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.activity({id: 723235883, asHtml: true}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.activity({id: 723235883, asHtml: true, type_not: 'TEXT', sort: ['ID_DESC', 'PINNED']}))
     expect(response).toBeDefined()
     return response.data.Activity
   })

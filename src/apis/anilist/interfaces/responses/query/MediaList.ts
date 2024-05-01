@@ -1,4 +1,4 @@
-import { Media } from '../../Media'
+import { type Media } from '../../Media'
 import { FuzzyDateSchema } from '../../FuzzyDate'
 import { MediaSchema } from './Media'
 

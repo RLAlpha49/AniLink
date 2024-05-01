@@ -1,7 +1,7 @@
-import { Name, NameSchema } from '../../Name'
-import { Image, ImageSchema } from '../../Image'
-import { FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
-import { Title, TitleSchema } from '../../Title'
+import { type Name, NameSchema } from '../../Name'
+import { type Image, ImageSchema } from '../../Image'
+import { type FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
+import { type Title, TitleSchema } from '../../Title'
 
 /**
  * `StaffResponse` is an interface representing the response from a staff query.

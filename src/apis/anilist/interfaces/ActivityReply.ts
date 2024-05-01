@@ -1,4 +1,4 @@
-import { BasicUser, BasicUserSchema } from './BasicUser'
+import { type BasicUser, BasicUserSchema } from './BasicUser'
 
 /**
  * `ActivityReply` is an interface representing a reply to an activity.

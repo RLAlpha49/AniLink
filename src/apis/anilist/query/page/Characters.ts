@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { CharacterResponse, CharacterSchema } from '../../interfaces/responses/query/Character'
+import { type CharacterResponse, CharacterSchema } from '../../interfaces/responses/query/Character'
 
 /**
  * `CharactersVariables` is an interface representing the variables for the `CharactersQuery`.

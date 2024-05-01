@@ -1,5 +1,5 @@
-import { BasicUser, BasicUserSchema } from '../../BasicUser'
-import { Media } from '../../Media'
+import { type BasicUser, BasicUserSchema } from '../../BasicUser'
+import { type Media } from '../../Media'
 import { MediaSchema } from './Media'
 
 /**

@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { ReviewResponse, ReviewSchema } from '../interfaces/responses/query/Review'
+import { type ReviewResponse, ReviewSchema } from '../interfaces/responses/query/Review'
 
 /**
  * `ReviewVariables` is an interface representing the variables for the `ReviewQuery`.

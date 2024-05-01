@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios'
+import axios, { type AxiosResponse } from 'axios'
 
 /**
  * Sends a request to the specified URL.
@@ -10,7 +10,7 @@ import axios, { AxiosResponse } from 'axios'
  * @throws An error if the request fails.
  */
 export const sendRequest = async (url: string, method: 'GET' | 'POST', data?: object, token?: string): Promise<any> => {
-  const headers: { [key: string]: string } = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json'
   }
@@ -19,6 +19,7 @@ export const sendRequest = async (url: string, method: 'GET' | 'POST', data?: ob
     headers.Authorization = `Bearer ${token}`
   }
 
+  /* eslint-disable no-useless-catch */
   try {
     const response: AxiosResponse = await axios({
       url,

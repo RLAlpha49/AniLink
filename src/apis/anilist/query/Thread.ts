@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { ThreadResponse, ThreadSchema } from '../interfaces/responses/query/Thread'
+import { type ThreadResponse, ThreadSchema } from '../interfaces/responses/query/Thread'
 
 /**
  * `ThreadVariables` is an interface representing the variables for the `ThreadQuery`.

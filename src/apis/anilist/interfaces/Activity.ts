@@ -1,5 +1,5 @@
-import { BasicUser, BasicUserSchema } from './BasicUser'
-import { ActivityReply, ActivityReplySchema } from './ActivityReply'
+import { type BasicUser, BasicUserSchema } from './BasicUser'
+import { type ActivityReply, ActivityReplySchema } from './ActivityReply'
 
 /**
  * `Activity` is an interface representing the response from an activity query.

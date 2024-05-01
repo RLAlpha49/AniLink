@@ -1,4 +1,4 @@
-import { UserResponse } from './User'
+import { type UserResponse } from './User'
 
 /**
  * `AniChartUserResponse` is an interface representing the response from an AniChart user query.

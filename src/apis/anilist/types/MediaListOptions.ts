@@ -3,7 +3,7 @@
  * It includes fields for section order, split completed section by format, custom lists, advanced scoring,
  * advanced scoring enabled, and theme.
  */
-export interface MediaListOptions {
+export type MediaListOptions = {
   /**
    * `sectionOrder` is an array of strings representing the order of sections in the media list.
    */

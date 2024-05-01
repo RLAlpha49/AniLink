@@ -2,7 +2,7 @@
  * `FuzzyDateInput` is a type representing a fuzzy date input.
  * It includes the year, month, and day each having their own optional properties.
  */
-export interface FuzzyDateInput {
+export type FuzzyDateInput = {
   /**
    * `year` is an optional number representing the year of the fuzzy date input.
    */

@@ -7,29 +7,31 @@
  * @throws Will throw an error if any of the variables do not match their expected types. The error message will include the names of the invalid variables and their expected types.
  */
 export function validateVariables (variables: any, variableTypeMappings: { [key: string]: any }) {
+  if (Object.keys(variables).length === 0) {
+    throw new Error('No variables were provided')
+  }
+
   const errors = []
 
   for (const [variable, value] of Object.entries(variables)) {
     const expectedType = variableTypeMappings[variable]
     if (expectedType) {
-      if (typeof expectedType === 'string' && expectedType.endsWith('[]')) {
-        // If the expected type is an array, check if the actual value is an array and if its elements are of the correct type
+      if (Array.isArray(expectedType)) {
+        // If the expected type is an array, check if the value or its elements are included in the array
+        if (Array.isArray(value)) {
+          value.forEach((item, index) => {
+            if (!expectedType.includes(item)) {
+              errors.push(`Invalid ${variable}[${index}]: ${item}. Expected one of: ${expectedType.join(', ')}`)
+            }
+          })
+        } else if (!expectedType.includes(value)) {
+          errors.push(`Invalid ${variable}: ${value}. Expected one of: ${expectedType.join(', ')}`)
+        }
+      } else if (typeof expectedType === 'string' && expectedType.endsWith('[]')) {
+        // If the expected type is an array type, check if the actual value is an array and if its elements are of the correct type
         const elementType = expectedType.slice(0, -2); // Remove the '[]' from the end
         if (!Array.isArray(value) || !value.every((element: any) => typeof element === elementType)) {
           errors.push(`Invalid ${variable}: ${value}. Expected type: ${expectedType}`);
-        }
-      } else if (Array.isArray(expectedType)) {
-        // If the value is an object, validate its properties
-        if (typeof value === 'object' && value !== null) {
-          for (const [prop, propValue] of Object.entries(value)) {
-            const expectedPropType = expectedType[prop as keyof typeof expectedType]
-            if (expectedPropType && !expectedPropType.includes(propValue)) {
-              errors.push(`Invalid ${variable}.${prop}: ${propValue}. Expected one of: ${expectedPropType.join(', ')}`)
-            }
-          }
-        } else if (!expectedType.includes(value)) {
-          // If the value is not an object, check if it is one of the array values
-          errors.push(`Invalid ${variable}: ${value}. Expected one of: ${expectedType.join(', ')}`)
         }
       } else if (typeof expectedType === 'object') {
         // If the expected type is an object, validate its properties

@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { AniChartUserResponse } from '../interfaces/responses/query/AniChartUser'
+import { type AniChartUserResponse } from '../interfaces/responses/query/AniChartUser'
 import { BasicUserSchema } from '../interfaces/BasicUser'
 
 /**

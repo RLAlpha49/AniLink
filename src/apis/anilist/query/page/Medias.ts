@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { MediaResponse, MediaWithRelationsSchema } from '../../interfaces/responses/query/Media'
+import { type MediaResponse, MediaWithRelationsSchema } from '../../interfaces/responses/query/Media'
 
 /**
  * `MediasVariables` is an interface representing the variables for the `MediasQuery`.

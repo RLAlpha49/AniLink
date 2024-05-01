@@ -1,9 +1,9 @@
-import { Title, TitleSchema } from '../../Title'
-import { ActivityNotification, ActivityNotificationSchema } from '../../ActivityNotification'
-import { BasicUser, BasicUserSchema } from '../../BasicUser'
-import { BasicThread, BasicThreadSchema } from '../../BasicThread'
-import { BasicComment, BasicCommentSchema } from '../../BasicComment'
-import { ThreadNotification, ThreadNotificationSchema } from '../../ThreadNotification'
+import { type Title, TitleSchema } from '../../Title'
+import { type ActivityNotification, ActivityNotificationSchema } from '../../ActivityNotification'
+import { type BasicUser, BasicUserSchema } from '../../BasicUser'
+import { type BasicThread, BasicThreadSchema } from '../../BasicThread'
+import { type BasicComment, BasicCommentSchema } from '../../BasicComment'
+import { type ThreadNotification, ThreadNotificationSchema } from '../../ThreadNotification'
 
 /**
  * `NotificationResponse` is an interface representing the response from a notification query.

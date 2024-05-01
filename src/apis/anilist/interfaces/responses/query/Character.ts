@@ -1,7 +1,7 @@
-import { FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
-import { Name, NameSchema } from '../../Name'
-import { Image, ImageSchema } from '../../Image'
-import { Title, TitleSchema } from '../../Title'
+import { type FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
+import { type Name, NameSchema } from '../../Name'
+import { type Image, ImageSchema } from '../../Image'
+import { type Title, TitleSchema } from '../../Title'
 
 /**
  * `CharacterResponse` is an interface representing the response from a character query.

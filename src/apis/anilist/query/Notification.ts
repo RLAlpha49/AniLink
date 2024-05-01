@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { NotificationResponse, NotificationSchema } from '../interfaces/responses/query/Notification'
+import { type NotificationResponse, NotificationSchema } from '../interfaces/responses/query/Notification'
 
 /**
  * `NotificationVariables` is an interface representing the variables for the `NotificationQuery`.

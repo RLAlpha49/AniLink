@@ -1,6 +1,6 @@
-import { Tag } from './Tag'
-import { Staff } from './Staff'
-import { Studio } from './Studio'
+import { type Tag } from './Tag'
+import { type Staff } from './Staff'
+import { type Studio } from './Studio'
 
 /**
  * `Favoured` is an interface representing a favoured entity.

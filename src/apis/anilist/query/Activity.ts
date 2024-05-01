@@ -1,6 +1,9 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { Activity, ActivityWithRepliesSchema } from '../interfaces/Activity'
+import { type Activity, ActivityWithRepliesSchema } from '../interfaces/Activity'
+import { validateVariables } from '../../../base/ValidateVariables'
+import { type ActivitySort, ActivitySortMappings } from '../types/Sort'
+import { type ActivityType, ActivityTypeMappings } from '../types/ActivityType'
 
 /**
  * `ActivityVariables` is an interface representing the variables for the `ActivityQuery`.
@@ -10,7 +13,7 @@ export interface ActivityVariables {
   /**
    * `id` is a number representing the id of the activity.
    */
-  id?: number
+  id: number
 
   /**
    * `userId` is a number representing the id of the user.
@@ -30,7 +33,7 @@ export interface ActivityVariables {
   /**
    * `type` is a string representing the type of the activity.
    */
-  type?: string
+  type?: ActivityType
 
   /**
    * `isFollowing` is a boolean representing whether the user is following.
@@ -115,17 +118,17 @@ export interface ActivityVariables {
   /**
    * `type_not` is a string representing the type of the activity that should not be included.
    */
-  type_not?: string
+  type_not?: ActivityType
 
   /**
    * `type_in` is an array of strings representing the types of the activities that should be included.
    */
-  type_in?: string[]
+  type_in?: ActivityType[]
 
   /**
    * `type_not_in` is an array of strings representing the types of the activities that should not be included.
    */
-  type_not_in?: string[]
+  type_not_in?: ActivityType[]
 
   /**
    * `createdAt_greater` is a number representing the minimum creation time of the activities.
@@ -135,7 +138,7 @@ export interface ActivityVariables {
   /**
    * `sort` is an array of strings representing the sort order.
    */
-  sort?: string[]
+  sort?: ActivitySort[]
 
   /**
    * `asHtml` is a boolean representing whether to return the result as HTML.
@@ -169,7 +172,42 @@ export class ActivityQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async activity (variables?: ActivityVariables): Promise<Activity> {
+  async activity (variables: ActivityVariables): Promise<Activity> {
+    if (variables.id === undefined) {
+      throw new Error('The id variable is required')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      userId: 'number',
+      messengerId: 'number',
+      mediaId: 'number',
+      type: ActivityTypeMappings,
+      isFollowing: 'boolean',
+      hasReplies: 'boolean',
+      hasRepliesOrTypeText: 'boolean',
+      createdAt: 'number',
+      id_not: 'number',
+      id_in: 'number[]',
+      id_not_in: 'number[]',
+      userId_not: 'number',
+      userId_in: 'number[]',
+      userId_not_in: 'number[]',
+      messengerId_not: 'number',
+      messengerId_in: 'number[]',
+      messengerId_not_in: 'number[]',
+      mediaId_not: 'number',
+      mediaId_in: 'number[]',
+      mediaId_not_in: 'number[]',
+      type_not: ActivityTypeMappings,
+      type_in: ActivityTypeMappings,
+      type_not_in: ActivityTypeMappings,
+      createdAt_greater: 'number',
+      sort: ActivitySortMappings,
+      asHtml: 'boolean'
+    }
+
+    validateVariables(variables, variableTypeMappings)
+
     const query = `
       query ($id: Int, $userId: Int, $messengerId: Int, $mediaId: Int, $type: ActivityType, $isFollowing: Boolean, $hasReplies: Boolean, $hasRepliesOrTypeText: Boolean, $createdAt: Int, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $userId_not: Int, $userId_in: [Int], $userId_not_in: [Int], $messengerId_not: Int, $messengerId_in: [Int], $messengerId_not_in: [Int], $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $type_not: ActivityType, $type_in: [ActivityType], $type_not_in: [ActivityType], $createdAt_greater: Int, $sort: [ActivitySort], $asHtml: Boolean) {
         Activity (id: $id, userId: $userId, messengerId: $messengerId, mediaId: $mediaId, type: $type, isFollowing: $isFollowing, hasReplies: $hasReplies, hasRepliesOrTypeText: $hasRepliesOrTypeText, createdAt: $createdAt, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, userId_not: $userId_not, userId_in: $userId_in, userId_not_in: $userId_not_in, messengerId_not: $messengerId_not, messengerId_in: $messengerId_in, messengerId_not_in: $messengerId_not_in, mediaId_not: $mediaId_not, mediaId_in: $mediaId_in, mediaId_not_in: $mediaId_not_in, type_not: $type_not, type_in: $type_in, type_not_in: $type_not_in, createdAt_greater: $createdAt_greater, sort: $sort) {

@@ -1,4 +1,4 @@
-import { Media } from '../../Media'
+import { type Media } from '../../Media'
 import { MediaSchema } from './Media'
 
 /**

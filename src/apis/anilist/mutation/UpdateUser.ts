@@ -1,12 +1,12 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { ScoreFormat, ScoreFormatMapping } from '../types/ScoreFormat'
-import { UserStaffNameLanguage, UserStaffNameLanguageMapping } from '../types/UserStaffNameLanguage'
-import { UserTitleLanguage, UserTitleLanguageMapping } from '../types/UserTitleLanguage'
+import { type ScoreFormat, ScoreFormatMapping } from '../types/ScoreFormat'
+import { type UserStaffNameLanguage, UserStaffNameLanguageMapping } from '../types/UserStaffNameLanguage'
+import { type UserTitleLanguage, UserTitleLanguageMapping } from '../types/UserTitleLanguage'
 import { validateVariables } from '../../../base/ValidateVariables'
-import { NotificationOptions, NotificationOptionsMapping } from '../types/NotificationOptions'
-import { MediaListOptions, MediaListOptionsMapping } from '../types/MediaListOptions'
-import { DisabledListActivity, DisabledListActivityMapping } from '../types/DisabledListActivity'
+import { type NotificationOptions, NotificationOptionsMapping } from '../types/NotificationOptions'
+import { type MediaListOptions, MediaListOptionsMapping } from '../types/MediaListOptions'
+import { type DisabledListActivity, DisabledListActivityMapping } from '../types/DisabledListActivity'
 
 /**
  * `UpdateUserVariables` is an interface representing the variables for the `UpdateUserMutation`.
@@ -343,9 +343,6 @@ export class UpdateUserMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    */
   async updateUser (variables: UpdateUserVariables): Promise<UpdateUserResponse> {
-    if (Object.keys(variables).length === 0) {
-      throw new Error('No variables were provided')
-    }
     const variableTypeMappings = {
       about: 'string',
       titleLanguage: UserTitleLanguageMapping,

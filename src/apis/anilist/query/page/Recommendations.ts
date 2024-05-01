@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { RecommendationResponse, RecommendationSchema } from '../../interfaces/responses/query/Recommendation'
+import { type RecommendationResponse, RecommendationSchema } from '../../interfaces/responses/query/Recommendation'
 
 /**
  * `RecommendationsVariables` is an interface representing the variables for the `RecommendationsQuery`.

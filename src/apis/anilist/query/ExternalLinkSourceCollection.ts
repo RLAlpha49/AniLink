@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { ExternalLinkSourceCollectionResponse } from '../interfaces/responses/query/ExternalLinkSourceCollection'
+import { type ExternalLinkSourceCollectionResponse } from '../interfaces/responses/query/ExternalLinkSourceCollection'
 
 /**
  * `ExternalLinkSourceCollectionVariables` is an interface representing the variables for the `ExternalLinkSourceCollectionQuery`.

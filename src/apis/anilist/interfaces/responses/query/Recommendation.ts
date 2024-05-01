@@ -1,5 +1,5 @@
-import { BasicUser, BasicUserSchema } from '../../BasicUser'
-import { MediaResponse, MediaSchema } from './Media'
+import { type BasicUser, BasicUserSchema } from '../../BasicUser'
+import { type MediaResponse, MediaSchema } from './Media'
 
 /**
  * `RecommendationResponse` is an interface representing the response from a recommendation query.

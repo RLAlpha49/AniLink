@@ -1,8 +1,8 @@
 import { CharacterSchema } from './Character'
 import { StaffSchema } from './Staff'
 import { MediaSchema } from './Media'
-import { Media } from '../../Media'
-import { Staff } from '../../Staff'
+import { type Media } from '../../Media'
+import { type Staff } from '../../Staff'
 import { NameSchema } from '../../Name'
 import { ImageSchema } from '../../Image'
 

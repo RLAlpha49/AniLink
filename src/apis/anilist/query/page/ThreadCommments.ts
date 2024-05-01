@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { ThreadCommentResponse, ThreadCommentSchema } from '../../interfaces/responses/query/ThreadComment'
+import { type ThreadCommentResponse, ThreadCommentSchema } from '../../interfaces/responses/query/ThreadComment'
 
 /**
  * `ThreadCommentsVariables` is an interface representing the variables for the `ThreadCommentsQuery`.

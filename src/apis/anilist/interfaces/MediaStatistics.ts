@@ -1,4 +1,4 @@
-import { Stat } from './Stat'
+import { type Stat } from './Stat'
 
 /**
  * `MediaStatistics` is an interface representing the statistics of a media.

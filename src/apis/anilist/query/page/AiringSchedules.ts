@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { AiringScheduleResponse, AiringScheduleSchema } from '../../interfaces/responses/query/AiringSchedule'
+import { type AiringScheduleResponse, AiringScheduleSchema } from '../../interfaces/responses/query/AiringSchedule'
 
 /**
  * `AiringSchedulesVariables` is an interface representing the variables for the `AiringSchedulesQuery`.

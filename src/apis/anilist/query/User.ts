@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { UserResponse, UserSchema } from '../interfaces/responses/query/User'
+import { type UserResponse, UserSchema } from '../interfaces/responses/query/User'
 
 /**
  * `UserVariables` is an interface representing the variables for the `UserQuery`.

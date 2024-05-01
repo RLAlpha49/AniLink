@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { StudioResponse, StudioSchema } from '../interfaces/responses/query/Studio'
+import { type StudioResponse, StudioSchema } from '../interfaces/responses/query/Studio'
 
 /**
  * `StudioVariables` is an interface representing the variables for the `StudioQuery`.

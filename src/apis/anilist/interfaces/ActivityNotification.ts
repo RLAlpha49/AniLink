@@ -1,5 +1,5 @@
-import { Activity, ActivitySchema } from './Activity'
-import { BasicUser, BasicUserSchema } from './BasicUser'
+import { type Activity, ActivitySchema } from './Activity'
+import { type BasicUser, BasicUserSchema } from './BasicUser'
 
 /**
  * `ActivityNotification` is an interface representing a notification related to an activity.

@@ -1,6 +1,6 @@
-import { FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
-import { Media } from '../../Media'
-import { UserResponse } from './User'
+import { type FuzzyDate, FuzzyDateSchema } from '../../FuzzyDate'
+import { type Media } from '../../Media'
+import { type UserResponse } from './User'
 import { MediaSchema } from './Media'
 
 /**

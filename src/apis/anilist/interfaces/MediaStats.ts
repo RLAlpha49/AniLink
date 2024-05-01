@@ -1,5 +1,5 @@
-import { ScoreDistribution } from './ScoreDistribution'
-import { StatusDistribution } from './StatusDistribution'
+import { type ScoreDistribution } from './ScoreDistribution'
+import { type StatusDistribution } from './StatusDistribution'
 
 /**
  * `MediaStats` is an interface representing the statistics of a media.

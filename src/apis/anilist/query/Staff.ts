@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { StaffResponse, StaffSchema } from '../interfaces/responses/query/Staff'
+import { type StaffResponse, StaffSchema } from '../interfaces/responses/query/Staff'
 
 /**
  * `StaffVariables` is an interface representing the variables for the `StaffQuery`.

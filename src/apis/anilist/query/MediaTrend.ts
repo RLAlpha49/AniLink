@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { MediaTrendResponse, MediaTrendSchema } from '../interfaces/responses/query/MediaTrend'
+import { type MediaTrendResponse, MediaTrendSchema } from '../interfaces/responses/query/MediaTrend'
 
 /**
  * `MediaTrendVariables` is an interface representing the variables for the `MediaTrendQuery`.

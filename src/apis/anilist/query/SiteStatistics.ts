@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { SiteStatisticsResponse, SiteStatisticsSchema } from '../interfaces/responses/query/SiteStatistics'
+import { type SiteStatisticsResponse, SiteStatisticsSchema } from '../interfaces/responses/query/SiteStatistics'
 
 /**
  * `SiteStatisticsVariables` is an interface representing the variables for the `SiteStatisticsQuery`.

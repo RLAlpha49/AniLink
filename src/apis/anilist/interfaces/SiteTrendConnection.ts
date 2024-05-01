@@ -1,4 +1,4 @@
-import { SiteTrend, SiteTrendSchema } from './SiteTrend'
+import { type SiteTrend, SiteTrendSchema } from './SiteTrend'
 
 /**
  * `SiteTrendConnection` is an interface representing the connection of site trends.

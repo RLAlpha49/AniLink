@@ -1,6 +1,6 @@
-import { BasicThread, BasicThreadSchema } from './BasicThread'
-import { BasicComment, BasicCommentSchema } from './BasicComment'
-import { BasicUser, BasicUserSchema } from './BasicUser'
+import { type BasicThread, BasicThreadSchema } from './BasicThread'
+import { type BasicComment, BasicCommentSchema } from './BasicComment'
+import { type BasicUser, BasicUserSchema } from './BasicUser'
 
 /**
  * `ThreadNotification` is an interface representing a thread notification.

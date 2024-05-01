@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import {
   MediaListCollectionQuerySchema,
-  MediaListCollectionResponse
+  type MediaListCollectionResponse
 } from '../interfaces/responses/query/MediaListCollectionResponse'
 
 /**

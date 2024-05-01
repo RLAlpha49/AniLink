@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { FuzzyDateSchema } from '../interfaces/FuzzyDate'
-import { MediaListStatus, MediaListStatusMappings } from '../types/MediaListStatus'
-import { FuzzyDateInput, FuzzyDateMappings } from '../types/FuzzyDate'
+import { type MediaListStatus, MediaListStatusMappings } from '../types/MediaListStatus'
+import { type FuzzyDateInput, FuzzyDateMappings } from '../types/FuzzyDate'
 import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
@@ -119,9 +119,6 @@ export class SaveMediaListEntryMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    */
   async saveMediaListEntry (variables: SaveMediaListEntryVariables): Promise<any> {
-    if (Object.keys(variables).length === 0) {
-      throw new Error('No variables were provided')
-    }
     if (variables.mediaId === undefined) {
       throw new Error('mediaId is required for SaveMediaListEntryMutation')
     }

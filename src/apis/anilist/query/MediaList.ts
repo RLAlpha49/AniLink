@@ -1,6 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
-import { MediaListResponse, MediaListSchema } from '../interfaces/responses/query/MediaList'
+import { type MediaListResponse, MediaListSchema } from '../interfaces/responses/query/MediaList'
 
 /**
  * `MediaListVariables` is an interface representing the variables for the `MediaListQuery`.

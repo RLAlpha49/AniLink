@@ -1,4 +1,4 @@
-import { Tag } from '../../Tag'
+import { type Tag } from '../../Tag'
 
 /**
  * `MediaTagCollectionResponse` is an interface representing the response from a media tag collection query.
