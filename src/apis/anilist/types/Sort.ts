@@ -235,3 +235,28 @@ export const RecommendationSortMappings = [
   'RATING',
   'RATING_DESC'
 ]
+
+/**
+ * `ReviewSort` is a type that represents the sorting options for the `Review` query.
+ * It can be one of the following: 'ID', 'ID_DESC', 'MEDIA_ID', 'MEDIA_ID_DESC', 'SCORE', 'SCORE_DESC', 'RATING', 'RATING_DESC', 'CREATED_AT', 'CREATED_AT_DESC', 'UPDATED_AT', 'UPDATED_AT_DESC'.
+ */
+export type ReviewSort = 'ID' | 'ID_DESC' | 'MEDIA_ID' | 'MEDIA_ID_DESC' | 'SCORE' | 'SCORE_DESC' | 'RATING' | 'RATING_DESC' | 'CREATED_AT' | 'CREATED_AT_DESC' | 'UPDATED_AT' | 'UPDATED_AT_DESC'
+
+/**
+ * `ReviewSortMappings` is a mapping of `ReviewSort` enum values to their corresponding string values.
+ * It can be one of the following: 'ID', 'ID_DESC', 'MEDIA_ID', 'MEDIA_ID_DESC', 'SCORE', 'SCORE_DESC', 'RATING', 'RATING_DESC', 'CREATED_AT', 'CREATED_AT_DESC', 'UPDATED_AT', 'UPDATED_AT_DESC'.
+ */
+export const ReviewSortMappings = [
+  'ID',
+  'ID_DESC',
+  'MEDIA_ID',
+  'MEDIA_ID_DESC',
+  'SCORE',
+  'SCORE_DESC',
+  'RATING',
+  'RATING_DESC',
+  'CREATED_AT',
+  'CREATED_AT_DESC',
+  'UPDATED_AT',
+  'UPDATED_AT_DESC'
+]

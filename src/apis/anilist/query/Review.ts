@@ -1,6 +1,8 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { type ReviewResponse, ReviewSchema } from '../interfaces/responses/query/Review'
+import {MediaType} from "../types/Type";
+import {ReviewSort, ReviewSortMappings} from "../types/Sort";
 
 /**
  * `ReviewVariables` is an interface representing the variables for the `ReviewQuery`.
@@ -25,12 +27,12 @@ export interface ReviewVariables {
   /**
    * `mediaType` is a string representing the type of the media.
    */
-  mediaType?: string
+  mediaType?: MediaType
 
   /**
    * `sort` is an array of strings representing the sort order of the review.
    */
-  sort?: string[]
+  sort?: ReviewSort[]
 
   /**
    * `asHtml` is a boolean indicating whether to return the result as HTML.
@@ -64,7 +66,19 @@ export class ReviewQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async review (variables?: ReviewVariables): Promise<ReviewResponse> {
+  async review (variables: ReviewVariables): Promise<ReviewResponse> {
+    if (!variables) {
+      throw new Error('At least one variable must be set')
+    }
+    const variableTypeMappings = {
+      id: 'number',
+      mediaId: 'number',
+      userId: 'number',
+      mediaType: 'string',
+      sort: ReviewSortMappings,
+      asHtml: 'boolean'
+    }
+
     const query = `
       query ($id: Int, $mediaId: Int, $userId: Int, $mediaType: MediaType, $sort: [ReviewSort], $asHtml: Boolean) {
         Review (id: $id, mediaId: $mediaId, userId: $userId, mediaType: $mediaType, sort: $sort) {

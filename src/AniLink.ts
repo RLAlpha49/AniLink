@@ -43,7 +43,7 @@ import { NotificationsQuery } from './apis/anilist/query/page/Notifications'
 import {RecommendationQuery, RecommendationVariables} from './apis/anilist/query/Recommendation'
 import { type RecommendationResponse } from './apis/anilist/interfaces/responses/query/Recommendation'
 import { RecommendationsQuery } from './apis/anilist/query/page/Recommendations'
-import { ReviewQuery } from './apis/anilist/query/Review'
+import {ReviewQuery, ReviewVariables} from './apis/anilist/query/Review'
 import { type ReviewResponse } from './apis/anilist/interfaces/responses/query/Review'
 import { ReviewsQuery } from './apis/anilist/query/page/Reviews'
 import { SaveMediaListEntryMutation, type SaveMediaListEntryVariables } from './apis/anilist/mutation/SaveMediaListEntry'
@@ -173,7 +173,7 @@ export class AniLink {
        * Fetches review data from the Anilist API.
        * @returns {Promise<ReviewResponse>} A promise that resolves to the review data.
        */
-      review: () => Promise<ReviewResponse>
+      review: (variables: ReviewVariables) => Promise<ReviewResponse>
 
       /**
        * Fetches activity data from the Anilist API.
