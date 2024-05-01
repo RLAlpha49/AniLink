@@ -91,7 +91,6 @@ describe('Anilist API query', () => {
     const response = await handleRateLimit(() => aniLink.anilist.query.character({
       asHtml: true,
       mediaSort: ['POPULARITY_DESC'],
-      mediaType: 'ANIME',
       mediaOnList: true,
       mediaPage: 1,
       mediaPerPage: 10,

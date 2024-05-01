@@ -1,5 +1,6 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
+import {validateVariables} from "../../../base/ValidateVariables";
 
 /**
  * `MarkdownVariables` is an interface representing the variables for the `MarkdownQuery`.
@@ -9,7 +10,7 @@ export interface MarkdownVariables {
   /**
    * `markdown` is a string representing the markdown text to be converted.
    */
-  markdown?: string
+  markdown: string
 }
 
 /**
@@ -38,7 +39,16 @@ export class MarkdownQuery extends APIWrapper {
    * @param variables - The variables for the query.
    * @returns The response from the query request.
    */
-  async markdown (variables?: MarkdownVariables): Promise<string> {
+  async markdown (variables: MarkdownVariables): Promise<string> {
+    if (!variables.markdown) {
+      throw new Error('Markdown variable is required.')
+    }
+    const variableTypeMapppings = {
+      markdown: 'string'
+    }
+
+    validateVariables(variables, variableTypeMapppings)
+
     const query = `
       query ($markdown: String!) {
         Markdown (markdown: $markdown) {

@@ -23,7 +23,7 @@ import {FollowingQuery, FollowingVariables} from './apis/anilist/query/Following
 import { FollowingsQuery } from './apis/anilist/query/page/Followings'
 import { GenreCollectionQuery } from './apis/anilist/query/GenreCollection'
 import { LikesQuery } from './apis/anilist/query/page/Likes'
-import { MarkdownQuery } from './apis/anilist/query/Markdown'
+import {MarkdownQuery, MarkdownVariables} from './apis/anilist/query/Markdown'
 import { MediaListCollectionQuery } from './apis/anilist/query/MediaListCollection'
 import { type MediaListCollectionResponse } from './apis/anilist/interfaces/responses/query/MediaListCollectionResponse'
 import { MediaListQuery } from './apis/anilist/query/MediaList'
@@ -112,6 +112,7 @@ export class AniLink {
 
       /**
        * Fetches character data from the Anilist API.
+       * @param {CharacterVariables} variables - The variables for the query.
        * @returns {Promise<CharacterResponse>} A promise that resolves to the character data.
        */
       character: (variables: CharacterVariables) => Promise<CharacterResponse>
@@ -186,12 +187,14 @@ export class AniLink {
 
       /**
        * Fetches following data from the Anilist API.
+       * @param {FollowingVariables} variables - The variables for the query.
        * @returns {Promise<UserResponse>} A promise that resolves to the following data.
        */
       following: (variables: FollowingVariables) => Promise<UserResponse>
 
       /**
        * Fetches follower data from the Anilist API.
+       * @param {FollowerVariables} variables - The variables for the query.
        * @returns {Promise<UserResponse>} A promise that resolves to the follower data.
        */
       follower: (variables: FollowerVariables) => Promise<UserResponse>
@@ -216,9 +219,10 @@ export class AniLink {
 
       /**
        * Fetches markdown data from the Anilist API.
+       * @param {MarkdownVariables} variables - The variables for the query.
        * @returns {Promise<string>} A promise that resolves to the markdown data.
        */
-      markdown: () => Promise<string>
+      markdown: (variables: MarkdownVariables) => Promise<string>
 
       /**
        * Fetches aniChart user data from the Anilist API.
