@@ -5,7 +5,7 @@ import { TextActivitySchema } from '../interfaces/Activity'
 
 /**
  * `SaveTextActivityMutation` is an interface representing the variables to save a text activity.
- * It includes the `customList` and `type` variables of the text activity to save.
+ * It includes the activity id, text, and locked status.
  */
 export interface SaveTextActivityVariables {
   id: number

@@ -75,6 +75,7 @@ import { DeleteCustomListMutation, type DeleteCustomListVariables } from './apis
 import { SaveTextActivityMutation, type SaveTextActivityVariables } from './apis/anilist/mutation/SaveTextActivity'
 import { SaveMessageActivityMutation, type SaveMessageActivityVariables } from './apis/anilist/mutation/SaveMessageActivity'
 import { SaveListActivityMutation, type SaveListActivityVariables } from './apis/anilist/mutation/SaveListActivity'
+import {DeleteActivityMutation, DeleteActivityVariables } from './apis/anilist/mutation/DeleteActivity'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -699,6 +700,8 @@ export class AniLink {
      * @property {Function} deleteCustomList - Deletes a custom list on the Anilist API.
      * @property {Function} saveTextActivity - Saves a text activity on the Anilist API.
      * @property {Function} saveMessageActivity - Saves a message activity on the Anilist API.
+     * @property {Function} saveListActivity - Saves a list activity on the Anilist API.
+     * @property {Function} deleteActivity - Deletes an activity on the Anilist API.
      *
      * Must be authenticated for all mutations.
      */
@@ -830,6 +833,19 @@ export class AniLink {
        * ```
        */
       saveListActivity: (variables: SaveListActivityVariables) => Promise<any>
+
+      /**
+       * Deletes an activity on the Anilist API.
+       * Mod Only
+       * @param {DeleteActivityVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.deleteActivity({id: 1});
+       * ```
+       */
+      deleteActivity: (variables: DeleteActivityVariables) => Promise<any>
     }
   }
 
@@ -898,6 +914,7 @@ export class AniLink {
     const saveTextActivityMutationInstance = new SaveTextActivityMutation(authToken)
     const saveMessageActivityMutationInstance = new SaveMessageActivityMutation(authToken)
     const saveListActivityMutationInstance = new SaveListActivityMutation(authToken)
+    const deleteActivityMutationInstance = new DeleteActivityMutation(authToken)
 
     this.anilist = {
       query: {
@@ -956,7 +973,8 @@ export class AniLink {
         deleteCustomList: deleteCustomListMutationInstance.deleteCustomList.bind(deleteCustomListMutationInstance),
         saveTextActivity: saveTextActivityMutationInstance.saveTextActivity.bind(saveTextActivityMutationInstance),
         saveMessageActivity: saveMessageActivityMutationInstance.saveMessageActivity.bind(saveMessageActivityMutationInstance),
-        saveListActivity: saveListActivityMutationInstance.saveListActivity.bind(saveListActivityMutationInstance)
+        saveListActivity: saveListActivityMutationInstance.saveListActivity.bind(saveListActivityMutationInstance),
+        deleteActivity: deleteActivityMutationInstance.deleteActivity.bind(deleteActivityMutationInstance)
       }
     }
   }

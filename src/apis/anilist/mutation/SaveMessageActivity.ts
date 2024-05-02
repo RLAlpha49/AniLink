@@ -5,7 +5,7 @@ import { MessageActivitySchema } from '../interfaces/Activity'
 
 /**
  * `SaveMessageActivityMutation` is an interface representing the variables to save a message activity.
- * It includes the `customList` and `type` variables of the message activity to save.
+ * It includes the activity id, message, recipient id, private, locked, and asHtml.
  */
 export interface SaveMessageActivityVariables {
   id: number
@@ -64,7 +64,7 @@ export class SaveMessageActivityMutation extends APIWrapper {
 
     const mutation = `
       mutation ($id: Int, $message: String, $recipientId: Int, $private: Boolean, $locked: Boolean, $asMod: Boolean, $asHtml: Boolean) {
-        SaveMessageActivity(id: $id, message: $message, recipientId: $recipientId, private: $private, locked:$locked, asMod: $asMod)
+        SaveMessageActivity(id: $id, message: $message, recipientId: $recipientId, private: $private, locked:$locked, asMod: $asMod) {
           ${MessageActivitySchema}
         }
       }

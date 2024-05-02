@@ -214,7 +214,9 @@ const entryId = (
       userId: 6503722,
       mediaId: 143271
     }
-  ))).data.MediaList.id;
+   )
+  )
+).data.MediaList.id;
 aniLink.anilist.mutation.deleteMediaListEntry({id: entryId});
 
 // Deleting custom list
@@ -234,5 +236,13 @@ aniLink.anilist.mutation.saveMessageActivity({id: 725254160, message: 'Updated M
 
 // Update List Activity
 // Mod Only
-aniLink.anilist.mutation.saveListActivity({id: 72525416})
+const activityId = (
+  await handleRateLimit(() => aniLink.anilist.query.activity(
+    {
+      userId: 6503722
+    }
+   )
+  )
+).data.ListActivity.id
+const response = await handleRateLimit(() => aniLink.anilist.mutation.deleteActivity({id: activityId}))
 ```

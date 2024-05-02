@@ -467,4 +467,10 @@ describe('Anilist API mutation', () => {
     return response.data.SaveMessageActivity;
   });
 
+  test('Delete Activity', async () => {
+    const activityId = (await handleRateLimit(() => aniLink.anilist.query.activity({userId: 6503722}))).data.ListActivity.id
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.deleteActivity({id: activityId}))
+    expect(response).toBeDefined();
+    return response.data.DeleteActivity;
+  });
 })
