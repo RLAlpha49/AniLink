@@ -388,8 +388,8 @@ describe('Anilist API mutation', () => {
       notificationOptions: [{type: 'AIRING', enabled: true}],
       timezone: '-06:00',
       activityMergeTime: 30,
-      animeListOptions: {sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false},
-      mangaListOptions: {sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false},
+      animeListOptions: {sectionOrder: ['title'], customLists: ['test'], advancedScoring: [], advancedScoringEnabled: false},
+      mangaListOptions: {sectionOrder: ['title'], customLists: ['test'], advancedScoring: [], advancedScoringEnabled: false},
       staffNameLanguage: 'ROMAJI',
       restrictMessagesToFollowing: false,
       disabledListActivity: [{type: 'CURRENT', disabled: false}]
@@ -400,7 +400,7 @@ describe('Anilist API mutation', () => {
 
   test('Save Media List Entries', async () => {
     const variables = {
-      mediaId: 1,
+      mediaId: 143271,
       type: 'ANIME',
       status: 'CURRENT',
       score: 8.5,
@@ -425,8 +425,7 @@ describe('Anilist API mutation', () => {
   });
 
   test('Delete Media List Entry', async () => {
-    const entryResponse = await handleRateLimit(() => aniLink.anilist.query.mediaList({userId: 6503722, mediaId: 143271}))
-    const entryId = entryResponse.data.MediaList.id
+    const entryId = (await handleRateLimit(() => aniLink.anilist.query.mediaList({userId: 6503722, mediaId: 143271}))).data.MediaList.id
 
     const variables = {
       id: entryId,
@@ -434,5 +433,25 @@ describe('Anilist API mutation', () => {
     const response = await handleRateLimit(() => aniLink.anilist.mutation.deleteMediaListEntry(variables))
     expect(response).toBeDefined();
     return response.data.DeleteMediaListEntry;
+  });
+
+  test('Delete Custom List', async () => {
+    const variables = {
+      customList: 'test',
+      type: 'ANIME',
+    };
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.deleteCustomList(variables))
+    expect(response).toBeDefined();
+    return response.data.DeleteCustomList;
+  });
+
+  test('Save Text Activity', async () => {
+    const variables = {
+      id: 725254160,
+      text: 'testing'
+    };
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveTextActivity(variables))
+    expect(response).toBeDefined();
+    return response.data.SaveTextActivity;
   });
 })

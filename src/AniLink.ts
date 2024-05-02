@@ -70,8 +70,9 @@ import { UserQuery, type UserVariables } from './apis/anilist/query/User'
 import { type UserResponse } from './apis/anilist/interfaces/responses/query/User'
 import { UsersQuery, type UsersVariables } from './apis/anilist/query/page/Users'
 import { ViewerQuery } from './apis/anilist/query/Viewer'
-import {DeleteMediaListEntryMutation, DeleteMediaListEntryVariables } from './apis/anilist/mutation/DeleteMediaListEntry'
-import {DeleteCustomListMutation, DeleteCustomListVariables } from './apis/anilist/mutation/DeleteCustomList'
+import { DeleteMediaListEntryMutation, type DeleteMediaListEntryVariables } from './apis/anilist/mutation/DeleteMediaListEntry'
+import { DeleteCustomListMutation, type DeleteCustomListVariables } from './apis/anilist/mutation/DeleteCustomList'
+import { SaveTextActivityMutation, type SaveTextActivityVariables } from './apis/anilist/mutation/SaveTextActivity'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -422,6 +423,13 @@ export class AniLink {
        * @returns {Promise<any>} A promise that resolves when the mutation is complete.
        */
       deleteCustomList: (variables: DeleteCustomListVariables) => Promise<any>
+
+      /**
+       * Saves a text activity on the Anilist API.
+       * @param {SaveTextActivityVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       */
+      saveTextActivity: (variables: SaveTextActivityVariables) => Promise<any>
     }
   }
 
@@ -480,6 +488,7 @@ export class AniLink {
     const updateMediaListEntriesMutationInstance = new UpdateMediaListEntriesMutation(authToken)
     const deleteMediaListEntryMutationInstance = new DeleteMediaListEntryMutation(authToken)
     const deleteCustomListMutationInstance = new DeleteCustomListMutation(authToken)
+    const saveTextActivityMutationInstance = new SaveTextActivityMutation(authToken)
 
     this.anilist = {
       query: {
@@ -535,7 +544,8 @@ export class AniLink {
         saveMediaListEntry: saveMediaListEntryMutationInstance.saveMediaListEntry.bind(saveMediaListEntryMutationInstance),
         updateMediaListEntries: updateMediaListEntriesMutationInstance.updateMediaListEntries.bind(updateMediaListEntriesMutationInstance),
         deleteMediaListEntry: deleteMediaListEntryMutationInstance.deleteMediaListEntry.bind(deleteMediaListEntryMutationInstance),
-        deleteCustomList: deleteCustomListMutationInstance.deleteCustomList.bind(deleteCustomListMutationInstance)
+        deleteCustomList: deleteCustomListMutationInstance.deleteCustomList.bind(deleteCustomListMutationInstance),
+        saveTextActivity: saveTextActivityMutationInstance.saveTextActivity.bind(saveTextActivityMutationInstance)
       }
     }
   }

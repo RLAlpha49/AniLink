@@ -439,3 +439,31 @@ export const ActivityWithRepliesSchema = `
     }
   }
 `
+
+/**
+ * `TextActivity` is an object representing a text activity.
+ * It includes the id, user id, type, reply count, text, site url, lock status, subscription status, like count, like status, pin status, creation date, user details, replies, and likes.
+ */
+export const TextActivitySchema = `
+  id
+  userId
+  type
+  replyCount
+  text (asHtml: $asHtml)
+  siteUrl
+  isLocked
+  isSubscribed
+  likeCount
+  isLiked
+  isPinned
+  createdAt
+  user {
+    ${BasicUserSchema}
+  }
+  replies {
+    ${ActivityReplySchema}
+  }
+  likes {
+    ${BasicUserSchema}
+  }
+`

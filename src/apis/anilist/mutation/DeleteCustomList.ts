@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
-import {MediaType, MediaTypeMappings} from "../types/Type";
+import { type MediaType, MediaTypeMappings } from '../types/Type'
 
 /**
  * `DeleteCustomListMutation` is an interface representing the variables to delete a custom list.
@@ -41,7 +41,7 @@ export class DeleteCustomListMutation extends APIWrapper {
    *  */
   async deleteCustomList (variables: DeleteCustomListVariables): Promise<any> {
     if (!variables.customList || !variables.type) {
-      throw new Error('id & type variables are required')
+      throw new Error('customList & type variables are required')
     }
     const variableTypeMappings = {
       customList: 'string',

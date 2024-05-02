@@ -115,6 +115,9 @@ List of methods in `anilist.mutation`:
 - updateUser
 - saveMediaListEntry
 - updateMediaListEntries
+- deleteMediaListEntries
+- deleteCustomLists
+- saveTextActivity
 
 ### Error Handling
 
@@ -380,8 +383,8 @@ aniLink.anilist.mutation.updateUser({
   notificationOptions: [{type: 'AIRING', enabled: true}],
   timezone: '-06:00',
   activityMergeTime: 30,
-  animeListOptions: {sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false},
-  mangaListOptions: {sectionOrder: ['title'], customLists: [], advancedScoring: [], advancedScoringEnabled: false},
+  animeListOptions: {sectionOrder: ['title'], customLists: ['test'], advancedScoring: [], advancedScoringEnabled: false},
+  mangaListOptions: {sectionOrder: ['title'], customLists: ['test'], advancedScoring: [], advancedScoringEnabled: false},
   staffNameLanguage: 'ROMAJI',
   restrictMessagesToFollowing: false,
   disabledListActivity: [{type: 'CURRENT', disabled: false}]
@@ -389,7 +392,7 @@ aniLink.anilist.mutation.updateUser({
 
 // Saving media list entries
 aniLink.anilist.mutation.saveMediaListEntry({
-  mediaId: 1,
+  mediaId: 143271,
   status: 'CURRENT',
   score: 8.5,
   progress: 3,
@@ -402,6 +405,25 @@ aniLink.anilist.mutation.updateMediaListEntries({
   progress: 3,
   ids: [143271, 156822, 170890],
 });
+
+// Deleting custom list
+aniLink.anilist.mutation.deleteCustomLists({customList: 'test'});
+
+// Deleting media list entry
+const entryId = (
+  await handleRateLimit(() => aniLink.anilist.query.mediaList(
+    {
+      userId: 6503722,
+      mediaId: 143271
+    }
+  ))).data.MediaList.id;
+aniLink.anilist.mutation.deleteMediaListEntry({id: entryId});
+
+// Create text activity
+aniLink.anilist.mutation.saveTextActivity({text: 'test'})
+
+// Update text activity
+aniLink.anilist.mutation.saveTextActivity({id: 725254160, text: 'Updated Text'})
 ```
 
 ## License
