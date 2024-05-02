@@ -71,6 +71,7 @@ import { type UserResponse } from './apis/anilist/interfaces/responses/query/Use
 import { UsersQuery, type UsersVariables } from './apis/anilist/query/page/Users'
 import { ViewerQuery } from './apis/anilist/query/Viewer'
 import {DeleteMediaListEntryMutation, DeleteMediaListEntryVariables } from './apis/anilist/mutation/DeleteMediaListEntry'
+import {DeleteCustomListMutation, DeleteCustomListVariables } from './apis/anilist/mutation/DeleteCustomList'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -414,6 +415,13 @@ export class AniLink {
        * @returns {Promise<any>} A promise that resolves when the mutation is complete.
        */
       deleteMediaListEntry: (variables: DeleteMediaListEntryVariables) => Promise<any>
+
+      /**
+       * Deletes a custom list on the Anilist API.
+       * @param {DeleteCustomListVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       */
+      deleteCustomList: (variables: DeleteCustomListVariables) => Promise<any>
     }
   }
 
@@ -471,6 +479,7 @@ export class AniLink {
     const saveMediaListEntryMutationInstance = new SaveMediaListEntryMutation(authToken)
     const updateMediaListEntriesMutationInstance = new UpdateMediaListEntriesMutation(authToken)
     const deleteMediaListEntryMutationInstance = new DeleteMediaListEntryMutation(authToken)
+    const deleteCustomListMutationInstance = new DeleteCustomListMutation(authToken)
 
     this.anilist = {
       query: {
@@ -525,7 +534,8 @@ export class AniLink {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance),
         saveMediaListEntry: saveMediaListEntryMutationInstance.saveMediaListEntry.bind(saveMediaListEntryMutationInstance),
         updateMediaListEntries: updateMediaListEntriesMutationInstance.updateMediaListEntries.bind(updateMediaListEntriesMutationInstance),
-        deleteMediaListEntry: deleteMediaListEntryMutationInstance.deleteMediaListEntry.bind(deleteMediaListEntryMutationInstance)
+        deleteMediaListEntry: deleteMediaListEntryMutationInstance.deleteMediaListEntry.bind(deleteMediaListEntryMutationInstance),
+        deleteCustomList: deleteCustomListMutationInstance.deleteCustomList.bind(deleteCustomListMutationInstance)
       }
     }
   }
