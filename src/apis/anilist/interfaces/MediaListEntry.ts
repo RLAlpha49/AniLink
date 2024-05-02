@@ -1,10 +1,4 @@
 /**
- * `MediaListStatus` is a type representing the status of a media list.
- * It can be 'CURRENT', 'PLANNING', 'COMPLETED', 'DROPPED', 'PAUSED', or 'REPEATING'.
- */
-export type MediaListStatus = 'CURRENT' | 'PLANNING' | 'COMPLETED' | 'DROPPED' | 'PAUSED' | 'REPEATING'
-
-/**
  * `MediaListEntry` is an interface representing an entry in a media list.
  * It includes the id and status each having their own properties.
  */

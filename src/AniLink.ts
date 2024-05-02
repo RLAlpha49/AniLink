@@ -75,7 +75,7 @@ import { DeleteCustomListMutation, type DeleteCustomListVariables } from './apis
 import { SaveTextActivityMutation, type SaveTextActivityVariables } from './apis/anilist/mutation/SaveTextActivity'
 import { SaveMessageActivityMutation, type SaveMessageActivityVariables } from './apis/anilist/mutation/SaveMessageActivity'
 import { SaveListActivityMutation, type SaveListActivityVariables } from './apis/anilist/mutation/SaveListActivity'
-import {DeleteActivityMutation, DeleteActivityVariables } from './apis/anilist/mutation/DeleteActivity'
+import { DeleteActivityMutation, type DeleteActivityVariables } from './apis/anilist/mutation/DeleteActivity'
 
 /**
  * `AniLink` is a class for interacting with the APIs.

@@ -460,7 +460,8 @@ describe('Anilist API mutation', () => {
   test('Save Message Activity', async () => {
     const variables = {
       recipientId: 542244,
-      message: 'testing'
+      message: 'testing',
+      private: true
     };
     const response = await handleRateLimit(() => aniLink.anilist.mutation.saveMessageActivity(variables))
     expect(response).toBeDefined();
@@ -468,7 +469,7 @@ describe('Anilist API mutation', () => {
   });
 
   test('Delete Activity', async () => {
-    const activityId = (await handleRateLimit(() => aniLink.anilist.query.activity({userId: 6503722}))).data.ListActivity.id
+    const activityId = (await handleRateLimit(() => aniLink.anilist.query.activity({userId: 542244, messengerId: 6503722, type: 'MESSAGE'}))).data.Activity.id
     const response = await handleRateLimit(() => aniLink.anilist.mutation.deleteActivity({id: activityId}))
     expect(response).toBeDefined();
     return response.data.DeleteActivity;

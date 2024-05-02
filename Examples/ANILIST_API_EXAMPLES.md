@@ -234,15 +234,20 @@ aniLink.anilist.mutation.saveMessageActivity({recipientId: 542244, message: 'tes
 // Update message activity
 aniLink.anilist.mutation.saveMessageActivity({id: 725254160, message: 'Updated Message'})
 
-// Update List Activity
-// Mod Only
+// Update list activity
+// Mod only
+aniLink.anilist.mutation.saveListActivity({id: 725254160})
+
+// Delete Activity
 const activityId = (
   await handleRateLimit(() => aniLink.anilist.query.activity(
     {
-      userId: 6503722
+      userId: 542244,
+      messengerId: 6503722,
+      type: 'MESSAGE'
     }
    )
   )
-).data.ListActivity.id
+).data.Activity.id
 const response = await handleRateLimit(() => aniLink.anilist.mutation.deleteActivity({id: activityId}))
 ```
