@@ -70,6 +70,7 @@ import { UserQuery, type UserVariables } from './apis/anilist/query/User'
 import { type UserResponse } from './apis/anilist/interfaces/responses/query/User'
 import { UsersQuery, type UsersVariables } from './apis/anilist/query/page/Users'
 import { ViewerQuery } from './apis/anilist/query/Viewer'
+import {DeleteMediaListEntryMutation, DeleteMediaListEntryVariables } from './apis/anilist/mutation/DeleteMediaListEntry'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -406,6 +407,13 @@ export class AniLink {
        * @returns {Promise<any>} A promise that resolves when the mutation is complete.
        */
       updateMediaListEntries: (variables: UpdateMediaListEntriesVariables) => Promise<any>
+
+      /**
+       * Deletes a media list entry on the Anilist API.
+       * @param {DeleteMediaListEntryVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       */
+      deleteMediaListEntry: (variables: DeleteMediaListEntryVariables) => Promise<any>
     }
   }
 
@@ -462,6 +470,7 @@ export class AniLink {
     const updateUserMutationInstance = new UpdateUserMutation(authToken)
     const saveMediaListEntryMutationInstance = new SaveMediaListEntryMutation(authToken)
     const updateMediaListEntriesMutationInstance = new UpdateMediaListEntriesMutation(authToken)
+    const deleteMediaListEntryMutationInstance = new DeleteMediaListEntryMutation(authToken)
 
     this.anilist = {
       query: {
@@ -515,7 +524,8 @@ export class AniLink {
       mutation: {
         updateUser: updateUserMutationInstance.updateUser.bind(updateUserMutationInstance),
         saveMediaListEntry: saveMediaListEntryMutationInstance.saveMediaListEntry.bind(saveMediaListEntryMutationInstance),
-        updateMediaListEntries: updateMediaListEntriesMutationInstance.updateMediaListEntries.bind(updateMediaListEntriesMutationInstance)
+        updateMediaListEntries: updateMediaListEntriesMutationInstance.updateMediaListEntries.bind(updateMediaListEntriesMutationInstance),
+        deleteMediaListEntry: deleteMediaListEntryMutationInstance.deleteMediaListEntry.bind(deleteMediaListEntryMutationInstance)
       }
     }
   }

@@ -122,7 +122,7 @@ describe('Anilist API query', () => {
   })
 
   test('Media List query', async (): Promise<MediaListResponse> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.mediaList({userId: 542244}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.mediaList({userId: 6503722}))
     expect(response).toBeDefined()
     return response.data.MediaList
   })
@@ -415,10 +415,19 @@ describe('Anilist API mutation', () => {
       status: 'CURRENT',
       score: 8.5,
       progress: 3,
-      ids: [143271, 156822, 170890],
+      ids: [143271, 156822, 170890, 404544133],
     };
     const response = await handleRateLimit(() => aniLink.anilist.mutation.updateMediaListEntries(variables))
     expect(response).toBeDefined();
     return response.data.UpdateMediaListEntries;
+  });
+
+  test('Delete Media List Entry', async () => {
+    const variables = {
+      id: 404544133,
+    };
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.deleteMediaListEntry(variables))
+    expect(response).toBeDefined();
+    return response.data.DeleteMediaListEntry;
   });
 })
