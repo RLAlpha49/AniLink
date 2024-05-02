@@ -86,12 +86,45 @@ export class AniLink {
   public anilist: {
     /**
      * Query methods for fetching data from the Anilist API.
+     * @public
+     * @type {Object}
+     * @property {Function} user - Fetches user data from the Anilist API.
+     * @property {Function} media - Fetches media data from the Anilist API.
+     * @property {Function} mediaTrend - Fetches media trend data from the Anilist API.
+     * @property {Function} airingSchedule - Fetches airing schedule data from the Anilist API.
+     * @property {Function} character - Fetches character data from the Anilist API.
+     * @property {Function} staff - Fetches staff data from the Anilist API.
+     * @property {Function} mediaList - Fetches media list data from the Anilist API.
+     * @property {Function} mediaListCollection - Fetches media list collection data from the Anilist API.
+     * @property {Function} genreCollection - Fetches genre collection data from the Anilist API.
+     * @property {Function} mediaTagCollection - Fetches media tag collection data from the Anilist API.
+     * @property {Function} viewer - Fetches viewer data from the Anilist API.
+     * @property {Function} notification - Fetches notification data from the Anilist API.
+     * @property {Function} studio - Fetches studio data from the Anilist API.
+     * @property {Function} review - Fetches review data from the Anilist API.
+     * @property {Function} activity - Fetches activity data from the Anilist API.
+     * @property {Function} activityReply - Fetches activity reply data from the Anilist API.
+     * @property {Function} following - Fetches following data from the Anilist API.
+     * @property {Function} follower - Fetches follower data from the Anilist API.
+     * @property {Function} thread - Fetches thread data from the Anilist API.
+     * @property {Function} threadComment - Fetches thread comment data from the Anilist API.
+     * @property {Function} recommendation - Fetches recommendation data from the Anilist API.
+     * @property {Function} markdown - Fetches markdown data from the Anilist API.
+     * @property {Function} aniChartUser - Fetches aniChart user data from the Anilist API.
+     * @property {Function} siteStatistics - Fetches site statistics data from the Anilist API.
+     * @property {Function} externalLinkSourceCollection - Fetches external link source collection data from the Anilist API.
+     * @property {Function} page - Fetches pages of data from the Anilist API.
      */
     query: {
       /**
        * Fetches user data from the Anilist API.
        * @param {UserVariables} variables - The variables for the query.
        * @returns {Promise<UserResponse>} A promise that resolves to the user's data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.user({id: 542244, isHTML: true});
+       * ```
        */
       user: (variables: UserVariables) => Promise<UserResponse>
 
@@ -99,6 +132,11 @@ export class AniLink {
        * Fetches media data from the Anilist API.
        * @param {MediaVariables} variables - The variables for the query.
        * @returns {Promise<MediaResponse>} A promise that resolves to the media data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.media({id: 1, type: 'ANIME'});
+       * ```
        */
       media: (variables: MediaVariables) => Promise<MediaResponse>
 
@@ -106,6 +144,11 @@ export class AniLink {
        * Fetches media trend data from the Anilist API.
        * @param {MediaTrendVariables} variables - The variables for the query.
        * @returns {Promise<MediaTrendResponse>} A promise that resolves to the media trend data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.mediaTrend({mediaId: 1, type: 'ANIME'});
+       * ```
        */
       mediaTrend: (variables: MediaTrendVariables) => Promise<MediaTrendResponse>
 
@@ -113,6 +156,12 @@ export class AniLink {
        * Fetches airing schedule data from the Anilist API.
        * @param {AiringScheduleVariables} variables - The variables for the query.
        * @returns {Promise<AiringScheduleResponse>} A promise that resolves to the airing schedule data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.airingSchedule({mediaId: 130590});
+       * ```
+       * Must be quering an airing anime. Returns error if not.
        */
       airingSchedule: (variables: AiringScheduleVariables) => Promise<AiringScheduleResponse>
 
@@ -120,6 +169,19 @@ export class AniLink {
        * Fetches character data from the Anilist API.
        * @param {CharacterVariables} variables - The variables for the query.
        * @returns {Promise<CharacterResponse>} A promise that resolves to the character data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.character({
+       *   id: 1,
+       *   asHtml: true,
+       *   mediaSort: ['POPULARITY_DESC'],
+       *   mediaType: 'ANIME',
+       *   mediaOnList: true,
+       *   mediaPage: 1,
+       *   mediaPerPage: 10
+       * });
+       * ```
        */
       character: (variables: CharacterVariables) => Promise<CharacterResponse>
 
@@ -127,6 +189,26 @@ export class AniLink {
        * Fetches staff data from the Anilist API.
        * @param {StaffVariables} variables - The variables for the query.
        * @returns {Promise<StaffResponse>} A promise that resolves to the staff data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.staff({
+       *   id: 132186,
+       *   asHtml: true,
+       *   staffMediaSort: ['POPULARITY_DESC'],
+       *   staffMediaType: 'ANIME',
+       *   staffMediaOnList: true,
+       *   staffMediaPage: 1,
+       *   staffMediaPerPage: 10,
+       *   charactersSort: ['ID'],
+       *   charactersPage: 1,
+       *   charactersPerPage: 10,
+       *   characterMediaSort: ['POPULARITY_DESC'],
+       *   characterMediaOnList: true,
+       *   characterMediaPage: 1,
+       *   characterMediaPerPage: 10
+       * });
+       * ```
        */
       staff: (variables: StaffVariables) => Promise<StaffResponse>
 
@@ -134,6 +216,11 @@ export class AniLink {
        * Fetches media list data from the Anilist API.
        * @param {MediaListVariables} variables - The variables for the query.
        * @returns {Promise<MediaListResponse>} A promise that resolves to the media list data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.mediaList({userId: 542244});
+       * ```
        */
       mediaList: (variables: MediaListVariables) => Promise<MediaListResponse>
 
@@ -141,24 +228,51 @@ export class AniLink {
        * Fetches media list collection data from the Anilist API.
        * @param {MediaListCollectionVariables} variables - The variables for the query.
        * @returns {Promise<MediaListCollectionResponse>} A promise that resolves to the media list collection data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.mediaListCollection({
+       *   userId: 542244,
+       *   type: 'ANIME',
+       *   status: 'COMPLETED',
+       *   chunk: 1,
+       *   perChunk: 10000
+       * });
+       * ```
        */
       mediaListCollection: (variables: MediaListCollectionVariables) => Promise<MediaListCollectionResponse>
 
       /**
        * Fetches genre collection data from the Anilist API.
        * @returns {Promise<String>} A promise that resolves to the genre collection data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.genreCollection()
+       * ```
        */
       genreCollection: () => Promise<string>
 
       /**
        * Fetches media tag collection data from the Anilist API.
        * @returns {Promise<MediaTagCollectionResponse>} A promise that resolves to the media tag collection data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.mediaTagCollection()
+       * ```
        */
       mediaTagCollection: () => Promise<MediaTagCollectionResponse>
 
       /**
        * Fetches viewer data from the Anilist API.
        * @returns {Promise<UserResponse>} A promise that resolves to the viewer data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.viewer({isHTML: true});
+       * ```
+       * Must be authenticated.
        */
       viewer: () => Promise<UserResponse>
 
@@ -166,6 +280,12 @@ export class AniLink {
        * Fetches notification data from the Anilist API.
        * @param {NotificationVariables} variables - The variables for the query.
        * @returns {Promise<NotificationResponse>} A promise that resolves to the notification data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.notification({asHtml: true});
+       * ```
+       * Must be authenticated.
        */
       notification: (variables: NotificationVariables) => Promise<NotificationResponse>
 
@@ -173,6 +293,11 @@ export class AniLink {
        * Fetches studio data from the Anilist API.
        * @param {StudioVariables} variables - The variables for the query.
        * @returns {Promise<StudioResponse>} A promise that resolves to the studio data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.studio({id: 561, asHtml: true});
+       * ```
        */
       studio: (variables: StudioVariables) => Promise<StudioResponse>
 
@@ -180,6 +305,11 @@ export class AniLink {
        * Fetches review data from the Anilist API.
        * @param {ReviewVariables} variables - The variables for the query.
        * @returns {Promise<ReviewResponse>} A promise that resolves to the review data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.review({id: 8008, asHtml: true});
+       * ```
        */
       review: (variables: ReviewVariables) => Promise<ReviewResponse>
 
@@ -187,6 +317,11 @@ export class AniLink {
        * Fetches activity data from the Anilist API.
        * @param {ActivityVariables} variables - The variables for the query.
        * @returns {Promise<Activity>} A promise that resolves to the activity data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.activity({id: 723235883, asHtml: true});
+       * ```
        */
       activity: (variables: ActivityVariables) => Promise<Activity>
 
@@ -194,6 +329,11 @@ export class AniLink {
        * Fetches activity reply data from the Anilist API.
        * @param {ActivityReplyVariables} variables - The variables for the query.
        * @returns {Promise<ActivityReply>} A promise that resolves to the activity reply data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.activityReply({id: 12191046, asHtml: true});
+       * ```
        */
       activityReply: (variables: ActivityReplyVariables) => Promise<ActivityReply>
 
@@ -201,6 +341,11 @@ export class AniLink {
        * Fetches following data from the Anilist API.
        * @param {FollowingVariables} variables - The variables for the query.
        * @returns {Promise<UserResponse>} A promise that resolves to the following data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.following({userId: 542244});
+       * ```
        */
       following: (variables: FollowingVariables) => Promise<UserResponse>
 
@@ -208,6 +353,11 @@ export class AniLink {
        * Fetches follower data from the Anilist API.
        * @param {FollowerVariables} variables - The variables for the query.
        * @returns {Promise<UserResponse>} A promise that resolves to the follower data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.follower({userId: 542244});
+       * ```
        */
       follower: (variables: FollowerVariables) => Promise<UserResponse>
 
@@ -215,6 +365,11 @@ export class AniLink {
        * Fetches thread data from the Anilist API.
        * @param {ThreadVariables} variables - The variables for the query.
        * @returns {Promise<ThreadResponse>} A promise that resolves to the thread data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.thread({id: 71881, asHtml: true});
+       * ```
        */
       thread: (variables: ThreadVariables) => Promise<ThreadResponse>
 
@@ -222,6 +377,11 @@ export class AniLink {
        * Fetches thread comment data from the Anilist API.
        * @param {ThreadCommentVariables} variables - The variables for the query.
        * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the thread comment data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.threadComment({id: 2555166, asHtml: true});
+       * ```
        */
       threadComment: (variables: ThreadCommentVariables) => Promise<ThreadCommentResponse>
 
@@ -229,6 +389,11 @@ export class AniLink {
        * Fetches recommendation data from the Anilist API.
        * @param {RecommendationVariables} variables - The variables for the query.
        * @returns {Promise<RecommendationResponse>} A promise that resolves to the recommendation data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.recommendation({mediaId: 156822, asHtml: true});
+       * ```
        */
       recommendation: (variables: RecommendationVariables) => Promise<RecommendationResponse>
 
@@ -236,32 +401,84 @@ export class AniLink {
        * Fetches markdown data from the Anilist API.
        * @param {MarkdownVariables} variables - The variables for the query.
        * @returns {Promise<string>} A promise that resolves to the markdown data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.markdown({markdown: 'Hello, world!'});
+       * ```
        */
       markdown: (variables: MarkdownVariables) => Promise<string>
 
       /**
        * Fetches aniChart user data from the Anilist API.
        * @returns {Promise<AniChartUserResponse>} A promise that resolves to the aniChart user data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.aniChartUser();
+       * ```
+       * Must be authenticated.
        */
       aniChartUser: () => Promise<AniChartUserResponse>
 
       /**
        * Fetches site statistics data from the Anilist API.
        * @returns {Promise<SiteStatisticsResponse>} A promise that resolves to the site statistics data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.siteStatistics();
+       * ```
        */
       siteStatistics: () => Promise<SiteStatisticsResponse>
 
       /**
        * Fetches external link source collection data from the Anilist API.
        * @returns {Promise<ExternalLinkSourceCollectionResponse>} A promise that resolves to the external link source collection data.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.query.externalLinkSourceCollection();
+       * ```
        */
       externalLinkSourceCollection: () => Promise<ExternalLinkSourceCollectionResponse>
 
+      /**
+       * Fetches pages of data from the Anilist API.
+       * All page queries have the same structure as original queries with the addition of `page` and `perPage` variables.
+       *
+       * @public
+       * @type {Object}
+       * @property {Function} users - Fetches users data from the Anilist API.
+       * @property {Function} medias - Fetches medias data from the Anilist API.
+       * @property {Function} characters - Fetches characters data from the Anilist API.
+       * @property {Function} staffs - Fetches staffs data from the Anilist API.
+       * @property {Function} studios - Fetches studios data from the Anilist API.
+       * @property {Function} mediaLists - Fetches media lists data from the Anilist API.
+       * @property {Function} airingSchedules - Fetches airing schedules data from the Anilist API.
+       * @property {Function} mediaTrends - Fetches media trends data from the Anilist API.
+       * @property {Function} notifications - Fetches notifications data from the Anilist API.
+       * @property {Function} followers - Fetches followers data from the Anilist API.
+       * @property {Function} following - Fetches following data from the Anilist API.
+       * @property {Function} activities - Fetches activities data from the Anilist API.
+       * @property {Function} activityReplies - Fetches activity replies data from the Anilist API.
+       * @property {Function} threads - Fetches threads data from the Anilist API.
+       * @property {Function} threadComments - Fetches thread comments data from the Anilist API.
+       * @property {Function} reviews - Fetches reviews data from the Anilist API.
+       * @property {Function} recommendations - Fetches recommendations data from the Anilist API.
+       * @property {Function} likes - Fetches likes data from the Anilist API.
+       */
       page: {
         /**
          * Fetches users data from the Anilist API.
          * @param {UsersVariables} variables - The variables for the query.
          * @returns {Promise<UserResponse>} A promise that resolves to the users data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.users({page: 1, perPage: 10});
+         * ```
          */
         users: (variables: UsersVariables) => Promise<UserResponse>
 
@@ -269,6 +486,12 @@ export class AniLink {
          * Fetches medias data from the Anilist API.
          * @param {MediasVariables} variables - The variables for the query.
          * @returns {Promise<MediaResponse>} A promise that resolves to the medias data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.medias({page: 1, perPage: 10, type: 'ANIME'});
+         * ```
          */
         medias: (variables: MediasVariables) => Promise<MediaResponse>
 
@@ -276,6 +499,12 @@ export class AniLink {
          * Fetches characters data from the Anilist API.
          * @param {CharactersVariables} variables - The variables for the query.
          * @returns {Promise<CharacterResponse>} A promise that resolves to the characters data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.characters({page: 1, perPage: 10});
+         * ```
          */
         characters: (variables: CharactersVariables) => Promise<CharacterResponse>
 
@@ -283,6 +512,12 @@ export class AniLink {
          * Fetches staffs data from the Anilist API.
          * @param {StaffsVariables} variables - The variables for the query.
          * @returns {Promise<StaffResponse>} A promise that resolves to the staffs data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.staffs({page: 1, perPage: 10});
+         * ```
          */
         staffs: (variables: StaffsVariables) => Promise<StaffResponse>
 
@@ -290,6 +525,12 @@ export class AniLink {
          * Fetches studios data from the Anilist API.
          * @param {StudiosVariables} variables - The variables for the query.
          * @returns {Promise<StudioResponse>} A promise that resolves to the studios data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.studios({page: 1, perPage: 10});
+         * ```
          */
         studios: (variables: StudiosVariables) => Promise<StudioResponse>
 
@@ -297,6 +538,12 @@ export class AniLink {
          * Fetches media lists data from the Anilist API.
          * @param {MediaListsVariables} variables - The variables for the query.
          * @returns {Promise<MediaListResponse>} A promise that resolves to the media lists data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.mediaLists({page: 1, perPage: 10, userId: 542244});
+         * ```
          */
         mediaLists: (variables: MediaListsVariables) => Promise<MediaListResponse>
 
@@ -304,6 +551,12 @@ export class AniLink {
          * Fetches airing schedules data from the Anilist API.
          * @param {AiringSchedulesVariables} variables - The variables for the query.
          * @returns {Promise<AiringScheduleResponse>} A promise that resolves to the airing schedules data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.airingSchedules({page: 1, perPage: 10});
+         * ```
          */
         airingSchedules: (variables: AiringSchedulesVariables) => Promise<AiringScheduleResponse>
 
@@ -311,13 +564,26 @@ export class AniLink {
          * Fetches media trends data from the Anilist API.
          * @param {MediaTrendsVariables} variables - The variables for the query.
          * @returns {Promise<MediaTrendResponse>} A promise that resolves to the media trends data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.mediaTrends({page: 1, perPage: 10, type: 'ANIME'});
+         * ```
+         * Must be quering an airing anime. Returns error if not.
          */
         mediaTrends: (variables: MediaTrendsVariables) => Promise<MediaTrendResponse>
 
         /**
          * Fetches notifications data from the Anilist API.
          * @param {NotificationsVariables} variables - The variables for the query.
-         * @returns {Promise<NotificationResponse>} A promise that resolves to the notifications data.
+         * @returns {Promise<NotificationResponse>} A promise that resolves to the notifications data.\
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.notifications({page: 1, perPage: 10});
+         * ```
          */
         notifications: (variables: NotificationsVariables) => Promise<NotificationResponse>
 
@@ -325,6 +591,12 @@ export class AniLink {
          * Fetches followers data from the Anilist API.
          * @param {FollowersVariables} variables - The variables for the query.
          * @returns {Promise<UserResponse>} A promise that resolves to the followers data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.followers({page: 1, perPage: 10, userId: 542244});
+         * ```
          */
         followers: (variables: FollowersVariables) => Promise<UserResponse>
 
@@ -332,6 +604,12 @@ export class AniLink {
          * Fetches following data from the Anilist API.
          * @param {FollowingsVariables} variables - The variables for the query.
          * @returns {Promise<UserResponse>} A promise that resolves to the following data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.following({page: 1, perPage: 10, userId: 542244});
+         * ```
          */
         following: (variables: FollowingsVariables) => Promise<UserResponse>
 
@@ -339,6 +617,12 @@ export class AniLink {
          * Fetches activities data from the Anilist API.
          * @param {ActivitiesVariables} variables - The variables for the query.
          * @returns {Promise<Activity>} A promise that resolves to the activities data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.activities({page: 1, perPage: 10, userId: 542244});
+         * ```
          */
         activities: (variables: ActivitiesVariables) => Promise<Activity>
 
@@ -346,6 +630,12 @@ export class AniLink {
          * Fetches activity replies data from the Anilist API.
          * @param {ActivityRepliesVariables} variables - The variables for the query.
          * @returns {Promise<ActivityReply>} A promise that resolves to the activity replies data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.activityReplies({page: 1, perPage: 10, activityId: 723235883});
+         * ```
          */
         activityReplies: (variables: ActivityRepliesVariables) => Promise<ActivityReply>
 
@@ -353,6 +643,12 @@ export class AniLink {
          * Fetches threads data from the Anilist API.
          * @param {ThreadsVariables} variables - The variables for the query.
          * @returns {Promise<ThreadResponse>} A promise that resolves to the threads data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.threads({page: 1, perPage: 10});
+         * ```
          */
         threads: (variables: ThreadsVariables) => Promise<ThreadResponse>
 
@@ -360,6 +656,12 @@ export class AniLink {
          * Fetches thread comments data from the Anilist API.
          * @param {ThreadCommentsVariables} variables - The variables for the query.
          * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the thread comments data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.threadComments({page: 1, perPage: 10, threadId: 71881});
+         * ```
          */
         threadComments: (variables: ThreadCommentsVariables) => Promise<ThreadCommentResponse>
 
@@ -367,6 +669,12 @@ export class AniLink {
          * Fetches reviews data from the Anilist API.
          * @param {ReviewsVariables} variables - The variables for the query.
          * @returns {Promise<ReviewResponse>} A promise that resolves to the reviews data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.reviews({page: 1, perPage: 10, mediaId: 1});
+         * ```
          */
         reviews: (variables: ReviewsVariables) => Promise<ReviewResponse>
 
@@ -374,6 +682,12 @@ export class AniLink {
          * Fetches recommendations data from the Anilist API.
          * @param {RecommendationsVariables} variables - The variables for the query.
          * @returns {Promise<RecommendationResponse>} A promise that resolves to the recommendations data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.recommendations({page: 1, perPage: 10, mediaId: 1});
+         * ```
          */
         recommendations: (variables: RecommendationsVariables) => Promise<RecommendationResponse>
 
@@ -381,18 +695,55 @@ export class AniLink {
          * Fetches likes data from the Anilist API.
          * @param {LikesVariables} variables - The variables for the query.
          * @returns {Promise<BasicUser>} A promise that resolves to the likes data.
+         *
+         * @example
+         * ```typescript
+         * let aniLink = new AniLink('authToken')
+         * await aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeAbleId: 1});
          */
         likes: (variables: LikesVariables) => Promise<BasicUser>
       }
     }
     /**
      * Mutation methods for updating data on the Anilist API.
+     * @public
+     * @type {Object}
+     * @property {Function} updateUser - Updates a user on the Anilist API.
+     * @property {Function} saveMediaListEntry - Saves a media list entry on the Anilist API.
+     * @property {Function} updateMediaListEntries - Updates media list entries on the Anilist API.
+     * @property {Function} deleteMediaListEntry - Deletes a media list entry on the Anilist API.
+     * @property {Function} deleteCustomList - Deletes a custom list on the Anilist API.
+     * @property {Function} saveTextActivity - Saves a text activity on the Anilist API.
+     *
+     * Must be authenticated for all mutations.
      */
     mutation: {
       /**
        * Updates a user on the Anilist API.
        * @param {UpdateUserVariables} variables - The variables for the mutation.
        * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.updateUser({
+       *   about: 'New about text',
+       *   titleLanguage: 'ENGLISH',
+       *   displayAdultContent: true,
+       *   airingNotifications: true,
+       *   scoreFormat: 'POINT_10',
+       *   rowOrder: 'title',
+       *   profileColor: 'blue',
+       *   donatorBadge: 'Supporter',
+       *   notificationOptions: [{type: 'AIRING', enabled: true}],
+       *   timezone: '-06:00',
+       *   activityMergeTime: 30,
+       *   animeListOptions: {sectionOrder: ['title'], customLists: ['test'], advancedScoring: [], advancedScoringEnabled: false},
+       *   mangaListOptions: {sectionOrder: ['title'], customLists: ['test'], advancedScoring: [], advancedScoringEnabled: false},
+       *   staffNameLanguage: 'ROMAJI',
+       *   restrictMessagesToFollowing: false,
+       *   disabledListActivity: [{type: 'CURRENT', disabled: false}]
+       * });
+       * ```
        */
       updateUser: (variables: UpdateUserVariables) => Promise<any>
 
@@ -400,6 +751,11 @@ export class AniLink {
        * Saves a media list entry on the Anilist API.
        * @param {SaveMediaListEntryVariables} variables - The variables for the mutation.
        * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.saveMediaListEntry({mediaId: 1, status: 'COMPLETED'});
+       * ```
        */
       saveMediaListEntry: (variables: SaveMediaListEntryVariables) => Promise<any>
 
@@ -407,6 +763,16 @@ export class AniLink {
        * Updates media list entries on the Anilist API.
        * @param {UpdateMediaListEntriesVariables} variables - The variables for the mutation.
        * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.updateMediaListEntries({
+       *   status: 'CURRENT',
+       *   score: 8.5,
+       *   progress: 3,
+       *   ids: [143271, 156822, 170890],
+       * });
+       * ```
        */
       updateMediaListEntries: (variables: UpdateMediaListEntriesVariables) => Promise<any>
 
@@ -414,28 +780,62 @@ export class AniLink {
        * Deletes a media list entry on the Anilist API.
        * @param {DeleteMediaListEntryVariables} variables - The variables for the mutation.
        * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * You cannot delete a media list entry without first fetching the entry's id. The entry's id is not the same as the mediaId. It is specific to each user and media.
+       * ```typescript
+       * // Fetch the entry's id first by quering the user's media list by the mediaId.
+       * const entryId = (
+       *   await handleRateLimit(() => aniLink.anilist.query.mediaList(
+       *     {
+       *       userId: 6503722,
+       *       mediaId: 143271
+       *     }
+       *   ))).data.MediaList.id;
+       * aniLink.anilist.mutation.deleteMediaListEntry({id: entryId});
+       * ```
        */
       deleteMediaListEntry: (variables: DeleteMediaListEntryVariables) => Promise<any>
 
       /**
-       * Deletes a custom list on the Anilist API.
+       * Deletes a custom list on the Anilist API. There is no mutation specifically for creating a custom list. You can create a custom list through the `updateUser` mutation under the `animeListOptions` or `mangaListOptions` variables.
        * @param {DeleteCustomListVariables} variables - The variables for the mutation.
        * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.deleteCustomLists({customList: 'test'});
+       * ```
        */
       deleteCustomList: (variables: DeleteCustomListVariables) => Promise<any>
 
       /**
-       * Saves a text activity on the Anilist API.
+       * Saves a text activity on the Anilist API. If no `id` is provided, a new activity will be created. If an `id` is provided, the activity with that `id` will be updated.
        * @param {SaveTextActivityVariables} variables - The variables for the mutation.
        * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.saveTextActivity({text: 'Hello, world!'});
+       * ```
        */
       saveTextActivity: (variables: SaveTextActivityVariables) => Promise<any>
     }
   }
 
   /**
-   * Creates a new AniLink instance.
+   * Creates a new AniLink instance. The `authToken` parameter is optional and only required for authenticated queries and mutations. If no `authToken` is provided, only public queries will be available. You are able to create multiple AniLink instances with different `authToken`s.
    * @param {string} authToken - The authentication token to use for API requests.
+   * @public
+   * @example
+   * ```typescript
+   * const aniLink = new AniLink('authToken');
+   * ```
+   *
+   * @example
+   * ```typescript
+   * const aniLink2 = new AniLink();
+   * ```
    */
   constructor (authToken: string) {
     const userQueryInstance = new UserQuery(authToken)

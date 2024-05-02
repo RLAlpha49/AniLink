@@ -199,7 +199,7 @@ Example Error Thrown:
 
 ### Examples
 
-See the [ANILIST_API_EXAMPLES](https://github.com/RLAlpha49/AniLink/blob/master/ANILIST_API_EXAMPLES) for examples of how to use AniLink to interact with the AniList API.
+See the [ANILIST_API_EXAMPLES](https://github.com/RLAlpha49/AniLink/blob/master/Examples/ANILIST_API_EXAMPLES.md) for examples of how to use AniLink to interact with the AniList API.
 
 ## License
 

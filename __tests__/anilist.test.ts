@@ -243,7 +243,7 @@ describe('Anilist API query', () => {
 
 
   test('Users Page query', async (): Promise<BasicUser> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.page.users({id: 542244, isHTML: true}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.page.users({isHTML: true}))
     expect(response).toBeDefined()
     return response.data.Page.users
   })
@@ -267,7 +267,7 @@ describe('Anilist API query', () => {
   })
 
   test('Studio Page query', async (): Promise<StudioResponse> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.page.studios({id: 561, asHtml: true}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.page.studios({asHtml: true}))
     expect(response).toBeDefined()
     return response.data.Page.studios
   })
@@ -279,13 +279,13 @@ describe('Anilist API query', () => {
   })
 
   test('Airing Schedule Page query', async (): Promise<AiringScheduleResponse> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.page.airingSchedules({mediaId: 130590}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.page.airingSchedules({type: 'ANIME'}))
     expect(response).toBeDefined()
     return response.data.Page.airingSchedules
   })
 
   test('Media Trend Page query', async (): Promise<MediaTrendResponse> => {
-    const response = await handleRateLimit(() => aniLink.anilist.query.page.mediaTrends({mediaId: 1, type: 'ANIME'}))
+    const response = await handleRateLimit(() => aniLink.anilist.query.page.mediaTrends({type: 'ANIME'}))
     expect(response).toBeDefined()
     return response.data.Page.mediaTrends
   })

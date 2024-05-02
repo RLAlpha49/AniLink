@@ -207,9 +207,6 @@ aniLink.anilist.mutation.updateMediaListEntries({
   ids: [143271, 156822, 170890],
 });
 
-// Deleting custom list
-aniLink.anilist.mutation.deleteCustomLists({customList: 'test'});
-
 // Deleting media list entry
 const entryId = (
   await handleRateLimit(() => aniLink.anilist.query.mediaList(
@@ -219,6 +216,9 @@ const entryId = (
     }
   ))).data.MediaList.id;
 aniLink.anilist.mutation.deleteMediaListEntry({id: entryId});
+
+// Deleting custom list
+aniLink.anilist.mutation.deleteCustomLists({customList: 'test'});
 
 // Create text activity
 aniLink.anilist.mutation.saveTextActivity({text: 'test'})
