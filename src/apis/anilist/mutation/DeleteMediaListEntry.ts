@@ -41,6 +41,9 @@ export class DeleteMediaListEntryMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    *  */
   async deleteMediaListEntry (variables: DeleteMediaListEntryVariables): Promise<any> {
+    if (!this.authToken) {
+      throw new Error('DeleteMediaListEntryMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
+    }
     if (!variables.id) {
       throw new Error('id variable is required')
     }

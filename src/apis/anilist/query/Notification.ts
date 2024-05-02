@@ -57,6 +57,9 @@ export class NotificationQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async notification (variables: NotificationVariables): Promise<NotificationResponse> {
+    if (!this.authToken) {
+      throw new Error('NotificationQuery requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
+    }
     if (!variables) {
       throw new Error('At least one variable must be set')
     }

@@ -109,6 +109,9 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    *  */
   async updateMediaListEntries (variables: UpdateMediaListEntriesVariables): Promise<any> {
+    if (!this.authToken) {
+      throw new Error('UpdateMediaListEntriesMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
+    }
     if (!variables.ids || variables.ids.length === 0) {
       throw new Error('ids must be an array of at least one number')
     }

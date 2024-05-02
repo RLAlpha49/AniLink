@@ -476,7 +476,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.users({page: 1, perPage: 10});
          * ```
          */
@@ -489,7 +488,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.medias({page: 1, perPage: 10, type: 'ANIME'});
          * ```
          */
@@ -502,7 +500,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.characters({page: 1, perPage: 10});
          * ```
          */
@@ -515,7 +512,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.staffs({page: 1, perPage: 10});
          * ```
          */
@@ -528,7 +524,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.studios({page: 1, perPage: 10});
          * ```
          */
@@ -541,7 +536,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.mediaLists({page: 1, perPage: 10, userId: 542244});
          * ```
          */
@@ -554,7 +548,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.airingSchedules({page: 1, perPage: 10});
          * ```
          */
@@ -567,7 +560,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.mediaTrends({page: 1, perPage: 10, type: 'ANIME'});
          * ```
          * Must be quering an airing anime. Returns error if not.
@@ -581,7 +573,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.notifications({page: 1, perPage: 10});
          * ```
          */
@@ -594,7 +585,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.followers({page: 1, perPage: 10, userId: 542244});
          * ```
          */
@@ -607,7 +597,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.following({page: 1, perPage: 10, userId: 542244});
          * ```
          */
@@ -620,7 +609,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.activities({page: 1, perPage: 10, userId: 542244});
          * ```
          */
@@ -633,7 +621,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.activityReplies({page: 1, perPage: 10, activityId: 723235883});
          * ```
          */
@@ -646,7 +633,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.threads({page: 1, perPage: 10});
          * ```
          */
@@ -659,7 +645,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.threadComments({page: 1, perPage: 10, threadId: 71881});
          * ```
          */
@@ -672,7 +657,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.reviews({page: 1, perPage: 10, mediaId: 1});
          * ```
          */
@@ -685,7 +669,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.recommendations({page: 1, perPage: 10, mediaId: 1});
          * ```
          */
@@ -698,7 +681,6 @@ export class AniLink {
          *
          * @example
          * ```typescript
-         * let aniLink = new AniLink('authToken')
          * await aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeAbleId: 1});
          */
         likes: (variables: LikesVariables) => Promise<BasicUser>
@@ -825,15 +807,12 @@ export class AniLink {
 
   /**
    * Creates a new AniLink instance. The `authToken` parameter is optional and only required for authenticated queries and mutations. If no `authToken` is provided, only public queries will be available. You are able to create multiple AniLink instances with different `authToken`s.
-   * @param {string} authToken - The authentication token to use for API requests.
+   * @param {string} [authToken] - The authentication token to use for API requests.
    * @public
    * @example
    * ```typescript
    * const aniLink = new AniLink('authToken');
-   * ```
    *
-   * @example
-   * ```typescript
    * const aniLink2 = new AniLink();
    * ```
    */

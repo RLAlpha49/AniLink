@@ -21,9 +21,6 @@ export class AniChartUserQuery extends APIWrapper {
   constructor (authToken: string) {
     super('https://graphql.anilist.co')
     this.authToken = authToken
-    if (!this.authToken) {
-      throw new Error('AniChartUserQuery requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
-    }
   }
 
   /**
@@ -32,6 +29,9 @@ export class AniChartUserQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async aniChartUser (): Promise<AniChartUserResponse> {
+    if (!this.authToken) {
+      throw new Error('AniChartUserQuery requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
+    }
     const query = `
       query {
         AniChartUser {

@@ -119,6 +119,9 @@ export class SaveMediaListEntryMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    */
   async saveMediaListEntry (variables: SaveMediaListEntryVariables): Promise<any> {
+    if (!this.authToken) {
+      throw new Error('SaveMediaListEntryMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
+    }
     if (variables.mediaId === undefined) {
       throw new Error('mediaId is required for SaveMediaListEntryMutation')
     }

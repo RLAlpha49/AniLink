@@ -62,6 +62,9 @@ export class ViewerQuery extends APIWrapper {
    * @returns The response from the query request.
    */
   async viewer (variables: ViewerVariables = {}): Promise<UserResponse> {
+    if (!this.authToken) {
+      throw new Error('ViewerQuery requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
+    }
     const variableTypeMappings = {
       asHtml: 'boolean',
       animeStatLimit: 'number',

@@ -343,6 +343,9 @@ export class UpdateUserMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    */
   async updateUser (variables: UpdateUserVariables): Promise<UpdateUserResponse> {
+    if (!this.authToken) {
+      throw new Error('UpdateUserMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
+    }
     const variableTypeMappings = {
       about: 'string',
       titleLanguage: UserTitleLanguageMapping,

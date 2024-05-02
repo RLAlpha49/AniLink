@@ -40,6 +40,9 @@ export class DeleteCustomListMutation extends APIWrapper {
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    *  */
   async deleteCustomList (variables: DeleteCustomListVariables): Promise<any> {
+    if (!this.authToken) {
+      throw new Error('DeleteCustomListMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
+    }
     if (!variables.customList || !variables.type) {
       throw new Error('customList & type variables are required')
     }
