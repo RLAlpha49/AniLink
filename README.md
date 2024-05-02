@@ -118,6 +118,8 @@ List of methods in `anilist.mutation`:
 - deleteMediaListEntries
 - deleteCustomLists
 - saveTextActivity
+- saveMessageActivity
+- deleteActivity
 
 ### Error Handling
 

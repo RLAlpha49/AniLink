@@ -467,3 +467,71 @@ export const TextActivitySchema = `
     ${BasicUserSchema}
   }
 `
+
+/**
+ * `ListActivitySchema` is an object representing a list activity.
+ * It includes the id, user id, type, reply count, status, progress, lock status, subscription status, like count, like status, pin status, site url, creation date, media details, user details, replies, and likes.
+ */
+export const ListActivitySchema = `
+  id
+  userId
+  type
+  replyCount
+  status
+  progress
+  isLocked
+  isSubscribed
+  likeCount
+  isLiked
+  isPinned
+  siteUrl
+  createdAt
+  media {
+    id
+    title {
+      romaji
+      english
+    }
+  }
+  user {
+    ${BasicUserSchema}
+  }
+  replies {
+    ${ActivityReplySchema}
+  }
+  likes {
+    ${BasicUserSchema}
+  }
+`
+
+/**
+ * `MessageActivitySchema` is an object representing a message activity.
+ * It includes the id, recipient id, messenger id, type, reply count, message, lock status, subscription status, like count, like status, privacy status, site url, creation date, recipient details, messenger details, replies, and likes.
+ */
+export const MessageActivitySchema = `
+  id
+  recipientId
+  messengerId
+  type
+  replyCount
+  message (asHtml: $asHtml)
+  isLocked
+  isSubscribed
+  likeCount
+  isLiked
+  isPrivate
+  siteUrl
+  createdAt
+  recipient {
+    ${BasicUserSchema}
+  }
+  messenger {
+    ${BasicUserSchema}
+  }
+  replies {
+    ${ActivityReplySchema}
+  }
+  likes {
+    ${BasicUserSchema}
+  }
+`

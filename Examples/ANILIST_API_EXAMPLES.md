@@ -225,4 +225,14 @@ aniLink.anilist.mutation.saveTextActivity({text: 'test'})
 
 // Update text activity
 aniLink.anilist.mutation.saveTextActivity({id: 725254160, text: 'Updated Text'})
+
+// Create message activity
+aniLink.anilist.mutation.saveMessageActivity({recipientId: 542244, message: 'test'})
+
+// Update message activity
+aniLink.anilist.mutation.saveMessageActivity({id: 725254160, message: 'Updated Message'})
+
+// Update List Activity
+// Mod Only
+aniLink.anilist.mutation.saveListActivity({id: 72525416})
 ```

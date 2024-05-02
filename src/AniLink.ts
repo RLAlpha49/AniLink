@@ -73,6 +73,8 @@ import { ViewerQuery } from './apis/anilist/query/Viewer'
 import { DeleteMediaListEntryMutation, type DeleteMediaListEntryVariables } from './apis/anilist/mutation/DeleteMediaListEntry'
 import { DeleteCustomListMutation, type DeleteCustomListVariables } from './apis/anilist/mutation/DeleteCustomList'
 import { SaveTextActivityMutation, type SaveTextActivityVariables } from './apis/anilist/mutation/SaveTextActivity'
+import { SaveMessageActivityMutation, type SaveMessageActivityVariables } from './apis/anilist/mutation/SaveMessageActivity'
+import { SaveListActivityMutation, type SaveListActivityVariables } from './apis/anilist/mutation/SaveListActivity'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -696,6 +698,7 @@ export class AniLink {
      * @property {Function} deleteMediaListEntry - Deletes a media list entry on the Anilist API.
      * @property {Function} deleteCustomList - Deletes a custom list on the Anilist API.
      * @property {Function} saveTextActivity - Saves a text activity on the Anilist API.
+     * @property {Function} saveMessageActivity - Saves a message activity on the Anilist API.
      *
      * Must be authenticated for all mutations.
      */
@@ -802,6 +805,31 @@ export class AniLink {
        * ```
        */
       saveTextActivity: (variables: SaveTextActivityVariables) => Promise<any>
+
+      /**
+       * Saves a message activity on the Anilist API. If no `id` is provided, a new activity will be created. If an `id` is provided, the activity with that `id` will be updated.
+       * @param {SaveMessageActivityVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.saveMessageActivity({text: 'Hello, world!'});
+       * ```
+       */
+      saveMessageActivity: (variables: SaveMessageActivityVariables) => Promise<any>
+
+      /**
+       * Saves a list activity on the Anilist API.
+       * Mod Only
+       * @param {SaveListActivityVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.saveListActivity({id: 1});
+       * ```
+       */
+      saveListActivity: (variables: SaveListActivityVariables) => Promise<any>
     }
   }
 
@@ -868,6 +896,8 @@ export class AniLink {
     const deleteMediaListEntryMutationInstance = new DeleteMediaListEntryMutation(authToken)
     const deleteCustomListMutationInstance = new DeleteCustomListMutation(authToken)
     const saveTextActivityMutationInstance = new SaveTextActivityMutation(authToken)
+    const saveMessageActivityMutationInstance = new SaveMessageActivityMutation(authToken)
+    const saveListActivityMutationInstance = new SaveListActivityMutation(authToken)
 
     this.anilist = {
       query: {
@@ -924,7 +954,9 @@ export class AniLink {
         updateMediaListEntries: updateMediaListEntriesMutationInstance.updateMediaListEntries.bind(updateMediaListEntriesMutationInstance),
         deleteMediaListEntry: deleteMediaListEntryMutationInstance.deleteMediaListEntry.bind(deleteMediaListEntryMutationInstance),
         deleteCustomList: deleteCustomListMutationInstance.deleteCustomList.bind(deleteCustomListMutationInstance),
-        saveTextActivity: saveTextActivityMutationInstance.saveTextActivity.bind(saveTextActivityMutationInstance)
+        saveTextActivity: saveTextActivityMutationInstance.saveTextActivity.bind(saveTextActivityMutationInstance),
+        saveMessageActivity: saveMessageActivityMutationInstance.saveMessageActivity.bind(saveMessageActivityMutationInstance),
+        saveListActivity: saveListActivityMutationInstance.saveListActivity.bind(saveListActivityMutationInstance)
       }
     }
   }

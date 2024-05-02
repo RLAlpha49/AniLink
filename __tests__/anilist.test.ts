@@ -456,4 +456,15 @@ describe('Anilist API mutation', () => {
     expect(response).toBeDefined();
     return response.data.SaveTextActivity;
   });
+
+  test('Save Message Activity', async () => {
+    const variables = {
+      recipientId: 542244,
+      message: 'testing'
+    };
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveMessageActivity(variables))
+    expect(response).toBeDefined();
+    return response.data.SaveMessageActivity;
+  });
+
 })

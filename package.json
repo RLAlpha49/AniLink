@@ -1,7 +1,7 @@
 {
   "name": "anilink-api-wrapper",
-  "version": "1.20.0",
-  "description": "Anilist API Wrapper",
+  "version": "1.21.0",
+  "description": "API wrapper for AniManga sites such as Anilist, MyAnimeList, Kitsu.",
   "main": "dist/AniLink.js",
   "scripts": {
     "test": "jest",
@@ -11,8 +11,14 @@
   },
   "keywords": [
     "anilist",
+    "myanimelist",
+    "kitsu",
     "api",
-    "wrapper"
+    "wrapper",
+    "anilist-api",
+    "anilist-query",
+    "anilist-mutation",
+    "anilist-graphql"
   ],
   "author": "RLAlpha49",
   "license": "MIT",
