@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
-import { TextActivitySchema } from '../interfaces/Activity'
+import {Activity, TextActivitySchema} from '../interfaces/Activity'
 
 /**
  * `SaveTextActivityMutation` is an interface representing the variables to save a text activity.
@@ -51,7 +51,7 @@ export class SaveTextActivityMutation extends APIWrapper {
    * @returns A Promise that resolves to the response from the mutation request.
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    *  */
-  async saveTextActivity (variables: SaveTextActivityVariables): Promise<any> {
+  async saveTextActivity (variables: SaveTextActivityVariables): Promise<Activity> {
     if (!this.authToken) {
       throw new Error('SaveTextActivityMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
     }

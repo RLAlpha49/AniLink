@@ -4,6 +4,7 @@ import { FuzzyDateSchema } from '../interfaces/FuzzyDate'
 import { type FuzzyDateInput, FuzzyDateMappings } from '../types/FuzzyDate'
 import { validateVariables } from '../../../base/ValidateVariables'
 import { type MediaListStatus, MediaListStatusMappings } from '../types/Status'
+import {MediaListResponse} from "../interfaces/responses/query/MediaList";
 
 /**
  * `SaveMediaListEntryVariables` is an interface representing the variables for the `SaveMediaListEntryMutation`.
@@ -118,7 +119,7 @@ export class SaveMediaListEntryMutation extends APIWrapper {
    * @returns A Promise that resolves to the response from the mutation request.
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    */
-  async saveMediaListEntry (variables: SaveMediaListEntryVariables): Promise<any> {
+  async saveMediaListEntry (variables: SaveMediaListEntryVariables): Promise<MediaListResponse> {
     if (!this.authToken) {
       throw new Error('SaveMediaListEntryMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
     }

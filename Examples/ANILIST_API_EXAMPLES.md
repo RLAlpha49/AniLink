@@ -249,7 +249,7 @@ const activityId = (
    )
   )
 ).data.Activity.id
-aniLink.anilist.mutation.deleteActivity({id: activityId}))
+aniLink.anilist.mutation.deleteActivity({id: activityId});
 
 // Toggle Activity Pin
 aniLink.anilist.mutation.toggleActivityPin({id: 1, pinned: true});

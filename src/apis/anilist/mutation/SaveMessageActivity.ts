@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
-import { MessageActivitySchema } from '../interfaces/Activity'
+import {Activity, MessageActivitySchema} from '../interfaces/Activity'
 
 /**
  * `SaveMessageActivityMutation` is an interface representing the variables to save a message activity.
@@ -66,7 +66,7 @@ export class SaveMessageActivityMutation extends APIWrapper {
    * @returns A Promise that resolves to the response from the mutation request.
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    *  */
-  async saveMessageActivity (variables: SaveMessageActivityVariables): Promise<any> {
+  async saveMessageActivity (variables: SaveMessageActivityVariables): Promise<Activity> {
     if (!this.authToken) {
       throw new Error('SaveMessageActivityMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
     }

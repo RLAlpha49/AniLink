@@ -4,6 +4,7 @@ import { type FuzzyDate, FuzzyDateSchema } from '../interfaces/FuzzyDate'
 import { validateVariables } from '../../../base/ValidateVariables'
 import { FuzzyDateMappings } from '../types/FuzzyDate'
 import { type MediaListStatus, MediaListStatusMappings } from '../types/Status'
+import {MediaListResponse} from "../interfaces/responses/query/MediaList";
 
 /**
  * `UpdateMediaListEntriesVariables` is an interface representing the variables for the `UpdateMediaListEntriesMutation`.
@@ -108,7 +109,7 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
    * @returns A Promise that resolves to the response from the mutation request.
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    *  */
-  async updateMediaListEntries (variables: UpdateMediaListEntriesVariables): Promise<any> {
+  async updateMediaListEntries (variables: UpdateMediaListEntriesVariables): Promise<MediaListResponse[]> {
     if (!this.authToken) {
       throw new Error('UpdateMediaListEntriesMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
     }

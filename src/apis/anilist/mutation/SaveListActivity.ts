@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
-import { ListActivitySchema } from '../interfaces/Activity'
+import {Activity, ListActivitySchema} from '../interfaces/Activity'
 
 /**
  * `SaveListActivityMutation` is an interface representing the variables to save a list activity.
@@ -51,7 +51,7 @@ export class SaveListActivityMutation extends APIWrapper {
    * @returns A Promise that resolves to the response from the mutation request.
    * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
    *  */
-  async saveListActivity (variables: SaveListActivityVariables): Promise<any> {
+  async saveListActivity (variables: SaveListActivityVariables): Promise<Activity> {
     if (!this.authToken) {
       throw new Error('SaveListActivityMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
     }
