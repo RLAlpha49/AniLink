@@ -249,5 +249,11 @@ const activityId = (
    )
   )
 ).data.Activity.id
-const response = await handleRateLimit(() => aniLink.anilist.mutation.deleteActivity({id: activityId}))
+aniLink.anilist.mutation.deleteActivity({id: activityId}))
+
+// Toggle Activity Pin
+aniLink.anilist.mutation.toggleActivityPin({id: 1, pinned: true});
+
+// Toggle Activity Subscription
+aniLink.anilist.mutation.toggleActivitySubscription({activityId: 1, subscribe: true});
 ```

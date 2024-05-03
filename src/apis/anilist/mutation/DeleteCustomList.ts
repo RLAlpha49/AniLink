@@ -8,7 +8,14 @@ import { type MediaType, MediaTypeMappings } from '../types/Type'
  * It includes the `customList` and `type` variables of the custom list to delete.
  */
 export interface DeleteCustomListVariables {
+  /**
+   * `customList` is a string representing the custom list to delete.
+   */
   customList?: string
+
+  /**
+   * `type` is a string representing the type of the media.
+   */
   type?: MediaType
 }
 
@@ -33,7 +40,7 @@ export class DeleteCustomListMutation extends APIWrapper {
   }
 
   /**
-   * `deleteMediaListEntry` is a method that sends a mutation request to delete a custom list.
+   * `deleteCustomList` is a method that sends a mutation request to delete a custom list.
    *
    * @param variables - An object of type `DeleteCustomListVariables` representing the variables for the mutation.
    * @returns A Promise that resolves to the response from the mutation request.

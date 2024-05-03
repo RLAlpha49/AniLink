@@ -8,11 +8,34 @@ import { MessageActivitySchema } from '../interfaces/Activity'
  * It includes the activity id, message, recipient id, private, locked, and asHtml.
  */
 export interface SaveMessageActivityVariables {
+  /**
+   * `id` is a number representing the id of the activity.
+   */
   id: number
+
+  /**
+   * `message` is a string representing the message.
+   */
   message?: string
+
+  /**
+   * `recipientId` is a number representing the id of the recipient.
+   */
   recipientId?: number
+
+  /**
+   * `private` is a boolean representing whether the message is private.
+   */
   private?: boolean
+
+  /**
+   * `locked` is a boolean representing whether the message is locked.
+   */
   locked?: boolean
+
+  /**
+   * `asHtml` is a boolean representing whether the description in the return response is in HTML format.
+   */
   asHtml?: boolean
 }
 

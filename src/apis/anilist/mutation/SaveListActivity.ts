@@ -8,8 +8,19 @@ import { ListActivitySchema } from '../interfaces/Activity'
  * It includes the `customList` and `type` variables of the list activity to save.
  */
 export interface SaveListActivityVariables {
+  /**
+   * `id` is a number representing the id of the list activity.
+   */
   id: number
+
+  /**
+   * `locked` is a boolean representing whether the list activity is locked.
+   */
   locked?: boolean
+
+  /**
+   * `asHtml` is a boolean representing whether the list activity is in HTML format.
+   */
   asHtml?: boolean
 }
 

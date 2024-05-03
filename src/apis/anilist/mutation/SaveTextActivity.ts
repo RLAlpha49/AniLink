@@ -8,8 +8,19 @@ import { TextActivitySchema } from '../interfaces/Activity'
  * It includes the activity id, text, and locked status.
  */
 export interface SaveTextActivityVariables {
+  /**
+   * `id` is a number representing the id of the activity.
+   */
   id: number
+
+  /**
+   * `text` is a string representing the text of the activity.
+   */
   text?: string
+
+  /**
+   * `locked` is a boolean representing whether the activity is locked.
+   */
   locked?: boolean
 }
 

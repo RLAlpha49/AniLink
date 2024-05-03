@@ -474,4 +474,10 @@ describe('Anilist API mutation', () => {
     expect(response).toBeDefined();
     return response.data.DeleteActivity;
   });
+
+  test('Toggle Activity Subscription', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.toggleActivitySubscription({activityId: 725674043, subscribe: true}))
+    expect(response).toBeDefined();
+    return response.data.ToggleActivitySubscription;
+  });
 })

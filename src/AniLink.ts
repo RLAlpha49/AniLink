@@ -76,6 +76,8 @@ import { SaveTextActivityMutation, type SaveTextActivityVariables } from './apis
 import { SaveMessageActivityMutation, type SaveMessageActivityVariables } from './apis/anilist/mutation/SaveMessageActivity'
 import { SaveListActivityMutation, type SaveListActivityVariables } from './apis/anilist/mutation/SaveListActivity'
 import { DeleteActivityMutation, type DeleteActivityVariables } from './apis/anilist/mutation/DeleteActivity'
+import { ToggleActivitySubscriptionMutation, type ToggleActivitySubscriptionVariables } from './apis/anilist/mutation/ToggleActivitySubscription'
+import { ToggleActivityPinMutation, type ToggleActivityPinVariables } from './apis/anilist/mutation/ToggleActivityPin'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -846,6 +848,32 @@ export class AniLink {
        * ```
        */
       deleteActivity: (variables: DeleteActivityVariables) => Promise<any>
+
+      /**
+       * Toggles the pin status of an activity on the Anilist API.
+       *
+       * @param {ToggleActivityPinVariables} variables - The variables for the mutation.
+       * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.toggleActivityPin({id: 1, pinned: true});
+       * ```
+       */
+      toggleActivityPin: (variables: ToggleActivityPinVariables) => Promise<Activity>
+
+      /**
+       * Toggles the subscription status of an activity on the Anilist API.
+       *
+       * @param {ToggleActivityLikeVariables} variables - The variables for the mutation.
+       * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.toggleActivitySubscription({activityId: 1, subscribe: true});
+       * ```
+       */
+      toggleActivitySubscription: (variables: ToggleActivitySubscriptionVariables) => Promise<Activity>
     }
   }
 
@@ -915,6 +943,8 @@ export class AniLink {
     const saveMessageActivityMutationInstance = new SaveMessageActivityMutation(authToken)
     const saveListActivityMutationInstance = new SaveListActivityMutation(authToken)
     const deleteActivityMutationInstance = new DeleteActivityMutation(authToken)
+    const toggleActivityPinMutationInstance = new ToggleActivityPinMutation(authToken)
+    const toggleActivitySubscriptionMutationInstance = new ToggleActivitySubscriptionMutation(authToken)
 
     this.anilist = {
       query: {
@@ -974,7 +1004,9 @@ export class AniLink {
         saveTextActivity: saveTextActivityMutationInstance.saveTextActivity.bind(saveTextActivityMutationInstance),
         saveMessageActivity: saveMessageActivityMutationInstance.saveMessageActivity.bind(saveMessageActivityMutationInstance),
         saveListActivity: saveListActivityMutationInstance.saveListActivity.bind(saveListActivityMutationInstance),
-        deleteActivity: deleteActivityMutationInstance.deleteActivity.bind(deleteActivityMutationInstance)
+        deleteActivity: deleteActivityMutationInstance.deleteActivity.bind(deleteActivityMutationInstance),
+        toggleActivityPin: toggleActivityPinMutationInstance.toggleActivityPin.bind(toggleActivityPinMutationInstance),
+        toggleActivitySubscription: toggleActivitySubscriptionMutationInstance.toggleActivitySubscription.bind(toggleActivitySubscriptionMutationInstance)
       }
     }
   }

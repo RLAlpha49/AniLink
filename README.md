@@ -120,6 +120,8 @@ List of methods in `anilist.mutation`:
 - saveTextActivity
 - saveMessageActivity
 - deleteActivity
+- toggleActivityPin
+- toggleActivitySubscription
 
 ### Error Handling
 

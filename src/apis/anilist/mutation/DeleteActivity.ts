@@ -7,6 +7,9 @@ import { validateVariables } from '../../../base/ValidateVariables'
  * It includes the activity id.
  */
 export interface DeleteActivityVariables {
+  /**
+   * `id` is a number representing the id of the activity.
+   */
   id: number
 }
 
@@ -31,7 +34,7 @@ export class DeleteActivityMutation extends APIWrapper {
   }
 
   /**
-   * `deleteMediaListEntry` is a method that sends a mutation request to delete a activity.
+   * `deleteActivity` is a method that sends a mutation request to delete a activity.
    *
    * @param variables - An object of type `DeleteActivityVariables` representing the variables for the mutation.
    * @returns A Promise that resolves to the response from the mutation request.
