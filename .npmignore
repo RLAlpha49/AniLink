@@ -3,8 +3,10 @@ __tests__/
 src/
 .idea/
 docs/
+Examples/
 babel.config.js
 jest.config.js
+add-ga.js
 tsconfig.json
 typedoc.json
 .env
