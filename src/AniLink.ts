@@ -704,6 +704,8 @@ export class AniLink {
      * @property {Function} saveMessageActivity - Saves a message activity on the Anilist API.
      * @property {Function} saveListActivity - Saves a list activity on the Anilist API.
      * @property {Function} deleteActivity - Deletes an activity on the Anilist API.
+     * @property {Function} toggleActivityPin - Toggles an activity's pin status on the Anilist API.
+     * @property {Function} toggleActivitySubscription - Toggles an activity's subscription status on the Anilist API.
      *
      * Must be authenticated for all mutations.
      */
@@ -865,7 +867,7 @@ export class AniLink {
       /**
        * Toggles the subscription status of an activity on the Anilist API.
        *
-       * @param {ToggleActivityLikeVariables} variables - The variables for the mutation.
+       * @param {ToggleActivitySubscriptionVariables} variables - The variables for the mutation.
        * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
        *
        * @example
