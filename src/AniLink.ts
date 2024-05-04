@@ -78,6 +78,7 @@ import { SaveListActivityMutation, type SaveListActivityVariables } from './apis
 import { DeleteActivityMutation, type DeleteActivityVariables } from './apis/anilist/mutation/DeleteActivity'
 import { ToggleActivitySubscriptionMutation, type ToggleActivitySubscriptionVariables } from './apis/anilist/mutation/ToggleActivitySubscription'
 import { ToggleActivityPinMutation, type ToggleActivityPinVariables } from './apis/anilist/mutation/ToggleActivityPin'
+import { SaveActivityReplyMutation, SaveActivityReplyVariables } from './apis/anilist/mutation/SaveActivityReply'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -876,6 +877,18 @@ export class AniLink {
        * ```
        */
       toggleActivitySubscription: (variables: ToggleActivitySubscriptionVariables) => Promise<Activity>
+
+      /**
+       * Saves an activity reply on the Anilist API. If no `id` is provided, a new activity reply will be created. If an `id` is provided, the activity reply with that `id` will be updated.
+       * @param {SaveActivityReplyVariables} variables - The variables for the mutation.
+       * @returns {Promise<ActivityReply>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.saveActivityReply({activityId: 1, text: 'Hello, world!'});
+       * ```
+       */
+      saveActivityReply: (variables: SaveActivityReplyVariables) => Promise<ActivityReply>
     }
   }
 
@@ -947,6 +960,7 @@ export class AniLink {
     const deleteActivityMutationInstance = new DeleteActivityMutation(authToken)
     const toggleActivityPinMutationInstance = new ToggleActivityPinMutation(authToken)
     const toggleActivitySubscriptionMutationInstance = new ToggleActivitySubscriptionMutation(authToken)
+    const saveActivityReplyMutationInstance = new SaveActivityReplyMutation(authToken)
 
     this.anilist = {
       query: {
@@ -1008,7 +1022,8 @@ export class AniLink {
         saveListActivity: saveListActivityMutationInstance.saveListActivity.bind(saveListActivityMutationInstance),
         deleteActivity: deleteActivityMutationInstance.deleteActivity.bind(deleteActivityMutationInstance),
         toggleActivityPin: toggleActivityPinMutationInstance.toggleActivityPin.bind(toggleActivityPinMutationInstance),
-        toggleActivitySubscription: toggleActivitySubscriptionMutationInstance.toggleActivitySubscription.bind(toggleActivitySubscriptionMutationInstance)
+        toggleActivitySubscription: toggleActivitySubscriptionMutationInstance.toggleActivitySubscription.bind(toggleActivitySubscriptionMutationInstance),
+        saveActivityReply: saveActivityReplyMutationInstance.saveActivityReply.bind(saveActivityReplyMutationInstance)
       }
     }
   }

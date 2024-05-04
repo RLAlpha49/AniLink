@@ -480,4 +480,10 @@ describe('Anilist API mutation', () => {
     expect(response).toBeDefined();
     return response.data.ToggleActivitySubscription;
   });
+
+  test('Save Activity Reply', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveActivityReply({id: 12808651, text: 'testing'}))
+    expect(response).toBeDefined();
+    return response.data.SaveActivityReply;
+  });
 })
