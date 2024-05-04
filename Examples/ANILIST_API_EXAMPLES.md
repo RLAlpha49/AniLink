@@ -256,4 +256,19 @@ aniLink.anilist.mutation.toggleActivityPin({id: 1, pinned: true});
 
 // Toggle Activity Subscription
 aniLink.anilist.mutation.toggleActivitySubscription({activityId: 1, subscribe: true});
+
+// Save Activity Reply
+aniLink.anilist.mutation.saveActivityReply({activityId: 1, text: 'test'});
+
+// Update Activity Reply
+aniLink.anilist.mutation.saveActivityReply({id: 1, text: 'Updated Text'});
+
+// Delete Activity Reply
+aniLink.anilist.mutation.deleteActivityReply({id: 1});
+
+// Toggle Like
+aniLink.anilist.mutation.toggleLike({id: 1, type: 'ACTIVITY'});
+
+// Toggle Like V2
+aniLink.anilist.mutation.toggleLikeV2({id: 1, type: 'ACTIVITY'});
 ```

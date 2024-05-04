@@ -79,6 +79,9 @@ import { DeleteActivityMutation, type DeleteActivityVariables } from './apis/ani
 import { ToggleActivitySubscriptionMutation, type ToggleActivitySubscriptionVariables } from './apis/anilist/mutation/ToggleActivitySubscription'
 import { ToggleActivityPinMutation, type ToggleActivityPinVariables } from './apis/anilist/mutation/ToggleActivityPin'
 import { SaveActivityReplyMutation, type SaveActivityReplyVariables } from './apis/anilist/mutation/SaveActivityReply'
+import { DeleteActivityReplyMutation, type DeleteActivityReplyVariables } from './apis/anilist/mutation/DeleteActivityReply'
+import { ToggleLikeMutation, type ToggleLikeVariables } from './apis/anilist/mutation/ToggleLike'
+import { ToggleLikeV2Mutation } from './apis/anilist/mutation/ToggleLikeV2'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -707,6 +710,9 @@ export class AniLink {
      * @property {Function} deleteActivity - Deletes an activity on the Anilist API.
      * @property {Function} toggleActivityPin - Toggles an activity's pin status on the Anilist API.
      * @property {Function} toggleActivitySubscription - Toggles an activity's subscription status on the Anilist API.
+     * @property {Function} saveActivityReply - Saves an activity reply on the Anilist API.
+     * @property {Function} deleteActivityReply - Deletes an activity reply on the Anilist API.
+     * @property {Function} toggleLike - Toggles a like on the Anilist API.
      *
      * Must be authenticated for all mutations.
      */
@@ -889,6 +895,43 @@ export class AniLink {
        * ```
        */
       saveActivityReply: (variables: SaveActivityReplyVariables) => Promise<ActivityReply>
+
+      /**
+       * Deletes an activity reply on the Anilist API.
+       * @param {DeleteActivityReplyVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.deleteActivityReply({id: 1});
+       * ```
+       */
+      deleteActivityReply: (variables: DeleteActivityReplyVariables) => Promise<any>
+
+      /**
+       * Toggles a like on the Anilist API.
+       * @param {ToggleLikeVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.toggleLike({likeAbleId: 1, type: 'ACTIVITY'});
+       * ```
+       */
+      toggleLike: (variables: ToggleLikeVariables) => Promise<any>
+
+      /**
+       * Toggles a like on the Anilist API.
+       * Returns a different response than the `toggleLike` mutation.
+       * @param {ToggleLikeVariables} variables - The variables for the mutation.
+       * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.toggleLikeV2({likeAbleId: 1, type: 'ACTIVITY'});
+       * ```
+       */
+      toggleLikeV2: (variables: ToggleLikeVariables) => Promise<Activity>
     }
   }
 
@@ -961,6 +1004,9 @@ export class AniLink {
     const toggleActivityPinMutationInstance = new ToggleActivityPinMutation(authToken)
     const toggleActivitySubscriptionMutationInstance = new ToggleActivitySubscriptionMutation(authToken)
     const saveActivityReplyMutationInstance = new SaveActivityReplyMutation(authToken)
+    const deleteActivityReplyMutationInstance = new DeleteActivityReplyMutation(authToken)
+    const toggleLikeMutationInstance = new ToggleLikeMutation(authToken)
+    const toggleLikeV2MutationInstance = new ToggleLikeV2Mutation(authToken)
 
     this.anilist = {
       query: {
@@ -1023,7 +1069,10 @@ export class AniLink {
         deleteActivity: deleteActivityMutationInstance.deleteActivity.bind(deleteActivityMutationInstance),
         toggleActivityPin: toggleActivityPinMutationInstance.toggleActivityPin.bind(toggleActivityPinMutationInstance),
         toggleActivitySubscription: toggleActivitySubscriptionMutationInstance.toggleActivitySubscription.bind(toggleActivitySubscriptionMutationInstance),
-        saveActivityReply: saveActivityReplyMutationInstance.saveActivityReply.bind(saveActivityReplyMutationInstance)
+        saveActivityReply: saveActivityReplyMutationInstance.saveActivityReply.bind(saveActivityReplyMutationInstance),
+        deleteActivityReply: deleteActivityReplyMutationInstance.deleteActivityReply.bind(deleteActivityReplyMutationInstance),
+        toggleLike: toggleLikeMutationInstance.toggleLike.bind(toggleLikeMutationInstance),
+        toggleLikeV2: toggleLikeV2MutationInstance.toggleLikeV2.bind(toggleLikeV2MutationInstance)
       }
     }
   }

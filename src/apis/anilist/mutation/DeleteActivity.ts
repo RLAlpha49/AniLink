@@ -3,7 +3,7 @@ import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
 
 /**
- * `DeleteActivityMutation` is an interface representing the variables to delete a activity.
+ * `DeleteActivityMutation` is an interface representing the variables to delete an activity.
  * It includes the activity id.
  */
 export interface DeleteActivityVariables {
@@ -15,7 +15,7 @@ export interface DeleteActivityVariables {
 
 /**
  * `DeleteActivityMutation` is a class representing a mutation to delete a activity.
- * It includes a method to delete a activity
+ * It includes a method to delete an activity
  */
 export class DeleteActivityMutation extends APIWrapper {
   /**

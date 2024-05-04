@@ -9,7 +9,7 @@ import { type ActivityReply, ActivityReplySchema } from '../interfaces/ActivityR
  */
 export interface SaveActivityReplyVariables {
   /**
-   * `id` is a number representing the id of the activity.
+   * `id` is a number representing the id of the activity reply.
    */
   id: number
 

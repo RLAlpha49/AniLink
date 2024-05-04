@@ -481,9 +481,23 @@ describe('Anilist API mutation', () => {
     return response.data.ToggleActivitySubscription;
   });
 
-  test('Save Activity Reply', async () => {
-    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveActivityReply({id: 12808651, text: 'testing'}))
-    expect(response).toBeDefined();
+  test('Save & Delete Activity Reply', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveActivityReply({activityId: 723235883, text: 'testing'}))
+    const replyId = response.data.SaveActivityReply.id
+    const response2 = await handleRateLimit(() => aniLink.anilist.mutation.deleteActivityReply({id: replyId}))
+    expect(response && response2).toBeDefined();
     return response.data.SaveActivityReply;
+  });
+
+  test('Toggle Like', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.toggleLike({id: 723235883, type: 'ACTIVITY'}))
+    expect(response).toBeDefined();
+    return response.data.ToggleLike;
+  });
+
+  test('Toggle Like V2', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.toggleLikeV2({id: 723235883, type: 'ACTIVITY'}))
+    expect(response).toBeDefined();
+    return response.data.ToggleLikeV2;
   });
 })

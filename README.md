@@ -122,6 +122,10 @@ List of methods in `anilist.mutation`:
 - deleteActivity
 - toggleActivityPin
 - toggleActivitySubscription
+- saveActivityReply
+- deleteActivityReply
+- toggleLike
+- toggleLikeV2
 
 ### Error Handling
 

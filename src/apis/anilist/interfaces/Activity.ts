@@ -1,5 +1,6 @@
 import { type BasicUser, BasicUserSchema } from './BasicUser'
 import { type ActivityReply, ActivityReplySchema } from './ActivityReply'
+import { TitleSchema } from './Title'
 
 /**
  * `Activity` is an interface representing the response from an activity query.
@@ -290,6 +291,230 @@ export interface Activity {
      */
     likes: BasicUser[]
   }
+
+  /**
+   * `ActivityReply` is an object representing an activity reply.
+   * It includes the id, user id, activity id, text, like count, like status, creation date, user details, and likes.
+   */
+  ActivityReply: {
+    /**
+     * `id` is a number representing the unique identifier of the activity reply.
+     */
+    id: number
+
+    /**
+     * `userId` is a number representing the unique identifier of the user who made the activity reply.
+     */
+    userId: number
+
+    /**
+     * `activityId` is a number representing the unique identifier of the activity the reply is made to.
+     */
+    activityId: number
+
+    /**
+     * `text` is a string representing the text of the activity reply.
+     */
+    text: string
+
+    /**
+     * `likeCount` is a number representing the count of likes the activity reply has received.
+     */
+    likeCount: number
+
+    /**
+     * `isLiked` is a boolean representing whether the activity reply is liked by the user or not.
+     */
+    isLiked: boolean
+
+    /**
+     * `createdAt` is a number representing the Unix timestamp when the activity reply was created.
+     */
+    createdAt: number
+
+    /**
+     * `user` is an object of type `BasicUser` representing the details of the user who made the activity reply.
+     */
+    user: BasicUser
+
+    /**
+     * `likes` is an array of `BasicUser` objects representing the users who liked the activity reply.
+     */
+    likes: BasicUser[]
+  }
+
+  /**
+   * `Thread` is an object representing a thread.
+   * It includes the id, title, body, user id, reply user id, reply comment id, reply count, view count, lock status, sticky status, subscription status, like count, like status, replied date, creation date, update date, user details, reply user details, likes, site url, categories, media categories.
+   */
+  Thread: {
+    /**
+     * `id` is a number representing the unique identifier of the thread.
+     */
+    id: number
+
+    /**
+     * `title` is a string representing the title of the thread.
+     */
+    title: string
+
+    /**
+     * `body` is a string representing the body of the thread.
+     */
+    body: string
+
+    /**
+     * `userId` is a number representing the unique identifier of the user who made the thread.
+     */
+    userId: number
+
+    /**
+     * `replyUserId` is a number representing the unique identifier of the user who replied to the thread.
+     */
+    replyUserId: number
+
+    /**
+     * `replyCommentId` is a number representing the unique identifier of the comment the thread is a reply to.
+     */
+    replyCommentId: number
+
+    /**
+     * `replyCount` is a number representing the count of replies the thread has received.
+     */
+    replyCount: number
+
+    /**
+     * `viewCount` is a number representing the count of views the thread has received.
+     */
+    viewCount: number
+
+    /**
+     * `isLocked` is a boolean representing whether the thread is locked or not.
+     */
+    isLocked: boolean
+
+    /**
+     * `isSticky` is a boolean representing whether the thread is sticky or not.
+     */
+    isSticky: boolean
+
+    /**
+     * `isSubscribed` is a boolean representing whether the user is subscribed to the thread or not.
+     */
+    isSubscribed: boolean
+
+    /**
+     * `likeCount` is a number representing the count of likes the thread has received.
+     */
+    likeCount: number
+
+    /**
+     * `isLiked` is a boolean representing whether the thread is liked by the user or not.
+     */
+    isLiked: boolean
+
+    /**
+     * `repliedAt` is a number representing the Unix timestamp when the thread was replied to.
+     */
+    repliedAt: number
+
+    /**
+     * `createdAt` is a number representing the Unix timestamp when the thread was created.
+     */
+    createdAt: number
+
+    /**
+     * `updatedAt` is a number representing the Unix timestamp when the thread was last updated.
+     */
+    updatedAt: number
+
+    /**
+     * `user` is an object of type `BasicUser` representing the details of the user who made the thread.
+     */
+    user: BasicUser
+  }
+
+  /**
+   * `ThreadComment` is an object representing a thread comment.
+   * It includes the id, user id, thread id, comment, like count, like status, site url, creation date, update date, thread details, user details, likes, child comments, lock status.
+   */
+  ThreadComment: {
+    /**
+     * `id` is a number representing the unique identifier of the thread comment.
+     */
+    id: number
+
+    /**
+     * `userId` is a number representing the unique identifier of the user who made the thread comment.
+     */
+    userId: number
+
+    /**
+     * `threadId` is a number representing the unique identifier of the thread the comment is made to.
+     */
+    threadId: number
+
+    /**
+     * `comment` is a string representing the comment of the thread.
+     */
+    comment: string
+
+    /**
+     * `likeCount` is a number representing the count of likes the thread comment has received.
+     */
+    likeCount: number
+
+    /**
+     * `isLiked` is a boolean representing whether the thread comment is liked by the user or not.
+     */
+    isLiked: boolean
+
+    /**
+     * `siteUrl` is a string representing the URL of the site where the thread comment is posted.
+     */
+    siteUrl: string
+
+    /**
+     * `createdAt` is a number representing the Unix timestamp when the thread comment was created.
+     */
+    createdAt: number
+
+    /**
+     * `updatedAt` is a number representing the Unix timestamp when the thread comment was last updated.
+     */
+    updatedAt: number
+
+    /**
+     * `thread` is an object representing the details of the thread the comment is made to.
+     * It includes the id and the title of the thread.
+     */
+    thread: {
+      /**
+       * `id` is a number representing the unique identifier of the thread.
+       */
+      id: number
+
+      /**
+       * `title` is a string representing the title of the thread.
+       */
+      title: string
+    }
+
+    /**
+     * `user` is an object of type `BasicUser` representing the details of the user who made the thread comment.
+     */
+    user: BasicUser
+
+    /**
+     * `likes` is an array of `BasicUser` objects representing the users who liked the thread comment.
+     */
+    likes: BasicUser[]
+
+    /**
+     * `isLocked` is a boolean representing whether the thread comment is locked or not.
+     */
+    isLocked: boolean
+  }
 }
 
 /**
@@ -349,6 +574,164 @@ export const ActivitySchema = `
       siteUrl
       createdAt
     }
+  }
+`
+
+export const ActivitySchemaV2 = `
+  ... on TextActivity {
+    id
+    userId
+    type
+    replyCount
+    text (asHtml: $asHtml)
+    siteUrl
+    isLocked
+    isSubscribed
+    likeCount
+    isLiked
+    isPinned
+    createdAt
+    user {
+      ${BasicUserSchema}
+    }
+    replies {
+      ${ActivityReplySchema}
+    }
+    likes {
+      ${BasicUserSchema}
+    }
+  }
+  ... on ListActivity {
+    id
+    userId
+    type
+    replyCount
+    status
+    progress
+    isLocked
+    isSubscribed
+    likeCount
+    isLiked
+    isPinned
+    siteUrl
+    createdAt
+    media {
+      id
+      title {
+        romaji
+        english
+      }
+    }
+    user {
+      ${BasicUserSchema}
+    }
+    replies {
+      ${ActivityReplySchema}
+    }
+    likes {
+      ${BasicUserSchema}
+    }
+  }
+  ... on MessageActivity {
+    id
+    recipientId
+    messengerId
+    type
+    replyCount
+    message (asHtml: $asHtml)
+    isLocked
+    isSubscribed
+    likeCount
+    isLiked
+    isPrivate
+    siteUrl
+    createdAt
+    recipient {
+      ${BasicUserSchema}
+    }
+    messenger {
+      ${BasicUserSchema}
+    }
+    replies {
+      ${ActivityReplySchema}
+    }
+    likes {
+      ${BasicUserSchema}
+    }
+  }
+  ... on ActivityReply {
+    id
+    userId
+    activityId
+    text (asHtml: $asHtml)
+    likeCount
+    isLiked
+    createdAt
+    user {
+      ${BasicUserSchema}
+    }
+    likes {
+      ${BasicUserSchema}
+    }
+  }
+  ... on Thread {
+    id
+    title
+    body (asHtml: $asHtml)
+    ThreadUserId: userId
+    replyUserId
+    replyCommentId
+    ThreadReplyCount: replyCount
+    viewCount
+    isLocked
+    isSticky
+    isSubscribed
+    likeCount
+    isLiked
+    repliedAt
+    createdAt
+    updatedAt
+    user {
+      ${BasicUserSchema}
+    }
+    replyUser {
+      ${BasicUserSchema}
+    }
+    likes {
+      ${BasicUserSchema}
+    }
+    siteUrl
+    categories {
+      id
+      name
+    }
+    mediaCategories {
+      id
+      ${TitleSchema}
+    }
+  }
+  ... on ThreadComment {
+    id
+    userId
+    threadId
+    comment (asHtml: $asHtml)
+    likeCount
+    isLiked
+    siteUrl
+    createdAt
+    updatedAt
+    thread {
+      id
+      title
+    }
+    user {
+      ${BasicUserSchema}
+    }
+    likes {
+      ${BasicUserSchema}
+    }
+    childComments
+    isLocked
   }
 `
 
