@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
-import {MediaListResponse} from "../interfaces/responses/query/MediaList";
+import { type MediaListResponse } from '../interfaces/responses/query/MediaList'
 
 /**
  * `DeleteMediaListEntryMutation` is an interface representing the variables to delete a media list entry.

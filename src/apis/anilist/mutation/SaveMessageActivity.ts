@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
-import {Activity, MessageActivitySchema} from '../interfaces/Activity'
+import { type Activity, MessageActivitySchema } from '../interfaces/Activity'
 
 /**
  * `SaveMessageActivityMutation` is an interface representing the variables to save a message activity.

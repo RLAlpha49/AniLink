@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
-import {Activity, ListActivitySchema} from '../interfaces/Activity'
+import { type Activity, ListActivitySchema } from '../interfaces/Activity'
 
 /**
  * `SaveListActivityMutation` is an interface representing the variables to save a list activity.

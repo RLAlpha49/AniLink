@@ -65,7 +65,7 @@ import {
   UpdateMediaListEntriesMutation,
   type UpdateMediaListEntriesVariables
 } from './apis/anilist/mutation/UpdateMediaListEntries'
-import {UpdateUserMutation, UpdateUserResponse, type UpdateUserVariables} from './apis/anilist/mutation/UpdateUser'
+import { UpdateUserMutation, type UpdateUserResponse, type UpdateUserVariables } from './apis/anilist/mutation/UpdateUser'
 import { UserQuery, type UserVariables } from './apis/anilist/query/User'
 import { type UserResponse } from './apis/anilist/interfaces/responses/query/User'
 import { UsersQuery, type UsersVariables } from './apis/anilist/query/page/Users'
@@ -78,7 +78,7 @@ import { SaveListActivityMutation, type SaveListActivityVariables } from './apis
 import { DeleteActivityMutation, type DeleteActivityVariables } from './apis/anilist/mutation/DeleteActivity'
 import { ToggleActivitySubscriptionMutation, type ToggleActivitySubscriptionVariables } from './apis/anilist/mutation/ToggleActivitySubscription'
 import { ToggleActivityPinMutation, type ToggleActivityPinVariables } from './apis/anilist/mutation/ToggleActivityPin'
-import { SaveActivityReplyMutation, SaveActivityReplyVariables } from './apis/anilist/mutation/SaveActivityReply'
+import { SaveActivityReplyMutation, type SaveActivityReplyVariables } from './apis/anilist/mutation/SaveActivityReply'
 
 /**
  * `AniLink` is a class for interacting with the APIs.

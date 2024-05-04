@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
-import {Activity, TextActivitySchema} from '../interfaces/Activity'
+import { type Activity, TextActivitySchema } from '../interfaces/Activity'
 
 /**
  * `SaveTextActivityMutation` is an interface representing the variables to save a text activity.

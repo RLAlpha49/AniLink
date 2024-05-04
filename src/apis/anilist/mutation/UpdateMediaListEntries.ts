@@ -4,7 +4,7 @@ import { type FuzzyDate, FuzzyDateSchema } from '../interfaces/FuzzyDate'
 import { validateVariables } from '../../../base/ValidateVariables'
 import { FuzzyDateMappings } from '../types/FuzzyDate'
 import { type MediaListStatus, MediaListStatusMappings } from '../types/Status'
-import {MediaListResponse} from "../interfaces/responses/query/MediaList";
+import { type MediaListResponse } from '../interfaces/responses/query/MediaList'
 
 /**
  * `UpdateMediaListEntriesVariables` is an interface representing the variables for the `UpdateMediaListEntriesMutation`.

@@ -1,8 +1,7 @@
 import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
-import {Activity} from '../interfaces/Activity'
-import {ActivityReply, ActivityReplySchema} from "../interfaces/ActivityReply";
+import { type ActivityReply, ActivityReplySchema } from '../interfaces/ActivityReply'
 
 /**
  * `SaveActivityReplyMutation` is an interface representing the variables to save an activity reply.
