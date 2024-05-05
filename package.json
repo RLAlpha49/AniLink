@@ -1,6 +1,6 @@
 {
   "name": "anilink-api-wrapper",
-  "version": "1.24.0",
+  "version": "1.25.0",
   "description": "API wrapper for AniManga sites such as Anilist, MyAnimeList, Kitsu.",
   "main": "dist/AniLink.js",
   "scripts": {
@@ -8,9 +8,9 @@
     "build": "rimraf dist && tsc",
     "generate-docs": "typedoc --entryPoints ./src --entryPointStrategy expand --out docs --plugin typedoc-theme-hierarchy --theme hierarchy && node add-ga.js",
     "prepublishOnly": "npm run build",
-    "publish:both": "npm run publish:npm && npm run publish:github",
-    "publish:npm": "npm publish --registry https://registry.npmjs.org/",
-    "publish:github": "npm publish"
+    "publish:both": "npm run build && npm run prepublish:npm && npm run prepublish:github",
+    "prepublish:npm": "node changePackageName.js anilink-api-wrapper && npm publish --registry https://registry.npmjs.org/",
+    "prepublish:github": "node changePackageName.js @rlalpha49/anilink-api-wrapper"
   },
   "keywords": [
     "anilist",
@@ -26,7 +26,7 @@
   "author": "RLAlpha49",
   "license": "MIT",
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com/"
+    "registry": "https://npm.pkg.github.com/rlalpha49"
   },
   "repository": {
     "type": "git",

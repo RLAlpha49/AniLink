@@ -1,6 +1,5 @@
-import { type Activity } from './apis/anilist/interfaces/Activity'
+import { type ActivityReply, type Activity } from './apis/anilist/interfaces/Activity'
 import { ActivityQuery, type ActivityVariables } from './apis/anilist/query/Activity'
-import { type ActivityReply } from './apis/anilist/interfaces/ActivityReply'
 import { ActivityReplyQuery, type ActivityReplyVariables } from './apis/anilist/query/ActivityReply'
 import { ActivityRepliesQuery, type ActivityRepliesVariables } from './apis/anilist/query/page/ActivityReplies'
 import { ActivitiesQuery, type ActivitiesVariables } from './apis/anilist/query/page/Activities'
@@ -9,7 +8,6 @@ import { type AiringScheduleResponse } from './apis/anilist/interfaces/responses
 import { AiringSchedulesQuery, type AiringSchedulesVariables } from './apis/anilist/query/page/AiringSchedules'
 import { AniChartUserQuery } from './apis/anilist/query/AniChartUser'
 import { type AniChartUserResponse } from './apis/anilist/interfaces/responses/query/AniChartUser'
-import { type BasicUser } from './apis/anilist/interfaces/BasicUser'
 import { CharacterQuery, type CharacterVariables } from './apis/anilist/query/Character'
 import { type CharacterResponse } from './apis/anilist/interfaces/responses/query/Character'
 import { CharactersQuery, type CharactersVariables } from './apis/anilist/query/page/Characters'
@@ -82,6 +80,7 @@ import { SaveActivityReplyMutation, type SaveActivityReplyVariables } from './ap
 import { DeleteActivityReplyMutation, type DeleteActivityReplyVariables } from './apis/anilist/mutation/DeleteActivityReply'
 import { ToggleLikeMutation, type ToggleLikeVariables } from './apis/anilist/mutation/ToggleLike'
 import { ToggleLikeV2Mutation } from './apis/anilist/mutation/ToggleLikeV2'
+import { type BasicUser } from './apis/anilist/interfaces/Basic'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -915,7 +914,7 @@ export class AniLink {
        *
        * @example
        * ```typescript
-       * await aniLink.anilist.mutation.toggleLike({likeAbleId: 1, type: 'ACTIVITY'});
+       * await aniLink.anilist.mutation.toggleLike({id: 1, type: 'ACTIVITY'});
        * ```
        */
       toggleLike: (variables: ToggleLikeVariables) => Promise<any>
@@ -928,7 +927,7 @@ export class AniLink {
        *
        * @example
        * ```typescript
-       * await aniLink.anilist.mutation.toggleLikeV2({likeAbleId: 1, type: 'ACTIVITY'});
+       * await aniLink.anilist.mutation.toggleLikeV2({id: 1, type: 'ACTIVITY'});
        * ```
        */
       toggleLikeV2: (variables: ToggleLikeVariables) => Promise<Activity>

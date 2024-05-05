@@ -1,6 +1,6 @@
-import { type BasicUser, BasicUserSchema } from '../../BasicUser'
 import { type Media } from '../../Media'
 import { MediaSchema } from './Media'
+import { type BasicUser, BasicUserSchema } from '../../Basic'
 
 /**
  * `ReviewResponse` is an interface representing the response from a review query.

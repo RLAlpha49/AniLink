@@ -1,4 +1,4 @@
-import { type SiteTrendConnection, SiteTrendConnectionSchema } from '../../SiteTrendConnection'
+import { type SiteTrendConnection, SiteTrendConnectionSchema } from '../../SiteTrend'
 
 /**
  * `SiteStatisticsResponse` is an interface representing the response from a site statistics query.
@@ -6,7 +6,7 @@ import { type SiteTrendConnection, SiteTrendConnectionSchema } from '../../SiteT
  */
 export interface SiteStatisticsResponse {
   /**
-   * `users` is an instance of `SiteTrendConnection` representing the users statistics.
+   * `users` is an instance of `SiteTrendConnection` representing the users' statistics.
    */
   users: SiteTrendConnection
 
@@ -21,7 +21,7 @@ export interface SiteStatisticsResponse {
   manga: SiteTrendConnection
 
   /**
-   * `characters` is an instance of `SiteTrendConnection` representing the characters statistics.
+   * `characters` is an instance of `SiteTrendConnection` representing the characters' statistics.
    */
   characters: SiteTrendConnection
 
@@ -31,12 +31,12 @@ export interface SiteStatisticsResponse {
   staff: SiteTrendConnection
 
   /**
-   * `studios` is an instance of `SiteTrendConnection` representing the studios statistics.
+   * `studios` is an instance of `SiteTrendConnection` representing the studios' statistics.
    */
   studios: SiteTrendConnection
 
   /**
-   * `reviews` is an instance of `SiteTrendConnection` representing the reviews statistics.
+   * `reviews` is an instance of `SiteTrendConnection` representing the reviews' statistics.
    */
   reviews: SiteTrendConnection
 }

@@ -1,7 +1,7 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { type ActivityReply, ActivityReplySchema } from '../../interfaces/ActivityReply'
 import { validateVariables } from '../../../../base/ValidateVariables'
+import { type ActivityReply, ActivityReplySchema } from '../../interfaces/Activity'
 
 /**
  * `ActivityRepliesVariables` is an interface representing the variables for the `ActivityRepliesQuery`.

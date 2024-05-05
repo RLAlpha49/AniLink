@@ -1,8 +1,8 @@
 import { APIWrapper } from '../../../../base/APIWrapper'
 import { sendRequest } from '../../../../base/RequestHandler'
-import { type BasicUser, BasicUserSchema } from '../../interfaces/BasicUser'
 import { type LikeableType, LikeableTypeMappings } from '../../types/Type'
 import { validateVariables } from '../../../../base/ValidateVariables'
+import { type BasicUser, BasicUserSchema } from '../../interfaces/Basic'
 
 /**
  * `LikesVariables` is an interface representing the variables for the `LikesQuery`.

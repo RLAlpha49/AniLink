@@ -1,6 +1,76 @@
-import { type BasicUser, BasicUserSchema } from './BasicUser'
-import { type ActivityReply, ActivityReplySchema } from './ActivityReply'
+import { type BasicUser, BasicUserSchema } from './Basic'
 import { TitleSchema } from './Title'
+
+/**
+ * `ActivityReply` is an interface representing a reply to an activity.
+ * It includes the id of the reply, the user id, the activity id, the text of the reply, the like count, the like status, the creation date, the user details, and the likes details.
+ */
+export interface ActivityReply {
+  /**
+   * `id` is a number representing the unique identifier of the reply.
+   */
+  id: number
+
+  /**
+   * `userId` is a number representing the unique identifier of the user who made the reply.
+   */
+  userId: number
+
+  /**
+   * `activityId` is a number representing the unique identifier of the activity to which the reply was made.
+   */
+  activityId: number
+
+  /**
+   * `text` is a string representing the text of the reply.
+   */
+  text: string
+
+  /**
+   * `likeCount` is a number representing the count of likes the reply has received.
+   */
+  likeCount: number
+
+  /**
+   * `isLiked` is a boolean representing whether the reply is liked by the user or not.
+   */
+  isLiked: boolean
+
+  /**
+   * `createdAt` is a number representing the Unix timestamp when the reply was created.
+   */
+  createdAt: number
+
+  /**
+   * `user` is an object of type `BasicUser` representing the details of the user who made the reply.
+   */
+  user: BasicUser
+
+  /**
+   * `likes` is an array of `BasicUser` objects representing the details of the users who liked the reply.
+   */
+  likes: BasicUser[]
+}
+
+/**
+ * `ActivityReplySchema` is a constant representing the GraphQL schema for an activity reply query.
+ * It includes the id of the reply, the user id, the activity id, the text of the reply, the like count, the like status, the creation date, the user details, and the likes details.
+ */
+export const ActivityReplySchema = `
+  id
+  userId
+  activityId
+  text (asHtml: $asHtml)
+  likeCount
+  isLiked
+  createdAt
+  user {
+    ${BasicUserSchema}
+  }
+  likes {
+    ${BasicUserSchema}
+  }
+`
 
 /**
  * `Activity` is an interface representing the response from an activity query.
@@ -917,4 +987,91 @@ export const MessageActivitySchema = `
   likes {
     ${BasicUserSchema}
   }
+`
+
+/**
+ * `ActivityHistory` is an interface representing the history of an activity.
+ * It includes the date of the activity, the amount of the activity, and the level of the activity.
+ */
+export interface ActivityHistory {
+  /**
+   * `date` is a number representing the date of the activity.
+   * It is expressed as a Unix timestamp.
+   */
+  date: number
+
+  /**
+   * `amount` is a number representing the amount of the activity.
+   * The exact meaning of this property depends on the context in which the `ActivityHistory` interface is used.
+   */
+  amount: number
+
+  /**
+   * `level` is a number representing the level of the activity.
+   * The exact meaning of this property depends on the context in which the `ActivityHistory` interface is used.
+   */
+  level: number
+}
+
+/**
+ * `ActivityNotification` is an interface representing a notification related to an activity.
+ * It includes the id of the notification, the user id, the type of the notification, the activity id, the context, the creation date, the activity details, and the user details.
+ */
+export interface ActivityNotification {
+  /**
+   * `id` is a number representing the unique identifier of the notification.
+   */
+  id: number
+
+  /**
+   * `userId` is a number representing the unique identifier of the user associated with the notification.
+   */
+  userId: number
+
+  /**
+   * `type` is a string representing the type of the notification.
+   */
+  type: string
+
+  /**
+   * `activityId` is a number representing the unique identifier of the activity associated with the notification.
+   */
+  activityId: number
+
+  /**
+   * `context` is a string representing the context of the notification.
+   */
+  context: string
+
+  /**
+   * `createdAt` is a number representing the Unix timestamp when the notification was created.
+   */
+  createdAt: number
+
+  /**
+   * `activity` is an object of type `Activity` representing the details of the activity associated with the notification.
+   */
+  activity: Activity
+
+  /**
+   * `user` is an object of type `BasicUser` representing the details of the user associated with the notification.
+   */
+  user: BasicUser
+}
+
+/**
+ * `ActivityNotificationSchema` is a constant representing the GraphQL schema for an activity notification query.
+ * It includes the id of the notification, the user id, the type of the notification, the activity id, the context, the creation date, the activity details, and the user details.
+ */
+export const ActivityNotificationSchema = `
+  id
+  userId
+  type
+  activityId
+  context
+  createdAt
+  ${ActivitySchema}
+    user {
+      ${BasicUserSchema}
+    }
 `

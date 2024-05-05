@@ -1,16 +1,12 @@
-import {ExternalLinkSourceCollectionQuery} from "../src/apis/anilist/query/ExternalLinkSourceCollection";
-
 require('dotenv').config()
 import AniLink from '../dist/AniLink.js'
 // import AniLink from '../src/AniLink'
 
-import {BasicUser} from "../src/apis/anilist/interfaces/BasicUser"
 import {RecommendationResponse} from "../src/apis/anilist/interfaces/responses/query/Recommendation"
 import {ThreadCommentResponse} from "../src/apis/anilist/interfaces/responses/query/ThreadComment"
 import {ThreadResponse} from "../src/apis/anilist/interfaces/responses/query/Thread"
 import {UserResponse} from "../src/apis/anilist/interfaces/responses/query/User"
-import {Activity} from "../src/apis/anilist/interfaces/Activity"
-import {ActivityReply} from "../src/apis/anilist/interfaces/ActivityReply"
+import {Activity, ActivityReply} from "../src/apis/anilist/interfaces/Activity"
 import {ReviewResponse} from "../src/apis/anilist/interfaces/responses/query/Review"
 import {StudioResponse} from "../src/apis/anilist/interfaces/responses/query/Studio"
 import {NotificationResponse} from "../src/apis/anilist/interfaces/responses/query/Notification"
@@ -24,6 +20,8 @@ import {MediaTrendResponse} from "../src/apis/anilist/interfaces/responses/query
 import {MediaResponse} from "../src/apis/anilist/interfaces/responses/query/Media"
 import {AniChartUserResponse} from "../src/apis/anilist/interfaces/responses/query/AniChartUser"
 import {SiteStatisticsResponse} from "../src/apis/anilist/interfaces/responses/query/SiteStatistics";
+import {ExternalLinkSourceCollectionQuery} from "../src/apis/anilist/query/ExternalLinkSourceCollection";
+import { BasicUser } from '../src/apis/anilist/interfaces/Basic.js'
 
 async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
   try {

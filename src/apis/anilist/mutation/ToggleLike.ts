@@ -2,7 +2,7 @@ import { APIWrapper } from '../../../base/APIWrapper'
 import { sendRequest } from '../../../base/RequestHandler'
 import { validateVariables } from '../../../base/ValidateVariables'
 import { type LikeableType, LikeableTypeMappings } from '../types/Type'
-import { BasicUserSchema } from '../interfaces/BasicUser'
+import { BasicUserSchema } from '../interfaces/Basic'
 
 /**
  * `ToggleLikeMutation` is an interface representing the variables to toggle a like.

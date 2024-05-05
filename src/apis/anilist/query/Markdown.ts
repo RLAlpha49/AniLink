@@ -8,14 +8,14 @@ import { validateVariables } from '../../../base/ValidateVariables'
  */
 export interface MarkdownVariables {
   /**
-   * `markdown` is a string representing the markdown text to be converted.
+   * `markdown` is a string representing the Markdown text to be converted.
    */
   markdown: string
 }
 
 /**
- * `MarkdownQuery` is a class representing a query for converting markdown text to HTML.
- * It includes a method to send the markdown text and receive the converted HTML.
+ * `MarkdownQuery` is a class representing a query for converting Markdown text to HTML.
+ * It includes a method to send the Markdown text and receive the converted HTML.
  */
 export class MarkdownQuery extends APIWrapper {
   /**

@@ -7,12 +7,10 @@ import { type NextAiringEpisode, NextAiringEpisodeSchema } from '../../NextAirin
 import { type ExternalLink, ExternalLinkSchema } from '../../ExternalLink'
 import { type StreamingEpisode, StreamingEpisodeSchema } from '../../StreamingEpisode'
 import { type Ranking, RankingSchema } from '../../Ranking'
-import { type MediaStats } from '../../MediaStats'
-import { type MediaListEntry, MediaListEntrySchema } from '../../MediaListEntry'
 import { type Name, NameSchema } from '../../Name'
 import { type Image, ImageSchema } from '../../Image'
-import { StatusDistributionSchema } from '../../StatusDistribution'
-import { ScoreDistributionSchema } from '../../ScoreDistribution'
+import { type MediaListEntry, MediaListEntrySchema, type MediaStats } from '../../Media'
+import { ScoreDistributionSchema, StatusDistributionSchema } from '../../Distribution'
 
 /**
  * `MediaResponse` is an interface representing the response from a media query.

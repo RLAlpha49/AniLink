@@ -7,8 +7,51 @@ import { type NextAiringEpisode } from './NextAiringEpisode'
 import { type ExternalLink } from './ExternalLink'
 import { type StreamingEpisode } from './StreamingEpisode'
 import { type Ranking } from './Ranking'
-import { type MediaStats } from './MediaStats'
-import { type MediaListEntry } from './MediaListEntry'
+import { type Stat } from './Stat'
+import { type ScoreDistribution, type StatusDistribution } from './Distribution'
+
+/**
+ * `MediaListEntry` is an interface representing an entry in a media list.
+ * It includes the id and status each having their own properties.
+ */
+export interface MediaListEntry {
+  /**
+   * `id` is a number representing the unique identifier of the media list entry.
+   */
+  id: number
+
+  /**
+   * `status` is a string representing the status of the media list entry.
+   */
+  status: string
+}
+
+/**
+ * `MediaListEntrySchema` is a string representing the GraphQL schema for a media list entry.
+ * It includes the id and status.
+ */
+export const MediaListEntrySchema = `
+  mediaListEntry {
+    id
+    status
+  }
+`
+
+/**
+ * `MediaStats` is an interface representing the statistics of a media.
+ * It includes score distribution and status distribution each having their own properties.
+ */
+export interface MediaStats {
+  /**
+   * `scoreDistribution` is an array of `ScoreDistribution` objects representing the score distribution of the media.
+   */
+  scoreDistribution: ScoreDistribution[]
+
+  /**
+   * `statusDistribution` is an array of `StatusDistribution` objects representing the status distribution of the media.
+   */
+  statusDistribution: StatusDistribution[]
+}
 
 /**
  * `Media` is an interface representing a media entity.
@@ -239,4 +282,105 @@ export interface Media {
    * `modNotes` is a string representing the moderator notes for the media.
    */
   modNotes: string
+}
+
+/**
+ * `MediaStatistics` is an interface representing the statistics of a media.
+ * It includes various properties related to the statistics of the media.
+ */
+export interface MediaStatistics {
+  /**
+   * `count` is a number representing the count of the media.
+   */
+  count: number
+
+  /**
+   * `meanScore` is a number representing the mean score of the media.
+   */
+  meanScore: number
+
+  /**
+   * `standardDeviation` is a number representing the standard deviation of the media.
+   */
+  standardDeviation: number
+
+  /**
+   * `minutesWatched` is an optional number representing the minutes watched of the media.
+   */
+  minutesWatched?: number
+
+  /**
+   * `episodesWatched` is an optional number representing the episodes watched of the media.
+   */
+  episodesWatched?: number
+
+  /**
+   * `chaptersRead` is an optional number representing the chapters read of the media.
+   */
+  chaptersRead?: number
+
+  /**
+   * `volumesRead` is an optional number representing the volumes read of the media.
+   */
+  volumesRead?: number
+
+  /**
+   * `formats` is an array of `Stat` objects representing the formats of the media.
+   */
+  formats: Stat[]
+
+  /**
+   * `statuses` is an array of `Stat` objects representing the statuses of the media.
+   */
+  statuses: Stat[]
+
+  /**
+   * `scores` is an array of `Stat` objects representing the scores of the media.
+   */
+  scores: Stat[]
+
+  /**
+   * `lengths` is an array of `Stat` objects representing the lengths of the media.
+   */
+  lengths: Stat[]
+
+  /**
+   * `releaseYears` is an array of `Stat` objects representing the release years of the media.
+   */
+  releaseYears: Stat[]
+
+  /**
+   * `startYears` is an array of `Stat` objects representing the start years of the media.
+   */
+  startYears: Stat[]
+
+  /**
+   * `genres` is an array of `Stat` objects representing the genres of the media.
+   */
+  genres: Stat[]
+
+  /**
+   * `tags` is an array of `Stat` objects representing the tags of the media.
+   */
+  tags: Stat[]
+
+  /**
+   * `countries` is an array of `Stat` objects representing the countries of the media.
+   */
+  countries: Stat[]
+
+  /**
+   * `voiceActors` is an optional array of `Stat` objects representing the voice actors of the media.
+   */
+  voiceActors?: Stat[]
+
+  /**
+   * `staff` is an array of `Stat` objects representing the staff of the media.
+   */
+  staff: Stat[]
+
+  /**
+   * `studios` is an array of `Stat` objects representing the studios of the media.
+   */
+  studios: Stat[]
 }

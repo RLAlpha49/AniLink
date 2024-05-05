@@ -4,6 +4,7 @@ src/
 .idea/
 docs/
 Examples/
+changePackageName.js
 babel.config.js
 jest.config.js
 add-ga.js

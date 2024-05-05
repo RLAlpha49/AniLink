@@ -1,8 +1,7 @@
-import { type ActivityHistory } from './ActivityHistory'
-import { type Distribution } from './Distribution'
-import { type ScoreDistribution } from './ScoreDistribution'
+import { type Distribution, type ScoreDistribution } from './Distribution'
 import { type ListScores } from './ListScores'
 import { type Favoured } from './Favoured'
+import { type ActivityHistory } from './Activity'
 
 /**
  * `UserStats` is an interface representing a user's statistics.
