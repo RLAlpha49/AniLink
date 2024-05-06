@@ -516,4 +516,41 @@ describe('Anilist API mutation', () => {
     expect(response).toBeDefined();
     return response.data.UpdateFavouriteOrder;
   });
+
+  test('Save & Delete Review', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveReview({
+      mediaId: 1,
+      body: 'a'.repeat(2200), // This will create a string of 'a' with length 2200
+      summary: 'b'.repeat(20), // This will create a string of 'b' with length 20
+      score: 8,
+      private: true
+    }))
+    const reviewId = response.data.SaveReview.id
+    const response2 = await handleRateLimit(() => aniLink.anilist.mutation.deleteReview({id: reviewId}))
+    expect(response && response2).toBeDefined();
+    return response.data.SaveReview;
+  });
+
+  test('Save Recommendation', async () => {
+    let response;
+    let attempts = 0;
+    const maxAttempts = 2; // Maximum number of attempts
+
+    while (!response && attempts < maxAttempts) {
+      try {
+        response = await handleRateLimit(() => aniLink.anilist.mutation.saveRecommendation({
+          mediaId: 1,
+          mediaRecommendationId: 495,
+          rating: 'NO_RATING'
+        }));
+      } catch (error) {
+        console.log('An error occurred:', error);
+        console.log('Retrying...');
+      }
+      attempts++;
+    }
+
+    expect(response).toBeDefined();
+    return response.data.SaveRecommendation;
+  });
 })

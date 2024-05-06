@@ -280,4 +280,28 @@ aniLink.anilist.mutation.toggleFavourite({studioId: 561});
 
 // Update Favourite Order
 aniLink.anilist.mutation.updateFavouriteOrder({studioIds: [561, 562, 563], studioOrder: [561, 562, 563]});
+
+// Save Review
+aniLink.anilist.mutation.saveReviewaniLink.anilist.mutation.saveReview({
+  mediaId: 1,
+  body: 'a'.repeat(2200), // This will create a string of 'a' with length 2200
+  summary: 'b'.repeat(20), // This will create a string of 'b' with length 20
+  score: 8,
+  private: true
+})
+
+// Update Review
+aniLink.anilist.mutation.saveReview({
+  id: 1,
+  body: 'a'.repeat(2200), // This will create a string of 'a' with length 2200
+  summary: 'b'.repeat(20), // This will create a string of 'b' with length 20
+  score: 8,
+  private: true
+})
+
+// Delete Review
+aniLink.anilist.mutation.deleteReview({id: 1});
+
+// Save Recommendation
+aniLink.anilist.mutation.saveRecommendation({mediaId: 1, mediaRecommendationId: 495, rating: 'NO_RATING'})
 ```

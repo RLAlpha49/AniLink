@@ -85,6 +85,9 @@ import { ToggleFollowMutation, type ToggleFollowVariables } from './apis/anilist
 import { ToggleFavouriteMutation, type ToggleFavouriteVariables } from './apis/anilist/mutation/ToggleFavourite'
 import { type Favourites } from './apis/anilist/interfaces/responses/mutation/Favourites'
 import { UpdateFavouriteOrderMutation, type UpdateFavouriteOrderVariables } from './apis/anilist/mutation/UpdateFavouriteOrder'
+import { SaveReviewMutation, type SaveReviewVariables } from './apis/anilist/mutation/SaveReview'
+import { DeleteReviewMutation, type DeleteReviewVariables } from './apis/anilist/mutation/DeleteReview'
+import { SaveRecommendationMutation, type SaveRecommendationVariables } from './apis/anilist/mutation/SaveRecommendation'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -718,7 +721,11 @@ export class AniLink {
      * @property {Function} toggleLike - Toggles a like on the Anilist API.
      * @property {Function} toggleLikeV2 - Toggles a like on the Anilist API.
      * @property {Function} toggleFollow - Toggles a follow on the Anilist API.
-     * @property {Function} toggleFavorite - Toggles a favorite on the Anilist API.
+     * @property {Function} toggleFavourite - Toggles a favorite on the Anilist API.
+     * @property {Function} updateFavouriteOrder - Updates a favorite order on the Anilist API.
+     * @property {Function} saveReview - Saves a review on the Anilist API.
+     * @property {Function} deleteReview - Deletes a review on the Anilist API.
+     * @property {Function} saveRecommendation - Saves a recommendation on the Anilist API.
      *
      * Must be authenticated for all mutations.
      */
@@ -974,6 +981,42 @@ export class AniLink {
        * ```
        */
       updateFavouriteOrder: (variables: UpdateFavouriteOrderVariables) => Promise<Favourites>
+
+      /**
+       * Saves a review on the Anilist API. If no `id` is provided, a new review will be created. If an `id` is provided, the review with that `id` will be updated.
+       * @param {SaveReviewVariables} variables - The variables for the mutation.
+       * @returns {Promise<ReviewResponse>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.saveReview({mediaId: 1, body: 'testing', summary: 'testing', score: 8, private: true});
+       * ```
+       */
+      saveReview: (variables: SaveReviewVariables) => Promise<ReviewResponse>
+
+      /**
+       * Deletes a review on the Anilist API.
+       * @param {DeleteReviewVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.deleteReview({id: 1});
+       * ```
+       */
+      deleteReview: (variables: DeleteReviewVariables) => Promise<any>
+
+      /**
+       * Saves a recommendation on the Anilist API.
+       * @param {SaveRecommendationVariables} variables - The variables for the mutation.
+       * @returns {Promise<RecommendationResponse>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.saveRecommendation({mediaId: 1, mediaRecommendationId: 2, rating: 8});
+       * ```
+       */
+      saveRecommendation: (variables: SaveRecommendationVariables) => Promise<RecommendationResponse>
     }
   }
 
@@ -1052,6 +1095,9 @@ export class AniLink {
     const toggleFollowMutationInstance = new ToggleFollowMutation(authToken)
     const toggleFavouriteMutationInstance = new ToggleFavouriteMutation(authToken)
     const updateFavouriteOrderMutationInstance = new UpdateFavouriteOrderMutation(authToken)
+    const saveReviewMutationInstance = new SaveReviewMutation(authToken)
+    const deleteReviewMutationInstance = new DeleteReviewMutation(authToken)
+    const saveRecommendationMutationInstance = new SaveRecommendationMutation(authToken)
 
     this.anilist = {
       query: {
@@ -1120,7 +1166,10 @@ export class AniLink {
         toggleLikeV2: toggleLikeV2MutationInstance.toggleLikeV2.bind(toggleLikeV2MutationInstance),
         toggleFollow: toggleFollowMutationInstance.toggleFollow.bind(toggleFollowMutationInstance),
         toggleFavourite: toggleFavouriteMutationInstance.toggleFavourite.bind(toggleFavouriteMutationInstance),
-        updateFavouriteOrder: updateFavouriteOrderMutationInstance.updateFavouriteOrder.bind(updateFavouriteOrderMutationInstance)
+        updateFavouriteOrder: updateFavouriteOrderMutationInstance.updateFavouriteOrder.bind(updateFavouriteOrderMutationInstance),
+        saveReview: saveReviewMutationInstance.saveReview.bind(saveReviewMutationInstance),
+        deleteReview: deleteReviewMutationInstance.deleteReview.bind(deleteReviewMutationInstance),
+        saveRecommendation: saveRecommendationMutationInstance.saveRecommendation.bind(saveRecommendationMutationInstance)
       }
     }
   }

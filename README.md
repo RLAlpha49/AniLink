@@ -129,6 +129,9 @@ List of methods in `anilist.mutation`:
 - toggleFollow
 - toggleFavourite
 - updateFavouriteOrder
+- saveReview
+- deleteReview
+- saveRecommendation
 
 ### Error Handling
 
