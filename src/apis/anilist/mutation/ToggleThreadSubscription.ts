@@ -67,8 +67,8 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
     validateVariables(variables, variableTypeMappings)
 
     const mutation = `
-      mutation ($activityId: Int, $subscribe: Boolean, $asHtml: Boolean) {
-        ToggleThreadSubscription (activityId: $activityId, subscribe: $subscribe) {
+      mutation ($threadId: Int, $subscribe: Boolean, $asHtml: Boolean) {
+        ToggleThreadSubscription (threadId: $threadId, subscribe: $subscribe) {
           ${ThreadSchema}
         }
       }

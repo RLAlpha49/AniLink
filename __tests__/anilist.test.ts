@@ -555,6 +555,31 @@ describe('Anilist API mutation', () => {
     return response.data.SaveRecommendation;
   });
 
+  test('Save & Delete Thread and Thread Comment', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveThread({
+      mediaId: 1,
+      title: 'testing',
+      body: 'testing',
+      categories: [1]
+    }))
+    const threadId = response.data.SaveThread.id
+    const response2 = await handleRateLimit(() => aniLink.anilist.mutation.saveThreadComment({
+      threadId: threadId,
+      comment: 'testing'
+    }))
+    const commentId = response2.data.SaveThreadComment.id
+    const response3 = await handleRateLimit(() => aniLink.anilist.mutation.deleteThreadComment({id: commentId}))
+    const response4 = await handleRateLimit(() => aniLink.anilist.mutation.deleteThread({id: threadId}))
+    expect(response && response2 && response3 && response4).toBeDefined();
+    return response.data.SaveThread;
+  });
+
+  test('Toggle Thread Subscription', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.toggleThreadSubscription({threadId: 71881, subscribe: true}))
+    expect(response).toBeDefined();
+    return response.data.ToggleThreadSubscription;
+  })
+
   test('Update AniChart Settings', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.mutation.updateAniChartSettings({
       titleLanguage: 'romaji',

@@ -74,12 +74,12 @@ export class SaveThreadCommentMutation extends APIWrapper {
       throw new Error('id or title variable is required')
     }
     const variableTypeMappings = {
-      id: 'Int',
-      threadId: 'Int',
-      parentCommentId: 'Int',
-      comment: 'String',
-      locked: 'Boolean',
-      asHtml: 'Boolean'
+      id: 'number',
+      threadId: 'number',
+      parentCommentId: 'number',
+      comment: 'string',
+      locked: 'boolean',
+      asHtml: 'boolean'
     }
 
     validateVariables(variables, variableTypeMappings)
