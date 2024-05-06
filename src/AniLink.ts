@@ -81,6 +81,10 @@ import { DeleteActivityReplyMutation, type DeleteActivityReplyVariables } from '
 import { ToggleLikeMutation, type ToggleLikeVariables } from './apis/anilist/mutation/ToggleLike'
 import { ToggleLikeV2Mutation } from './apis/anilist/mutation/ToggleLikeV2'
 import { type BasicUser } from './apis/anilist/interfaces/Basic'
+import { ToggleFollowMutation, type ToggleFollowVariables } from './apis/anilist/mutation/ToggleFollow'
+import { ToggleFavouriteMutation, type ToggleFavouriteVariables } from './apis/anilist/mutation/ToggleFavourite'
+import { type Favourites } from './apis/anilist/interfaces/responses/mutation/Favourites'
+import { UpdateFavouriteOrderMutation, type UpdateFavouriteOrderVariables } from './apis/anilist/mutation/UpdateFavouriteOrder'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -712,6 +716,9 @@ export class AniLink {
      * @property {Function} saveActivityReply - Saves an activity reply on the Anilist API.
      * @property {Function} deleteActivityReply - Deletes an activity reply on the Anilist API.
      * @property {Function} toggleLike - Toggles a like on the Anilist API.
+     * @property {Function} toggleLikeV2 - Toggles a like on the Anilist API.
+     * @property {Function} toggleFollow - Toggles a follow on the Anilist API.
+     * @property {Function} toggleFavorite - Toggles a favorite on the Anilist API.
      *
      * Must be authenticated for all mutations.
      */
@@ -931,6 +938,42 @@ export class AniLink {
        * ```
        */
       toggleLikeV2: (variables: ToggleLikeVariables) => Promise<Activity>
+
+      /**
+       * Toggles a follow on the Anilist API.
+       * @param {ToggleFollowVariables} variables - The variables for the mutation.
+       * @returns {Promise<UserResponse>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.toggleFollow({userId: 542244});
+       * ```
+       */
+      toggleFollow: (variables: ToggleFollowVariables) => Promise<UserResponse>
+
+      /**
+       * Toggles a favorite on the Anilist API.
+       * @param {ToggleFavouriteVariables} variables - The variables for the mutation.
+       * @returns {Promise<Favourites>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.toggleFavorite({studioId: 561});
+       * ```
+       */
+      toggleFavourite: (variables: ToggleFavouriteVariables) => Promise<Favourites>
+
+      /**
+       * Updates the order of favourites on the Anilist API.
+       * @param {UpdateFavouriteOrderVariables} variables - The variables for the mutation.
+       * @returns {Promise<Favourites>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.updateFavouriteOrder({ids: [1, 2, 3]});
+       * ```
+       */
+      updateFavouriteOrder: (variables: UpdateFavouriteOrderVariables) => Promise<Favourites>
     }
   }
 
@@ -1006,6 +1049,9 @@ export class AniLink {
     const deleteActivityReplyMutationInstance = new DeleteActivityReplyMutation(authToken)
     const toggleLikeMutationInstance = new ToggleLikeMutation(authToken)
     const toggleLikeV2MutationInstance = new ToggleLikeV2Mutation(authToken)
+    const toggleFollowMutationInstance = new ToggleFollowMutation(authToken)
+    const toggleFavouriteMutationInstance = new ToggleFavouriteMutation(authToken)
+    const updateFavouriteOrderMutationInstance = new UpdateFavouriteOrderMutation(authToken)
 
     this.anilist = {
       query: {
@@ -1071,7 +1117,10 @@ export class AniLink {
         saveActivityReply: saveActivityReplyMutationInstance.saveActivityReply.bind(saveActivityReplyMutationInstance),
         deleteActivityReply: deleteActivityReplyMutationInstance.deleteActivityReply.bind(deleteActivityReplyMutationInstance),
         toggleLike: toggleLikeMutationInstance.toggleLike.bind(toggleLikeMutationInstance),
-        toggleLikeV2: toggleLikeV2MutationInstance.toggleLikeV2.bind(toggleLikeV2MutationInstance)
+        toggleLikeV2: toggleLikeV2MutationInstance.toggleLikeV2.bind(toggleLikeV2MutationInstance),
+        toggleFollow: toggleFollowMutationInstance.toggleFollow.bind(toggleFollowMutationInstance),
+        toggleFavourite: toggleFavouriteMutationInstance.toggleFavourite.bind(toggleFavouriteMutationInstance),
+        updateFavouriteOrder: updateFavouriteOrderMutationInstance.updateFavouriteOrder.bind(updateFavouriteOrderMutationInstance)
       }
     }
   }

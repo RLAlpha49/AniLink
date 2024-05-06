@@ -271,4 +271,13 @@ aniLink.anilist.mutation.toggleLike({id: 1, type: 'ACTIVITY'});
 
 // Toggle Like V2
 aniLink.anilist.mutation.toggleLikeV2({id: 1, type: 'ACTIVITY'});
+
+// Toggle Follow
+aniLink.anilist.mutation.toggleFollow({userId: 542244});
+
+// Toggle Favourite
+aniLink.anilist.mutation.toggleFavourite({studioId: 561});
+
+// Update Favourite Order
+aniLink.anilist.mutation.updateFavouriteOrder({studioIds: [561, 562, 563], studioOrder: [561, 562, 563]});
 ```

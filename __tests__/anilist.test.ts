@@ -498,4 +498,22 @@ describe('Anilist API mutation', () => {
     expect(response).toBeDefined();
     return response.data.ToggleLikeV2;
   });
+
+  test('Toggle Follow', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.toggleFollow({userId: 542244}))
+    expect(response).toBeDefined();
+    return response.data.ToggleFollow;
+  });
+
+  test('Toggle Favourite', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.toggleFavourite({studioId: 561}))
+    expect(response).toBeDefined();
+    return response.data.ToggleFavourite;
+  });
+
+  test('Update Favourite Order', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.updateFavouriteOrder({studioIds: [561], studioOrder: [561]}))
+    expect(response).toBeDefined();
+    return response.data.UpdateFavouriteOrder;
+  });
 })

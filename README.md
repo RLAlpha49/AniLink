@@ -126,6 +126,9 @@ List of methods in `anilist.mutation`:
 - deleteActivityReply
 - toggleLike
 - toggleLikeV2
+- toggleFollow
+- toggleFavourite
+- updateFavouriteOrder
 
 ### Error Handling
 
