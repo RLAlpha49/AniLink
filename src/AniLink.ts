@@ -88,6 +88,13 @@ import { UpdateFavouriteOrderMutation, type UpdateFavouriteOrderVariables } from
 import { SaveReviewMutation, type SaveReviewVariables } from './apis/anilist/mutation/SaveReview'
 import { DeleteReviewMutation, type DeleteReviewVariables } from './apis/anilist/mutation/DeleteReview'
 import { SaveRecommendationMutation, type SaveRecommendationVariables } from './apis/anilist/mutation/SaveRecommendation'
+import { SaveThreadMutation, type SaveThreadVariables } from './apis/anilist/mutation/SaveThread'
+import { DeleteThreadMutation, type DeleteThreadVariables } from './apis/anilist/mutation/DeleteThread'
+import { ToggleThreadSubscriptionMutation, type ToggleThreadSubscriptionVariables } from './apis/anilist/mutation/ToggleThreadSubscription'
+import { SaveThreadCommentMutation, type SaveThreadCommentVariables } from './apis/anilist/mutation/SaveThreadComment'
+import { DeleteThreadCommentMutation, type DeleteThreadCommentVariables } from './apis/anilist/mutation/DeleteThreadComment'
+import { UpdateAniChartSettingsMutation, type UpdateAniChartSettingsVariables } from './apis/anilist/mutation/UpdateAniChartSettings'
+import { UpdateAniChartHighlightsMutation, type UpdateAniChartHighlightsVariables } from './apis/anilist/mutation/UpdateAniChartHighlights'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -726,6 +733,13 @@ export class AniLink {
      * @property {Function} saveReview - Saves a review on the Anilist API.
      * @property {Function} deleteReview - Deletes a review on the Anilist API.
      * @property {Function} saveRecommendation - Saves a recommendation on the Anilist API.
+     * @property {Function} saveThread - Saves a thread on the Anilist API.
+     * @property {Function} deleteThread - Deletes a thread on the Anilist API.
+     * @property {Function} toggleThreadSubscription - Toggles a thread's subscription status on the Anilist API.
+     * @property {Function} saveThreadComment - Saves a thread comment on the Anilist API.
+     * @property {Function} deleteThreadComment - Deletes a thread comment on the Anilist API.
+     * @property {Function} updateAniChartSettings - Updates aniChart settings on the Anilist API.
+     * @property {Function} updateAniChartHighlights - Updates aniChart highlights on the Anilist API.
      *
      * Must be authenticated for all mutations.
      */
@@ -1017,6 +1031,90 @@ export class AniLink {
        * ```
        */
       saveRecommendation: (variables: SaveRecommendationVariables) => Promise<RecommendationResponse>
+
+      /**
+       * Saves a thread on the Anilist API. If no `id` is provided, a new thread will be created. If an `id` is provided, the thread with that `id` will be updated.
+       * @param {SaveThreadVariables} variables - The variables for the mutation.
+       * @returns {Promise<ThreadResponse>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.saveThread({title: 'Hello, world!', body: 'Hello, world!'});
+       * ```
+       */
+      saveThread: (variables: SaveThreadVariables) => Promise<ThreadResponse>
+
+      /**
+       * Deletes a thread on the Anilist API.
+       * @param {DeleteThreadVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.deleteThread({id: 1});
+       * ```
+       */
+      deleteThread: (variables: DeleteThreadVariables) => Promise<any>
+
+      /**
+       * Toggles a thread subscription on the Anilist API.
+       * @param {ToggleThreadSubscriptionVariables} variables - The variables for the mutation.
+       * @returns {Promise<ThreadResponse>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.toggleThreadSubscription({threadId: 1, subscribe: true});
+       * ```
+       */
+      toggleThreadSubscription: (variables: ToggleThreadSubscriptionVariables) => Promise<ThreadResponse>
+
+      /**
+       * Saves a thread comment on the Anilist API. If no `id` is provided, a new thread comment will be created. If an `id` is provided, the thread comment with that `id` will be updated.
+       * @param {SaveThreadCommentVariables} variables - The variables for the mutation.
+       * @returns {Promise<ThreadCommentResponse>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.saveThreadComment({threadId: 1, comment: 'Hello, world!'});
+       * ```
+       */
+      saveThreadComment: (variables: SaveThreadCommentVariables) => Promise<ThreadCommentResponse>
+
+      /**
+       * Deletes a thread comment on the Anilist API.
+       * @param {DeleteThreadCommentVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.deleteThreadComment({id: 1});
+       * ```
+       */
+      deleteThreadComment: (variables: DeleteThreadCommentVariables) => Promise<any>
+
+      /**
+       * Updates the AniChart settings for a user on the Anilist API.
+       * @param {UpdateAniChartSettingsVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.updateAniChartSettings({titleLanguage: 'romaji', theme: 'dark'});
+       * ```
+       */
+      updateAniChartSettings: (variables: UpdateAniChartSettingsVariables) => Promise<any>
+
+      /**
+       * Updates the AniChart highlights for a user on the Anilist API.
+       * @param {UpdateAniChartHighlightsVariables} variables - The variables for the mutation.
+       * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+       *
+       * @example
+       * ```typescript
+       * await aniLink.anilist.mutation.updateAniChartHighlights({highlights: [{mediaId: 1, highlight: 'test'}]});
+       * ```
+       */
+      updateAniChartHighlights: (variables: UpdateAniChartHighlightsVariables) => Promise<any>
     }
   }
 
@@ -1098,6 +1196,13 @@ export class AniLink {
     const saveReviewMutationInstance = new SaveReviewMutation(authToken)
     const deleteReviewMutationInstance = new DeleteReviewMutation(authToken)
     const saveRecommendationMutationInstance = new SaveRecommendationMutation(authToken)
+    const saveThreadMutationInstance = new SaveThreadMutation(authToken)
+    const deleteThreadMutationInstance = new DeleteThreadMutation(authToken)
+    const toggleThreadSubscriptionMutationInstance = new ToggleThreadSubscriptionMutation(authToken)
+    const saveThreadCommentMutationInstance = new SaveThreadCommentMutation(authToken)
+    const deleteThreadCommentMutationInstance = new DeleteThreadCommentMutation(authToken)
+    const updateAniChartSettingsMutationInstance = new UpdateAniChartSettingsMutation(authToken)
+    const updateAniChartHighlightsMutationInstance = new UpdateAniChartHighlightsMutation(authToken)
 
     this.anilist = {
       query: {
@@ -1169,7 +1274,14 @@ export class AniLink {
         updateFavouriteOrder: updateFavouriteOrderMutationInstance.updateFavouriteOrder.bind(updateFavouriteOrderMutationInstance),
         saveReview: saveReviewMutationInstance.saveReview.bind(saveReviewMutationInstance),
         deleteReview: deleteReviewMutationInstance.deleteReview.bind(deleteReviewMutationInstance),
-        saveRecommendation: saveRecommendationMutationInstance.saveRecommendation.bind(saveRecommendationMutationInstance)
+        saveRecommendation: saveRecommendationMutationInstance.saveRecommendation.bind(saveRecommendationMutationInstance),
+        saveThread: saveThreadMutationInstance.saveThread.bind(saveThreadMutationInstance),
+        deleteThread: deleteThreadMutationInstance.deleteThread.bind(deleteThreadMutationInstance),
+        toggleThreadSubscription: toggleThreadSubscriptionMutationInstance.toggleThreadSubscription.bind(toggleThreadSubscriptionMutationInstance),
+        saveThreadComment: saveThreadCommentMutationInstance.saveThreadComment.bind(saveThreadCommentMutationInstance),
+        deleteThreadComment: deleteThreadCommentMutationInstance.deleteThreadComment.bind(deleteThreadCommentMutationInstance),
+        updateAniChartSettings: updateAniChartSettingsMutationInstance.updateAniChartSettings.bind(updateAniChartSettingsMutationInstance),
+        updateAniChartHighlights: updateAniChartHighlightsMutationInstance.updateAniChartHighlights.bind(updateAniChartHighlightsMutationInstance)
       }
     }
   }

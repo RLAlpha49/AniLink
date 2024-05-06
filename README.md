@@ -132,6 +132,13 @@ List of methods in `anilist.mutation`:
 - saveReview
 - deleteReview
 - saveRecommendation
+- saveThread
+- deleteThread
+- toggleThreadSubscription
+- saveThreadComment
+- deleteThreadComment
+- updateAniChartSettings
+- updateAniChartHighlights
 
 ### Error Handling
 

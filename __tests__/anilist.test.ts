@@ -41,6 +41,7 @@ async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
       return handleRateLimit(apiCall, retryAfter);
     } else {
       if (error.response && error.response.data) {
+        console.log(error.response.data.errors[0].validation)
         throw error.response.data;
       } else {
         throw error.response || error;
@@ -553,4 +554,14 @@ describe('Anilist API mutation', () => {
     expect(response).toBeDefined();
     return response.data.SaveRecommendation;
   });
+
+  test('Update AniChart Settings', async () => {
+    const response = await handleRateLimit(() => aniLink.anilist.mutation.updateAniChartSettings({
+      titleLanguage: 'romaji',
+      outgoingLinkProvider: 'anilist',
+      theme: 'dark',
+    }))
+    expect(response).toBeDefined();
+    return response.data.UpdateAniChartSettings;
+  })
 })

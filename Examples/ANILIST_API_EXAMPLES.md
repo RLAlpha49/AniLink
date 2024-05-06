@@ -304,4 +304,31 @@ aniLink.anilist.mutation.deleteReview({id: 1});
 
 // Save Recommendation
 aniLink.anilist.mutation.saveRecommendation({mediaId: 1, mediaRecommendationId: 495, rating: 'NO_RATING'})
+
+// Save Thread
+aniLink.anilist.mutation.saveThread({title: 'test', body: 'test'})
+
+// Update Thread
+aniLink.anilist.mutation.saveThread({id: 1, title: 'Updated Title', body: 'Updated Body'})
+
+// Delete Thread
+aniLink.anilist.mutation.deleteThread({id: 1});
+
+// Toggle Thread Subscription
+aniLink.anilist.mutation.toggleThreadSubscription({threadId: 1, subscribe: true});
+
+// Save Thread Comment
+aniLink.anilist.mutation.saveThreadComment({threadId: 1, text: 'test'});
+
+// Update Thread Comment
+aniLink.anilist.mutation.saveThreadComment({id: 1, text: 'Updated Text'});
+
+// Delete Thread Comment
+aniLink.anilist.mutation.deleteThreadComment({id: 1});
+
+// Update AniChart Settings
+aniLink.anilist.mutation.updateAniChartSettings({titleLanguage: 'romaji', theme: 'dark'});
+
+// Update AniChart Highlights
+aniLink.anilist.mutation.updateAniChartHighlights({highlights: [{mediaId: 1, highlight: 'test'}]});
 ```
