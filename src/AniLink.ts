@@ -95,6 +95,7 @@ import { SaveThreadCommentMutation, type SaveThreadCommentVariables } from './ap
 import { DeleteThreadCommentMutation, type DeleteThreadCommentVariables } from './apis/anilist/mutation/DeleteThreadComment'
 import { UpdateAniChartSettingsMutation, type UpdateAniChartSettingsVariables } from './apis/anilist/mutation/UpdateAniChartSettings'
 import { UpdateAniChartHighlightsMutation, type UpdateAniChartHighlightsVariables } from './apis/anilist/mutation/UpdateAniChartHighlights'
+import { CustomRequest } from './apis/anilist/Custom'
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -104,8 +105,28 @@ export class AniLink {
   /**
    * Anilist API methods.
    * @public
+   * @type {Object}
+   * @property {Function} custom - Custom query or mutation.
+   * @property {Object} query - Query methods for fetching data from the Anilist API.
+   * @property {Object} mutation - Mutation methods for updating data in the Anilist API.
    */
   public anilist: {
+    /**
+     * Custom query or mutation.
+     * @param query - The query for the request.
+     * @param variables - The variables for the request. This parameter is optional.
+     *
+     * @example
+     * ```typescript
+     * const viewer = await aniLink.anilist.custom('query {Viewer {id}}');
+     *
+     * const mutation = 'mutation ($about: String) {UpdateUser (about: $about) {id}}';
+     * const variables = { about: "New about text" };
+     * const response = await aniLink.anilist.custom(mutation, variables);
+     * ```
+     */
+    custom: (query: string, variables: any) => Promise<any>
+
     /**
      * Query methods for fetching data from the Anilist API.
      * @public
@@ -135,7 +156,7 @@ export class AniLink {
      * @property {Function} aniChartUser - Fetches aniChart user data from the Anilist API.
      * @property {Function} siteStatistics - Fetches site statistics data from the Anilist API.
      * @property {Function} externalLinkSourceCollection - Fetches external link source collection data from the Anilist API.
-     * @property {Function} page - Fetches pages of data from the Anilist API.
+     * @property {Object} page - Fetches pages of data from the Anilist API.
      */
     query: {
       /**
@@ -1130,6 +1151,8 @@ export class AniLink {
    * ```
    */
   constructor (authToken: string) {
+    const customInstance = new CustomRequest(authToken)
+
     const userQueryInstance = new UserQuery(authToken)
     const mediaQueryInstance = new MediaQuery(authToken)
     const mediaTrendQueryInstance = new MediaTrendQuery(authToken)
@@ -1205,6 +1228,7 @@ export class AniLink {
     const updateAniChartHighlightsMutationInstance = new UpdateAniChartHighlightsMutation(authToken)
 
     this.anilist = {
+      custom: customInstance.custom.bind(customInstance),
       query: {
         user: userQueryInstance.user.bind(userQueryInstance),
         media: mediaQueryInstance.media.bind(mediaQueryInstance),

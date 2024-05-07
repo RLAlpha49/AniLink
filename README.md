@@ -55,6 +55,20 @@ const aniLink = new AniLink();
 
 AniLink for AniList is divided into two main sections: `anilist.query` and `anilist.mutation`. The `anilist.query` section contains methods for querying data from the AniList API, while the `anilist.mutation` section contains methods for mutating data.
 
+#### Custom Queries and Mutations
+
+If needed there is a custom section `anilist.custom` that allows the user to pass a custom query or mutation to the AniList API.
+
+The method accepts two parameters: the query or mutation string and an optional variables object.
+
+```typescript
+const viewer = await aniLink.anilist.custom('query {Viewer {id}}');
+
+const mutation = 'mutation ($about: String) {UpdateUser (about: $about) {id}}';
+const variables = { about: "New about text" };
+const response = await aniLink.anilist.custom(mutation, variables);
+```
+
 #### Query Methods
 
 The `anilist.query` section is further divided into main query methods and page query methods. The main query methods return a single piece of data, while the page query methods return pages of data.

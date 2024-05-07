@@ -63,6 +63,12 @@ describe('Anilist API query', () => {
     aniLink2 = new AniLink()
   })
 
+  test('Custom query', async (): Promise<any> => {
+    const response = await handleRateLimit(() => aniLink.anilist.custom('query {Viewer {id}}'));
+    expect(response).toBeDefined()
+    return response.data.Viewer.id
+  })
+
   test('User query', async (): Promise<UserResponse> => {
     const response = await handleRateLimit(() => aniLink2.anilist.query.user({id: 542244, isHTML: true}))
     expect(response).toBeDefined()
@@ -375,6 +381,13 @@ describe('Anilist API mutation', () => {
     }
     aniLink = new AniLink(token)
   })
+
+  test('Custom mutation', async (): Promise<any> => {
+    const variables = { about: "New about text" };
+    const response = await handleRateLimit(() => aniLink.anilist.custom('mutation ($about: String) {UpdateUser (about: $about) {id}}', variables));
+    expect(response).toBeDefined()
+    return response.data.UpdateUser.id
+  });
 
   test('Update User', async (): Promise<UserResponse> => {
     const response = await handleRateLimit(() => aniLink.anilist.mutation.updateUser({
