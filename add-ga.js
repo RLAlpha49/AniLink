@@ -5,13 +5,13 @@ const indexPath = path.join(__dirname, '/docs', 'index.html');
 
 const gaCode = `
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-TQ9SNE93ZF"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-F7DE9Y757W"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-TQ9SNE93ZF');
+  gtag('config', 'G-F7DE9Y757W');
 </script>
 `;
 
