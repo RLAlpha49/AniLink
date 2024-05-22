@@ -7,3 +7,6 @@ updates:
     commit-message:
       prefix: "npm"
       include: "scope"
+    ignore:
+      - dependency-name: "eslint-plugin-n"
+        versions: ["*"]
