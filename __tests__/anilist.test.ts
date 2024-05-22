@@ -537,61 +537,63 @@ describe('Anilist API mutation', () => {
     return response.data.UpdateFavouriteOrder;
   });
 
-  test('Save & Delete Review', async () => {
-    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveReview({
-      mediaId: 1,
-      body: 'a'.repeat(2200), // This will create a string of 'a' with length 2200
-      summary: 'b'.repeat(20), // This will create a string of 'b' with length 20
-      score: 8,
-      private: true
-    }))
-    const reviewId = response.data.SaveReview.id
-    const response2 = await handleRateLimit(() => aniLink.anilist.mutation.deleteReview({id: reviewId}))
-    expect(response && response2).toBeDefined();
-    return response.data.SaveReview;
-  });
-
-  test('Save Recommendation', async () => {
-    let response;
-    let attempts = 0;
-    const maxAttempts = 2; // Maximum number of attempts
-
-    while (!response && attempts < maxAttempts) {
-      try {
-        response = await handleRateLimit(() => aniLink.anilist.mutation.saveRecommendation({
-          mediaId: 1,
-          mediaRecommendationId: 495,
-          rating: 'NO_RATING'
-        }));
-      } catch (error) {
-        console.log('An error occurred:', error);
-        console.log('Retrying...');
-      }
-      attempts++;
-    }
-
-    expect(response).toBeDefined();
-    return response.data.SaveRecommendation;
-  });
-
-  test('Save & Delete Thread and Thread Comment', async () => {
-    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveThread({
-      mediaId: 1,
-      title: 'testing',
-      body: 'testing',
-      categories: [1]
-    }))
-    const threadId = response.data.SaveThread.id
-    const response2 = await handleRateLimit(() => aniLink.anilist.mutation.saveThreadComment({
-      threadId: threadId,
-      comment: 'testing'
-    }))
-    const commentId = response2.data.SaveThreadComment.id
-    const response3 = await handleRateLimit(() => aniLink.anilist.mutation.deleteThreadComment({id: commentId}))
-    const response4 = await handleRateLimit(() => aniLink.anilist.mutation.deleteThread({id: threadId}))
-    expect(response && response2 && response3 && response4).toBeDefined();
-    return response.data.SaveThread;
-  });
+  // Tests removed at request of AniList moderators
+  //
+  // test('Save & Delete Review', async () => {
+  //   const response = await handleRateLimit(() => aniLink.anilist.mutation.saveReview({
+  //     mediaId: 1,
+  //     body: 'a'.repeat(2200), // This will create a string of 'a' with length 2200
+  //     summary: 'b'.repeat(20), // This will create a string of 'b' with length 20
+  //     score: 8,
+  //     private: true
+  //   }))
+  //   const reviewId = response.data.SaveReview.id
+  //   const response2 = await handleRateLimit(() => aniLink.anilist.mutation.deleteReview({id: reviewId}))
+  //   expect(response && response2).toBeDefined();
+  //   return response.data.SaveReview;
+  // });
+  //
+  // test('Save Recommendation', async () => {
+  //   let response;
+  //   let attempts = 0;
+  //   const maxAttempts = 2; // Maximum number of attempts
+  //
+  //   while (!response && attempts < maxAttempts) {
+  //     try {
+  //       response = await handleRateLimit(() => aniLink.anilist.mutation.saveRecommendation({
+  //         mediaId: 1,
+  //         mediaRecommendationId: 495,
+  //         rating: 'NO_RATING'
+  //       }));
+  //     } catch (error) {
+  //       console.log('An error occurred:', error);
+  //       console.log('Retrying...');
+  //     }
+  //     attempts++;
+  //   }
+  //
+  //   expect(response).toBeDefined();
+  //   return response.data.SaveRecommendation;
+  // });
+  //
+  // test('Save & Delete Thread and Thread Comment', async () => {
+  //   const response = await handleRateLimit(() => aniLink.anilist.mutation.saveThread({
+  //     mediaId: 1,
+  //     title: 'testing',
+  //     body: 'testing',
+  //     categories: [1]
+  //   }))
+  //   const threadId = response.data.SaveThread.id
+  //   const response2 = await handleRateLimit(() => aniLink.anilist.mutation.saveThreadComment({
+  //     threadId: threadId,
+  //     comment: 'testing'
+  //   }))
+  //   const commentId = response2.data.SaveThreadComment.id
+  //   const response3 = await handleRateLimit(() => aniLink.anilist.mutation.deleteThreadComment({id: commentId}))
+  //   const response4 = await handleRateLimit(() => aniLink.anilist.mutation.deleteThread({id: threadId}))
+  //   expect(response && response2 && response3 && response4).toBeDefined();
+  //   return response.data.SaveThread;
+  // });
 
   test('Toggle Thread Subscription', async () => {
     const response = await handleRateLimit(() => aniLink.anilist.mutation.toggleThreadSubscription({threadId: 71881, subscribe: true}))
