@@ -1,0 +1,20 @@
+name: Run Dependabot on push to package.json or package-lock.json
+
+on:
+  push:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.6
+
+      - name: Fetch metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2.1.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"

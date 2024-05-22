@@ -183,7 +183,7 @@ describe('Anilist API query', () => {
   })
 
   test('Activity query', async (): Promise<Activity> => {
-    const response = await handleRateLimit(() => aniLink2.anilist.query.activity({id: 723235883, asHtml: true, type_not: 'TEXT', sort: ['ID_DESC', 'PINNED']}))
+    const response = await handleRateLimit(() => aniLink2.anilist.query.activity({userId: 542244, asHtml: true, type_not: 'TEXT', sort: ['ID_DESC', 'PINNED']}))
     expect(response).toBeDefined()
     return response.data.Activity
   })
@@ -494,23 +494,29 @@ describe('Anilist API mutation', () => {
   });
 
   test('Save & Delete Activity Reply', async () => {
-    const response = await handleRateLimit(() => aniLink.anilist.mutation.saveActivityReply({activityId: 723235883, text: 'testing'}))
-    const replyId = response.data.SaveActivityReply.id
-    const response2 = await handleRateLimit(() => aniLink.anilist.mutation.deleteActivityReply({id: replyId}))
-    expect(response && response2).toBeDefined();
-    return response.data.SaveActivityReply;
+    const response = await handleRateLimit(() => aniLink.anilist.query.activity({userId: 542244}))
+    const activityId = response.data.Activity.id
+    const response2 = await handleRateLimit(() => aniLink.anilist.mutation.saveActivityReply({activityId: activityId, text: 'testing'}))
+    const replyId = response2.data.SaveActivityReply.id
+    const response3 = await handleRateLimit(() => aniLink.anilist.mutation.deleteActivityReply({id: replyId}))
+    expect(response && response2 && response3).toBeDefined();
+    return response2.data.SaveActivityReply;
   });
 
   test('Toggle Like', async () => {
-    const response = await handleRateLimit(() => aniLink.anilist.mutation.toggleLike({id: 723235883, type: 'ACTIVITY'}))
-    expect(response).toBeDefined();
-    return response.data.ToggleLike;
+    const response = await handleRateLimit(() => aniLink.anilist.query.activity({userId: 542244}))
+    const activityId = response.data.Activity.id
+    const response2 = await handleRateLimit(() => aniLink.anilist.mutation.toggleLike({id: activityId, type: 'ACTIVITY'}))
+    expect(response && response2).toBeDefined();
+    return response2.data.ToggleLike;
   });
 
   test('Toggle Like V2', async () => {
-    const response = await handleRateLimit(() => aniLink.anilist.mutation.toggleLikeV2({id: 723235883, type: 'ACTIVITY'}))
-    expect(response).toBeDefined();
-    return response.data.ToggleLikeV2;
+    const response = await handleRateLimit(() => aniLink.anilist.query.activity({userId: 542244}))
+    const activityId = response.data.Activity.id
+    const response2 = await handleRateLimit(() => aniLink.anilist.mutation.toggleLikeV2({id: activityId, type: 'ACTIVITY'}))
+    expect(response && response2).toBeDefined();
+    return response2.data.ToggleLikeV2;
   });
 
   test('Toggle Follow', async () => {
