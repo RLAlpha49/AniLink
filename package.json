@@ -1,6 +1,6 @@
 {
   "name": "anilink-api-wrapper",
-  "version": "1.29.1",
+  "version": "1.29.2",
   "description": "API wrapper for AniManga sites such as Anilist, MyAnimeList, Kitsu.",
   "main": "dist/AniLink.js",
   "scripts": {
@@ -41,6 +41,6 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "axios": "^1.7.5"
+    "axios": "^1.7.7"
   }
 }
