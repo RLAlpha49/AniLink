@@ -1,3 +1,4 @@
 *.js linguist-vendored
 src/apis/anilist/interfaces/** linguist-vendored
 src/apis/anilist/types/** linguist-vendored
+src/apis/anilist/query/page/** linguist-vendored
