@@ -24,7 +24,6 @@ export const sendRequest = async (
         headers.Authorization = `Bearer ${token}`;
     }
 
-    /* eslint-disable no-useless-catch */
     try {
         const response: AxiosResponse = await axios({
             url,
@@ -33,7 +32,18 @@ export const sendRequest = async (
             headers,
         });
 
-        return response.data;
+        const responseData = response.data;
+        const queryData = responseData?.data;
+
+        if (queryData && typeof queryData === "object") {
+            const fields = Object.keys(queryData);
+
+            if (fields.length === 1) {
+                return queryData[fields[0]];
+            }
+        }
+
+        return responseData;
     } catch (error: any) {
         throw error;
     }

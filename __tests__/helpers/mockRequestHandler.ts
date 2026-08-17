@@ -11,7 +11,7 @@ export interface RecordedRequest {
 
 const requestMock = vi.hoisted(() =>
     vi.fn(async () => ({
-        data: { __typename: "MockResponse" },
+        __typename: "MockResponse",
     }))
 );
 

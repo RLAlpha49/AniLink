@@ -79,7 +79,7 @@ describe("AniList mutations without remote side effects", () => {
             const client = createTestClient("mutation-token");
             const call = (client.anilist.mutation as any)[method];
 
-            await call(variables);
+            const result = await call(variables);
 
             expect(mockSendRequest).toHaveBeenCalledTimes(1);
             expect(getLastRequest()).toEqual(
@@ -93,6 +93,7 @@ describe("AniList mutations without remote side effects", () => {
                     }),
                 })
             );
+            expect(result).toEqual({ __typename: "MockResponse" });
         }
     );
 

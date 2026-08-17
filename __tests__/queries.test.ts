@@ -45,11 +45,12 @@ describe("AniList single-resource queries", () => {
         async (_name, method, variables, operation) => {
             const client = createTestClient("query-token");
             const call = (client.anilist.query as any)[method];
+            let result;
 
             if (variables === undefined) {
-                await call();
+                result = await call();
             } else {
-                await call(variables);
+                result = await call(variables);
             }
 
             expect(mockSendRequest).toHaveBeenCalledTimes(1);
@@ -65,6 +66,8 @@ describe("AniList single-resource queries", () => {
             if (variables !== undefined) {
                 expect(getLastRequest()?.data).toEqual(expect.objectContaining({ variables }));
             }
+
+            expect(result).toEqual({ __typename: "MockResponse" });
         }
     );
 });
