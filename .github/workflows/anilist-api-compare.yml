@@ -1,0 +1,41 @@
+name: AniList API comparison
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      live:
+        description: Compare against the current live AniList schema
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Compare AniList API
+        run: |
+          if [ "${{ inputs.live }}" = "true" ]; then
+            npm run anilist:api:compare -- --live
+          else
+            npm run anilist:api:compare
+          fi
+      - name: Upload comparison reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: anilist-api-comparison
+          path: artifacts/anilist-api-compare/
+          if-no-files-found: error
