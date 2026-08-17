@@ -1,4 +1,7 @@
-/.idea
 /dist
 /node_modules
 .env
+.github/copilot-instructions.md
+.gitignore
+docs/plans/
+AGENTS.md
