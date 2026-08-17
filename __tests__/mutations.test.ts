@@ -1,0 +1,53 @@
+import { createTestClient, getLastRequest, mockSendRequest } from './helpers/mockRequestHandler'
+import { describe, expect, test } from 'vitest'
+
+const mutationCases: Array<[string, string, object, string]> = [
+  ['update user', 'updateUser', { about: 'test', titleLanguage: 'ENGLISH' }, 'UpdateUser'],
+  ['save media list entry', 'saveMediaListEntry', { mediaId: 143271, type: 'ANIME', status: 'CURRENT', progress: 3 }, 'SaveMediaListEntry'],
+  ['update media list entries', 'updateMediaListEntries', { status: 'CURRENT', score: 8.5, progress: 3, ids: [143271, 156822] }, 'UpdateMediaListEntries'],
+  ['delete media list entry', 'deleteMediaListEntry', { id: 12345 }, 'DeleteMediaListEntry'],
+  ['delete custom list', 'deleteCustomList', { customList: 'test', type: 'ANIME' }, 'DeleteCustomList'],
+  ['save text activity', 'saveTextActivity', { id: 725254160, text: 'testing' }, 'SaveTextActivity'],
+  ['save message activity', 'saveMessageActivity', { recipientId: 542244, message: 'testing', private: true }, 'SaveMessageActivity'],
+  ['delete activity', 'deleteActivity', { id: 725254160 }, 'DeleteActivity'],
+  ['toggle activity subscription', 'toggleActivitySubscription', { activityId: 725674043, subscribe: true }, 'ToggleActivitySubscription'],
+  ['save activity reply', 'saveActivityReply', { activityId: 725674043, text: 'testing' }, 'SaveActivityReply'],
+  ['delete activity reply', 'deleteActivityReply', { id: 12345 }, 'DeleteActivityReply'],
+  ['toggle like', 'toggleLike', { id: 725674043, type: 'ACTIVITY' }, 'ToggleLike'],
+  ['toggle like v2', 'toggleLikeV2', { id: 725674043, type: 'ACTIVITY' }, 'ToggleLike'],
+  ['toggle follow', 'toggleFollow', { userId: 542244 }, 'ToggleFollow'],
+  ['toggle favourite', 'toggleFavourite', { studioId: 561 }, 'ToggleFavourite'],
+  ['update favourite order', 'updateFavouriteOrder', { studioIds: [561], studioOrder: [561] }, 'UpdateFavouriteOrder'],
+  ['toggle thread subscription', 'toggleThreadSubscription', { threadId: 71881, subscribe: true }, 'ToggleThreadSubscription'],
+  ['update AniChart settings', 'updateAniChartSettings', { titleLanguage: 'romaji', outgoingLinkProvider: 'anilist', theme: 'dark' }, 'UpdateAniChartSettings']
+]
+
+describe('AniList mutations without remote side effects', () => {
+  test.each(mutationCases)('%s only builds a mocked request', async (_name, method, variables, operation) => {
+    const client = createTestClient('mutation-token')
+    const call = (client.anilist.mutation as any)[method]
+
+    await call(variables)
+
+    expect(mockSendRequest).toHaveBeenCalledTimes(1)
+    expect(getLastRequest()).toEqual(expect.objectContaining({
+      url: 'https://graphql.anilist.co',
+      method: 'POST',
+      token: 'mutation-token',
+      data: expect.objectContaining({
+        query: expect.stringContaining(operation),
+        variables
+      })
+    }))
+  })
+
+  test('sends custom mutations through the mocked transport', async () => {
+    const client = createTestClient('custom-mutation-token')
+    await client.anilist.custom('mutation ($about: String) { UpdateUser (about: $about) { id } }', { about: 'test' })
+
+    expect(getLastRequest()).toEqual(expect.objectContaining({
+      token: 'custom-mutation-token',
+      data: { query: expect.stringContaining('UpdateUser'), variables: { about: 'test' } }
+    }))
+  })
+})
