@@ -3,20 +3,20 @@
  * It includes the id, site, and thumbnail each having their own properties.
  */
 export interface Trailer {
-  /**
-   * `id` is a string representing the id of the trailer.
-   */
-  id: string
+    /**
+     * `id` is a string representing the id of the trailer.
+     */
+    id: string;
 
-  /**
-   * `site` is a string representing the site of the trailer.
-   */
-  site: string
+    /**
+     * `site` is a string representing the site of the trailer.
+     */
+    site: string;
 
-  /**
-   * `thumbnail` is a string representing the thumbnail of the trailer.
-   */
-  thumbnail: string
+    /**
+     * `thumbnail` is a string representing the thumbnail of the trailer.
+     */
+    thumbnail: string;
 }
 
 /**
@@ -29,4 +29,4 @@ export const TrailerSchema = `
     site
     thumbnail
   }
-`
+`;

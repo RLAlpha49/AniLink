@@ -1,85 +1,85 @@
-import { APIWrapper } from '../../../base/APIWrapper'
-import { sendRequest } from '../../../base/RequestHandler'
-import { type FuzzyDate, FuzzyDateSchema } from '../interfaces/FuzzyDate'
-import { validateVariables } from '../../../base/ValidateVariables'
-import { FuzzyDateMappings } from '../types/FuzzyDate'
-import { type MediaListStatus, MediaListStatusMappings } from '../types/Status'
-import { type MediaListResponse } from '../interfaces/responses/query/MediaList'
+import { APIWrapper } from "../../../base/APIWrapper";
+import { sendRequest } from "../../../base/RequestHandler";
+import { type FuzzyDate, FuzzyDateSchema } from "../interfaces/FuzzyDate";
+import { validateVariables } from "../../../base/ValidateVariables";
+import { FuzzyDateMappings } from "../types/FuzzyDate";
+import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
+import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
 
 /**
  * `UpdateMediaListEntriesVariables` is an interface representing the variables for the `UpdateMediaListEntriesMutation`.
  * It includes optional status, score, raw score, progress, progress volumes, repeat, priority, private status, notes, hidden from status lists status, advanced scores, started at date, completed at date, and a required array of ids.
  */
 export interface UpdateMediaListEntriesVariables {
-  /**
-   * `status` is a `MediaListStatus` representing the status of the media list entries.
-   */
-  status?: MediaListStatus
+    /**
+     * `status` is a `MediaListStatus` representing the status of the media list entries.
+     */
+    status?: MediaListStatus;
 
-  /**
-   * `score` is a number representing the score of the media list entries.
-   */
-  score?: number
+    /**
+     * `score` is a number representing the score of the media list entries.
+     */
+    score?: number;
 
-  /**
-   * `scoreRaw` is a number representing the raw score of the media list entries.
-   */
-  scoreRaw?: number
+    /**
+     * `scoreRaw` is a number representing the raw score of the media list entries.
+     */
+    scoreRaw?: number;
 
-  /**
-   * `progress` is a number representing the progress of the media list entries.
-   */
-  progress?: number
+    /**
+     * `progress` is a number representing the progress of the media list entries.
+     */
+    progress?: number;
 
-  /**
-   * `progressVolumes` is a number representing the progress volumes of the media list entries.
-   */
-  progressVolumes?: number
+    /**
+     * `progressVolumes` is a number representing the progress volumes of the media list entries.
+     */
+    progressVolumes?: number;
 
-  /**
-   * `repeat` is a number representing the repeat status of the media list entries.
-   */
-  repeat?: number
+    /**
+     * `repeat` is a number representing the repeat status of the media list entries.
+     */
+    repeat?: number;
 
-  /**
-   * `priority` is a number representing the priority of the media list entries.
-   */
-  priority?: number
+    /**
+     * `priority` is a number representing the priority of the media list entries.
+     */
+    priority?: number;
 
-  /**
-   * `private` is a boolean representing the privacy status of the media list entries.
-   */
-  private?: boolean
+    /**
+     * `private` is a boolean representing the privacy status of the media list entries.
+     */
+    private?: boolean;
 
-  /**
-   * `notes` is a string representing the notes of the media list entries.
-   */
-  notes?: string
+    /**
+     * `notes` is a string representing the notes of the media list entries.
+     */
+    notes?: string;
 
-  /**
-   * `hiddenFromStatusLists` is a boolean representing whether the media list entries are hidden from status lists.
-   */
-  hiddenFromStatusLists?: boolean
+    /**
+     * `hiddenFromStatusLists` is a boolean representing whether the media list entries are hidden from status lists.
+     */
+    hiddenFromStatusLists?: boolean;
 
-  /**
-   * `advancedScores` is an array of numbers representing the advanced scores of the media list entries.
-   */
-  advancedScores?: number[]
+    /**
+     * `advancedScores` is an array of numbers representing the advanced scores of the media list entries.
+     */
+    advancedScores?: number[];
 
-  /**
-   * `startedAt` is a `FuzzyDateInput` representing when the media list entries started.
-   */
-  startedAt?: FuzzyDate
+    /**
+     * `startedAt` is a `FuzzyDateInput` representing when the media list entries started.
+     */
+    startedAt?: FuzzyDate;
 
-  /**
-   * `completedAt` is a `FuzzyDateInput` representing when the media list entries were completed.
-   */
-  completedAt?: FuzzyDate
+    /**
+     * `completedAt` is a `FuzzyDateInput` representing when the media list entries were completed.
+     */
+    completedAt?: FuzzyDate;
 
-  /**
-   * `ids` is an array of numbers representing the ids of the media list entries.
-   */
-  ids: number[]
+    /**
+     * `ids` is an array of numbers representing the ids of the media list entries.
+     */
+    ids: number[];
 }
 
 /**
@@ -87,55 +87,59 @@ export interface UpdateMediaListEntriesVariables {
  * It includes a method to update media list entries.
  */
 export class UpdateMediaListEntriesMutation extends APIWrapper {
-  /**
-   * `authToken` is a string representing the authentication token.
-   */
-  private readonly authToken: string
+    /**
+     * `authToken` is a string representing the authentication token.
+     */
+    private readonly authToken: string;
 
-  /**
-   * Constructs a new `UpdateMediaListEntriesMutation` instance.
-   *
-   * @param authToken - The authentication token.
-   */
-  constructor (authToken: string) {
-    super('https://graphql.anilist.co')
-    this.authToken = authToken
-  }
-
-  /**
-   * `updateMediaListEntries` is a method that sends a mutation request to update media list entries.
-   *
-   * @param variables - An object of type `UpdateMediaListEntriesVariables` representing the variables for the mutation.
-   * @returns A Promise that resolves to the response from the mutation request.
-   * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-   *  */
-  async updateMediaListEntries (variables: UpdateMediaListEntriesVariables): Promise<MediaListResponse[]> {
-    if (!this.authToken) {
-      throw new Error('UpdateMediaListEntriesMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
-    }
-    if (!variables.ids || variables.ids.length === 0) {
-      throw new Error('ids must be an array of at least one number')
-    }
-    const variableTypeMappings = {
-      status: MediaListStatusMappings,
-      score: 'number',
-      scoreRaw: 'number',
-      progress: 'number',
-      progressVolumes: 'number',
-      repeat: 'number',
-      priority: 'number',
-      private: 'boolean',
-      notes: 'string',
-      hiddenFromStatusLists: 'boolean',
-      advancedScores: 'number[]',
-      startedAt: FuzzyDateMappings,
-      completedAt: FuzzyDateMappings,
-      ids: 'number[]'
+    /**
+     * Constructs a new `UpdateMediaListEntriesMutation` instance.
+     *
+     * @param authToken - The authentication token.
+     */
+    constructor(authToken: string) {
+        super("https://graphql.anilist.co");
+        this.authToken = authToken;
     }
 
-    validateVariables(variables, variableTypeMappings)
+    /**
+     * `updateMediaListEntries` is a method that sends a mutation request to update media list entries.
+     *
+     * @param variables - An object of type `UpdateMediaListEntriesVariables` representing the variables for the mutation.
+     * @returns A Promise that resolves to the response from the mutation request.
+     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     *  */
+    async updateMediaListEntries(
+        variables: UpdateMediaListEntriesVariables
+    ): Promise<MediaListResponse[]> {
+        if (!this.authToken) {
+            throw new Error(
+                "UpdateMediaListEntriesMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument."
+            );
+        }
+        if (!variables.ids || variables.ids.length === 0) {
+            throw new Error("ids must be an array of at least one number");
+        }
+        const variableTypeMappings = {
+            status: MediaListStatusMappings,
+            score: "number",
+            scoreRaw: "number",
+            progress: "number",
+            progressVolumes: "number",
+            repeat: "number",
+            priority: "number",
+            private: "boolean",
+            notes: "string",
+            hiddenFromStatusLists: "boolean",
+            advancedScores: "number[]",
+            startedAt: FuzzyDateMappings,
+            completedAt: FuzzyDateMappings,
+            ids: "number[]",
+        };
 
-    const mutation = `
+        validateVariables(variables, variableTypeMappings);
+
+        const mutation = `
       mutation ($status: MediaListStatus, $score: Float, $scoreRaw: Int, $progress: Int, $progressVolumes: Int, $repeat: Int, $priority: Int, $private: Boolean, $notes: String, $hiddenFromStatusLists: Boolean, $advancedScores: [Float], $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $ids: [Int]) {
         UpdateMediaListEntries(status: $status, score: $score, scoreRaw: $scoreRaw, progress: $progress, progressVolumes: $progressVolumes, repeat: $repeat, priority: $priority, private: $private, notes: $notes, hiddenFromStatusLists: $hiddenFromStatusLists, advancedScores: $advancedScores, startedAt: $startedAt, completedAt: $completedAt, ids: $ids) {
           id
@@ -157,9 +161,9 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
           }
         }
       }
-    `
+    `;
 
-    const data = { query: mutation, variables }
-    return await sendRequest(this.baseURL, 'POST', data, this.authToken)
-  }
+        const data = { query: mutation, variables };
+        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+    }
 }

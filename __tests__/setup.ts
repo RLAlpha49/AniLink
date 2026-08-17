@@ -1,12 +1,14 @@
-import { vi } from 'vitest'
+import { vi } from "vitest";
 
 const networkDisabled = (): never => {
-  throw new Error('Network access is disabled in tests. Mock the AniLink request transport instead.')
-}
+    throw new Error(
+        "Network access is disabled in tests. Mock the AniLink request transport instead."
+    );
+};
 
-global.fetch = networkDisabled as typeof fetch
+global.fetch = networkDisabled as typeof fetch;
 
-vi.mock('axios', () => ({
-  __esModule: true,
-  default: networkDisabled
-}))
+vi.mock("axios", () => ({
+    __esModule: true,
+    default: networkDisabled,
+}));

@@ -3,45 +3,45 @@
  * It includes the id, rank, type, format, year, season, all-time status, and context each having their own properties.
  */
 export interface Ranking {
-  /**
-   * `id` is a number representing the id of the ranking.
-   */
-  id: number
+    /**
+     * `id` is a number representing the id of the ranking.
+     */
+    id: number;
 
-  /**
-   * `rank` is a number representing the rank of the media.
-   */
-  rank: number
+    /**
+     * `rank` is a number representing the rank of the media.
+     */
+    rank: number;
 
-  /**
-   * `type` is a string representing the type of the ranking.
-   */
-  type: string
+    /**
+     * `type` is a string representing the type of the ranking.
+     */
+    type: string;
 
-  /**
-   * `format` is a string representing the format of the ranking.
-   */
-  format: string
+    /**
+     * `format` is a string representing the format of the ranking.
+     */
+    format: string;
 
-  /**
-   * `year` is a number representing the year of the ranking.
-   */
-  year: number
+    /**
+     * `year` is a number representing the year of the ranking.
+     */
+    year: number;
 
-  /**
-   * `season` is a string representing the season of the ranking.
-   */
-  season: string
+    /**
+     * `season` is a string representing the season of the ranking.
+     */
+    season: string;
 
-  /**
-   * `allTime` is a boolean representing whether the ranking is all-time or not.
-   */
-  allTime: boolean
+    /**
+     * `allTime` is a boolean representing whether the ranking is all-time or not.
+     */
+    allTime: boolean;
 
-  /**
-   * `context` is a string representing the context of the ranking.
-   */
-  context: string
+    /**
+     * `context` is a string representing the context of the ranking.
+     */
+    context: string;
 }
 
 /**
@@ -59,4 +59,4 @@ export const RankingSchema = `
     allTime
     context
   }
-`
+`;

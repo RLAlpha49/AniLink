@@ -3,20 +3,20 @@
  * It includes the id, url, and site each having their own properties.
  */
 export interface ExternalLink {
-  /**
-   * `id` is a number representing the unique identifier of the external link.
-   */
-  id: number
+    /**
+     * `id` is a number representing the unique identifier of the external link.
+     */
+    id: number;
 
-  /**
-   * `url` is a string representing the URL of the external link.
-   */
-  url: string
+    /**
+     * `url` is a string representing the URL of the external link.
+     */
+    url: string;
 
-  /**
-   * `site` is a string representing the site of the external link.
-   */
-  site: string
+    /**
+     * `site` is a string representing the site of the external link.
+     */
+    site: string;
 }
 
 /**
@@ -29,4 +29,4 @@ export const ExternalLinkSchema = `
     url
     site
   }
-`
+`;

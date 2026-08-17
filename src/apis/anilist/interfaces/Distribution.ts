@@ -3,15 +3,15 @@
  * It includes the status and amount each having their own properties.
  */
 export interface Distribution {
-  /**
-   * `status` is a string representing the status of the distribution.
-   */
-  status: string
+    /**
+     * `status` is a string representing the status of the distribution.
+     */
+    status: string;
 
-  /**
-   * `amount` is a number representing the amount of the distribution.
-   */
-  amount: number
+    /**
+     * `amount` is a number representing the amount of the distribution.
+     */
+    amount: number;
 }
 
 /**
@@ -19,15 +19,15 @@ export interface Distribution {
  * It includes the score and the amount each having their own properties.
  */
 export interface ScoreDistribution {
-  /**
-   * `score` is a number representing the score of the media.
-   */
-  score: number
+    /**
+     * `score` is a number representing the score of the media.
+     */
+    score: number;
 
-  /**
-   * `amount` is a number representing the amount of the score.
-   */
-  amount: number
+    /**
+     * `amount` is a number representing the amount of the score.
+     */
+    amount: number;
 }
 
 /**
@@ -39,22 +39,22 @@ export const ScoreDistributionSchema = `
     score
     amount
   }
-`
+`;
 
 /**
  * `StatusDistribution` is an interface representing the distribution of statuses.
  * It includes the status and amount each having their own properties.
  */
 export interface StatusDistribution {
-  /**
-   * `status` is a string representing the status.
-   */
-  status: string
+    /**
+     * `status` is a string representing the status.
+     */
+    status: string;
 
-  /**
-   * `amount` is a number representing the amount of the status.
-   */
-  amount: number
+    /**
+     * `amount` is a number representing the amount of the status.
+     */
+    amount: number;
 }
 
 /**
@@ -66,4 +66,4 @@ export const StatusDistributionSchema = `
     status
     amount
   }
-`
+`;

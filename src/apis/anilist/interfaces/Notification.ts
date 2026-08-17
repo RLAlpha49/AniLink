@@ -1,19 +1,26 @@
-import { type BasicComment, BasicCommentSchema, type BasicThread, BasicThreadSchema, type BasicUser, BasicUserSchema } from './Basic'
+import {
+    type BasicComment,
+    BasicCommentSchema,
+    type BasicThread,
+    BasicThreadSchema,
+    type BasicUser,
+    BasicUserSchema,
+} from "./Basic";
 
 /**
  * `NotificationOptionInput` is an interface representing the options for a notification.
  * It includes the type and enabled status each having their own properties.
  */
 export interface NotificationOptionInput {
-  /**
-   * `type` is a string representing the type of the notification.
-   */
-  type: string
+    /**
+     * `type` is a string representing the type of the notification.
+     */
+    type: string;
 
-  /**
-   * `enabled` is a boolean representing whether the notification is enabled or not.
-   */
-  enabled: boolean
+    /**
+     * `enabled` is a boolean representing whether the notification is enabled or not.
+     */
+    enabled: boolean;
 }
 
 /**
@@ -21,50 +28,50 @@ export interface NotificationOptionInput {
  * It includes the id, userId, type, commentId, context, createdAt, thread, comment, and user each having their own properties.
  */
 export interface ThreadNotification {
-  /**
-   * `id` is a number representing the id of the thread notification.
-   */
-  id: number
+    /**
+     * `id` is a number representing the id of the thread notification.
+     */
+    id: number;
 
-  /**
-   * `userId` is a number representing the id of the user associated with the thread notification.
-   */
-  userId: number
+    /**
+     * `userId` is a number representing the id of the user associated with the thread notification.
+     */
+    userId: number;
 
-  /**
-   * `type` is a string representing the type of the thread notification.
-   */
-  type: string
+    /**
+     * `type` is a string representing the type of the thread notification.
+     */
+    type: string;
 
-  /**
-   * `commentId` is a number representing the id of the comment associated with the thread notification.
-   */
-  commentId: number
+    /**
+     * `commentId` is a number representing the id of the comment associated with the thread notification.
+     */
+    commentId: number;
 
-  /**
-   * `context` is a string representing the context of the thread notification.
-   */
-  context: string
+    /**
+     * `context` is a string representing the context of the thread notification.
+     */
+    context: string;
 
-  /**
-   * `createdAt` is a number representing the timestamp when the thread notification was created.
-   */
-  createdAt: number
+    /**
+     * `createdAt` is a number representing the timestamp when the thread notification was created.
+     */
+    createdAt: number;
 
-  /**
-   * `thread` is an instance of `BasicThread` representing the thread associated with the thread notification.
-   */
-  thread: BasicThread
+    /**
+     * `thread` is an instance of `BasicThread` representing the thread associated with the thread notification.
+     */
+    thread: BasicThread;
 
-  /**
-   * `comment` is an instance of `BasicComment` representing the comment associated with the thread notification.
-   */
-  comment: BasicComment
+    /**
+     * `comment` is an instance of `BasicComment` representing the comment associated with the thread notification.
+     */
+    comment: BasicComment;
 
-  /**
-   * `user` is an instance of `BasicUser` representing the user associated with the thread notification.
-   */
-  user: BasicUser
+    /**
+     * `user` is an instance of `BasicUser` representing the user associated with the thread notification.
+     */
+    user: BasicUser;
 }
 
 /**
@@ -87,4 +94,4 @@ export const ThreadNotificationSchema = `
   user {
     ${BasicUserSchema}
   }
-`
+`;

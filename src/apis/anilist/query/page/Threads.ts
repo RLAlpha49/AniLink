@@ -1,73 +1,73 @@
-import { APIWrapper } from '../../../../base/APIWrapper'
-import { sendRequest } from '../../../../base/RequestHandler'
-import { type ThreadResponse, ThreadSchema } from '../../interfaces/responses/query/Thread'
-import { ThreadSortMappings } from '../../types/Sort'
-import { validateVariables } from '../../../../base/ValidateVariables'
+import { APIWrapper } from "../../../../base/APIWrapper";
+import { sendRequest } from "../../../../base/RequestHandler";
+import { type ThreadResponse, ThreadSchema } from "../../interfaces/responses/query/Thread";
+import { ThreadSortMappings } from "../../types/Sort";
+import { validateVariables } from "../../../../base/ValidateVariables";
 
 /**
  * `ThreadsVariables` is an interface representing the variables for the `ThreadsQuery`.
  * It includes optional page, per page, id, user id, reply user id, subscribed, category id, media category id, search, id in, sort, and as html.
  */
 export interface ThreadsVariables {
-  /**
-   * `page` is a number representing the page number.
-   */
-  page?: number
+    /**
+     * `page` is a number representing the page number.
+     */
+    page?: number;
 
-  /**
-   * `perPage` is a number representing the number of items per page.
-   */
-  perPage?: number
+    /**
+     * `perPage` is a number representing the number of items per page.
+     */
+    perPage?: number;
 
-  /**
-   * `id` is a number representing the id of the thread.
-   */
-  id?: number
+    /**
+     * `id` is a number representing the id of the thread.
+     */
+    id?: number;
 
-  /**
-   * `userId` is a number representing the id of the user.
-   */
-  userId?: number
+    /**
+     * `userId` is a number representing the id of the user.
+     */
+    userId?: number;
 
-  /**
-   * `replyUserId` is a number representing the id of the reply user.
-   */
-  replyUserId?: number
+    /**
+     * `replyUserId` is a number representing the id of the reply user.
+     */
+    replyUserId?: number;
 
-  /**
-   * `subscribed` is a boolean representing whether the user is subscribed.
-   */
-  subscribed?: boolean
+    /**
+     * `subscribed` is a boolean representing whether the user is subscribed.
+     */
+    subscribed?: boolean;
 
-  /**
-   * `categoryId` is a number representing the id of the category.
-   */
-  categoryId?: number
+    /**
+     * `categoryId` is a number representing the id of the category.
+     */
+    categoryId?: number;
 
-  /**
-   * `mediaCategoryId` is a number representing the id of the media category.
-   */
-  mediaCategoryId?: number
+    /**
+     * `mediaCategoryId` is a number representing the id of the media category.
+     */
+    mediaCategoryId?: number;
 
-  /**
-   * `search` is a string representing the search term.
-   */
-  search?: string
+    /**
+     * `search` is a string representing the search term.
+     */
+    search?: string;
 
-  /**
-   * `id_in` is an array of numbers representing the ids of the threads that should be included.
-   */
-  id_in?: number[]
+    /**
+     * `id_in` is an array of numbers representing the ids of the threads that should be included.
+     */
+    id_in?: number[];
 
-  /**
-   * `sort` is an array of strings representing the sort order.
-   */
-  sort?: string[]
+    /**
+     * `sort` is an array of strings representing the sort order.
+     */
+    sort?: string[];
 
-  /**
-   * `asHtml` is a boolean representing whether to return the result as HTML.
-   */
-  asHtml?: boolean
+    /**
+     * `asHtml` is a boolean representing whether to return the result as HTML.
+     */
+    asHtml?: boolean;
 }
 
 /**
@@ -75,49 +75,49 @@ export interface ThreadsVariables {
  * It includes a method to get threads.
  */
 export class ThreadsQuery extends APIWrapper {
-  /**
-   * `authToken` is a string representing the authentication token.
-   */
-  private readonly authToken: string
+    /**
+     * `authToken` is a string representing the authentication token.
+     */
+    private readonly authToken: string;
 
-  /**
-   * Constructs a new `ThreadsQuery` instance.
-   *
-   * @param authToken - The authentication token.
-   */
-  constructor (authToken: string) {
-    super('https://graphql.anilist.co')
-    this.authToken = authToken
-  }
-
-  /**
-   * `threads` is a method that sends a query request to get threads.
-   *
-   * @param variables - The variables for the query.
-   * @returns The response from the query request.
-   */
-  async threads (variables: ThreadsVariables): Promise<ThreadResponse> {
-    if (!variables) {
-      throw new Error('At least one variable must be provided')
-    }
-    const variableTypeMappings = {
-      page: 'number',
-      perPage: 'number',
-      id: 'number',
-      userId: 'number',
-      replyUserId: 'number',
-      subscribed: 'boolean',
-      categoryId: 'number',
-      mediaCategoryId: 'number',
-      search: 'string',
-      id_in: 'number[]',
-      sort: ThreadSortMappings,
-      asHtml: 'boolean'
+    /**
+     * Constructs a new `ThreadsQuery` instance.
+     *
+     * @param authToken - The authentication token.
+     */
+    constructor(authToken: string) {
+        super("https://graphql.anilist.co");
+        this.authToken = authToken;
     }
 
-    validateVariables(variables, variableTypeMappings)
+    /**
+     * `threads` is a method that sends a query request to get threads.
+     *
+     * @param variables - The variables for the query.
+     * @returns The response from the query request.
+     */
+    async threads(variables: ThreadsVariables): Promise<ThreadResponse> {
+        if (!variables) {
+            throw new Error("At least one variable must be provided");
+        }
+        const variableTypeMappings = {
+            page: "number",
+            perPage: "number",
+            id: "number",
+            userId: "number",
+            replyUserId: "number",
+            subscribed: "boolean",
+            categoryId: "number",
+            mediaCategoryId: "number",
+            search: "string",
+            id_in: "number[]",
+            sort: ThreadSortMappings,
+            asHtml: "boolean",
+        };
 
-    const query = `
+        validateVariables(variables, variableTypeMappings);
+
+        const query = `
       query ($page: Int, $perPage: Int, $id: Int, $userId: Int, $replyUserId: Int, $subscribed: Boolean, $categoryId: Int, $mediaCategoryId: Int, $search: String, $id_in: [Int], $sort: [ThreadSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
           pageInfo {
@@ -132,9 +132,9 @@ export class ThreadsQuery extends APIWrapper {
           }
         }
       }
-    `
+    `;
 
-    const data = { query, variables }
-    return await sendRequest(this.baseURL, 'POST', data, this.authToken)
-  }
+        const data = { query, variables };
+        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+    }
 }

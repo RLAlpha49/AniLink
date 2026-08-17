@@ -1,97 +1,103 @@
-import { APIWrapper } from '../../../base/APIWrapper'
-import { sendRequest } from '../../../base/RequestHandler'
-import { type UserStaffNameLanguage, UserStaffNameLanguageMapping } from '../types/UserStaffNameLanguage'
-import { type UserTitleLanguage, UserTitleLanguageMapping } from '../types/UserTitleLanguage'
-import { validateVariables } from '../../../base/ValidateVariables'
-import { type NotificationOptions, NotificationOptionsMapping } from '../types/NotificationOptions'
-import { type MediaListOptions, MediaListOptionsMapping } from '../types/MediaListOptions'
-import { type DisabledListActivity, DisabledListActivityMapping } from '../types/DisabledListActivity'
-import { type ScoreFormat, ScoreFormatMapping } from '../types/Format'
+import { APIWrapper } from "../../../base/APIWrapper";
+import { sendRequest } from "../../../base/RequestHandler";
+import {
+    type UserStaffNameLanguage,
+    UserStaffNameLanguageMapping,
+} from "../types/UserStaffNameLanguage";
+import { type UserTitleLanguage, UserTitleLanguageMapping } from "../types/UserTitleLanguage";
+import { validateVariables } from "../../../base/ValidateVariables";
+import { type NotificationOptions, NotificationOptionsMapping } from "../types/NotificationOptions";
+import { type MediaListOptions, MediaListOptionsMapping } from "../types/MediaListOptions";
+import {
+    type DisabledListActivity,
+    DisabledListActivityMapping,
+} from "../types/DisabledListActivity";
+import { type ScoreFormat, ScoreFormatMapping } from "../types/Format";
 
 /**
  * `UpdateUserVariables` is an interface representing the variables for the `UpdateUserMutation`.
  * It includes optional fields for updating user details.
  */
 export interface UpdateUserVariables {
-  /**
-   * `about` is a string representing the updated about section of the user.
-   */
-  about?: string
+    /**
+     * `about` is a string representing the updated about section of the user.
+     */
+    about?: string;
 
-  /**
-   * `titleLanguage` is a `UserTitleLanguage` representing the updated title language preference of the user.
-   */
-  titleLanguage?: UserTitleLanguage
+    /**
+     * `titleLanguage` is a `UserTitleLanguage` representing the updated title language preference of the user.
+     */
+    titleLanguage?: UserTitleLanguage;
 
-  /**
-   * `displayAdultContent` is a boolean representing the updated preference of the user for displaying adult content.
-   */
-  displayAdultContent?: boolean
+    /**
+     * `displayAdultContent` is a boolean representing the updated preference of the user for displaying adult content.
+     */
+    displayAdultContent?: boolean;
 
-  /**
-   * `airingNotifications` is a boolean representing the updated preference of the user for receiving airing notifications.
-   */
-  airingNotifications?: boolean
+    /**
+     * `airingNotifications` is a boolean representing the updated preference of the user for receiving airing notifications.
+     */
+    airingNotifications?: boolean;
 
-  /**
-   * `scoreFormat` is a `ScoreFormat` representing the updated score format preference of the user.
-   */
-  scoreFormat?: ScoreFormat
+    /**
+     * `scoreFormat` is a `ScoreFormat` representing the updated score format preference of the user.
+     */
+    scoreFormat?: ScoreFormat;
 
-  /**
-   * `rowOrder` is a string representing the updated row order preference of the user.
-   */
-  rowOrder?: string
+    /**
+     * `rowOrder` is a string representing the updated row order preference of the user.
+     */
+    rowOrder?: string;
 
-  /**
-   * `profileColor` is a string representing the updated profile color preference of the user.
-   */
-  profileColor?: string
+    /**
+     * `profileColor` is a string representing the updated profile color preference of the user.
+     */
+    profileColor?: string;
 
-  /**
-   * `donatorBadge` is a string representing the updated donator badge of the user.
-   */
-  donatorBadge?: string
+    /**
+     * `donatorBadge` is a string representing the updated donator badge of the user.
+     */
+    donatorBadge?: string;
 
-  /**
-   * `notificationOptions` is an array of `NotificationOptions` representing the updated notification options of the user.
-   */
-  notificationOptions?: NotificationOptions[]
+    /**
+     * `notificationOptions` is an array of `NotificationOptions` representing the updated notification options of the user.
+     */
+    notificationOptions?: NotificationOptions[];
 
-  /**
-   * `timezone` is a string representing the updated timezone of the user.
-   */
-  timezone?: string
+    /**
+     * `timezone` is a string representing the updated timezone of the user.
+     */
+    timezone?: string;
 
-  /**
-   * `activityMergeTime` is a number representing the updated activity merge time of the user.
-   */
-  activityMergeTime?: number
+    /**
+     * `activityMergeTime` is a number representing the updated activity merge time of the user.
+     */
+    activityMergeTime?: number;
 
-  /**
-   * `animeListOptions` is a `MediaListOptions` representing the updated anime list options of the user.
-   */
-  animeListOptions?: MediaListOptions
+    /**
+     * `animeListOptions` is a `MediaListOptions` representing the updated anime list options of the user.
+     */
+    animeListOptions?: MediaListOptions;
 
-  /**
-   * `mangaListOptions` is a `MediaListOptions` representing the updated manga list options of the user.
-   */
-  mangaListOptions?: MediaListOptions
+    /**
+     * `mangaListOptions` is a `MediaListOptions` representing the updated manga list options of the user.
+     */
+    mangaListOptions?: MediaListOptions;
 
-  /**
-   * `staffNameLanguage` is a `UserStaffNameLanguage` representing the updated staff name language preference of the user.
-   */
-  staffNameLanguage?: UserStaffNameLanguage
+    /**
+     * `staffNameLanguage` is a `UserStaffNameLanguage` representing the updated staff name language preference of the user.
+     */
+    staffNameLanguage?: UserStaffNameLanguage;
 
-  /**
-   * `restrictMessagesToFollowing` is a boolean representing the updated preference of the user for restricting messages to following.
-   */
-  restrictMessagesToFollowing?: boolean
+    /**
+     * `restrictMessagesToFollowing` is a boolean representing the updated preference of the user for restricting messages to following.
+     */
+    restrictMessagesToFollowing?: boolean;
 
-  /**
-   * `disabledListActivity` is an array of `DisabledListActivity` representing the updated disabled list activity preferences of the user.
-   */
-  disabledListActivity?: DisabledListActivity[]
+    /**
+     * `disabledListActivity` is an array of `DisabledListActivity` representing the updated disabled list activity preferences of the user.
+     */
+    disabledListActivity?: DisabledListActivity[];
 }
 
 /**
@@ -99,220 +105,220 @@ export interface UpdateUserVariables {
  * It includes the id, name, about, avatar, banner image, is following, is follower, is blocked, bans, options, media list options, unread notification count, site url, donator tier, donator badge, moderator roles, created at, and updated at.
  */
 export interface UpdateUserResponse {
-  /**
-   * `id` is a number representing the id of the user.
-   */
-  id: number
-
-  /**
-   * `name` is a string representing the name of the user.
-   */
-  name: string
-
-  /**
-   * `about` is a string representing the about section of the user.
-   */
-  about: string
-
-  /**
-   * `avatar` is an object that includes the large and medium avatar of the user.
-   */
-  avatar: {
     /**
-     * `large` is a string representing the large avatar of the user.
+     * `id` is a number representing the id of the user.
      */
-    large: string
+    id: number;
 
     /**
-     * `medium` is a string representing the medium avatar of the user.
+     * `name` is a string representing the name of the user.
      */
-    medium: string
-  }
-
-  /**
-   * `bannerImage` is a string representing the banner image of the user.
-   */
-  bannerImage: string
-
-  /**
-   * `isFollowing` is a boolean representing whether the user is following.
-   */
-  isFollowing: boolean
-
-  /**
-   * `isFollower` is a boolean representing whether the user is a follower.
-   */
-  isFollower: boolean
-
-  /**
-   * `isBlocked` is a boolean representing whether the user is blocked.
-   */
-  isBlocked: boolean
-
-  /**
-   * `bans` is an array representing the bans of the user.
-   */
-  bans: any[]
-
-  /**
-   * `options` is an object that includes the title language, display adult content, airing notifications, profile color, notification options, timezone, activity merge time, staff name language, and restrict messages to following of the user.
-   */
-  options: {
-    /**
-     * `titleLanguage` is a string representing the title language of the user.
-     */
-    titleLanguage: string
+    name: string;
 
     /**
-     * `displayAdultContent` is a boolean representing whether the user displays adult content.
+     * `about` is a string representing the about section of the user.
      */
-    displayAdultContent: boolean
+    about: string;
 
     /**
-     * `airingNotifications` is a boolean representing whether the user has airing notifications enabled.
+     * `avatar` is an object that includes the large and medium avatar of the user.
      */
-    airingNotifications: boolean
+    avatar: {
+        /**
+         * `large` is a string representing the large avatar of the user.
+         */
+        large: string;
+
+        /**
+         * `medium` is a string representing the medium avatar of the user.
+         */
+        medium: string;
+    };
 
     /**
-     * `profileColor` is a string representing the profile color of the user.
+     * `bannerImage` is a string representing the banner image of the user.
      */
-    profileColor: string
+    bannerImage: string;
 
     /**
-     * `notificationOptions` is an array that includes the type and enabled status of the notification options of the user.
+     * `isFollowing` is a boolean representing whether the user is following.
      */
-    notificationOptions: Array<{
-      /**
-       * `type` is a string representing the type of the notification option.
-       */
-      type: string
-
-      /**
-       * `enabled` is a boolean representing whether the notification option is enabled.
-       */
-      enabled: boolean
-    }>
+    isFollowing: boolean;
 
     /**
-     * `timezone` is a string representing the timezone of the user.
+     * `isFollower` is a boolean representing whether the user is a follower.
      */
-    timezone: string
+    isFollower: boolean;
 
     /**
-     * `activityMergeTime` is a number representing the activity merge time of the user.
+     * `isBlocked` is a boolean representing whether the user is blocked.
      */
-    activityMergeTime: number
+    isBlocked: boolean;
 
     /**
-     * `staffNameLanguage` is a string representing the staff name language of the user.
+     * `bans` is an array representing the bans of the user.
      */
-    staffNameLanguage: string
+    bans: any[];
 
     /**
-     * `restrictMessagesToFollowing` is a boolean representing whether the user restricts messages to following.
+     * `options` is an object that includes the title language, display adult content, airing notifications, profile color, notification options, timezone, activity merge time, staff name language, and restrict messages to following of the user.
      */
-    restrictMessagesToFollowing: boolean
-  }
+    options: {
+        /**
+         * `titleLanguage` is a string representing the title language of the user.
+         */
+        titleLanguage: string;
 
-  /**
-   * `mediaListOptions` is an object that includes the score format, row order, anime list, and manga list of the user.
-   */
-  mediaListOptions: {
+        /**
+         * `displayAdultContent` is a boolean representing whether the user displays adult content.
+         */
+        displayAdultContent: boolean;
+
+        /**
+         * `airingNotifications` is a boolean representing whether the user has airing notifications enabled.
+         */
+        airingNotifications: boolean;
+
+        /**
+         * `profileColor` is a string representing the profile color of the user.
+         */
+        profileColor: string;
+
+        /**
+         * `notificationOptions` is an array that includes the type and enabled status of the notification options of the user.
+         */
+        notificationOptions: Array<{
+            /**
+             * `type` is a string representing the type of the notification option.
+             */
+            type: string;
+
+            /**
+             * `enabled` is a boolean representing whether the notification option is enabled.
+             */
+            enabled: boolean;
+        }>;
+
+        /**
+         * `timezone` is a string representing the timezone of the user.
+         */
+        timezone: string;
+
+        /**
+         * `activityMergeTime` is a number representing the activity merge time of the user.
+         */
+        activityMergeTime: number;
+
+        /**
+         * `staffNameLanguage` is a string representing the staff name language of the user.
+         */
+        staffNameLanguage: string;
+
+        /**
+         * `restrictMessagesToFollowing` is a boolean representing whether the user restricts messages to following.
+         */
+        restrictMessagesToFollowing: boolean;
+    };
+
     /**
-     * `scoreFormat` is a string representing the score format of the user.
+     * `mediaListOptions` is an object that includes the score format, row order, anime list, and manga list of the user.
      */
-    scoreFormat: string
+    mediaListOptions: {
+        /**
+         * `scoreFormat` is a string representing the score format of the user.
+         */
+        scoreFormat: string;
+
+        /**
+         * `rowOrder` is a string representing the row order of the user.
+         */
+        rowOrder: string;
+
+        /**
+         * `animeList` is an object that includes the section order, custom lists, advanced scoring, and advanced scoring enabled status of the anime list of the user.
+         */
+        animeList: {
+            /**
+             * `sectionOrder` is an array of strings representing the section order of the anime list of the user.
+             */
+            sectionOrder: string[];
+
+            /**
+             * `customLists` is an array of strings representing the custom lists of the anime list of the user.
+             */
+            customLists: string[];
+
+            /**
+             * `advancedScoring` is an array of strings representing the advanced scoring of the anime list of the user.
+             */
+            advancedScoring: string[];
+
+            /**
+             * `advancedScoringEnabled` is a boolean representing whether advanced scoring is enabled for the anime list of the user.
+             */
+            advancedScoringEnabled: boolean;
+        };
+
+        /**
+         * `mangaList` is an object that includes the section order, custom lists, advanced scoring, and advanced scoring enabled status of the manga list of the user.
+         */
+        mangaList: {
+            /**
+             * `sectionOrder` is an array of strings representing the section order of the manga list of the user.
+             */
+            sectionOrder: string[];
+
+            /**
+             * `customLists` is an array of strings representing the custom lists of the manga list of the user.
+             */
+            customLists: string[];
+
+            /**
+             * `advancedScoring` is an array of strings representing the advanced scoring of the manga list of the user.
+             */
+            advancedScoring: string[];
+
+            /**
+             * `advancedScoringEnabled` is a boolean representing whether advanced scoring is enabled for the manga list of the user.
+             */
+            advancedScoringEnabled: boolean;
+        };
+    };
 
     /**
-     * `rowOrder` is a string representing the row order of the user.
+     * `unreadNotificationCount` is a number representing the unread notification count of the user.
      */
-    rowOrder: string
+    unreadNotificationCount: number;
 
     /**
-     * `animeList` is an object that includes the section order, custom lists, advanced scoring, and advanced scoring enabled status of the anime list of the user.
+     * `siteUrl` is a string representing the site URL of the user.
      */
-    animeList: {
-      /**
-       * `sectionOrder` is an array of strings representing the section order of the anime list of the user.
-       */
-      sectionOrder: string[]
-
-      /**
-       * `customLists` is an array of strings representing the custom lists of the anime list of the user.
-       */
-      customLists: string[]
-
-      /**
-       * `advancedScoring` is an array of strings representing the advanced scoring of the anime list of the user.
-       */
-      advancedScoring: string[]
-
-      /**
-       * `advancedScoringEnabled` is a boolean representing whether advanced scoring is enabled for the anime list of the user.
-       */
-      advancedScoringEnabled: boolean
-    }
+    siteUrl: string;
 
     /**
-     * `mangaList` is an object that includes the section order, custom lists, advanced scoring, and advanced scoring enabled status of the manga list of the user.
+     * `donatorTier` is a number representing the donator tier of the user.
      */
-    mangaList: {
-      /**
-       * `sectionOrder` is an array of strings representing the section order of the manga list of the user.
-       */
-      sectionOrder: string[]
+    donatorTier: number;
 
-      /**
-       * `customLists` is an array of strings representing the custom lists of the manga list of the user.
-       */
-      customLists: string[]
+    /**
+     * `donatorBadge` is a string representing the donator badge of the user.
+     */
+    donatorBadge: string;
 
-      /**
-       * `advancedScoring` is an array of strings representing the advanced scoring of the manga list of the user.
-       */
-      advancedScoring: string[]
+    /**
+     * `moderatorRoles` is an array of strings representing the moderator roles of the user.
+     */
+    moderatorRoles: string[];
 
-      /**
-       * `advancedScoringEnabled` is a boolean representing whether advanced scoring is enabled for the manga list of the user.
-       */
-      advancedScoringEnabled: boolean
-    }
-  }
+    /**
+     * `createdAt` is a number representing when the user was created.
+     */
+    createdAt: number;
 
-  /**
-   * `unreadNotificationCount` is a number representing the unread notification count of the user.
-   */
-  unreadNotificationCount: number
-
-  /**
-   * `siteUrl` is a string representing the site URL of the user.
-   */
-  siteUrl: string
-
-  /**
-   * `donatorTier` is a number representing the donator tier of the user.
-   */
-  donatorTier: number
-
-  /**
-   * `donatorBadge` is a string representing the donator badge of the user.
-   */
-  donatorBadge: string
-
-  /**
-   * `moderatorRoles` is an array of strings representing the moderator roles of the user.
-   */
-  moderatorRoles: string[]
-
-  /**
-   * `createdAt` is a number representing when the user was created.
-   */
-  createdAt: number
-
-  /**
-   * `updatedAt` is a number representing when the user was last updated.
-   */
-  updatedAt: number
+    /**
+     * `updatedAt` is a number representing when the user was last updated.
+     */
+    updatedAt: number;
 }
 
 /**
@@ -320,54 +326,56 @@ export interface UpdateUserResponse {
  * It includes a method to update a user.
  */
 export class UpdateUserMutation extends APIWrapper {
-  /**
-   * `authToken` is a string representing the authentication token.
-   */
-  private readonly authToken: string
+    /**
+     * `authToken` is a string representing the authentication token.
+     */
+    private readonly authToken: string;
 
-  /**
-   * Constructs a new `UpdateUserMutation` instance.
-   *
-   * @param authToken - The authentication token.
-   */
-  constructor (authToken: string) {
-    super('https://graphql.anilist.co')
-    this.authToken = authToken
-  }
-
-  /**
-   * `updateUser` is a method that sends a mutation request to update a user.
-   *
-   * @param variables - An object of type `UpdateUserVariables` representing the variables for the mutation.
-   * @returns A Promise that resolves to an object of type `UpdateUserResponse`. This object includes the updated user details
-   * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-   */
-  async updateUser (variables: UpdateUserVariables): Promise<UpdateUserResponse> {
-    if (!this.authToken) {
-      throw new Error('UpdateUserMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument.')
-    }
-    const variableTypeMappings = {
-      about: 'string',
-      titleLanguage: UserTitleLanguageMapping,
-      displayAdultContent: 'boolean',
-      airingNotifications: 'boolean',
-      scoreFormat: ScoreFormatMapping,
-      rowOrder: 'string',
-      profileColor: 'string',
-      donatorBadge: 'string',
-      notificationOptions: NotificationOptionsMapping,
-      timezone: 'string',
-      activityMergeTime: 'number',
-      animeListOptions: MediaListOptionsMapping,
-      mangaListOptions: MediaListOptionsMapping,
-      staffNameLanguage: UserStaffNameLanguageMapping,
-      restrictMessagesToFollowing: 'boolean',
-      disabledListActivity: DisabledListActivityMapping
+    /**
+     * Constructs a new `UpdateUserMutation` instance.
+     *
+     * @param authToken - The authentication token.
+     */
+    constructor(authToken: string) {
+        super("https://graphql.anilist.co");
+        this.authToken = authToken;
     }
 
-    validateVariables(variables, variableTypeMappings)
+    /**
+     * `updateUser` is a method that sends a mutation request to update a user.
+     *
+     * @param variables - An object of type `UpdateUserVariables` representing the variables for the mutation.
+     * @returns A Promise that resolves to an object of type `UpdateUserResponse`. This object includes the updated user details
+     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     */
+    async updateUser(variables: UpdateUserVariables): Promise<UpdateUserResponse> {
+        if (!this.authToken) {
+            throw new Error(
+                "UpdateUserMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument."
+            );
+        }
+        const variableTypeMappings = {
+            about: "string",
+            titleLanguage: UserTitleLanguageMapping,
+            displayAdultContent: "boolean",
+            airingNotifications: "boolean",
+            scoreFormat: ScoreFormatMapping,
+            rowOrder: "string",
+            profileColor: "string",
+            donatorBadge: "string",
+            notificationOptions: NotificationOptionsMapping,
+            timezone: "string",
+            activityMergeTime: "number",
+            animeListOptions: MediaListOptionsMapping,
+            mangaListOptions: MediaListOptionsMapping,
+            staffNameLanguage: UserStaffNameLanguageMapping,
+            restrictMessagesToFollowing: "boolean",
+            disabledListActivity: DisabledListActivityMapping,
+        };
 
-    const mutation = `
+        validateVariables(variables, variableTypeMappings);
+
+        const mutation = `
       mutation ($about: String, $titleLanguage: UserTitleLanguage, $displayAdultContent: Boolean, $airingNotifications: Boolean, $scoreFormat: ScoreFormat, $rowOrder: String, $profileColor: String, $donatorBadge: String, $notificationOptions: [NotificationOptionInput], $timezone: String, $activityMergeTime: Int, $animeListOptions: MediaListOptionsInput, $mangaListOptions: MediaListOptionsInput, $staffNameLanguage: UserStaffNameLanguage, $restrictMessagesToFollowing: Boolean, $disabledListActivity: [ListActivityOptionInput]) {
         UpdateUser(about: $about, titleLanguage: $titleLanguage, displayAdultContent: $displayAdultContent, airingNotifications: $airingNotifications, scoreFormat: $scoreFormat, rowOrder: $rowOrder, profileColor: $profileColor, donatorBadge: $donatorBadge, notificationOptions: $notificationOptions, timezone: $timezone, activityMergeTime: $activityMergeTime, animeListOptions: $animeListOptions, mangaListOptions: $mangaListOptions, staffNameLanguage: $staffNameLanguage, restrictMessagesToFollowing: $restrictMessagesToFollowing, disabledListActivity: $disabledListActivity) {
           id
@@ -421,9 +429,9 @@ export class UpdateUserMutation extends APIWrapper {
           updatedAt
         }
       }
-    `
+    `;
 
-    const data = { query: mutation, variables }
-    return await sendRequest(this.baseURL, 'POST', data, this.authToken)
-  }
+        const data = { query: mutation, variables };
+        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+    }
 }
