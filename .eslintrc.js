@@ -1,5 +1,6 @@
 module.exports = {
-    extends: 'standard-with-typescript',
+    extends: ['standard-with-typescript', 'prettier'],
+    plugins: ['@typescript-eslint'],
     parserOptions: {
         project: './tsconfig.json'
     },
@@ -11,6 +12,6 @@ module.exports = {
         {
             extends: ['plugin:@typescript-eslint/disable-type-checked'],
             files: ['./**/*.ts']
-        },
+        }
     ],
 }
