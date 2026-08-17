@@ -26,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Generate documentation
-        run: npm run generate-docs
+        run: npm run docs:generate
 
       - name: Publish documentation branch
         uses: peaceiris/actions-gh-pages@v4
