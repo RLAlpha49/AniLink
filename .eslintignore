@@ -1,7 +1,0 @@
-node_modules/
-dist/
-docs/
-coverage/
-*.js/__tests__/*
-/docs/*
-/src/base/ValidateVariables.ts
