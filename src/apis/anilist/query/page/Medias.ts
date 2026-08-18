@@ -384,6 +384,9 @@ export interface MediasVariables {
  * It defines the `medias` method that returns a `MediaResponse`.
  */
 export class MediasQuery extends APIWrapper {
+    /**
+     * `authToken` is a string representing the authentication token.
+     */
     private readonly authToken: string;
 
     /**

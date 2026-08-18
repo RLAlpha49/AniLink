@@ -1,11 +1,11 @@
-/**
- * `UpdateFavouriteOrderVariables` is an interface that contains the variables that are required to update the order of the favourite anime/manga.
- */
 import { sendRequest } from "../../../base/RequestHandler";
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type Favourites, FavouritesSchema } from "../interfaces/responses/mutation/Favourites";
 import { validateVariables } from "../../../base/ValidateVariables";
 
+/**
+ * `UpdateFavouriteOrderVariables` is an interface that contains the variables that are required to update the order of the favourite anime/manga.
+ */
 export interface UpdateFavouriteOrderVariables {
     /**
      * `animeIds` is an array of numbers representing the ids of the anime to update the order of.
@@ -83,6 +83,7 @@ export class UpdateFavouriteOrderMutation extends APIWrapper {
      *
      * @param variables - An object of type `UpdateFavouriteOrderVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
+     * @throws Will throw an error if authentication is missing, validation fails, or the mutation request fails.
      */
     async updateFavouriteOrder(variables: UpdateFavouriteOrderVariables): Promise<Favourites> {
         if (!this.authToken) {
