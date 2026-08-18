@@ -50,6 +50,7 @@ const mutationCases: Array<[string, string, object, string]> = [
     ["delete activity reply", "deleteActivityReply", { id: 12345 }, "DeleteActivityReply"],
     ["toggle like", "toggleLike", { id: 725674043, type: "ACTIVITY" }, "ToggleLike"],
     ["toggle like v2", "toggleLikeV2", { id: 725674043, type: "ACTIVITY" }, "ToggleLike"],
+    ["rate review", "rateReview", { reviewId: 8008, rating: "UP_VOTE" }, "RateReview"],
     ["toggle follow", "toggleFollow", { userId: 542244 }, "ToggleFollow"],
     ["toggle favourite", "toggleFavourite", { studioId: 561 }, "ToggleFavourite"],
     [

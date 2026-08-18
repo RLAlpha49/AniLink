@@ -31,6 +31,7 @@ import { FollowingQuery, type FollowingVariables } from "./apis/anilist/query/Fo
 import { FollowingsQuery, type FollowingsVariables } from "./apis/anilist/query/page/Followings";
 import { GenreCollectionQuery } from "./apis/anilist/query/GenreCollection";
 import { LikesQuery, type LikesVariables } from "./apis/anilist/query/page/Likes";
+import { LikeQuery, type LikeVariables } from "./apis/anilist/query/Like";
 import { MarkdownQuery, type MarkdownVariables } from "./apis/anilist/query/Markdown";
 import {
     MediaListCollectionQuery,
@@ -160,6 +161,7 @@ import {
     type UpdateFavouriteOrderVariables,
 } from "./apis/anilist/mutation/UpdateFavouriteOrder";
 import { SaveReviewMutation, type SaveReviewVariables } from "./apis/anilist/mutation/SaveReview";
+import { RateReviewMutation, type RateReviewVariables } from "./apis/anilist/mutation/RateReview";
 import {
     DeleteReviewMutation,
     type DeleteReviewVariables,
@@ -213,6 +215,7 @@ export class AniLink {
          * Custom query or mutation.
          * @param query - The query for the request.
          * @param variables - The variables for the request. This parameter is optional.
+         * @returns {Promise<any>} A promise that resolves to the response from the request.
          *
          * @example
          * ```typescript
@@ -237,6 +240,7 @@ export class AniLink {
          * @property {Function} staff - Fetches staff data from the Anilist API.
          * @property {Function} mediaList - Fetches media list data from the Anilist API.
          * @property {Function} mediaListCollection - Fetches media list collection data from the Anilist API.
+         * @property {Function} like - Fetches users who liked a model from the Anilist API.
          * @property {Function} genreCollection - Fetches genre collection data from the Anilist API.
          * @property {Function} mediaTagCollection - Fetches media tag collection data from the Anilist API.
          * @property {Function} viewer - Fetches viewer data from the Anilist API.
@@ -384,6 +388,18 @@ export class AniLink {
             mediaListCollection: (
                 variables: MediaListCollectionVariables
             ) => Promise<MediaListCollectionResponse>;
+
+            /**
+             * Fetches users who liked a model from the Anilist API.
+             * @param {LikeVariables} variables - The variables for the query.
+             * @returns {Promise<BasicUser>} A promise that resolves to the users who liked the model.
+             *
+             * @example
+             * ```typescript
+             * await aniLink.anilist.query.like({likeableId: 723235883, type: 'ACTIVITY'});
+             * ```
+             */
+            like: (variables: LikeVariables) => Promise<BasicUser>;
 
             /**
              * Fetches genre collection data from the Anilist API.
@@ -858,6 +874,7 @@ export class AniLink {
          * @property {Function} toggleFavourite - Toggles a favorite on the Anilist API.
          * @property {Function} updateFavouriteOrder - Updates a favorite order on the Anilist API.
          * @property {Function} saveReview - Saves a review on the Anilist API.
+         * @property {Function} rateReview - Rates a review on the Anilist API.
          * @property {Function} deleteReview - Deletes a review on the Anilist API.
          * @property {Function} saveRecommendation - Saves a recommendation on the Anilist API.
          * @property {Function} saveThread - Saves a thread on the Anilist API.
@@ -1144,6 +1161,18 @@ export class AniLink {
             saveReview: (variables: SaveReviewVariables) => Promise<ReviewResponse>;
 
             /**
+             * Rates a review on the Anilist API.
+             * @param {RateReviewVariables} variables - The variables for the mutation.
+             * @returns {Promise<ReviewResponse>} A promise that resolves to the rated review.
+             *
+             * @example
+             * ```typescript
+             * await aniLink.anilist.mutation.rateReview({reviewId: 8008, rating: 'UP_VOTE'});
+             * ```
+             */
+            rateReview: (variables: RateReviewVariables) => Promise<ReviewResponse>;
+
+            /**
              * Deletes a review on the Anilist API.
              * @param {DeleteReviewVariables} variables - The variables for the mutation.
              * @returns {Promise<any>} A promise that resolves when the mutation is complete.
@@ -1283,6 +1312,7 @@ export class AniLink {
         const staffQueryInstance = new StaffQuery(authToken);
         const mediaListQueryInstance = new MediaListQuery(authToken);
         const mediaListCollectionQueryInstance = new MediaListCollectionQuery(authToken);
+        const likeQueryInstance = new LikeQuery(authToken);
         const genreCollectionQueryInstance = new GenreCollectionQuery(authToken);
         const mediaTagCollectionQueryInstance = new MediaTagCollectionQuery(authToken);
         const viewerQueryInstance = new ViewerQuery(authToken);
@@ -1345,6 +1375,7 @@ export class AniLink {
         const toggleFavouriteMutationInstance = new ToggleFavouriteMutation(authToken);
         const updateFavouriteOrderMutationInstance = new UpdateFavouriteOrderMutation(authToken);
         const saveReviewMutationInstance = new SaveReviewMutation(authToken);
+        const rateReviewMutationInstance = new RateReviewMutation(authToken);
         const deleteReviewMutationInstance = new DeleteReviewMutation(authToken);
         const saveRecommendationMutationInstance = new SaveRecommendationMutation(authToken);
         const saveThreadMutationInstance = new SaveThreadMutation(authToken);
@@ -1373,10 +1404,10 @@ export class AniLink {
                 character: characterQueryInstance.character.bind(characterQueryInstance),
                 staff: staffQueryInstance.staff.bind(staffQueryInstance),
                 mediaList: mediaListQueryInstance.mediaList.bind(mediaListQueryInstance),
-                mediaListCollection:
-                    mediaListCollectionQueryInstance.mediaListCollection.bind(
-                        mediaListQueryInstance
-                    ),
+                mediaListCollection: mediaListCollectionQueryInstance.mediaListCollection.bind(
+                    mediaListCollectionQueryInstance
+                ),
+                like: likeQueryInstance.like.bind(likeQueryInstance),
                 genreCollection: genreCollectionQueryInstance.genreCollection.bind(
                     genreCollectionQueryInstance
                 ),
@@ -1500,6 +1531,7 @@ export class AniLink {
                         updateFavouriteOrderMutationInstance
                     ),
                 saveReview: saveReviewMutationInstance.saveReview.bind(saveReviewMutationInstance),
+                rateReview: rateReviewMutationInstance.rateReview.bind(rateReviewMutationInstance),
                 deleteReview: deleteReviewMutationInstance.deleteReview.bind(
                     deleteReviewMutationInstance
                 ),

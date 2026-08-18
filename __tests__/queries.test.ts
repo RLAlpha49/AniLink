@@ -15,6 +15,7 @@ const queryCases: Array<[string, string, object | undefined, string]> = [
         { userId: 542244, type: "ANIME", status: "COMPLETED", chunk: 1, perChunk: 100 },
         "MediaListCollection",
     ],
+    ["likes for a model", "like", { likeableId: 723422275, type: "ACTIVITY" }, "Like"],
     ["genre collection", "genreCollection", undefined, "GenreCollection"],
     ["media tag collection", "mediaTagCollection", undefined, "MediaTagCollection"],
     ["viewer", "viewer", { isHTML: true }, "Viewer"],
