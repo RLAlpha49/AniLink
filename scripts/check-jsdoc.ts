@@ -1,8 +1,11 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 
+const ANILIST_API_REFERENCE_PREFIX = "https://docs.anilist.co/reference/";
+
 export interface JsdocIssue {
     file: string;
+    line: number;
     tag: string;
     message: string;
 }
@@ -71,6 +74,14 @@ export function checkAniLinkSource(source: string, file: string): JsdocIssue[] {
             "@example",
             `AniLink operation ${property[1]} must include an executable usage example`
         );
+        requireApiReference(
+            issues,
+            source,
+            file,
+            index,
+            documentation,
+            `AniLink operation ${property[1]}`
+        );
     }
 
     return issues;
@@ -91,12 +102,20 @@ function checkOperationDeclarations(source: string, file: string, issues: JsdocI
         const declaration = /^export (interface|class) ([A-Za-z]\w*)/.exec(trimmed);
         if (declaration) {
             const index = line.start + line.text.indexOf("export");
-            requireDocumentation(
+            const documentation = requireDocumentation(
                 issues,
                 source,
                 file,
                 index,
                 `Export ${declaration[2]} must have JSDoc`
+            );
+            requireApiReference(
+                issues,
+                source,
+                file,
+                index,
+                documentation,
+                `Export ${declaration[2]}`
             );
             checkingVariables =
                 declaration[1] === "interface" && declaration[2].endsWith("Variables");
@@ -208,6 +227,8 @@ function checkMethodDocumentation(
     );
     if (!documentation) return;
 
+    requireApiReference(issues, source, file, index, documentation, `Operation ${method[1]}`);
+
     requireTag(
         issues,
         source,
@@ -249,13 +270,14 @@ export function checkTypeSource(source: string, file: string): JsdocIssue[] {
         if (!declaration) continue;
 
         const index = line.start + line.text.indexOf("export");
-        requireDocumentation(
+        const documentation = requireDocumentation(
             issues,
             source,
             file,
             index,
             `Export ${declaration[2]} must have JSDoc`
         );
+        requireApiReference(issues, source, file, index, documentation, `Export ${declaration[2]}`);
     }
 
     return issues;
@@ -357,6 +379,30 @@ function requireTag(
 ): void {
     if (!documentation || !new RegExp(tag).test(documentation.text)) {
         issues.push(createIssue(source, file, index, tag.startsWith("@") ? tag : "JSDoc", message));
+    }
+}
+
+function requireApiReference(
+    issues: JsdocIssue[],
+    source: string,
+    file: string,
+    index: number,
+    documentation: DocumentationBlock | undefined,
+    subject: string
+): void {
+    if (!documentation) return;
+
+    const reference = /@see\s+(\S+)/.exec(documentation.text)?.[1];
+    if (!(reference?.startsWith(ANILIST_API_REFERENCE_PREFIX) ?? false)) {
+        issues.push(
+            createIssue(
+                source,
+                file,
+                index,
+                "@see",
+                `${subject} must link to the official AniList API reference`
+            )
+        );
     }
 }
 
