@@ -16,6 +16,8 @@ export function comparePackageToSchema(input: {
     const types = new Map(input.schema.__schema.types.map((type) => [type.name, type]));
     const discrepancies: Discrepancy[] = [];
     const implemented = new Set<string>();
+    const removedOperations = new Set<string>();
+    const deprecatedOperations = new Set<string>();
     const rootTypes = {
         query: input.schema.__schema.queryType?.name,
         mutation: input.schema.__schema.mutationType?.name,
@@ -25,7 +27,9 @@ export function comparePackageToSchema(input: {
         const rootTypeName = rootTypes[operation.kind];
         const rootType = rootTypeName ? types.get(rootTypeName) : undefined;
         const rootField = getField(rootType, operation.rootField);
+        const operationName = `${operation.kind}.${operation.rootField}`;
         if (!rootField) {
+            removedOperations.add(operationName);
             discrepancies.push({
                 severity: "error",
                 category: "removed-operation",
@@ -38,6 +42,17 @@ export function comparePackageToSchema(input: {
         }
 
         implemented.add(operation.rootField);
+        if (rootField.isDeprecated) {
+            deprecatedOperations.add(operationName);
+            discrepancies.push({
+                severity: "warning",
+                category: "deprecated-operation",
+                operation: operation.exportName,
+                sourcePath: operation.sourcePath,
+                apiValue: rootField.deprecationReason ?? "No deprecation reason provided",
+                message: `${operation.kind} field ${operation.rootField} is deprecated in AniList`,
+            });
+        }
         compareArguments(operation, rootField, discrepancies);
         compareSelection(operation, operation.selection, rootField.type, types, discrepancies);
         compareTypeScriptContracts(operation, input.contracts, discrepancies);
@@ -64,6 +79,8 @@ export function comparePackageToSchema(input: {
         discrepancies,
         implementedOperations: implemented.size,
         unimplementedOperations,
+        removedOperations: [...removedOperations],
+        deprecatedOperations: [...deprecatedOperations],
         warnings: discrepancies.filter((item) => item.severity === "warning"),
     };
 }

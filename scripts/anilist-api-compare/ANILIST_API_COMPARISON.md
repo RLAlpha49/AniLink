@@ -2,7 +2,7 @@
 
 This repository includes a development tool that compares AniLink's implemented AniList GraphQL operations with an AniList introspection schema.
 
-It checks query and mutation coverage, operation fields, arguments, variables, response selections, and selected TypeScript contracts. The reports identify API drift and operations that still need package support.
+It checks query and mutation coverage, operation fields, arguments, variables, response selections, and selected TypeScript contracts. The comparison works in both directions: it reports API operations that AniLink does not implement, and it reports package operations that are absent from the API schema. It also warns when a package operation is still present but deprecated. The reports identify API drift and operations that still need package support.
 
 ## Commands
 
@@ -32,6 +32,8 @@ The comparison writes:
 
 - `artifacts/anilist-api-compare/report.md`
 - `artifacts/anilist-api-compare/report.json`
+
+The report summary includes separate counts for unimplemented, removed, and deprecated operations. Use `--live` when checking for changes that are not yet reflected in the committed schema snapshot.
 
 ## Exit codes
 

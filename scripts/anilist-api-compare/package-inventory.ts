@@ -194,9 +194,7 @@ function extractFallbackMetadata(document: string): ReturnType<typeof extractOpe
         selection: [
             {
                 name: rootMatch[1],
-                arguments: [
-                    ...(rootMatch[2]?.matchAll(/([A-Za-z_][A-Za-z0-9_]*)\s*:/g) ?? []),
-                ].map(
+                arguments: [...(rootMatch[2]?.matchAll(/([A-Za-z_][A-Za-z0-9_]*)\s*:/g) ?? [])].map(
                     (match) => match[1]
                 ),
                 selection: [],

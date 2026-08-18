@@ -41,6 +41,8 @@ export interface ComparisonResult {
     discrepancies: Discrepancy[];
     implementedOperations: number;
     unimplementedOperations: string[];
+    removedOperations: string[];
+    deprecatedOperations: string[];
     warnings: Discrepancy[];
 }
 

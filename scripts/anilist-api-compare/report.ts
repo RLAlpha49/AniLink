@@ -12,6 +12,8 @@ export function renderMarkdown(result: ComparisonResult, metadata: ReportMetadat
         "",
         `- Implemented operations: ${result.implementedOperations}`,
         `- Unimplemented operations: ${result.unimplementedOperations.length}`,
+        `- Removed operations: ${result.removedOperations.length}`,
+        `- Deprecated operations: ${result.deprecatedOperations.length}`,
         `- Discrepancies: ${result.discrepancies.length}`,
         "",
     ];
@@ -23,15 +25,19 @@ export function renderMarkdown(result: ComparisonResult, metadata: ReportMetadat
 
     lines.push("## Discrepancies", "");
     for (const discrepancy of result.discrepancies) {
-        lines.push(`### ${discrepancy.severity}: ${discrepancy.category}`);
-        lines.push(`- Operation: ${discrepancy.operation ?? "n/a"}`);
-        lines.push(`- Source: ${discrepancy.sourcePath ?? "n/a"}`);
-        lines.push(`- ${discrepancy.message}`);
-        if (discrepancy.packageValue !== undefined)
-            lines.push(`- Package value: \`${JSON.stringify(discrepancy.packageValue)}\``);
-        if (discrepancy.apiValue !== undefined)
-            lines.push(`- API value: \`${JSON.stringify(discrepancy.apiValue)}\``);
-        lines.push("");
+        lines.push(
+            `### ${discrepancy.severity}: ${discrepancy.category}`,
+            `- Operation: ${discrepancy.operation ?? "n/a"}`,
+            `- Source: ${discrepancy.sourcePath ?? "n/a"}`,
+            `- ${discrepancy.message}`,
+            ...(discrepancy.packageValue !== undefined
+                ? [`- Package value: \`${JSON.stringify(discrepancy.packageValue)}\``]
+                : []),
+            ...(discrepancy.apiValue !== undefined
+                ? [`- API value: \`${JSON.stringify(discrepancy.apiValue)}\``]
+                : []),
+            ""
+        );
     }
     return `${lines.join("\n")}\n`;
 }
