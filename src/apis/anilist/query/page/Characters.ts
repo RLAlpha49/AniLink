@@ -1,9 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import {
-    type CharacterResponse,
-    CharacterSchema,
-} from "../../interfaces/responses/query/Character";
+import { CharacterSchema } from "../../interfaces/responses/query/Character";
+import { type CharactersPageResponse } from "../../interfaces/responses/page/Characters";
 import { CharacterSortMappings, MediaSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -109,7 +107,7 @@ export class CharactersQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async characters(variables: CharactersVariables): Promise<CharacterResponse> {
+    async characters(variables: CharactersVariables): Promise<CharactersPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be set");
         }

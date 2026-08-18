@@ -1,14 +1,25 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import { type ReviewResponse, ReviewSchema } from "../../interfaces/responses/query/Review";
+import { ReviewSchema } from "../../interfaces/responses/query/Review";
+import { type ReviewsPageResponse } from "../../interfaces/responses/page/Reviews";
 import { ReviewSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
 /**
  * `ReviewsVariables` is an interface representing the variables for the `ReviewsQuery`.
- * It includes optional id, media id, user id, media type, sort, and as html.
+ * It includes optional page, per page, id, media id, user id, media type, sort, and as html.
  */
 export interface ReviewsVariables {
+    /**
+     * `page` is a number representing the page number.
+     */
+    page?: number;
+
+    /**
+     * `perPage` is a number representing the number of items per page.
+     */
+    perPage?: number;
+
     /**
      * `id` is a number representing the id of the review.
      */
@@ -66,7 +77,7 @@ export class ReviewsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async reviews(variables: ReviewsVariables): Promise<ReviewResponse> {
+    async reviews(variables: ReviewsVariables): Promise<ReviewsPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be set");
         }

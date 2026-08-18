@@ -1,6 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import { type ThreadResponse, ThreadSchema } from "../../interfaces/responses/query/Thread";
+import { ThreadSchema } from "../../interfaces/responses/query/Thread";
+import { type ThreadsPageResponse } from "../../interfaces/responses/page/Threads";
 import { ThreadSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -96,7 +97,7 @@ export class ThreadsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async threads(variables: ThreadsVariables): Promise<ThreadResponse> {
+    async threads(variables: ThreadsVariables): Promise<ThreadsPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be provided");
         }

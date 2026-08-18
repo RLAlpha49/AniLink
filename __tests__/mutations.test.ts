@@ -25,13 +25,13 @@ const mutationCases: Array<[string, string, object, string]> = [
     [
         "save text activity",
         "saveTextActivity",
-        { id: 725254160, text: "testing" },
+        { id: 725254160, text: "testing", asHtml: true },
         "SaveTextActivity",
     ],
     [
         "save message activity",
         "saveMessageActivity",
-        { recipientId: 542244, message: "testing", private: true },
+        { recipientId: 542244, message: "testing", private: true, asMod: false },
         "SaveMessageActivity",
     ],
     ["delete activity", "deleteActivity", { id: 725254160 }, "DeleteActivity"],

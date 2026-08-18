@@ -1,9 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import {
-    type RecommendationResponse,
-    RecommendationSchema,
-} from "../../interfaces/responses/query/Recommendation";
+import { RecommendationSchema } from "../../interfaces/responses/query/Recommendation";
+import { type RecommendationsPageResponse } from "../../interfaces/responses/page/Recommendations";
 import { RecommendationSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -99,7 +97,9 @@ export class RecommendationsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async recommendations(variables: RecommendationsVariables): Promise<RecommendationResponse> {
+    async recommendations(
+        variables: RecommendationsVariables
+    ): Promise<RecommendationsPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be set");
         }

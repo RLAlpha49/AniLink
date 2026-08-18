@@ -1,9 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import {
-    type ThreadCommentResponse,
-    ThreadCommentSchema,
-} from "../../interfaces/responses/query/ThreadComment";
+import { ThreadCommentSchema } from "../../interfaces/responses/query/ThreadComment";
+import { type ThreadCommentsPageResponse } from "../../interfaces/responses/page/ThreadComments";
 import { ThreadSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -74,7 +72,7 @@ export class ThreadCommentsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async threadComments(variables: ThreadCommentsVariables): Promise<ThreadCommentResponse> {
+    async threadComments(variables: ThreadCommentsVariables): Promise<ThreadCommentsPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be provided");
         }

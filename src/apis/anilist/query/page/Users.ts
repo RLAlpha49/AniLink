@@ -1,6 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import { type UserResponse, UserSchema } from "../../interfaces/responses/query/User";
+import { UserSchema } from "../../interfaces/responses/query/User";
+import { type UsersPageResponse } from "../../interfaces/responses/page/Users";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -96,7 +97,7 @@ export class UsersQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async users(variables: UsersVariables): Promise<UserResponse> {
+    async users(variables: UsersVariables): Promise<UsersPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be provided");
         }

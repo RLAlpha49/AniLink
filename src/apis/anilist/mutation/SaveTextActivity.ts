@@ -5,7 +5,7 @@ import { type Activity, TextActivitySchema } from "../interfaces/Activity";
 
 /**
  * `SaveTextActivityMutation` is an interface representing the variables to save a text activity.
- * It includes the activity id, text, and locked status.
+ * It includes the activity id, text, locked status, and HTML output flag.
  */
 export interface SaveTextActivityVariables {
     /**
@@ -22,6 +22,11 @@ export interface SaveTextActivityVariables {
      * `locked` is a boolean representing whether the activity is locked.
      */
     locked?: boolean;
+
+    /**
+     * `asHtml` is a boolean representing whether the activity text is returned as HTML.
+     */
+    asHtml?: boolean;
 }
 
 /**

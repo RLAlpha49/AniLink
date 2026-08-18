@@ -1,9 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import {
-    type MediaResponse,
-    MediaWithRelationsSchema,
-} from "../../interfaces/responses/query/Media";
+import { MediaWithRelationsSchema } from "../../interfaces/responses/query/Media";
+import { type MediasPageResponse } from "../../interfaces/responses/page/Medias";
 import { FuzzyDateMappings } from "../../types/FuzzyDate";
 import { MediaSeasonMappings } from "../../types/Season";
 import { MediaTypeMappings } from "../../types/Type";
@@ -403,7 +401,7 @@ export class MediasQuery extends APIWrapper {
      * @param variables - A `MediasVariables` object representing the variables for the query.
      * @returns A `MediaResponse` object.
      */
-    async medias(variables: MediasVariables): Promise<MediaResponse> {
+    async medias(variables: MediasVariables): Promise<MediasPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be set");
         }

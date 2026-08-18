@@ -1,6 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import { type StaffResponse, StaffSchema } from "../../interfaces/responses/query/Staff";
+import { StaffSchema } from "../../interfaces/responses/query/Staff";
+import { type StaffsPageResponse } from "../../interfaces/responses/page/Staffs";
 import { CharacterSortMappings, MediaSortMappings, StaffSortMappings } from "../../types/Sort";
 import { MediaTypeMappings } from "../../types/Type";
 import { validateVariables } from "../../../../base/ValidateVariables";
@@ -147,7 +148,7 @@ export class StaffsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async staffs(variables: StaffsVariables): Promise<StaffResponse> {
+    async staffs(variables: StaffsVariables): Promise<StaffsPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be set");
         }

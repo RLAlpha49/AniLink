@@ -1,9 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import {
-    type NotificationResponse,
-    NotificationSchema,
-} from "../../interfaces/responses/query/Notification";
+import { NotificationSchema } from "../../interfaces/responses/query/Notification";
+import { type NotificationsPageResponse } from "../../interfaces/responses/page/Notifications";
 import { NotificationTypeMappings } from "../../types/Type";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -69,7 +67,7 @@ export class NotificationsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async notifications(variables: NotificationsVariables): Promise<NotificationResponse> {
+    async notifications(variables: NotificationsVariables): Promise<NotificationsPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be set");
         }

@@ -5,7 +5,7 @@ import { type Activity, MessageActivitySchema } from "../interfaces/Activity";
 
 /**
  * `SaveMessageActivityMutation` is an interface representing the variables to save a message activity.
- * It includes the activity id, message, recipient id, private, locked, and asHtml.
+ * It includes the activity id, message, recipient id, private, locked, asMod, and asHtml.
  */
 export interface SaveMessageActivityVariables {
     /**
@@ -32,6 +32,11 @@ export interface SaveMessageActivityVariables {
      * `locked` is a boolean representing whether the message is locked.
      */
     locked?: boolean;
+
+    /**
+     * `asMod` is a boolean representing whether the activity is saved as a moderator.
+     */
+    asMod?: boolean;
 
     /**
      * `asHtml` is a boolean representing whether the description in the return response is in HTML format.

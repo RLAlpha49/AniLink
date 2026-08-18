@@ -1,6 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import { type StudioResponse, StudioSchema } from "../../interfaces/responses/query/Studio";
+import { StudioSchema } from "../../interfaces/responses/query/Studio";
+import { type StudiosPageResponse } from "../../interfaces/responses/page/Studios";
 import { CharacterSortMappings, MediaSortMappings, StudioSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -166,7 +167,7 @@ export class StudiosQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async studios(variables: StudiosVariables): Promise<StudioResponse> {
+    async studios(variables: StudiosVariables): Promise<StudiosPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be provided");
         }

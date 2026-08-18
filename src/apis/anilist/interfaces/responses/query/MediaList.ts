@@ -117,7 +117,7 @@ export const MediaListSchema = `
   userId
   mediaId
   status
-  score (format: $ScoreFormat)
+  score (format: $scoreFormat)
   progress
   progressVolumes
   repeat

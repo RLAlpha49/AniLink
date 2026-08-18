@@ -1,9 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import {
-    type MediaTrendResponse,
-    MediaTrendSchema,
-} from "../../interfaces/responses/query/MediaTrend";
+import { MediaTrendSchema } from "../../interfaces/responses/query/MediaTrend";
+import { type MediaTrendsPageResponse } from "../../interfaces/responses/page/MediaTrends";
 import { MediaTrendSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -179,7 +177,7 @@ export class MediaTrendsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async mediaTrends(variables: MediaTrendsVariables): Promise<MediaTrendResponse> {
+    async mediaTrends(variables: MediaTrendsVariables): Promise<MediaTrendsPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be set");
         }

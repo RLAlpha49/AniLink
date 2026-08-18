@@ -1,6 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import { type UserResponse, UserSchema } from "../../interfaces/responses/query/User";
+import { UserSchema } from "../../interfaces/responses/query/User";
+import { type FollowersPageResponse } from "../../interfaces/responses/page/Followers";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -23,6 +24,11 @@ export interface FollowersVariables {
      * `userId` is a number representing the id of the user.
      */
     userId?: number;
+
+    /**
+     * `asHtml` is a boolean representing whether the response text is returned as HTML.
+     */
+    asHtml?: boolean;
 
     /**
      * `sort` is a string representing the sort order.
@@ -76,7 +82,7 @@ export class FollowersQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async followers(variables: FollowersVariables): Promise<UserResponse> {
+    async followers(variables: FollowersVariables): Promise<FollowersPageResponse> {
         if (!variables.userId) {
             throw new Error("userId is required");
         }
@@ -85,6 +91,7 @@ export class FollowersQuery extends APIWrapper {
             perPage: "number",
             userId: "number",
             sort: UserSortMappings,
+            asHtml: "boolean",
             animeStatLimit: "number",
             mangaStatLimit: "number",
             animeStatSort: UserStatisticSortMappings,

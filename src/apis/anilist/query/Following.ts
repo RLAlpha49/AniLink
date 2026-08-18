@@ -11,7 +11,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 
 /**
  * `FollowingVariables` is an interface representing the variables for the `FollowingQuery`.
- * It includes optional userId, sort, animeStatLimit, mangaStatLimit, animeStatSort, and mangaStatSort.
+ * It includes optional userId, sort, asHtml, animeStatLimit, mangaStatLimit, animeStatSort, and mangaStatSort.
  */
 export interface FollowingVariables {
     /**
@@ -23,6 +23,11 @@ export interface FollowingVariables {
      * `sort` is a string representing the sort order.
      */
     sort?: UserSort;
+
+    /**
+     * `asHtml` is a boolean representing whether the response text is returned as HTML.
+     */
+    asHtml?: boolean;
 
     /**
      * `animeStatLimit` is a number representing the limit for anime statistics.
@@ -78,6 +83,7 @@ export class FollowingQuery extends APIWrapper {
         const variableTypeMappings = {
             userId: "number",
             sort: UserSortMappings,
+            asHtml: "boolean",
             animeStatLimit: "number",
             mangaStatLimit: "number",
             animeStatSort: UserStatisticSortMappings,

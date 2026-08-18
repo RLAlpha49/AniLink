@@ -18,17 +18,21 @@ import {
     AiringSchedulesQuery,
     type AiringSchedulesVariables,
 } from "./apis/anilist/query/page/AiringSchedules";
+import { type AiringSchedulesPageResponse } from "./apis/anilist/interfaces/responses/page/AiringSchedules";
 import { AniChartUserQuery } from "./apis/anilist/query/AniChartUser";
 import { type AniChartUserResponse } from "./apis/anilist/interfaces/responses/query/AniChartUser";
 import { CharacterQuery, type CharacterVariables } from "./apis/anilist/query/Character";
 import { type CharacterResponse } from "./apis/anilist/interfaces/responses/query/Character";
 import { CharactersQuery, type CharactersVariables } from "./apis/anilist/query/page/Characters";
+import { type CharactersPageResponse } from "./apis/anilist/interfaces/responses/page/Characters";
 import { ExternalLinkSourceCollectionQuery } from "./apis/anilist/query/ExternalLinkSourceCollection";
 import { type ExternalLinkSourceCollectionResponse } from "./apis/anilist/interfaces/responses/query/ExternalLinkSourceCollection";
 import { FollowerQuery, type FollowerVariables } from "./apis/anilist/query/Follower";
 import { FollowersQuery, type FollowersVariables } from "./apis/anilist/query/page/Followers";
+import { type FollowersPageResponse } from "./apis/anilist/interfaces/responses/page/Followers";
 import { FollowingQuery, type FollowingVariables } from "./apis/anilist/query/Following";
 import { FollowingsQuery, type FollowingsVariables } from "./apis/anilist/query/page/Followings";
+import { type FollowingsPageResponse } from "./apis/anilist/interfaces/responses/page/Followings";
 import { GenreCollectionQuery } from "./apis/anilist/query/GenreCollection";
 import { LikesQuery, type LikesVariables } from "./apis/anilist/query/page/Likes";
 import { LikeQuery, type LikeVariables } from "./apis/anilist/query/Like";
@@ -41,6 +45,7 @@ import { type MediaListCollectionResponse } from "./apis/anilist/interfaces/resp
 import { MediaListQuery, type MediaListVariables } from "./apis/anilist/query/MediaList";
 import { type MediaListResponse } from "./apis/anilist/interfaces/responses/query/MediaList";
 import { MediaListsQuery, type MediaListsVariables } from "./apis/anilist/query/page/MediaLists";
+import { type MediaListsPageResponse } from "./apis/anilist/interfaces/responses/page/MediaLists";
 import { MediaQuery, type MediaVariables } from "./apis/anilist/query/Media";
 import { type MediaResponse } from "./apis/anilist/interfaces/responses/query/Media";
 import { MediaTagCollectionQuery } from "./apis/anilist/query/MediaTagCollection";
@@ -49,12 +54,15 @@ import { MediaTrendQuery, type MediaTrendVariables } from "./apis/anilist/query/
 import { type MediaTrendResponse } from "./apis/anilist/interfaces/responses/query/MediaTrend";
 import { MediaTrendsQuery, type MediaTrendsVariables } from "./apis/anilist/query/page/MediaTrends";
 import { MediasQuery, type MediasVariables } from "./apis/anilist/query/page/Medias";
+import { type MediasPageResponse } from "./apis/anilist/interfaces/responses/page/Medias";
+import { type MediaTrendsPageResponse } from "./apis/anilist/interfaces/responses/page/MediaTrends";
 import { NotificationQuery, type NotificationVariables } from "./apis/anilist/query/Notification";
 import { type NotificationResponse } from "./apis/anilist/interfaces/responses/query/Notification";
 import {
     NotificationsQuery,
     type NotificationsVariables,
 } from "./apis/anilist/query/page/Notifications";
+import { type NotificationsPageResponse } from "./apis/anilist/interfaces/responses/page/Notifications";
 import {
     RecommendationQuery,
     type RecommendationVariables,
@@ -64,9 +72,11 @@ import {
     RecommendationsQuery,
     type RecommendationsVariables,
 } from "./apis/anilist/query/page/Recommendations";
+import { type RecommendationsPageResponse } from "./apis/anilist/interfaces/responses/page/Recommendations";
 import { ReviewQuery, type ReviewVariables } from "./apis/anilist/query/Review";
 import { type ReviewResponse } from "./apis/anilist/interfaces/responses/query/Review";
 import { ReviewsQuery, type ReviewsVariables } from "./apis/anilist/query/page/Reviews";
+import { type ReviewsPageResponse } from "./apis/anilist/interfaces/responses/page/Reviews";
 import {
     SaveMediaListEntryMutation,
     type SaveMediaListEntryVariables,
@@ -76,9 +86,11 @@ import { type SiteStatisticsResponse } from "./apis/anilist/interfaces/responses
 import { StaffQuery, type StaffVariables } from "./apis/anilist/query/Staff";
 import { type StaffResponse } from "./apis/anilist/interfaces/responses/query/Staff";
 import { StaffsQuery, type StaffsVariables } from "./apis/anilist/query/page/Staffs";
+import { type StaffsPageResponse } from "./apis/anilist/interfaces/responses/page/Staffs";
 import { StudioQuery, type StudioVariables } from "./apis/anilist/query/Studio";
 import { type StudioResponse } from "./apis/anilist/interfaces/responses/query/Studio";
 import { StudiosQuery, type StudiosVariables } from "./apis/anilist/query/page/Studios";
+import { type StudiosPageResponse } from "./apis/anilist/interfaces/responses/page/Studios";
 import {
     ThreadCommentQuery,
     type ThreadCommentVariables,
@@ -88,9 +100,11 @@ import {
     ThreadCommentsQuery,
     type ThreadCommentsVariables,
 } from "./apis/anilist/query/page/ThreadCommments";
+import { type ThreadCommentsPageResponse } from "./apis/anilist/interfaces/responses/page/ThreadComments";
 import { ThreadQuery, type ThreadVariables } from "./apis/anilist/query/Thread";
 import { type ThreadResponse } from "./apis/anilist/interfaces/responses/query/Thread";
 import { ThreadsQuery, type ThreadsVariables } from "./apis/anilist/query/page/Threads";
+import { type ThreadsPageResponse } from "./apis/anilist/interfaces/responses/page/Threads";
 import {
     UpdateMediaListEntriesMutation,
     type UpdateMediaListEntriesVariables,
@@ -103,11 +117,13 @@ import {
 import { UserQuery, type UserVariables } from "./apis/anilist/query/User";
 import { type UserResponse } from "./apis/anilist/interfaces/responses/query/User";
 import { UsersQuery, type UsersVariables } from "./apis/anilist/query/page/Users";
+import { type UsersPageResponse } from "./apis/anilist/interfaces/responses/page/Users";
 import { ViewerQuery } from "./apis/anilist/query/Viewer";
 import {
     DeleteMediaListEntryMutation,
     type DeleteMediaListEntryVariables,
 } from "./apis/anilist/mutation/DeleteMediaListEntry";
+import { type DeleteMediaListEntryResponse } from "./apis/anilist/interfaces/responses/mutation/DeleteMediaListEntry";
 import {
     DeleteCustomListMutation,
     type DeleteCustomListVariables,
@@ -631,79 +647,79 @@ export class AniLink {
                 /**
                  * Fetches users data from the Anilist API.
                  * @param {UsersVariables} variables - The variables for the query.
-                 * @returns {Promise<UserResponse>} A promise that resolves to the users data.
+                 * @returns {Promise<UsersPageResponse>} A promise that resolves to the users data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.users({page: 1, perPage: 10});
                  * ```
                  */
-                users: (variables: UsersVariables) => Promise<UserResponse>;
+                users: (variables: UsersVariables) => Promise<UsersPageResponse>;
 
                 /**
                  * Fetches medias data from the Anilist API.
                  * @param {MediasVariables} variables - The variables for the query.
-                 * @returns {Promise<MediaResponse>} A promise that resolves to the medias data.
+                 * @returns {Promise<MediasPageResponse>} A promise that resolves to the medias data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.medias({page: 1, perPage: 10, type: 'ANIME'});
                  * ```
                  */
-                medias: (variables: MediasVariables) => Promise<MediaResponse>;
+                medias: (variables: MediasVariables) => Promise<MediasPageResponse>;
 
                 /**
                  * Fetches characters data from the Anilist API.
                  * @param {CharactersVariables} variables - The variables for the query.
-                 * @returns {Promise<CharacterResponse>} A promise that resolves to the characters data.
+                 * @returns {Promise<CharactersPageResponse>} A promise that resolves to the characters data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.characters({page: 1, perPage: 10});
                  * ```
                  */
-                characters: (variables: CharactersVariables) => Promise<CharacterResponse>;
+                characters: (variables: CharactersVariables) => Promise<CharactersPageResponse>;
 
                 /**
                  * Fetches staffs data from the Anilist API.
                  * @param {StaffsVariables} variables - The variables for the query.
-                 * @returns {Promise<StaffResponse>} A promise that resolves to the staffs data.
+                 * @returns {Promise<StaffsPageResponse>} A promise that resolves to the staffs data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.staffs({page: 1, perPage: 10});
                  * ```
                  */
-                staffs: (variables: StaffsVariables) => Promise<StaffResponse>;
+                staffs: (variables: StaffsVariables) => Promise<StaffsPageResponse>;
 
                 /**
                  * Fetches studios data from the Anilist API.
                  * @param {StudiosVariables} variables - The variables for the query.
-                 * @returns {Promise<StudioResponse>} A promise that resolves to the studios data.
+                 * @returns {Promise<StudiosPageResponse>} A promise that resolves to the studios data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.studios({page: 1, perPage: 10});
                  * ```
                  */
-                studios: (variables: StudiosVariables) => Promise<StudioResponse>;
+                studios: (variables: StudiosVariables) => Promise<StudiosPageResponse>;
 
                 /**
                  * Fetches media lists data from the Anilist API.
                  * @param {MediaListsVariables} variables - The variables for the query.
-                 * @returns {Promise<MediaListResponse>} A promise that resolves to the media lists data.
+                 * @returns {Promise<MediaListsPageResponse>} A promise that resolves to the media lists data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.mediaLists({page: 1, perPage: 10, userId: 542244});
                  * ```
                  */
-                mediaLists: (variables: MediaListsVariables) => Promise<MediaListResponse>;
+                mediaLists: (variables: MediaListsVariables) => Promise<MediaListsPageResponse>;
 
                 /**
                  * Fetches airing schedules data from the Anilist API.
                  * @param {AiringSchedulesVariables} variables - The variables for the query.
-                 * @returns {Promise<AiringScheduleResponse>} A promise that resolves to the airing schedules data.
+                 * @returns {Promise<AiringSchedulesPageResponse>} A promise that resolves to the airing schedules data and pagination metadata.
                  *
                  * @example
                  * ```typescript
@@ -712,12 +728,12 @@ export class AniLink {
                  */
                 airingSchedules: (
                     variables: AiringSchedulesVariables
-                ) => Promise<AiringScheduleResponse>;
+                ) => Promise<AiringSchedulesPageResponse>;
 
                 /**
                  * Fetches media trends data from the Anilist API.
                  * @param {MediaTrendsVariables} variables - The variables for the query.
-                 * @returns {Promise<MediaTrendResponse>} A promise that resolves to the media trends data.
+                 * @returns {Promise<MediaTrendsPageResponse>} A promise that resolves to the media trends data and pagination metadata.
                  *
                  * @example
                  * ```typescript
@@ -725,43 +741,45 @@ export class AniLink {
                  * ```
                  * Must be quering an airing anime. Returns error if not.
                  */
-                mediaTrends: (variables: MediaTrendsVariables) => Promise<MediaTrendResponse>;
+                mediaTrends: (variables: MediaTrendsVariables) => Promise<MediaTrendsPageResponse>;
 
                 /**
                  * Fetches notifications data from the Anilist API.
                  * @param {NotificationsVariables} variables - The variables for the query.
-                 * @returns {Promise<NotificationResponse>} A promise that resolves to the notifications data.\
+                 * @returns {Promise<NotificationsPageResponse>} A promise that resolves to the notifications data and pagination metadata.\
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.notifications({page: 1, perPage: 10});
                  * ```
                  */
-                notifications: (variables: NotificationsVariables) => Promise<NotificationResponse>;
+                notifications: (
+                    variables: NotificationsVariables
+                ) => Promise<NotificationsPageResponse>;
 
                 /**
                  * Fetches followers data from the Anilist API.
                  * @param {FollowersVariables} variables - The variables for the query.
-                 * @returns {Promise<UserResponse>} A promise that resolves to the followers data.
+                 * @returns {Promise<FollowersPageResponse>} A promise that resolves to the followers data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.followers({page: 1, perPage: 10, userId: 542244});
                  * ```
                  */
-                followers: (variables: FollowersVariables) => Promise<UserResponse>;
+                followers: (variables: FollowersVariables) => Promise<FollowersPageResponse>;
 
                 /**
                  * Fetches following data from the Anilist API.
                  * @param {FollowingsVariables} variables - The variables for the query.
-                 * @returns {Promise<UserResponse>} A promise that resolves to the following data.
+                 * @returns {Promise<FollowingsPageResponse>} A promise that resolves to the following data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.following({page: 1, perPage: 10, userId: 542244});
                  * ```
                  */
-                following: (variables: FollowingsVariables) => Promise<UserResponse>;
+                following: (variables: FollowingsVariables) => Promise<FollowingsPageResponse>;
 
                 /**
                  * Fetches activities data from the Anilist API.
@@ -790,19 +808,19 @@ export class AniLink {
                 /**
                  * Fetches threads data from the Anilist API.
                  * @param {ThreadsVariables} variables - The variables for the query.
-                 * @returns {Promise<ThreadResponse>} A promise that resolves to the threads data.
+                 * @returns {Promise<ThreadsPageResponse>} A promise that resolves to the threads data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.threads({page: 1, perPage: 10});
                  * ```
                  */
-                threads: (variables: ThreadsVariables) => Promise<ThreadResponse>;
+                threads: (variables: ThreadsVariables) => Promise<ThreadsPageResponse>;
 
                 /**
                  * Fetches thread comments data from the Anilist API.
                  * @param {ThreadCommentsVariables} variables - The variables for the query.
-                 * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the thread comments data.
+                 * @returns {Promise<ThreadCommentsPageResponse>} A promise that resolves to the thread comments data and pagination metadata.
                  *
                  * @example
                  * ```typescript
@@ -811,24 +829,24 @@ export class AniLink {
                  */
                 threadComments: (
                     variables: ThreadCommentsVariables
-                ) => Promise<ThreadCommentResponse>;
+                ) => Promise<ThreadCommentsPageResponse>;
 
                 /**
                  * Fetches reviews data from the Anilist API.
                  * @param {ReviewsVariables} variables - The variables for the query.
-                 * @returns {Promise<ReviewResponse>} A promise that resolves to the reviews data.
+                 * @returns {Promise<ReviewsPageResponse>} A promise that resolves to the reviews data and pagination metadata.
                  *
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.reviews({page: 1, perPage: 10, mediaId: 1});
                  * ```
                  */
-                reviews: (variables: ReviewsVariables) => Promise<ReviewResponse>;
+                reviews: (variables: ReviewsVariables) => Promise<ReviewsPageResponse>;
 
                 /**
                  * Fetches recommendations data from the Anilist API.
                  * @param {RecommendationsVariables} variables - The variables for the query.
-                 * @returns {Promise<RecommendationResponse>} A promise that resolves to the recommendations data.
+                 * @returns {Promise<RecommendationsPageResponse>} A promise that resolves to the recommendations data and pagination metadata.
                  *
                  * @example
                  * ```typescript
@@ -837,7 +855,7 @@ export class AniLink {
                  */
                 recommendations: (
                     variables: RecommendationsVariables
-                ) => Promise<RecommendationResponse>;
+                ) => Promise<RecommendationsPageResponse>;
 
                 /**
                  * Fetches likes data from the Anilist API.
@@ -953,7 +971,7 @@ export class AniLink {
             /**
              * Deletes a media list entry on the Anilist API.
              * @param {DeleteMediaListEntryVariables} variables - The variables for the mutation.
-             * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+             * @returns {Promise<DeleteMediaListEntryResponse>} A promise that resolves when the mutation is complete.
              *
              * @example
              * You cannot delete a media list entry without first fetching the entry's id. The entry's id is not the same as the mediaId. It is specific to each user and media.
@@ -971,7 +989,7 @@ export class AniLink {
              */
             deleteMediaListEntry: (
                 variables: DeleteMediaListEntryVariables
-            ) => Promise<MediaListResponse>;
+            ) => Promise<DeleteMediaListEntryResponse>;
 
             /**
              * Deletes a custom list on the Anilist API. There is no mutation specifically for creating a custom list. You can create a custom list through the `updateUser` mutation under the `animeListOptions` or `mangaListOptions` variables.

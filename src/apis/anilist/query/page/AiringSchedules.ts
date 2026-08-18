@@ -1,9 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { sendRequest } from "../../../../base/RequestHandler";
-import {
-    type AiringScheduleResponse,
-    AiringScheduleSchema,
-} from "../../interfaces/responses/query/AiringSchedule";
+import { AiringScheduleSchema } from "../../interfaces/responses/query/AiringSchedule";
+import { type AiringSchedulesPageResponse } from "../../interfaces/responses/page/AiringSchedules";
 import { AiringSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
 
@@ -149,7 +147,9 @@ export class AiringSchedulesQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      */
-    async airingSchedules(variables: AiringSchedulesVariables): Promise<AiringScheduleResponse> {
+    async airingSchedules(
+        variables: AiringSchedulesVariables
+    ): Promise<AiringSchedulesPageResponse> {
         if (!variables) {
             throw new Error("At least one variable must be set");
         }

@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
-import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
+import { type DeleteMediaListEntryResponse } from "../interfaces/responses/mutation/DeleteMediaListEntry";
 
 /**
  * `DeleteMediaListEntryMutation` is an interface representing the variables to delete a media list entry.
@@ -43,7 +43,7 @@ export class DeleteMediaListEntryMutation extends APIWrapper {
      *  */
     async deleteMediaListEntry(
         variables: DeleteMediaListEntryVariables
-    ): Promise<MediaListResponse> {
+    ): Promise<DeleteMediaListEntryResponse> {
         if (!this.authToken) {
             throw new Error(
                 "DeleteMediaListEntryMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument."
