@@ -3,6 +3,33 @@ import { join, relative, resolve } from "node:path";
 
 const ANILIST_API_REFERENCE_PREFIX = "https://docs.anilist.co/reference/";
 
+function isActualAniListApiReference(reference: string): boolean {
+    if (!reference.startsWith(ANILIST_API_REFERENCE_PREFIX)) {
+        return false;
+    }
+
+    let suffix = reference.slice(ANILIST_API_REFERENCE_PREFIX.length);
+    const queryIndex = suffix.indexOf("?");
+    const hashIndex = suffix.indexOf("#");
+    let fragmentIndex = -1;
+
+    if (queryIndex !== -1 && (hashIndex === -1 || queryIndex < hashIndex)) {
+        fragmentIndex = queryIndex;
+    } else if (hashIndex !== -1) {
+        fragmentIndex = hashIndex;
+    }
+
+    if (fragmentIndex !== -1) {
+        suffix = suffix.slice(0, fragmentIndex);
+    }
+
+    while (suffix.endsWith("/")) {
+        suffix = suffix.slice(0, -1);
+    }
+
+    return suffix.length > 0 && !suffix.includes(" ");
+}
+
 export interface JsdocIssue {
     file: string;
     line: number;
@@ -393,14 +420,14 @@ function requireApiReference(
     if (!documentation) return;
 
     const reference = /@see\s+(\S+)/.exec(documentation.text)?.[1];
-    if (!(reference?.startsWith(ANILIST_API_REFERENCE_PREFIX) ?? false)) {
+    if (!reference || !isActualAniListApiReference(reference)) {
         issues.push(
             createIssue(
                 source,
                 file,
                 index,
                 "@see",
-                `${subject} must link to the official AniList API reference`
+                `${subject} must link to an actual AniList API reference page`
             )
         );
     }
