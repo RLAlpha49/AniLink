@@ -17,6 +17,7 @@ import { type ScoreFormat, ScoreFormatMapping } from "../types/Format";
 /**
  * `UpdateUserVariables` is an interface representing the variables for the `UpdateUserMutation`.
  * It includes optional fields for updating user details.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface UpdateUserVariables {
     /**
@@ -103,6 +104,7 @@ export interface UpdateUserVariables {
 /**
  * `UpdateUserResponse` is an interface representing the response from an update user mutation.
  * It includes the id, name, about, avatar, banner image, is following, is follower, is blocked, bans, options, media list options, unread notification count, site url, donator tier, donator badge, moderator roles, created at, and updated at.
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface UpdateUserResponse {
     /**
@@ -324,6 +326,7 @@ export interface UpdateUserResponse {
 /**
  * `UpdateUserMutation` is a class representing a mutation to update a user.
  * It includes a method to update a user.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class UpdateUserMutation extends APIWrapper {
     /**
@@ -347,6 +350,7 @@ export class UpdateUserMutation extends APIWrapper {
      * @param variables - An object of type `UpdateUserVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to an object of type `UpdateUserResponse`. This object includes the updated user details
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @see https://docs.anilist.co/reference/mutation
      */
     async updateUser(variables: UpdateUserVariables): Promise<UpdateUserResponse> {
         if (!this.authToken) {

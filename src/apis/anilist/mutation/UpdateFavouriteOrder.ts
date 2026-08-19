@@ -5,6 +5,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 
 /**
  * `UpdateFavouriteOrderVariables` is an interface that contains the variables that are required to update the order of the favourite anime/manga.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface UpdateFavouriteOrderVariables {
     /**
@@ -61,6 +62,7 @@ export interface UpdateFavouriteOrderVariables {
 /**
  * `UpdateFavouriteOrderMutation` is a class that contains the method to update the order of the favourites.
  * It includes a method to update the order of the favourites.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class UpdateFavouriteOrderMutation extends APIWrapper {
     /**
@@ -84,6 +86,7 @@ export class UpdateFavouriteOrderMutation extends APIWrapper {
      * @param variables - An object of type `UpdateFavouriteOrderVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if authentication is missing, validation fails, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/mutation
      */
     async updateFavouriteOrder(variables: UpdateFavouriteOrderVariables): Promise<Favourites> {
         if (!this.authToken) {

@@ -4,6 +4,7 @@ import { type BasicUser, BasicUserSchema } from "../../Basic";
 /**
  * `ThreadResponse` is an interface representing the response from a thread query.
  * It includes the thread's id, title, body, userId, replyUserId, replyCommentId, replyCount, viewCount, isLocked status, isSticky status, isSubscribed status, likeCount, isLiked status, repliedAt, createdAt, updatedAt, user of type `BasicUser`, replyUser of type `BasicUser`, likes of type `BasicUser[]`, siteUrl, categories, and mediaCategories of type `MediaResponse[]`.
+ * @see https://docs.anilist.co/reference/object/thread
  */
 export interface ThreadResponse {
     /**
@@ -131,6 +132,7 @@ export interface ThreadResponse {
 /**
  * `ThreadSchema` is a constant representing the GraphQL schema for a thread query.
  * It includes the thread's id, title, body, userId, replyUserId, replyCommentId, replyCount, viewCount, isLocked status, isSticky status, isSubscribed status, likeCount, isLiked status, repliedAt, createdAt, updatedAt, user of type `BasicUser`, replyUser of type `BasicUser`, likes of type `BasicUser[]`, siteUrl, categories, and mediaCategories of type `MediaResponse[]`.
+ * @see https://docs.anilist.co/reference/object/thread
  */
 export const ThreadSchema = `
   id

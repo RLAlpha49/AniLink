@@ -11,6 +11,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `MediaListVariables` is an interface representing the variables for the `MediaListQuery`.
  * It includes optional parameters for querying media list data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface MediaListVariables {
     /**
@@ -157,6 +158,7 @@ export interface MediaListVariables {
 /**
  * `MediaListQuery` is a class representing a query for media list data.
  * It includes a method to send the media list query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class MediaListQuery extends APIWrapper {
     /**
@@ -179,6 +181,7 @@ export class MediaListQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async mediaList(variables: MediaListVariables): Promise<MediaListResponse> {
         if (!variables) {

@@ -10,6 +10,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `MediaTrendVariables` is an interface representing the variables for the `MediaTrendQuery`.
  * It includes optional parameters for querying media trend data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface MediaTrendVariables {
     /**
@@ -146,6 +147,7 @@ export interface MediaTrendVariables {
 /**
  * `MediaTrendQuery` is a class representing a query for media trend data.
  * It includes a method to send the media trend query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class MediaTrendQuery extends APIWrapper {
     /**
@@ -168,6 +170,7 @@ export class MediaTrendQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async mediaTrend(variables: MediaTrendVariables): Promise<MediaTrendResponse> {
         if (!variables) {

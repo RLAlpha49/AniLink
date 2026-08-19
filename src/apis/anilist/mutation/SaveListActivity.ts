@@ -6,6 +6,7 @@ import { type Activity, ListActivitySchema } from "../interfaces/Activity";
 /**
  * `SaveListActivityMutation` is an interface representing the variables to save a list activity.
  * It includes the `customList` and `type` variables of the list activity to save.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface SaveListActivityVariables {
     /**
@@ -27,6 +28,7 @@ export interface SaveListActivityVariables {
 /**
  * `SaveListActivityMutation` is a class representing a mutation to save a list activity.
  * It includes a method to save a list activity
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class SaveListActivityMutation extends APIWrapper {
     /**
@@ -50,7 +52,8 @@ export class SaveListActivityMutation extends APIWrapper {
      * @param variables - An object of type `SaveListActivityVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async saveListActivity(variables: SaveListActivityVariables): Promise<Activity> {
         if (!this.authToken) {
             throw new Error(

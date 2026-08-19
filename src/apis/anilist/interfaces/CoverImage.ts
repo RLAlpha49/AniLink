@@ -1,6 +1,7 @@
 /**
  * `CoverImage` is an interface representing a cover image.
  * It includes the extra large, large, medium size images and color each having their own properties.
+ * @see https://docs.anilist.co/reference/object/mediacoverimage
  */
 export interface CoverImage {
     /**
@@ -27,6 +28,7 @@ export interface CoverImage {
 /**
  * `CoverImageSchema` is a string representing the GraphQL schema for a cover image.
  * It includes the extra large, large, medium size images and color.
+ * @see https://docs.anilist.co/reference/object/mediacoverimage
  */
 export const CoverImageSchema = `
   coverImage {

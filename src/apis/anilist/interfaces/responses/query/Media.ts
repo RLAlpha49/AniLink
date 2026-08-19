@@ -15,6 +15,7 @@ import { ScoreDistributionSchema, StatusDistributionSchema } from "../../Distrib
 /**
  * `MediaResponse` is an interface representing the response from a media query.
  * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, relations, characters, staff, studios, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
+ * @see https://docs.anilist.co/reference/object/media
  */
 export interface MediaResponse {
     /**
@@ -484,6 +485,7 @@ export interface MediaResponse {
 /**
  * `MediaWithRelationsSchema` is a constant representing the GraphQL schema for a media query with relations.
  * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, relations, characters, staff, studios, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
+ * @see https://docs.anilist.co/reference/object/media
  */
 export const MediaWithRelationsSchema = `
   id
@@ -626,6 +628,7 @@ export const MediaWithRelationsSchema = `
 /**
  * `MediaSchema` is a constant representing the GraphQL schema for a media query.
  * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
+ * @see https://docs.anilist.co/reference/object/media
  */
 export const MediaSchema = `
   id

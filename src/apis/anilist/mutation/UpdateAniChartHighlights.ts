@@ -4,6 +4,7 @@ import { APIWrapper } from "../../../base/APIWrapper";
 
 /**
  * `UpdateAniChartHighlightsVariables` is an interface that contains the variables that are required to update the AniChart highlights.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface UpdateAniChartHighlightsVariables {
     /**
@@ -24,6 +25,7 @@ export interface UpdateAniChartHighlightsVariables {
 
 /**
  * `UpdateAniChartHighlightsMutation` is a class that represents a mutation to update the AniChart highlights.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class UpdateAniChartHighlightsMutation extends APIWrapper {
     /**
@@ -47,6 +49,7 @@ export class UpdateAniChartHighlightsMutation extends APIWrapper {
      * @param variables - An object of type `UpdateAniChartHighlightsVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @see https://docs.anilist.co/reference/mutation
      */
     async updateAniChartHighlights(variables: UpdateAniChartHighlightsVariables): Promise<any> {
         if (!this.authToken) {

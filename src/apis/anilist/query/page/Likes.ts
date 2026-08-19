@@ -7,6 +7,7 @@ import { type BasicUser, BasicUserSchema } from "../../interfaces/Basic";
 /**
  * `LikesVariables` is an interface representing the variables for the `LikesQuery`.
  * It includes optional likeable id, type, page, and per page.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface LikesVariables {
     /**
@@ -33,6 +34,7 @@ export interface LikesVariables {
 /**
  * `LikesQuery` is a class representing a query for likes.
  * It includes a method to get likes.
+ * @see https://docs.anilist.co/reference/query
  */
 export class LikesQuery extends APIWrapper {
     /**
@@ -55,6 +57,7 @@ export class LikesQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async likes(variables: LikesVariables): Promise<BasicUser> {
         if (!variables) {

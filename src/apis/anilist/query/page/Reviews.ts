@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `ReviewsVariables` is an interface representing the variables for the `ReviewsQuery`.
  * It includes optional page, per page, id, media id, user id, media type, sort, and as html.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ReviewsVariables {
     /**
@@ -54,6 +55,7 @@ export interface ReviewsVariables {
 /**
  * `ReviewsQuery` is a class representing a query for reviews.
  * It includes a method to get reviews.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ReviewsQuery extends APIWrapper {
     /**
@@ -76,6 +78,7 @@ export class ReviewsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async reviews(variables: ReviewsVariables): Promise<ReviewsPageResponse> {
         if (!variables) {

@@ -1,6 +1,7 @@
 /**
  * `Distribution` is an interface representing a distribution.
  * It includes the status and amount each having their own properties.
+ * @see https://docs.anilist.co/reference/object/statusdistribution
  */
 export interface Distribution {
     /**
@@ -17,6 +18,7 @@ export interface Distribution {
 /**
  * `ScoreDistribution` is an interface representing the score distribution of a media.
  * It includes the score and the amount each having their own properties.
+ * @see https://docs.anilist.co/reference/object/scoredistribution
  */
 export interface ScoreDistribution {
     /**
@@ -33,6 +35,7 @@ export interface ScoreDistribution {
 /**
  * `ScoreDistributionSchema` is a string representing the GraphQL schema for a score distribution.
  * It includes the score and the amount.
+ * @see https://docs.anilist.co/reference/object/scoredistribution
  */
 export const ScoreDistributionSchema = `
   scoreDistribution {
@@ -44,6 +47,7 @@ export const ScoreDistributionSchema = `
 /**
  * `StatusDistribution` is an interface representing the distribution of statuses.
  * It includes the status and amount each having their own properties.
+ * @see https://docs.anilist.co/reference/object/statusdistribution
  */
 export interface StatusDistribution {
     /**
@@ -60,6 +64,7 @@ export interface StatusDistribution {
 /**
  * `StatusDistributionSchema` is a string representing the GraphQL schema for a status distribution.
  * It includes the status and amount.
+ * @see https://docs.anilist.co/reference/object/statusdistribution
  */
 export const StatusDistributionSchema = `
   statusDistribution {

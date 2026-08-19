@@ -6,6 +6,7 @@ import { type ActivityReply, ActivityReplySchema } from "../interfaces/Activity"
 /**
  * `SaveActivityReplyMutation` is an interface representing the variables to save an activity reply.
  * It includes the id of the activity, the activity id, the text of the activity reply, the locked status of the activity reply, and the status of the activity reply.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface SaveActivityReplyVariables {
     /**
@@ -37,6 +38,7 @@ export interface SaveActivityReplyVariables {
 /**
  * `SaveActivityReplyMutation` is a class representing a mutation to save an activity reply.
  * It includes a method to save an activity reply
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class SaveActivityReplyMutation extends APIWrapper {
     /**
@@ -60,7 +62,8 @@ export class SaveActivityReplyMutation extends APIWrapper {
      * @param variables - An object of type `SaveActivityReplyVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async saveActivityReply(variables: SaveActivityReplyVariables): Promise<ActivityReply> {
         if (!this.authToken) {
             throw new Error(

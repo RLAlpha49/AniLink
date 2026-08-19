@@ -13,6 +13,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `SaveRecommendationVariables` is an interface that contains the variables that are required to save a recommendation.
  * It includes the media ID, media recommendation ID, and rating.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface SaveRecommendationVariables {
     /**
@@ -39,6 +40,7 @@ export interface SaveRecommendationVariables {
 /**
  * `SaveRecommendationMutation` is a class representing a mutation to save a recommendation.
  * It includes a method to save a recommendation.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class SaveRecommendationMutation extends APIWrapper {
     /**
@@ -62,6 +64,7 @@ export class SaveRecommendationMutation extends APIWrapper {
      * @param variables - An object of type `SaveRecommendationVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @see https://docs.anilist.co/reference/mutation
      */
     async saveRecommendation(
         variables: SaveRecommendationVariables

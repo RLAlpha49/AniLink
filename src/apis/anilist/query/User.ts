@@ -12,6 +12,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `UserVariables` is an interface representing the variables for the `UserQuery`.
  * It includes optional parameters for querying user data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface UserVariables {
     /**
@@ -68,6 +69,7 @@ export interface UserVariables {
 /**
  * `UserQuery` is a class representing a query for user data.
  * It includes a method to send the user query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class UserQuery extends APIWrapper {
     /**
@@ -90,6 +92,7 @@ export class UserQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async user(variables: UserVariables): Promise<UserResponse> {
         if (!variables) {

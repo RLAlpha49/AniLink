@@ -6,6 +6,7 @@ import { type Activity, TextActivitySchema } from "../interfaces/Activity";
 /**
  * `SaveTextActivityMutation` is an interface representing the variables to save a text activity.
  * It includes the activity id, text, locked status, and HTML output flag.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface SaveTextActivityVariables {
     /**
@@ -32,6 +33,7 @@ export interface SaveTextActivityVariables {
 /**
  * `SaveTextActivityMutation` is a class representing a mutation to save a text activity.
  * It includes a method to save a text activity
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class SaveTextActivityMutation extends APIWrapper {
     /**
@@ -55,7 +57,8 @@ export class SaveTextActivityMutation extends APIWrapper {
      * @param variables - An object of type `SaveTextActivityVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async saveTextActivity(variables: SaveTextActivityVariables): Promise<Activity> {
         if (!this.authToken) {
             throw new Error(

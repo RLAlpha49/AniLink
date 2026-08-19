@@ -5,6 +5,7 @@ import { type Studio } from "./Studio";
 /**
  * `Favoured` is an interface representing a favoured entity.
  * It includes the genre, amount, meanScore, timeWatched, tag, staff, studio, year, and format each having their own properties.
+ * @see https://docs.anilist.co/reference/object/favourites
  */
 export interface Favoured {
     /**

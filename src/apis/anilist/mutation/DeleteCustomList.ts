@@ -6,6 +6,7 @@ import { type MediaType, MediaTypeMappings } from "../types/Type";
 /**
  * `DeleteCustomListMutation` is an interface representing the variables to delete a custom list.
  * It includes the `customList` and `type` variables of the custom list to delete.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface DeleteCustomListVariables {
     /**
@@ -22,6 +23,7 @@ export interface DeleteCustomListVariables {
 /**
  * `DeleteCustomListMutation` is a class representing a mutation to delete a custom list.
  * It includes a method to delete a custom list
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class DeleteCustomListMutation extends APIWrapper {
     /**
@@ -45,7 +47,8 @@ export class DeleteCustomListMutation extends APIWrapper {
      * @param variables - An object of type `DeleteCustomListVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async deleteCustomList(variables: DeleteCustomListVariables): Promise<any> {
         if (!this.authToken) {
             throw new Error(

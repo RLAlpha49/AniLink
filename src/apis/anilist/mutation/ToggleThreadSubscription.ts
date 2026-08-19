@@ -6,6 +6,7 @@ import { type ThreadResponse, ThreadSchema } from "../interfaces/responses/query
 /**
  * `ToggleThreadSubscriptionVariables` is an interface representing the variables to subscribe to a thread.
  * It includes threadId and subscribe.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface ToggleThreadSubscriptionVariables {
     /**
@@ -27,6 +28,7 @@ export interface ToggleThreadSubscriptionVariables {
 /**
  * `ToggleThreadSubscriptionMutation` is a class representing a mutation to subscribe to a thread.
  * It includes a method to subscribe to a thread
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class ToggleThreadSubscriptionMutation extends APIWrapper {
     /**
@@ -50,7 +52,8 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
      * @param variables - An object of type `ToggleThreadSubscriptionVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async toggleThreadSubscription(
         variables: ToggleThreadSubscriptionVariables
     ): Promise<ThreadResponse> {

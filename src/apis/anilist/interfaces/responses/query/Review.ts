@@ -5,6 +5,7 @@ import { type BasicUser, BasicUserSchema } from "../../Basic";
 /**
  * `ReviewResponse` is an interface representing the response from a review query.
  * It includes the id, mediaId, userId, mediaType, summary, body, rating, ratingAmount, score, private status, siteUrl, createdAt, updatedAt, user of type `BasicUser`, and media of type `Media`.
+ * @see https://docs.anilist.co/reference/object/review
  */
 export interface ReviewResponse {
     /**
@@ -86,6 +87,7 @@ export interface ReviewResponse {
 /**
  * `ReviewSchema` is a constant representing the GraphQL schema for a review query.
  * It includes the id, mediaId, userId, mediaType, summary, body, rating, ratingAmount, score, private status, siteUrl, createdAt, updatedAt, user of type `BasicUser`, and media of type `Media`.
+ * @see https://docs.anilist.co/reference/object/review
  */
 export const ReviewSchema = `
   id

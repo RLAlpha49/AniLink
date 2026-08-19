@@ -6,6 +6,7 @@ import { type ActivityReply, ActivityReplySchema } from "../interfaces/Activity"
 /**
  * `ActivityReplyVariables` is an interface representing the variables for the `ActivityReplyQuery`.
  * It includes optional id, activityId, and asHtml.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ActivityReplyVariables {
     /**
@@ -27,6 +28,7 @@ export interface ActivityReplyVariables {
 /**
  * `ActivityReplyQuery` is a class representing a query for activity replies.
  * It includes a method to get activity replies.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ActivityReplyQuery extends APIWrapper {
     /**
@@ -49,6 +51,7 @@ export class ActivityReplyQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async activityReply(variables: ActivityReplyVariables): Promise<ActivityReply> {
         if (!variables.id) {

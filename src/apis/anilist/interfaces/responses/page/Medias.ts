@@ -3,6 +3,7 @@ import { type PageInfo } from "./PageInfo";
 
 /**
  * `MediasPageResponse` is the paginated response from a medias query.
+ * @see https://docs.anilist.co/reference/object/media
  */
 export interface MediasPageResponse {
     /** Pagination metadata for the response. */

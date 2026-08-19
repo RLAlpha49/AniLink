@@ -1,6 +1,7 @@
 /**
  * `Ranking` is an interface representing the ranking of a media.
  * It includes the id, rank, type, format, year, season, all-time status, and context each having their own properties.
+ * @see https://docs.anilist.co/reference/object/mediarank
  */
 export interface Ranking {
     /**
@@ -47,6 +48,7 @@ export interface Ranking {
 /**
  * `RankingSchema` is a string representing the GraphQL schema for a ranking.
  * It includes the id, rank, type, format, year, season, all-time status, and context.
+ * @see https://docs.anilist.co/reference/object/mediarank
  */
 export const RankingSchema = `
   rankings {

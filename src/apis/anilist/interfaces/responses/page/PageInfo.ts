@@ -1,5 +1,6 @@
 /**
  * `PageInfo` is pagination metadata returned by an AniList page query.
+ * @see https://docs.anilist.co/reference/object/pageinfo
  */
 export interface PageInfo {
     /** Total number of items across all pages. */

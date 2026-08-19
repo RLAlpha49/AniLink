@@ -6,6 +6,7 @@ import { type Title, TitleSchema } from "../../Title";
 /**
  * `StaffResponse` is an interface representing the response from a staff query.
  * It includes the staff's id, name, language, image, description, primary occupations, gender, date of birth, date of death, age, years active, hometown, blood type, favourite status, favourite blocked status, site url, staff media, characters, character media, staff, submitter, submission status, submission notes, favourites, and mod notes.
+ * @see https://docs.anilist.co/reference/object/staff
  */
 export interface StaffResponse {
     /**
@@ -198,6 +199,7 @@ export interface StaffResponse {
 /**
  * `StaffSchema` is a constant representing the GraphQL schema for a staff query.
  * It includes the staff's id, name, language, image, description, primary occupations, gender, date of birth, date of death, age, years active, hometown, blood type, favourite status, favourite blocked status, site url, staff media, characters, character media, staff, submitter, submission status, submission notes, favourites, and mod notes.
+ * @see https://docs.anilist.co/reference/object/staff
  */
 export const StaffSchema = `
   id

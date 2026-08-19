@@ -7,6 +7,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `ViewerVariables` is an interface representing the variables for the `ViewerQuery`.
  * It includes optional parameters for querying viewer data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ViewerVariables {
     /**
@@ -38,6 +39,7 @@ export interface ViewerVariables {
 /**
  * `ViewerQuery` is a class representing a query for viewer data.
  * It includes a method to send the viewer query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ViewerQuery extends APIWrapper {
     /**
@@ -60,6 +62,7 @@ export class ViewerQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async viewer(variables: ViewerVariables = {}): Promise<UserResponse> {
         if (!this.authToken) {

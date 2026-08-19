@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `AiringSchedulesVariables` is an interface representing the variables for the `AiringSchedulesQuery`.
  * It includes optional page, per page, id, media id, episode, airing at, not yet aired, id not, id in, id not in, media id not, media id in, media id not in, episode not, episode in, episode not in, episode greater, episode lesser, airing at greater, airing at lesser, sort, and as html.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface AiringSchedulesVariables {
     /**
@@ -124,6 +125,7 @@ export interface AiringSchedulesVariables {
 /**
  * `AiringSchedulesQuery` is a class representing a query for airing schedules.
  * It includes a method to get airing schedules.
+ * @see https://docs.anilist.co/reference/query
  */
 export class AiringSchedulesQuery extends APIWrapper {
     /**
@@ -146,6 +148,7 @@ export class AiringSchedulesQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async airingSchedules(
         variables: AiringSchedulesVariables

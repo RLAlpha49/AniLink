@@ -6,6 +6,7 @@ import { BasicUserSchema } from "../interfaces/Basic";
 /**
  * `AniChartUserQuery` is a class representing a query for AniChart users.
  * It includes a method to get AniChart users.
+ * @see https://docs.anilist.co/reference/query
  */
 export class AniChartUserQuery extends APIWrapper {
     /**
@@ -27,6 +28,7 @@ export class AniChartUserQuery extends APIWrapper {
      * `aniChartUser` is a method that sends a query request to get AniChart users.
      *
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async aniChartUser(): Promise<AniChartUserResponse> {
         if (!this.authToken) {

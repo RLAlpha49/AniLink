@@ -4,6 +4,7 @@ import { TitleSchema } from "./Title";
 /**
  * `ActivityReply` is an interface representing a reply to an activity.
  * It includes the id of the reply, the user id, the activity id, the text of the reply, the like count, the like status, the creation date, the user details, and the likes details.
+ * @see https://docs.anilist.co/reference/object/activityreply
  */
 export interface ActivityReply {
     /**
@@ -55,6 +56,7 @@ export interface ActivityReply {
 /**
  * `ActivityReplySchema` is a constant representing the GraphQL schema for an activity reply query.
  * It includes the id of the reply, the user id, the activity id, the text of the reply, the like count, the like status, the creation date, the user details, and the likes details.
+ * @see https://docs.anilist.co/reference/object/activityreply
  */
 export const ActivityReplySchema = `
   id
@@ -75,6 +77,7 @@ export const ActivityReplySchema = `
 /**
  * `Activity` is an interface representing the response from an activity query.
  * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties.
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export interface Activity {
     /**
@@ -590,6 +593,7 @@ export interface Activity {
 /**
  * `ActivitySchema` is a constant representing the GraphQL schema for an activity query.
  * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties.
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export const ActivitySchema = `
   activity {
@@ -808,6 +812,7 @@ export const ActivitySchemaV2 = `
 /**
  * `ActivityWithRepliesSchema` is a constant representing the GraphQL schema for an activity query with replies.
  * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties and replies.
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export const ActivityWithRepliesSchema = `
   ... on TextActivity {
@@ -896,6 +901,7 @@ export const ActivityWithRepliesSchema = `
 /**
  * `TextActivity` is an object representing a text activity.
  * It includes the id, user id, type, reply count, text, site url, lock status, subscription status, like count, like status, pin status, creation date, user details, replies, and likes.
+ * @see https://docs.anilist.co/reference/object/textactivity
  */
 export const TextActivitySchema = `
   id
@@ -924,6 +930,7 @@ export const TextActivitySchema = `
 /**
  * `ListActivitySchema` is an object representing a list activity.
  * It includes the id, user id, type, reply count, status, progress, lock status, subscription status, like count, like status, pin status, site url, creation date, media details, user details, replies, and likes.
+ * @see https://docs.anilist.co/reference/object/listactivity
  */
 export const ListActivitySchema = `
   id
@@ -960,6 +967,7 @@ export const ListActivitySchema = `
 /**
  * `MessageActivitySchema` is an object representing a message activity.
  * It includes the id, recipient id, messenger id, type, reply count, message, lock status, subscription status, like count, like status, privacy status, site url, creation date, recipient details, messenger details, replies, and likes.
+ * @see https://docs.anilist.co/reference/object/messageactivity
  */
 export const MessageActivitySchema = `
   id
@@ -992,6 +1000,7 @@ export const MessageActivitySchema = `
 /**
  * `ActivityHistory` is an interface representing the history of an activity.
  * It includes the date of the activity, the amount of the activity, and the level of the activity.
+ * @see https://docs.anilist.co/reference/object/useractivityhistory
  */
 export interface ActivityHistory {
     /**
@@ -1016,6 +1025,7 @@ export interface ActivityHistory {
 /**
  * `ActivityNotification` is an interface representing a notification related to an activity.
  * It includes the id of the notification, the user id, the type of the notification, the activity id, the context, the creation date, the activity details, and the user details.
+ * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface ActivityNotification {
     /**
@@ -1062,6 +1072,7 @@ export interface ActivityNotification {
 /**
  * `ActivityNotificationSchema` is a constant representing the GraphQL schema for an activity notification query.
  * It includes the id of the notification, the user id, the type of the notification, the activity id, the context, the creation date, the activity details, and the user details.
+ * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export const ActivityNotificationSchema = `
   id

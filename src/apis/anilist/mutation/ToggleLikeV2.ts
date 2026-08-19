@@ -7,6 +7,7 @@ import { type Activity, ActivitySchemaV2 } from "../interfaces/Activity";
 /**
  * `ToggleLikeV2Mutation` is an interface representing the variables to toggle a like.
  * It includes the id of the likeable object and the type of the likeable object.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface ToggleLikeV2Variables {
     /**
@@ -28,6 +29,7 @@ export interface ToggleLikeV2Variables {
 /**
  * `ToggleLikeV2Mutation` is a class representing a mutation to toggle a like.
  * It includes a method to delete an activity
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class ToggleLikeV2Mutation extends APIWrapper {
     /**
@@ -51,7 +53,8 @@ export class ToggleLikeV2Mutation extends APIWrapper {
      * @param variables - An object of type `ToggleLikeV2Variables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async toggleLikeV2(variables: ToggleLikeV2Variables): Promise<Activity> {
         if (!this.authToken) {
             throw new Error(

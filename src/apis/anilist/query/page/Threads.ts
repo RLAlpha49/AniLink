@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `ThreadsVariables` is an interface representing the variables for the `ThreadsQuery`.
  * It includes optional page, per page, id, user id, reply user id, subscribed, category id, media category id, search, id in, sort, and as html.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ThreadsVariables {
     /**
@@ -74,6 +75,7 @@ export interface ThreadsVariables {
 /**
  * `ThreadsQuery` is a class representing a query for threads.
  * It includes a method to get threads.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ThreadsQuery extends APIWrapper {
     /**
@@ -96,6 +98,7 @@ export class ThreadsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async threads(variables: ThreadsVariables): Promise<ThreadsPageResponse> {
         if (!variables) {

@@ -6,6 +6,7 @@ import { type ActivityHistory } from "./Activity";
 /**
  * `UserStats` is an interface representing a user's statistics.
  * It includes the watchedTime, chaptersRead, activityHistory, animeStatusDistribution, mangaStatusDistribution, animeScoreDistribution, mangaScoreDistribution, animeListScores, mangaListScores, favouredGenresOverview, favouredGenres, favouredTags, favouredActors, favouredStaff, favouredStudios, favouredYears, and favouredFormats each having their own properties.
+ * @see https://docs.anilist.co/reference/object/userstats
  */
 export interface UserStats {
     /**
@@ -97,6 +98,7 @@ export interface UserStats {
 /**
  * `UserAnimeStatsSchema` is a string representing the GraphQL schema for a user's anime statistics.
  * It includes the count, meanScore, minutesWatched, and mediaIds.
+ * @see https://docs.anilist.co/reference/object/userstats
  */
 export const UserAnimeStatsSchema = `
   count
@@ -108,6 +110,7 @@ export const UserAnimeStatsSchema = `
 /**
  * `UserMangaStatsSchema` is a string representing the GraphQL schema for a user's manga statistics.
  * It includes the count, meanScore, chaptersRead, and mediaIds.
+ * @see https://docs.anilist.co/reference/object/userstats
  */
 export const UserMangaStatsSchema = `
   count

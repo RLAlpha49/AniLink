@@ -12,6 +12,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `MediaListsVariables` is an interface representing the variables for the `MediaListsQuery`.
  * It includes optional page, per page, id, user id, user name, type, status, media id, is following, notes, started at, completed at, compare with auth list, user id in, status in, status not in, status not, media id in, media id not in, notes like, started at greater, started at lesser, started at like, completed at greater, completed at lesser, completed at like, sort, score format, as array, and as html.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface MediaListsVariables {
     /**
@@ -168,6 +169,7 @@ export interface MediaListsVariables {
 /**
  * `MediaListsQuery` is a class representing a query for media lists.
  * It includes a method to get media lists.
+ * @see https://docs.anilist.co/reference/query
  */
 export class MediaListsQuery extends APIWrapper {
     /**
@@ -190,6 +192,7 @@ export class MediaListsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async mediaLists(variables: MediaListsVariables): Promise<MediaListsPageResponse> {
         if (!variables) {

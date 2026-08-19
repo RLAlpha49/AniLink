@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `ThreadCommentsVariables` is an interface representing the variables for the `ThreadCommentsQuery`.
  * It includes optional page, per page, id, thread id, user id, sort, and as html.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ThreadCommentsVariables {
     /**
@@ -49,6 +50,7 @@ export interface ThreadCommentsVariables {
 /**
  * `ThreadCommentsQuery` is a class representing a query for thread comments.
  * It includes a method to get thread comments.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ThreadCommentsQuery extends APIWrapper {
     /**
@@ -71,6 +73,7 @@ export class ThreadCommentsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async threadComments(variables: ThreadCommentsVariables): Promise<ThreadCommentsPageResponse> {
         if (!variables) {

@@ -5,6 +5,7 @@ import { type Studio } from "./Studio";
 /**
  * `Stat` is an interface representing the statistics of a media.
  * It includes the count, mean score, minutes watched, chapters read, media ids, format, status, score, length, release year, start year, genre, tag, country, voice actor, character ids, staff, and studio each having their own properties.
+ * @see https://docs.anilist.co/reference/object/userstatistictypes
  */
 export interface Stat {
     /**

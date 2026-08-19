@@ -286,6 +286,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.user({id: 542244, isHTML: true});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             user: (variables: UserVariables) => Promise<UserResponse>;
 
@@ -298,6 +299,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.media({id: 1, type: 'ANIME'});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             media: (variables: MediaVariables) => Promise<MediaResponse>;
 
@@ -310,6 +312,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.mediaTrend({mediaId: 1, type: 'ANIME'});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             mediaTrend: (variables: MediaTrendVariables) => Promise<MediaTrendResponse>;
 
@@ -323,6 +326,7 @@ export class AniLink {
              * await aniLink.anilist.query.airingSchedule({mediaId: 130590});
              * ```
              * Must be quering an airing anime. Returns error if not.
+             * @see https://docs.anilist.co/reference/query
              */
             airingSchedule: (variables: AiringScheduleVariables) => Promise<AiringScheduleResponse>;
 
@@ -343,6 +347,7 @@ export class AniLink {
              *   mediaPerPage: 10
              * });
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             character: (variables: CharacterVariables) => Promise<CharacterResponse>;
 
@@ -370,6 +375,7 @@ export class AniLink {
              *   characterMediaPerPage: 10
              * });
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             staff: (variables: StaffVariables) => Promise<StaffResponse>;
 
@@ -382,6 +388,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.mediaList({userId: 542244});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             mediaList: (variables: MediaListVariables) => Promise<MediaListResponse>;
 
@@ -400,6 +407,7 @@ export class AniLink {
              *   perChunk: 10000
              * });
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             mediaListCollection: (
                 variables: MediaListCollectionVariables
@@ -414,6 +422,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.like({likeableId: 723235883, type: 'ACTIVITY'});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             like: (variables: LikeVariables) => Promise<BasicUser>;
 
@@ -425,6 +434,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.genreCollection()
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             genreCollection: () => Promise<string>;
 
@@ -436,6 +446,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.mediaTagCollection()
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             mediaTagCollection: () => Promise<MediaTagCollectionResponse>;
 
@@ -448,6 +459,7 @@ export class AniLink {
              * await aniLink.anilist.query.viewer({isHTML: true});
              * ```
              * Must be authenticated.
+             * @see https://docs.anilist.co/reference/query
              */
             viewer: () => Promise<UserResponse>;
 
@@ -461,6 +473,7 @@ export class AniLink {
              * await aniLink.anilist.query.notification({asHtml: true});
              * ```
              * Must be authenticated.
+             * @see https://docs.anilist.co/reference/query
              */
             notification: (variables: NotificationVariables) => Promise<NotificationResponse>;
 
@@ -473,6 +486,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.studio({id: 561, asHtml: true});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             studio: (variables: StudioVariables) => Promise<StudioResponse>;
 
@@ -485,6 +499,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.review({id: 8008, asHtml: true});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             review: (variables: ReviewVariables) => Promise<ReviewResponse>;
 
@@ -497,6 +512,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.activity({id: 723235883, asHtml: true});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             activity: (variables: ActivityVariables) => Promise<Activity>;
 
@@ -509,6 +525,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.activityReply({id: 12191046, asHtml: true});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             activityReply: (variables: ActivityReplyVariables) => Promise<ActivityReply>;
 
@@ -521,6 +538,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.following({userId: 542244});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             following: (variables: FollowingVariables) => Promise<UserResponse>;
 
@@ -533,6 +551,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.follower({userId: 542244});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             follower: (variables: FollowerVariables) => Promise<UserResponse>;
 
@@ -545,6 +564,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.thread({id: 71881, asHtml: true});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             thread: (variables: ThreadVariables) => Promise<ThreadResponse>;
 
@@ -557,6 +577,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.threadComment({id: 2555166, asHtml: true});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             threadComment: (variables: ThreadCommentVariables) => Promise<ThreadCommentResponse>;
 
@@ -569,6 +590,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.recommendation({mediaId: 156822, asHtml: true});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             recommendation: (variables: RecommendationVariables) => Promise<RecommendationResponse>;
 
@@ -581,6 +603,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.markdown({markdown: 'Hello, world!'});
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             markdown: (variables: MarkdownVariables) => Promise<string>;
 
@@ -593,6 +616,7 @@ export class AniLink {
              * await aniLink.anilist.query.aniChartUser();
              * ```
              * Must be authenticated.
+             * @see https://docs.anilist.co/reference/query
              */
             aniChartUser: () => Promise<AniChartUserResponse>;
 
@@ -604,6 +628,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.siteStatistics();
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             siteStatistics: () => Promise<SiteStatisticsResponse>;
 
@@ -615,6 +640,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.query.externalLinkSourceCollection();
              * ```
+             * @see https://docs.anilist.co/reference/query
              */
             externalLinkSourceCollection: () => Promise<ExternalLinkSourceCollectionResponse>;
 
@@ -653,6 +679,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.users({page: 1, perPage: 10});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 users: (variables: UsersVariables) => Promise<UsersPageResponse>;
 
@@ -665,6 +692,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.medias({page: 1, perPage: 10, type: 'ANIME'});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 medias: (variables: MediasVariables) => Promise<MediasPageResponse>;
 
@@ -677,6 +705,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.characters({page: 1, perPage: 10});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 characters: (variables: CharactersVariables) => Promise<CharactersPageResponse>;
 
@@ -689,6 +718,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.staffs({page: 1, perPage: 10});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 staffs: (variables: StaffsVariables) => Promise<StaffsPageResponse>;
 
@@ -701,6 +731,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.studios({page: 1, perPage: 10});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 studios: (variables: StudiosVariables) => Promise<StudiosPageResponse>;
 
@@ -713,6 +744,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.mediaLists({page: 1, perPage: 10, userId: 542244});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 mediaLists: (variables: MediaListsVariables) => Promise<MediaListsPageResponse>;
 
@@ -725,6 +757,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.airingSchedules({page: 1, perPage: 10});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 airingSchedules: (
                     variables: AiringSchedulesVariables
@@ -740,6 +773,7 @@ export class AniLink {
                  * await aniLink.anilist.query.page.mediaTrends({page: 1, perPage: 10, type: 'ANIME'});
                  * ```
                  * Must be quering an airing anime. Returns error if not.
+                 * @see https://docs.anilist.co/reference/query
                  */
                 mediaTrends: (variables: MediaTrendsVariables) => Promise<MediaTrendsPageResponse>;
 
@@ -752,6 +786,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.notifications({page: 1, perPage: 10});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 notifications: (
                     variables: NotificationsVariables
@@ -766,6 +801,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.followers({page: 1, perPage: 10, userId: 542244});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 followers: (variables: FollowersVariables) => Promise<FollowersPageResponse>;
 
@@ -778,6 +814,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.following({page: 1, perPage: 10, userId: 542244});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 following: (variables: FollowingsVariables) => Promise<FollowingsPageResponse>;
 
@@ -790,6 +827,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.activities({page: 1, perPage: 10, userId: 542244});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 activities: (variables: ActivitiesVariables) => Promise<Activity>;
 
@@ -802,6 +840,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.activityReplies({page: 1, perPage: 10, activityId: 723235883});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 activityReplies: (variables: ActivityRepliesVariables) => Promise<ActivityReply>;
 
@@ -814,6 +853,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.threads({page: 1, perPage: 10});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 threads: (variables: ThreadsVariables) => Promise<ThreadsPageResponse>;
 
@@ -826,6 +866,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.threadComments({page: 1, perPage: 10, threadId: 71881});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 threadComments: (
                     variables: ThreadCommentsVariables
@@ -840,6 +881,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.reviews({page: 1, perPage: 10, mediaId: 1});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 reviews: (variables: ReviewsVariables) => Promise<ReviewsPageResponse>;
 
@@ -852,6 +894,7 @@ export class AniLink {
                  * ```typescript
                  * await aniLink.anilist.query.page.recommendations({page: 1, perPage: 10, mediaId: 1});
                  * ```
+                 * @see https://docs.anilist.co/reference/query
                  */
                 recommendations: (
                     variables: RecommendationsVariables
@@ -865,6 +908,7 @@ export class AniLink {
                  * @example
                  * ```typescript
                  * await aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeAbleId: 1});
+                 * @see https://docs.anilist.co/reference/query
                  */
                 likes: (variables: LikesVariables) => Promise<BasicUser>;
             };
@@ -932,6 +976,7 @@ export class AniLink {
              *   disabledListActivity: [{type: 'CURRENT', disabled: false}]
              * });
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             updateUser: (variables: UpdateUserVariables) => Promise<UpdateUserResponse>;
 
@@ -944,6 +989,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.saveMediaListEntry({mediaId: 1, status: 'COMPLETED'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             saveMediaListEntry: (
                 variables: SaveMediaListEntryVariables
@@ -963,6 +1009,7 @@ export class AniLink {
              *   ids: [143271, 156822, 170890],
              * });
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             updateMediaListEntries: (
                 variables: UpdateMediaListEntriesVariables
@@ -986,6 +1033,7 @@ export class AniLink {
              *   ))).data.MediaList.id;
              * aniLink.anilist.mutation.deleteMediaListEntry({id: entryId});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             deleteMediaListEntry: (
                 variables: DeleteMediaListEntryVariables
@@ -1000,6 +1048,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.deleteCustomLists({customList: 'test'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             deleteCustomList: (variables: DeleteCustomListVariables) => Promise<any>;
 
@@ -1012,6 +1061,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.saveTextActivity({text: 'Hello, world!'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             saveTextActivity: (variables: SaveTextActivityVariables) => Promise<Activity>;
 
@@ -1024,6 +1074,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.saveMessageActivity({text: 'Hello, world!'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             saveMessageActivity: (variables: SaveMessageActivityVariables) => Promise<Activity>;
 
@@ -1037,6 +1088,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.saveListActivity({id: 1});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             saveListActivity: (variables: SaveListActivityVariables) => Promise<Activity>;
 
@@ -1050,6 +1102,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.deleteActivity({id: 1});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             deleteActivity: (variables: DeleteActivityVariables) => Promise<any>;
 
@@ -1063,6 +1116,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.toggleActivityPin({id: 1, pinned: true});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             toggleActivityPin: (variables: ToggleActivityPinVariables) => Promise<Activity>;
 
@@ -1076,6 +1130,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.toggleActivitySubscription({activityId: 1, subscribe: true});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             toggleActivitySubscription: (
                 variables: ToggleActivitySubscriptionVariables
@@ -1090,6 +1145,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.saveActivityReply({activityId: 1, text: 'Hello, world!'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             saveActivityReply: (variables: SaveActivityReplyVariables) => Promise<ActivityReply>;
 
@@ -1102,6 +1158,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.deleteActivityReply({id: 1});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             deleteActivityReply: (variables: DeleteActivityReplyVariables) => Promise<any>;
 
@@ -1114,6 +1171,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.toggleLike({id: 1, type: 'ACTIVITY'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             toggleLike: (variables: ToggleLikeVariables) => Promise<any>;
 
@@ -1127,6 +1185,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.toggleLikeV2({id: 1, type: 'ACTIVITY'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             toggleLikeV2: (variables: ToggleLikeVariables) => Promise<Activity>;
 
@@ -1139,6 +1198,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.toggleFollow({userId: 542244});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             toggleFollow: (variables: ToggleFollowVariables) => Promise<UserResponse>;
 
@@ -1151,6 +1211,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.toggleFavorite({studioId: 561});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             toggleFavourite: (variables: ToggleFavouriteVariables) => Promise<Favourites>;
 
@@ -1163,6 +1224,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.updateFavouriteOrder({ids: [1, 2, 3]});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             updateFavouriteOrder: (variables: UpdateFavouriteOrderVariables) => Promise<Favourites>;
 
@@ -1175,6 +1237,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.saveReview({mediaId: 1, body: 'testing', summary: 'testing', score: 8, private: true});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             saveReview: (variables: SaveReviewVariables) => Promise<ReviewResponse>;
 
@@ -1187,6 +1250,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.rateReview({reviewId: 8008, rating: 'UP_VOTE'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             rateReview: (variables: RateReviewVariables) => Promise<ReviewResponse>;
 
@@ -1199,6 +1263,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.deleteReview({id: 1});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             deleteReview: (variables: DeleteReviewVariables) => Promise<any>;
 
@@ -1211,6 +1276,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.saveRecommendation({mediaId: 1, mediaRecommendationId: 2, rating: 8});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             saveRecommendation: (
                 variables: SaveRecommendationVariables
@@ -1225,6 +1291,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.saveThread({title: 'Hello, world!', body: 'Hello, world!'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             saveThread: (variables: SaveThreadVariables) => Promise<ThreadResponse>;
 
@@ -1237,6 +1304,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.deleteThread({id: 1});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             deleteThread: (variables: DeleteThreadVariables) => Promise<any>;
 
@@ -1249,6 +1317,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.toggleThreadSubscription({threadId: 1, subscribe: true});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             toggleThreadSubscription: (
                 variables: ToggleThreadSubscriptionVariables
@@ -1263,6 +1332,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.saveThreadComment({threadId: 1, comment: 'Hello, world!'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             saveThreadComment: (
                 variables: SaveThreadCommentVariables
@@ -1277,6 +1347,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.deleteThreadComment({id: 1});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             deleteThreadComment: (variables: DeleteThreadCommentVariables) => Promise<any>;
 
@@ -1289,6 +1360,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.updateAniChartSettings({titleLanguage: 'romaji', theme: 'dark'});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             updateAniChartSettings: (variables: UpdateAniChartSettingsVariables) => Promise<any>;
 
@@ -1301,6 +1373,7 @@ export class AniLink {
              * ```typescript
              * await aniLink.anilist.mutation.updateAniChartHighlights({highlights: [{mediaId: 1, highlight: 'test'}]});
              * ```
+             * @see https://docs.anilist.co/reference/mutation
              */
             updateAniChartHighlights: (
                 variables: UpdateAniChartHighlightsVariables

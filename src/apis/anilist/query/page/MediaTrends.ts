@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `MediaTrendsVariables` is an interface representing the variables for the `MediaTrendsQuery`.
  * It includes optional page, per page, media id, date, trending, average score, popularity, episode, releasing, media id not, media id in, media id not in, date greater, date lesser, trending greater, trending lesser, trending not, average score greater, average score lesser, average score not, popularity greater, popularity lesser, popularity not, episode greater, episode lesser, episode not, sort, and as html.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface MediaTrendsVariables {
     /**
@@ -154,6 +155,7 @@ export interface MediaTrendsVariables {
 /**
  * `MediaTrendsQuery` is a class representing a query for media trends.
  * It includes a method to get media trends.
+ * @see https://docs.anilist.co/reference/query
  */
 export class MediaTrendsQuery extends APIWrapper {
     /**
@@ -176,6 +178,7 @@ export class MediaTrendsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async mediaTrends(variables: MediaTrendsVariables): Promise<MediaTrendsPageResponse> {
         if (!variables) {

@@ -3,6 +3,7 @@ import { type PageInfo } from "./PageInfo";
 
 /**
  * `NotificationsPageResponse` is the paginated response from a notifications query.
+ * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface NotificationsPageResponse {
     /** Pagination metadata for the response. */

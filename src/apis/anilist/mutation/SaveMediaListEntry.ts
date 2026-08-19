@@ -9,6 +9,7 @@ import { type MediaListResponse } from "../interfaces/responses/query/MediaList"
 /**
  * `SaveMediaListEntryVariables` is an interface representing the variables for the `SaveMediaListEntryMutation`.
  * It includes optional id, media id, status, score, raw score, progress, progress volumes, repeat, priority, private status, notes, hidden from status lists status, custom lists, advanced scores, started at date, and completed at date.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface SaveMediaListEntryVariables {
     /**
@@ -95,6 +96,7 @@ export interface SaveMediaListEntryVariables {
 /**
  * `SaveMediaListEntryMutation` is a class representing a mutation to save a media list entry.
  * It includes a method to save a media list entry.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class SaveMediaListEntryMutation extends APIWrapper {
     /**
@@ -118,6 +120,7 @@ export class SaveMediaListEntryMutation extends APIWrapper {
      * @param variables - An object of type `SaveMediaListEntryVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @see https://docs.anilist.co/reference/mutation
      */
     async saveMediaListEntry(variables: SaveMediaListEntryVariables): Promise<MediaListResponse> {
         if (!this.authToken) {

@@ -3,6 +3,7 @@ import { type Title, TitleSchema } from "../../Title";
 /**
  * `Favourites` is an interface that contains the favourites of a user.
  * It includes the anime, manga, characters, staff, and studios that are favourited.
+ * @see https://docs.anilist.co/reference/object/favourites
  */
 export interface Favourites {
     anime: {
@@ -83,6 +84,7 @@ export interface Favourites {
 /**
  * `FavouritesSchema` is a constant representing the GraphQL schema for a favourites query.
  * It includes the anime, manga, characters, staff, and studios schema.
+ * @see https://docs.anilist.co/reference/object/favourites
  */
 export const FavouritesSchema = `
   anime {

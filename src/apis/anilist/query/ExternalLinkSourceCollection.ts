@@ -7,6 +7,7 @@ import { type MediaType, MediaTypeMappings } from "../types/Type";
 /**
  * `ExternalLinkSourceCollectionVariables` is an interface representing the variables for the `ExternalLinkSourceCollectionQuery`.
  * It includes optional id, type, and mediaType.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ExternalLinkSourceCollectionVariables {
     /**
@@ -28,6 +29,7 @@ export interface ExternalLinkSourceCollectionVariables {
 /**
  * `ExternalLinkSourceCollectionQuery` is a class representing a query for external link source collections.
  * It includes a method to get external link source collections.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ExternalLinkSourceCollectionQuery extends APIWrapper {
     /**
@@ -50,6 +52,7 @@ export class ExternalLinkSourceCollectionQuery extends APIWrapper {
      *
      * @param variables - The variables for the query. If not provided, an empty object will be used.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async externalLinkSourceCollection(
         variables: ExternalLinkSourceCollectionVariables = {}

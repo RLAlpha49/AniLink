@@ -1,6 +1,7 @@
 /**
  * `Trailer` is an interface representing a trailer.
  * It includes the id, site, and thumbnail each having their own properties.
+ * @see https://docs.anilist.co/reference/object/mediatrailer
  */
 export interface Trailer {
     /**
@@ -22,6 +23,7 @@ export interface Trailer {
 /**
  * `TrailerSchema` is a string representing the GraphQL schema for a trailer.
  * It includes the id, site, and thumbnail.
+ * @see https://docs.anilist.co/reference/object/mediatrailer
  */
 export const TrailerSchema = `
   trailer {

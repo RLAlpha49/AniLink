@@ -3,6 +3,7 @@ import { type SiteTrendConnection, SiteTrendConnectionSchema } from "../../SiteT
 /**
  * `SiteStatisticsResponse` is an interface representing the response from a site statistics query.
  * It includes users, anime, manga, characters, staff, studios, and reviews of type `SiteTrendConnection`.
+ * @see https://docs.anilist.co/reference/object/sitestatistics
  */
 export interface SiteStatisticsResponse {
     /**
@@ -44,6 +45,7 @@ export interface SiteStatisticsResponse {
 /**
  * `SiteStatisticsSchema` is a constant representing the GraphQL schema for a site statistics query.
  * It includes users, anime, manga, characters, staff, studios, and reviews of type `SiteTrendConnection`.
+ * @see https://docs.anilist.co/reference/object/sitestatistics
  */
 export const SiteStatisticsSchema = `
   users (sort: $usersSort, page: $usersPage, perPage: $usersPerPage) {

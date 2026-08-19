@@ -10,6 +10,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `SiteStatisticsVariables` is an interface representing the variables for the `SiteStatisticsQuery`.
  * It includes optional parameters for querying site statistics data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface SiteStatisticsVariables {
     /**
@@ -121,6 +122,7 @@ export interface SiteStatisticsVariables {
 /**
  * `SiteStatisticsQuery` is a class representing a query for site statistics data.
  * It includes a method to send the site statistics query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class SiteStatisticsQuery extends APIWrapper {
     /**
@@ -143,6 +145,7 @@ export class SiteStatisticsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query. If not provided, an empty object will be used.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async siteStatistics(variables: SiteStatisticsVariables = {}): Promise<SiteStatisticsResponse> {
         const variableTypeMappings = {

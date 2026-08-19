@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `NotificationsVariables` is an interface representing the variables for the `NotificationsQuery`.
  * It includes optional page, per page, type, reset notification count, type in, and as html.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface NotificationsVariables {
     /**
@@ -44,6 +45,7 @@ export interface NotificationsVariables {
 /**
  * `NotificationsQuery` is a class representing a query for notifications.
  * It includes a method to get notifications.
+ * @see https://docs.anilist.co/reference/query
  */
 export class NotificationsQuery extends APIWrapper {
     /**
@@ -66,6 +68,7 @@ export class NotificationsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async notifications(variables: NotificationsVariables): Promise<NotificationsPageResponse> {
         if (!variables) {

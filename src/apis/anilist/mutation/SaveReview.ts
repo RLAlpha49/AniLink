@@ -6,6 +6,7 @@ import { type ReviewResponse, ReviewSchema } from "../interfaces/responses/query
 /**
  * `SaveReviewVariables` is an interface that contains the variables that are required to save a review.
  * It includes the review ID, media ID, body, summary, score, and private status.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface SaveReviewVariables {
     /**
@@ -47,6 +48,7 @@ export interface SaveReviewVariables {
 /**
  * `SaveReviewMutation` is a class representing a mutation to save a review.
  * It includes a method to save a review.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class SaveReviewMutation extends APIWrapper {
     /**
@@ -70,6 +72,7 @@ export class SaveReviewMutation extends APIWrapper {
      * @param variables - An object of type `SaveReviewVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @see https://docs.anilist.co/reference/mutation
      */
     async saveReview(variables: SaveReviewVariables): Promise<ReviewResponse> {
         if (!this.authToken) {

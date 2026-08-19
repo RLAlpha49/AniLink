@@ -7,6 +7,7 @@ import { type ReviewRating, ReviewRatingMappings } from "../types/ReviewRating";
 /**
  * `RateReviewVariables` is an interface representing the variables for the `RateReviewMutation`.
  * It includes the review id and rating to apply to the review.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface RateReviewVariables {
     /**
@@ -23,6 +24,7 @@ export interface RateReviewVariables {
 /**
  * `RateReviewMutation` is a class representing a mutation to rate a review.
  * It includes a method to send the rate review mutation and receive the response.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class RateReviewMutation extends APIWrapper {
     /**
@@ -46,6 +48,7 @@ export class RateReviewMutation extends APIWrapper {
      * @param variables - An object of type `RateReviewVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if authentication is missing, validation fails, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/mutation
      */
     async rateReview(variables: RateReviewVariables): Promise<ReviewResponse> {
         if (!this.authToken) {

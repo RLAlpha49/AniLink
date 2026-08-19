@@ -9,6 +9,7 @@ import {
 /**
  * `SaveThreadCommentVariables` is an interface that contains the variables that are passed to the `SaveThreadComment` mutation.
  * It contains the ID of the thread, the ID of the parent comment, the comment to be saved, and a boolean to determine if the response is in HTML format.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface SaveThreadCommentVariables {
     /**
@@ -45,6 +46,7 @@ export interface SaveThreadCommentVariables {
 /**
  * `SaveThreadCommentMutation` is a class representing a mutation to save a thread comment.
  * It includes a method to save a thread
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class SaveThreadCommentMutation extends APIWrapper {
     /**
@@ -68,7 +70,8 @@ export class SaveThreadCommentMutation extends APIWrapper {
      * @param variables - An object of type `SaveThreadCommentVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async saveThreadComment(variables: SaveThreadCommentVariables): Promise<ThreadCommentResponse> {
         if (!this.authToken) {
             throw new Error(

@@ -6,6 +6,7 @@ import { type Title, TitleSchema } from "../../Title";
 /**
  * `CharacterResponse` is an interface representing the response from a character query.
  * It includes the character's id, name, image, description, gender, date of birth, age, blood type, favourite status, site URL, associated media, number of favourites, and moderator notes.
+ * @see https://docs.anilist.co/reference/object/character
  */
 export interface CharacterResponse {
     /**
@@ -95,6 +96,7 @@ export interface CharacterResponse {
 /**
  * `CharacterSchema` is a constant representing the GraphQL schema for a character query.
  * It includes the character's id, name, image, description, gender, date of birth, age, blood type, favourite status, site URL, associated media, number of favourites, and moderator notes.
+ * @see https://docs.anilist.co/reference/object/character
  */
 export const CharacterSchema = `
   id

@@ -13,6 +13,7 @@ import { type ScoreDistribution, type StatusDistribution } from "./Distribution"
 /**
  * `MediaListEntry` is an interface representing an entry in a media list.
  * It includes the id and status each having their own properties.
+ * @see https://docs.anilist.co/reference/object/medialist
  */
 export interface MediaListEntry {
     /**
@@ -29,6 +30,7 @@ export interface MediaListEntry {
 /**
  * `MediaListEntrySchema` is a string representing the GraphQL schema for a media list entry.
  * It includes the id and status.
+ * @see https://docs.anilist.co/reference/object/medialist
  */
 export const MediaListEntrySchema = `
   mediaListEntry {
@@ -40,6 +42,7 @@ export const MediaListEntrySchema = `
 /**
  * `MediaStats` is an interface representing the statistics of a media.
  * It includes score distribution and status distribution each having their own properties.
+ * @see https://docs.anilist.co/reference/object/mediastats
  */
 export interface MediaStats {
     /**
@@ -56,6 +59,7 @@ export interface MediaStats {
 /**
  * `Media` is an interface representing a media entity.
  * It includes various properties related to the media.
+ * @see https://docs.anilist.co/reference/object/media
  */
 export interface Media {
     /**
@@ -287,6 +291,7 @@ export interface Media {
 /**
  * `MediaStatistics` is an interface representing the statistics of a media.
  * It includes various properties related to the statistics of the media.
+ * @see https://docs.anilist.co/reference/object/userstatistics
  */
 export interface MediaStatistics {
     /**

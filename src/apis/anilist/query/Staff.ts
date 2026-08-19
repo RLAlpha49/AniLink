@@ -15,6 +15,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `StaffVariables` is an interface representing the variables for the `StaffQuery`.
  * It includes optional parameters for querying staff data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface StaffVariables {
     /**
@@ -121,6 +122,7 @@ export interface StaffVariables {
 /**
  * `StaffQuery` is a class representing a query for staff data.
  * It includes a method to send the staff query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class StaffQuery extends APIWrapper {
     /**
@@ -143,6 +145,7 @@ export class StaffQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async staff(variables: StaffVariables): Promise<StaffResponse> {
         if (!variables) {

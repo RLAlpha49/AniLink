@@ -8,6 +8,7 @@ import { type ActivityType, ActivityTypeMappings } from "../types/ActivityType";
 /**
  * `ActivityVariables` is an interface representing the variables for the `ActivityQuery`.
  * It includes optional id, userId, messengerId, mediaId, type, isFollowing, hasReplies, hasRepliesOrTypeText, createdAt, id_not, id_in, id_not_in, userId_not, userId_in, userId_not_in, messengerId_not, messengerId_in, messengerId_not_in, mediaId_not, mediaId_in, mediaId_not_in, type_not, type_in, type_not_in, createdAt_greater, sort, and asHtml.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ActivityVariables {
     /**
@@ -149,6 +150,7 @@ export interface ActivityVariables {
 /**
  * `ActivityQuery` is a class representing a query for activities.
  * It includes a method to get activities.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ActivityQuery extends APIWrapper {
     /**
@@ -171,6 +173,7 @@ export class ActivityQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async activity(variables: ActivityVariables): Promise<Activity> {
         if (!variables) {

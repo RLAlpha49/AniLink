@@ -7,6 +7,7 @@ import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 /**
  * `LikeVariables` is an interface representing the variables for the `LikeQuery`.
  * It includes the id and type of the likeable item.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface LikeVariables {
     /**
@@ -23,6 +24,7 @@ export interface LikeVariables {
 /**
  * `LikeQuery` is a class representing a query for users who liked a model.
  * It includes a method to send the like query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class LikeQuery extends APIWrapper {
     /**
@@ -45,6 +47,7 @@ export class LikeQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async like(variables: LikeVariables): Promise<BasicUser> {
         if (!variables) {

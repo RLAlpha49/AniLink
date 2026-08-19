@@ -5,6 +5,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `DeleteThreadCommentVariables` is an interface representing the variables to delete a thread comment.
  * It includes the id of the thread comment.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface DeleteThreadCommentVariables {
     /**
@@ -16,6 +17,7 @@ export interface DeleteThreadCommentVariables {
 /**
  * `DeleteThreadCommentMutation` is a class representing a mutation to delete a thread comment.
  * It includes a method to delete a thread
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class DeleteThreadCommentMutation extends APIWrapper {
     /**
@@ -39,7 +41,8 @@ export class DeleteThreadCommentMutation extends APIWrapper {
      * @param variables - An object of type `DeleteThreadCommentVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async deleteThreadComment(variables: DeleteThreadCommentVariables): Promise<any> {
         if (!this.authToken) {
             throw new Error(

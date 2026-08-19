@@ -12,6 +12,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `FollowerVariables` is an interface representing the variables for the `FollowerQuery`.
  * It includes optional userId, sort, asHtml, animeStatLimit, mangaStatLimit, animeStatSort, and mangaStatSort.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface FollowerVariables {
     /**
@@ -53,6 +54,7 @@ export interface FollowerVariables {
 /**
  * `FollowerQuery` is a class representing a query for followers.
  * It includes a method to get followers.
+ * @see https://docs.anilist.co/reference/query
  */
 export class FollowerQuery extends APIWrapper {
     /**
@@ -75,6 +77,7 @@ export class FollowerQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async follower(variables: FollowerVariables): Promise<UserResponse> {
         if (!variables.userId) {

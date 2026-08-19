@@ -9,6 +9,7 @@ import { TagSchema } from "../../Tag";
 /**
  * `UserResponse` is an interface representing the response from a user query.
  * It includes the user's id, name, about, avatar, bannerImage, isFollowing status, isFollower status, isBlocked status, bans, options, mediaListOptions, favourites, statistics, stats, unreadNotificationCount, siteUrl, donatorTier, donatorBadge, moderatorRoles, createdAt, updatedAt, and previousNames.
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface UserResponse {
     /**
@@ -305,6 +306,7 @@ export interface UserResponse {
 /**
  * `UserSchema` is a constant representing the GraphQL schema for a user query.
  * It includes the user's id, name, about, avatar, bannerImage, isFollowing status, isFollower status, isBlocked status, bans, options, mediaListOptions, favourites, statistics, stats, unreadNotificationCount, siteUrl, donatorTier, donatorBadge, moderatorRoles, createdAt, updatedAt, and previousNames.
+ * @see https://docs.anilist.co/reference/object/user
  */
 export const UserSchema = `
   id

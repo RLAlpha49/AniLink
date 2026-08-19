@@ -7,6 +7,7 @@ import { BasicUserSchema } from "../interfaces/Basic";
 /**
  * `ToggleFollowVariables` is an interface representing the variables to toggle a follow.
  * It includes a number representing the id of the user to follow.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface ToggleFollowVariables {
     /**
@@ -18,6 +19,7 @@ export interface ToggleFollowVariables {
 /**
  * `ToggleFollowMutation` is a class representing a mutation to toggle a follow.
  * It includes a method to toggle a follow.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class ToggleFollowMutation extends APIWrapper {
     /**
@@ -41,7 +43,8 @@ export class ToggleFollowMutation extends APIWrapper {
      * @param variables - An object of type `ToggleFollowVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async toggleFollow(variables: ToggleFollowVariables): Promise<UserResponse> {
         if (!this.authToken) {
             throw new Error(

@@ -4,6 +4,7 @@ import { MediaSchema } from "./Media";
 /**
  * `AiringScheduleResponse` is an interface representing the response from an airing schedule query.
  * It includes the id, airing time, time until airing, episode number, media id, and the media itself.
+ * @see https://docs.anilist.co/reference/object/airingschedule
  */
 export interface AiringScheduleResponse {
     /**
@@ -40,6 +41,7 @@ export interface AiringScheduleResponse {
 /**
  * `AiringScheduleSchema` is a constant representing the GraphQL schema for an airing schedule query.
  * It includes the id, airing time, time until airing, episode number, media id, and the media schema.
+ * @see https://docs.anilist.co/reference/object/airingschedule
  */
 export const AiringScheduleSchema = `
   id

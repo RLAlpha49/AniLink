@@ -10,6 +10,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `NotificationVariables` is an interface representing the variables for the `NotificationQuery`.
  * It includes optional parameters for querying notification data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface NotificationVariables {
     /**
@@ -36,6 +37,7 @@ export interface NotificationVariables {
 /**
  * `NotificationQuery` is a class representing a query for notification data.
  * It includes a method to send the notification query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class NotificationQuery extends APIWrapper {
     /**
@@ -58,6 +60,7 @@ export class NotificationQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async notification(variables: NotificationVariables): Promise<NotificationResponse> {
         if (!this.authToken) {

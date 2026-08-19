@@ -5,6 +5,7 @@ import { MediaSchema } from "./Media";
 /**
  * `MediaListResponse` is an interface representing the response from a media list query.
  * It includes the id, user id, media id, status, score, progress, progress volumes, repeat, priority, private status, notes, hidden from status lists status, custom lists, advanced scores, started at date, completed at date, updated at timestamp, created at timestamp, media, and user.
+ * @see https://docs.anilist.co/reference/object/medialist
  */
 export interface MediaListResponse {
     /**
@@ -111,6 +112,7 @@ export interface MediaListResponse {
 /**
  * `MediaListSchema` is a constant representing the GraphQL schema for a media list query.
  * It includes the id, user id, media id, status, score, progress, progress volumes, repeat, priority, private status, notes, hidden from status lists status, custom lists, advanced scores, started at date, completed at date, updated at timestamp, created at timestamp, media, and user.
+ * @see https://docs.anilist.co/reference/object/medialist
  */
 export const MediaListSchema = `
   id

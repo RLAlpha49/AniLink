@@ -1,6 +1,7 @@
 /**
  * `Name` is an interface representing a name.
  * It includes the first name, last name, full name, native name, alternative name, and user preferred name each having their own properties.
+ * @see https://docs.anilist.co/reference/object/charactername
  */
 export interface Name {
     /**
@@ -37,6 +38,7 @@ export interface Name {
 /**
  * `NameSchema` is a string representing the GraphQL schema for a name.
  * It includes the first name, last name, full name, and native name.
+ * @see https://docs.anilist.co/reference/object/charactername
  */
 export const NameSchema = `
   name {

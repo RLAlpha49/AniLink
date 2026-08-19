@@ -7,6 +7,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `ThreadVariables` is an interface representing the variables for the `ThreadQuery`.
  * It includes optional parameters for querying thread data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ThreadVariables {
     /**
@@ -63,6 +64,7 @@ export interface ThreadVariables {
 /**
  * `ThreadQuery` is a class representing a query for thread data.
  * It includes a method to send the thread query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ThreadQuery extends APIWrapper {
     /**
@@ -85,6 +87,7 @@ export class ThreadQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async thread(variables: ThreadVariables): Promise<ThreadResponse> {
         if (!variables) {

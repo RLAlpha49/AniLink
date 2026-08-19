@@ -3,6 +3,7 @@ import { type MediaStatistics } from "./Media";
 /**
  * `Statistics` is an interface representing the statistics of a media.
  * It includes the anime and manga each being an instance of `MediaStatistics`.
+ * @see https://docs.anilist.co/reference/object/userstatistics
  */
 export interface Statistics {
     /**

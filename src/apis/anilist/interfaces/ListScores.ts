@@ -1,6 +1,7 @@
 /**
  * `ListScores` is an interface representing the scores of a list.
  * It includes the meanScore and standardDeviation each having their own properties.
+ * @see https://docs.anilist.co/reference/object/listscorestats
  */
 export interface ListScores {
     /**

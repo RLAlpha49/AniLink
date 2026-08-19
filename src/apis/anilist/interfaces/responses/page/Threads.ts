@@ -3,6 +3,7 @@ import { type PageInfo } from "./PageInfo";
 
 /**
  * `ThreadsPageResponse` is the paginated response from a threads query.
+ * @see https://docs.anilist.co/reference/object/thread
  */
 export interface ThreadsPageResponse {
     /** Pagination metadata for the response. */

@@ -12,6 +12,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `CharacterVariables` is an interface representing the variables for the `CharacterQuery`.
  * It includes optional id, isBirthday, search, id_not, id_in, id_not_in, sort, asHtml, mediaSort, mediaOnList, mediaPage, and mediaPerPage.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface CharacterVariables {
     /**
@@ -78,6 +79,7 @@ export interface CharacterVariables {
 /**
  * `CharacterQuery` is a class representing a query for characters.
  * It includes a method to get characters.
+ * @see https://docs.anilist.co/reference/query
  */
 export class CharacterQuery extends APIWrapper {
     /**
@@ -100,6 +102,7 @@ export class CharacterQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async character(variables: CharacterVariables): Promise<CharacterResponse> {
         if (!variables) {

@@ -1,6 +1,7 @@
 /**
  * `StreamingEpisode` is an interface representing a streaming episode.
  * It includes the title, thumbnail, url, and site each having their own properties.
+ * @see https://docs.anilist.co/reference/object/mediastreamingepisode
  */
 export interface StreamingEpisode {
     /**
@@ -27,6 +28,7 @@ export interface StreamingEpisode {
 /**
  * `StreamingEpisodeSchema` is a string representing the GraphQL schema for a streaming episode.
  * It includes the title, thumbnail, url, and site.
+ * @see https://docs.anilist.co/reference/object/mediastreamingepisode
  */
 export const StreamingEpisodeSchema = `
   streamingEpisodes {

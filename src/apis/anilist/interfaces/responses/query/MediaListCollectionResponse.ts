@@ -6,6 +6,7 @@ import { MediaSchema } from "./Media";
 /**
  * `MediaListCollectionResponse` is an interface representing the response from a media list collection query.
  * It includes the media list collection, lists, entries, user, and hasNextChunk status.
+ * @see https://docs.anilist.co/reference/object/medialistcollection
  */
 export interface MediaListCollectionResponse {
     /**
@@ -150,6 +151,7 @@ export interface MediaListCollectionResponse {
 /**
  * `MediaListCollectionQuerySchema` is a constant representing the GraphQL schema for a media list collection query.
  * It includes the media list collection, lists, entries, user, and hasNextChunk status.
+ * @see https://docs.anilist.co/reference/object/medialistcollection
  */
 export const MediaListCollectionQuerySchema = `
   query ($userId: Int, $userName: String, $type: MediaType, $status: MediaListStatus, $notes: String, $startedAt: FuzzyDateInt, $completedAt: FuzzyDateInt, $forceSingleCompletedList: Boolean, $chunk: Int, $perChunk: Int, $status_in: [MediaListStatus], $status_not_in: [MediaListStatus], $status_not: MediaListStatus, $notes_like: String, $startedAt_greater: FuzzyDateInt, $startedAt_lesser: FuzzyDateInt, $startedAt_like: String, $completedAt_greater: FuzzyDateInt, $completedAt_lesser: FuzzyDateInt, $completedAt_like: String, $sort: [MediaListSort], $scoreFormat: ScoreFormat, $asArray: Boolean, $asHtml: Boolean) {

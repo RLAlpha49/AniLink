@@ -6,6 +6,7 @@ import { type Activity, MessageActivitySchema } from "../interfaces/Activity";
 /**
  * `SaveMessageActivityMutation` is an interface representing the variables to save a message activity.
  * It includes the activity id, message, recipient id, private, locked, asMod, and asHtml.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface SaveMessageActivityVariables {
     /**
@@ -47,6 +48,7 @@ export interface SaveMessageActivityVariables {
 /**
  * `SaveMessageActivityMutation` is a class representing a mutation to save a message activity.
  * It includes a method to save a message activity
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class SaveMessageActivityMutation extends APIWrapper {
     /**
@@ -70,7 +72,8 @@ export class SaveMessageActivityMutation extends APIWrapper {
      * @param variables - An object of type `SaveMessageActivityVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async saveMessageActivity(variables: SaveMessageActivityVariables): Promise<Activity> {
         if (!this.authToken) {
             throw new Error(

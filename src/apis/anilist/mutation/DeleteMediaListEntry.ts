@@ -6,6 +6,7 @@ import { type DeleteMediaListEntryResponse } from "../interfaces/responses/mutat
 /**
  * `DeleteMediaListEntryMutation` is an interface representing the variables to delete a media list entry.
  * It includes the `id` of the media list entry to delete.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface DeleteMediaListEntryVariables {
     /**
@@ -17,6 +18,7 @@ export interface DeleteMediaListEntryVariables {
 /**
  * `DeleteMediaListEntryMutation` is a class representing a mutation to delete a media list entry.
  * It includes a method to delete a media list entry.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class DeleteMediaListEntryMutation extends APIWrapper {
     /**
@@ -40,7 +42,8 @@ export class DeleteMediaListEntryMutation extends APIWrapper {
      * @param variables - An object of type `DeleteMediaListEntryVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async deleteMediaListEntry(
         variables: DeleteMediaListEntryVariables
     ): Promise<DeleteMediaListEntryResponse> {

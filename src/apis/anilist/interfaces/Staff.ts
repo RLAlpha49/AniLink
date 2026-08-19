@@ -3,6 +3,7 @@ import { type Name } from "./Name";
 /**
  * `Staff` is an interface representing a staff member.
  * It includes the id and name each having their own properties.
+ * @see https://docs.anilist.co/reference/object/staff
  */
 export interface Staff {
     /**

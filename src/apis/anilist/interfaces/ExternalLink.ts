@@ -1,6 +1,7 @@
 /**
  * `ExternalLink` is an interface representing an external link.
  * It includes the id, url, and site each having their own properties.
+ * @see https://docs.anilist.co/reference/object/mediaexternallink
  */
 export interface ExternalLink {
     /**
@@ -22,6 +23,7 @@ export interface ExternalLink {
 /**
  * `ExternalLinkSchema` is a string representing the GraphQL schema for an external link.
  * It includes the id, url, and site.
+ * @see https://docs.anilist.co/reference/object/mediaexternallink
  */
 export const ExternalLinkSchema = `
   externalLinks {

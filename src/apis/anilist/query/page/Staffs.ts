@@ -9,6 +9,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `StaffsVariables` is an interface representing the variables for the `StaffsQuery`.
  * It includes optional page, per page, id, is birthday, search, id not, id in, id not in, sort, as html, staff media sort, staff media type, staff media on list, staff media page, staff media per page, characters sort, characters page, characters per page, character media sort, character media on list, character media page, and character media per page.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface StaffsVariables {
     /**
@@ -125,6 +126,7 @@ export interface StaffsVariables {
 /**
  * `StaffsQuery` is a class representing a query for staffs.
  * It includes a method to get staffs.
+ * @see https://docs.anilist.co/reference/query
  */
 export class StaffsQuery extends APIWrapper {
     /**
@@ -147,6 +149,7 @@ export class StaffsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async staffs(variables: StaffsVariables): Promise<StaffsPageResponse> {
         if (!variables) {

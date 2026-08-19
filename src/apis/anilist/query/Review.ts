@@ -8,6 +8,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `ReviewVariables` is an interface representing the variables for the `ReviewQuery`.
  * It includes optional parameters for querying review data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ReviewVariables {
     /**
@@ -44,6 +45,7 @@ export interface ReviewVariables {
 /**
  * `ReviewQuery` is a class representing a query for review data.
  * It includes a method to send the review query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ReviewQuery extends APIWrapper {
     /**
@@ -66,6 +68,7 @@ export class ReviewQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async review(variables: ReviewVariables): Promise<ReviewResponse> {
         if (!variables) {

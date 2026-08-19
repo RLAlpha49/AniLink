@@ -5,6 +5,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `DeleteActivityMutation` is an interface representing the variables to delete an activity.
  * It includes the activity id.
+ * @see https://docs.anilist.co/reference/mutation
  */
 export interface DeleteActivityVariables {
     /**
@@ -16,6 +17,7 @@ export interface DeleteActivityVariables {
 /**
  * `DeleteActivityMutation` is a class representing a mutation to delete a activity.
  * It includes a method to delete an activity
+ * @see https://docs.anilist.co/reference/mutation
  */
 export class DeleteActivityMutation extends APIWrapper {
     /**
@@ -39,7 +41,8 @@ export class DeleteActivityMutation extends APIWrapper {
      * @param variables - An object of type `DeleteActivityVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *  */
+     *   * @see https://docs.anilist.co/reference/mutation
+     */
     async deleteActivity(variables: DeleteActivityVariables): Promise<any> {
         if (!this.authToken) {
             throw new Error(

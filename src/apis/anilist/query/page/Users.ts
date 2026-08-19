@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `UsersVariables` is an interface representing the variables for the `UsersQuery`.
  * It includes optional page, per page, id, name, is moderator, search, sort, as html, anime stat limit, manga stat limit, anime stat sort, and manga stat sort.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface UsersVariables {
     /**
@@ -74,6 +75,7 @@ export interface UsersVariables {
 /**
  * `UsersQuery` is a class representing a query for users.
  * It includes a method to get users.
+ * @see https://docs.anilist.co/reference/query
  */
 export class UsersQuery extends APIWrapper {
     /**
@@ -96,6 +98,7 @@ export class UsersQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async users(variables: UsersVariables): Promise<UsersPageResponse> {
         if (!variables) {

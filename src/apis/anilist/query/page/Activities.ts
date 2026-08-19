@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `ActivitiesVariables` is an interface representing the variables for the `ActivitiesQuery`.
  * It includes optional page, per page, id, user id, messenger id, media id, type, is following, has replies, has replies or type text, created at, id not, id in, id not in, user id not, user id in, user id not in, messenger id not, messenger id in, messenger id not in, media id not, media id in, media id not in, type not, type in, type not in, created at greater, sort, and as html.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ActivitiesVariables {
     /**
@@ -159,6 +160,7 @@ export interface ActivitiesVariables {
 /**
  * `ActivitiesQuery` is a class representing a query for activities.
  * It includes a method to get activities.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ActivitiesQuery extends APIWrapper {
     /**
@@ -181,6 +183,7 @@ export class ActivitiesQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async activities(variables: ActivitiesVariables): Promise<Activity> {
         if (!variables) {

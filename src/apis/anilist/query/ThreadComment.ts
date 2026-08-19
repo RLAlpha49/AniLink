@@ -10,6 +10,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `ThreadCommentVariables` is an interface representing the variables for the `ThreadCommentQuery`.
  * It includes optional parameters for querying thread comment data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface ThreadCommentVariables {
     /**
@@ -41,6 +42,7 @@ export interface ThreadCommentVariables {
 /**
  * `ThreadCommentQuery` is a class representing a query for thread comment data.
  * It includes a method to send the thread comment query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class ThreadCommentQuery extends APIWrapper {
     /**
@@ -63,6 +65,7 @@ export class ThreadCommentQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async threadComment(variables: ThreadCommentVariables): Promise<ThreadCommentResponse> {
         if (!variables) {

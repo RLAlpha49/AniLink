@@ -9,6 +9,7 @@ import { ImageSchema } from "../../Image";
 /**
  * `StudioResponse` is an interface representing the response from a studio query.
  * It includes the studio's id, name, animation studio status, media, site url, favourite status, and favourites count.
+ * @see https://docs.anilist.co/reference/object/studio
  */
 export interface StudioResponse {
     /**
@@ -129,6 +130,7 @@ export interface StudioResponse {
 /**
  * `StudioSchema` is a constant representing the GraphQL schema for a studio query.
  * It includes the studio's id, name, animation studio status, media, site url, favourite status, and favourites count.
+ * @see https://docs.anilist.co/reference/object/studio
  */
 export const StudioSchema = `
   id

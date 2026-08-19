@@ -3,6 +3,7 @@ import { type PageInfo } from "./PageInfo";
 
 /**
  * `UsersPageResponse` is the paginated response from a users query.
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface UsersPageResponse {
     /** Pagination metadata for the response. */

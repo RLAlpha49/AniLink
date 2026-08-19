@@ -4,6 +4,7 @@ import { type BasicUser, BasicUserSchema } from "../../Basic";
 /**
  * `ThreadCommentResponse` is an interface representing the response from a thread comment query.
  * It includes the comment's id, userId, threadId, comment, likeCount, isLiked status, siteUrl, createdAt, updatedAt, thread of type `ThreadResponse`, user of type `BasicUser`, likes of type `BasicUser[]`, childComments of type `ThreadCommentResponse[]`, and isLocked status.
+ * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export interface ThreadCommentResponse {
     /**
@@ -80,6 +81,7 @@ export interface ThreadCommentResponse {
 /**
  * `ThreadCommentSchema` is a constant representing the GraphQL schema for a thread comment query.
  * It includes the comment's id, userId, threadId, comment, likeCount, isLiked status, siteUrl, createdAt, updatedAt, thread of type `ThreadResponse`, user of type `BasicUser`, likes of type `BasicUser[]`, childComments, and isLocked status.
+ * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export const ThreadCommentSchema = `
   id

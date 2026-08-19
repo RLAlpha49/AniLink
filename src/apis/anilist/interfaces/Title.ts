@@ -1,6 +1,7 @@
 /**
  * `Title` is an interface representing a title.
  * It includes the romaji, english, native, and userPreferred each having their own properties.
+ * @see https://docs.anilist.co/reference/object/mediatitle
  */
 export interface Title {
     /**
@@ -27,6 +28,7 @@ export interface Title {
 /**
  * `TitleSchema` is a string representing the GraphQL schema for a title.
  * It includes the romaji, english, native, and userPreferred.
+ * @see https://docs.anilist.co/reference/object/mediatitle
  */
 export const TitleSchema = `
   title {

@@ -14,6 +14,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `StudioVariables` is an interface representing the variables for the `StudioQuery`.
  * It includes optional parameters for querying studio data.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface StudioVariables {
     /**
@@ -140,6 +141,7 @@ export interface StudioVariables {
 /**
  * `StudioQuery` is a class representing a query for studio data.
  * It includes a method to send the studio query and receive the response.
+ * @see https://docs.anilist.co/reference/query
  */
 export class StudioQuery extends APIWrapper {
     /**
@@ -162,6 +164,7 @@ export class StudioQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async studio(variables: StudioVariables): Promise<StudioResponse> {
         if (!variables) {

@@ -5,6 +5,7 @@ import { validateVariables } from "../../../base/ValidateVariables";
 /**
  * `MarkdownVariables` is an interface representing the variables for the `MarkdownQuery`.
  * It includes an optional markdown string.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface MarkdownVariables {
     /**
@@ -16,6 +17,7 @@ export interface MarkdownVariables {
 /**
  * `MarkdownQuery` is a class representing a query for converting Markdown text to HTML.
  * It includes a method to send the Markdown text and receive the converted HTML.
+ * @see https://docs.anilist.co/reference/query
  */
 export class MarkdownQuery extends APIWrapper {
     /**
@@ -38,6 +40,7 @@ export class MarkdownQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async markdown(variables: MarkdownVariables): Promise<string> {
         if (!variables.markdown) {

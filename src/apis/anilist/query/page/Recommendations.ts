@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `RecommendationsVariables` is an interface representing the variables for the `RecommendationsQuery`.
  * It includes optional page, per page, id, media id, media recommendation id, user id, rating, on list, rating greater, rating lesser, sort, and as html.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface RecommendationsVariables {
     /**
@@ -74,6 +75,7 @@ export interface RecommendationsVariables {
 /**
  * `RecommendationsQuery` is a class representing a query for recommendations.
  * It includes a method to get recommendations.
+ * @see https://docs.anilist.co/reference/query
  */
 export class RecommendationsQuery extends APIWrapper {
     /**
@@ -96,6 +98,7 @@ export class RecommendationsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async recommendations(
         variables: RecommendationsVariables

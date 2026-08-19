@@ -8,6 +8,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `StudiosVariables` is an interface representing the variables for the `StudiosQuery`.
  * It includes optional page, per page, id, search, id not, id in, id not in, sort, as html, media sort, media is main, media on list, media page, media per page, staff media sort, staff media type, staff media on list, staff media page, staff media per page, characters sort, characters page, characters per page, character media sort, character media on list, character media page, and character media per page.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface StudiosVariables {
     /**
@@ -144,6 +145,7 @@ export interface StudiosVariables {
 /**
  * `StudiosQuery` is a class representing a query for studios.
  * It includes a method to get studios.
+ * @see https://docs.anilist.co/reference/query
  */
 export class StudiosQuery extends APIWrapper {
     /**
@@ -166,6 +168,7 @@ export class StudiosQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
+     * @see https://docs.anilist.co/reference/query
      */
     async studios(variables: StudiosVariables): Promise<StudiosPageResponse> {
         if (!variables) {

@@ -14,6 +14,7 @@ import { validateVariables } from "../../../../base/ValidateVariables";
 /**
  * `MediasVariables` is an interface representing the variables for the `MediasQuery`.
  * It includes optional page, per page, id, idMal, startDate, endDate, season, seasonYear, type, format, status, episodes, duration, chapters, volumes, isAdult, genre, tag, minimumTagRank, tagCategory, onList, licensedBy, licensedById, averageScore, popularity, source, countryOfOrigin, isLicensed, search, id_not, id_in, id_not_in, idMal_not, idMal_in, idMal_not_in, startDate_greater, startDate_lesser, startDate_like, endDate_greater, endDate_lesser, endDate_like, format_in, format_not, format_not_in, status_in, status_not, status_not_in, episodes_greater, episodes_lesser, duration_greater, duration_lesser, chapters_greater, chapters_lesser, volumes_greater, volumes_lesser, genre_in, genre_not_in, tag_in, tag_not_in, tagCategory_in, tagCategory_not_in, licensedBy_in, licensedById_in, averageScore_not, averageScore_greater, averageScore_lesser, popularity_not, popularity_greater, popularity_lesser, source_in, sort, and asHtml.
+ * @see https://docs.anilist.co/reference/query
  */
 export interface MediasVariables {
     /**
@@ -380,6 +381,7 @@ export interface MediasVariables {
 /**
  * `MediasQuery` is a class that extends the `APIWrapper` class.
  * It defines the `medias` method that returns a `MediaResponse`.
+ * @see https://docs.anilist.co/reference/query
  */
 export class MediasQuery extends APIWrapper {
     /**
@@ -400,6 +402,7 @@ export class MediasQuery extends APIWrapper {
      * Returns a `MediaResponse` object.
      * @param variables - A `MediasVariables` object representing the variables for the query.
      * @returns A `MediaResponse` object.
+     * @see https://docs.anilist.co/reference/query
      */
     async medias(variables: MediasVariables): Promise<MediasPageResponse> {
         if (!variables) {

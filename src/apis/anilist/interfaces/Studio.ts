@@ -1,6 +1,7 @@
 /**
  * `Studio` is an interface representing a studio.
  * It includes the id and name each having their own properties.
+ * @see https://docs.anilist.co/reference/object/studio
  */
 export interface Studio {
     /**

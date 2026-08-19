@@ -13,6 +13,7 @@ import { type ThreadNotification, ThreadNotificationSchema } from "../../Notific
 /**
  * `NotificationResponse` is an interface representing the response from a notification query.
  * It includes various types of notifications such as AiringNotification, FollowingNotification, ActivityMessageNotification, ActivityMentionNotification, ActivityReplyNotification, ActivityReplySubscribedNotification, ActivityLikeNotification, ActivityReplyLikeNotification, ThreadCommentMentionNotification, ThreadCommentReplyNotification, ThreadCommentSubscribedNotification, ThreadCommentLikeNotification, ThreadLikeNotification, RelatedMediaAdditionNotification, MediaDataChangeNotification, MediaMergeNotification, and MediaDeletionNotification.
+ * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface NotificationResponse {
     /**
@@ -568,6 +569,7 @@ export interface NotificationResponse {
 /**
  * `NotificationSchema` is a constant representing the GraphQL schema for a notification query.
  * It includes various types of notifications such as AiringNotification, FollowingNotification, ActivityMessageNotification, ActivityMentionNotification, ActivityReplyNotification, ActivityReplySubscribedNotification, ActivityLikeNotification, ActivityReplyLikeNotification, ThreadCommentMentionNotification, ThreadCommentReplyNotification, ThreadCommentSubscribedNotification, ThreadCommentLikeNotification, ThreadLikeNotification, RelatedMediaAdditionNotification, MediaDataChangeNotification, MediaMergeNotification, and MediaDeletionNotification.
+ * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export const NotificationSchema = `
   ... on AiringNotification {
