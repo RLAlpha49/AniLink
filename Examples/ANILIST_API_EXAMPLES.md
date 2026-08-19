@@ -1,18 +1,18 @@
-## Examples
+# Examples
 
 Here are examples of how to use AniLink to interact with the AniList API:
 
-### Querying user data
+## Querying
 
 ```typescript
 // Querying user data
-aniLink.anilist.query.user({id: 542244, isHTML: true});
+aniLink.anilist.query.user({id: 542244, asHtml: true});
 
 // Querying media data
 aniLink.anilist.query.media({id: 1, type: 'ANIME'});
 
 // Querying media trend data
-aniLink.anilist.query.mediaTrend({mediaId: 1, type: 'ANIME'});
+aniLink.anilist.query.mediaTrend({mediaId: 1});
 
 // Querying airing schedule data
 aniLink.anilist.query.airingSchedule({mediaId: 130590});
@@ -22,7 +22,6 @@ aniLink.anilist.query.character({
   id: 1,
   asHtml: true,
   mediaSort: ['POPULARITY_DESC'],
-  mediaType: 'ANIME',
   mediaOnList: true,
   mediaPage: 1,
   mediaPerPage: 10
@@ -65,7 +64,7 @@ aniLink.anilist.query.genreCollection();
 aniLink.anilist.query.mediaTagCollection();
 
 // Querying viewer data
-aniLink.anilist.query.viewer({isHTML: true});
+aniLink.anilist.query.viewer({asHtml: true});
 
 // Querying notification data
 aniLink.anilist.query.notification({asHtml: true});
@@ -109,8 +108,11 @@ aniLink.anilist.query.siteStatistics();
 // Querying external link source collection data
 aniLink.anilist.query.externalLinkSourceCollection();
 
+// Querying users who liked a model
+aniLink.anilist.query.like({likeableId: 723422275, type: 'ACTIVITY'});
+
 // Querying users page data
-aniLink.anilist.query.page.users({id: 542244, isHTML: true});
+aniLink.anilist.query.page.users({id: 542244, asHtml: true});
 
 // Querying media page data
 aniLink.anilist.query.page.medias({id: 1, type: 'ANIME'});
@@ -131,7 +133,7 @@ aniLink.anilist.query.page.mediaLists({userId: 542244});
 aniLink.anilist.query.page.airingSchedules({mediaId: 130590});
 
 // Querying media trend page data
-aniLink.anilist.query.page.mediaTrends({mediaId: 1, type: 'ANIME'});
+aniLink.anilist.query.page.mediaTrends({mediaId: 1});
 
 // Querying notification page data
 aniLink.anilist.query.page.notifications({asHtml: true});
@@ -164,11 +166,10 @@ aniLink.anilist.query.page.recommendations({mediaId: 156822, asHtml: true
 });
 
 // Querying likes page data
-aniLink.anilist.query.page.likes({likeableId: 723422275, type: 'ACTIVITY', asHtml: true
-});
+aniLink.anilist.query.page.likes({likeableId: 723422275, type: 'ACTIVITY'});
 ```
 
-### Mutating user data
+## Mutating
 
 ```typescript
 // Updating a user
@@ -208,19 +209,10 @@ aniLink.anilist.mutation.updateMediaListEntries({
 });
 
 // Deleting media list entry
-const entryId = (
-  await handleRateLimit(() => aniLink.anilist.query.mediaList(
-    {
-      userId: 6503722,
-      mediaId: 143271
-    }
-   )
-  )
-).data.MediaList.id;
-aniLink.anilist.mutation.deleteMediaListEntry({id: entryId});
+aniLink.anilist.mutation.deleteMediaListEntry({id: 1});
 
 // Deleting custom list
-aniLink.anilist.mutation.deleteCustomLists({customList: 'test'});
+aniLink.anilist.mutation.deleteCustomList({customList: 'test', type: 'ANIME'});
 
 // Create text activity
 aniLink.anilist.mutation.saveTextActivity({text: 'test'})
@@ -239,17 +231,7 @@ aniLink.anilist.mutation.saveMessageActivity({id: 725254160, message: 'Updated M
 aniLink.anilist.mutation.saveListActivity({id: 725254160})
 
 // Delete Activity
-const activityId = (
-  await handleRateLimit(() => aniLink.anilist.query.activity(
-    {
-      userId: 542244,
-      messengerId: 6503722,
-      type: 'MESSAGE'
-    }
-   )
-  )
-).data.Activity.id
-aniLink.anilist.mutation.deleteActivity({id: activityId});
+aniLink.anilist.mutation.deleteActivity({id: 1});
 
 // Toggle Activity Pin
 aniLink.anilist.mutation.toggleActivityPin({id: 1, pinned: true});
@@ -282,7 +264,7 @@ aniLink.anilist.mutation.toggleFavourite({studioId: 561});
 aniLink.anilist.mutation.updateFavouriteOrder({studioIds: [561, 562, 563], studioOrder: [561, 562, 563]});
 
 // Save Review
-aniLink.anilist.mutation.saveReviewaniLink.anilist.mutation.saveReview({
+aniLink.anilist.mutation.saveReview({
   mediaId: 1,
   body: 'a'.repeat(2200), // This will create a string of 'a' with length 2200
   summary: 'b'.repeat(20), // This will create a string of 'b' with length 20
@@ -302,6 +284,9 @@ aniLink.anilist.mutation.saveReview({
 // Delete Review
 aniLink.anilist.mutation.deleteReview({id: 1});
 
+// Rate Review
+aniLink.anilist.mutation.rateReview({reviewId: 8008, rating: 'UP_VOTE'});
+
 // Save Recommendation
 aniLink.anilist.mutation.saveRecommendation({mediaId: 1, mediaRecommendationId: 495, rating: 'NO_RATING'})
 
@@ -318,17 +303,17 @@ aniLink.anilist.mutation.deleteThread({id: 1});
 aniLink.anilist.mutation.toggleThreadSubscription({threadId: 1, subscribe: true});
 
 // Save Thread Comment
-aniLink.anilist.mutation.saveThreadComment({threadId: 1, text: 'test'});
+aniLink.anilist.mutation.saveThreadComment({threadId: 1, comment: 'test'});
 
 // Update Thread Comment
-aniLink.anilist.mutation.saveThreadComment({id: 1, text: 'Updated Text'});
+aniLink.anilist.mutation.saveThreadComment({id: 1, comment: 'Updated Text'});
 
 // Delete Thread Comment
 aniLink.anilist.mutation.deleteThreadComment({id: 1});
 
 // Update AniChart Settings
-aniLink.anilist.mutation.updateAniChartSettings({titleLanguage: 'romaji', theme: 'dark'});
+aniLink.anilist.mutation.updateAniChartSettings({titleLanguage: 'romaji', outgoingLinkProvider: 'crunchyroll', theme: 'dark', sort: 'popularity'});
 
 // Update AniChart Highlights
-aniLink.anilist.mutation.updateAniChartHighlights({highlights: [{mediaId: 1, highlight: 'test'}]});
+aniLink.anilist.mutation.updateAniChartHighlights({highlights: [{mediaId: 1, highlight: true}]});
 ```
