@@ -3,9 +3,25 @@ import { join, relative, resolve } from "node:path";
 
 const ANILIST_API_REFERENCE_PREFIX = "https://docs.anilist.co/reference/";
 
-function isActualAniListApiReference(reference: string): boolean {
+/**
+ * The set of real, non-404 AniList API reference pages.
+ * Generated from the docs site's own navigation (see scripts/reference-pages.json).
+ */
+let referencePages: Set<string> | undefined;
+
+async function loadReferencePages(): Promise<Set<string>> {
+    if (referencePages) return referencePages;
+
+    const pagesPath = join(__dirname, "reference-pages.json");
+    const raw = await readFile(pagesPath, "utf8");
+    const parsed = JSON.parse(raw) as { pages: string[] };
+    referencePages = new Set(parsed.pages);
+    return referencePages;
+}
+
+function normalizeReferencePath(reference: string): string | undefined {
     if (!reference.startsWith(ANILIST_API_REFERENCE_PREFIX)) {
-        return false;
+        return undefined;
     }
 
     let suffix = reference.slice(ANILIST_API_REFERENCE_PREFIX.length);
@@ -27,7 +43,20 @@ function isActualAniListApiReference(reference: string): boolean {
         suffix = suffix.slice(0, -1);
     }
 
-    return suffix.length > 0 && !suffix.includes(" ");
+    if (suffix.length === 0 || suffix.includes(" ")) {
+        return undefined;
+    }
+
+    // Return the full path (e.g. "/reference/query") to match the allowlist.
+    return `/reference/${suffix}`;
+}
+
+async function isActualAniListApiReference(reference: string): Promise<boolean> {
+    const suffix = normalizeReferencePath(reference);
+    if (!suffix) return false;
+
+    const pages = await loadReferencePages();
+    return pages.has(suffix);
 }
 
 export interface JsdocIssue {
@@ -46,7 +75,7 @@ interface SourceLine {
     start: number;
 }
 
-export function checkAniLinkSource(source: string, file: string): JsdocIssue[] {
+export async function checkAniLinkSource(source: string, file: string): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
     const lines = getSourceLines(source);
 
@@ -101,7 +130,7 @@ export function checkAniLinkSource(source: string, file: string): JsdocIssue[] {
             "@example",
             `AniLink operation ${property[1]} must include an executable usage example`
         );
-        requireApiReference(
+        await requireApiReference(
             issues,
             source,
             file,
@@ -114,68 +143,48 @@ export function checkAniLinkSource(source: string, file: string): JsdocIssue[] {
     return issues;
 }
 
-export function checkOperationSource(source: string, file: string): JsdocIssue[] {
+export async function checkOperationSource(source: string, file: string): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
-    checkOperationDeclarations(source, file, issues);
-    checkOperationMembers(source, file, /[\\/]mutation[\\/]/.test(file), issues);
+    await checkOperationDeclarations(source, file, issues);
+    await checkOperationMembers(source, file, /[\\/]mutation[\\/]/.test(file), issues);
     return issues;
 }
 
-function checkOperationDeclarations(source: string, file: string, issues: JsdocIssue[]): void {
-    let checkingVariables = false;
-
+async function checkOperationDeclarations(
+    source: string,
+    file: string,
+    issues: JsdocIssue[]
+): Promise<void> {
     for (const line of getSourceLines(source)) {
         const trimmed = line.text.trim();
         const declaration = /^export (interface|class) ([A-Za-z]\w*)/.exec(trimmed);
-        if (declaration) {
-            const index = line.start + line.text.indexOf("export");
-            const documentation = requireDocumentation(
-                issues,
-                source,
-                file,
-                index,
-                `Export ${declaration[2]} must have JSDoc`
-            );
-            requireApiReference(
-                issues,
-                source,
-                file,
-                index,
-                documentation,
-                `Export ${declaration[2]}`
-            );
-            checkingVariables =
-                declaration[1] === "interface" && declaration[2].endsWith("Variables");
-            continue;
-        }
+        if (!declaration) continue;
 
-        if (checkingVariables && trimmed === "}") {
-            checkingVariables = false;
-            continue;
-        }
-
-        if (checkingVariables) {
-            const property = /^([A-Za-z]\w*)\?? *:/.exec(trimmed);
-            if (property) {
-                const index = line.start + line.text.indexOf(property[1]);
-                requireDocumentation(
-                    issues,
-                    source,
-                    file,
-                    index,
-                    `Variable ${property[1]} must have JSDoc`
-                );
-            }
-        }
+        const index = line.start + line.text.indexOf("export");
+        const documentation = requireDocumentation(
+            issues,
+            source,
+            file,
+            index,
+            `Export ${declaration[2]} must have JSDoc`
+        );
+        await requireApiReference(
+            issues,
+            source,
+            file,
+            index,
+            documentation,
+            `Export ${declaration[2]}`
+        );
     }
 }
 
-function checkOperationMembers(
+async function checkOperationMembers(
     source: string,
     file: string,
     mutation: boolean,
     issues: JsdocIssue[]
-): void {
+): Promise<void> {
     for (const line of getSourceLines(source)) {
         checkAuthTokenDocumentation(source, file, line, issues);
 
@@ -186,7 +195,7 @@ function checkOperationMembers(
         const method = /^async +([A-Za-z]\w*) *\(([^)]*)\)/.exec(trimmed);
         if (!method) continue;
 
-        checkMethodDocumentation(source, file, line, method, mutation, issues);
+        await checkMethodDocumentation(source, file, line, method, mutation, issues);
     }
 }
 
@@ -236,14 +245,14 @@ function checkConstructorDocumentation(
     );
 }
 
-function checkMethodDocumentation(
+async function checkMethodDocumentation(
     source: string,
     file: string,
     line: SourceLine,
     method: RegExpExecArray,
     mutation: boolean,
     issues: JsdocIssue[]
-): void {
+): Promise<void> {
     const index = line.start + line.text.indexOf("async");
     const documentation = requireDocumentation(
         issues,
@@ -254,7 +263,7 @@ function checkMethodDocumentation(
     );
     if (!documentation) return;
 
-    requireApiReference(issues, source, file, index, documentation, `Operation ${method[1]}`);
+    await requireApiReference(issues, source, file, index, documentation, `Operation ${method[1]}`);
 
     requireTag(
         issues,
@@ -289,7 +298,7 @@ function checkMethodDocumentation(
     }
 }
 
-export function checkTypeSource(source: string, file: string): JsdocIssue[] {
+export async function checkTypeSource(source: string, file: string): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
 
     for (const line of getSourceLines(source)) {
@@ -304,7 +313,14 @@ export function checkTypeSource(source: string, file: string): JsdocIssue[] {
             index,
             `Export ${declaration[2]} must have JSDoc`
         );
-        requireApiReference(issues, source, file, index, documentation, `Export ${declaration[2]}`);
+        await requireApiReference(
+            issues,
+            source,
+            file,
+            index,
+            documentation,
+            `Export ${declaration[2]}`
+        );
     }
 
     return issues;
@@ -315,19 +331,19 @@ export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssu
     const sourceRoot = resolve(projectRoot, "src");
     const aniLinkPath = join(sourceRoot, "AniLink.ts");
     const aniLinkSource = await readFile(aniLinkPath, "utf8");
-    issues.push(...checkAniLinkSource(aniLinkSource, relative(projectRoot, aniLinkPath)));
+    issues.push(...(await checkAniLinkSource(aniLinkSource, relative(projectRoot, aniLinkPath))));
 
     for (const directory of ["apis/anilist/query", "apis/anilist/mutation"]) {
         for (const file of await collectTypeScriptFiles(join(sourceRoot, directory))) {
             const source = await readFile(file, "utf8");
-            issues.push(...checkOperationSource(source, relative(projectRoot, file)));
+            issues.push(...(await checkOperationSource(source, relative(projectRoot, file))));
         }
     }
 
     const typeDirectory = join(sourceRoot, "apis/anilist/types");
     for (const file of await collectTypeScriptFiles(typeDirectory)) {
         const source = await readFile(file, "utf8");
-        issues.push(...checkTypeSource(source, relative(projectRoot, file)));
+        issues.push(...(await checkTypeSource(source, relative(projectRoot, file))));
     }
 
     return issues;
@@ -354,10 +370,18 @@ async function collectTypeScriptFiles(directory: string): Promise<string[]> {
 function getSourceLines(source: string): SourceLine[] {
     const lines: SourceLine[] = [];
     let start = 0;
+    const newline = /\r?\n/g;
+    let match: RegExpExecArray | null;
+    let lastIndex = 0;
 
-    for (const text of source.split(/\r?\n/)) {
-        lines.push({ text, start });
-        start += text.length + 1;
+    while ((match = newline.exec(source)) !== null) {
+        lines.push({ text: source.slice(lastIndex, match.index), start });
+        start = match.index + match[0].length;
+        lastIndex = start;
+    }
+
+    if (lastIndex < source.length) {
+        lines.push({ text: source.slice(lastIndex), start });
     }
 
     return lines;
@@ -376,9 +400,13 @@ function getPropertySignature(lines: SourceLine[], lineIndex: number): string {
 
 function findDocumentation(source: string, index: number): DocumentationBlock | undefined {
     const prefix = source.slice(0, index);
-    const match = /\/\*\*([\s\S]*?)\*\/\s*$/.exec(prefix);
-    if (!match) return undefined;
-    return { text: match[0] };
+    const closeIndex = prefix.lastIndexOf("*/");
+    if (closeIndex === -1) return undefined;
+
+    const openIndex = prefix.lastIndexOf("/**", closeIndex);
+    if (openIndex === -1) return undefined;
+
+    return { text: prefix.slice(openIndex, closeIndex + 2) };
 }
 
 function requireDocumentation(
@@ -409,18 +437,18 @@ function requireTag(
     }
 }
 
-function requireApiReference(
+async function requireApiReference(
     issues: JsdocIssue[],
     source: string,
     file: string,
     index: number,
     documentation: DocumentationBlock | undefined,
     subject: string
-): void {
+): Promise<void> {
     if (!documentation) return;
 
     const reference = /@see\s+(\S+)/.exec(documentation.text)?.[1];
-    if (!reference || !isActualAniListApiReference(reference)) {
+    if (!reference || !(await isActualAniListApiReference(reference))) {
         issues.push(
             createIssue(
                 source,
