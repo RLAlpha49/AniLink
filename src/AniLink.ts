@@ -1023,15 +1023,7 @@ export class AniLink {
              * @example
              * You cannot delete a media list entry without first fetching the entry's id. The entry's id is not the same as the mediaId. It is specific to each user and media.
              * ```typescript
-             * // Fetch the entry's id first by quering the user's media list by the mediaId.
-             * const entryId = (
-             *   await handleRateLimit(() => aniLink.anilist.query.mediaList(
-             *     {
-             *       userId: 6503722,
-             *       mediaId: 143271
-             *     }
-             *   ))).data.MediaList.id;
-             * aniLink.anilist.mutation.deleteMediaListEntry({id: entryId});
+             * await aniLink.anilist.mutation.deleteMediaListEntry({id: 1});
              * ```
              * @see https://docs.anilist.co/reference/mutation
              */
