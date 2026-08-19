@@ -1,241 +1,158 @@
 # AniLink
 
-For full documentation on methods and parameters, please refer to the [AniLink documentation](https://rlalpha49.github.io/AniLink/).
+A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co/). AniLink turns raw AniList GraphQL into a set of named methods. You can query a user, save a list entry, or toggle a favourite. You do not need to write query strings or hand-roll HTTP.
 
-AniLink is a TypeScript library for interacting with the AniList API. It provides methods for querying and mutating data, making it easier to integrate AniList's features into your own applications.
+## Why It Exists
 
-## Installation
+AniList exposes a GraphQL API that is flexible but verbose. Every request needs a query document, a variables object, and careful handling of the response shape. AniLink removes that ceremony. You call a method, pass a plain object, and get back typed data. AniLink also validates your variables before they leave your app. A wrong field type fails fast with a clear message instead of a confusing API error.
 
-To install AniLink, you can use npm or yarn.:
+## What You Can Do With It
+
+AniLink uses one instance with a single `anilist` surface:
+
+- `anilist.query` fetches data. This includes users, media, characters, staff, studios, reviews, activities, threads, notifications, and more.
+
+- `anilist.query.page` returns paginated versions of the same resources.
+
+- `anilist.mutation` changes data. You can update your profile, save and delete list entries, and post activities and replies. You can also toggle likes and favourites and manage reviews, threads, and AniChart settings.
+
+- `anilist.custom` sends any raw query or mutation when you need something the named methods do not cover.
+
+```typescript
+import AniLink from "anilink-api-wrapper";
+
+// Remember that you can create multiple instances with different auth tokens
+// or one instance without a token for public queries.
+const aniLink = new AniLink();
+const aniLinkAuth = new AniLink("your-auth-token");
+
+
+// Fetch a user
+const user = await aniLink.anilist.query.user({ id: 542244 });
+
+// Save an anime to your list
+await aniLinkAuth.anilist.mutation.saveMediaListEntry({
+  mediaId: 1,
+  status: "COMPLETED",
+  score: 9,
+});
+
+// Send a raw query
+const viewer = await aniLinkAuth.anilist.custom("query { Viewer { id } }");
+```
+
+## Key Features
+
+- **Typed end to end.** Every method has a typed variables interface and a typed response. Your editor catches mistakes before runtime.
+
+- **No GraphQL strings for common tasks.** The named query and mutation methods cover the everyday AniList operations.
+
+- **Variable validation.** AniLink checks required fields and types before sending. It throws a descriptive error like `Invalid id: 542244. Expected type: number` when something is wrong.
+
+- **Optional auth.** Construct with a token for authenticated calls, or without one for public queries. You can create multiple instances with different tokens.
+
+- **Custom escape hatch.** `anilist.custom` accepts any query or mutation string with an optional variables object.
+
+- **Pagination built in.** Page queries accept `page` and `perPage` and return paged responses.
+
+- **Clear error handling.** API errors, including rate limits, surface as thrown errors you can catch and retry.
+
+## Who It Is For
+
+AniLink is for developers building tools around AniList. This includes trackers, recommendation engines, Discord bots, dashboards, or anything that reads or writes AniList data. If you would rather call `query.media({ id: 1 })` than maintain GraphQL documents, this is for you.
+
+## Getting Started
+
+### Install
 
 ```bash
 npm install anilink-api-wrapper
 ```
 
-or
-
-```bash
-yarn add anilink-api-wrapper
-```
-
-## Initialization
-
-### AniList
-
-To start using AniLink, you need to import it and initialize it with an optional authentication token. You can get an authentication token by registering your application on the AniList website.
-
-#### Typescript
+### Initialize
 
 ```typescript
-import AniLink from 'anilink-api-wrapper';
-```
+import AniLink from "anilink-api-wrapper";
 
-#### Javascript
+// With a token (required for authenticated queries and mutations)
+const aniLink = new AniLink("your-auth-token");
 
-```javascript
-const AniLink = require('anilink-api-wrapper');
-```
-
-#### Initialization
-
-```typescript
-const authToken = 'your-auth-token';
-const aniLink = new AniLink(authToken);
-```
-
-You can also initialize AniLink without an authentication token
-
-```typescript
+// Without a token (public queries only)
 const aniLink = new AniLink();
 ```
 
-## AniList API
+Get a token by registering an application on the [AniList developer settings](https://anilist.co/settings/developer).
 
-### Structure
-
-AniLink for AniList is divided into two main sections: `anilist.query` and `anilist.mutation`. The `anilist.query` section contains methods for querying data from the AniList API, while the `anilist.mutation` section contains methods for mutating data.
-
-#### Custom Queries and Mutations
-
-If needed there is a custom section `anilist.custom` that allows the user to pass a custom query or mutation to the AniList API.
-
-The method accepts two parameters: the query or mutation string and an optional variables object.
+### Query
 
 ```typescript
-const viewer = await aniLink.anilist.custom('query {Viewer {id}}');
-
-const mutation = 'mutation ($about: String) {UpdateUser (about: $about) {id}}';
-const variables = { about: "New about text" };
-const response = await aniLink.anilist.custom(mutation, variables);
+const user = await aniLink.anilist.query.user({ id: 542244, asHtml: true });
+const media = await aniLink.anilist.query.media({ id: 1, type: "ANIME" });
+const viewer = await aniLink.anilist.query.viewer({ asHtml: true });
 ```
 
-#### Query Methods
+### Paginate
 
-The `anilist.query` section is further divided into main query methods and page query methods. The main query methods return a single piece of data, while the page query methods return pages of data.
+```typescript
+const page = await aniLink.anilist.query.page.medias({
+  page: 1,
+  perPage: 10,
+  type: "ANIME",
+  sort: ["POPULARITY_DESC"],
+});
+```
 
-List of main query methods in `anilist.query`:
+### Mutate
 
-- user
-- media
-- mediaTrend
-- airingSchedule
-- character
-- staff
-- mediaList
-- mediaListCollection
-- genreCollection
-- mediaTagCollection
-- viewer
-- notification
-- studio
-- review
-- activity
-- activityReply
-- following
-- follower
-- thread
-- threadComment
-- recommendation
-- markdown
-- aniChartUser
-- siteStatistics
-- externalLinkSourceCollection
+```typescript
+await aniLink.anilist.mutation.saveMediaListEntry({
+  mediaId: 1,
+  status: "COMPLETED",
+  score: 9,
+});
 
-List of page query methods in `anilist.query.page`:
+await aniLink.anilist.mutation.toggleFavourite({ animeId: 1 });
+```
 
-- users
-- medias
-- characters
-- staffs
-- studios
-- mediaLists
-- airingSchedules
-- mediaTrends
-- notifications
-- followers
-- following
-- activities
-- activityReplies
-- threads
-- threadComments
-- reviews
-- recommendations
-- likes
+### Handle errors
 
-#### Mutation Methods
-
-List of methods in `anilist.mutation`:
-
-- updateUser
-- saveMediaListEntry
-- updateMediaListEntries
-- deleteMediaListEntries
-- deleteCustomLists
-- saveTextActivity
-- saveMessageActivity
-- deleteActivity
-- toggleActivityPin
-- toggleActivitySubscription
-- saveActivityReply
-- deleteActivityReply
-- toggleLike
-- toggleLikeV2
-- toggleFollow
-- toggleFavourite
-- updateFavouriteOrder
-- saveReview
-- deleteReview
-- saveRecommendation
-- saveThread
-- deleteThread
-- toggleThreadSubscription
-- saveThreadComment
-- deleteThreadComment
-- updateAniChartSettings
-- updateAniChartHighlights
-
-### Error Handling
-
-AniLink will throw an error if the AniList API returns an error. You can catch these errors using a try-catch block.
+AniLink throws on API errors and on invalid variables. Catch them with a `try/catch`:
 
 ```typescript
 try {
-  const user = await aniLink.anilist.query.user({id: 542244});
+  const user = await aniLink.anilist.query.user({ id: 542244 });
   console.log(user);
 } catch (error) {
   console.error(error);
 }
 ```
 
-This includes status codes and error messages returned by the AniList API. Here is an example rate limit handler to catch the errors thrown by AniLink:
+Common status codes from the AniList API:
 
-##### Typescript
+- `400` bad request
+- `401` unauthorized
+- `404` not found
+- `429` too many requests (rate limit)
+- `500` internal server error
 
-```typescript
-async function handleRateLimit(apiCall: () => Promise<any>, retryAfter = 60) {
-  try {
-    let response;
-    try {
-      response = await apiCall();
-    } catch (error) {
-      throw error;
-    }
-    console.log(response.data);
-    return response;
-  } catch (error: any) {
-    if (error.response && error.response.status === 429) {
-      console.log('Rate limit exceeded, waiting for 1 minute before retrying...');
-      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-      console.log('Retrying...');
-      return handleRateLimit(apiCall, retryAfter);
-    } else {
-      if (error.response && error.response.data) {
-        throw error.response.data;
-      } else {
-        throw error.response || error;
-      }
-    }
-  }
-}
+## Documentation
+
+Full method and parameter reference: [AniLink documentation](https://rlalpha49.github.io/AniLink/).
+
+More usage examples: [ANILIST_API_EXAMPLES](https://github.com/RLAlpha49/AniLink/blob/master/Examples/ANILIST_API_EXAMPLES.md).
+
+## Development
+
+```bash
+npm install               # install dependencies
+npm run typecheck         # TypeScript type checking
+npm test                  # run unit tests
+npm run test:integration  # run integration tests
+npm run lint              # lint source and tests
+npm run build             # build to dist/
+npm run docs:generate     # generate API docs to docs/
 ```
-
-##### Javascript
-
-```javascript
-async function handleRateLimit(apiCall, retryAfter = 60) {
-    // Same as above
-}
-```
-
-The possible error codes returned by the AniList API are:
-- 400: Bad Request (e.g. missing variables, invalid variables, or invalid query)
-- 401: Unauthorized (e.g. invalid authentication token)
-- 404: Not Found (e.g. user not found)
-- 429: Too Many Requests (e.g. rate limit exceeded)
-- 500: Internal Server Error (e.g. AniList server error)
-
-#### Missing or Invalid Variables
-
-AniLink will also throw an error if any variables are missing or invalid. For example, if you try to query a user providing a string instead of a number for ID, AniLink will throw an error. Most variables are optional however there a few that are required.
-```typescript
-try {
-  const user = await aniLink.anilist.query.user({id: '542244'});
-  console.log(user);
-} catch (error) {
-  console.error(error);
-}
-```
-
-Example Error Thrown:
-
-```typescript
-  Invalid id: 542244. Expected type: number
-```
-
-### Examples
-
-See the [ANILIST_API_EXAMPLES](https://github.com/RLAlpha49/AniLink/blob/master/Examples/ANILIST_API_EXAMPLES.md) for examples of how to use AniLink to interact with the AniList API.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/RLAlpha49/AniLink/blob/master/LICENSE) file for details.
+[MIT](https://github.com/RLAlpha49/AniLink/blob/master/LICENSE)
