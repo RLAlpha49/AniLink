@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate documentation
+      - name: Generate documentation and API explorer
         run: npm run docs:generate
 
       - name: Publish documentation branch

@@ -2,6 +2,8 @@
 
 A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co/). AniLink turns raw AniList GraphQL into a set of named methods. You can query a user, save a list entry, or toggle a favourite. You do not need to write query strings or hand-roll HTTP.
 
+> 🧪 Try the [AniLink API Explorer](https://rlalpha49.github.io/AniLink/explorer/) — build and test AniLink calls live against AniList.
+
 ## Why It Exists
 
 AniList exposes a GraphQL API that is flexible but verbose. Every request needs a query document, a variables object, and careful handling of the response shape. AniLink removes that ceremony. You call a method, pass a plain object, and get back typed data. AniLink also validates your variables before they leave your app. A wrong field type fails fast with a clear message instead of a confusing API error.
