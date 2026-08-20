@@ -1,4 +1,57 @@
-import axios, { type AxiosResponse } from "axios";
+import http from "node:http";
+import https from "node:https";
+import axios, { type AxiosError, type AxiosResponse } from "axios";
+import {
+    AniLinkApiError,
+    AniLinkError,
+    AniLinkErrorCodes,
+    AniLinkNetworkError,
+} from "./AniLinkError";
+
+/** The default maximum time a request may remain in progress. */
+export const DEFAULT_REQUEST_TIMEOUT = 30_000;
+
+/** Transport settings shared by the AniLink request operations. */
+export interface RequestOptions {
+    timeout?: number;
+    signal?: AbortSignal;
+    exposeRawAxiosError?: boolean;
+}
+
+const axiosClient = axios.create({
+    timeout: DEFAULT_REQUEST_TIMEOUT,
+    httpAgent: new http.Agent({ keepAlive: true }),
+    httpsAgent: new https.Agent({ keepAlive: true }),
+});
+
+let requestOptions: Required<Pick<RequestOptions, "timeout" | "exposeRawAxiosError">> &
+    Pick<RequestOptions, "signal"> = {
+    timeout: DEFAULT_REQUEST_TIMEOUT,
+    exposeRawAxiosError: false,
+};
+
+/**
+ * Configures the timeout and cancellation signal used by subsequent requests.
+ *
+ * Passing no options restores the default timeout and clears the signal. A
+ * timeout of zero is valid because Axios uses it to disable its timeout.
+ *
+ * @param options - Optional timeout and abort signal configuration.
+ * @throws A `TypeError` when `timeout` is negative or not finite.
+ */
+export const configureRequestOptions = (options: RequestOptions = {}): void => {
+    const timeout = options.timeout ?? DEFAULT_REQUEST_TIMEOUT;
+
+    if (!Number.isFinite(timeout) || timeout < 0) {
+        throw new TypeError("timeout must be a finite number greater than or equal to 0");
+    }
+
+    requestOptions = {
+        timeout,
+        signal: options.signal,
+        exposeRawAxiosError: options.exposeRawAxiosError ?? false,
+    };
+};
 
 /**
  * A GraphQL response envelope as returned by the AniList API.
@@ -37,6 +90,53 @@ export const unwrapGraphQLResponse = <T>(response: unknown): T => {
     return response as T;
 };
 
+const getRawAxiosError = (error: unknown): unknown =>
+    requestOptions.exposeRawAxiosError ? error : undefined;
+
+const normalizeAxiosError = (error: AxiosError): AniLinkError => {
+    if (axios.isCancel(error)) {
+        return new AniLinkNetworkError(
+            AniLinkErrorCodes.ABORTED,
+            "AniList request was cancelled.",
+            getRawAxiosError(error)
+        );
+    }
+
+    if (error.response?.status !== undefined) {
+        return new AniLinkApiError(
+            error.response.status,
+            error.response.data,
+            getRawAxiosError(error)
+        );
+    }
+
+    if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
+        return new AniLinkNetworkError(
+            AniLinkErrorCodes.TIMEOUT,
+            "AniList request timed out.",
+            getRawAxiosError(error)
+        );
+    }
+
+    return new AniLinkNetworkError(
+        AniLinkErrorCodes.NETWORK,
+        "AniList request failed due to a network error.",
+        getRawAxiosError(error)
+    );
+};
+
+const normalizeRequestError = (error: unknown): AniLinkError => {
+    if (error instanceof AniLinkError) {
+        return error;
+    }
+
+    if (axios.isAxiosError(error)) {
+        return normalizeAxiosError(error);
+    }
+
+    return new AniLinkError("AniList request failed.", AniLinkErrorCodes.UNKNOWN);
+};
+
 /**
  * Sends a request to the specified URL.
  * @param url - The URL to send the request to.
@@ -64,12 +164,20 @@ export const sendRequest = async <T = unknown>(
         headers.Authorization = `Bearer ${token}`;
     }
 
-    const response: AxiosResponse = await axios({
-        url,
-        method,
-        data,
-        headers,
-    });
+    let response: AxiosResponse;
+
+    try {
+        response = await axiosClient({
+            url,
+            method,
+            data,
+            headers,
+            timeout: requestOptions.timeout,
+            signal: requestOptions.signal,
+        });
+    } catch (error: unknown) {
+        throw normalizeRequestError(error);
+    }
 
     return unwrapGraphQLResponse<T>(response.data);
 };

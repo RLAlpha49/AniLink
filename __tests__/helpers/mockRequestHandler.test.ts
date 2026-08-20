@@ -1,6 +1,25 @@
 import { unwrapGraphQLResponse } from "../../src/base/RequestHandler";
-import { createTestClient, getLastRequest, mockSendRequest } from "./mockRequestHandler";
+import {
+    createTestClient,
+    createTestClientWithOptions,
+    createTestClientWithoutToken,
+    getLastRequest,
+    mockConfigureRequestOptions,
+    mockSendRequest,
+} from "./mockRequestHandler";
 import { expect, test } from "vitest";
+
+test("configures transport options from the AniLink constructor", () => {
+    const signal = new AbortController().signal;
+
+    createTestClientWithOptions({ timeout: 1_000, signal });
+
+    expect(mockConfigureRequestOptions).toHaveBeenCalledWith({ timeout: 1_000, signal });
+});
+
+test("keeps no-token construction valid", () => {
+    expect(createTestClientWithoutToken()).toBeDefined();
+});
 
 test("routes AniLink requests through the mocked transport", async () => {
     const client = createTestClient("fake-token");

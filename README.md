@@ -116,16 +116,60 @@ await aniLink.anilist.mutation.toggleFavourite({ animeId: 1 });
 
 ### Handle errors
 
-AniLink throws on API errors and on invalid variables. Catch them with a `try/catch`:
+AniLink throws typed errors with stable `code` values. HTTP failures are
+represented by `AniLinkApiError` and expose the HTTP `status`; network,
+timeout, and cancellation failures use `AniLinkNetworkError`. Successful
+AniList response data is returned normally as the typed result of each
+query or mutation. For failed API requests, `AniLinkApiError.data` contains
+the upstream AniList response body. AniLink does not expose the raw Axios
+response object, request headers, bearer token, or request internals.
 
 ```typescript
+import {
+  AniLinkApiError,
+  AniLinkNetworkError,
+} from "anilink-api-wrapper";
+
 try {
   const user = await aniLink.anilist.query.user({ id: 542244 });
   console.log(user);
-} catch (error) {
-  console.error(error);
+} catch (error: unknown) {
+  if (error instanceof AniLinkApiError) {
+    console.error(error.code, error.status, error.data);
+
+    if (error.status === 429) {
+      console.error("AniList rate limit reached. Try again later.");
+    }
+  } else if (error instanceof AniLinkNetworkError) {
+    console.error(error.code, error.message);
+  } else {
+    throw error;
+  }
 }
 ```
+
+The available transport codes are `API_ERROR`, `NETWORK_ERROR`,
+`TIMEOUT_ERROR`, `ABORTED_ERROR`, and `UNKNOWN_ERROR`.
+
+For local debugging, you can opt into the original Axios error:
+
+```typescript
+const debugClient = new AniLink("your-auth-token", {
+  exposeRawAxiosError: true,
+});
+
+try {
+  await debugClient.anilist.query.user({ id: 542244 });
+} catch (error: unknown) {
+  if (error instanceof AniLinkApiError) {
+    console.error(error.rawAxiosError);
+  }
+}
+```
+
+`exposeRawAxiosError` defaults to `false`. Use it for local debugging;
+the raw Axios error can contain request configuration and bearer-token
+headers.
 
 Common status codes from the AniList API:
 

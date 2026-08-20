@@ -10,5 +10,7 @@ global.fetch = networkDisabled as typeof fetch;
 
 vi.mock("axios", () => ({
     __esModule: true,
-    default: networkDisabled,
+    default: Object.assign(networkDisabled, {
+        create: () => networkDisabled,
+    }),
 }));

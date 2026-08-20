@@ -212,6 +212,19 @@ import {
     type UpdateAniChartHighlightsVariables,
 } from "./apis/anilist/mutation/UpdateAniChartHighlights";
 import { CustomRequest } from "./apis/anilist/Custom";
+import { configureRequestOptions, type RequestOptions } from "./base/RequestHandler";
+import {
+    AniLinkApiError,
+    AniLinkError,
+    AniLinkErrorCodes,
+    AniLinkNetworkError,
+} from "./base/AniLinkError";
+
+export { AniLinkApiError, AniLinkError, AniLinkErrorCodes, AniLinkNetworkError };
+export type { AniLinkErrorCode } from "./base/AniLinkError";
+
+/** Transport options accepted by an `AniLink` client. */
+export interface AniLinkOptions extends RequestOptions {}
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -1376,6 +1389,7 @@ export class AniLink {
     /**
      * Creates a new AniLink instance. The `authToken` parameter is optional and only required for authenticated queries and mutations. If no `authToken` is provided, only public queries will be available. You are able to create multiple AniLink instances with different `authToken`s.
      * @param {string} [authToken] - The authentication token to use for API requests.
+     * @param {AniLinkOptions} [options] - Timeout, cancellation, and debugging settings for API requests.
      * @public
      * @example
      * ```typescript
@@ -1384,7 +1398,9 @@ export class AniLink {
      * const aniLink2 = new AniLink();
      * ```
      */
-    constructor(authToken: string) {
+    constructor(authToken: string, options?: AniLinkOptions) {
+        configureRequestOptions(options);
+
         const customInstance = new CustomRequest(authToken);
 
         const userQueryInstance = new UserQuery(authToken);
@@ -1648,4 +1664,10 @@ export class AniLink {
     }
 }
 
-module.exports = AniLink;
+module.exports = Object.assign(AniLink, {
+    AniLink,
+    AniLinkApiError,
+    AniLinkError,
+    AniLinkErrorCodes,
+    AniLinkNetworkError,
+});
