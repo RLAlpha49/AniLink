@@ -3,6 +3,33 @@
   "version": "1.29.2",
   "description": "API wrapper for AniManga sites such as Anilist, MyAnimeList, Kitsu.",
   "main": "dist/AniLink.js",
+  "types": "./dist/AniLink.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/AniLink.d.ts",
+      "require": "./dist/AniLink.js",
+      "import": "./dist/AniLink.js",
+      "default": "./dist/AniLink.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RLAlpha49/AniLink.git"
+  },
+  "homepage": "https://rlalpha49.github.io/AniLink/",
+  "bugs": {
+    "url": "https://github.com/RLAlpha49/AniLink/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

@@ -1673,12 +1673,3 @@ export class AniLink {
         };
     }
 }
-
-module.exports = Object.assign(AniLink, {
-    AniLink,
-    AniLinkApiError,
-    AniLinkError,
-    AniLinkErrorCodes,
-    AniLinkNetworkError,
-    AniLinkValidationError,
-});

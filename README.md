@@ -19,7 +19,7 @@ AniLink uses one instance with a single `anilist` surface:
 - `anilist.custom` sends any raw query or mutation when you need something the named methods do not cover.
 
 ```typescript
-import AniLink from "anilink-api-wrapper";
+import { AniLink } from "anilink-api-wrapper";
 
 // Remember that you can create multiple instances with different auth tokens
 // or one instance without a token for public queries.
@@ -72,7 +72,7 @@ npm install anilink-api-wrapper
 ### Initialize
 
 ```typescript
-import AniLink from "anilink-api-wrapper";
+import { AniLink } from "anilink-api-wrapper";
 
 // With a token (required for authenticated queries and mutations)
 const aniLink = new AniLink("your-auth-token");

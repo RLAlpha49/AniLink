@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "allowJs": true,
     "target": "ES2022",
     "module": "commonjs",
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022"],
     "strict": true,
     "esModuleInterop": true,
-    "types": ["node"]
+    "types": ["node"],
+    "declaration": true,
+    "declarationMap": true
   },
   "include": [
     "src/**/*.ts",
