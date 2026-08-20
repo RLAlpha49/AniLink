@@ -58,12 +58,14 @@ export interface MediaListCollectionVariables {
     forceSingleCompletedList?: boolean;
 
     /**
-     * `chunk` is a number representing the chunk of the media list collection.
+     * `chunk` is a 1-based number selecting which chunk of the media list collection to fetch.
+     * Advance it while the response's `hasNextChunk` is `true` to walk the whole list.
      */
     chunk?: number;
 
     /**
-     * `perChunk` is a number representing the number of media per chunk.
+     * `perChunk` is the number of entries to return per chunk. Pair with `chunk` to page
+     * through a large list one chunk at a time.
      */
     perChunk?: number;
 
@@ -162,8 +164,24 @@ export class MediaListCollectionQuery extends APIWrapper {
     /**
      * `mediaListCollection` is a method that sends a query request to get media list collection data.
      *
+     * Chunk semantics: AniList returns large user lists in chunks. Set `chunk` (1-based) and
+     * `perChunk` (entries per chunk) to fetch a single chunk; the response's `hasNextChunk` flag
+     * indicates whether more chunks remain. To retrieve an entire list, advance `chunk` from 1
+     * while `hasNextChunk` is `true`. Use the shared `paginateChunks` helper (see `src/base/Paginator.ts`)
+     * to walk chunks with a `maxChunks` guard instead of hand-rolling the loop:
+     *
+     * ```typescript
+     * const result = await paginateChunks(
+     *   (chunk, perChunk) => aniLink.anilist.query.mediaListCollection(
+     *     { userId: 542244, type: "ANIME", chunk, perChunk }
+     *   ),
+     *   "lists",
+     *   { perChunk: 500, maxChunks: 20 }
+     * );
+     * ```
+     *
      * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @returns The response from the query request, including `lists` and `hasNextChunk`.
      * @see https://docs.anilist.co/reference/query
      */
     async mediaListCollection(

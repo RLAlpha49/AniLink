@@ -133,7 +133,9 @@ export interface MediaListCollectionResponse {
         status: string;
     }>;
     /**
-     * `hasNextChunk` is a boolean representing whether there is a next chunk in the media list collection.
+     * `hasNextChunk` is a boolean indicating whether more chunks remain in the media list collection.
+     * When `true`, advance the `chunk` variable and re-issue the query to fetch the next chunk.
+     * Use the shared `paginateChunks` helper (see `src/base/Paginator.ts`) to walk chunks with a guard.
      */
     hasNextChunk: boolean;
 }

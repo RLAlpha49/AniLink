@@ -16,6 +16,8 @@ AniLink uses one instance with a single `anilist` surface:
 
 - `anilist.query.page` returns paginated versions of the same resources.
 
+- `anilist.paginate`, `anilist.paginatePages`, and `anilist.paginateChunks` walk every page or chunk for you, so you do not hand-roll `hasNextPage` loops.
+
 - `anilist.mutation` changes data. You can update your profile, save and delete list entries, and post activities and replies. You can also toggle likes and favourites and manage reviews, threads, and AniChart settings.
 
 - `anilist.custom` sends any raw query or mutation when you need something the named methods do not cover.
@@ -28,15 +30,14 @@ import { AniLink } from "anilink-api-wrapper";
 const aniLink = new AniLink();
 const aniLinkAuth = new AniLink("your-auth-token");
 
-
 // Fetch a user
 const user = await aniLink.anilist.query.user({ id: 542244 });
 
 // Save an anime to your list
 await aniLinkAuth.anilist.mutation.saveMediaListEntry({
-  mediaId: 1,
-  status: "COMPLETED",
-  score: 9,
+    mediaId: 1,
+    status: "COMPLETED",
+    score: 9,
 });
 
 // Send a raw query
@@ -55,7 +56,7 @@ const viewer = await aniLinkAuth.anilist.custom("query { Viewer { id } }");
 
 - **Custom escape hatch.** `anilist.custom` accepts any query or mutation string with an optional variables object.
 
-- **Pagination built in.** Page queries accept `page` and `perPage` and return paged responses.
+- **Pagination built in.** Page queries accept `page` and `perPage`, and the `paginate` / `paginatePages` / `paginateChunks` helpers walk every page or chunk with a max-page guard.
 
 - **Clear error handling.** API errors, including rate limits, surface as thrown errors you can catch and retry.
 
@@ -95,22 +96,67 @@ const viewer = await aniLink.anilist.query.viewer({ asHtml: true });
 
 ### Paginate
 
+Page queries accept `page` and `perPage` and return a single page with `pageInfo`. Fetch one page when you know the range:
+
 ```typescript
 const page = await aniLink.anilist.query.page.medias({
-  page: 1,
-  perPage: 10,
-  type: "ANIME",
-  sort: ["POPULARITY_DESC"],
+    page: 1,
+    perPage: 10,
+    type: "ANIME",
+    sort: ["POPULARITY_DESC"],
 });
 ```
+
+To walk every page, use the helpers on `aniLink.anilist`. They track `page`/`perPage` and `hasNextPage` for you and stop at a `maxPages` guard, so a runaway loop cannot fetch forever.
+
+`paginate` collects every item across all pages into one array:
+
+```typescript
+const result = await aniLink.anilist.paginate(
+    (page, perPage) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" }),
+    "media",
+    { perPage: 50, maxPages: 10 }
+);
+console.log(result.items.length, result.pageCount, result.truncated);
+```
+
+`paginatePages` yields each raw page response in turn. Use it for streaming or early exit when you do not need every item in memory:
+
+```typescript
+for await (const page of aniLink.anilist.paginatePages((page, perPage) =>
+    aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" })
+)) {
+    console.log(page.pageInfo.currentPage, page.media.length);
+    if (page.media.length > 0 && page.media[0].id === 1) break;
+}
+```
+
+`paginateChunks` walks `MediaListCollection` chunks, which AniList returns with `hasNextChunk` instead of `pageInfo`:
+
+```typescript
+const result = await aniLink.anilist.paginateChunks(
+    (chunk, perChunk) =>
+        aniLink.anilist.query.mediaListCollection({
+            userId: 542244,
+            type: "ANIME",
+            chunk,
+            perChunk,
+        }),
+    "lists",
+    { perChunk: 500, maxChunks: 20 }
+);
+console.log(result.items.length, result.chunkCount, result.truncated);
+```
+
+Each helper returns `truncated: true` when it stopped at the guard before the source ran out of pages or chunks.
 
 ### Mutate
 
 ```typescript
 await aniLink.anilist.mutation.saveMediaListEntry({
-  mediaId: 1,
-  status: "COMPLETED",
-  score: 9,
+    mediaId: 1,
+    status: "COMPLETED",
+    score: 9,
 });
 
 await aniLink.anilist.mutation.toggleFavourite({ animeId: 1 });
@@ -128,29 +174,25 @@ the upstream AniList response body. AniLink does not expose the raw Axios
 response object, request headers, bearer token, or request internals.
 
 ```typescript
-import {
-  AniLinkApiError,
-  AniLinkAuthError,
-  AniLinkNetworkError,
-} from "anilink-api-wrapper";
+import { AniLinkApiError, AniLinkAuthError, AniLinkNetworkError } from "anilink-api-wrapper";
 
 try {
-  const user = await aniLink.anilist.query.user({ id: 542244 });
-  console.log(user);
+    const user = await aniLink.anilist.query.user({ id: 542244 });
+    console.log(user);
 } catch (error: unknown) {
-  if (error instanceof AniLinkApiError) {
-    console.error(error.code, error.status, error.data);
+    if (error instanceof AniLinkApiError) {
+        console.error(error.code, error.status, error.data);
 
-    if (error.status === 429) {
-      console.error("AniList rate limit reached. Try again later.");
+        if (error.status === 429) {
+            console.error("AniList rate limit reached. Try again later.");
+        }
+    } else if (error instanceof AniLinkAuthError) {
+        console.error(error.code, error.message);
+    } else if (error instanceof AniLinkNetworkError) {
+        console.error(error.code, error.message);
+    } else {
+        throw error;
     }
-  } else if (error instanceof AniLinkAuthError) {
-    console.error(error.code, error.message);
-  } else if (error instanceof AniLinkNetworkError) {
-    console.error(error.code, error.message);
-  } else {
-    throw error;
-  }
 }
 ```
 
@@ -161,15 +203,15 @@ For local debugging, you can opt into the original Axios error:
 
 ```typescript
 const debugClient = new AniLink("your-auth-token", {
-  exposeRawAxiosError: true,
+    exposeRawAxiosError: true,
 });
 
 try {
-  await debugClient.anilist.query.user({ id: 542244 });
+    await debugClient.anilist.query.user({ id: 542244 });
 } catch (error: unknown) {
-  if (error instanceof AniLinkApiError) {
-    console.error(error.rawAxiosError);
-  }
+    if (error instanceof AniLinkApiError) {
+        console.error(error.rawAxiosError);
+    }
 }
 ```
 
@@ -193,13 +235,13 @@ const aniLink = new AniLink("your-auth-token", { retry: true });
 
 // Or tune the policy
 const aniLink = new AniLink("your-auth-token", {
-  retry: {
-    maxRetries: 3, // retries after the initial attempt
-    baseDelayMs: 250, // first backoff delay
-    maxDelayMs: 5_000, // backoff cap
-    retryOnStatus: [429, 500, 502, 503, 504],
-    retryOnNetworkError: true,
-  },
+    retry: {
+        maxRetries: 3, // retries after the initial attempt
+        baseDelayMs: 250, // first backoff delay
+        maxDelayMs: 5_000, // backoff cap
+        retryOnStatus: [429, 500, 502, 503, 504],
+        retryOnNetworkError: true,
+    },
 });
 ```
 
@@ -216,12 +258,12 @@ to implement your own fallback (for example a cache or an offline queue).
 import { AniLink, AniLinkApiError } from "anilink-api-wrapper";
 
 const aniLink = new AniLink("your-auth-token", {
-  onError: (error, context) => {
-    console.error(`Request to ${context.url} failed on attempt ${context.attempt}`);
-    if (error instanceof AniLinkApiError && error.status === 429) {
-      // queue the request for later
-    }
-  },
+    onError: (error, context) => {
+        console.error(`Request to ${context.url} failed on attempt ${context.attempt}`);
+        if (error instanceof AniLinkApiError && error.status === 429) {
+            // queue the request for later
+        }
+    },
 });
 ```
 
