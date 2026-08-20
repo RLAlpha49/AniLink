@@ -94,7 +94,7 @@
     "typedoc-plugin-ga": "^1.1.1",
     "typedoc-plugin-llms-txt": "^0.1.2",
     "typedoc-plugin-mdn-links": "^5.1.1",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   },
   "dependencies": {
