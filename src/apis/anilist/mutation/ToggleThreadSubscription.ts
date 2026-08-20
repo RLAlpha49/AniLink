@@ -34,14 +34,14 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
     /**
      * `authToken` is a string representing the authentication token.
      */
-    private readonly authToken: string;
+    private readonly authToken?: string;
 
     /**
      * Constructs a new `ToggleThreadSubscriptionMutation` instance.
      *
      * @param authToken - The authentication token.
      */
-    constructor(authToken: string) {
+    constructor(authToken?: string) {
         super("https://graphql.anilist.co");
         this.authToken = authToken;
     }
@@ -57,11 +57,6 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
     async toggleThreadSubscription(
         variables: ToggleThreadSubscriptionVariables
     ): Promise<ThreadResponse> {
-        if (!this.authToken) {
-            throw new Error(
-                "ToggleThreadSubscriptionMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument."
-            );
-        }
         if (!variables.threadId || !variables.subscribe) {
             throw new Error("threadId & subscribe variables are required");
         }
@@ -82,6 +77,6 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
     `;
 
         const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
     }
 }

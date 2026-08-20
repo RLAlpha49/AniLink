@@ -7,6 +7,7 @@ export interface RecordedRequest {
     method: "GET" | "POST";
     data?: object;
     token?: string;
+    requiresAuth?: boolean;
 }
 
 const requestMock = vi.hoisted(() =>
@@ -31,9 +32,11 @@ export const createTestClientWithoutToken = (): AniLinkClient => new AniLink();
 
 export const getLastRequest = (): RecordedRequest | undefined => {
     const lastCall = mockSendRequest.mock.calls.at(-1) as
-        [string, "GET" | "POST", object?, string?] | undefined;
-    const [url, method, data, token] = lastCall ?? [];
-    return url === undefined || method === undefined ? undefined : { url, method, data, token };
+        [string, "GET" | "POST", object?, string?, boolean?] | undefined;
+    const [url, method, data, token, requiresAuth] = lastCall ?? [];
+    return url === undefined || method === undefined
+        ? undefined
+        : { url, method, data, token, requiresAuth };
 };
 
 beforeEach(() => {

@@ -1,6 +1,11 @@
 import axios from "axios";
 import { beforeEach, expect, test, vi } from "vitest";
-import { AniLinkApiError, AniLinkError, AniLinkNetworkError } from "../src/base/AniLinkError";
+import {
+    AniLinkApiError,
+    AniLinkAuthError,
+    AniLinkError,
+    AniLinkNetworkError,
+} from "../src/base/AniLinkError";
 import {
     configureRequestOptions,
     DEFAULT_REQUEST_TIMEOUT,
@@ -66,6 +71,36 @@ test.each([-1, Number.NaN, Number.POSITIVE_INFINITY])("rejects invalid timeout %
 
 test("allows zero to disable the Axios timeout", () => {
     expect(() => configureRequestOptions({ timeout: 0 })).not.toThrow();
+});
+
+test("throws AniLinkAuthError when a token is required but missing", async () => {
+    const error = await sendRequest(
+        "https://graphql.anilist.co",
+        "POST",
+        {},
+        undefined,
+        true
+    ).catch((requestError: unknown) => requestError);
+
+    expect(error).toBeInstanceOf(AniLinkAuthError);
+    expect(error).toMatchObject({ name: "AniLinkAuthError", code: "AUTH_ERROR" });
+    expect(mocks.request).not.toHaveBeenCalled();
+});
+
+test("throws AniLinkAuthError for an empty-string token when auth is required", async () => {
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, "", true).catch(
+        (requestError: unknown) => requestError
+    );
+
+    expect(error).toBeInstanceOf(AniLinkAuthError);
+    expect(error).toMatchObject({ name: "AniLinkAuthError", code: "AUTH_ERROR" });
+    expect(mocks.request).not.toHaveBeenCalled();
+});
+
+test("does not require a token when requiresAuth is false", async () => {
+    await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false);
+
+    expect(mocks.request).toHaveBeenCalledTimes(1);
 });
 
 test("normalizes an HTTP failure without exposing the Axios response", async () => {

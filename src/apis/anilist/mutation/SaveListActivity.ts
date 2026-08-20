@@ -34,14 +34,14 @@ export class SaveListActivityMutation extends APIWrapper {
     /**
      * `authToken` is a string representing the authentication token.
      */
-    private readonly authToken: string;
+    private readonly authToken?: string;
 
     /**
      * Constructs a new `SaveListActivityMutation` instance.
      *
      * @param authToken - The authentication token.
      */
-    constructor(authToken: string) {
+    constructor(authToken?: string) {
         super("https://graphql.anilist.co");
         this.authToken = authToken;
     }
@@ -55,11 +55,6 @@ export class SaveListActivityMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/mutation
      */
     async saveListActivity(variables: SaveListActivityVariables): Promise<Activity> {
-        if (!this.authToken) {
-            throw new Error(
-                "SaveListActivityMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument."
-            );
-        }
         if (!variables.id) {
             throw new Error("id variable is required");
         }
@@ -80,6 +75,6 @@ export class SaveListActivityMutation extends APIWrapper {
     `;
 
         const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
     }
 }

@@ -3,6 +3,7 @@ import https from "node:https";
 import axios, { type AxiosError, type AxiosResponse } from "axios";
 import {
     AniLinkApiError,
+    AniLinkAuthError,
     AniLinkError,
     AniLinkErrorCodes,
     AniLinkNetworkError,
@@ -143,6 +144,7 @@ const normalizeRequestError = (error: unknown): AniLinkError => {
  * @param method - The HTTP method to use ('GET' or 'POST').
  * @param data - The data to send with the request.
  * @param token - The authentication token to include in the request headers.
+ * @param requiresAuth - Whether the operation requires an authentication token.
  * @returns The unwrapped response data. For operations with a single root
  * field this is the bare field value; otherwise it is the full `{ data }`
  * envelope. Use {@link unwrapGraphQLResponse} to apply the same rule to a
@@ -153,8 +155,13 @@ export const sendRequest = async <T = unknown>(
     url: string,
     method: "GET" | "POST",
     data?: object,
-    token?: string
+    token?: string,
+    requiresAuth = false
 ): Promise<T> => {
+    if (requiresAuth && (token === null || token === undefined || token === "")) {
+        throw new AniLinkAuthError();
+    }
+
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
         Accept: "application/json",

@@ -46,14 +46,14 @@ export class SaveRecommendationMutation extends APIWrapper {
     /**
      * `authToken` is a string representing the authentication token.
      */
-    private readonly authToken: string;
+    private readonly authToken?: string;
 
     /**
      * Constructs a new `SaveRecommendationMutation` instance.
      *
      * @param authToken - The authentication token.
      */
-    constructor(authToken: string) {
+    constructor(authToken?: string) {
         super("https://graphql.anilist.co");
         this.authToken = authToken;
     }
@@ -69,11 +69,6 @@ export class SaveRecommendationMutation extends APIWrapper {
     async saveRecommendation(
         variables: SaveRecommendationVariables
     ): Promise<RecommendationResponse> {
-        if (!this.authToken) {
-            throw new Error(
-                "SaveReviewMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument."
-            );
-        }
         if (!variables.mediaId || !variables.mediaRecommendationId || !variables.rating) {
             throw new Error("mediaId, mediaRecommendationId, and rating variables are required.");
         }
@@ -95,6 +90,6 @@ export class SaveRecommendationMutation extends APIWrapper {
     `;
 
         const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
     }
 }

@@ -215,12 +215,13 @@ import { CustomRequest } from "./apis/anilist/Custom";
 import { configureRequestOptions, type RequestOptions } from "./base/RequestHandler";
 import {
     AniLinkApiError,
+    AniLinkAuthError,
     AniLinkError,
     AniLinkErrorCodes,
     AniLinkNetworkError,
 } from "./base/AniLinkError";
 
-export { AniLinkApiError, AniLinkError, AniLinkErrorCodes, AniLinkNetworkError };
+export { AniLinkApiError, AniLinkAuthError, AniLinkError, AniLinkErrorCodes, AniLinkNetworkError };
 export type { AniLinkErrorCode } from "./base/AniLinkError";
 
 /** Transport options accepted by an `AniLink` client. */
@@ -474,7 +475,7 @@ export class AniLink {
              * Must be authenticated.
              * @see https://docs.anilist.co/reference/query
              */
-            viewer: () => Promise<UserResponse>;
+            viewer: (variables: UserVariables) => Promise<UserResponse>;
 
             /**
              * Fetches notification data from the Anilist API.
@@ -1398,7 +1399,7 @@ export class AniLink {
      * const aniLink2 = new AniLink();
      * ```
      */
-    constructor(authToken: string, options?: AniLinkOptions) {
+    constructor(authToken?: string, options?: AniLinkOptions) {
         configureRequestOptions(options);
 
         const customInstance = new CustomRequest(authToken);

@@ -39,6 +39,22 @@ test("routes AniLink requests through the mocked transport", async () => {
     );
 });
 
+test("marks authenticated operations as requiring a token", async () => {
+    const client = createTestClient("fake-token");
+
+    await client.anilist.query.viewer({ isHtml: true });
+
+    expect(getLastRequest()).toEqual(expect.objectContaining({ requiresAuth: true }));
+});
+
+test("does not require a token for public operations", async () => {
+    const client = createTestClient("fake-token");
+
+    await client.anilist.query.media({ id: 1, type: "ANIME" });
+
+    expect(getLastRequest()).toEqual(expect.objectContaining({ requiresAuth: undefined }));
+});
+
 test("unwraps a single-root-field response to the bare object", () => {
     const envelope = {
         data: {

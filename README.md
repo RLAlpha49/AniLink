@@ -118,7 +118,8 @@ await aniLink.anilist.mutation.toggleFavourite({ animeId: 1 });
 
 AniLink throws typed errors with stable `code` values. HTTP failures are
 represented by `AniLinkApiError` and expose the HTTP `status`; network,
-timeout, and cancellation failures use `AniLinkNetworkError`. Successful
+timeout, and cancellation failures use `AniLinkNetworkError`. Calling an
+authenticated operation without a token throws `AniLinkAuthError`. Successful
 AniList response data is returned normally as the typed result of each
 query or mutation. For failed API requests, `AniLinkApiError.data` contains
 the upstream AniList response body. AniLink does not expose the raw Axios
@@ -127,6 +128,7 @@ response object, request headers, bearer token, or request internals.
 ```typescript
 import {
   AniLinkApiError,
+  AniLinkAuthError,
   AniLinkNetworkError,
 } from "anilink-api-wrapper";
 
@@ -140,6 +142,8 @@ try {
     if (error.status === 429) {
       console.error("AniList rate limit reached. Try again later.");
     }
+  } else if (error instanceof AniLinkAuthError) {
+    console.error(error.code, error.message);
   } else if (error instanceof AniLinkNetworkError) {
     console.error(error.code, error.message);
   } else {
@@ -149,7 +153,7 @@ try {
 ```
 
 The available transport codes are `API_ERROR`, `NETWORK_ERROR`,
-`TIMEOUT_ERROR`, `ABORTED_ERROR`, and `UNKNOWN_ERROR`.
+`TIMEOUT_ERROR`, `ABORTED_ERROR`, `AUTH_ERROR`, and `UNKNOWN_ERROR`.
 
 For local debugging, you can opt into the original Axios error:
 

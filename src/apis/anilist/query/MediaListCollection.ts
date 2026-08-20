@@ -147,14 +147,14 @@ export class MediaListCollectionQuery extends APIWrapper {
     /**
      * `authToken` is a string representing the authentication token.
      */
-    private readonly authToken: string;
+    private readonly authToken?: string;
 
     /**
      * Constructs a new `MediaListCollectionQuery` instance.
      *
      * @param authToken - The authentication token.
      */
-    constructor(authToken: string) {
+    constructor(authToken?: string) {
         super("https://graphql.anilist.co");
         this.authToken = authToken;
     }

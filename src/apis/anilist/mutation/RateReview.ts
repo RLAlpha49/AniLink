@@ -30,14 +30,14 @@ export class RateReviewMutation extends APIWrapper {
     /**
      * `authToken` is a string representing the authentication token.
      */
-    private readonly authToken: string;
+    private readonly authToken?: string;
 
     /**
      * Constructs a new `RateReviewMutation` instance.
      *
      * @param authToken - The authentication token.
      */
-    constructor(authToken: string) {
+    constructor(authToken?: string) {
         super("https://graphql.anilist.co");
         this.authToken = authToken;
     }
@@ -51,11 +51,6 @@ export class RateReviewMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/mutation
      */
     async rateReview(variables: RateReviewVariables): Promise<ReviewResponse> {
-        if (!this.authToken) {
-            throw new Error(
-                "RateReviewMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument."
-            );
-        }
         if (!variables?.reviewId || !variables?.rating) {
             throw new Error("reviewId and rating variables are required.");
         }
@@ -77,7 +72,8 @@ export class RateReviewMutation extends APIWrapper {
             this.baseURL,
             "POST",
             { query: mutation, variables },
-            this.authToken
+            this.authToken,
+            true
         );
     }
 }

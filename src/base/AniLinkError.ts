@@ -9,6 +9,7 @@ export const AniLinkErrorCodes = {
     NETWORK: "NETWORK_ERROR",
     TIMEOUT: "TIMEOUT_ERROR",
     ABORTED: "ABORTED_ERROR",
+    AUTH: "AUTH_ERROR",
     UNKNOWN: "UNKNOWN_ERROR",
 } as const;
 
@@ -62,6 +63,20 @@ export class AniLinkApiError extends AniLinkError {
     }
 }
 
+/** A failure caused by a missing authentication token. */
+export class AniLinkAuthError extends AniLinkError {
+    /**
+     * Creates an authentication error for a token-required operation.
+     */
+    constructor() {
+        super(
+            "This operation requires an authentication token. Create an instance of AniLink and pass the token as an argument.",
+            AniLinkErrorCodes.AUTH
+        );
+        this.name = "AniLinkAuthError";
+    }
+}
+
 /** A network, timeout, or cancellation failure. */
 export class AniLinkNetworkError extends AniLinkError {
     /**
@@ -69,7 +84,7 @@ export class AniLinkNetworkError extends AniLinkError {
      *
      * @param code - The stable code for the transport failure.
      * @param message - A safe message intended for application logs.
-    * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
+     * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
      */
     constructor(
         code:

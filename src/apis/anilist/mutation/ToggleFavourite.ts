@@ -44,14 +44,14 @@ export class ToggleFavouriteMutation extends APIWrapper {
     /**
      * `authToken` is a string representing the authentication token.
      */
-    private readonly authToken: string;
+    private readonly authToken?: string;
 
     /**
      * Constructs a new `ToggleFavouriteMutation` instance.
      *
      * @param authToken - The authentication token.
      */
-    constructor(authToken: string) {
+    constructor(authToken?: string) {
         super("https://graphql.anilist.co");
         this.authToken = authToken;
     }
@@ -65,11 +65,6 @@ export class ToggleFavouriteMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/mutation
      */
     async toggleFavourite(variables: ToggleFavouriteVariables): Promise<Favourites> {
-        if (!this.authToken) {
-            throw new Error(
-                "ToggleFavouriteMutation requires an authentication token. Create a new instance of AniLink and pass the token as an argument."
-            );
-        }
         if (
             !variables.animeId &&
             !variables.mangaId &&
@@ -100,6 +95,6 @@ export class ToggleFavouriteMutation extends APIWrapper {
     `;
 
         const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
     }
 }
