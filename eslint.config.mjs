@@ -27,7 +27,6 @@ export default [
       'coverage',
       '**/*.js',
       '/docs/*',
-      '/src/base/ValidateVariables.ts',
     ],
   },
 ];
