@@ -1,0 +1,513 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Activity | AniLink - v1.29.2</title><meta name="description" content="Documentation for AniLink"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script><link rel="stylesheet" href="../assets/typedoc-github-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">AniLink - v1.29.2</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/apis_anilist_interfaces_Activity.html">apis/anilist/interfaces/Activity</a></li>
+<li><a href="" aria-current="page">Activity</a></li></ul>
+<h1>Interface Activity</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p><code>Activity</code> is an interface representing the response from an activity query.
+It includes the TextActivity, ListActivity, and MessageActivity each having their own properties.</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-see">
+<h4 class="tsd-anchor-link" id="see">See<a href="#see" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://docs.anilist.co/reference/union/activityunion" target="_blank" class="external">https://docs.anilist.co/reference/union/activityunion</a></p>
+</div></div></section>
+<div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">Activity</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#activityreply">ActivityReply</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">activityId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">text</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#listactivity">ListActivity</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isPinned</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">media</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">english</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">romaji</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">progress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">replies</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Activity.ActivityReply.html" class="tsd-signature-type tsd-kind-interface">ActivityReply</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">status</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#messageactivity">MessageActivity</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isPrivate</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">message</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">messenger</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">messengerId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">recipient</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">recipientId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">replies</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Activity.ActivityReply.html" class="tsd-signature-type tsd-kind-interface">ActivityReply</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#textactivity">TextActivity</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isPinned</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">replies</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Activity.ActivityReply.html" class="tsd-signature-type tsd-kind-interface">ActivityReply</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">text</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#thread">Thread</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">body</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isSticky</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">repliedAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">replyCommentId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">replyUserId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">updatedAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">viewCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#threadcomment">ThreadComment</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>        <span class="tsd-kind-property">comment</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">thread</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">threadId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">updatedAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>        <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Activity.ts#L82">apis/anilist/interfaces/Activity.ts:82</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#activityreply" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Activity<wbr/>Reply</span></a>
+<a href="#listactivity" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>List<wbr/>Activity</span></a>
+<a href="#messageactivity" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Message<wbr/>Activity</span></a>
+<a href="#textactivity" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Text<wbr/>Activity</span></a>
+<a href="#thread" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Thread</span></a>
+<a href="#threadcomment" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Thread<wbr/>Comment</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="activityreply"><span>Activity<wbr/>Reply</span><a href="#activityreply" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">ActivityReply</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">activityId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">text</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p><code>ActivityReply</code> is an object representing an activity reply.
+It includes the id, user id, activity id, text, like count, like status, creation date, user details, and likes.</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">activityId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>activityId</code> is a number representing the unique identifier of the activity the reply is made to.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>createdAt</code> is a number representing the Unix timestamp when the activity reply was created.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>id</code> is a number representing the unique identifier of the activity reply.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLiked</code> is a boolean representing whether the activity reply is liked by the user or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likeCount</code> is a number representing the count of likes the activity reply has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likes</code> is an array of <code>BasicUser</code> objects representing the users who liked the activity reply.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">text</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>text</code> is a string representing the text of the activity reply.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a></h5>
+<div class="tsd-comment tsd-typography"><p><code>user</code> is an object of type <code>BasicUser</code> representing the details of the user who made the activity reply.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>userId</code> is a number representing the unique identifier of the user who made the activity reply.</p>
+</div></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Activity.ts#L372">apis/anilist/interfaces/Activity.ts:372</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="listactivity"><span>List<wbr/>Activity</span><a href="#listactivity" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">ListActivity</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isPinned</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">media</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">english</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">romaji</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">progress</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">replies</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Activity.ActivityReply.html" class="tsd-signature-type tsd-kind-interface">ActivityReply</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">status</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p><code>ListActivity</code> is an object representing a list activity.
+It includes the id, user id, type, reply count, status, progress, lock status, subscription status, like count, like status, pin status, site url, creation date, media details, user details, replies, and likes.</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>createdAt</code> is a number representing the Unix timestamp when the list activity was created.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>id</code> is a number representing the unique identifier of the list activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLiked</code> is a boolean representing whether the list activity is liked by the user or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLocked</code> is a boolean representing whether the list activity is locked or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isPinned</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isPinned</code> is a boolean representing whether the list activity is pinned or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isSubscribed</code> is a boolean representing whether the user is subscribed to the list activity or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likeCount</code> is a number representing the count of likes the list activity has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likes</code> is an array of <code>BasicUser</code> objects representing the users who liked the list activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">media</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">english</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">romaji</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span> <span class="tsd-signature-symbol">}</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>media</code> is an object representing the media details of the list activity.
+It includes the id and the title of the media.</p>
+</div>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>id</code> is a number representing the unique identifier of the media.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">english</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">romaji</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>title</code> is an object representing the title of the media.
+It includes the romaji and english title of the media.</p>
+</div>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">english</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>english</code> is a string representing the english title of the media.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">romaji</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>romaji</code> is a string representing the romaji title of the media.</p>
+</div></li></ul></li></ul></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">progress</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>progress</code> is a number representing the progress of the list activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">replies</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Activity.ActivityReply.html" class="tsd-signature-type tsd-kind-interface">ActivityReply</a><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>replies</code> is an array of <code>ActivityReply</code> objects representing the replies to the list activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>replyCount</code> is a number representing the count of replies the list activity has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>siteUrl</code> is a string representing the URL of the site where the list activity is posted.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">status</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>status</code> is a string representing the status of the list activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>type</code> is a string representing the type of the list activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a></h5>
+<div class="tsd-comment tsd-typography"><p><code>user</code> is an object of type <code>BasicUser</code> representing the details of the user who made the list activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>userId</code> is a number representing the unique identifier of the user who made the list activity.</p>
+</div></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Activity.ts#L168">apis/anilist/interfaces/Activity.ts:168</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="messageactivity"><span>Message<wbr/>Activity</span><a href="#messageactivity" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">MessageActivity</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isPrivate</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">message</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">messenger</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">messengerId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">recipient</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">recipientId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">replies</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Activity.ActivityReply.html" class="tsd-signature-type tsd-kind-interface">ActivityReply</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p><code>MessageActivity</code> is an object representing a message activity.
+It includes the id, recipient id, messenger id, type, reply count, message, lock status, subscription status, like count, like status, privacy status, site url, creation date, recipient details, messenger details, replies, and likes.</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>createdAt</code> is a number representing the Unix timestamp when the message activity was created.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>id</code> is a number representing the unique identifier of the message activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLiked</code> is a boolean representing whether the message activity is liked by the user or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLocked</code> is a boolean representing whether the message activity is locked or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isPrivate</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isPrivate</code> is a boolean representing whether the message activity is private or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isSubscribed</code> is a boolean representing whether the user is subscribed to the message activity or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likeCount</code> is a number representing the count of likes the message activity has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likes</code> is an array of <code>BasicUser</code> objects representing the users who liked the message activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">message</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>message</code> is a string representing the message of the message activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">messenger</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a></h5>
+<div class="tsd-comment tsd-typography"><p><code>messenger</code> is an object of type <code>BasicUser</code> representing the details of the messenger of the message activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">messengerId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>messengerId</code> is a number representing the unique identifier of the messenger of the message activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">recipient</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a></h5>
+<div class="tsd-comment tsd-typography"><p><code>recipient</code> is an object of type <code>BasicUser</code> representing the details of the recipient of the message activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">recipientId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>recipientId</code> is a number representing the unique identifier of the recipient of the message activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">replies</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Activity.ActivityReply.html" class="tsd-signature-type tsd-kind-interface">ActivityReply</a><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>replies</code> is an array of <code>ActivityReply</code> objects representing the replies to the message activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>replyCount</code> is a number representing the count of replies the message activity has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>siteUrl</code> is a string representing the URL of the site where the message activity is posted.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>type</code> is a string representing the type of the message activity.</p>
+</div></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Activity.ts#L281">apis/anilist/interfaces/Activity.ts:281</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="textactivity"><span>Text<wbr/>Activity</span><a href="#textactivity" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">TextActivity</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isPinned</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">replies</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Activity.ActivityReply.html" class="tsd-signature-type tsd-kind-interface">ActivityReply</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">text</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p><code>TextActivity</code> is an object representing a text activity.
+It includes the id, user id, type, reply count, text, site url, lock status, subscription status, like count, like status, pin status, creation date, user details, replies, and likes.</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>createdAt</code> is a number representing the Unix timestamp when the text activity was created.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>id</code> is a number representing the unique identifier of the text activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLiked</code> is a boolean representing whether the text activity is liked by the user or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLocked</code> is a boolean representing whether the text activity is locked or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isPinned</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isPinned</code> is a boolean representing whether the text activity is pinned or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isSubscribed</code> is a boolean representing whether the user is subscribed to the text activity or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likeCount</code> is a number representing the count of likes the text activity has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likes</code> is an array of <code>BasicUser</code> objects representing the users who liked the text activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">replies</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Activity.ActivityReply.html" class="tsd-signature-type tsd-kind-interface">ActivityReply</a><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>replies</code> is an array of <code>ActivityReply</code> objects representing the replies to the text activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>replyCount</code> is a number representing the count of replies the text activity has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>siteUrl</code> is a string representing the URL of the site where the text activity is posted.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">text</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>text</code> is a string representing the text of the text activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>type</code> is a string representing the type of the text activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a></h5>
+<div class="tsd-comment tsd-typography"><p><code>user</code> is an object of type <code>BasicUser</code> representing the details of the user who made the text activity.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>userId</code> is a number representing the unique identifier of the user who made the text activity.</p>
+</div></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Activity.ts#L87">apis/anilist/interfaces/Activity.ts:87</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="thread"><span>Thread</span><a href="#thread" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">Thread</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">body</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isSticky</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">repliedAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">replyCommentId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">replyUserId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">updatedAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">viewCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p><code>Thread</code> is an object representing a thread.
+It includes the id, title, body, user id, reply user id, reply comment id, reply count, view count, lock status, sticky status, subscription status, like count, like status, replied date, creation date, update date, user details, reply user details, likes, site url, categories, media categories.</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">body</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>body</code> is a string representing the body of the thread.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>createdAt</code> is a number representing the Unix timestamp when the thread was created.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>id</code> is a number representing the unique identifier of the thread.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLiked</code> is a boolean representing whether the thread is liked by the user or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLocked</code> is a boolean representing whether the thread is locked or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isSticky</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isSticky</code> is a boolean representing whether the thread is sticky or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isSubscribed</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isSubscribed</code> is a boolean representing whether the user is subscribed to the thread or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likeCount</code> is a number representing the count of likes the thread has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">repliedAt</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>repliedAt</code> is a number representing the Unix timestamp when the thread was replied to.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">replyCommentId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>replyCommentId</code> is a number representing the unique identifier of the comment the thread is a reply to.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">replyCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>replyCount</code> is a number representing the count of replies the thread has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">replyUserId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>replyUserId</code> is a number representing the unique identifier of the user who replied to the thread.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>title</code> is a string representing the title of the thread.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">updatedAt</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>updatedAt</code> is a number representing the Unix timestamp when the thread was last updated.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a></h5>
+<div class="tsd-comment tsd-typography"><p><code>user</code> is an object of type <code>BasicUser</code> representing the details of the user who made the thread.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>userId</code> is a number representing the unique identifier of the user who made the thread.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">viewCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>viewCount</code> is a number representing the count of views the thread has received.</p>
+</div></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Activity.ts#L423">apis/anilist/interfaces/Activity.ts:423</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="threadcomment"><span>Thread<wbr/>Comment</span><a href="#threadcomment" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">ThreadComment</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span><br/>    <span class="tsd-kind-property">comment</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">thread</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">threadId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">updatedAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">;</span><br/>    <span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p><code>ThreadComment</code> is an object representing a thread comment.
+It includes the id, user id, thread id, comment, like count, like status, site url, creation date, update date, thread details, user details, likes, child comments, lock status.</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">comment</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>comment</code> is a string representing the comment of the thread.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">createdAt</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>createdAt</code> is a number representing the Unix timestamp when the thread comment was created.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>id</code> is a number representing the unique identifier of the thread comment.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLiked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLiked</code> is a boolean representing whether the thread comment is liked by the user or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>isLocked</code> is a boolean representing whether the thread comment is locked or not.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likeCount</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likeCount</code> is a number representing the count of likes the thread comment has received.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">likes</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a><span class="tsd-signature-symbol">[]</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>likes</code> is an array of <code>BasicUser</code> objects representing the users who liked the thread comment.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>siteUrl</code> is a string representing the URL of the site where the thread comment is posted.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">thread</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>thread</code> is an object representing the details of the thread the comment is made to.
+It includes the id and the title of the thread.</p>
+</div>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>id</code> is a number representing the unique identifier of the thread.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>title</code> is a string representing the title of the thread.</p>
+</div></li></ul></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">threadId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>threadId</code> is a number representing the unique identifier of the thread the comment is made to.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">updatedAt</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>updatedAt</code> is a number representing the Unix timestamp when the thread comment was last updated.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">user</span><span class="tsd-signature-symbol">: </span><a href="apis_anilist_interfaces_Basic.BasicUser.html" class="tsd-signature-type tsd-kind-interface">BasicUser</a></h5>
+<div class="tsd-comment tsd-typography"><p><code>user</code> is an object of type <code>BasicUser</code> representing the details of the user who made the thread comment.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">userId</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p><code>userId</code> is a number representing the unique identifier of the user who made the thread comment.</p>
+</div></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Activity.ts#L514">apis/anilist/interfaces/Activity.ts:514</a></li></ul></aside></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
+<div><a href="#activityreply"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Activity<wbr/>Reply</span></a><a href="#listactivity"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>List<wbr/>Activity</span></a><a href="#messageactivity"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Message<wbr/>Activity</span></a><a href="#textactivity"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Text<wbr/>Activity</span></a><a href="#thread"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Thread</span></a><a href="#threadcomment"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>Thread<wbr/>Comment</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">AniLink - v1.29.2</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a> with <a href="https://github.com/JulianWowra/typedoc-github-theme" target="_blank">typedoc-github-theme</a></p></footer>
+<div class="overlay"></div><script async src="https://www.googletagmanager.com/gtag/js?id=G-F7DE9Y757W"></script><script>window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-F7DE9Y757W');</script></body></html>

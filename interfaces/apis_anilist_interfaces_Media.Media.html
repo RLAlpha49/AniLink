@@ -1,0 +1,419 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>Media | AniLink - v1.29.2</title><meta name="description" content="Documentation for AniLink"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script><link rel="stylesheet" href="../assets/typedoc-github-style.css"/></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">AniLink - v1.29.2</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="../modules/apis_anilist_interfaces_Media.html">apis/anilist/interfaces/Media</a></li>
+<li><a href="" aria-current="page">Media</a></li></ul>
+<h1>Interface Media</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p><code>Media</code> is an interface representing a media entity.
+It includes various properties related to the media.</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-see">
+<h4 class="tsd-anchor-link" id="see">See<a href="#see" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><a href="https://docs.anilist.co/reference/object/media" target="_blank" class="external">https://docs.anilist.co/reference/object/media</a></p>
+</div></div></section>
+<div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">Media</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#autocreateforumthread">autoCreateForumThread</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#averagescore">averageScore</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#bannerimage">bannerImage</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#chapters">chapters</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#countryoforigin">countryOfOrigin</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#coverimage">coverImage</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_CoverImage.CoverImage.html" class="tsd-signature-type tsd-kind-interface">CoverImage</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#description">description</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#duration">duration</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#enddate">endDate</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_FuzzyDate.FuzzyDate.html" class="tsd-signature-type tsd-kind-interface">FuzzyDate</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#episodes">episodes</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#externallinks">externalLinks</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_ExternalLink.ExternalLink.html" class="tsd-signature-type tsd-kind-interface">ExternalLink</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#favourites">favourites</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#format">format</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#genres">genres</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#hashtag">hashtag</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#id">id</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#idmal">idMal</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#isadult">isAdult</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#isfavourite">isFavourite</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#islicensed">isLicensed</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#islocked">isLocked</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#isrecommendationblocked">isRecommendationBlocked</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#meanscore">meanScore</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#medialistentry">mediaListEntry</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Media.MediaListEntry.html" class="tsd-signature-type tsd-kind-interface">MediaListEntry</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#modnotes">modNotes</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#nextairingepisode">nextAiringEpisode</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_NextAiringEpisode.NextAiringEpisode.html" class="tsd-signature-type tsd-kind-interface">NextAiringEpisode</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#popularity">popularity</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#rankings">rankings</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Ranking.Ranking.html" class="tsd-signature-type tsd-kind-interface">Ranking</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#season">season</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#seasonint">seasonInt</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#seasonyear">seasonYear</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#siteurl">siteUrl</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#source">source</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#startdate">startDate</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_FuzzyDate.FuzzyDate.html" class="tsd-signature-type tsd-kind-interface">FuzzyDate</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#stats">stats</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Media.MediaStats.html" class="tsd-signature-type tsd-kind-interface">MediaStats</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#status">status</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#streamingepisodes">streamingEpisodes</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_StreamingEpisode.StreamingEpisode.html" class="tsd-signature-type tsd-kind-interface">StreamingEpisode</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#synonyms">synonyms</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#tags">tags</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Tag.Tag.html" class="tsd-signature-type tsd-kind-interface">Tag</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#title">title</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Title.Title.html" class="tsd-signature-type tsd-kind-interface">Title</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#trailer">trailer</a><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Trailer.Trailer.html" class="tsd-signature-type tsd-kind-interface">Trailer</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#trending">trending</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#type">type</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#updatedat">updatedAt</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#volumes">volumes</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L64">apis/anilist/interfaces/Media.ts:64</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#autocreateforumthread" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>auto<wbr/>Create<wbr/>Forum<wbr/>Thread</span></a>
+<a href="#averagescore" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>average<wbr/>Score</span></a>
+<a href="#bannerimage" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>banner<wbr/>Image</span></a>
+<a href="#chapters" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>chapters?</span></a>
+<a href="#countryoforigin" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>country<wbr/>Of<wbr/>Origin</span></a>
+<a href="#coverimage" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>cover<wbr/>Image</span></a>
+<a href="#description" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>description</span></a>
+<a href="#duration" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>duration?</span></a>
+<a href="#enddate" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>end<wbr/>Date</span></a>
+<a href="#episodes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>episodes?</span></a>
+<a href="#externallinks" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>external<wbr/>Links</span></a>
+<a href="#favourites" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>favourites</span></a>
+<a href="#format" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>format</span></a>
+<a href="#genres" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>genres</span></a>
+<a href="#hashtag" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>hashtag</span></a>
+<a href="#id" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>id</span></a>
+<a href="#idmal" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>id<wbr/>Mal</span></a>
+<a href="#isadult" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Adult</span></a>
+<a href="#isfavourite" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Favourite</span></a>
+<a href="#islicensed" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Licensed</span></a>
+<a href="#islocked" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Locked</span></a>
+<a href="#isrecommendationblocked" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Recommendation<wbr/>Blocked</span></a>
+<a href="#meanscore" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>mean<wbr/>Score</span></a>
+<a href="#medialistentry" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>media<wbr/>List<wbr/>Entry</span></a>
+<a href="#modnotes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>mod<wbr/>Notes</span></a>
+<a href="#nextairingepisode" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>next<wbr/>Airing<wbr/>Episode</span></a>
+<a href="#popularity" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>popularity</span></a>
+<a href="#rankings" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>rankings</span></a>
+<a href="#season" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>season</span></a>
+<a href="#seasonint" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>season<wbr/>Int</span></a>
+<a href="#seasonyear" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>season<wbr/>Year</span></a>
+<a href="#siteurl" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>site<wbr/>Url</span></a>
+<a href="#source" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>source</span></a>
+<a href="#startdate" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>start<wbr/>Date</span></a>
+<a href="#stats" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>stats</span></a>
+<a href="#status" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>status</span></a>
+<a href="#streamingepisodes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>streaming<wbr/>Episodes</span></a>
+<a href="#synonyms" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>synonyms</span></a>
+<a href="#tags" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>tags</span></a>
+<a href="#title" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>title</span></a>
+<a href="#trailer" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>trailer</span></a>
+<a href="#trending" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>trending</span></a>
+<a href="#type" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>type</span></a>
+<a href="#updatedat" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>updated<wbr/>At</span></a>
+<a href="#volumes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>volumes?</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="autocreateforumthread"><span>auto<wbr/>Create<wbr/>Forum<wbr/>Thread</span><a href="#autocreateforumthread" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">autoCreateForumThread</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p><code>autoCreateForumThread</code> is a boolean indicating whether a forum thread is automatically created for the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L278">apis/anilist/interfaces/Media.ts:278</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="averagescore"><span>average<wbr/>Score</span><a href="#averagescore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">averageScore</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>averageScore</code> is a number representing the average score of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L198">apis/anilist/interfaces/Media.ts:198</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="bannerimage"><span>banner<wbr/>Image</span><a href="#bannerimage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">bannerImage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>bannerImage</code> is a string representing the URL of the banner image of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L183">apis/anilist/interfaces/Media.ts:183</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="chapters"><code class="tsd-tag">Optional</code><span>chapters</span><a href="#chapters" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">chapters</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>chapters</code> is an optional number representing the number of chapters of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L138">apis/anilist/interfaces/Media.ts:138</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="countryoforigin"><span>country<wbr/>Of<wbr/>Origin</span><a href="#countryoforigin" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">countryOfOrigin</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>countryOfOrigin</code> is a string representing the country of origin of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L148">apis/anilist/interfaces/Media.ts:148</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="coverimage"><span>cover<wbr/>Image</span><a href="#coverimage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">coverImage</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_CoverImage.CoverImage.html" class="tsd-signature-type tsd-kind-interface">CoverImage</a></div>
+<div class="tsd-comment tsd-typography"><p><code>coverImage</code> is an object of type <code>CoverImage</code> representing the cover image of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L178">apis/anilist/interfaces/Media.ts:178</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="description"><span>description</span><a href="#description" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">description</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>description</code> is a string representing the description of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L98">apis/anilist/interfaces/Media.ts:98</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="duration"><code class="tsd-tag">Optional</code><span>duration</span><a href="#duration" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">duration</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>duration</code> is an optional number representing the duration of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L133">apis/anilist/interfaces/Media.ts:133</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="enddate"><span>end<wbr/>Date</span><a href="#enddate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">endDate</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_FuzzyDate.FuzzyDate.html" class="tsd-signature-type tsd-kind-interface">FuzzyDate</a></div>
+<div class="tsd-comment tsd-typography"><p><code>endDate</code> is an object of type <code>FuzzyDate</code> representing the end date of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L108">apis/anilist/interfaces/Media.ts:108</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="episodes"><code class="tsd-tag">Optional</code><span>episodes</span><a href="#episodes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">episodes</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>episodes</code> is an optional number representing the number of episodes of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L128">apis/anilist/interfaces/Media.ts:128</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="externallinks"><span>external<wbr/>Links</span><a href="#externallinks" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">externalLinks</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_ExternalLink.ExternalLink.html" class="tsd-signature-type tsd-kind-interface">ExternalLink</a><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-comment tsd-typography"><p><code>externalLinks</code> is an array of objects of type <code>ExternalLink</code> representing the external links of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L248">apis/anilist/interfaces/Media.ts:248</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="favourites"><span>favourites</span><a href="#favourites" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">favourites</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>favourites</code> is a number representing the number of favourites of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L223">apis/anilist/interfaces/Media.ts:223</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="format"><span>format</span><a href="#format" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">format</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>format</code> is a string representing the format of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L88">apis/anilist/interfaces/Media.ts:88</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="genres"><span>genres</span><a href="#genres" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">genres</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-comment tsd-typography"><p><code>genres</code> is an array of strings representing the genres of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L188">apis/anilist/interfaces/Media.ts:188</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="hashtag"><span>hashtag</span><a href="#hashtag" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">hashtag</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>hashtag</code> is a string representing the hashtag of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L163">apis/anilist/interfaces/Media.ts:163</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="id"><span>id</span><a href="#id" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">id</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>id</code> is a number representing the unique identifier of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L68">apis/anilist/interfaces/Media.ts:68</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="idmal"><span>id<wbr/>Mal</span><a href="#idmal" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">idMal</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>idMal</code> is a number representing the MyAnimeList identifier of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L73">apis/anilist/interfaces/Media.ts:73</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isadult"><span>is<wbr/>Adult</span><a href="#isadult" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">isAdult</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p><code>isAdult</code> is a boolean indicating whether the media is for adults.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L238">apis/anilist/interfaces/Media.ts:238</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isfavourite"><span>is<wbr/>Favourite</span><a href="#isfavourite" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">isFavourite</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p><code>isFavourite</code> is a boolean indicating whether the media is a favourite.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L233">apis/anilist/interfaces/Media.ts:233</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="islicensed"><span>is<wbr/>Licensed</span><a href="#islicensed" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">isLicensed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p><code>isLicensed</code> is a boolean indicating whether the media is licensed.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L153">apis/anilist/interfaces/Media.ts:153</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="islocked"><span>is<wbr/>Locked</span><a href="#islocked" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">isLocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p><code>isLocked</code> is a boolean indicating whether the media is locked.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L213">apis/anilist/interfaces/Media.ts:213</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="isrecommendationblocked"><span>is<wbr/>Recommendation<wbr/>Blocked</span><a href="#isrecommendationblocked" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">isRecommendationBlocked</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p><code>isRecommendationBlocked</code> is a boolean indicating whether recommendation is blocked for the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L283">apis/anilist/interfaces/Media.ts:283</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="meanscore"><span>mean<wbr/>Score</span><a href="#meanscore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">meanScore</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>meanScore</code> is a number representing the mean score of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L203">apis/anilist/interfaces/Media.ts:203</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="medialistentry"><span>media<wbr/>List<wbr/>Entry</span><a href="#medialistentry" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">mediaListEntry</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Media.MediaListEntry.html" class="tsd-signature-type tsd-kind-interface">MediaListEntry</a></div>
+<div class="tsd-comment tsd-typography"><p><code>mediaListEntry</code> is an object of type <code>MediaListEntry</code> representing the media list entry of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L263">apis/anilist/interfaces/Media.ts:263</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="modnotes"><span>mod<wbr/>Notes</span><a href="#modnotes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">modNotes</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>modNotes</code> is a string representing the moderator notes for the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L288">apis/anilist/interfaces/Media.ts:288</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="nextairingepisode"><span>next<wbr/>Airing<wbr/>Episode</span><a href="#nextairingepisode" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">nextAiringEpisode</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_NextAiringEpisode.NextAiringEpisode.html" class="tsd-signature-type tsd-kind-interface">NextAiringEpisode</a></div>
+<div class="tsd-comment tsd-typography"><p><code>nextAiringEpisode</code> is an object of type <code>NextAiringEpisode</code> representing the next airing episode of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L243">apis/anilist/interfaces/Media.ts:243</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="popularity"><span>popularity</span><a href="#popularity" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">popularity</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>popularity</code> is a number representing the popularity of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L208">apis/anilist/interfaces/Media.ts:208</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="rankings"><span>rankings</span><a href="#rankings" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">rankings</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Ranking.Ranking.html" class="tsd-signature-type tsd-kind-interface">Ranking</a><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-comment tsd-typography"><p><code>rankings</code> is an array of objects of type <code>Ranking</code> representing the rankings of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L258">apis/anilist/interfaces/Media.ts:258</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="season"><span>season</span><a href="#season" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">season</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>season</code> is a string representing the season of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L113">apis/anilist/interfaces/Media.ts:113</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="seasonint"><span>season<wbr/>Int</span><a href="#seasonint" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">seasonInt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>seasonInt</code> is a number representing the integer value of the season of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L123">apis/anilist/interfaces/Media.ts:123</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="seasonyear"><span>season<wbr/>Year</span><a href="#seasonyear" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">seasonYear</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>seasonYear</code> is a number representing the year of the season of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L118">apis/anilist/interfaces/Media.ts:118</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="siteurl"><span>site<wbr/>Url</span><a href="#siteurl" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">siteUrl</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>siteUrl</code> is a string representing the site URL of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L273">apis/anilist/interfaces/Media.ts:273</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="source"><span>source</span><a href="#source" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">source</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>source</code> is a string representing the source of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L158">apis/anilist/interfaces/Media.ts:158</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="startdate"><span>start<wbr/>Date</span><a href="#startdate" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">startDate</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_FuzzyDate.FuzzyDate.html" class="tsd-signature-type tsd-kind-interface">FuzzyDate</a></div>
+<div class="tsd-comment tsd-typography"><p><code>startDate</code> is an object of type <code>FuzzyDate</code> representing the start date of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L103">apis/anilist/interfaces/Media.ts:103</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="stats"><span>stats</span><a href="#stats" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">stats</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Media.MediaStats.html" class="tsd-signature-type tsd-kind-interface">MediaStats</a></div>
+<div class="tsd-comment tsd-typography"><p><code>stats</code> is an object of type <code>MediaStats</code> representing the statistics of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L268">apis/anilist/interfaces/Media.ts:268</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="status"><span>status</span><a href="#status" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">status</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>status</code> is a string representing the status of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L93">apis/anilist/interfaces/Media.ts:93</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="streamingepisodes"><span>streaming<wbr/>Episodes</span><a href="#streamingepisodes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">streamingEpisodes</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_StreamingEpisode.StreamingEpisode.html" class="tsd-signature-type tsd-kind-interface">StreamingEpisode</a><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-comment tsd-typography"><p><code>streamingEpisodes</code> is an array of objects of type <code>StreamingEpisode</code> representing the streaming episodes of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L253">apis/anilist/interfaces/Media.ts:253</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="synonyms"><span>synonyms</span><a href="#synonyms" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">synonyms</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-comment tsd-typography"><p><code>synonyms</code> is an array of strings representing the synonyms of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L193">apis/anilist/interfaces/Media.ts:193</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="tags"><span>tags</span><a href="#tags" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">tags</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Tag.Tag.html" class="tsd-signature-type tsd-kind-interface">Tag</a><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-comment tsd-typography"><p><code>tags</code> is an array of objects of type <code>Tag</code> representing the tags of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L228">apis/anilist/interfaces/Media.ts:228</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="title"><span>title</span><a href="#title" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Title.Title.html" class="tsd-signature-type tsd-kind-interface">Title</a></div>
+<div class="tsd-comment tsd-typography"><p><code>title</code> is an object of type <code>Title</code> representing the title of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L78">apis/anilist/interfaces/Media.ts:78</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="trailer"><span>trailer</span><a href="#trailer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">trailer</span><span class="tsd-signature-symbol">:</span> <a href="apis_anilist_interfaces_Trailer.Trailer.html" class="tsd-signature-type tsd-kind-interface">Trailer</a></div>
+<div class="tsd-comment tsd-typography"><p><code>trailer</code> is an object of type <code>Trailer</code> representing the trailer of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L168">apis/anilist/interfaces/Media.ts:168</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="trending"><span>trending</span><a href="#trending" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">trending</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>trending</code> is a number representing the trending value of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L218">apis/anilist/interfaces/Media.ts:218</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="type"><span>type</span><a href="#type" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p><code>type</code> is a string representing the type of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L83">apis/anilist/interfaces/Media.ts:83</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="updatedat"><span>updated<wbr/>At</span><a href="#updatedat" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">updatedAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>updatedAt</code> is a number representing the timestamp when the media was last updated.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L173">apis/anilist/interfaces/Media.ts:173</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="volumes"><code class="tsd-tag">Optional</code><span>volumes</span><a href="#volumes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">volumes</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
+<div class="tsd-comment tsd-typography"><p><code>volumes</code> is an optional number representing the number of volumes of the media.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/apis/anilist/interfaces/Media.ts#L143">apis/anilist/interfaces/Media.ts:143</a></li></ul></aside></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
+<div><a href="#autocreateforumthread"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>auto<wbr/>Create<wbr/>Forum<wbr/>Thread</span></a><a href="#averagescore"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>average<wbr/>Score</span></a><a href="#bannerimage"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>banner<wbr/>Image</span></a><a href="#chapters"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>chapters</span></a><a href="#countryoforigin"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>country<wbr/>Of<wbr/>Origin</span></a><a href="#coverimage"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>cover<wbr/>Image</span></a><a href="#description"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>description</span></a><a href="#duration"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>duration</span></a><a href="#enddate"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>end<wbr/>Date</span></a><a href="#episodes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>episodes</span></a><a href="#externallinks"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>external<wbr/>Links</span></a><a href="#favourites"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>favourites</span></a><a href="#format"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>format</span></a><a href="#genres"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>genres</span></a><a href="#hashtag"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>hashtag</span></a><a href="#id"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>id</span></a><a href="#idmal"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>id<wbr/>Mal</span></a><a href="#isadult"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Adult</span></a><a href="#isfavourite"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Favourite</span></a><a href="#islicensed"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Licensed</span></a><a href="#islocked"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Locked</span></a><a href="#isrecommendationblocked"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>is<wbr/>Recommendation<wbr/>Blocked</span></a><a href="#meanscore"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>mean<wbr/>Score</span></a><a href="#medialistentry"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>media<wbr/>List<wbr/>Entry</span></a><a href="#modnotes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>mod<wbr/>Notes</span></a><a href="#nextairingepisode"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>next<wbr/>Airing<wbr/>Episode</span></a><a href="#popularity"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>popularity</span></a><a href="#rankings"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>rankings</span></a><a href="#season"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>season</span></a><a href="#seasonint"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>season<wbr/>Int</span></a><a href="#seasonyear"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>season<wbr/>Year</span></a><a href="#siteurl"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>site<wbr/>Url</span></a><a href="#source"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>source</span></a><a href="#startdate"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>start<wbr/>Date</span></a><a href="#stats"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>stats</span></a><a href="#status"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>status</span></a><a href="#streamingepisodes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>streaming<wbr/>Episodes</span></a><a href="#synonyms"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>synonyms</span></a><a href="#tags"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>tags</span></a><a href="#title"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>title</span></a><a href="#trailer"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>trailer</span></a><a href="#trending"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>trending</span></a><a href="#type"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>type</span></a><a href="#updatedat"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>updated<wbr/>At</span></a><a href="#volumes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>volumes</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../modules.html">AniLink - v1.29.2</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a> with <a href="https://github.com/JulianWowra/typedoc-github-theme" target="_blank">typedoc-github-theme</a></p></footer>
+<div class="overlay"></div><script async src="https://www.googletagmanager.com/gtag/js?id=G-F7DE9Y757W"></script><script>window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-F7DE9Y757W');</script></body></html>
