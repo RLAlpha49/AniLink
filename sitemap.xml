@@ -2,2042 +2,2042 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/index.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/hierarchy.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/AniLink.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/AniLink.AniLink.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/AniLink.AniLinkOptions.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_Custom.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_Custom.CustomRequest.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Activity.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Activity.Activity.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Activity.ActivityHistory.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Activity.ActivityNotification.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Activity.ActivityReply.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Activity.ActivityNotificationSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Activity.ActivityReplySchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Activity.ActivitySchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Activity.ActivitySchemaV2.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Activity.ActivityWithRepliesSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Activity.ListActivitySchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Activity.MessageActivitySchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Activity.TextActivitySchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Basic.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Basic.BasicComment.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Basic.BasicThread.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Basic.BasicUser.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Basic.BasicCommentSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Basic.BasicThreadSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Basic.BasicUserSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_CoverImage.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_CoverImage.CoverImage.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_CoverImage.CoverImageSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Distribution.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Distribution.Distribution.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Distribution.ScoreDistribution.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Distribution.StatusDistribution.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Distribution.ScoreDistributionSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Distribution.StatusDistributionSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_ExternalLink.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_ExternalLink.ExternalLink.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_ExternalLink.ExternalLinkSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Favoured.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Favoured.Favoured.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_FuzzyDate.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_FuzzyDate.FuzzyDate.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_FuzzyDate.FuzzyDateSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Image.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Image.Image.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Image.ImageSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_ListScores.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_ListScores.ListScores.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Media.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Media.Media.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Media.MediaListEntry.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Media.MediaStatistics.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Media.MediaStats.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Media.MediaListEntrySchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Name.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Name.Name.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Name.NameSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_NextAiringEpisode.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_NextAiringEpisode.NextAiringEpisode.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_NextAiringEpisode.NextAiringEpisodeSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Notification.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Notification.NotificationOptionInput.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Notification.ThreadNotification.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Notification.ThreadNotificationSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Ranking.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Ranking.Ranking.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Ranking.RankingSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_mutation_DeleteMediaListEntry.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_mutation_DeleteMediaListEntry.DeleteMediaListEntryResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_mutation_Favourites.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_mutation_Favourites.Favourites.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_mutation_Favourites.FavouritesSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_AiringSchedules.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_AiringSchedules.AiringSchedulesPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Characters.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Characters.CharactersPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Followers.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Followers.FollowersPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Followings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Followings.FollowingsPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_MediaLists.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_MediaLists.MediaListsPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Medias.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Medias.MediasPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_MediaTrends.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_MediaTrends.MediaTrendsPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Notifications.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Notifications.NotificationsPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_PageInfo.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_PageInfo.PageInfo.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Recommendations.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Recommendations.RecommendationsPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Reviews.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Reviews.ReviewsPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Staffs.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Staffs.StaffsPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Studios.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Studios.StudiosPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_ThreadComments.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_ThreadComments.ThreadCommentsPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Threads.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Threads.ThreadsPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_page_Users.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_page_Users.UsersPageResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_AiringSchedule.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_AiringSchedule.AiringScheduleResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_AiringSchedule.AiringScheduleSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_AniChartUser.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_AniChartUser.AniChartUserResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_Character.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_Character.CharacterResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_Character.CharacterSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_ExternalLinkSourceCollection.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_ExternalLinkSourceCollection.ExternalLinkSourceCollectionResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_Media.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_Media.MediaResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_Media.MediaSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_Media.MediaWithRelationsSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_MediaList.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_MediaList.MediaListResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_MediaList.MediaListSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_MediaListCollectionResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_MediaListCollectionResponse.MediaListCollectionResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_MediaListCollectionResponse.MediaListCollectionQuerySchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_MediaTagCollection.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_MediaTagCollection.MediaTagCollectionResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_MediaTrend.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_MediaTrend.MediaTrendResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_MediaTrend.MediaTrendSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_Notification.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_Notification.NotificationResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_Notification.NotificationSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_Recommendation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_Recommendation.RecommendationResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_Recommendation.RecommendationSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_Review.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_Review.ReviewResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_Review.ReviewSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_SiteStatistics.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_SiteStatistics.SiteStatisticsResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_SiteStatistics.SiteStatisticsSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_Staff.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_Staff.StaffResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_Staff.StaffSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_Studio.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_Studio.StudioResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_Studio.StudioSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_Thread.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_Thread.ThreadResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_Thread.ThreadSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_ThreadComment.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_ThreadComment.ThreadCommentResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_ThreadComment.ThreadCommentSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_responses_query_User.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_responses_query_User.UserResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_responses_query_User.UserSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_SiteTrend.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_SiteTrend.SiteTrend.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_SiteTrend.SiteTrendConnection.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_SiteTrend.SiteTrendConnectionSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_SiteTrend.SiteTrendSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Staff.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Staff.Staff.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Stat.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Stat.Stat.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Statistics.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Statistics.Statistics.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_StreamingEpisode.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_StreamingEpisode.StreamingEpisode.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_StreamingEpisode.StreamingEpisodeSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Studio.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Studio.Studio.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Tag.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Tag.Tag.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Tag.TagSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Title.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Title.Title.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Title.TitleSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_Trailer.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_Trailer.Trailer.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_Trailer.TrailerSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_interfaces_UserStats.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_interfaces_UserStats.UserStats.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_UserStats.UserAnimeStatsSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_interfaces_UserStats.UserMangaStatsSchema.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_DeleteActivity.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_DeleteActivity.DeleteActivityMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_DeleteActivity.DeleteActivityVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_DeleteActivityReply.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_DeleteActivityReply.DeleteActivityReplyMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_DeleteActivityReply.DeleteActivityReplyVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_DeleteCustomList.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_DeleteCustomList.DeleteCustomListMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_DeleteCustomList.DeleteCustomListVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_DeleteMediaListEntry.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_DeleteMediaListEntry.DeleteMediaListEntryMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_DeleteMediaListEntry.DeleteMediaListEntryVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_DeleteReview.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_DeleteReview.DeleteReviewMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_DeleteReview.DeleteReviewVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_DeleteThread.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_DeleteThread.DeleteThreadMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_DeleteThread.DeleteThreadVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_DeleteThreadComment.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_DeleteThreadComment.DeleteThreadCommentMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_DeleteThreadComment.DeleteThreadCommentVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_RateReview.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_RateReview.RateReviewMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_RateReview.RateReviewVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_SaveActivityReply.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_SaveActivityReply.SaveActivityReplyMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_SaveActivityReply.SaveActivityReplyVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_SaveListActivity.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_SaveListActivity.SaveListActivityMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_SaveListActivity.SaveListActivityVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_SaveMediaListEntry.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_SaveMediaListEntry.SaveMediaListEntryMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_SaveMediaListEntry.SaveMediaListEntryVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_SaveMessageActivity.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_SaveMessageActivity.SaveMessageActivityMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_SaveMessageActivity.SaveMessageActivityVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_SaveRecommendation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_SaveRecommendation.SaveRecommendationMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_SaveRecommendation.SaveRecommendationVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_SaveReview.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_SaveReview.SaveReviewMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_SaveReview.SaveReviewVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_SaveTextActivity.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_SaveTextActivity.SaveTextActivityMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_SaveTextActivity.SaveTextActivityVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_SaveThread.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_SaveThread.SaveThreadMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_SaveThread.SaveThreadVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_SaveThreadComment.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_SaveThreadComment.SaveThreadCommentMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_SaveThreadComment.SaveThreadCommentVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_ToggleActivityPin.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_ToggleActivityPin.ToggleActivityPinMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_ToggleActivityPin.ToggleActivityPinVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_ToggleActivitySubscription.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_ToggleActivitySubscription.ToggleActivitySubscriptionMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_ToggleActivitySubscription.ToggleActivitySubscriptionVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_ToggleFavourite.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_ToggleFavourite.ToggleFavouriteMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_ToggleFavourite.ToggleFavouriteVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_ToggleFollow.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_ToggleFollow.ToggleFollowMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_ToggleFollow.ToggleFollowVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_ToggleLike.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_ToggleLike.ToggleLikeMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_ToggleLike.ToggleLikeVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_ToggleLikeV2.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_ToggleLikeV2.ToggleLikeV2Mutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_ToggleLikeV2.ToggleLikeV2Variables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_ToggleThreadSubscription.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_ToggleThreadSubscription.ToggleThreadSubscriptionMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_ToggleThreadSubscription.ToggleThreadSubscriptionVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_UpdateAniChartHighlights.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_UpdateAniChartHighlights.UpdateAniChartHighlightsMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_UpdateAniChartHighlights.UpdateAniChartHighlightsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_UpdateAniChartSettings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_UpdateAniChartSettings.UpdateAniChartSettingsMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_UpdateAniChartSettings.UpdateAniChartSettingsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_UpdateFavouriteOrder.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_UpdateFavouriteOrder.UpdateFavouriteOrderMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_UpdateFavouriteOrder.UpdateFavouriteOrderVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_UpdateMediaListEntries.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_UpdateMediaListEntries.UpdateMediaListEntriesMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_UpdateMediaListEntries.UpdateMediaListEntriesVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_mutation_UpdateUser.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_mutation_UpdateUser.UpdateUserMutation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_UpdateUser.UpdateUserResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_mutation_UpdateUser.UpdateUserVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Activity.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Activity.ActivityQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Activity.ActivityVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_ActivityReply.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_ActivityReply.ActivityReplyQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_ActivityReply.ActivityReplyVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_AiringSchedule.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_AiringSchedule.AiringScheduleQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_AiringSchedule.AiringScheduleVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_AniChartUser.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_AniChartUser.AniChartUserQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Character.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Character.CharacterQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Character.CharacterVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_ExternalLinkSourceCollection.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_ExternalLinkSourceCollection.ExternalLinkSourceCollectionQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_ExternalLinkSourceCollection.ExternalLinkSourceCollectionVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Follower.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Follower.FollowerQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Follower.FollowerVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Following.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Following.FollowingQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Following.FollowingVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_GenreCollection.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_GenreCollection.GenreCollectionQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Like.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Like.LikeQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Like.LikeVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Markdown.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Markdown.MarkdownQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Markdown.MarkdownVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Media.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Media.MediaQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Media.MediaVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_MediaList.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_MediaList.MediaListQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_MediaList.MediaListVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_MediaListCollection.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_MediaListCollection.MediaListCollectionQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_MediaListCollection.MediaListCollectionVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_MediaTagCollection.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_MediaTagCollection.MediaTagCollectionQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_MediaTagCollection.MediaTagCollectionVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_MediaTrend.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_MediaTrend.MediaTrendQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_MediaTrend.MediaTrendVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Notification.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Notification.NotificationQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Notification.NotificationVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Activities.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Activities.ActivitiesQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Activities.ActivitiesVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_ActivityReplies.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_ActivityReplies.ActivityRepliesQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_ActivityReplies.ActivityRepliesVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_AiringSchedules.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_AiringSchedules.AiringSchedulesQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_AiringSchedules.AiringSchedulesVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Characters.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Characters.CharactersQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Characters.CharactersVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Followers.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Followers.FollowersQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Followers.FollowersVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Followings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Followings.FollowingsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Followings.FollowingsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Likes.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Likes.LikesQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Likes.LikesVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_MediaLists.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_MediaLists.MediaListsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_MediaLists.MediaListsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Medias.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Medias.MediasQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Medias.MediasVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_MediaTrends.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_MediaTrends.MediaTrendsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_MediaTrends.MediaTrendsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Notifications.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Notifications.NotificationsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Notifications.NotificationsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Recommendations.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Recommendations.RecommendationsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Recommendations.RecommendationsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Reviews.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Reviews.ReviewsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Reviews.ReviewsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Staffs.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Staffs.StaffsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Staffs.StaffsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Studios.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Studios.StudiosQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Studios.StudiosVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_ThreadCommments.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_ThreadCommments.ThreadCommentsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_ThreadCommments.ThreadCommentsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Threads.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Threads.ThreadsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Threads.ThreadsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_page_Users.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_page_Users.UsersQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_page_Users.UsersVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Recommendation.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Recommendation.RecommendationQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Recommendation.RecommendationVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Review.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Review.ReviewQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Review.ReviewVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_SiteStatistics.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_SiteStatistics.SiteStatisticsQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_SiteStatistics.SiteStatisticsVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Staff.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Staff.StaffQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Staff.StaffVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Studio.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Studio.StudioQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Studio.StudioVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Thread.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Thread.ThreadQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Thread.ThreadVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_ThreadComment.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_ThreadComment.ThreadCommentQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_ThreadComment.ThreadCommentVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_User.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_User.UserQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_User.UserVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_query_Viewer.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/apis_anilist_query_Viewer.ViewerQuery.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/apis_anilist_query_Viewer.ViewerVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_ActivityType.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_ActivityType.ActivityType.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_ActivityType.ActivityTypeMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_DisabledListActivity.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_DisabledListActivity.DisabledListActivity.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_DisabledListActivity.DisabledListActivityMapping.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_Format.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Format.MediaFormat.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Format.ScoreFormat.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Format.MediaFormatMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Format.ScoreFormatMapping.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_FuzzyDate.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_FuzzyDate.FuzzyDateInput.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_FuzzyDate.FuzzyDateMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_MediaListOptions.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_MediaListOptions.MediaListOptions.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_MediaListOptions.MediaListOptionsMapping.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_NotificationOptions.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_NotificationOptions.NotificationOptions.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_NotificationOptions.NotificationOptionsMapping.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_RecommendationRating.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_RecommendationRating.RecommendationRating.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_RecommendationRating.RecommendationRatingMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_ReviewRating.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_ReviewRating.ReviewRating.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_ReviewRating.ReviewRatingMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_Season.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Season.MediaSeason.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Season.MediaSeasonMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_Sort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.ActivitySort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.AiringSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.CharacterSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.MediaListSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.MediaSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.MediaTrendSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.RecommendationSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.ReviewSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.SiteTrendSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.StaffSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.StudioSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.ThreadCommentSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.ThreadSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.UserSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Sort.UserStatisticSort.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.ActivitySortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.AiringSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.CharacterSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.MediaListSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.MediaSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.MediaTrendSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.RecommendationSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.ReviewSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.SiteTrendSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.StaffSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.StudioSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.ThreadCommentSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.ThreadSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.UserSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Sort.UserStatisticSortMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_Source.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Source.MediaSource.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Source.MediaSourceMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_Status.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Status.MediaListStatus.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Status.MediaStatus.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Status.MediaListStatusMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Status.MediaStatusMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_Type.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Type.LikeableType.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Type.MediaType.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_Type.NotificationType.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Type.LikeableTypeMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Type.MediaTypeMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_Type.NotificationTypeMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_UserStaffNameLanguage.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_UserStaffNameLanguage.UserStaffNameLanguage.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_UserStaffNameLanguage.UserStaffNameLanguageMapping.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/apis_anilist_types_UserTitleLanguage.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/apis_anilist_types_UserTitleLanguage.UserTitleLanguage.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/apis_anilist_types_UserTitleLanguage.UserTitleLanguageMapping.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/base_AniLinkError.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/base_AniLinkError.AniLinkApiError.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/base_AniLinkError.AniLinkAuthError.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/base_AniLinkError.AniLinkError.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/base_AniLinkError.AniLinkNetworkError.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/base_AniLinkError.AniLinkValidationError.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/base_AniLinkError.AniLinkErrorCode.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/base_AniLinkError.AniLinkErrorCodes.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/base_APIWrapper.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/classes/base_APIWrapper.APIWrapper.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/base_RequestHandler.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/base_RequestHandler.GraphQLResponseEnvelope.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/base_RequestHandler.RequestErrorContext.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/base_RequestHandler.RequestOptions.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/interfaces/base_RequestHandler.RetryPolicy.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/base_RequestHandler.OnErrorHandler.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/variables/base_RequestHandler.DEFAULT_REQUEST_TIMEOUT.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/functions/base_RequestHandler.configureRequestOptions.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/functions/base_RequestHandler.sendRequest.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/functions/base_RequestHandler.unwrapGraphQLResponse.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/modules/base_ValidateVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/base_ValidateVariables.VariableTypeMapping.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/types/base_ValidateVariables.VariableTypeMappings.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 	<url>
 		<loc>https://rlalpha49.github.io/AniLink/functions/base_ValidateVariables.validateVariables.html</loc>
-		<lastmod>2026-08-20T18:02:21.855Z</lastmod>
+		<lastmod>2026-08-20T18:13:16.307Z</lastmod>
 	</url>
 </urlset>

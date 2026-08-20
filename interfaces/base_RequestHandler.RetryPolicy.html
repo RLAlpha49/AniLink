@@ -16,7 +16,7 @@
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">RetryPolicy</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#basedelayms">baseDelayMs</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#maxdelayms">maxDelayMs</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#maxretries">maxRetries</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#retryonnetworkerror">retryOnNetworkError</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#retryonstatus">retryOnStatus</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-keyword">readonly</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/base/RequestHandler.ts#L19">base/RequestHandler.ts:19</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/dc6be1233e252cfbb50e77b3e624b6275d675693/src/base/RequestHandler.ts#L19">base/RequestHandler.ts:19</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -39,35 +39,35 @@
 <div class="tsd-comment tsd-typography"><p>The base delay before the first retry, in milliseconds.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/base/RequestHandler.ts#L23">base/RequestHandler.ts:23</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/dc6be1233e252cfbb50e77b3e624b6275d675693/src/base/RequestHandler.ts#L23">base/RequestHandler.ts:23</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="maxdelayms"><span>max<wbr/>Delay<wbr/>Ms</span><a href="#maxdelayms" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">maxDelayMs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography"><p>The maximum delay between retries, in milliseconds.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/base/RequestHandler.ts#L25">base/RequestHandler.ts:25</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/dc6be1233e252cfbb50e77b3e624b6275d675693/src/base/RequestHandler.ts#L25">base/RequestHandler.ts:25</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="maxretries"><span>max<wbr/>Retries</span><a href="#maxretries" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">maxRetries</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography"><p>The maximum number of retries after the initial attempt.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/base/RequestHandler.ts#L21">base/RequestHandler.ts:21</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/dc6be1233e252cfbb50e77b3e624b6275d675693/src/base/RequestHandler.ts#L21">base/RequestHandler.ts:21</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="retryonnetworkerror"><span>retry<wbr/>On<wbr/>Network<wbr/>Error</span><a href="#retryonnetworkerror" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">retryOnNetworkError</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 <div class="tsd-comment tsd-typography"><p>Whether network and timeout failures trigger a retry.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/base/RequestHandler.ts#L29">base/RequestHandler.ts:29</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/dc6be1233e252cfbb50e77b3e624b6275d675693/src/base/RequestHandler.ts#L29">base/RequestHandler.ts:29</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="retryonstatus"><span>retry<wbr/>On<wbr/>Status</span><a href="#retryonstatus" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">retryOnStatus</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-keyword">readonly</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span></div>
 <div class="tsd-comment tsd-typography"><p>HTTP status codes that trigger a retry.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/af9a72fcaf87820029672d538def34c81aee9cdb/src/base/RequestHandler.ts#L27">base/RequestHandler.ts:27</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/RLAlpha49/AniLink/blob/dc6be1233e252cfbb50e77b3e624b6275d675693/src/base/RequestHandler.ts#L27">base/RequestHandler.ts:27</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
