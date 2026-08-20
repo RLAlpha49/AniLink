@@ -27,8 +27,6 @@
 
 * { box-sizing: border-box; }
 
-/* Ensure the [hidden] attribute always hides elements, even when a class
-   sets display (e.g. .builder-content { display: flex }). */
 [hidden] { display: none !important; }
 
 html, body {
