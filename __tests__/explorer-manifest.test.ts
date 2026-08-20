@@ -34,7 +34,9 @@ describe("generateManifest - discovery", () => {
 
     it("discovers page operations including medias", () => {
         const manifest = generateManifest();
-        const medias = manifest.operations.find((o) => o.category === "page" && o.name === "medias");
+        const medias = manifest.operations.find(
+            (o) => o.category === "page" && o.name === "medias"
+        );
         expect(medias).toBeDefined();
         expect(medias?.anilinkCall).toBe("aniLink.anilist.query.page.medias(variables)");
     });

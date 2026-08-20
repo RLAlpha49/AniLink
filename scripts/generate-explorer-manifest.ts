@@ -8,7 +8,15 @@
  *
  * Run: `npx tsx scripts/generate-explorer-manifest.ts`
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync, copyFileSync } from "node:fs";
+import {
+    readFileSync,
+    writeFileSync,
+    mkdirSync,
+    existsSync,
+    readdirSync,
+    statSync,
+    copyFileSync,
+} from "node:fs";
 import { dirname, resolve, join } from "node:path";
 
 /** A single variable field on an operation's `*Variables` interface. */
@@ -218,7 +226,10 @@ function dedent(text: string): string {
             return mm ? mm[0].length : 0;
         });
     const min = indents.length ? Math.min(...indents) : 0;
-    return lines.map((l) => l.slice(min)).join("\n").trim();
+    return lines
+        .map((l) => l.slice(min))
+        .join("\n")
+        .trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -630,7 +641,11 @@ function discoverOperations(): RawOp[] {
         }
 
         // Custom signature (single line).
-        if (/^\s+custom:\s*\(query:\s*string,\s*variables:\s*any\)\s*=>\s*Promise<any>;\s*$/.test(line)) {
+        if (
+            /^\s+custom:\s*\(query:\s*string,\s*variables:\s*any\)\s*=>\s*Promise<any>;\s*$/.test(
+                line
+            )
+        ) {
             ops.push({
                 category: "custom",
                 name: "custom",
@@ -664,9 +679,10 @@ function tryParseSignature(
     start: number
 ): { name: string; variablesType: string; responseType: string } | null {
     // Single-line form: `name: (variables: XVars) => Promise<XResp>;`
-    const single = /^\s+([a-zA-Z]+):\s*\(variables:\s*([A-Za-z]+)\)\s*=>\s*Promise<([A-Za-z]+)>;\s*$/.exec(
-        lines[start]
-    );
+    const single =
+        /^\s+([a-zA-Z]+):\s*\(variables:\s*([A-Za-z]+)\)\s*=>\s*Promise<([A-Za-z]+)>;\s*$/.exec(
+            lines[start]
+        );
     if (single) {
         return { name: single[1], variablesType: single[2], responseType: single[3] };
     }
