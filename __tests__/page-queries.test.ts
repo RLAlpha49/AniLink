@@ -46,3 +46,61 @@ describe("AniList page queries", () => {
         }
     );
 });
+
+test("paginate helper iterates pages through the facade with a maxPages guard", async () => {
+    const client = createTestClient("paginate-token");
+
+    let callCount = 0;
+    mockSendRequest.mockImplementation(async () => {
+        callCount += 1;
+        const hasNextPage = callCount < 2;
+        return {
+            pageInfo: {
+                total: 100,
+                perPage: 50,
+                currentPage: callCount,
+                lastPage: 2,
+                hasNextPage,
+            },
+            media: [{ id: callCount }],
+        };
+    });
+
+    const result = await client.anilist.paginate(
+        (page, perPage) =>
+            client.anilist.query.page.medias({ page, perPage, type: "ANIME" } as never),
+        "media",
+        { maxPages: 5 }
+    );
+
+    expect(mockSendRequest).toHaveBeenCalledTimes(2);
+    expect(result.pageCount).toBe(2);
+    expect(result.truncated).toBe(false);
+    expect(result.items).toEqual([{ id: 1 }, { id: 2 }]);
+});
+
+test("paginate helper truncates at the maxPages guard", async () => {
+    const client = createTestClient("paginate-token");
+
+    mockSendRequest.mockImplementation(async () => ({
+        pageInfo: {
+            total: 1000,
+            perPage: 50,
+            currentPage: 1,
+            lastPage: 20,
+            hasNextPage: true,
+        },
+        media: [{ id: 1 }],
+    }));
+
+    const result = await client.anilist.paginate(
+        (page, perPage) =>
+            client.anilist.query.page.medias({ page, perPage, type: "ANIME" } as never),
+        "media",
+        { maxPages: 3 }
+    );
+
+    expect(mockSendRequest).toHaveBeenCalledTimes(3);
+    expect(result.pageCount).toBe(3);
+    expect(result.truncated).toBe(true);
+});

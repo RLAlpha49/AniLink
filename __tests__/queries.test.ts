@@ -84,3 +84,51 @@ test("sends custom query text and variables through the mocked transport", async
         })
     );
 });
+
+test("fuzzyDate helper builds a FuzzyDateInput from the facade", () => {
+    const client = createTestClient("fuzzy-token");
+    const result = client.anilist.fuzzyDate({ year: 2024, month: 4, day: 15 });
+    expect(result).toEqual({ year: 2024, month: 4, day: 15 });
+});
+
+test("flattenMediaListCollection helper flattens list groups from the facade", () => {
+    const client = createTestClient("flatten-token");
+    const collection = {
+        lists: [
+            {
+                entries: [
+                    {
+                        id: 1,
+                        userId: 5,
+                        mediaId: 100,
+                        status: "COMPLETED",
+                        score: 8,
+                        progress: 12,
+                        progressVolumes: 0,
+                        repeat: 0,
+                        priority: 0,
+                        private: false,
+                        notes: "",
+                        hiddenFromStatusLists: false,
+                        customLists: [],
+                        advancedScores: [],
+                        startedAt: { year: 0, month: 0, day: 0 },
+                        completedAt: { year: 0, month: 0, day: 0 },
+                        updatedAt: 0,
+                        createdAt: 0,
+                        media: {},
+                    },
+                ],
+                name: "Completed",
+                isCustomList: false,
+                isSplitCompletedList: false,
+                status: "COMPLETED",
+            },
+        ],
+        hasNextChunk: false,
+    };
+    const entries = client.anilist.flattenMediaListCollection(collection);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].listNames).toEqual(["Completed"]);
+    expect(entries[0].mediaId).toBe(100);
+});
