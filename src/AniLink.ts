@@ -298,7 +298,7 @@ export class AniLink {
              *
              * @example
              * ```typescript
-             * await aniLink.anilist.query.user({id: 542244, isHTML: true});
+             * await aniLink.anilist.query.user({id: 542244, asHtml: true});
              * ```
              * @see https://docs.anilist.co/reference/query
              */
@@ -470,7 +470,7 @@ export class AniLink {
              *
              * @example
              * ```typescript
-             * await aniLink.anilist.query.viewer({isHTML: true});
+             * await aniLink.anilist.query.viewer({asHtml: true});
              * ```
              * Must be authenticated.
              * @see https://docs.anilist.co/reference/query

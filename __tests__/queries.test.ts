@@ -2,7 +2,7 @@ import { createTestClient, getLastRequest, mockSendRequest } from "./helpers/moc
 import { describe, expect, test } from "vitest";
 
 const queryCases: Array<[string, string, object | undefined, string]> = [
-    ["user", "user", { id: 542244, isHTML: true }, "User"],
+    ["user", "user", { id: 542244, asHtml: true }, "User"],
     ["media", "media", { id: 1, type: "ANIME" }, "Media"],
     ["media trend", "mediaTrend", { mediaId: 1, type: "ANIME" }, "MediaTrend"],
     ["airing schedule", "airingSchedule", { mediaId: 130590 }, "AiringSchedule"],
@@ -18,7 +18,7 @@ const queryCases: Array<[string, string, object | undefined, string]> = [
     ["likes for a model", "like", { likeableId: 723422275, type: "ACTIVITY" }, "Like"],
     ["genre collection", "genreCollection", undefined, "GenreCollection"],
     ["media tag collection", "mediaTagCollection", undefined, "MediaTagCollection"],
-    ["viewer", "viewer", { isHTML: true }, "Viewer"],
+    ["viewer", "viewer", { asHtml: true }, "Viewer"],
     ["notification", "notification", { asHtml: true }, "Notification"],
     ["studio", "studio", { id: 561, asHtml: true }, "Studio"],
     ["review", "review", { id: 8008, asHtml: true }, "Review"],

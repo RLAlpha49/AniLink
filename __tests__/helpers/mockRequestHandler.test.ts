@@ -42,7 +42,7 @@ test("routes AniLink requests through the mocked transport", async () => {
 test("marks authenticated operations as requiring a token", async () => {
     const client = createTestClient("fake-token");
 
-    await client.anilist.query.viewer({ isHtml: true });
+    await client.anilist.query.viewer({ asHtml: true });
 
     expect(getLastRequest()).toEqual(expect.objectContaining({ requiresAuth: true }));
 });

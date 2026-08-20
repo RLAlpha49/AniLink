@@ -2,7 +2,7 @@ import { createTestClient, getLastRequest, mockSendRequest } from "./helpers/moc
 import { describe, expect, test } from "vitest";
 
 const pageCases: Array<[string, object, string, string]> = [
-    ["users", { isHTML: true }, "users", "Page"],
+    ["users", { asHtml: true }, "users", "Page"],
     ["medias", { id: 1, type: "ANIME" }, "medias", "Page"],
     ["characters", { id: 1, asHtml: true }, "characters", "Page"],
     ["staffs", { id: 132186, asHtml: true }, "staffs", "Page"],
