@@ -175,6 +175,54 @@ try {
 the raw Axios error can contain request configuration and bearer-token
 headers.
 
+### Retry with backoff
+
+AniLink can retry transient failures for you. Retrying is **opt-in**: by
+default requests are sent exactly once and every failure is thrown to
+your code. Pass `retry: true` to use the default policy, or pass a
+partial policy to tune it. When enabled, AniLink retries HTTP `429` and
+`5xx` responses plus network and timeout errors, with exponential
+backoff. The `Retry-After` header is honored for `429` responses
+(capped at 30 seconds).
+
+```typescript
+// Opt in with the default policy
+const aniLink = new AniLink("your-auth-token", { retry: true });
+
+// Or tune the policy
+const aniLink = new AniLink("your-auth-token", {
+  retry: {
+    maxRetries: 3, // retries after the initial attempt
+    baseDelayMs: 250, // first backoff delay
+    maxDelayMs: 5_000, // backoff cap
+    retryOnStatus: [429, 500, 502, 503, 504],
+    retryOnNetworkError: true,
+  },
+});
+```
+
+Retries are disabled by default so you stay in control of when requests
+are retried. Set `retry: false` explicitly to make that intent clear.
+
+### Error hook
+
+The `onError` hook is invoked when a request ultimately fails after all
+retries are exhausted (or immediately when retries are disabled). Use it
+to implement your own fallback (for example a cache or an offline queue).
+
+```typescript
+import { AniLink, AniLinkApiError } from "anilink-api-wrapper";
+
+const aniLink = new AniLink("your-auth-token", {
+  onError: (error, context) => {
+    console.error(`Request to ${context.url} failed on attempt ${context.attempt}`);
+    if (error instanceof AniLinkApiError && error.status === 429) {
+      // queue the request for later
+    }
+  },
+});
+```
+
 Common status codes from the AniList API:
 
 - `400` bad request

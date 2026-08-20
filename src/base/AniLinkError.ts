@@ -10,6 +10,7 @@ export const AniLinkErrorCodes = {
     TIMEOUT: "TIMEOUT_ERROR",
     ABORTED: "ABORTED_ERROR",
     AUTH: "AUTH_ERROR",
+    VALIDATION: "VALIDATION_ERROR",
     UNKNOWN: "UNKNOWN_ERROR",
 } as const;
 
@@ -74,6 +75,26 @@ export class AniLinkAuthError extends AniLinkError {
             AniLinkErrorCodes.AUTH
         );
         this.name = "AniLinkAuthError";
+    }
+}
+
+/** A failure caused by operation variables that fail validation. */
+export class AniLinkValidationError extends AniLinkError {
+    /** The individual validation problems, one per line. */
+    public readonly details: readonly string[];
+
+    /**
+     * Creates a validation error for invalid operation variables.
+     *
+     * @param details - The individual validation problems.
+     */
+    constructor(details: readonly string[]) {
+        super(
+            `AniList request variables are invalid:\n${details.join("\n")}`,
+            AniLinkErrorCodes.VALIDATION
+        );
+        this.name = "AniLinkValidationError";
+        this.details = details;
     }
 }
 
