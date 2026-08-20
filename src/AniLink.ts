@@ -219,9 +219,17 @@ import {
     AniLinkError,
     AniLinkErrorCodes,
     AniLinkNetworkError,
+    AniLinkValidationError,
 } from "./base/AniLinkError";
 
-export { AniLinkApiError, AniLinkAuthError, AniLinkError, AniLinkErrorCodes, AniLinkNetworkError };
+export {
+    AniLinkApiError,
+    AniLinkAuthError,
+    AniLinkError,
+    AniLinkErrorCodes,
+    AniLinkNetworkError,
+    AniLinkValidationError,
+};
 export type { AniLinkErrorCode } from "./base/AniLinkError";
 
 /** Transport options accepted by an `AniLink` client. */
@@ -466,6 +474,7 @@ export class AniLink {
 
             /**
              * Fetches viewer data from the Anilist API.
+             * @param {UserVariables} variables - The variables for the query.
              * @returns {Promise<UserResponse>} A promise that resolves to the viewer data.
              *
              * @example
@@ -1671,4 +1680,5 @@ module.exports = Object.assign(AniLink, {
     AniLinkError,
     AniLinkErrorCodes,
     AniLinkNetworkError,
+    AniLinkValidationError,
 });

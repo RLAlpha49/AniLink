@@ -73,9 +73,7 @@ export class ViewerQuery extends APIWrapper {
             mangaStatSort: UserStatisticSortMappings,
         };
 
-        if (Object(variables).length > 0) {
-            validateVariables(variables, variableTypeMappings);
-        }
+        validateVariables(variables, variableTypeMappings);
 
         const query = `
       query ($asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
