@@ -3,6 +3,7 @@ import plugin from '@typescript-eslint/eslint-plugin';
 import prettierConfig from 'eslint-config-prettier';
 
 export default [
+  ...plugin.configs['flat/recommended'],
   {
     files: ['**/*.ts'],
     languageOptions: {
