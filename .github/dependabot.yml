@@ -21,9 +21,6 @@ updates:
           - "vitest"
           - "@vitest/*"
           - "typedoc"
-    ignore:
-      - dependency-name: "eslint-plugin-n"
-        versions: [">=18"]
 
   - package-ecosystem: "npm"
     directory: "/"
