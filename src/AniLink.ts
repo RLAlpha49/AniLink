@@ -1,5 +1,14 @@
 import { type AniLinkOptions, buildAniListApi, type AniListApi } from "./apis/anilist/facade";
 
+export {
+    ANILIST_AUTHORIZE_URL,
+    ANILIST_TOKEN_URL,
+    type AniListTokenResponse,
+    buildAuthorizationUrl,
+    getAccessToken,
+    refreshAccessToken,
+} from "./auth/AniListAuth";
+
 /**
  * `AniLink` is a class for interacting with the APIs.
  * It provides methods for querying and mutating data.

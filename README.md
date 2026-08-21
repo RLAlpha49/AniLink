@@ -86,6 +86,52 @@ const aniLink = new AniLink();
 
 Get a token by registering an application on the [AniList developer settings](https://anilist.co/settings/developer).
 
+### OAuth
+
+AniLink ships helpers for the AniList OAuth2 authorization-code flow, so you can obtain and refresh the token you pass to the `AniLink` constructor instead of hand-rolling the HTTP calls.
+
+First, register an application on the [AniList developer settings](https://anilist.co/settings/developer) to get a client ID and client secret, and pick a redirect URI.
+
+Send the user to the authorization URL to approve your application:
+
+```typescript
+import { buildAuthorizationUrl } from "anilink-api-wrapper";
+
+const authorizeUrl = buildAuthorizationUrl("your-client-id", "https://example.com/callback");
+// Redirect the user to `authorizeUrl`. After approval, AniList sends them back
+// to your redirect URI with a `?code=` query parameter.
+```
+
+Exchange the authorization code from the redirect for an access token:
+
+```typescript
+import { getAccessToken, AniLink } from "anilink-api-wrapper";
+
+const { access_token, refresh_token } = await getAccessToken(
+    "your-client-id",
+    "your-client-secret",
+    code, // the `code` query parameter from the redirect
+    "https://example.com/callback"
+);
+
+const aniLink = new AniLink(access_token);
+```
+
+When the access token expires, exchange the stored refresh token for a new one. Note that the refresh response may not include a new `refresh_token`, in which case you keep using the one you stored:
+
+```typescript
+import { refreshAccessToken } from "anilink-api-wrapper";
+
+const { access_token, refresh_token: rotated } = await refreshAccessToken(
+    "your-client-id",
+    "your-client-secret",
+    refresh_token
+);
+
+const nextRefreshToken = rotated ?? refresh_token;
+const aniLink = new AniLink(access_token);
+```
+
 ### Query
 
 ```typescript
