@@ -1,10 +1,10 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { comparePackageToSchema } from "./compare";
+import { comparePackageToSchema } from "../../lib/api-compare/compare";
 import { discoverPackageContracts, discoverPackageOperations } from "./package-inventory";
-import { renderJson, renderMarkdown } from "./report";
-import { fetchSchema, loadSchema, writeSchema } from "./schema";
-import type { ComparisonResult } from "./types";
+import { renderJson, renderMarkdown } from "../../lib/api-compare/report";
+import { fetchSchema, loadSchema, writeSchema } from "../../lib/api-compare/schema";
+import type { ComparisonResult } from "../../lib/api-compare/types";
 
 export interface CliComparisonResult {
     discrepancies: Array<{ severity: string; category: string; message: string }>;

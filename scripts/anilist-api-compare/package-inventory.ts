@@ -1,9 +1,12 @@
 import { readFileSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { extractOperationMetadata } from "./graph";
-import { extractTypeScriptContracts, type TypeScriptContracts } from "./typescript-contracts";
-import type { PackageOperation } from "./types";
+import { extractOperationMetadata } from "../../lib/api-compare/graph";
+import {
+    extractTypeScriptContracts,
+    type TypeScriptContracts,
+} from "../../lib/api-compare/typescript-contracts";
+import type { PackageOperation } from "../../lib/api-compare/types";
 
 export async function discoverPackageOperations(sourceRoot: string): Promise<PackageOperation[]> {
     const operations: PackageOperation[] = [];
