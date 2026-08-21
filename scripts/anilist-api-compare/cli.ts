@@ -5,6 +5,7 @@ import { discoverPackageContracts, discoverPackageOperations } from "./package-i
 import { renderJson, renderMarkdown } from "../../lib/api-compare/report";
 import { fetchSchema, loadSchema, writeSchema } from "../../lib/api-compare/schema";
 import type { ComparisonResult } from "../../lib/api-compare/types";
+import { resolveProvider, type ProviderConfig } from "./providers";
 
 export interface CliComparisonResult {
     discrepancies: Array<{ severity: string; category: string; message: string }>;
@@ -13,8 +14,8 @@ export interface CliComparisonResult {
 
 export interface CliOptions {
     argv: string[];
-    compare?: (argv: string[]) => Promise<CliComparisonResult>;
-    updateSchema?: () => Promise<void>;
+    compare?: (argv: string[], provider: ProviderConfig) => Promise<CliComparisonResult>;
+    updateSchema?: (provider: ProviderConfig) => Promise<void>;
     log?: (message: string) => void;
 }
 
@@ -29,17 +30,18 @@ export interface CliResult {
 export async function runCli(options: CliOptions): Promise<CliResult> {
     const log = options.log ?? console.log;
     try {
+        const provider = resolveProvider(valueAfter(options.argv, "--provider"));
         log(
             options.argv[0] === "update-schema"
-                ? "AniList schema snapshot update started"
-                : "AniList API comparison started"
+                ? `${provider.label} schema snapshot update started`
+                : `${provider.label} API comparison started`
         );
         if (options.argv[0] === "update-schema") {
-            await (options.updateSchema ?? updateSchema)();
-            log("AniList schema snapshot updated: scripts/anilist-api-compare/anilist-schema.json");
+            await (options.updateSchema ?? updateSchema)(provider);
+            log(`${provider.label} schema snapshot updated: ${provider.schemaPath}`);
             return { exitCode: 0 };
         }
-        const result = await (options.compare ?? runComparison)(options.argv);
+        const result = await (options.compare ?? runComparison)(options.argv, provider);
         const hasErrors = result.discrepancies.some(
             (discrepancy) => discrepancy.severity === "error"
         );
@@ -51,7 +53,7 @@ export async function runCli(options: CliOptions): Promise<CliResult> {
                 : "No discrepancies found"
         );
         log(
-            "Reports: artifacts/anilist-api-compare/report.md, artifacts/anilist-api-compare/report.json"
+            `Reports: ${provider.reportDirectory}/report.md, ${provider.reportDirectory}/report.json`
         );
         return { exitCode: hasErrors ? 1 : 0 };
     } catch (error) {
@@ -62,19 +64,18 @@ export async function runCli(options: CliOptions): Promise<CliResult> {
     }
 }
 
-async function runComparison(argv: string[]): Promise<ComparisonResult> {
+async function runComparison(argv: string[], provider: ProviderConfig): Promise<ComparisonResult> {
     const live = argv.includes("--live");
     const root = process.cwd();
-    const schemaPath = resolve(
-        root,
-        valueAfter(argv, "--schema") ?? "scripts/anilist-api-compare/anilist-schema.json"
-    );
+    const schemaPath = resolve(root, valueAfter(argv, "--schema") ?? provider.schemaPath);
     const reportDirectory = resolve(
         root,
-        valueAfter(argv, "--report-dir") ?? "artifacts/anilist-api-compare"
+        valueAfter(argv, "--report-dir") ?? provider.reportDirectory
     );
-    const schema = live ? await fetchSchema() : await loadSchema(schemaPath);
-    const sourceRoot = resolve(root, "src/apis/anilist");
+    const schema = live
+        ? await fetchSchema(fetch, { url: provider.graphqlUrl })
+        : await loadSchema(schemaPath);
+    const sourceRoot = resolve(root, provider.sourceRoot);
     const operations = await discoverPackageOperations(sourceRoot);
     const contracts = await discoverPackageContracts(sourceRoot);
     const result = comparePackageToSchema({ schema, operations, contracts });
@@ -92,12 +93,9 @@ async function runComparison(argv: string[]): Promise<ComparisonResult> {
     return result;
 }
 
-async function updateSchema(): Promise<void> {
-    const schema = await fetchSchema();
-    await writeSchema(
-        resolve(process.cwd(), "scripts/anilist-api-compare/anilist-schema.json"),
-        schema
-    );
+async function updateSchema(provider: ProviderConfig): Promise<void> {
+    const schema = await fetchSchema(fetch, { url: provider.graphqlUrl });
+    await writeSchema(resolve(process.cwd(), provider.schemaPath), schema);
 }
 
 function valueAfter(argv: string[], flag: string): string | undefined {

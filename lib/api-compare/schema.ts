@@ -4,20 +4,30 @@ import { getIntrospectionQuery, type IntrospectionQuery } from "graphql";
 
 const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
 
+export interface FetchSchemaOptions {
+    /** GraphQL endpoint to introspect. Defaults to the AniList endpoint. */
+    url?: string;
+}
+
 export async function loadSchema(filePath: string): Promise<IntrospectionQuery> {
     const raw = await readFile(filePath, "utf8");
     return validateSchema(JSON.parse(raw));
 }
 
-export async function fetchSchema(fetcher: typeof fetch = fetch): Promise<IntrospectionQuery> {
-    const response = await fetcher(ANILIST_GRAPHQL_URL, {
+export async function fetchSchema(
+    fetcher: typeof fetch = fetch,
+    options: FetchSchemaOptions = {}
+): Promise<IntrospectionQuery> {
+    const response = await fetcher(options.url ?? ANILIST_GRAPHQL_URL, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ query: getIntrospectionQuery() }),
     });
 
     if (!response.ok) {
-        throw new Error(`AniList schema request failed with HTTP ${response.status}`);
+        throw new Error(
+            `Schema request failed with HTTP ${response.status} (${options.url ?? ANILIST_GRAPHQL_URL})`
+        );
     }
 
     const payload = (await response.json()) as {
@@ -27,7 +37,7 @@ export async function fetchSchema(fetcher: typeof fetch = fetch): Promise<Intros
 
     if (payload.errors?.length) {
         throw new Error(
-            `AniList schema request returned errors: ${payload.errors.map((error) => error.message ?? "Unknown error").join("; ")}`
+            `Schema request returned errors: ${payload.errors.map((error) => error.message ?? "Unknown error").join("; ")}`
         );
     }
 
