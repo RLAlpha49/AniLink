@@ -48,7 +48,8 @@
     "docs:serve": "npm run docs:generate && npx serve docs",
     "release": "semantic-release",
     "release:dry": "semantic-release --dry-run --no-ci",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run anilist:api:compare"
   },
   "keywords": [
     "anilist",
@@ -94,6 +95,7 @@
     "typedoc-plugin-ga": "^1.1.1",
     "typedoc-plugin-llms-txt": "^0.1.2",
     "typedoc-plugin-mdn-links": "^5.1.1",
+    "typedoc-plugin-missing-exports": "^4.1.4",
     "typescript": "^6.0.3",
     "vitest": "^4.1.11"
   },

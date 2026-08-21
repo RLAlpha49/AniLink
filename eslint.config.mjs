@@ -14,9 +14,7 @@ export default [
     plugins: {
       '@typescript-eslint': plugin,
     },
-    rules: {
-      '@typescript-eslint/consistent-type-definitions': 'off',
-    },
+    rules: {},
     ...prettierConfig,
   },
   {

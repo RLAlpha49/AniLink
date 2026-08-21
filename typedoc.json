@@ -8,9 +8,10 @@
   "plugin": [
     "typedoc-github-theme",
     "typedoc-plugin-mdn-links",
+    "typedoc-plugin-missing-exports",
     "typedoc-plugin-llms-txt",
     "typedoc-plugin-ga",
-    "@boneskull/typedoc-plugin-mermaid"
+    "@boneskull/typedoc-plugin-mermaid",
   ],
   "tsconfig": "./tsconfig.json",
   "excludePrivate": true,
