@@ -78,7 +78,9 @@ describe("AniList mutations without remote side effects", () => {
         "%s only builds a mocked request",
         async (_name, method, variables, operation) => {
             const client = createTestClient("mutation-token");
-            const call = (client.anilist.mutation as any)[method];
+            const call = (
+                client.anilist.mutation as Record<string, (variables: object) => Promise<unknown>>
+            )[method];
 
             const result = await call(variables);
 

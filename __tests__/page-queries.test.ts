@@ -27,7 +27,9 @@ describe("AniList page queries", () => {
         "%s is handled without network access",
         async (_name, variables, method, operation) => {
             const client = createTestClient("page-query-token");
-            const call = (client.anilist.query.page as any)[method];
+            const call = (
+                client.anilist.query.page as Record<string, (variables: object) => Promise<unknown>>
+            )[method];
 
             await call(variables);
 

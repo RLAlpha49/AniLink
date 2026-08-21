@@ -37,7 +37,7 @@ interface TestChunk {
 
 describe("paginate", () => {
     test("collects items across pages until hasNextPage is false", async () => {
-        const fetchPage = vi.fn(async (page: number, perPage: number): Promise<TestPage> => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
             const isLast = page >= 2;
             return {
                 pageInfo: pageInfo({
@@ -77,7 +77,7 @@ describe("paginate", () => {
     });
 
     test("respects startPage and perPage options", async () => {
-        const fetchPage = vi.fn(async (page: number, perPage: number): Promise<TestPage> => ({
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
             pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
             media: [{ id: page }],
         }));
@@ -107,7 +107,7 @@ describe("paginate", () => {
     });
 
     test("falls back to defaults when options are invalid", async () => {
-        const fetchPage = vi.fn(async (page: number, perPage: number): Promise<TestPage> => ({
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
             pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
             media: [{ id: page }],
         }));
@@ -164,6 +164,7 @@ describe("paginatePages", () => {
 
         let count = 0;
         for await (const _page of paginatePages(fetchPage, { maxPages: 100 })) {
+            void _page;
             count++;
             if (count === 2) break;
         }
@@ -174,7 +175,7 @@ describe("paginatePages", () => {
 
 describe("paginateChunks", () => {
     test("collects items across chunks until hasNextChunk is false", async () => {
-        const fetchChunk = vi.fn(async (chunk: number, perChunk: number): Promise<TestChunk> => {
+        const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => {
             const isLast = chunk >= 2;
             return {
                 hasNextChunk: !isLast,
@@ -209,7 +210,7 @@ describe("paginateChunks", () => {
     });
 
     test("respects startChunk and perChunk options", async () => {
-        const fetchChunk = vi.fn(async (chunk: number, perChunk: number): Promise<TestChunk> => ({
+        const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
             hasNextChunk: false,
             lists: [{ name: `list-${chunk}` }],
         }));
@@ -224,7 +225,7 @@ describe("paginateChunks", () => {
     });
 
     test("falls back to defaults when options are invalid", async () => {
-        const fetchChunk = vi.fn(async (chunk: number, perChunk: number): Promise<TestChunk> => ({
+        const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
             hasNextChunk: false,
             lists: [{ name: `list-${chunk}` }],
         }));
