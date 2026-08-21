@@ -78,7 +78,7 @@ npm install anilink-api-wrapper
 import { AniLink } from "anilink-api-wrapper";
 
 // With a token (required for authenticated queries and mutations)
-const aniLink = new AniLink("your-auth-token");
+const aniLinkAuth = new AniLink("your-auth-token");
 
 // Without a token (public queries only)
 const aniLink = new AniLink();
@@ -338,6 +338,11 @@ npm run lint              # lint source and tests
 npm run build             # build to dist/
 npm run docs:generate     # generate API docs to docs/
 ```
+
+## Resources
+
+- [Contributing guide](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md) and [GitHub Releases](https://github.com/RLAlpha49/AniLink/releases)
 
 ## License
 
