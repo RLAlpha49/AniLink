@@ -24,7 +24,7 @@ export interface FollowingsVariables {
     /**
      * `userId` is a number representing the id of the user.
      */
-    userId?: number;
+    userId: number;
 
     /**
      * `asHtml` is a boolean representing whether the response text is returned as HTML.
