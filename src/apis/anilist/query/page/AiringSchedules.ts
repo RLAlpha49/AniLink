@@ -1,9 +1,9 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
-import { sendRequest } from "../../../../base/RequestHandler";
-import { AiringScheduleSchema } from "../../interfaces/responses/query/AiringSchedule";
+
 import { type AiringSchedulesPageResponse } from "../../interfaces/responses/page/AiringSchedules";
 import { AiringSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
+import { AiringScheduleSchema } from "../../schemas/responses/query/AiringSchedule";
 
 /**
  * `AiringSchedulesVariables` is an interface representing the variables for the `AiringSchedulesQuery`.
@@ -129,21 +129,6 @@ export interface AiringSchedulesVariables {
  */
 export class AiringSchedulesQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `AiringSchedulesQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `airingSchedules` is a method that sends a query request to get airing schedules.
      *
      * @param variables - The variables for the query.
@@ -200,7 +185,6 @@ export class AiringSchedulesQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

@@ -1,9 +1,9 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
-import { sendRequest } from "../../../../base/RequestHandler";
-import { ThreadCommentSchema } from "../../interfaces/responses/query/ThreadComment";
+
 import { type ThreadCommentsPageResponse } from "../../interfaces/responses/page/ThreadComments";
 import { ThreadSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
+import { ThreadCommentSchema } from "../../schemas/responses/query/ThreadComment";
 
 /**
  * `ThreadCommentsVariables` is an interface representing the variables for the `ThreadCommentsQuery`.
@@ -54,21 +54,6 @@ export interface ThreadCommentsVariables {
  */
 export class ThreadCommentsQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ThreadCommentsQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `threadComments` is a method that sends a query request to get thread comments.
      *
      * @param variables - The variables for the query.
@@ -108,7 +93,6 @@ export class ThreadCommentsQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

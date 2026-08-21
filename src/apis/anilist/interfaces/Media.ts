@@ -28,18 +28,6 @@ export interface MediaListEntry {
 }
 
 /**
- * `MediaListEntrySchema` is a string representing the GraphQL schema for a media list entry.
- * It includes the id and status.
- * @see https://docs.anilist.co/reference/object/medialist
- */
-export const MediaListEntrySchema = `
-  mediaListEntry {
-    id
-    status
-  }
-`;
-
-/**
  * `MediaStats` is an interface representing the statistics of a media.
  * It includes score distribution and status distribution each having their own properties.
  * @see https://docs.anilist.co/reference/object/mediastats

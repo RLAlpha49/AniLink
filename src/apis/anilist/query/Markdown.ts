@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
 
 /**
@@ -20,21 +19,6 @@ export interface MarkdownVariables {
  * @see https://docs.anilist.co/reference/query
  */
 export class MarkdownQuery extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `MarkdownQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `markdown` is a method that sends a query request to convert Markdown text to HTML.
      *
@@ -60,7 +44,6 @@ export class MarkdownQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

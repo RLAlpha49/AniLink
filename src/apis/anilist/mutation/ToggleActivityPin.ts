@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
-import { type Activity, ActivityWithRepliesSchema } from "../interfaces/Activity";
+import { type Activity } from "../interfaces/Activity";
+import { ActivityWithRepliesSchema } from "../schemas/Activity";
 
 /**
  * `ToggleActivityPinMutation` is an interface representing the variables to pin an activity.
@@ -32,21 +32,6 @@ export interface ToggleActivityPinVariables {
  */
 export class ToggleActivityPinMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ToggleActivityPinMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `toggleActivityPin` is a method that sends a mutation request to pin an activity.
      *
      * @param variables - An object of type `ToggleActivityPinVariables` representing the variables for the mutation.
@@ -74,7 +59,6 @@ export class ToggleActivityPinMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

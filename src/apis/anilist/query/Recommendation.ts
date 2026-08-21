@@ -1,11 +1,8 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import {
-    type RecommendationResponse,
-    RecommendationSchema,
-} from "../interfaces/responses/query/Recommendation";
+import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { type RecommendationSort, RecommendationSortMappings } from "../types/Sort";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { RecommendationSchema } from "../schemas/responses/query/Recommendation";
 
 /**
  * `RecommendationVariables` is an interface representing the variables for the `RecommendationQuery`.
@@ -71,21 +68,6 @@ export interface RecommendationVariables {
  */
 export class RecommendationQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `RecommendationQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `recommendation` is a method that sends a query request to get recommendation data.
      *
      * @param variables - The variables for the query.
@@ -119,7 +101,6 @@ export class RecommendationQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

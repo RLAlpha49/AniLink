@@ -1,6 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
-import { sendRequest } from "../../../../base/RequestHandler";
-import { MediaListSchema } from "../../interfaces/responses/query/MediaList";
+
 import { type MediaListsPageResponse } from "../../interfaces/responses/page/MediaLists";
 import { MediaTypeMappings } from "../../types/Type";
 import { MediaListStatusMappings } from "../../types/Status";
@@ -8,6 +7,7 @@ import { FuzzyDateMappings } from "../../types/FuzzyDate";
 import { MediaListSortMappings } from "../../types/Sort";
 import { ScoreFormatMapping } from "../../types/Format";
 import { validateVariables } from "../../../../base/ValidateVariables";
+import { MediaListSchema } from "../../schemas/responses/query/MediaList";
 
 /**
  * `MediaListsVariables` is an interface representing the variables for the `MediaListsQuery`.
@@ -173,21 +173,6 @@ export interface MediaListsVariables {
  */
 export class MediaListsQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `MediaListsQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `mediaLists` is a method that sends a query request to get media lists.
      *
      * @param variables - The variables for the query.
@@ -250,7 +235,6 @@ export class MediaListsQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

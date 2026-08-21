@@ -1,11 +1,8 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import {
-    type MediaTrendResponse,
-    MediaTrendSchema,
-} from "../interfaces/responses/query/MediaTrend";
+import { type MediaTrendResponse } from "../interfaces/responses/query/MediaTrend";
 import { type MediaTrendSort, MediaTrendSortMappings } from "../types/Sort";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { MediaTrendSchema } from "../schemas/responses/query/MediaTrend";
 
 /**
  * `MediaTrendVariables` is an interface representing the variables for the `MediaTrendQuery`.
@@ -151,21 +148,6 @@ export interface MediaTrendVariables {
  */
 export class MediaTrendQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `MediaTrendQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `mediaTrend` is a method that sends a query request to get media trend data.
      *
      * @param variables - The variables for the query.
@@ -215,7 +197,6 @@ export class MediaTrendQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

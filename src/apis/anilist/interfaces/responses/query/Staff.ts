@@ -1,7 +1,11 @@
-import { type Name, NameSchema } from "../../Name";
-import { type Image, ImageSchema } from "../../Image";
-import { type FuzzyDate, FuzzyDateSchema } from "../../FuzzyDate";
-import { type Title, TitleSchema } from "../../Title";
+import { type Name } from "../../Name";
+import { type Image } from "../../Image";
+import { type FuzzyDate } from "../../FuzzyDate";
+import { type Title } from "../../Title";
+import { FuzzyDateSchema } from "../../../schemas/FuzzyDate";
+import { ImageSchema } from "../../../schemas/Image";
+import { NameSchema } from "../../../schemas/Name";
+import { TitleSchema } from "../../../schemas/Title";
 
 /**
  * `StaffResponse` is an interface representing the response from a staff query.
@@ -195,57 +199,3 @@ export interface StaffResponse {
      */
     modNotes: string;
 }
-
-/**
- * `StaffSchema` is a constant representing the GraphQL schema for a staff query.
- * It includes the staff's id, name, language, image, description, primary occupations, gender, date of birth, date of death, age, years active, hometown, blood type, favourite status, favourite blocked status, site url, staff media, characters, character media, staff, submitter, submission status, submission notes, favourites, and mod notes.
- * @see https://docs.anilist.co/reference/object/staff
- */
-export const StaffSchema = `
-  id
-  ${NameSchema}
-  languageV2
-  ${ImageSchema}
-  description(asHtml: $asHtml)
-  primaryOccupations
-  gender
-  dateOfBirth {
-    ${FuzzyDateSchema}
-  }
-  dateOfDeath {
-    ${FuzzyDateSchema}
-  }
-  age
-  yearsActive
-  homeTown
-  bloodType
-  isFavourite
-  isFavouriteBlocked
-  siteUrl
-  staffMedia (sort: $staffMediaSort, type: $staffMediaType, onList: $staffMediaOnList, page: $staffMediaPage, perPage: $staffMediaPerPage) {
-    nodes {
-      id
-      ${TitleSchema}
-    }
-  }
-  characters (sort: $charactersSort, page: $charactersPage, perPage: $charactersPerPage) {
-    nodes {
-      id
-      ${NameSchema}
-    }
-  }
-  characterMedia (sort: $characterMediaSort, onList: $characterMediaOnList, page: $characterMediaPage, perPage: $characterMediaPerPage) {
-    nodes {
-      id
-      ${TitleSchema}
-    }
-  }
-  submitter {
-    id
-    name
-  }
-  submissionStatus
-  submissionNotes
-  favourites
-  modNotes
-`;

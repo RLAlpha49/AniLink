@@ -1,11 +1,8 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import {
-    type NotificationResponse,
-    NotificationSchema,
-} from "../interfaces/responses/query/Notification";
+import { type NotificationResponse } from "../interfaces/responses/query/Notification";
 import { type NotificationType, NotificationTypeMappings } from "../types/Type";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { NotificationSchema } from "../schemas/responses/query/Notification";
 
 /**
  * `NotificationVariables` is an interface representing the variables for the `NotificationQuery`.
@@ -41,21 +38,6 @@ export interface NotificationVariables {
  */
 export class NotificationQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `NotificationQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `notification` is a method that sends a query request to get notification data.
      *
      * @param variables - The variables for the query.
@@ -83,7 +65,6 @@ export class NotificationQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(query, variables, true);
     }
 }

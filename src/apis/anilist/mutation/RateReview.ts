@@ -1,8 +1,8 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
-import { type ReviewResponse, ReviewSchema } from "../interfaces/responses/query/Review";
+import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { type ReviewRating, ReviewRatingMappings } from "../types/ReviewRating";
+import { ReviewSchema } from "../schemas/responses/query/Review";
 
 /**
  * `RateReviewVariables` is an interface representing the variables for the `RateReviewMutation`.
@@ -27,21 +27,6 @@ export interface RateReviewVariables {
  * @see https://docs.anilist.co/reference/mutation
  */
 export class RateReviewMutation extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `RateReviewMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `rateReview` is a method that sends a mutation request to rate a review.
      *
@@ -68,12 +53,6 @@ export class RateReviewMutation extends APIWrapper {
       }
     `;
 
-        return await sendRequest(
-            this.baseURL,
-            "POST",
-            { query: mutation, variables },
-            this.authToken,
-            true
-        );
+        return await this.request(mutation, variables, true);
     }
 }

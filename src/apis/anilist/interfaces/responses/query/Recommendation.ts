@@ -1,5 +1,7 @@
-import { type MediaResponse, MediaSchema } from "./Media";
-import { type BasicUser, BasicUserSchema } from "../../Basic";
+import { type MediaResponse } from "./Media";
+import { type BasicUser } from "../../Basic";
+import { BasicUserSchema } from "../../../schemas/Basic";
+import { MediaSchema } from "../../../schemas/responses/query/Media";
 
 /**
  * `RecommendationResponse` is an interface representing the response from a recommendation query.
@@ -37,23 +39,3 @@ export interface RecommendationResponse {
      */
     user: BasicUser;
 }
-
-/**
- * `RecommendationSchema` is a constant representing the GraphQL schema for a recommendation query.
- * It includes the id, rating, user rating, media of type `MediaResponse`, media recommendation of type `MediaResponse`, and user of type `BasicUser`.
- * @see https://docs.anilist.co/reference/object/recommendation
- */
-export const RecommendationSchema = `
-  id
-  rating
-  userRating
-  media {
-    ${MediaSchema}
-  }
-  mediaRecommendation {
-    ${MediaSchema}
-  }
-  user {
-    ${BasicUserSchema}
-  }
-`;

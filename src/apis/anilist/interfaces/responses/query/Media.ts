@@ -1,16 +1,33 @@
-import { type Title, TitleSchema } from "../../Title";
-import { type FuzzyDate, FuzzyDateSchema } from "../../FuzzyDate";
-import { type Trailer, TrailerSchema } from "../../Trailer";
-import { type CoverImage, CoverImageSchema } from "../../CoverImage";
-import { type Tag, TagSchema } from "../../Tag";
-import { type NextAiringEpisode, NextAiringEpisodeSchema } from "../../NextAiringEpisode";
-import { type ExternalLink, ExternalLinkSchema } from "../../ExternalLink";
-import { type StreamingEpisode, StreamingEpisodeSchema } from "../../StreamingEpisode";
-import { type Ranking, RankingSchema } from "../../Ranking";
-import { type Name, NameSchema } from "../../Name";
-import { type Image, ImageSchema } from "../../Image";
-import { type MediaListEntry, MediaListEntrySchema, type MediaStats } from "../../Media";
-import { ScoreDistributionSchema, StatusDistributionSchema } from "../../Distribution";
+import { type MediaFormat } from "../../../types/Format";
+import { type MediaSeason } from "../../../types/Season";
+import { type MediaSource } from "../../../types/Source";
+import { type MediaStatus } from "../../../types/Status";
+import { type MediaType } from "../../../types/Type";
+import { type Title } from "../../Title";
+import { type FuzzyDate } from "../../FuzzyDate";
+import { type Trailer } from "../../Trailer";
+import { type CoverImage } from "../../CoverImage";
+import { type Tag } from "../../Tag";
+import { type NextAiringEpisode } from "../../NextAiringEpisode";
+import { type ExternalLink } from "../../ExternalLink";
+import { type StreamingEpisode } from "../../StreamingEpisode";
+import { type Ranking } from "../../Ranking";
+import { type Name } from "../../Name";
+import { type Image } from "../../Image";
+import { type MediaListEntry, type MediaStats } from "../../Media";
+import { CoverImageSchema } from "../../../schemas/CoverImage";
+import { ScoreDistributionSchema, StatusDistributionSchema } from "../../../schemas/Distribution";
+import { ExternalLinkSchema } from "../../../schemas/ExternalLink";
+import { FuzzyDateSchema } from "../../../schemas/FuzzyDate";
+import { ImageSchema } from "../../../schemas/Image";
+import { MediaListEntrySchema } from "../../../schemas/Media";
+import { NameSchema } from "../../../schemas/Name";
+import { NextAiringEpisodeSchema } from "../../../schemas/NextAiringEpisode";
+import { RankingSchema } from "../../../schemas/Ranking";
+import { StreamingEpisodeSchema } from "../../../schemas/StreamingEpisode";
+import { TagSchema } from "../../../schemas/Tag";
+import { TitleSchema } from "../../../schemas/Title";
+import { TrailerSchema } from "../../../schemas/Trailer";
 
 /**
  * `MediaResponse` is an interface representing the response from a media query.
@@ -36,17 +53,17 @@ export interface MediaResponse {
     /**
      * `type` is a string representing the type of the media.
      */
-    type: string;
+    type: MediaType;
 
     /**
      * `format` is a string representing the format of the media.
      */
-    format: string;
+    format: MediaFormat;
 
     /**
      * `status` is a string representing the status of the media.
      */
-    status: string;
+    status: MediaStatus;
 
     /**
      * `description` is a string representing the description of the media.
@@ -66,7 +83,7 @@ export interface MediaResponse {
     /**
      * `season` is a string representing the season of the media.
      */
-    season: string;
+    season: MediaSeason;
 
     /**
      * `seasonYear` is a number representing the year of the season of the media.
@@ -111,7 +128,7 @@ export interface MediaResponse {
     /**
      * `source` is a string representing the source of the media.
      */
-    source: string;
+    source: MediaSource;
 
     /**
      * `hashtag` is a string representing the hashtag of the media.
@@ -481,208 +498,3 @@ export interface MediaResponse {
      */
     modNotes: string;
 }
-
-/**
- * `MediaWithRelationsSchema` is a constant representing the GraphQL schema for a media query with relations.
- * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, relations, characters, staff, studios, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
- * @see https://docs.anilist.co/reference/object/media
- */
-export const MediaWithRelationsSchema = `
-  id
-  idMal
-  ${TitleSchema}
-  type
-  format
-  status
-  description (asHtml: $asHtml)
-  startDate {
-    ${FuzzyDateSchema}
-  }
-  endDate {
-    ${FuzzyDateSchema}
-  }
-  season
-  seasonYear
-  seasonInt
-  episodes
-  duration
-  chapters
-  volumes
-  countryOfOrigin
-  isLicensed
-  source
-  hashtag
-  ${TrailerSchema}
-  updatedAt
-  ${CoverImageSchema}
-  bannerImage
-  genres
-  synonyms
-  averageScore
-  meanScore
-  popularity
-  isLocked
-  trending
-  favourites
-  tags {
-    ${TagSchema}
-  }
-  relations {
-    edges {
-      id
-      relationType
-      isMainStudio
-      characters {
-        id
-        ${NameSchema}
-        ${ImageSchema}
-        description (asHtml: $asHtml)
-        gender
-        dateOfBirth {
-          ${FuzzyDateSchema}
-        }
-        age
-        bloodType
-        isFavourite
-        isFavouriteBlocked
-        siteUrl
-        favourites
-        modNotes
-      }
-      characterRole
-      characterName
-      roleNotes
-      dubGroup
-      staffRole
-      node {
-        id
-        ${TitleSchema}
-      }
-    }
-  }
-  characters {
-    edges {
-      id
-      role
-      name
-      voiceActors {
-        id
-        ${NameSchema}
-        ${ImageSchema}
-      }
-      media {
-        id
-        ${TitleSchema}
-        ${CoverImageSchema}
-      }
-      favouriteOrder
-      node {
-        id
-        ${NameSchema}
-        ${ImageSchema}
-      }
-    }
-  }
-  staff {
-    edges {
-      id
-      role
-      favouriteOrder
-      node {
-        id
-        ${NameSchema}
-        ${ImageSchema}
-      }
-    }
-  }
-  studios {
-    edges {
-      id
-      isMain
-      favouriteOrder
-      node {
-        id
-        name
-        isAnimationStudio
-        siteUrl
-      }
-    }
-  }
-  isFavourite
-  isAdult
-  ${NextAiringEpisodeSchema}
-  ${ExternalLinkSchema}
-  ${StreamingEpisodeSchema}
-  ${RankingSchema}
-  ${MediaListEntrySchema}
-  stats {
-    ${StatusDistributionSchema}
-    ${ScoreDistributionSchema}
-  }
-  siteUrl
-  autoCreateForumThread
-  isRecommendationBlocked
-  modNotes
-`;
-
-/**
- * `MediaSchema` is a constant representing the GraphQL schema for a media query.
- * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
- * @see https://docs.anilist.co/reference/object/media
- */
-export const MediaSchema = `
-  id
-  idMal
-  ${TitleSchema}
-  type
-  format
-  status
-  description (asHtml: $asHtml)
-  startDate {
-    ${FuzzyDateSchema}
-  }
-  endDate {
-    ${FuzzyDateSchema}
-  }
-  season
-  seasonYear
-  seasonInt
-  episodes
-  duration
-  chapters
-  volumes
-  countryOfOrigin
-  isLicensed
-  source
-  hashtag
-  ${TrailerSchema}
-  updatedAt
-  ${CoverImageSchema}
-  bannerImage
-  genres
-  synonyms
-  averageScore
-  meanScore
-  popularity
-  isLocked
-  trending
-  favourites
-  tags {
-    ${TagSchema}
-  }
-  isFavourite
-  isAdult
-  ${NextAiringEpisodeSchema}
-  ${ExternalLinkSchema}
-  ${StreamingEpisodeSchema}
-  ${RankingSchema}
-  ${MediaListEntrySchema}
-  stats {
-    ${StatusDistributionSchema}
-    ${ScoreDistributionSchema}
-  }
-  siteUrl
-  autoCreateForumThread
-  isRecommendationBlocked
-  modNotes
-`;

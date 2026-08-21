@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import {
     type UserStaffNameLanguage,
     UserStaffNameLanguageMapping,
@@ -330,21 +329,6 @@ export interface UpdateUserResponse {
  */
 export class UpdateUserMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `UpdateUserMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `updateUser` is a method that sends a mutation request to update a user.
      *
      * @param variables - An object of type `UpdateUserVariables` representing the variables for the mutation.
@@ -430,7 +414,6 @@ export class UpdateUserMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

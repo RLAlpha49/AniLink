@@ -1,9 +1,9 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import { type ReviewResponse, ReviewSchema } from "../interfaces/responses/query/Review";
+import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { type MediaType } from "../types/Type";
 import { type ReviewSort, ReviewSortMappings } from "../types/Sort";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { ReviewSchema } from "../schemas/responses/query/Review";
 
 /**
  * `ReviewVariables` is an interface representing the variables for the `ReviewQuery`.
@@ -49,21 +49,6 @@ export interface ReviewVariables {
  */
 export class ReviewQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ReviewQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `review` is a method that sends a query request to get review data.
      *
      * @param variables - The variables for the query.
@@ -93,7 +78,6 @@ export class ReviewQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

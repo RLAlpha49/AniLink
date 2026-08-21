@@ -1,7 +1,7 @@
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
-import { type ReviewResponse, ReviewSchema } from "../interfaces/responses/query/Review";
+import { type ReviewResponse } from "../interfaces/responses/query/Review";
+import { ReviewSchema } from "../schemas/responses/query/Review";
 
 /**
  * `SaveReviewVariables` is an interface that contains the variables that are required to save a review.
@@ -52,21 +52,6 @@ export interface SaveReviewVariables {
  */
 export class SaveReviewMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `SaveReviewMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `saveReview` is a method that sends a mutation request to save a review.
      *
      * @param variables - An object of type `SaveReviewVariables` representing the variables for the mutation.
@@ -97,7 +82,6 @@ export class SaveReviewMutation extends APIWrapper {
         }
       }
     `;
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

@@ -1,9 +1,9 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
-import { sendRequest } from "../../../../base/RequestHandler";
-import { UserSchema } from "../../interfaces/responses/query/User";
+
 import { type FollowingsPageResponse } from "../../interfaces/responses/page/Followings";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
+import { UserSchema } from "../../schemas/responses/query/User";
 
 /**
  * `FollowingsVariables` is an interface representing the variables for the `FollowingsQuery`.
@@ -64,21 +64,6 @@ export interface FollowingsVariables {
  */
 export class FollowingsQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `FollowingsQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `followings` is a method that sends a query request to get followings.
      *
      * @param variables - The variables for the query.
@@ -120,7 +105,6 @@ export class FollowingsQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

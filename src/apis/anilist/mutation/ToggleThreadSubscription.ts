@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
-import { type ThreadResponse, ThreadSchema } from "../interfaces/responses/query/Thread";
+import { type ThreadResponse } from "../interfaces/responses/query/Thread";
+import { ThreadSchema } from "../schemas/responses/query/Thread";
 
 /**
  * `ToggleThreadSubscriptionVariables` is an interface representing the variables to subscribe to a thread.
@@ -32,21 +32,6 @@ export interface ToggleThreadSubscriptionVariables {
  */
 export class ToggleThreadSubscriptionMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ToggleThreadSubscriptionMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `toggleThreadSubscription` is a method that sends a mutation request to subscribe to an activity.
      *
      * @param variables - An object of type `ToggleThreadSubscriptionVariables` representing the variables for the mutation.
@@ -76,7 +61,6 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

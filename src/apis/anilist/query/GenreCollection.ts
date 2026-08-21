@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 
 /**
  * `GenreCollectionQuery` is a class representing a query for genre collections.
@@ -7,21 +6,6 @@ import { sendRequest } from "../../../base/RequestHandler";
  * @see https://docs.anilist.co/reference/query
  */
 export class GenreCollectionQuery extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `GenreCollectionQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `genreCollection` is a method that sends a query request to get genre collections.
      *
@@ -35,7 +19,6 @@ export class GenreCollectionQuery extends APIWrapper {
       }
     `;
 
-        const data = { query };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query);
     }
 }

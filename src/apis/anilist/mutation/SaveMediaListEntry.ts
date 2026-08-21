@@ -1,10 +1,10 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import { FuzzyDateSchema } from "../interfaces/FuzzyDate";
+
 import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
 import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
+import { FuzzyDateSchema } from "../schemas/FuzzyDate";
 
 /**
  * `SaveMediaListEntryVariables` is an interface representing the variables for the `SaveMediaListEntryMutation`.
@@ -100,21 +100,6 @@ export interface SaveMediaListEntryVariables {
  */
 export class SaveMediaListEntryMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `SaveMediaListEntryMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `saveMediaListEntry` is a method that sends a mutation request to save a media list entry.
      *
      * @param variables - An object of type `SaveMediaListEntryVariables` representing the variables for the mutation.
@@ -174,7 +159,6 @@ export class SaveMediaListEntryMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

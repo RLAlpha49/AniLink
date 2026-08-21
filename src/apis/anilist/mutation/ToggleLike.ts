@@ -1,8 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
-import { BasicUserSchema } from "../interfaces/Basic";
+import { BasicUserSchema } from "../schemas/Basic";
 
 /**
  * `ToggleLikeMutation` is an interface representing the variables to toggle a like.
@@ -27,21 +26,6 @@ export interface ToggleLikeVariables {
  * @see https://docs.anilist.co/reference/mutation
  */
 export class ToggleLikeMutation extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ToggleLikeMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `ToggleLike` is a method that sends a mutation request to toggle a like.
      *
@@ -69,7 +53,6 @@ export class ToggleLikeMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

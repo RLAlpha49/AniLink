@@ -1,9 +1,9 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
-import { sendRequest } from "../../../../base/RequestHandler";
-import { StudioSchema } from "../../interfaces/responses/query/Studio";
+
 import { type StudiosPageResponse } from "../../interfaces/responses/page/Studios";
 import { CharacterSortMappings, MediaSortMappings, StudioSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
+import { StudioSchema } from "../../schemas/responses/query/Studio";
 
 /**
  * `StudiosVariables` is an interface representing the variables for the `StudiosQuery`.
@@ -149,21 +149,6 @@ export interface StudiosVariables {
  */
 export class StudiosQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `StudiosQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `studios` is a method that sends a query request to get studios.
      *
      * @param variables - The variables for the query.
@@ -221,7 +206,6 @@ export class StudiosQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

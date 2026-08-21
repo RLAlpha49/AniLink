@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
-import { type ActivityReply, ActivityReplySchema } from "../interfaces/Activity";
+import { type ActivityReply } from "../interfaces/Activity";
+import { ActivityReplySchema } from "../schemas/Activity";
 
 /**
  * `ActivityReplyVariables` is an interface representing the variables for the `ActivityReplyQuery`.
@@ -32,21 +32,6 @@ export interface ActivityReplyVariables {
  */
 export class ActivityReplyQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ActivityReplyQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `activityReply` is a method that sends a query request to get activity replies.
      *
      * @param variables - The variables for the query.
@@ -73,7 +58,6 @@ export class ActivityReplyQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

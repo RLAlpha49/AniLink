@@ -1,10 +1,10 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
-import { sendRequest } from "../../../../base/RequestHandler";
-import { StaffSchema } from "../../interfaces/responses/query/Staff";
+
 import { type StaffsPageResponse } from "../../interfaces/responses/page/Staffs";
 import { CharacterSortMappings, MediaSortMappings, StaffSortMappings } from "../../types/Sort";
 import { MediaTypeMappings } from "../../types/Type";
 import { validateVariables } from "../../../../base/ValidateVariables";
+import { StaffSchema } from "../../schemas/responses/query/Staff";
 
 /**
  * `StaffsVariables` is an interface representing the variables for the `StaffsQuery`.
@@ -130,21 +130,6 @@ export interface StaffsVariables {
  */
 export class StaffsQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `StaffsQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `staffs` is a method that sends a query request to get staffs.
      *
      * @param variables - The variables for the query.
@@ -199,7 +184,6 @@ export class StaffsQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

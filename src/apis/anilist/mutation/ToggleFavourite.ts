@@ -1,7 +1,7 @@
 import { validateVariables } from "../../../base/ValidateVariables";
-import { sendRequest } from "../../../base/RequestHandler";
 import { APIWrapper } from "../../../base/APIWrapper";
-import { type Favourites, FavouritesSchema } from "../interfaces/responses/mutation/Favourites";
+import { type Favourites } from "../interfaces/responses/mutation/Favourites";
+import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
 
 /**
  * `ToggleFavouriteVariables` is an interface that contains the variables that are required to toggle a favourite.
@@ -42,21 +42,6 @@ export interface ToggleFavouriteVariables {
  */
 export class ToggleFavouriteMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ToggleFavouriteMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `toggleFavourite` is a method that sends a mutation request to toggle a favourite.
      *
      * @param variables - An object of type `ToggleFavouriteVariables` representing the variables for the mutation.
@@ -94,7 +79,6 @@ export class ToggleFavouriteMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

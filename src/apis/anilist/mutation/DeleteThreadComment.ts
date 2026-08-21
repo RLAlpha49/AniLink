@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
 
 /**
@@ -20,21 +19,6 @@ export interface DeleteThreadCommentVariables {
  * @see https://docs.anilist.co/reference/mutation
  */
 export class DeleteThreadCommentMutation extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `DeleteThreadCommentMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `deleteThreadComment` is a method that sends a mutation request to delete a thread comment.
      *
@@ -66,7 +50,6 @@ export class DeleteThreadCommentMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

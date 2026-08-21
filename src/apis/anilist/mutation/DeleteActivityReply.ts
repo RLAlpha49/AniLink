@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
 
 /**
@@ -20,21 +19,6 @@ export interface DeleteActivityReplyVariables {
  * @see https://docs.anilist.co/reference/mutation
  */
 export class DeleteActivityReplyMutation extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `DeleteActivityReplyMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `DeleteActivityReply` is a method that sends a mutation request to delete an activity reply.
      *
@@ -66,7 +50,6 @@ export class DeleteActivityReplyMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

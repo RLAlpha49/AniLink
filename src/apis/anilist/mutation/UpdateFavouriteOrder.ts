@@ -1,7 +1,7 @@
-import { sendRequest } from "../../../base/RequestHandler";
 import { APIWrapper } from "../../../base/APIWrapper";
-import { type Favourites, FavouritesSchema } from "../interfaces/responses/mutation/Favourites";
+import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
 
 /**
  * `UpdateFavouriteOrderVariables` is an interface that contains the variables that are required to update the order of the favourite anime/manga.
@@ -66,21 +66,6 @@ export interface UpdateFavouriteOrderVariables {
  */
 export class UpdateFavouriteOrderMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `UpdateFavouriteOrderMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `updateFavouriteOrder` is a method that sends a mutation request to update the order of the favourites.
      *
      * @param variables - An object of type `UpdateFavouriteOrderVariables` representing the variables for the mutation.
@@ -121,7 +106,6 @@ export class UpdateFavouriteOrderMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

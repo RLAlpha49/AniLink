@@ -1,10 +1,7 @@
 import { validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import {
-    type ThreadCommentResponse,
-    ThreadCommentSchema,
-} from "../interfaces/responses/query/ThreadComment";
+import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
+import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
 
 /**
  * `SaveThreadCommentVariables` is an interface that contains the variables that are passed to the `SaveThreadComment` mutation.
@@ -50,21 +47,6 @@ export interface SaveThreadCommentVariables {
  */
 export class SaveThreadCommentMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `SaveThreadCommentMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `saveThreadComment` is a method that sends a mutation request to save a thread comment.
      *
      * @param variables - An object of type `SaveThreadCommentVariables` representing the variables for the mutation.
@@ -95,7 +77,6 @@ export class SaveThreadCommentMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

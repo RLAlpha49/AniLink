@@ -1,10 +1,10 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import { type FuzzyDate, FuzzyDateSchema } from "../interfaces/FuzzyDate";
+import { type FuzzyDate } from "../interfaces/FuzzyDate";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
 import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
+import { FuzzyDateSchema } from "../schemas/FuzzyDate";
 
 /**
  * `UpdateMediaListEntriesVariables` is an interface representing the variables for the `UpdateMediaListEntriesMutation`.
@@ -90,21 +90,6 @@ export interface UpdateMediaListEntriesVariables {
  */
 export class UpdateMediaListEntriesMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `UpdateMediaListEntriesMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `updateMediaListEntries` is a method that sends a mutation request to update media list entries.
      *
      * @param variables - An object of type `UpdateMediaListEntriesVariables` representing the variables for the mutation.
@@ -161,7 +146,6 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

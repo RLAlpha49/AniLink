@@ -1,9 +1,9 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
-import { sendRequest } from "../../../../base/RequestHandler";
-import { ThreadSchema } from "../../interfaces/responses/query/Thread";
+
 import { type ThreadsPageResponse } from "../../interfaces/responses/page/Threads";
 import { ThreadSortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
+import { ThreadSchema } from "../../schemas/responses/query/Thread";
 
 /**
  * `ThreadsVariables` is an interface representing the variables for the `ThreadsQuery`.
@@ -79,21 +79,6 @@ export interface ThreadsVariables {
  */
 export class ThreadsQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ThreadsQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `threads` is a method that sends a query request to get threads.
      *
      * @param variables - The variables for the query.
@@ -138,7 +123,6 @@ export class ThreadsQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

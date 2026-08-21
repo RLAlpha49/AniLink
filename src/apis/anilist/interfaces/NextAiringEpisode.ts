@@ -1,7 +1,7 @@
 /**
  * `NextAiringEpisode` is an interface representing the next airing episode of a media.
  * It includes the airing time, time until airing, and the episode number each having their own properties.
- * @see https://docs.anilist.co/reference/object/airingprogression
+ * @see https://docs.anilist.co/reference/object/airingschedule
  */
 export interface NextAiringEpisode {
     /**
@@ -19,16 +19,3 @@ export interface NextAiringEpisode {
      */
     episode: number;
 }
-
-/**
- * `NextAiringEpisodeSchema` is a string representing the GraphQL schema for a next airing episode.
- * It includes the airing time, time until airing, and the episode number.
- * @see https://docs.anilist.co/reference/object/airingprogression
- */
-export const NextAiringEpisodeSchema = `
-  nextAiringEpisode {
-    airingAt
-    timeUntilAiring
-    episode
-  }
-`;

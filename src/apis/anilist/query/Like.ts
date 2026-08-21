@@ -1,8 +1,8 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
-import { type BasicUser, BasicUserSchema } from "../interfaces/Basic";
+import { type BasicUser } from "../interfaces/Basic";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
+import { BasicUserSchema } from "../schemas/Basic";
 
 /**
  * `LikeVariables` is an interface representing the variables for the `LikeQuery`.
@@ -28,21 +28,6 @@ export interface LikeVariables {
  */
 export class LikeQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `LikeQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `like` is a method that sends a query request to get users who liked a model.
      *
      * @param variables - The variables for the query.
@@ -67,6 +52,6 @@ export class LikeQuery extends APIWrapper {
       }
     `;
 
-        return await sendRequest(this.baseURL, "POST", { query, variables }, this.authToken);
+        return await this.request(query, variables);
     }
 }

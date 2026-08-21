@@ -1,8 +1,8 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { type MediaTagCollectionResponse } from "../interfaces/responses/query/MediaTagCollection";
-import { TagSchema } from "../interfaces/Tag";
+
 import { validateVariables } from "../../../base/ValidateVariables";
+import { TagSchema } from "../schemas/Tag";
 
 /**
  * `MediaTagCollectionVariables` is an interface representing the variables for the `MediaTagCollectionQuery`.
@@ -22,21 +22,6 @@ export interface MediaTagCollectionVariables {
  * @see https://docs.anilist.co/reference/query
  */
 export class MediaTagCollectionQuery extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `MediaTagCollectionQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `mediaTagCollection` is a method that sends a query request to get media tag collection data.
      *
@@ -63,7 +48,6 @@ export class MediaTagCollectionQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

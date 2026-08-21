@@ -1,8 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { type UserResponse } from "../interfaces/responses/query/User";
-import { BasicUserSchema } from "../interfaces/Basic";
+import { BasicUserSchema } from "../schemas/Basic";
 
 /**
  * `ToggleFollowVariables` is an interface representing the variables to toggle a follow.
@@ -22,21 +21,6 @@ export interface ToggleFollowVariables {
  * @see https://docs.anilist.co/reference/mutation
  */
 export class ToggleFollowMutation extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ToggleFollowMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `ToggleFollow` is a method that sends a mutation request to toggle a follow.
      *
@@ -63,7 +47,6 @@ export class ToggleFollowMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

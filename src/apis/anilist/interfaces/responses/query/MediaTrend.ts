@@ -1,5 +1,5 @@
 import { type Media } from "../../Media";
-import { MediaSchema } from "./Media";
+import { MediaSchema } from "../../../schemas/responses/query/Media";
 
 /**
  * `MediaTrendResponse` is an interface representing the response from a media trend query.
@@ -52,22 +52,3 @@ export interface MediaTrendResponse {
      */
     media: Media;
 }
-
-/**
- * `MediaTrendSchema` is a constant representing the GraphQL schema for a media trend query.
- * It includes the media's id, date, trending status, average score, popularity, in progress status, releasing status, episode number, and media of type `Media`.
- * @see https://docs.anilist.co/reference/object/mediatrend
- */
-export const MediaTrendSchema = `
-  mediaId
-  date
-  trending
-  averageScore
-  popularity
-  inProgress
-  releasing
-  episode
-  media {
-    ${MediaSchema}
-  }
-`;

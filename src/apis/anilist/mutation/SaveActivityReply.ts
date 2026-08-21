@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
-import { type ActivityReply, ActivityReplySchema } from "../interfaces/Activity";
+import { type ActivityReply } from "../interfaces/Activity";
+import { ActivityReplySchema } from "../schemas/Activity";
 
 /**
  * `SaveActivityReplyMutation` is an interface representing the variables to save an activity reply.
@@ -42,21 +42,6 @@ export interface SaveActivityReplyVariables {
  */
 export class SaveActivityReplyMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `SaveActivityReplyMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `SaveActivityReply` is a method that sends a mutation request to save an activity reply.
      *
      * @param variables - An object of type `SaveActivityReplyVariables` representing the variables for the mutation.
@@ -86,7 +71,6 @@ export class SaveActivityReplyMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

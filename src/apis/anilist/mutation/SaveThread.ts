@@ -1,7 +1,7 @@
-import { type ThreadResponse, ThreadSchema } from "../interfaces/responses/query/Thread";
+import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
+import { ThreadSchema } from "../schemas/responses/query/Thread";
 
 /**
  * `SaveThreadVariables` is an interface that contains the variables that are passed to the `SaveThread` mutation.
@@ -57,21 +57,6 @@ export interface SaveThreadVariables {
  */
 export class SaveThreadMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `SaveThreadMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `SaveThread` is a method that sends a mutation request to save a thread.
      *
      * @param variables - An object of type `SaveThreadVariables` representing the variables for the mutation.
@@ -104,7 +89,6 @@ export class SaveThreadMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

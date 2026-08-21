@@ -176,9 +176,11 @@ const schemaScanDone = { value: false };
 function scanSchemas(): void {
     if (schemaScanDone.value) return;
     schemaScanDone.value = true;
-    const interfacesDir = join(ANILIST, "interfaces");
-    if (existsSync(interfacesDir)) {
-        collectSchemas(interfacesDir);
+    const schemaDirs = [join(ANILIST, "schemas"), join(ANILIST, "interfaces")];
+    for (const dir of schemaDirs) {
+        if (existsSync(dir)) {
+            collectSchemas(dir);
+        }
     }
 }
 
@@ -610,7 +612,7 @@ interface RawOp {
 
 /** Parse the type-declaration block in AniLink.ts into raw operations. */
 function discoverOperations(): RawOp[] {
-    const content = readFileText(join(SRC, "AniLink.ts"));
+    const content = readFileText(join(ANILIST, "facade.ts"));
     const lines = content.split("\n");
     const ops: RawOp[] = [];
 
@@ -642,7 +644,7 @@ function discoverOperations(): RawOp[] {
 
         // Custom signature (single line).
         if (
-            /^\s+custom:\s*\(query:\s*string,\s*variables:\s*any\)\s*=>\s*Promise<any>;\s*$/.test(
+            /^\s*custom:\s*<[^>]*>\(query:\s*string,\s*variables\?:\s*Record<string, unknown>\)\s*=>\s*Promise<[^>]*>;\s*$/.test(
                 line
             )
         ) {
@@ -705,7 +707,7 @@ function tryParseSignature(
 function resolveSourceInfo(
     op: RawOp
 ): { className: string; methodName: string; sourceFile: string } | null {
-    const content = readFileText(join(SRC, "AniLink.ts"));
+    const content = readFileText(join(ANILIST, "facade.ts"));
     const escapedName = op.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     // Find all bindings: `name: <instance>.<method>.bind(<instance>)`.
     // The method name does not always equal the operation name (e.g. `following` op

@@ -1,4 +1,3 @@
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 
@@ -29,21 +28,6 @@ export interface UpdateAniChartHighlightsVariables {
  */
 export class UpdateAniChartHighlightsMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `UpdateAniChartHighlightsMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `updateAniChartHighlights` is a method that sends a mutation request to update the AniChart highlights.
      *
      * @param variables - An object of type `UpdateAniChartHighlightsVariables` representing the variables for the mutation.
@@ -66,7 +50,6 @@ export class UpdateAniChartHighlightsMutation extends APIWrapper {
         UpdateAniChartHighlights (highlights: $highlights)
       }
     `;
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

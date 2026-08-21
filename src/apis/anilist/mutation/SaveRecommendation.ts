@@ -1,14 +1,11 @@
-import { sendRequest } from "../../../base/RequestHandler";
-import {
-    type RecommendationResponse,
-    RecommendationSchema,
-} from "../interfaces/responses/query/Recommendation";
+import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { APIWrapper } from "../../../base/APIWrapper";
 import {
     type RecommendationRating,
     RecommendationRatingMappings,
 } from "../types/RecommendationRating";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { RecommendationSchema } from "../schemas/responses/query/Recommendation";
 
 /**
  * `SaveRecommendationVariables` is an interface that contains the variables that are required to save a recommendation.
@@ -44,21 +41,6 @@ export interface SaveRecommendationVariables {
  */
 export class SaveRecommendationMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `SaveRecommendationMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `saveReview` is a method that sends a mutation request to save a recommendation.
      *
      * @param variables - An object of type `SaveRecommendationVariables` representing the variables for the mutation.
@@ -89,7 +71,6 @@ export class SaveRecommendationMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

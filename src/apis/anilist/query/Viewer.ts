@@ -1,8 +1,8 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import { type UserResponse, UserSchema } from "../interfaces/responses/query/User";
+import { type UserResponse } from "../interfaces/responses/query/User";
 import { type UserStatisticSort, UserStatisticSortMappings } from "../types/Sort";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { UserSchema } from "../schemas/responses/query/User";
 
 /**
  * `ViewerVariables` is an interface representing the variables for the `ViewerQuery`.
@@ -43,21 +43,6 @@ export interface ViewerVariables {
  */
 export class ViewerQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ViewerQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `viewer` is a method that sends a query request to get viewer data.
      *
      * @param variables - The variables for the query.
@@ -83,7 +68,6 @@ export class ViewerQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(query, variables, true);
     }
 }

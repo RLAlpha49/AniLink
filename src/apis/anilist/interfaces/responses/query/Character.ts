@@ -1,7 +1,11 @@
-import { type FuzzyDate, FuzzyDateSchema } from "../../FuzzyDate";
-import { type Name, NameSchema } from "../../Name";
-import { type Image, ImageSchema } from "../../Image";
-import { type Title, TitleSchema } from "../../Title";
+import { type FuzzyDate } from "../../FuzzyDate";
+import { type Name } from "../../Name";
+import { type Image } from "../../Image";
+import { type Title } from "../../Title";
+import { FuzzyDateSchema } from "../../../schemas/FuzzyDate";
+import { ImageSchema } from "../../../schemas/Image";
+import { NameSchema } from "../../../schemas/Name";
+import { TitleSchema } from "../../../schemas/Title";
 
 /**
  * `CharacterResponse` is an interface representing the response from a character query.
@@ -92,32 +96,3 @@ export interface CharacterResponse {
      */
     modNotes: string;
 }
-
-/**
- * `CharacterSchema` is a constant representing the GraphQL schema for a character query.
- * It includes the character's id, name, image, description, gender, date of birth, age, blood type, favourite status, site URL, associated media, number of favourites, and moderator notes.
- * @see https://docs.anilist.co/reference/object/character
- */
-export const CharacterSchema = `
-  id
-  ${NameSchema}
-  ${ImageSchema}
-  description(asHtml: $asHtml)
-  gender
-  dateOfBirth {
-    ${FuzzyDateSchema}
-  }
-  age
-  bloodType
-  isFavourite
-  isFavouriteBlocked
-  siteUrl
-  media(sort: $mediaSort, onList: $mediaOnList, page: $mediaPage, perPage: $mediaPerPage) {
-    nodes {
-      id
-      ${TitleSchema}
-    }
-  }
-  favourites
-  modNotes
-`;

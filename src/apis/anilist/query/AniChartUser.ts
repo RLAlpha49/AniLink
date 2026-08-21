@@ -1,7 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { type AniChartUserResponse } from "../interfaces/responses/query/AniChartUser";
-import { BasicUserSchema } from "../interfaces/Basic";
+import { BasicUserSchema } from "../schemas/Basic";
 
 /**
  * `AniChartUserQuery` is a class representing a query for AniChart users.
@@ -9,21 +8,6 @@ import { BasicUserSchema } from "../interfaces/Basic";
  * @see https://docs.anilist.co/reference/query
  */
 export class AniChartUserQuery extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `AniChartUserQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `aniChartUser` is a method that sends a query request to get AniChart users.
      *
@@ -43,7 +27,6 @@ export class AniChartUserQuery extends APIWrapper {
       }
     `;
 
-        const data = { query };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(query, undefined, true);
     }
 }

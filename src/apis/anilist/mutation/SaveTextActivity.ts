@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
-import { type Activity, TextActivitySchema } from "../interfaces/Activity";
+import { type Activity } from "../interfaces/Activity";
+import { TextActivitySchema } from "../schemas/Activity";
 
 /**
  * `SaveTextActivityMutation` is an interface representing the variables to save a text activity.
@@ -37,21 +37,6 @@ export interface SaveTextActivityVariables {
  */
 export class SaveTextActivityMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `SaveTextActivityMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `saveTextActivity` is a method that sends a mutation request to save a text activity.
      *
      * @param variables - An object of type `SaveTextActivityVariables` representing the variables for the mutation.
@@ -80,7 +65,6 @@ export class SaveTextActivityMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }

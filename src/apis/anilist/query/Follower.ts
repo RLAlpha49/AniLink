@@ -1,6 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import { type UserResponse, UserSchema } from "../interfaces/responses/query/User";
+import { type UserResponse } from "../interfaces/responses/query/User";
 import {
     type UserSort,
     UserSortMappings,
@@ -8,6 +7,7 @@ import {
     UserStatisticSortMappings,
 } from "../types/Sort";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { UserSchema } from "../schemas/responses/query/User";
 
 /**
  * `FollowerVariables` is an interface representing the variables for the `FollowerQuery`.
@@ -58,21 +58,6 @@ export interface FollowerVariables {
  */
 export class FollowerQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `FollowerQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `follower` is a method that sends a query request to get followers.
      *
      * @param variables - The variables for the query.
@@ -103,7 +88,6 @@ export class FollowerQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

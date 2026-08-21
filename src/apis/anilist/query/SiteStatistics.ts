@@ -1,11 +1,8 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
-import {
-    type SiteStatisticsResponse,
-    SiteStatisticsSchema,
-} from "../interfaces/responses/query/SiteStatistics";
+import { type SiteStatisticsResponse } from "../interfaces/responses/query/SiteStatistics";
 import { type SiteTrendSort, SiteTrendSortMappings } from "../types/Sort";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { SiteStatisticsSchema } from "../schemas/responses/query/SiteStatistics";
 
 /**
  * `SiteStatisticsVariables` is an interface representing the variables for the `SiteStatisticsQuery`.
@@ -126,21 +123,6 @@ export interface SiteStatisticsVariables {
  */
 export class SiteStatisticsQuery extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `SiteStatisticsQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `siteStatistics` is a method that sends a query request to get site statistics data.
      *
      * @param variables - The variables for the query. If not provided, an empty object will be used.
@@ -184,7 +166,6 @@ export class SiteStatisticsQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

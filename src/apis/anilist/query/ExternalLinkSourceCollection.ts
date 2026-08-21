@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { type ExternalLinkSourceCollectionResponse } from "../interfaces/responses/query/ExternalLinkSourceCollection";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
@@ -32,21 +31,6 @@ export interface ExternalLinkSourceCollectionVariables {
  * @see https://docs.anilist.co/reference/query
  */
 export class ExternalLinkSourceCollectionQuery extends APIWrapper {
-    /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ExternalLinkSourceCollectionQuery` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
     /**
      * `externalLinkSourceCollection` is a method that sends a query request to get external link source collections.
      *
@@ -84,7 +68,6 @@ export class ExternalLinkSourceCollectionQuery extends APIWrapper {
       }
     `;
 
-        const data = { query, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken);
+        return await this.request(query, variables);
     }
 }

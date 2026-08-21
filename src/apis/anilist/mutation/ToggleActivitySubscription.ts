@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { sendRequest } from "../../../base/RequestHandler";
 import { validateVariables } from "../../../base/ValidateVariables";
-import { type Activity, ActivityWithRepliesSchema } from "../interfaces/Activity";
+import { type Activity } from "../interfaces/Activity";
+import { ActivityWithRepliesSchema } from "../schemas/Activity";
 
 /**
  * `ToggleActivitySubscriptionMutation` is an interface representing the variables to pin an activity.
@@ -32,21 +32,6 @@ export interface ToggleActivitySubscriptionVariables {
  */
 export class ToggleActivitySubscriptionMutation extends APIWrapper {
     /**
-     * `authToken` is a string representing the authentication token.
-     */
-    private readonly authToken?: string;
-
-    /**
-     * Constructs a new `ToggleActivitySubscriptionMutation` instance.
-     *
-     * @param authToken - The authentication token.
-     */
-    constructor(authToken?: string) {
-        super("https://graphql.anilist.co");
-        this.authToken = authToken;
-    }
-
-    /**
      * `toggleActivitySubscription` is a method that sends a mutation request to subscribe to an activity.
      *
      * @param variables - An object of type `ToggleActivitySubscriptionVariables` representing the variables for the mutation.
@@ -76,7 +61,6 @@ export class ToggleActivitySubscriptionMutation extends APIWrapper {
       }
     `;
 
-        const data = { query: mutation, variables };
-        return await sendRequest(this.baseURL, "POST", data, this.authToken, true);
+        return await this.request(mutation, variables, true);
     }
 }
