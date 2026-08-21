@@ -7,6 +7,29 @@ updates:
     commit-message:
       prefix: "npm"
       include: "scope"
+    groups:
+      # Batch all @typescript-eslint/* packages so plugin/parser/config updates land together
+      typescript-eslint:
+        patterns:
+          - "@typescript-eslint/*"
+      # Batch eslint/prettier/vitest/typedoc-related tooling updates
+      tooling:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "prettier"
+          - "vitest"
+          - "@vitest/*"
+          - "typedoc"
     ignore:
       - dependency-name: "eslint-plugin-n"
-        versions: ["*"]
+        versions: [">=18"]
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    security-updates-only: true
+    commit-message:
+      prefix: "npm"
+      include: "scope"
