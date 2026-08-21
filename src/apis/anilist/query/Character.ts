@@ -18,7 +18,7 @@ export interface CharacterVariables {
     /**
      * `id` is a number representing the id of the character.
      */
-    id: number;
+    id?: number;
 
     /**
      * `isBirthday` is a boolean representing whether it is the character's birthday.
@@ -28,22 +28,22 @@ export interface CharacterVariables {
     /**
      * `search` is a string representing the search term.
      */
-    search: string;
+    search?: string;
 
     /**
      * `id_not` is a number representing the id of the character that should not be included.
      */
-    id_not: number;
+    id_not?: number;
 
     /**
      * `id_in` is an array of numbers representing the ids of the characters that should be included.
      */
-    id_in: number[];
+    id_in?: number[];
 
     /**
      * `id_not_in` is an array of numbers representing the ids of the characters that should not be included.
      */
-    id_not_in: number[];
+    id_not_in?: number[];
 
     /**
      * `sort` is an array of strings representing the sort order.
