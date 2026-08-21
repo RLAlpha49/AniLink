@@ -41,7 +41,112 @@
     return node;
   }
   function esc(s) {
-    return String(s).replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  /** Pretty-print a GraphQL document: one field per line, 2-space nesting. */
+  function formatGraphql(query) {
+    var lines = [];
+    var depth = 0;
+    var pending = ""; // the current field (name + optional args)
+
+    var indent = function () { return "  ".repeat(depth); };
+    var flush = function () {
+      if (pending.trim()) lines.push(indent() + pending.trim());
+      pending = "";
+    };
+
+    var i = 0;
+    while (i < query.length) {
+      var ch = query[i];
+
+      if (ch === "{") {
+        pending = pending.trim();
+        lines.push(indent() + (pending ? pending + " {" : "{"));
+        pending = "";
+        depth++;
+        i++;
+        continue;
+      }
+      if (ch === "}") {
+        flush();
+        depth = Math.max(0, depth - 1);
+        lines.push(indent() + "}");
+        i++;
+        continue;
+      }
+      if (ch === ")") {
+        // A bare close paren (e.g. after `query (...)`) flushes the line.
+        pending = pending.trimEnd() + ")";
+        flush();
+        i++;
+        continue;
+      }
+      if (/\s/.test(ch)) {
+        // Whitespace between fields ends the current field's line — unless the
+        // next token is an argument list or selection set that must stay attached.
+        var j = i;
+        while (j < query.length && /\s/.test(query[j])) j++;
+        var next = query[j];
+        i = j; // always consume the whitespace run
+        if (next === "(" || next === "{") continue; // keep pending attached
+        flush();
+        continue;
+      }
+      if (ch === "(") {
+        // Argument list: consume through the matching close paren verbatim.
+        var args = "";
+        var parenDepth = 0;
+        while (i < query.length) {
+          var c2 = query[i];
+          args += c2;
+          if (c2 === "(") parenDepth++;
+          if (c2 === ")") {
+            parenDepth--;
+            i++;
+            if (parenDepth === 0) break;
+            continue;
+          }
+          i++;
+        }
+        // Attach the args directly to the field name already pending.
+        pending = pending.trimEnd() + args;
+        continue;
+      }
+
+      // A word token (field name, variable, type, etc.).
+      var word = "";
+      while (i < query.length && !/[\s{}()]/.test(query[i])) {
+        word += query[i];
+        i++;
+      }
+      if (word) pending = pending.trimEnd() + (pending.trim() ? " " : "") + word;
+    }
+    flush();
+    return lines.join("\n");
+  }
+
+  /** Wrap GraphQL keywords, variables, and fields in highlight spans. */
+  function highlightGraphql(formatted) {
+    var h = esc(formatted);
+    h = h.replace(
+      /^(\s*)(query|mutation|fragment)(\s|\()/gm,
+      '$1<span class="gql-keyword">$2</span>$3'
+    );
+    h = h.replace(/(\$[A-Za-z_]\w*)/g, '<span class="gql-arg">$1</span>');
+    h = h.replace(
+      /^(\s*)([A-Za-z_]\w*)(\s*\(|\s*\{|$)/gm,
+      function (m, ws, name, tail) {
+        if (/^(query|mutation|fragment)$/.test(name)) return m;
+        return ws + '<span class="gql-field">' + name + "</span>" + tail;
+      }
+    );
+    h = h.replace(/([{}(),])/g, '<span class="gql-punct">$1</span>');
+    return h;
   }
 
   // ---------- Manifest load + tree ----------
@@ -326,7 +431,7 @@
 
     // GraphQL
     var gql = op.category === "custom" ? (($("custom-query") || {}).value || "") : op.graphql;
-    $("graphql-code").textContent = gql;
+    $("graphql-code").innerHTML = highlightGraphql(formatGraphql(gql));
   }
 
   function buildAnilinkCode(op, vars, token) {
@@ -476,13 +581,14 @@
   function renderRequestTab() {
     if (state.activeTab === "request" && state.lastRequest) {
       var req = state.lastRequest;
-      var display = {
-        method: "POST",
-        url: ENDPOINT,
-        headers: req.headers,
-        body: { query: req.query, variables: req.variables },
-      };
-      $("response-output").innerHTML = highlightJson(display);
+      var html = "";
+      html += '<span class="tok-key">"method"</span>: <span class="tok-string">"POST"</span>\n';
+      html += '<span class="tok-key">"url"</span>: <span class="tok-string">"' + esc(ENDPOINT) + '"</span>\n';
+      html += '<span class="tok-key">"headers"</span>: ' + highlightJson(req.headers) + "\n";
+      html += '<span class="tok-key">"query"</span>:\n';
+      html += '<span class="gql-field">' + highlightGraphql(formatGraphql(req.query)) + "</span>\n";
+      html += '<span class="tok-key">"variables"</span>: ' + highlightJson(req.variables);
+      $("response-output").innerHTML = html;
     }
   }
 
