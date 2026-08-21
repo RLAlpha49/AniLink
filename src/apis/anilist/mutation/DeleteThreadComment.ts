@@ -33,9 +33,7 @@ export class DeleteThreadCommentMutation extends APIWrapper {
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/mutation
      */
-    async deleteThreadComment(
-        variables: DeleteThreadCommentVariables
-    ): Promise<DeleteResult> {
+    async deleteThreadComment(variables: DeleteThreadCommentVariables): Promise<DeleteResult> {
         if (!variables.id) {
             throw new Error("id variable is required");
         }
