@@ -11,7 +11,7 @@ export interface RecordedRequest {
 }
 
 const requestMock = vi.hoisted(() =>
-    vi.fn(async () => ({
+    vi.fn(async (): Promise<unknown> => ({
         __typename: "MockResponse",
     }))
 );
@@ -24,6 +24,27 @@ vi.mock("../../src/base/RequestHandler", () => ({
 
 export const mockSendRequest = requestMock;
 export const mockConfigureRequestOptions = configureRequestOptionsMock;
+
+/**
+ * Configures what the mocked transport resolves with for subsequent requests.
+ *
+ * Pass a plain value (for example a GraphQL envelope such as
+ * `{ data: { Media: { id: 1 } } }`) to make every call resolve with it, or a
+ * factory that receives the recorded request and returns the response. This
+ * lets tests assert on returned data instead of only on request arguments.
+ */
+export const setMockResponse = (
+    response: unknown | ((request: RecordedRequest) => unknown)
+): void => {
+    if (typeof response === "function") {
+        const factory = response as (request: RecordedRequest) => unknown;
+        mockSendRequest.mockImplementation(async (url, method, data, token, requiresAuth) =>
+            factory({ url, method, data, token, requiresAuth })
+        );
+        return;
+    }
+    mockSendRequest.mockImplementation(async () => response);
+};
 
 export const createTestClient = (token = "test-token"): AniLinkClient => new AniLink(token);
 export const createTestClientWithOptions = (options: AniLinkOptions): AniLinkClient =>
@@ -41,4 +62,8 @@ export const getLastRequest = (): RecordedRequest | undefined => {
 
 beforeEach(() => {
     vi.clearAllMocks();
+    // Restore the default response so per-test `setMockResponse` values never leak.
+    requestMock.mockImplementation(async () => ({
+        __typename: "MockResponse",
+    }));
 });

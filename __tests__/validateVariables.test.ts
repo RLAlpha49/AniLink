@@ -149,4 +149,36 @@ describe("validateVariables", () => {
             AniLinkValidationError
         );
     });
+
+    test("aggregates every problem into the error message", () => {
+        let caught: unknown;
+        try {
+            validateVariables({ id: "nope", name: 42, status: "DROPPED" }, mappings);
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError).toBeInstanceOf(AniLinkValidationError);
+        expect(validationError.details).toHaveLength(3);
+        expect(validationError.message).toContain("AniList request variables are invalid:");
+        for (const detail of validationError.details) {
+            expect(validationError.message).toContain(detail);
+        }
+    });
+
+    test("reports the index of each invalid enum-array element", () => {
+        let caught: unknown;
+        try {
+            validateVariables({ sort: ["ID", "NOPE", "ALSO_BAD"] }, mappings);
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError.details).toHaveLength(2);
+        expect(validationError.details[0]).toContain("sort[1]");
+        expect(validationError.details[0]).toContain("Expected one of: ID, ID_DESC");
+        expect(validationError.details[1]).toContain("sort[2]");
+    });
 });

@@ -1,7 +1,16 @@
-import { createTestClient, getLastRequest, mockSendRequest } from "./helpers/mockRequestHandler";
+import type { AniListApi } from "../src/apis/anilist/facade";
+import {
+    createTestClient,
+    getLastRequest,
+    mockSendRequest,
+    setMockResponse,
+} from "./helpers/mockRequestHandler";
 import { describe, expect, test } from "vitest";
 
-const pageCases: Array<[string, object, string, string]> = [
+/** Method names are validated against the public API surface at compile time. */
+type PageMethod = keyof AniListApi["query"]["page"];
+
+const pageCases: Array<[string, object, PageMethod, string]> = [
     ["users", { asHtml: true }, "users", "Page"],
     ["medias", { id: 1, type: "ANIME" }, "medias", "Page"],
     ["characters", { id: 1, asHtml: true }, "characters", "Page"],
@@ -27,9 +36,9 @@ describe("AniList page queries", () => {
         "%s is handled without network access",
         async (_name, variables, method, operation) => {
             const client = createTestClient("page-query-token");
-            const call = (
-                client.anilist.query.page as Record<string, (variables: object) => Promise<unknown>>
-            )[method];
+            const call = client.anilist.query.page[method] as (
+                variables: object
+            ) => Promise<unknown>;
 
             await call(variables);
 
@@ -105,4 +114,13 @@ test("paginate helper truncates at the maxPages guard", async () => {
     expect(mockSendRequest).toHaveBeenCalledTimes(3);
     expect(result.pageCount).toBe(3);
     expect(result.truncated).toBe(true);
+});
+
+test("passes an error-only response through a page operation unchanged", async () => {
+    setMockResponse({ errors: [{ message: "Not Found" }] });
+    const client = createTestClient("shape-page-token");
+
+    const result = await client.anilist.query.page.medias({ page: 1, perPage: 10 });
+
+    expect(result).toEqual({ errors: [{ message: "Not Found" }] });
 });

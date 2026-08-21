@@ -248,4 +248,82 @@ test("normalizes unexpected transport failures without rethrowing raw values", a
     expect((error as Error).message).not.toContain("secret-token");
 });
 
+test("sends JSON content headers without an Authorization header when no token is given", async () => {
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+
+    expect(mocks.request).toHaveBeenCalledWith(
+        expect.objectContaining({
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        })
+    );
+});
+
+test("attaches a Bearer Authorization header when a token is given", async () => {
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, "secret-token");
+
+    expect(mocks.request).toHaveBeenCalledWith(
+        expect.objectContaining({
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: "Bearer secret-token",
+            },
+        })
+    );
+});
+
+test("omits the Authorization header for an empty-string token when auth is not required", async () => {
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, "", false);
+
+    const call = mocks.request.mock.calls[0]?.[0] as { headers: Record<string, string> };
+    expect(call.headers).not.toHaveProperty("Authorization");
+    expect(call.headers).toMatchObject({
+        "Content-Type": "application/json",
+        Accept: "application/json",
+    });
+});
+
+test("unwraps the single root field of the GraphQL data envelope", async () => {
+    mocks.request.mockResolvedValueOnce({ data: { data: { Media: { id: 7, title: "Trigun" } } } });
+
+    await expect(
+        sendRequest("https://graphql.anilist.co", "POST", { query: "query" })
+    ).resolves.toEqual({
+        id: 7,
+        title: "Trigun",
+    });
+});
+
+test("passes through the full envelope when the response has multiple root fields", async () => {
+    const envelope = { data: { Media: { id: 1 }, User: { id: 2 } } };
+    mocks.request.mockResolvedValueOnce({ data: envelope });
+
+    await expect(
+        sendRequest("https://graphql.anilist.co", "POST", { query: "query" })
+    ).resolves.toEqual(envelope);
+});
+
+test("passes through the envelope unchanged when it has no data object", async () => {
+    const envelope = { errors: [{ message: "Not authenticated." }] };
+    mocks.request.mockResolvedValueOnce({ data: envelope });
+
+    await expect(
+        sendRequest("https://graphql.anilist.co", "POST", { query: "query" })
+    ).resolves.toEqual(envelope);
+});
+
+test("propagates the normalized error when the transport rejects", async () => {
+    mocks.request.mockRejectedValueOnce({
+        isAxiosError: true,
+        response: { status: 404, data: { message: "not found" } },
+    });
+
+    await expect(
+        sendRequest("https://graphql.anilist.co", "POST", { query: "query" })
+    ).rejects.toMatchObject({ name: "AniLinkApiError", code: "API_ERROR", status: 404 });
+});
+
 void axios;

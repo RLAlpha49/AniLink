@@ -1,7 +1,16 @@
-import { createTestClient, getLastRequest, mockSendRequest } from "./helpers/mockRequestHandler";
+import type { AniListApi } from "../src/apis/anilist/facade";
+import {
+    createTestClient,
+    getLastRequest,
+    mockSendRequest,
+    setMockResponse,
+} from "./helpers/mockRequestHandler";
 import { describe, expect, test } from "vitest";
 
-const queryCases: Array<[string, string, object | undefined, string]> = [
+/** Method names are validated against the public API surface at compile time. */
+type QueryMethod = keyof AniListApi["query"];
+
+const queryCases: Array<[string, QueryMethod, object | undefined, string]> = [
     ["user", "user", { id: 542244, asHtml: true }, "User"],
     ["media", "media", { id: 1, type: "ANIME" }, "Media"],
     ["media trend", "mediaTrend", { mediaId: 1, type: "ANIME" }, "MediaTrend"],
@@ -45,9 +54,7 @@ describe("AniList single-resource queries", () => {
         "%s is handled without network access",
         async (_name, method, variables, operation) => {
             const client = createTestClient("query-token");
-            const call = (
-                client.anilist.query as Record<string, (variables?: object) => Promise<unknown>>
-            )[method];
+            const call = client.anilist.query[method] as (variables?: object) => Promise<unknown>;
             let result;
 
             if (variables === undefined) {
@@ -85,6 +92,28 @@ test("sends custom query text and variables through the mocked transport", async
             data: { query: expect.stringContaining("Media"), variables: { id: 1 } },
         })
     );
+});
+
+test("passes the resolved payload through a query operation unchanged", async () => {
+    // The mocked transport stands in for the real one, so it resolves with
+    // what `sendRequest` would return after unwrapping the GraphQL envelope.
+    setMockResponse({ id: 1, title: { romaji: "Cowboy Bebop" } });
+    const client = createTestClient("shape-query-token");
+
+    const result = await client.anilist.query.media({ id: 1, type: "ANIME" });
+
+    expect(result).toEqual({ id: 1, title: { romaji: "Cowboy Bebop" } });
+});
+
+test("custom() defaults omitted variables to an empty object", async () => {
+    const client = createTestClient("default-vars-token");
+
+    await client.anilist.custom("query { Viewer { id } }");
+
+    expect(getLastRequest()?.data).toEqual({
+        query: expect.stringContaining("Viewer"),
+        variables: {},
+    });
 });
 
 test("fuzzyDate helper builds a FuzzyDateInput from the facade", () => {

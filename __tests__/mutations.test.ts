@@ -1,7 +1,16 @@
-import { createTestClient, getLastRequest, mockSendRequest } from "./helpers/mockRequestHandler";
+import type { AniListApi } from "../src/apis/anilist/facade";
+import {
+    createTestClient,
+    getLastRequest,
+    mockSendRequest,
+    setMockResponse,
+} from "./helpers/mockRequestHandler";
 import { describe, expect, test } from "vitest";
 
-const mutationCases: Array<[string, string, object, string]> = [
+/** Method names are validated against the public API surface at compile time. */
+type MutationMethod = keyof AniListApi["mutation"];
+
+const mutationCases: Array<[string, MutationMethod, object, string]> = [
     ["update user", "updateUser", { about: "test", titleLanguage: "ENGLISH" }, "UpdateUser"],
     [
         "save media list entry",
@@ -78,9 +87,7 @@ describe("AniList mutations without remote side effects", () => {
         "%s only builds a mocked request",
         async (_name, method, variables, operation) => {
             const client = createTestClient("mutation-token");
-            const call = (
-                client.anilist.mutation as Record<string, (variables: object) => Promise<unknown>>
-            )[method];
+            const call = client.anilist.mutation[method] as (variables: object) => Promise<unknown>;
 
             const result = await call(variables);
 
@@ -99,6 +106,29 @@ describe("AniList mutations without remote side effects", () => {
             expect(result).toEqual({ __typename: "MockResponse" });
         }
     );
+
+    test("passes a multi-root-field envelope through a mutation operation", async () => {
+        setMockResponse({
+            data: {
+                SaveMediaListEntry: { id: 9, mediaId: 143271 },
+                UpdateUser: { id: 542244 },
+            },
+        });
+        const client = createTestClient("shape-mutation-token");
+
+        const result = await client.anilist.mutation.saveMediaListEntry({
+            mediaId: 143271,
+            status: "CURRENT",
+            progress: 3,
+        });
+
+        expect(result).toEqual({
+            data: {
+                SaveMediaListEntry: { id: 9, mediaId: 143271 },
+                UpdateUser: { id: 542244 },
+            },
+        });
+    });
 
     test("sends custom mutations through the mocked transport", async () => {
         const client = createTestClient("custom-mutation-token");
