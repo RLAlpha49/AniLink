@@ -1,7 +1,5 @@
 import { type MediaResponse } from "./Media";
 import { type BasicUser } from "../../Basic";
-import { BasicUserSchema } from "../../../schemas/Basic";
-import { MediaSchema } from "../../../schemas/responses/query/Media";
 
 /**
  * `ThreadResponse` is an interface representing the response from a thread query.

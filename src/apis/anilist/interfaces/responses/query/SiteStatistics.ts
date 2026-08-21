@@ -1,5 +1,4 @@
 import { type SiteTrendConnection } from "../../SiteTrend";
-import { SiteTrendConnectionSchema } from "../../../schemas/SiteTrend";
 
 /**
  * `SiteStatisticsResponse` is an interface representing the response from a site statistics query.

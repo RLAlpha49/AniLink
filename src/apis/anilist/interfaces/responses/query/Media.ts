@@ -15,19 +15,6 @@ import { type Ranking } from "../../Ranking";
 import { type Name } from "../../Name";
 import { type Image } from "../../Image";
 import { type MediaListEntry, type MediaStats } from "../../Media";
-import { CoverImageSchema } from "../../../schemas/CoverImage";
-import { ScoreDistributionSchema, StatusDistributionSchema } from "../../../schemas/Distribution";
-import { ExternalLinkSchema } from "../../../schemas/ExternalLink";
-import { FuzzyDateSchema } from "../../../schemas/FuzzyDate";
-import { ImageSchema } from "../../../schemas/Image";
-import { MediaListEntrySchema } from "../../../schemas/Media";
-import { NameSchema } from "../../../schemas/Name";
-import { NextAiringEpisodeSchema } from "../../../schemas/NextAiringEpisode";
-import { RankingSchema } from "../../../schemas/Ranking";
-import { StreamingEpisodeSchema } from "../../../schemas/StreamingEpisode";
-import { TagSchema } from "../../../schemas/Tag";
-import { TitleSchema } from "../../../schemas/Title";
-import { TrailerSchema } from "../../../schemas/Trailer";
 
 /**
  * `MediaResponse` is an interface representing the response from a media query.

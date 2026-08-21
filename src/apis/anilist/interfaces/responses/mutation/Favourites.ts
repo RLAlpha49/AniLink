@@ -1,5 +1,4 @@
 import { type Title } from "../../Title";
-import { TitleSchema } from "../../../schemas/Title";
 
 /**
  * `Favourites` is an interface that contains the favourites of a user.

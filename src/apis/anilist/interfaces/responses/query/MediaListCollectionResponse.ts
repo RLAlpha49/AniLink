@@ -1,7 +1,5 @@
 import { type FuzzyDate } from "../../FuzzyDate";
 import { type Media } from "../../Media";
-import { FuzzyDateSchema } from "../../../schemas/FuzzyDate";
-import { MediaSchema } from "../../../schemas/responses/query/Media";
 
 /**
  * `MediaListCollectionResponse` is an interface representing the response from a media list collection query.

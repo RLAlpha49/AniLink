@@ -1,5 +1,4 @@
 import { type Media } from "../../Media";
-import { MediaSchema } from "../../../schemas/responses/query/Media";
 
 /**
  * `AiringScheduleResponse` is an interface representing the response from an airing schedule query.

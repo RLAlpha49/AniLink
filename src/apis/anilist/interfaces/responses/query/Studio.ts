@@ -1,10 +1,5 @@
 import { type Media } from "../../Media";
 import { type Staff } from "../../Staff";
-import { ImageSchema } from "../../../schemas/Image";
-import { NameSchema } from "../../../schemas/Name";
-import { CharacterSchema } from "../../../schemas/responses/query/Character";
-import { MediaSchema } from "../../../schemas/responses/query/Media";
-import { StaffSchema } from "../../../schemas/responses/query/Staff";
 
 /**
  * `StudioResponse` is an interface representing the response from a studio query.

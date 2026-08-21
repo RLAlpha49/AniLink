@@ -1,7 +1,5 @@
 import { type ThreadResponse } from "./Thread";
 import { type BasicUser } from "../../Basic";
-import { BasicUserSchema } from "../../../schemas/Basic";
-import { ThreadSchema } from "../../../schemas/responses/query/Thread";
 
 /**
  * `ThreadCommentResponse` is an interface representing the response from a thread comment query.

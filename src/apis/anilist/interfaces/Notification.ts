@@ -1,5 +1,4 @@
 import { type BasicComment, type BasicThread, type BasicUser } from "./Basic";
-import { BasicCommentSchema, BasicThreadSchema, BasicUserSchema } from "../schemas/Basic";
 
 /**
  * `NotificationOptionInput` is an interface representing the options for a notification.

@@ -1,5 +1,4 @@
 import { type Media } from "../../Media";
-import { MediaSchema } from "../../../schemas/responses/query/Media";
 
 /**
  * `MediaTrendResponse` is an interface representing the response from a media trend query.
