@@ -270,7 +270,10 @@ const getRetryDelay = (
 
 const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
     new Promise((resolve, reject) => {
-        let timeout: NodeJS.Timeout;
+        const timeout: NodeJS.Timeout = setTimeout(() => {
+            signal?.removeEventListener("abort", abort);
+            resolve();
+        }, ms);
 
         const abort = (): void => {
             clearTimeout(timeout);
@@ -278,11 +281,6 @@ const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
                 new AniLinkNetworkError(AniLinkErrorCodes.ABORTED, "AniList request was cancelled.")
             );
         };
-
-        timeout = setTimeout(() => {
-            signal?.removeEventListener("abort", abort);
-            resolve();
-        }, ms);
 
         if (signal?.aborted) {
             abort();
