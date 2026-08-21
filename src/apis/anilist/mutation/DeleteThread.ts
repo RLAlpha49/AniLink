@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import { type DeleteResult } from "../types/DeleteResult";
 import { validateVariables } from "../../../base/ValidateVariables";
 
 /**
@@ -32,7 +33,7 @@ export class DeleteThreadMutation extends APIWrapper {
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/mutation
      */
-    async deleteThread(variables: DeleteThreadVariables): Promise<any> {
+    async deleteThread(variables: DeleteThreadVariables): Promise<DeleteResult> {
         if (!variables.id) {
             throw new Error("id variable is required");
         }

@@ -2,6 +2,7 @@ import { APIWrapper } from "../../../base/APIWrapper";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 import { BasicUserSchema } from "../schemas/Basic";
+import { type BasicUser } from "../interfaces/Basic";
 
 /**
  * `ToggleLikeMutation` is an interface representing the variables to toggle a like.
@@ -30,11 +31,11 @@ export class ToggleLikeMutation extends APIWrapper {
      * `ToggleLike` is a method that sends a mutation request to toggle a like.
      *
      * @param variables - An object of type `ToggleLikeVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
+     * @returns A Promise that resolves to the user who performed the like toggle.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/mutation
      */
-    async toggleLike(variables: ToggleLikeVariables): Promise<any> {
+    async toggleLike(variables: ToggleLikeVariables): Promise<BasicUser> {
         if (!variables.id || !variables.type) {
             throw new Error("id and type variables are required.");
         }

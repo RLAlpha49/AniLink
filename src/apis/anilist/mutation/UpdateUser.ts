@@ -157,9 +157,9 @@ export interface UpdateUserResponse {
     isBlocked: boolean;
 
     /**
-     * `bans` is an array representing the bans of the user.
+     * `bans` is an array of strings representing the bans of the user.
      */
-    bans: any[];
+    bans: string[];
 
     /**
      * `options` is an object that includes the title language, display adult content, airing notifications, profile color, notification options, timezone, activity merge time, staff name language, and restrict messages to following of the user.

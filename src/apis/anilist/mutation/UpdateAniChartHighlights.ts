@@ -31,11 +31,11 @@ export class UpdateAniChartHighlightsMutation extends APIWrapper {
      * `updateAniChartHighlights` is a method that sends a mutation request to update the AniChart highlights.
      *
      * @param variables - An object of type `UpdateAniChartHighlightsVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
+     * @returns A Promise that resolves to the updated AniChart highlights string.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/mutation
      */
-    async updateAniChartHighlights(variables: UpdateAniChartHighlightsVariables): Promise<any> {
+    async updateAniChartHighlights(variables: UpdateAniChartHighlightsVariables): Promise<string> {
         const variableTypeMappings = {
             highlights: {
                 mediaId: "number",

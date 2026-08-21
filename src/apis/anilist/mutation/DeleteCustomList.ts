@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import { type DeleteResult } from "../types/DeleteResult";
 import { validateVariables } from "../../../base/ValidateVariables";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 
@@ -38,7 +39,7 @@ export class DeleteCustomListMutation extends APIWrapper {
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/mutation
      */
-    async deleteCustomList(variables: DeleteCustomListVariables): Promise<any> {
+    async deleteCustomList(variables: DeleteCustomListVariables): Promise<DeleteResult> {
         if (!variables.customList || !variables.type) {
             throw new Error("customList & type variables are required");
         }

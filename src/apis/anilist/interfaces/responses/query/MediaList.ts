@@ -1,6 +1,6 @@
 import { type Media } from "../../Media";
-import { FuzzyDateSchema } from "../../../schemas/FuzzyDate";
-import { MediaSchema } from "../../../schemas/responses/query/Media";
+import { type FuzzyDate } from "../../FuzzyDate";
+import { type BasicUser } from "../../Basic";
 
 /**
  * `MediaListResponse` is an interface representing the response from a media list query.
@@ -70,23 +70,24 @@ export interface MediaListResponse {
 
     /**
      * `customLists` is an array representing the custom lists of the media list.
+     * A string array when queried with `asArray: true`, otherwise a map of list names to membership flags.
      */
-    customLists: any;
+    customLists: string[] | boolean[];
 
     /**
      * `advancedScores` is an array representing the advanced scores of the media list.
      */
-    advancedScores: any;
+    advancedScores: number[];
 
     /**
      * `startedAt` is a date representing when the media list started.
      */
-    startedAt: any;
+    startedAt: FuzzyDate;
 
     /**
      * `completedAt` is a date representing when the media list was completed.
      */
-    completedAt: any;
+    completedAt: FuzzyDate;
 
     /**
      * `updatedAt` is a number representing the timestamp when the media list was last updated.
@@ -106,5 +107,5 @@ export interface MediaListResponse {
     /**
      * `user` is an instance representing the user associated with the media list.
      */
-    user: any;
+    user: BasicUser;
 }

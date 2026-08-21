@@ -1,5 +1,6 @@
 import { validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
+import { type DeleteResult } from "../types/DeleteResult";
 
 /**
  * `DeleteReviewVariables` is an interface that contains the variables that are required for the `DeleteReview` mutation.
@@ -32,7 +33,7 @@ export class DeleteReviewMutation extends APIWrapper {
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/mutation
      */
-    async deleteReview(variables: DeleteReviewVariables): Promise<any> {
+    async deleteReview(variables: DeleteReviewVariables): Promise<DeleteResult> {
         if (!variables.id) {
             throw new Error("id variable is required");
         }

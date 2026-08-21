@@ -5,6 +5,7 @@ import { type UserTitleLanguage } from "../../../types/UserTitleLanguage";
 import { type Image } from "../../Image";
 import { type Statistics } from "../../Statistics";
 import { type UserStats } from "../../UserStats";
+import { type Title } from "../../Title";
 
 /**
  * `UserResponse` is an interface representing the response from a user query.
@@ -53,9 +54,9 @@ export interface UserResponse {
     isBlocked: boolean;
 
     /**
-     * `bans` is an array of any representing the bans of the user.
+     * `bans` is an array of strings representing the bans of the user.
      */
-    bans: any[];
+    bans: string[];
 
     /**
      * `options` is an object representing the options of the user.
@@ -212,29 +213,35 @@ export interface UserResponse {
      */
     favourites: {
         /**
-         * `anime` is an array of any representing the favourite anime of the user.
+         * `anime` is an array of the user's favourite anime, each with its id and title.
          */
-        anime: any[];
+        anime: Array<{
+            id: number;
+            title: Title;
+        }>;
 
         /**
-         * `manga` is an array of any representing the favourite manga of the user.
+         * `manga` is an array of the user's favourite manga, each with its id and title.
          */
-        manga: any[];
+        manga: Array<{
+            id: number;
+            title: Title;
+        }>;
 
         /**
-         * `characters` is an array of any representing the favourite characters of the user.
+         * `characters` is an array of the user's favourite character edges.
          */
-        characters: any[];
+        characters: unknown[];
 
         /**
-         * `staff` is an array of any representing the favourite staff of the user.
+         * `staff` is an array of the user's favourite staff edges.
          */
-        staff: any[];
+        staff: unknown[];
 
         /**
-         * `studios` is an array of any representing the favourite studios of the user.
+         * `studios` is an array of the user's favourite studio edges.
          */
-        studios: any[];
+        studios: unknown[];
     };
 
     /**

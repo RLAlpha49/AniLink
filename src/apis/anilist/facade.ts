@@ -192,6 +192,7 @@ import {
     type ChunkPaginateResult,
 } from "../../base/Paginator";
 import type { PageInfo } from "./interfaces/responses/page/PageInfo";
+import type { DeleteResult } from "./types/DeleteResult";
 import type { FuzzyDateInput } from "./types/FuzzyDate";
 import { configureRequestOptions, type RequestOptions } from "../../base/RequestHandler";
 
@@ -206,7 +207,7 @@ export {
 export type { AniLinkErrorCode } from "../../base/AniLinkError";
 
 /** Transport options accepted by an `AniLink` client. */
-export interface AniLinkOptions extends RequestOptions {}
+export type AniLinkOptions = RequestOptions;
 
 /** Callback that fetches a single `PageInfo`-based page. */
 type PageFetcher<TPage extends { pageInfo: PageInfo }> = (
@@ -1033,7 +1034,7 @@ export type AniListApi = {
         /**
          * Deletes a custom list on the Anilist API. There is no mutation specifically for creating a custom list. You can create a custom list through the `updateUser` mutation under the `animeListOptions` or `mangaListOptions` variables.
          * @param {DeleteCustomListVariables} variables - The variables for the mutation.
-         * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the  custom list was deleted by this call and `false` when it was already absent.
          *
          * @example
          * ```typescript
@@ -1041,7 +1042,7 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        deleteCustomList: (variables: DeleteCustomListVariables) => Promise<any>;
+        deleteCustomList: (variables: DeleteCustomListVariables) => Promise<DeleteResult>;
 
         /**
          * Saves a text activity on the Anilist API. If no `id` is provided, a new activity will be created. If an `id` is provided, the activity with that `id` will be updated.
@@ -1087,7 +1088,7 @@ export type AniListApi = {
          * Deletes an activity on the Anilist API.
          * Mod Only
          * @param {DeleteActivityVariables} variables - The variables for the mutation.
-         * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the          activity was deleted by this call and `false` when it was already absent.
          *
          * @example
          * ```typescript
@@ -1095,7 +1096,7 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        deleteActivity: (variables: DeleteActivityVariables) => Promise<any>;
+        deleteActivity: (variables: DeleteActivityVariables) => Promise<DeleteResult>;
 
         /**
          * Toggles the pin status of an activity on the Anilist API.
@@ -1143,7 +1144,7 @@ export type AniListApi = {
         /**
          * Deletes an activity reply on the Anilist API.
          * @param {DeleteActivityReplyVariables} variables - The variables for the mutation.
-         * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the reply was deleted by this call and `false` when it was already absent.
          *
          * @example
          * ```typescript
@@ -1151,12 +1152,12 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        deleteActivityReply: (variables: DeleteActivityReplyVariables) => Promise<any>;
+        deleteActivityReply: (variables: DeleteActivityReplyVariables) => Promise<DeleteResult>;
 
         /**
          * Toggles a like on the Anilist API.
          * @param {ToggleLikeVariables} variables - The variables for the mutation.
-         * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<BasicUser>} A promise that resolves to the user who performed the like toggle.
          *
          * @example
          * ```typescript
@@ -1164,7 +1165,7 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        toggleLike: (variables: ToggleLikeVariables) => Promise<any>;
+        toggleLike: (variables: ToggleLikeVariables) => Promise<BasicUser>;
 
         /**
          * Toggles a like on the Anilist API.
@@ -1248,7 +1249,7 @@ export type AniListApi = {
         /**
          * Deletes a review on the Anilist API.
          * @param {DeleteReviewVariables} variables - The variables for the mutation.
-         * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the review was deleted by this call and `false` when it was already absent.
          *
          * @example
          * ```typescript
@@ -1256,7 +1257,7 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        deleteReview: (variables: DeleteReviewVariables) => Promise<any>;
+        deleteReview: (variables: DeleteReviewVariables) => Promise<DeleteResult>;
 
         /**
          * Saves a recommendation on the Anilist API.
@@ -1289,7 +1290,7 @@ export type AniListApi = {
         /**
          * Deletes a thread on the Anilist API.
          * @param {DeleteThreadVariables} variables - The variables for the mutation.
-         * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the thread was deleted by this call and `false` when it was already absent.
          *
          * @example
          * ```typescript
@@ -1297,7 +1298,7 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        deleteThread: (variables: DeleteThreadVariables) => Promise<any>;
+        deleteThread: (variables: DeleteThreadVariables) => Promise<DeleteResult>;
 
         /**
          * Toggles a thread subscription on the Anilist API.
@@ -1332,7 +1333,7 @@ export type AniListApi = {
         /**
          * Deletes a thread comment on the Anilist API.
          * @param {DeleteThreadCommentVariables} variables - The variables for the mutation.
-         * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the comment was deleted by this call and `false` when it was already absent.
          *
          * @example
          * ```typescript
@@ -1340,12 +1341,12 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        deleteThreadComment: (variables: DeleteThreadCommentVariables) => Promise<any>;
+        deleteThreadComment: (variables: DeleteThreadCommentVariables) => Promise<DeleteResult>;
 
         /**
          * Updates the AniChart settings for a user on the Anilist API.
          * @param {UpdateAniChartSettingsVariables} variables - The variables for the mutation.
-         * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<string>} A promise that resolves to the updated AniChart settings string.
          *
          * @example
          * ```typescript
@@ -1353,12 +1354,12 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        updateAniChartSettings: (variables: UpdateAniChartSettingsVariables) => Promise<any>;
+        updateAniChartSettings: (variables: UpdateAniChartSettingsVariables) => Promise<string>;
 
         /**
          * Updates the AniChart highlights for a user on the Anilist API.
          * @param {UpdateAniChartHighlightsVariables} variables - The variables for the mutation.
-         * @returns {Promise<any>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<string>} A promise that resolves to the updated AniChart highlights string.
          *
          * @example
          * ```typescript
@@ -1366,7 +1367,7 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        updateAniChartHighlights: (variables: UpdateAniChartHighlightsVariables) => Promise<any>;
+        updateAniChartHighlights: (variables: UpdateAniChartHighlightsVariables) => Promise<string>;
     };
 
     /**
