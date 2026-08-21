@@ -4,6 +4,8 @@ on:
   push:
     branches: [master]
   pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
   workflow_dispatch:
     inputs:
       live:
@@ -27,11 +29,38 @@ jobs:
       - run: npm ci
       - name: Compare AniList API
         run: |
-          if [ "${{ inputs.live }}" = "true" ]; then
-            npm run anilist:api:compare -- --live
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.live }}" = "true" ]; then
+            npm run anilist:api:compare -- --live --strict
           else
             npm run anilist:api:compare
           fi
+      - name: Annotate discrepancies
+        if: always()
+        run: |
+          report="artifacts/anilist-api-compare/report.json"
+          if [ ! -f "$report" ]; then
+            echo "No comparison report found at $report"
+            exit 0
+          fi
+          node -e '
+            const fs = require("node:fs");
+            const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const discrepancies = [
+              ...report.discrepancies.map((d) => ({ ...d, kind: "discrepancy" })),
+              ...report.warnings.map((w) => ({ ...w, kind: "warning" }))
+            ];
+            if (discrepancies.length === 0) {
+              console.log("No API discrepancies found");
+              return;
+            }
+            for (const d of discrepancies) {
+              const file = d.sourcePath ? d.sourcePath.split(":")[0] : undefined;
+              const location = file ? ` file=${file}` : "";
+              console.log(
+                `::warning${location}::[${d.kind}/${d.severity}] ${d.operation ?? "api"}: ${d.message}`
+              );
+            }
+          ' "$report"
       - name: Upload comparison reports
         if: always()
         uses: actions/upload-artifact@v7

@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { comparePackageToSchema } from "../../lib/api-compare/compare";
 import { discoverPackageContracts, discoverPackageOperations } from "./package-inventory";
 import { renderJson, renderMarkdown } from "../../lib/api-compare/report";
@@ -41,10 +41,14 @@ export async function runCli(options: CliOptions): Promise<CliResult> {
             log(`${provider.label} schema snapshot updated: ${provider.schemaPath}`);
             return { exitCode: 0 };
         }
+        const strict = options.argv.includes("--strict");
+        if (strict) {
+            log("Strict mode enabled: any discrepancy will fail the comparison");
+        }
         const result = await (options.compare ?? runComparison)(options.argv, provider);
-        const hasErrors = result.discrepancies.some(
-            (discrepancy) => discrepancy.severity === "error"
-        );
+        const hasErrors = strict
+            ? result.discrepancies.length > 0
+            : result.discrepancies.some((discrepancy) => discrepancy.severity === "error");
         log(`Implemented operations: ${result.implementedOperations ?? "unknown"}`);
         log(`Discrepancies found: ${result.discrepancies.length}`);
         log(
@@ -68,6 +72,7 @@ async function runComparison(argv: string[], provider: ProviderConfig): Promise<
     const live = argv.includes("--live");
     const root = process.cwd();
     const schemaPath = resolve(root, valueAfter(argv, "--schema") ?? provider.schemaPath);
+    const schemaSource = live ? "live" : relative(root, schemaPath);
     const reportDirectory = resolve(
         root,
         valueAfter(argv, "--report-dir") ?? provider.reportDirectory
@@ -82,12 +87,12 @@ async function runComparison(argv: string[], provider: ProviderConfig): Promise<
     await mkdir(reportDirectory, { recursive: true });
     await writeFile(
         resolve(reportDirectory, "report.md"),
-        renderMarkdown(result, { schemaSource: live ? "live" : schemaPath }),
+        renderMarkdown(result, { schemaSource }),
         "utf8"
     );
     await writeFile(
         resolve(reportDirectory, "report.json"),
-        renderJson(result, { schemaSource: live ? "live" : schemaPath }),
+        renderJson(result, { schemaSource }),
         "utf8"
     );
     return result;
