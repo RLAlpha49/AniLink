@@ -65,6 +65,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Fail if ANILIST_TOKEN is missing
+        if: ${{ env.ANILIST_TOKEN == '' }}
+        run: echo "::error::ANILIST_TOKEN secret is not set; live integration coverage is not running" && exit 1
+
       - name: Run live AniList integration test
-        if: ${{ env.ANILIST_TOKEN != '' }}
         run: npm run test:integration
