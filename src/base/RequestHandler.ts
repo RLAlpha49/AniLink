@@ -1,12 +1,16 @@
 import http from "node:http";
 import https from "node:https";
+import { randomInt } from "node:crypto";
 import axios, { type AxiosError, type AxiosResponse } from "axios";
 import {
     AniLinkApiError,
     AniLinkAuthError,
     AniLinkError,
     AniLinkErrorCodes,
+    AniLinkGraphQLError,
     AniLinkNetworkError,
+    type AniLinkErrorCode,
+    type RateLimitInfo,
 } from "./AniLinkError";
 
 /** The default maximum time a request may remain in progress. */
@@ -15,7 +19,14 @@ export const DEFAULT_REQUEST_TIMEOUT = 30_000;
 /** The maximum time a `Retry-After` header may delay a retry. */
 const MAX_RETRY_AFTER_MS = 60_000;
 
-/** Retry policy for transient transport failures. */
+/**
+ * Retry policy for transient transport failures.
+ *
+ * Delays between retries use exponential backoff with full jitter by default:
+ * each wait is a random value between `0` and the computed exponential cap so
+ * concurrent clients do not synchronize their retries (thundering herd).
+ * Server-dictated `Retry-After` delays are never jittered.
+ */
 export interface RetryPolicy {
     /** The maximum number of retries after the initial attempt. */
     maxRetries: number;
@@ -27,9 +38,11 @@ export interface RetryPolicy {
     retryOnStatus: readonly number[];
     /** Whether network and timeout failures trigger a retry. */
     retryOnNetworkError: boolean;
+    /** Whether to apply full jitter to computed backoff delays. Defaults to `true`. */
+    jitter?: boolean;
 }
 
-/** Context passed to the `onError` hook when a request ultimately fails. */
+/** Context passed to the request lifecycle hooks for a single attempt. */
 export interface RequestErrorContext {
     /** The URL the request was sent to. */
     url: string;
@@ -37,26 +50,80 @@ export interface RequestErrorContext {
     method: "GET" | "POST";
     /** The 1-based attempt that failed. */
     attempt: number;
+    /** The stable code of the normalized failure. */
+    code: AniLinkErrorCode;
+    /** The HTTP status when the failure came from an API response. */
+    status?: number;
+    /** The delay before the next retry, when the failure will be retried. */
+    nextDelayMs?: number;
 }
 
-/** A callback invoked when a request fails after all retries are exhausted. */
+/** A callback invoked when an attempt fails, before each retry wait and once more when retries are exhausted. */
 export type OnErrorHandler = (error: AniLinkError, context: RequestErrorContext) => void;
 
-/** Transport settings shared by the AniLink request operations. */
-export interface RequestOptions {
-    timeout?: number;
-    signal?: AbortSignal;
-    exposeRawAxiosError?: boolean;
-    retry?: boolean | Partial<RetryPolicy>;
-    onError?: OnErrorHandler;
+/** Context passed to the `onRequestStart` hook just before an attempt is sent. */
+export interface RequestContext {
+    /** The URL the request is being sent to. */
+    url: string;
+    /** The HTTP method of the request. */
+    method: "GET" | "POST";
+    /** The 1-based attempt about to run. */
+    attempt: number;
 }
 
-const DEFAULT_RETRY_POLICY: RetryPolicy = {
+/**
+ * A callback invoked immediately before each request attempt is sent. Use it
+ * to count request volume or correlate logs with outgoing attempts.
+ */
+export type OnRequestStartHandler = (context: RequestContext) => void;
+
+/**
+ * A callback invoked after each attempt completes, whether it succeeded or
+ * failed. The elapsed wall-clock time of the attempt is reported as
+ * `durationMs`, making this the natural point for latency metrics.
+ */
+export type OnResponseHandler = (context: RequestContext & { durationMs: number }) => void;
+
+/**
+ * Transport settings shared by the AniLink request operations.
+ *
+ * Pass these as the second argument of the `AniLink` constructor; they apply
+ * per instance and never leak across clients.
+ */
+export interface RequestOptions {
+    /** Milliseconds before a request is aborted. `0` disables the Axios timeout. Defaults to 30 seconds. */
+    timeout?: number;
+    /** Signal used to cancel in-flight requests. */
+    signal?: AbortSignal;
+    /**
+     * Attach the original Axios error to thrown errors as `rawAxiosError`
+     * (and `cause`) for local debugging. Defaults to `false` because raw
+     * errors can contain request configuration and bearer-token headers.
+     */
+    exposeRawAxiosError?: boolean;
+    /**
+     * Opt into automatic retries for transient failures: `true` uses the
+     * default policy, a partial policy tunes it, and `false` (the default)
+     * sends every request exactly once.
+     */
+    retry?: boolean | Partial<RetryPolicy>;
+    /** Invoked when an attempt fails, and once more when retries are exhausted. */
+    onError?: OnErrorHandler;
+    /** Invoked before each retry wait with the scheduled delay in `nextDelayMs`. Falls back to per-attempt `onError` calls when unset. */
+    onRetry?: OnErrorHandler;
+    /** Invoked just before each attempt is sent. */
+    onRequestStart?: OnRequestStartHandler;
+    /** Invoked after each attempt completes with the elapsed `durationMs`. */
+    onResponse?: OnResponseHandler;
+}
+
+const DEFAULT_RETRY_POLICY: Required<Pick<RetryPolicy, "jitter">> & RetryPolicy = {
     maxRetries: 3,
     baseDelayMs: 250,
     maxDelayMs: 5_000,
     retryOnStatus: [429, 500, 502, 503, 504],
     retryOnNetworkError: true,
+    jitter: true,
 };
 
 const axiosClient = axios.create({
@@ -71,13 +138,10 @@ interface ResolvedRequestOptions {
     exposeRawAxiosError: boolean;
     retry: RetryPolicy | null;
     onError?: OnErrorHandler;
+    onRetry?: OnErrorHandler;
+    onRequestStart?: OnRequestStartHandler;
+    onResponse?: OnResponseHandler;
 }
-
-let requestOptions: ResolvedRequestOptions = {
-    timeout: DEFAULT_REQUEST_TIMEOUT,
-    exposeRawAxiosError: false,
-    retry: null,
-};
 
 const resolveRetryPolicy = (
     retry: boolean | Partial<RetryPolicy> | undefined
@@ -92,28 +156,32 @@ const resolveRetryPolicy = (
 };
 
 /**
- * Configures the timeout, cancellation signal, retry policy, and error hook
- * used by subsequent requests.
+ * Resolves partial transport settings into the complete set used by one
+ * request pipeline.
  *
  * Passing no options restores the defaults. A timeout of zero is valid because
  * Axios uses it to disable its timeout.
  *
  * @param options - Optional transport configuration.
+ * @returns The fully resolved options.
  * @throws A `TypeError` when `timeout` is negative or not finite.
  */
-export const configureRequestOptions = (options: RequestOptions = {}): void => {
+const resolveRequestOptions = (options: RequestOptions = {}): ResolvedRequestOptions => {
     const timeout = options.timeout ?? DEFAULT_REQUEST_TIMEOUT;
 
     if (!Number.isFinite(timeout) || timeout < 0) {
         throw new TypeError("timeout must be a finite number greater than or equal to 0");
     }
 
-    requestOptions = {
+    return {
         timeout,
         signal: options.signal,
         exposeRawAxiosError: options.exposeRawAxiosError ?? false,
         retry: resolveRetryPolicy(options.retry),
         onError: options.onError,
+        onRetry: options.onRetry,
+        onRequestStart: options.onRequestStart,
+        onResponse: options.onResponse,
     };
 };
 
@@ -133,15 +201,22 @@ export interface GraphQLResponseEnvelope {
  * For operations whose selection set has exactly one root field (for example
  * `User`, `Media`, or `MediaListCollection`), this helper returns the bare
  * field value. For responses with multiple root fields, or responses without
- * a `data` object (for example GraphQL errors), the full envelope is returned
- * unchanged.
+ * a `data` object, the full envelope is returned unchanged.
+ *
+ * An envelope carrying a non-empty `errors` array (an HTTP 200 GraphQL
+ * failure) throws an {@link AniLinkGraphQLError} instead of returning data.
  *
  * @param response - The full GraphQL response envelope.
  * @returns The unwrapped single-root-field value, or the envelope as-is.
+ * @throws An {@link AniLinkGraphQLError} when the envelope carries GraphQL errors.
  */
 export const unwrapGraphQLResponse = <T>(response: unknown): T => {
     const envelope = response as GraphQLResponseEnvelope | null | undefined;
     const queryData = envelope?.data;
+
+    if (Array.isArray(envelope?.errors) && envelope.errors.length > 0) {
+        throw new AniLinkGraphQLError(envelope.errors, queryData);
+    }
 
     if (queryData && typeof queryData === "object") {
         const fields = Object.keys(queryData);
@@ -154,15 +229,33 @@ export const unwrapGraphQLResponse = <T>(response: unknown): T => {
     return response as T;
 };
 
-const getRawAxiosError = (error: unknown): unknown =>
-    requestOptions.exposeRawAxiosError ? error : undefined;
+const getRawAxiosError = (resolved: ResolvedRequestOptions, error: unknown): unknown =>
+    resolved.exposeRawAxiosError ? error : undefined;
 
-const normalizeAxiosError = (error: AxiosError): AniLinkError => {
+const getRateLimitInfo = (
+    headers: Record<string, unknown> | undefined
+): RateLimitInfo | undefined => {
+    if (!headers) {
+        return undefined;
+    }
+
+    const limit = Number(headers["x-ratelimit-limit"]);
+    const remaining = Number(headers["x-ratelimit-remaining"]);
+    const reset = Number(headers["x-ratelimit-reset"]);
+
+    if (![limit, remaining, reset].every(Number.isFinite)) {
+        return undefined;
+    }
+
+    return { limit, remaining, reset };
+};
+
+const normalizeAxiosError = (resolved: ResolvedRequestOptions, error: AxiosError): AniLinkError => {
     if (axios.isCancel(error)) {
         return new AniLinkNetworkError(
             AniLinkErrorCodes.ABORTED,
             "AniList request was cancelled.",
-            getRawAxiosError(error)
+            getRawAxiosError(resolved, error)
         );
     }
 
@@ -170,7 +263,8 @@ const normalizeAxiosError = (error: AxiosError): AniLinkError => {
         return new AniLinkApiError(
             error.response.status,
             error.response.data,
-            getRawAxiosError(error)
+            getRawAxiosError(resolved, error),
+            { rateLimit: getRateLimitInfo(error.response.headers) }
         );
     }
 
@@ -178,27 +272,31 @@ const normalizeAxiosError = (error: AxiosError): AniLinkError => {
         return new AniLinkNetworkError(
             AniLinkErrorCodes.TIMEOUT,
             "AniList request timed out.",
-            getRawAxiosError(error)
+            getRawAxiosError(resolved, error)
         );
     }
 
     return new AniLinkNetworkError(
         AniLinkErrorCodes.NETWORK,
         "AniList request failed due to a network error.",
-        getRawAxiosError(error)
+        getRawAxiosError(resolved, error)
     );
 };
 
-const normalizeRequestError = (error: unknown): AniLinkError => {
+const normalizeRequestError = (resolved: ResolvedRequestOptions, error: unknown): AniLinkError => {
     if (error instanceof AniLinkError) {
         return error;
     }
 
     if (axios.isAxiosError(error)) {
-        return normalizeAxiosError(error);
+        return normalizeAxiosError(resolved, error);
     }
 
-    return new AniLinkError("AniList request failed.", AniLinkErrorCodes.UNKNOWN);
+    return new AniLinkError(
+        "AniList request failed.",
+        AniLinkErrorCodes.UNKNOWN,
+        getRawAxiosError(resolved, error)
+    );
 };
 
 const parseRetryAfter = (header: string | undefined, now: number): number | null => {
@@ -229,12 +327,32 @@ const getRetryAfterDelay = (error: unknown): number | null => {
     return null;
 };
 
+/**
+ * Computes the raw exponential backoff cap for an attempt.
+ *
+ * @param attempt - The zero-based index of the attempt that just failed.
+ * @param policy - The active retry policy.
+ * @returns The un-jittered delay cap in milliseconds.
+ */
 const getBackoffDelay = (attempt: number, policy: RetryPolicy): number =>
     Math.min(policy.baseDelayMs * 2 ** attempt, policy.maxDelayMs);
 
 /**
+ * Applies full jitter to a computed backoff cap: the returned wait is a
+ * uniformly random value in `[0, cap]`, which spreads out retries from
+ * concurrent clients instead of synchronizing them.
+ *
+ * @param cap - The un-jittered delay cap in milliseconds.
+ * @param policy - The active retry policy.
+ * @returns The delay to wait before the next retry, in milliseconds.
+ */
+const applyJitter = (cap: number, policy: RetryPolicy): number =>
+    policy.jitter === false ? cap : randomInt(0, cap + 1);
+
+/**
  * Computes the delay before the next retry, or `null` when the request should
- * not be retried.
+ * not be retried. `Retry-After` delays are returned un-jittered because the
+ * server dictates them.
  */
 const getRetryDelay = (
     error: AniLinkError,
@@ -248,10 +366,13 @@ const getRetryDelay = (
 
     if (error instanceof AniLinkApiError) {
         if (error.status === 429) {
-            return getRetryAfterDelay(rawError) ?? getBackoffDelay(attempt, policy);
+            return (
+                getRetryAfterDelay(rawError) ??
+                applyJitter(getBackoffDelay(attempt, policy), policy)
+            );
         }
         if (policy.retryOnStatus.includes(error.status)) {
-            return getBackoffDelay(attempt, policy);
+            return applyJitter(getBackoffDelay(attempt, policy), policy);
         }
         return null;
     }
@@ -261,7 +382,7 @@ const getRetryDelay = (
             return null;
         }
         if (policy.retryOnNetworkError) {
-            return getBackoffDelay(attempt, policy);
+            return applyJitter(getBackoffDelay(attempt, policy), policy);
         }
     }
 
@@ -296,34 +417,72 @@ interface ExecuteOptions {
     headers: Record<string, string>;
 }
 
-const executeWithRetry = async <T>(options: ExecuteOptions): Promise<T> => {
+/**
+ * Builds the context object handed to the request lifecycle hooks.
+ *
+ * @param url - The URL the request was sent to.
+ * @param method - The HTTP method of the request.
+ * @param attempt - The 1-based attempt number.
+ * @param normalized - The normalized failure for the attempt.
+ * @param nextDelayMs - The scheduled retry delay, when the failure will be retried.
+ * @returns The populated hook context.
+ */
+const buildErrorContext = (
+    url: string,
+    method: "GET" | "POST",
+    attempt: number,
+    normalized: AniLinkError,
+    nextDelayMs?: number
+): RequestErrorContext => ({
+    url,
+    method,
+    attempt,
+    code: normalized.code,
+    ...(normalized instanceof AniLinkApiError ? { status: normalized.status } : {}),
+    ...(nextDelayMs === undefined ? {} : { nextDelayMs }),
+});
+
+const executeWithRetry = async <T>(
+    options: ExecuteOptions,
+    resolved: ResolvedRequestOptions
+): Promise<T> => {
     const { url, method, data, headers } = options;
-    const policy = requestOptions.retry;
+    const policy = resolved.retry;
     let attempt = 0;
 
     for (;;) {
+        const startedAt = Date.now();
+        const hookContext = { url, method, attempt: attempt + 1 };
+        resolved.onRequestStart?.(hookContext);
         try {
             const response: AxiosResponse = await axiosClient({
                 url,
                 method,
                 data,
                 headers,
-                timeout: requestOptions.timeout,
-                signal: requestOptions.signal,
+                timeout: resolved.timeout,
+                signal: resolved.signal,
             });
+            resolved.onResponse?.({ ...hookContext, durationMs: Date.now() - startedAt });
             return unwrapGraphQLResponse<T>(response.data);
         } catch (error: unknown) {
-            const normalized = normalizeRequestError(error);
+            resolved.onResponse?.({ ...hookContext, durationMs: Date.now() - startedAt });
+            const normalized = normalizeRequestError(resolved, error);
             const delay =
                 policy === null ? null : getRetryDelay(normalized, error, attempt, policy);
 
-            if (delay === null) {
-                requestOptions.onError?.(normalized, { url, method, attempt: attempt + 1 });
-                throw normalized;
+            if (delay !== null) {
+                (resolved.onRetry ?? resolved.onError)?.(
+                    normalized,
+                    buildErrorContext(url, method, attempt + 1, normalized, delay)
+                );
+                attempt += 1;
+                await sleep(delay, resolved.signal);
+                continue;
             }
 
-            attempt += 1;
-            await sleep(delay, requestOptions.signal);
+            resolved.onError?.(normalized, buildErrorContext(url, method, attempt + 1, normalized));
+            throw normalized;
         }
     }
 };
@@ -335,6 +494,7 @@ const executeWithRetry = async <T>(options: ExecuteOptions): Promise<T> => {
  * @param data - The data to send with the request.
  * @param token - The authentication token to include in the request headers.
  * @param requiresAuth - Whether the operation requires an authentication token.
+ * @param options - Per-request transport settings. When omitted, library defaults apply (30 second timeout, no retry, no hooks).
  * @returns The unwrapped response data. For operations with a single root
  * field this is the bare field value; otherwise it is the full `{ data }`
  * envelope. Use {@link unwrapGraphQLResponse} to apply the same rule to a
@@ -346,7 +506,8 @@ export const sendRequest = async <T = unknown>(
     method: "GET" | "POST",
     data?: object,
     token?: string,
-    requiresAuth = false
+    requiresAuth = false,
+    options?: RequestOptions
 ): Promise<T> => {
     if (requiresAuth && (token === null || token === undefined || token === "")) {
         throw new AniLinkAuthError();
@@ -361,5 +522,5 @@ export const sendRequest = async <T = unknown>(
         headers.Authorization = `Bearer ${token}`;
     }
 
-    return executeWithRetry<T>({ url, method, data, headers });
+    return executeWithRetry<T>({ url, method, data, headers }, resolveRequestOptions(options));
 };

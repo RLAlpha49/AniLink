@@ -1,7 +1,8 @@
-import { sendRequest } from "./RequestHandler";
+import { type RequestOptions, sendRequest } from "./RequestHandler";
 
 /**
- * The default AniList GraphQL endpoint used by every AniLink operation.
+ * The AniList GraphQL endpoint used by every AniLink operation. It is defined
+ * once here and imported everywhere it is needed.
  */
 export const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
 
@@ -15,24 +16,24 @@ export const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
  */
 export class APIWrapper {
     /**
-     * The base URL for the API.
-     */
-    protected baseURL: string;
-
-    /**
      * The authentication token shared by all operations of an instance.
      */
     private readonly authToken?: string;
 
     /**
+     * The transport settings resolved at construction time.
+     */
+    private readonly resolvedOptions?: RequestOptions;
+
+    /**
      * Constructs a new `APIWrapper` instance.
      *
      * @param authToken - The authentication token used for API requests.
-     * @param baseURL - The base URL for the API. Defaults to the AniList GraphQL endpoint.
+     * @param options - Transport settings scoped to this instance (timeout, cancellation, retry policy, lifecycle hooks).
      */
-    constructor(authToken?: string, baseURL: string = ANILIST_GRAPHQL_URL) {
-        this.baseURL = baseURL;
+    constructor(authToken?: string, options?: RequestOptions) {
         this.authToken = authToken;
+        this.resolvedOptions = options;
     }
 
     /**
@@ -54,11 +55,12 @@ export class APIWrapper {
     ): Promise<T> {
         const data = variables === undefined ? { query } : { query, variables };
         return await sendRequest<T>(
-            this.baseURL,
+            ANILIST_GRAPHQL_URL,
             "POST",
             data,
             this.authToken,
-            requiresAuth || undefined
+            requiresAuth || undefined,
+            this.resolvedOptions
         );
     }
 }

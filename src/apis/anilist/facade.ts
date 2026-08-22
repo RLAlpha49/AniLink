@@ -193,19 +193,20 @@ import {
 import type { PageInfo } from "./interfaces/responses/page/PageInfo";
 import type { DeleteResult } from "./types/DeleteResult";
 import type { FuzzyDateInput } from "./types/FuzzyDate";
-import { configureRequestOptions, type RequestOptions } from "../../base/RequestHandler";
+import type { RequestOptions } from "../../base/RequestHandler";
 
 export {
     AniLinkApiError,
     AniLinkAuthError,
     AniLinkError,
     AniLinkErrorCodes,
+    AniLinkGraphQLError,
     AniLinkNetworkError,
     AniLinkValidationError,
 } from "../../base/AniLinkError";
-export type { AniLinkErrorCode } from "../../base/AniLinkError";
+export type { AniLinkErrorCode, RateLimitInfo } from "../../base/AniLinkError";
 
-/** Transport options accepted by an `AniLink` client. */
+/** Transport settings accepted by an `AniLink` client: `timeout`, `signal`, opt-in `retry`, lifecycle hooks, and `exposeRawAxiosError`. */
 export type AniLinkOptions = RequestOptions;
 
 /** Callback that fetches a single `PageInfo`-based page. */
@@ -1471,91 +1472,105 @@ export type AniListApi = {
  * @returns The composed AniList API surface.
  */
 export function buildAniListApi(authToken?: string, options?: AniLinkOptions): AniListApi {
-    configureRequestOptions(options);
+    const customInstance = new CustomRequest(authToken, options);
 
-    const customInstance = new CustomRequest(authToken);
-
-    const userQueryInstance = new UserQuery(authToken);
-    const mediaQueryInstance = new MediaQuery(authToken);
-    const mediaTrendQueryInstance = new MediaTrendQuery(authToken);
-    const airingScheduleQueryInstance = new AiringScheduleQuery(authToken);
-    const characterQueryInstance = new CharacterQuery(authToken);
-    const staffQueryInstance = new StaffQuery(authToken);
-    const mediaListQueryInstance = new MediaListQuery(authToken);
-    const mediaListCollectionQueryInstance = new MediaListCollectionQuery(authToken);
-    const genreCollectionQueryInstance = new GenreCollectionQuery(authToken);
-    const mediaTagCollectionQueryInstance = new MediaTagCollectionQuery(authToken);
-    const viewerQueryInstance = new ViewerQuery(authToken);
-    const notificationQueryInstance = new NotificationQuery(authToken);
-    const studioQueryInstance = new StudioQuery(authToken);
-    const reviewQueryInstance = new ReviewQuery(authToken);
-    const activityQueryInstance = new ActivityQuery(authToken);
-    const activityReplyQueryInstance = new ActivityReplyQuery(authToken);
-    const followingQueryInstance = new FollowingQuery(authToken);
-    const followerQueryInstance = new FollowerQuery(authToken);
-    const threadQueryInstance = new ThreadQuery(authToken);
-    const threadCommentQueryInstance = new ThreadCommentQuery(authToken);
-    const recommendationQueryInstance = new RecommendationQuery(authToken);
-    const markdownQueryInstance = new MarkdownQuery(authToken);
-    const aniChartUserQueryInstance = new AniChartUserQuery(authToken);
-    const siteStatisticsQueryInstance = new SiteStatisticsQuery(authToken);
+    const userQueryInstance = new UserQuery(authToken, options);
+    const mediaQueryInstance = new MediaQuery(authToken, options);
+    const mediaTrendQueryInstance = new MediaTrendQuery(authToken, options);
+    const airingScheduleQueryInstance = new AiringScheduleQuery(authToken, options);
+    const characterQueryInstance = new CharacterQuery(authToken, options);
+    const staffQueryInstance = new StaffQuery(authToken, options);
+    const mediaListQueryInstance = new MediaListQuery(authToken, options);
+    const mediaListCollectionQueryInstance = new MediaListCollectionQuery(authToken, options);
+    const genreCollectionQueryInstance = new GenreCollectionQuery(authToken, options);
+    const mediaTagCollectionQueryInstance = new MediaTagCollectionQuery(authToken, options);
+    const viewerQueryInstance = new ViewerQuery(authToken, options);
+    const notificationQueryInstance = new NotificationQuery(authToken, options);
+    const studioQueryInstance = new StudioQuery(authToken, options);
+    const reviewQueryInstance = new ReviewQuery(authToken, options);
+    const activityQueryInstance = new ActivityQuery(authToken, options);
+    const activityReplyQueryInstance = new ActivityReplyQuery(authToken, options);
+    const followingQueryInstance = new FollowingQuery(authToken, options);
+    const followerQueryInstance = new FollowerQuery(authToken, options);
+    const threadQueryInstance = new ThreadQuery(authToken, options);
+    const threadCommentQueryInstance = new ThreadCommentQuery(authToken, options);
+    const recommendationQueryInstance = new RecommendationQuery(authToken, options);
+    const markdownQueryInstance = new MarkdownQuery(authToken, options);
+    const aniChartUserQueryInstance = new AniChartUserQuery(authToken, options);
+    const siteStatisticsQueryInstance = new SiteStatisticsQuery(authToken, options);
     const externalLinkSourceCollectionQueryInstance = new ExternalLinkSourceCollectionQuery(
-        authToken
+        authToken,
+        options
     );
 
-    const usersQueryInstance = new UsersQuery(authToken);
-    const mediasQueryInstance = new MediasQuery(authToken);
-    const charactersQueryInstance = new CharactersQuery(authToken);
-    const staffsQueryInstance = new StaffsQuery(authToken);
-    const studiosQueryInstance = new StudiosQuery(authToken);
-    const mediaListsQueryInstance = new MediaListsQuery(authToken);
-    const airingSchedulesQueryInstance = new AiringSchedulesQuery(authToken);
-    const mediaTrendsQueryInstance = new MediaTrendsQuery(authToken);
-    const notificationsQueryInstance = new NotificationsQuery(authToken);
-    const followersQueryInstance = new FollowersQuery(authToken);
-    const followingsQueryInstance = new FollowingsQuery(authToken);
-    const activitiesQueryInstance = new ActivitiesQuery(authToken);
-    const activityRepliesQueryInstance = new ActivityRepliesQuery(authToken);
-    const threadsQueryInstance = new ThreadsQuery(authToken);
-    const threadCommentsQueryInstance = new ThreadCommentsQuery(authToken);
-    const reviewsQueryInstance = new ReviewsQuery(authToken);
-    const recommendationsQueryInstance = new RecommendationsQuery(authToken);
-    const likesQueryInstance = new LikesQuery(authToken);
+    const usersQueryInstance = new UsersQuery(authToken, options);
+    const mediasQueryInstance = new MediasQuery(authToken, options);
+    const charactersQueryInstance = new CharactersQuery(authToken, options);
+    const staffsQueryInstance = new StaffsQuery(authToken, options);
+    const studiosQueryInstance = new StudiosQuery(authToken, options);
+    const mediaListsQueryInstance = new MediaListsQuery(authToken, options);
+    const airingSchedulesQueryInstance = new AiringSchedulesQuery(authToken, options);
+    const mediaTrendsQueryInstance = new MediaTrendsQuery(authToken, options);
+    const notificationsQueryInstance = new NotificationsQuery(authToken, options);
+    const followersQueryInstance = new FollowersQuery(authToken, options);
+    const followingsQueryInstance = new FollowingsQuery(authToken, options);
+    const activitiesQueryInstance = new ActivitiesQuery(authToken, options);
+    const activityRepliesQueryInstance = new ActivityRepliesQuery(authToken, options);
+    const threadsQueryInstance = new ThreadsQuery(authToken, options);
+    const threadCommentsQueryInstance = new ThreadCommentsQuery(authToken, options);
+    const reviewsQueryInstance = new ReviewsQuery(authToken, options);
+    const recommendationsQueryInstance = new RecommendationsQuery(authToken, options);
+    const likesQueryInstance = new LikesQuery(authToken, options);
 
-    const updateUserMutationInstance = new UpdateUserMutation(authToken);
-    const saveMediaListEntryMutationInstance = new SaveMediaListEntryMutation(authToken);
-    const updateMediaListEntriesMutationInstance = new UpdateMediaListEntriesMutation(authToken);
-    const deleteMediaListEntryMutationInstance = new DeleteMediaListEntryMutation(authToken);
-    const deleteCustomListMutationInstance = new DeleteCustomListMutation(authToken);
-    const saveTextActivityMutationInstance = new SaveTextActivityMutation(authToken);
-    const saveMessageActivityMutationInstance = new SaveMessageActivityMutation(authToken);
-    const saveListActivityMutationInstance = new SaveListActivityMutation(authToken);
-    const deleteActivityMutationInstance = new DeleteActivityMutation(authToken);
-    const toggleActivityPinMutationInstance = new ToggleActivityPinMutation(authToken);
+    const updateUserMutationInstance = new UpdateUserMutation(authToken, options);
+    const saveMediaListEntryMutationInstance = new SaveMediaListEntryMutation(authToken, options);
+    const updateMediaListEntriesMutationInstance = new UpdateMediaListEntriesMutation(
+        authToken,
+        options
+    );
+    const deleteMediaListEntryMutationInstance = new DeleteMediaListEntryMutation(
+        authToken,
+        options
+    );
+    const deleteCustomListMutationInstance = new DeleteCustomListMutation(authToken, options);
+    const saveTextActivityMutationInstance = new SaveTextActivityMutation(authToken, options);
+    const saveMessageActivityMutationInstance = new SaveMessageActivityMutation(authToken, options);
+    const saveListActivityMutationInstance = new SaveListActivityMutation(authToken, options);
+    const deleteActivityMutationInstance = new DeleteActivityMutation(authToken, options);
+    const toggleActivityPinMutationInstance = new ToggleActivityPinMutation(authToken, options);
     const toggleActivitySubscriptionMutationInstance = new ToggleActivitySubscriptionMutation(
-        authToken
+        authToken,
+        options
     );
-    const saveActivityReplyMutationInstance = new SaveActivityReplyMutation(authToken);
-    const deleteActivityReplyMutationInstance = new DeleteActivityReplyMutation(authToken);
-    const toggleLikeMutationInstance = new ToggleLikeMutation(authToken);
-    const toggleLikeV2MutationInstance = new ToggleLikeV2Mutation(authToken);
-    const toggleFollowMutationInstance = new ToggleFollowMutation(authToken);
-    const toggleFavouriteMutationInstance = new ToggleFavouriteMutation(authToken);
-    const updateFavouriteOrderMutationInstance = new UpdateFavouriteOrderMutation(authToken);
-    const saveReviewMutationInstance = new SaveReviewMutation(authToken);
-    const rateReviewMutationInstance = new RateReviewMutation(authToken);
-    const deleteReviewMutationInstance = new DeleteReviewMutation(authToken);
-    const saveRecommendationMutationInstance = new SaveRecommendationMutation(authToken);
-    const saveThreadMutationInstance = new SaveThreadMutation(authToken);
-    const deleteThreadMutationInstance = new DeleteThreadMutation(authToken);
+    const saveActivityReplyMutationInstance = new SaveActivityReplyMutation(authToken, options);
+    const deleteActivityReplyMutationInstance = new DeleteActivityReplyMutation(authToken, options);
+    const toggleLikeMutationInstance = new ToggleLikeMutation(authToken, options);
+    const toggleLikeV2MutationInstance = new ToggleLikeV2Mutation(authToken, options);
+    const toggleFollowMutationInstance = new ToggleFollowMutation(authToken, options);
+    const toggleFavouriteMutationInstance = new ToggleFavouriteMutation(authToken, options);
+    const updateFavouriteOrderMutationInstance = new UpdateFavouriteOrderMutation(
+        authToken,
+        options
+    );
+    const saveReviewMutationInstance = new SaveReviewMutation(authToken, options);
+    const rateReviewMutationInstance = new RateReviewMutation(authToken, options);
+    const deleteReviewMutationInstance = new DeleteReviewMutation(authToken, options);
+    const saveRecommendationMutationInstance = new SaveRecommendationMutation(authToken, options);
+    const saveThreadMutationInstance = new SaveThreadMutation(authToken, options);
+    const deleteThreadMutationInstance = new DeleteThreadMutation(authToken, options);
     const toggleThreadSubscriptionMutationInstance = new ToggleThreadSubscriptionMutation(
-        authToken
+        authToken,
+        options
     );
-    const saveThreadCommentMutationInstance = new SaveThreadCommentMutation(authToken);
-    const deleteThreadCommentMutationInstance = new DeleteThreadCommentMutation(authToken);
-    const updateAniChartSettingsMutationInstance = new UpdateAniChartSettingsMutation(authToken);
+    const saveThreadCommentMutationInstance = new SaveThreadCommentMutation(authToken, options);
+    const deleteThreadCommentMutationInstance = new DeleteThreadCommentMutation(authToken, options);
+    const updateAniChartSettingsMutationInstance = new UpdateAniChartSettingsMutation(
+        authToken,
+        options
+    );
     const updateAniChartHighlightsMutationInstance = new UpdateAniChartHighlightsMutation(
-        authToken
+        authToken,
+        options
     );
 
     return {

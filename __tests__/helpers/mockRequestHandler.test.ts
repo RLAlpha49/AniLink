@@ -1,20 +1,23 @@
 import { unwrapGraphQLResponse } from "../../src/base/RequestHandler";
+import { AniLinkGraphQLError } from "../../src/base/AniLinkError";
 import {
     createTestClient,
     createTestClientWithOptions,
     createTestClientWithoutToken,
     getLastRequest,
-    mockConfigureRequestOptions,
     mockSendRequest,
 } from "./mockRequestHandler";
 import { expect, test } from "vitest";
 
-test("configures transport options from the AniLink constructor", () => {
+test("forwards transport options from the AniLink constructor into sendRequest", async () => {
     const signal = new AbortController().signal;
+    const client = createTestClientWithOptions({ timeout: 1_000, signal });
 
-    createTestClientWithOptions({ timeout: 1_000, signal });
+    await client.anilist.query.media({ id: 1, type: "ANIME" });
 
-    expect(mockConfigureRequestOptions).toHaveBeenCalledWith({ timeout: 1_000, signal });
+    // Options now travel per instance as the sixth sendRequest argument.
+    const call = mockSendRequest.mock.calls.at(-1) as unknown[] | undefined;
+    expect(call?.[5]).toEqual({ timeout: 1_000, signal });
 });
 
 test("keeps no-token construction valid", () => {
@@ -81,10 +84,14 @@ test("keeps the full envelope when the response has multiple root fields", () =>
     expect(result).toEqual(envelope);
 });
 
-test("passes through a response with no root data as-is", () => {
+test("throws AniLinkGraphQLError for a response with no root data", () => {
     const envelope = { errors: [{ message: "boom" }] };
 
-    const result = unwrapGraphQLResponse(envelope);
-
-    expect(result).toEqual(envelope);
+    expect(() => unwrapGraphQLResponse(envelope)).toThrow(AniLinkGraphQLError);
+    try {
+        unwrapGraphQLResponse(envelope);
+    } catch (error: unknown) {
+        expect((error as AniLinkGraphQLError).graphqlErrors).toEqual(envelope.errors);
+        expect((error as Error).message).toContain("boom");
+    }
 });

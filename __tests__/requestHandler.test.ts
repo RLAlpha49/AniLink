@@ -1,16 +1,14 @@
 import axios from "axios";
-import { beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
     AniLinkApiError,
     AniLinkAuthError,
     AniLinkError,
+    AniLinkGraphQLError,
     AniLinkNetworkError,
 } from "../src/base/AniLinkError";
-import {
-    configureRequestOptions,
-    DEFAULT_REQUEST_TIMEOUT,
-    sendRequest,
-} from "../src/base/RequestHandler";
+import { DEFAULT_REQUEST_TIMEOUT, sendRequest } from "../src/base/RequestHandler";
+import { AniLink } from "../src/AniLink";
 
 const mocks = vi.hoisted(() => {
     const request = vi.fn(async () => ({ data: { data: { Media: { id: 1 } } } }));
@@ -35,7 +33,6 @@ vi.mock("axios", () => ({
 
 beforeEach(() => {
     vi.clearAllMocks();
-    configureRequestOptions({});
 });
 
 test("uses the default timeout with the shared Axios instance", async () => {
@@ -47,30 +44,49 @@ test("uses the default timeout with the shared Axios instance", async () => {
 });
 
 test("forwards a configured timeout to Axios", async () => {
-    configureRequestOptions({ timeout: 5_000 });
-
-    await sendRequest("https://graphql.anilist.co", "POST");
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, false, {
+        timeout: 5_000,
+    });
 
     expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({ timeout: 5_000 }));
 });
 
 test("forwards an AbortSignal to Axios", async () => {
     const controller = new AbortController();
-    configureRequestOptions({ signal: controller.signal });
 
-    await sendRequest("https://graphql.anilist.co", "POST");
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, false, {
+        signal: controller.signal,
+    });
 
     expect(mocks.request).toHaveBeenCalledWith(
         expect.objectContaining({ signal: controller.signal })
     );
 });
 
-test.each([-1, Number.NaN, Number.POSITIVE_INFINITY])("rejects invalid timeout %s", (timeout) => {
-    expect(() => configureRequestOptions({ timeout })).toThrow(TypeError);
-});
+test.each([-1, Number.NaN, Number.POSITIVE_INFINITY])(
+    "rejects invalid timeout %s",
+    async (timeout) => {
+        await expect(
+            sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query" },
+                undefined,
+                false,
+                {
+                    timeout,
+                }
+            )
+        ).rejects.toThrow(TypeError);
+    }
+);
 
-test("allows zero to disable the Axios timeout", () => {
-    expect(() => configureRequestOptions({ timeout: 0 })).not.toThrow();
+test("allows zero to disable the Axios timeout", async () => {
+    await expect(
+        sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, false, {
+            timeout: 0,
+        })
+    ).resolves.toBeDefined();
 });
 
 test("throws AniLinkAuthError when a token is required but missing", async () => {
@@ -173,12 +189,11 @@ test("exposes the original Axios error when explicitly enabled", async () => {
         response: { status: 500, data: { message: "server error" } },
         request: { headers: { Authorization: "Bearer secret-token" } },
     };
-    configureRequestOptions({ exposeRawAxiosError: true });
     mocks.request.mockRejectedValueOnce(axiosError);
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
-        (requestError: unknown) => requestError
-    );
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
+        exposeRawAxiosError: true,
+    }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkApiError);
     expect((error as AniLinkApiError).rawAxiosError).toBe(axiosError);
@@ -248,6 +263,20 @@ test("normalizes unexpected transport failures without rethrowing raw values", a
     expect((error as Error).message).not.toContain("secret-token");
 });
 
+test("preserves the original throwable in UNKNOWN failures when exposeRawAxiosError is enabled", async () => {
+    const original = new Error("secret-token leaked by adapter");
+    mocks.request.mockRejectedValueOnce(original);
+
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
+        exposeRawAxiosError: true,
+    }).catch((requestError: unknown) => requestError);
+
+    expect(error).toBeInstanceOf(AniLinkError);
+    expect(error).toMatchObject({ name: "AniLinkError", code: "UNKNOWN_ERROR" });
+    expect((error as AniLinkError).rawAxiosError).toBe(original);
+    expect((error as Error).cause).toBe(original);
+});
+
 test("sends JSON content headers without an Authorization header when no token is given", async () => {
     await sendRequest("https://graphql.anilist.co", "POST", { query: "query" });
 
@@ -306,13 +335,17 @@ test("passes through the full envelope when the response has multiple root field
     ).resolves.toEqual(envelope);
 });
 
-test("passes through the envelope unchanged when it has no data object", async () => {
+test("throws AniLinkGraphQLError for a 200 envelope without a data object", async () => {
     const envelope = { errors: [{ message: "Not authenticated." }] };
     mocks.request.mockResolvedValueOnce({ data: envelope });
 
-    await expect(
-        sendRequest("https://graphql.anilist.co", "POST", { query: "query" })
-    ).resolves.toEqual(envelope);
+    const error = await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }).catch(
+        (requestError: unknown) => requestError
+    );
+
+    expect(error).toBeInstanceOf(AniLinkGraphQLError);
+    expect((error as AniLinkGraphQLError).graphqlErrors).toEqual(envelope.errors);
+    expect((error as Error).message).toContain("Not authenticated.");
 });
 
 test("propagates the normalized error when the transport rejects", async () => {
@@ -324,6 +357,218 @@ test("propagates the normalized error when the transport rejects", async () => {
     await expect(
         sendRequest("https://graphql.anilist.co", "POST", { query: "query" })
     ).rejects.toMatchObject({ name: "AniLinkApiError", code: "API_ERROR", status: 404 });
+});
+
+describe("per-instance options isolation", () => {
+    test("constructing a second client does not mutate the first client's effective timeout", async () => {
+        const first = new AniLink(undefined, { timeout: 12_345 });
+        new AniLink(undefined, { timeout: 5_000 });
+
+        await first.anilist.query.media({ id: 1, type: "ANIME" });
+
+        expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({ timeout: 12_345 }));
+    });
+
+    test("scopes instance options to their own client instead of the global defaults", async () => {
+        new AniLink(undefined, { timeout: 7_777 });
+
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+
+        expect(mocks.request).toHaveBeenCalledWith(
+            expect.objectContaining({ timeout: DEFAULT_REQUEST_TIMEOUT })
+        );
+    });
+
+    test("forwards instance options through the operation wrapper into sendRequest", async () => {
+        const client = new AniLink("token-a", { timeout: 4_000 });
+
+        await client.anilist.query.media({ id: 1, type: "ANIME" });
+
+        expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({ timeout: 4_000 }));
+    });
+});
+
+describe("per-call options", () => {
+    test("applies the same options to every request that passes them", async () => {
+        const options = { timeout: 5_000 };
+
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            false,
+            options
+        );
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            false,
+            options
+        );
+
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+        const timeouts = mocks.request.mock.calls.map(
+            (call) => (call[0] as { timeout: number }).timeout
+        );
+        expect(timeouts).toEqual([5_000, 5_000]);
+    });
+
+    test("falls back to library defaults when no options are passed", async () => {
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 500, data: {} },
+        });
+        await expect(sendRequest("https://graphql.anilist.co", "POST")).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        expect(mocks.request).toHaveBeenCalledTimes(1); // retry defaults to disabled
+
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+        expect(mocks.request).toHaveBeenLastCalledWith(
+            expect.objectContaining({ timeout: DEFAULT_REQUEST_TIMEOUT })
+        );
+    });
+});
+
+describe("GraphQL errors in HTTP 200 responses", () => {
+    test("throws AniLinkGraphQLError for a 200 envelope with errors and null data", async () => {
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "Not authenticated." }], data: null },
+        });
+
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        }).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+        expect(error).toMatchObject({
+            name: "AniLinkGraphQLError",
+            code: "GRAPHQL_ERROR",
+            status: 200,
+        });
+        expect((error as AniLinkGraphQLError).graphqlErrors).toEqual([
+            { message: "Not authenticated." },
+        ]);
+        expect((error as Error).message).toContain("Not authenticated.");
+    });
+
+    test("throws AniLinkGraphQLError preserving upstream messages when partial data is present", async () => {
+        const partialData = { Media: { id: 1 } };
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: partialData,
+                errors: [{ message: "first problem" }, { message: "second problem" }],
+            },
+        });
+
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        }).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+        expect((error as AniLinkGraphQLError).status).toBe(200);
+        expect((error as AniLinkGraphQLError).data).toEqual(partialData);
+        expect((error as Error).message).toContain("first problem");
+        expect((error as Error).message).toContain("second problem");
+    });
+});
+
+describe("request lifecycle hooks", () => {
+    test("invokes onRequestStart then onResponse with the attempt duration", async () => {
+        const events: string[] = [];
+        const onRequestStart = vi.fn(() => {
+            events.push("start");
+        });
+        const onResponse = vi.fn(() => {
+            events.push("response");
+        });
+
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            false,
+            {
+                onRequestStart,
+                onResponse,
+            }
+        );
+
+        expect(events).toEqual(["start", "response"]);
+        expect(onRequestStart).toHaveBeenCalledWith({
+            url: "https://graphql.anilist.co",
+            method: "POST",
+            attempt: 1,
+        });
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        const [responseContext] = onResponse.mock.calls[0] as [
+            { url: string; method: string; attempt: number; durationMs: number },
+        ];
+        expect(responseContext).toMatchObject({
+            url: "https://graphql.anilist.co",
+            method: "POST",
+            attempt: 1,
+        });
+        expect(responseContext.durationMs).toBeTypeOf("number");
+        expect(responseContext.durationMs).toBeGreaterThanOrEqual(0);
+    });
+});
+
+describe("rate limit info", () => {
+    test("populates rateLimit from response headers on a 429", async () => {
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: {
+                status: 429,
+                data: {},
+                headers: {
+                    "x-ratelimit-limit": "90",
+                    "x-ratelimit-remaining": "0",
+                    "x-ratelimit-reset": "1700000000",
+                },
+            },
+        });
+
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
+            (requestError: unknown) => requestError
+        );
+
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        expect((error as AniLinkApiError).rateLimit).toEqual({
+            limit: 90,
+            remaining: 0,
+            reset: 1700000000,
+        });
+        expect((error as Error).message).not.toContain("90");
+    });
+
+    test("leaves rateLimit undefined when headers are missing or incomplete", async () => {
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 500, data: {} },
+        });
+        const missing = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
+            (requestError: unknown) => requestError
+        );
+        expect((missing as AniLinkApiError).rateLimit).toBeUndefined();
+
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: {
+                status: 429,
+                data: {},
+                headers: { "x-ratelimit-limit": "90" },
+            },
+        });
+        const incomplete = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
+            (requestError: unknown) => requestError
+        );
+        expect((incomplete as AniLinkApiError).rateLimit).toBeUndefined();
+    });
 });
 
 void axios;

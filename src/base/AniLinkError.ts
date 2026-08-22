@@ -6,6 +6,7 @@
  */
 export const AniLinkErrorCodes = {
     API: "API_ERROR",
+    GRAPHQL: "GRAPHQL_ERROR",
     NETWORK: "NETWORK_ERROR",
     TIMEOUT: "TIMEOUT_ERROR",
     ABORTED: "ABORTED_ERROR",
@@ -19,7 +20,7 @@ export type AniLinkErrorCode = (typeof AniLinkErrorCodes)[keyof typeof AniLinkEr
 
 /** A base error with a stable AniLink error code. */
 export class AniLinkError extends Error {
-    public readonly code: AniLinkErrorCode;
+    public code: AniLinkErrorCode;
     declare public readonly rawAxiosError?: unknown;
 
     /**
@@ -30,7 +31,7 @@ export class AniLinkError extends Error {
      * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
      */
     constructor(message: string, code: AniLinkErrorCode, rawAxiosError?: unknown) {
-        super(message);
+        super(message, rawAxiosError instanceof Error ? { cause: rawAxiosError } : undefined);
         this.name = "AniLinkError";
         this.code = code;
         if (rawAxiosError !== undefined) {
@@ -40,10 +41,29 @@ export class AniLinkError extends Error {
     }
 }
 
+/** Rate-limit accounting reported by the AniList response headers. */
+export interface RateLimitInfo {
+    /** The maximum number of requests allowed in the current window. */
+    limit: number;
+    /** The number of requests remaining in the current window. */
+    remaining: number;
+    /** The Unix epoch seconds at which the current window resets. */
+    reset: number;
+}
+
 /** A failure returned by the AniList HTTP API. */
 export class AniLinkApiError extends AniLinkError {
     public readonly status: number;
     public readonly data: unknown;
+
+    /**
+     * Rate-limit accounting parsed from the `x-ratelimit-limit`,
+     * `x-ratelimit-remaining`, and `x-ratelimit-reset` response headers,
+     * whenever AniList includes all three. Use it to self-throttle before
+     * the next request instead of waiting for another `429`. It is never
+     * included in the error message so logs stay clean.
+     */
+    declare public readonly rateLimit?: RateLimitInfo;
 
     /**
      * Creates an API error while preserving the upstream response body.
@@ -51,8 +71,14 @@ export class AniLinkApiError extends AniLinkError {
      * @param status - The HTTP status returned by AniList.
      * @param data - The response body returned by AniList.
      * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
+     * @param options - Additional error metadata such as rate-limit headers.
      */
-    constructor(status: number, data: unknown, rawAxiosError?: unknown) {
+    constructor(
+        status: number,
+        data: unknown,
+        rawAxiosError?: unknown,
+        options?: { rateLimit?: RateLimitInfo }
+    ) {
         super(
             `AniList API request failed with status ${status}.`,
             AniLinkErrorCodes.API,
@@ -61,6 +87,40 @@ export class AniLinkApiError extends AniLinkError {
         this.name = "AniLinkApiError";
         this.status = status;
         this.data = data;
+        if (options?.rateLimit !== undefined) {
+            this.rateLimit = options.rateLimit;
+        }
+    }
+}
+
+/** A GraphQL-level failure returned inside an HTTP 200 envelope. */
+export class AniLinkGraphQLError extends AniLinkApiError {
+    /**
+     * The upstream GraphQL `errors` array carried by the envelope. Each entry
+     * has a human-readable `message`; partial `data` returned alongside the
+     * errors remains available on {@link AniLinkApiError.data}.
+     */
+    public readonly graphqlErrors: ReadonlyArray<{ message: string }>;
+
+    /**
+     * Creates a GraphQL error from an HTTP 200 envelope's `errors` array.
+     *
+     * @param errors - The upstream GraphQL errors; each entry should carry a `message`.
+     * @param data - The partial `data` object returned alongside the errors, when any.
+     * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
+     */
+    constructor(
+        errors: ReadonlyArray<{ message: string }>,
+        data?: unknown,
+        rawAxiosError?: unknown
+    ) {
+        super(200, data, rawAxiosError);
+        this.name = "AniLinkGraphQLError";
+        this.code = AniLinkErrorCodes.GRAPHQL;
+        this.message = `AniList request failed with GraphQL errors: ${errors
+            .map((graphqlError) => graphqlError.message)
+            .join("; ")}`;
+        this.graphqlErrors = errors;
     }
 }
 

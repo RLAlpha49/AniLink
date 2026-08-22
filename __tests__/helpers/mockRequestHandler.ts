@@ -15,15 +15,12 @@ const requestMock = vi.hoisted(() =>
         __typename: "MockResponse",
     }))
 );
-const configureRequestOptionsMock = vi.hoisted(() => vi.fn());
 
 vi.mock("../../src/base/RequestHandler", () => ({
     sendRequest: requestMock,
-    configureRequestOptions: configureRequestOptionsMock,
 }));
 
 export const mockSendRequest = requestMock;
-export const mockConfigureRequestOptions = configureRequestOptionsMock;
 
 /**
  * Configures what the mocked transport resolves with for subsequent requests.
