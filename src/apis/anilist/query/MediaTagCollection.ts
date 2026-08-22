@@ -36,9 +36,7 @@ export class MediaTagCollectionQuery extends APIWrapper {
             status: "number",
         };
 
-        if (Object(variables).length > 0) {
-            validateVariables(variables, variableTypeMappings);
-        }
+        validateVariables(variables, variableTypeMappings);
 
         const query = `
       query ($status: Int) {

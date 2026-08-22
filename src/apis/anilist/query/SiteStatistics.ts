@@ -154,9 +154,7 @@ export class SiteStatisticsQuery extends APIWrapper {
             reviewsPerPage: "number",
         };
 
-        if (Object(variables).length > 0) {
-            validateVariables(variables, variableTypeMappings);
-        }
+        validateVariables(variables, variableTypeMappings);
 
         const query = `
       query ($usersSort: [SiteTrendSort], $usersPage: Int, $usersPerPage: Int, $animeSort: [SiteTrendSort], $animePage: Int, $animePerPage: Int, $mangaSort: [SiteTrendSort], $mangaPage: Int, $mangaPerPage: Int, $charactersSort: [SiteTrendSort], $charactersPage: Int, $charactersPerPage: Int, $staffSort: [SiteTrendSort], $staffPage: Int, $staffPerPage: Int, $studiosSort: [SiteTrendSort], $studiosPage: Int, $studiosPerPage: Int, $reviewsSort: [SiteTrendSort], $reviewsPage: Int, $reviewsPerPage: Int) {

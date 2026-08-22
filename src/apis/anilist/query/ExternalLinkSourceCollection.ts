@@ -47,9 +47,7 @@ export class ExternalLinkSourceCollectionQuery extends APIWrapper {
             mediaType: MediaTypeMappings,
         };
 
-        if (Object(variables).length > 0) {
-            validateVariables(variables, variableTypeMappings);
-        }
+        validateVariables(variables, variableTypeMappings);
 
         const query = `
       query ($id: Int, $type: ExternalLinkType, $mediaType: ExternalLinkMediaType) {
