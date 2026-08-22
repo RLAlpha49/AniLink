@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type AiringScheduleResponse } from "../interfaces/responses/query/AiringSchedule";
 import { type AiringSort, AiringSortMappings } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { AiringScheduleSchema } from "../schemas/responses/query/AiringSchedule";
 
 /**
@@ -13,12 +13,12 @@ export interface AiringScheduleVariables {
     /**
      * `id` is a number representing the id of the airing schedule.
      */
-    id: number;
+    id?: number;
 
     /**
      * `mediaId` is a number representing the id of the media.
      */
-    mediaId: number;
+    mediaId?: number;
 
     /**
      * `episode` is a number representing the episode number.
@@ -125,9 +125,11 @@ export class AiringScheduleQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async airingSchedule(variables: AiringScheduleVariables): Promise<AiringScheduleResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            { kind: "notOnly", names: ["asHtml"] },
+            "The AiringSchedule query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             mediaId: "number",

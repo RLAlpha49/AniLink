@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { type ThreadSort, ThreadSortMappings } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
 
 /**
@@ -50,9 +50,11 @@ export class ThreadCommentQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async threadComment(variables: ThreadCommentVariables): Promise<ThreadCommentResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be provided");
-        }
+        requireVariables(
+            variables,
+            { kind: "notOnly", names: ["asHtml"] },
+            "The ThreadComment query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             threadId: "number",

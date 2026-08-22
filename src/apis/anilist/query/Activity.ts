@@ -1,6 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type Activity } from "../interfaces/Activity";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type ActivitySort, ActivitySortMappings } from "../types/Sort";
 import { type ActivityType, ActivityTypeMappings } from "../types/ActivityType";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
@@ -14,7 +14,7 @@ export interface ActivityVariables {
     /**
      * `id` is a number representing the id of the activity.
      */
-    id: number;
+    id?: number;
 
     /**
      * `userId` is a number representing the id of the user.
@@ -161,9 +161,11 @@ export class ActivityQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async activity(variables: ActivityVariables): Promise<Activity> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            { kind: "notOnly", names: ["asHtml"] },
+            "The Activity query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             userId: "number",

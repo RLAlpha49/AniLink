@@ -8,7 +8,7 @@ import {
     type StudioSort,
     StudioSortMappings,
 } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { StudioSchema } from "../schemas/responses/query/Studio";
 
 /**
@@ -152,9 +152,14 @@ export class StudioQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async studio(variables: StudioVariables): Promise<StudioResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be provided");
-        }
+        requireVariables(
+            variables,
+            {
+                kind: "any",
+                names: ["id", "search", "id_not", "id_in", "id_not_in", "sort"],
+            },
+            "The Studio query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             search: "string",

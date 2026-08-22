@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type UserResponse } from "../interfaces/responses/query/User";
 import { BasicUserSchema } from "../schemas/Basic";
 
@@ -30,9 +30,11 @@ export class ToggleFollowMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/mutation
      */
     async toggleFollow(variables: ToggleFollowVariables): Promise<UserResponse> {
-        if (!variables.userId) {
-            throw new Error("userId variable is required");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["userId"] },
+            "The ToggleFollow mutation requires a userId variable."
+        );
         const variableTypeMappings = {
             userId: "number",
         };

@@ -1,18 +1,18 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type ActivityReply } from "../interfaces/Activity";
 import { ActivityReplySchema } from "../schemas/Activity";
 
 /**
  * `ActivityReplyVariables` is an interface representing the variables for the `ActivityReplyQuery`.
- * It includes optional id, activityId, and asHtml.
+ * At least one of `id` or `activityId` is required by the AniList API; `asHtml` is optional.
  * @see https://docs.anilist.co/reference/query
  */
 export interface ActivityReplyVariables {
     /**
      * `id` is a number representing the id of the activity reply.
      */
-    id: number;
+    id?: number;
 
     /**
      * `activityId` is a number representing the id of the activity.
@@ -39,9 +39,11 @@ export class ActivityReplyQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async activityReply(variables: ActivityReplyVariables): Promise<ActivityReply> {
-        if (!variables.id) {
-            throw new Error("The id is required");
-        }
+        requireVariables(
+            variables,
+            { kind: "any", names: ["id", "activityId"] },
+            "The ActivityReply query requires an id or an activityId."
+        );
         const variableTypeMappings = {
             id: "number",
             activityId: "number",

@@ -391,9 +391,6 @@ export class MediasQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async medias(variables: MediasVariables): Promise<MediasPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

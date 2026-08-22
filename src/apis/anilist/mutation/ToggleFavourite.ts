@@ -1,4 +1,4 @@
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
@@ -50,17 +50,11 @@ export class ToggleFavouriteMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/mutation
      */
     async toggleFavourite(variables: ToggleFavouriteVariables): Promise<Favourites> {
-        if (
-            !variables.animeId &&
-            !variables.mangaId &&
-            !variables.characterId &&
-            !variables.staffId &&
-            !variables.studioId
-        ) {
-            throw new Error(
-                "animeId, mangaId, characterId, staffId, or studioId variable is required"
-            );
-        }
+        requireVariables(
+            variables,
+            { kind: "any", names: ["animeId", "mangaId", "characterId", "staffId", "studioId"] },
+            "The ToggleFavourite mutation requires an animeId, mangaId, characterId, staffId, or studioId variable."
+        );
         const variableTypeMappings = {
             animeId: "number",
             mangaId: "number",

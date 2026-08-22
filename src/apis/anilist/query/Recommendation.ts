@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { type RecommendationSort, RecommendationSortMappings } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { RecommendationSchema } from "../schemas/responses/query/Recommendation";
 
 /**
@@ -75,9 +75,11 @@ export class RecommendationQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async recommendation(variables: RecommendationVariables): Promise<RecommendationResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            { kind: "notOnly", names: ["asHtml"] },
+            "The Recommendation query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             mediaId: "number",

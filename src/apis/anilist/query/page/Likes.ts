@@ -1,12 +1,12 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { type LikeableType, LikeableTypeMappings } from "../../types/Type";
-import { validateVariables } from "../../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../../base/ValidateVariables";
 import { type BasicUser } from "../../interfaces/Basic";
 import { BasicUserSchema } from "../../schemas/Basic";
 
 /**
  * `LikesVariables` is an interface representing the variables for the `LikesQuery`.
- * It includes optional likeable id, type, page, and per page.
+ * The AniList API requires both `likeableId` and `type`; `page` and `perPage` are optional.
  * @see https://docs.anilist.co/reference/query
  */
 export interface LikesVariables {
@@ -45,9 +45,11 @@ export class LikesQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async likes(variables: LikesVariables): Promise<BasicUser> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["likeableId", "type"] },
+            "The Page.likes query requires both a likeableId and a type."
+        );
         const variableTypeMappings = {
             likeableId: "number",
             type: LikeableTypeMappings,

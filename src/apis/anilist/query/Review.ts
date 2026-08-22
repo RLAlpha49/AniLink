@@ -2,7 +2,7 @@ import { APIWrapper } from "../../../base/APIWrapper";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { type MediaType } from "../types/Type";
 import { type ReviewSort, ReviewSortMappings } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { ReviewSchema } from "../schemas/responses/query/Review";
 
 /**
@@ -56,9 +56,11 @@ export class ReviewQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async review(variables: ReviewVariables): Promise<ReviewResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            { kind: "notOnly", names: ["asHtml"] },
+            "The Review query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             mediaId: "number",

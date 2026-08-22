@@ -171,9 +171,6 @@ export class ActivitiesQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async activities(variables: ActivitiesVariables): Promise<Activity> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

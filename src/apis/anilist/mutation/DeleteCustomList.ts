@@ -1,6 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type DeleteResult } from "../types/DeleteResult";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 
 /**
@@ -40,9 +40,11 @@ export class DeleteCustomListMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/mutation
      */
     async deleteCustomList(variables: DeleteCustomListVariables): Promise<DeleteResult> {
-        if (!variables.customList || !variables.type) {
-            throw new Error("customList & type variables are required");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["customList", "type"] },
+            "The DeleteCustomList mutation requires customList and type variables."
+        );
         const variableTypeMappings = {
             customList: "string",
             type: MediaTypeMappings,

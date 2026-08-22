@@ -166,9 +166,6 @@ export class MediaTrendsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async mediaTrends(variables: MediaTrendsVariables): Promise<MediaTrendsPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

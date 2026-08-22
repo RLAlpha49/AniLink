@@ -1,6 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type FuzzyDate } from "../interfaces/FuzzyDate";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
 import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
@@ -100,9 +100,11 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
     async updateMediaListEntries(
         variables: UpdateMediaListEntriesVariables
     ): Promise<MediaListResponse[]> {
-        if (!variables.ids || variables.ids.length === 0) {
-            throw new Error("ids must be an array of at least one number");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["ids"] },
+            "The UpdateMediaListEntries mutation requires an ids variable."
+        );
         const variableTypeMappings = {
             status: MediaListStatusMappings,
             score: "number",

@@ -156,9 +156,6 @@ export class StudiosQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async studios(variables: StudiosVariables): Promise<StudiosPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be provided");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

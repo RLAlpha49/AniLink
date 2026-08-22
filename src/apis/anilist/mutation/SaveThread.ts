@@ -1,5 +1,5 @@
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
@@ -65,9 +65,11 @@ export class SaveThreadMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/mutation
      */
     async saveThread(variables: SaveThreadVariables): Promise<ThreadResponse> {
-        if (!variables.id && !variables.title) {
-            throw new Error("id or title variable is required");
-        }
+        requireVariables(
+            variables,
+            { kind: "any", names: ["id", "title"] },
+            "The SaveThread mutation requires an id or a title variable."
+        );
         const variableTypeMappings = {
             id: "number",
             title: "string",

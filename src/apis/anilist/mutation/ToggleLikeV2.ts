@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 import { type Activity } from "../interfaces/Activity";
 import { ActivitySchemaV2 } from "../schemas/Activity";
@@ -41,9 +41,11 @@ export class ToggleLikeV2Mutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/mutation
      */
     async toggleLikeV2(variables: ToggleLikeV2Variables): Promise<Activity> {
-        if (!variables.id || !variables.type) {
-            throw new Error("id and type variables are required.");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["id", "type"] },
+            "The ToggleLikeV2 mutation requires id and type variables."
+        );
         const variableTypeMappings = {
             id: "number",
             type: LikeableTypeMappings,

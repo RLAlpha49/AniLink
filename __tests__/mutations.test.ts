@@ -77,7 +77,7 @@ const mutationCases: Array<[string, MutationMethod, object, string]> = [
     [
         "update AniChart settings",
         "updateAniChartSettings",
-        { titleLanguage: "romaji", outgoingLinkProvider: "anilist", theme: "dark" },
+        { titleLanguage: "romaji", outgoingLinkProvider: "anilist", theme: "dark", sort: "title" },
         "UpdateAniChartSettings",
     ],
 ];

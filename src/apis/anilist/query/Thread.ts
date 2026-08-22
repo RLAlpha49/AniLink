@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { type ThreadSort, ThreadSortMappings } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
 /**
@@ -75,9 +75,11 @@ export class ThreadQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async thread(variables: ThreadVariables): Promise<ThreadResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be provided");
-        }
+        requireVariables(
+            variables,
+            { kind: "notOnly", names: ["asHtml"] },
+            "The Thread query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             userId: "number",

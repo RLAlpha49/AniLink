@@ -1,4 +1,4 @@
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 
 /**
@@ -41,6 +41,14 @@ export class UpdateAniChartSettingsMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/mutation
      */
     async updateAniChartSettings(variables: UpdateAniChartSettingsVariables): Promise<string> {
+        requireVariables(
+            variables,
+            {
+                kind: "all",
+                names: ["titleLanguage", "outgoingLinkProvider", "theme", "sort"],
+            },
+            "The UpdateAniChartSettings mutation requires titleLanguage, outgoingLinkProvider, theme, and sort variables."
+        );
         const variableTypeMappings = {
             titleLanguage: "string",
             outgoingLinkProvider: "string",

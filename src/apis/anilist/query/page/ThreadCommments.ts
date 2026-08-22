@@ -2,12 +2,12 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type ThreadCommentsPageResponse } from "../../interfaces/responses/page/ThreadComments";
 import { ThreadSortMappings } from "../../types/Sort";
-import { validateVariables } from "../../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../../base/ValidateVariables";
 import { ThreadCommentSchema } from "../../schemas/responses/query/ThreadComment";
 
 /**
  * `ThreadCommentsVariables` is an interface representing the variables for the `ThreadCommentsQuery`.
- * It includes optional page, per page, id, thread id, user id, sort, and as html.
+ * The AniList API requires a `threadId` or a `userId`; the remaining parameters are optional.
  * @see https://docs.anilist.co/reference/query
  */
 export interface ThreadCommentsVariables {
@@ -61,9 +61,11 @@ export class ThreadCommentsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async threadComments(variables: ThreadCommentsVariables): Promise<ThreadCommentsPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be provided");
-        }
+        requireVariables(
+            variables,
+            { kind: "any", names: ["threadId", "userId"] },
+            "The Page.threadComments query requires a threadId or a userId."
+        );
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

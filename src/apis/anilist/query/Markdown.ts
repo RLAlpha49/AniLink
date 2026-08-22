@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 
 /**
  * `MarkdownVariables` is an interface representing the variables for the `MarkdownQuery`.
@@ -27,9 +27,11 @@ export class MarkdownQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async markdown(variables: MarkdownVariables): Promise<string> {
-        if (!variables.markdown) {
-            throw new Error("Markdown variable is required.");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["markdown"] },
+            "The Markdown query requires a markdown variable."
+        );
         const variableTypeMapppings = {
             markdown: "string",
         };

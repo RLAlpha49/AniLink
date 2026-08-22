@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type ActivityReply } from "../interfaces/Activity";
 import { ActivityReplySchema } from "../schemas/Activity";
 
@@ -50,9 +50,11 @@ export class SaveActivityReplyMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/mutation
      */
     async saveActivityReply(variables: SaveActivityReplyVariables): Promise<ActivityReply> {
-        if (!variables.id && !variables.text) {
-            throw new Error("id or text variable is required");
-        }
+        requireVariables(
+            variables,
+            { kind: "any", names: ["id", "text"] },
+            "The SaveActivityReply mutation requires an id or a text variable."
+        );
         const variableTypeMappings = {
             id: "number",
             activityId: "number",

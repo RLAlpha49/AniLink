@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { type ReviewRating, ReviewRatingMappings } from "../types/ReviewRating";
 import { ReviewSchema } from "../schemas/responses/query/Review";
@@ -36,9 +36,11 @@ export class RateReviewMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/mutation
      */
     async rateReview(variables: RateReviewVariables): Promise<ReviewResponse> {
-        if (!variables?.reviewId || !variables?.rating) {
-            throw new Error("reviewId and rating variables are required.");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["reviewId", "rating"] },
+            "The RateReview mutation requires reviewId and rating variables."
+        );
 
         validateVariables(variables, {
             reviewId: "number",

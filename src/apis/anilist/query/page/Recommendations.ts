@@ -88,9 +88,6 @@ export class RecommendationsQuery extends APIWrapper {
     async recommendations(
         variables: RecommendationsVariables
     ): Promise<RecommendationsPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

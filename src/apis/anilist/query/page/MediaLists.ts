@@ -6,7 +6,7 @@ import { MediaListStatusMappings } from "../../types/Status";
 import { FuzzyDateMappings } from "../../types/FuzzyDate";
 import { MediaListSortMappings } from "../../types/Sort";
 import { ScoreFormatMapping } from "../../types/Format";
-import { validateVariables } from "../../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../../base/ValidateVariables";
 import { MediaListSchema } from "../../schemas/responses/query/MediaList";
 
 /**
@@ -180,9 +180,11 @@ export class MediaListsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async mediaLists(variables: MediaListsVariables): Promise<MediaListsPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            { kind: "any", names: ["userId", "userName"] },
+            "The Page.mediaList query requires either a userId or a userName."
+        );
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

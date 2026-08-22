@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type Activity } from "../interfaces/Activity";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
 
@@ -42,9 +42,11 @@ export class ToggleActivitySubscriptionMutation extends APIWrapper {
     async toggleActivitySubscription(
         variables: ToggleActivitySubscriptionVariables
     ): Promise<Activity> {
-        if (!variables.activityId || !variables.subscribe) {
-            throw new Error("activityId & subscribe variables are required");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["activityId", "subscribe"] },
+            "The ToggleActivitySubscription mutation requires activityId and subscribe variables."
+        );
         const variableTypeMappings = {
             activityId: "number",
             subscribe: "boolean",

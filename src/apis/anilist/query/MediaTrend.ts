@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type MediaTrendResponse } from "../interfaces/responses/query/MediaTrend";
 import { type MediaTrendSort, MediaTrendSortMappings } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { MediaTrendSchema } from "../schemas/responses/query/MediaTrend";
 
 /**
@@ -155,9 +155,11 @@ export class MediaTrendQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async mediaTrend(variables: MediaTrendVariables): Promise<MediaTrendResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            { kind: "notOnly", names: ["asHtml"] },
+            "The MediaTrend query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             mediaId: "number",
             date: "number",

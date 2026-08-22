@@ -5,7 +5,7 @@ import { ActivityReplySchema } from "../../schemas/Activity";
 
 /**
  * `ActivityRepliesVariables` is an interface representing the variables for the `ActivityRepliesQuery`.
- * It includes optional page, per page, id, activity id, and as html.
+ * Every parameter is optional: without filters AniList returns the latest activity replies.
  * @see https://docs.anilist.co/reference/query
  */
 export interface ActivityRepliesVariables {
@@ -49,9 +49,6 @@ export class ActivityRepliesQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async activityReplies(variables: ActivityRepliesVariables): Promise<ActivityReply> {
-        if (!variables.id) {
-            throw new Error("The id is required");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

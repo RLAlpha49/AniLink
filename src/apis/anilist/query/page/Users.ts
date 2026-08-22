@@ -86,9 +86,6 @@ export class UsersQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async users(variables: UsersVariables): Promise<UsersPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be provided");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

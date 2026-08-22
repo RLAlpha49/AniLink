@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type Activity } from "../interfaces/Activity";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
 
@@ -40,9 +40,11 @@ export class ToggleActivityPinMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/mutation
      */
     async toggleActivityPin(variables: ToggleActivityPinVariables): Promise<Activity> {
-        if (!variables.id || !variables.pinned) {
-            throw new Error("id & pinned variables are required");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["id", "pinned"] },
+            "The ToggleActivityPin mutation requires id and pinned variables."
+        );
         const variableTypeMappings = {
             id: "number",
             pinned: "boolean",

@@ -6,7 +6,7 @@ import {
     type UserStatisticSort,
     UserStatisticSortMappings,
 } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { UserSchema } from "../schemas/responses/query/User";
 
 /**
@@ -80,9 +80,20 @@ export class UserQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async user(variables: UserVariables): Promise<UserResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be provided");
-        }
+        requireVariables(
+            variables,
+            {
+                kind: "notOnly",
+                names: [
+                    "asHtml",
+                    "animeStatLimit",
+                    "mangaStatLimit",
+                    "animeStatSort",
+                    "mangaStatSort",
+                ],
+            },
+            "The User query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             name: "string",

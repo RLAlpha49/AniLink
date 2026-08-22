@@ -6,7 +6,7 @@ import {
     type UserStatisticSort,
     UserStatisticSortMappings,
 } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { UserSchema } from "../schemas/responses/query/User";
 
 /**
@@ -65,9 +65,11 @@ export class FollowingQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async following(variables: FollowingVariables): Promise<UserResponse> {
-        if (!variables.userId) {
-            throw new Error("userId is required");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["userId"] },
+            "The Following query requires a userId."
+        );
         const variableTypeMappings = {
             userId: "number",
             sort: UserSortMappings,

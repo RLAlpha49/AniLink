@@ -5,12 +5,12 @@ import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
 import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListSort, MediaListSortMappings } from "../types/Sort";
 import { type ScoreFormat } from "../types/Format";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { MediaListCollectionQuerySchema } from "../schemas/responses/query/MediaListCollectionResponse";
 
 /**
  * `MediaListCollectionVariables` is an interface representing the variables for the `MediaListCollectionQuery`.
- * It includes optional parameters for querying media list collection data.
+ * The AniList API requires a `type` plus a `userId` or a `userName`; every other parameter is optional.
  * @see https://docs.anilist.co/reference/query
  */
 export interface MediaListCollectionVariables {
@@ -27,7 +27,7 @@ export interface MediaListCollectionVariables {
     /**
      * `type` is a string representing the type of the media.
      */
-    type?: MediaType;
+    type: MediaType;
 
     /**
      * `status` is a string representing the status of the media.
@@ -169,9 +169,16 @@ export class MediaListCollectionQuery extends APIWrapper {
     async mediaListCollection(
         variables: MediaListCollectionVariables
     ): Promise<MediaListCollectionResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["type"] },
+            "The MediaListCollection query requires a type variable."
+        );
+        requireVariables(
+            variables,
+            { kind: "any", names: ["userId", "userName"] },
+            "The MediaListCollection query requires a userId or a userName."
+        );
         const variableTypeMappings = {
             userId: "number",
             userName: "string",

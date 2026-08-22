@@ -7,7 +7,7 @@ import { type MediaFormat, MediaFormatMappings } from "../types/Format";
 import { type MediaStatus, MediaStatusMappings } from "../types/Status";
 import { type MediaSource, MediaSourceMappings } from "../types/Source";
 import { type MediaSort, MediaSortMappings } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { MediaWithRelationsSchema } from "../schemas/responses/query/Media";
 
 /**
@@ -381,9 +381,11 @@ export class MediaQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async media(variables: MediaVariables): Promise<MediaResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            { kind: "notOnly", names: ["asHtml"] },
+            "The Media query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             idMal: "number",

@@ -56,9 +56,6 @@ export class NotificationsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async notifications(variables: NotificationsVariables): Promise<NotificationsPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

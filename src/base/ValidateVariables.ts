@@ -137,3 +137,64 @@ export function validateVariables(
         throw new AniLinkValidationError(errors);
     }
 }
+
+/**
+ * Enforces the variable requirements of an AniList operation.
+ *
+ * AniList rejects several query operations at runtime with messages such as
+ * "The Media query requires at least 1 argument." even though the GraphQL
+ * schema declares every argument as optional. This helper lets each operation
+ * describe its real contract so callers fail fast with a local
+ * {@link AniLinkValidationError} instead of a remote 400.
+ *
+ * A variable satisfies a requirement when it is present with a value other
+ * than `undefined` and `null`. Requirements are expressed as:
+ * - `"one"`: at least one variable must be set.
+ * - `"all"`: every listed variable must be set.
+ * - `"any"`: at least one of the listed variables must be set.
+ * - `"notOnly"`: at least one variable must be set, and at least one set
+ *   variable must not appear in `names`.
+ *
+ * @param variables - The variables the caller passed to the operation.
+ * @param requirements - The requirement description for the operation.
+ * @param message - The error message describing what the operation needs.
+ * @throws An {@link AniLinkValidationError} when the requirements are not met.
+ */
+export function requireVariables(
+    variables: object,
+    requirements:
+        | { kind: "one" }
+        | { kind: "all"; names: readonly string[] }
+        | { kind: "any"; names: readonly string[] }
+        | { kind: "notOnly"; names: readonly string[] },
+    message: string
+): void {
+    const entries = Object.entries(variables);
+    const isSet = (value: unknown): boolean => value !== undefined && value !== null;
+
+    let satisfied: boolean;
+    switch (requirements.kind) {
+        case "one":
+            satisfied = entries.some(([, value]) => isSet(value));
+            break;
+        case "all":
+            satisfied = requirements.names.every((name) =>
+                isSet((variables as Record<string, unknown>)[name])
+            );
+            break;
+        case "any":
+            satisfied = requirements.names.some((name) =>
+                isSet((variables as Record<string, unknown>)[name])
+            );
+            break;
+        case "notOnly": {
+            const excluded = new Set(requirements.names);
+            satisfied = entries.some(([name, value]) => isSet(value) && !excluded.has(name));
+            break;
+        }
+    }
+
+    if (!satisfied) {
+        throw new AniLinkValidationError([message]);
+    }
+}

@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 
 import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
 import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
 import { FuzzyDateSchema } from "../schemas/FuzzyDate";
@@ -108,9 +108,11 @@ export class SaveMediaListEntryMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/mutation
      */
     async saveMediaListEntry(variables: SaveMediaListEntryVariables): Promise<MediaListResponse> {
-        if (variables.mediaId === undefined) {
-            throw new Error("mediaId is required for SaveMediaListEntryMutation");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["mediaId"] },
+            "The SaveMediaListEntry mutation requires a mediaId variable."
+        );
 
         const variableTypeMappings = {
             id: "number",

@@ -86,9 +86,6 @@ export class ThreadsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async threads(variables: ThreadsVariables): Promise<ThreadsPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be provided");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

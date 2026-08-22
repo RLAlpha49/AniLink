@@ -4,7 +4,7 @@ import {
     type RecommendationRating,
     RecommendationRatingMappings,
 } from "../types/RecommendationRating";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { RecommendationSchema } from "../schemas/responses/query/Recommendation";
 
 /**
@@ -51,9 +51,11 @@ export class SaveRecommendationMutation extends APIWrapper {
     async saveRecommendation(
         variables: SaveRecommendationVariables
     ): Promise<RecommendationResponse> {
-        if (!variables.mediaId || !variables.mediaRecommendationId || !variables.rating) {
-            throw new Error("mediaId, mediaRecommendationId, and rating variables are required.");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["mediaId", "mediaRecommendationId", "rating"] },
+            "The SaveRecommendation mutation requires mediaId, mediaRecommendationId, and rating variables."
+        );
         const variableTypeMappings = {
             mediaId: "number",
             mediaRecommendationId: "number",

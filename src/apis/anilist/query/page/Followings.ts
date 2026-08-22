@@ -2,7 +2,7 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type FollowingsPageResponse } from "../../interfaces/responses/page/Followings";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
-import { validateVariables } from "../../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../../base/ValidateVariables";
 import { UserSchema } from "../../schemas/responses/query/User";
 
 /**
@@ -71,9 +71,11 @@ export class FollowingsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async followings(variables: FollowingsVariables): Promise<FollowingsPageResponse> {
-        if (!variables.userId) {
-            throw new Error("userId is required");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["userId"] },
+            "The Page.following query requires a userId."
+        );
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

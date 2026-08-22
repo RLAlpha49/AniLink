@@ -1,4 +1,4 @@
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
@@ -55,9 +55,11 @@ export class SaveThreadCommentMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/mutation
      */
     async saveThreadComment(variables: SaveThreadCommentVariables): Promise<ThreadCommentResponse> {
-        if (!variables.id && !variables.threadId) {
-            throw new Error("id or title variable is required");
-        }
+        requireVariables(
+            variables,
+            { kind: "any", names: ["id", "threadId"] },
+            "The SaveThreadComment mutation requires an id or a threadId variable."
+        );
         const variableTypeMappings = {
             id: "number",
             threadId: "number",

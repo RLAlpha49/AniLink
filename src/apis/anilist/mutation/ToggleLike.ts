@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 import { BasicUserSchema } from "../schemas/Basic";
 import { type BasicUser } from "../interfaces/Basic";
@@ -36,9 +36,11 @@ export class ToggleLikeMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/mutation
      */
     async toggleLike(variables: ToggleLikeVariables): Promise<BasicUser> {
-        if (!variables.id || !variables.type) {
-            throw new Error("id and type variables are required.");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["id", "type"] },
+            "The ToggleLike mutation requires id and type variables."
+        );
         const variableTypeMappings = {
             id: "number",
             type: LikeableTypeMappings,

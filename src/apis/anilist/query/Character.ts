@@ -6,7 +6,7 @@ import {
     type MediaSort,
     MediaSortMappings,
 } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { CharacterSchema } from "../schemas/responses/query/Character";
 
 /**
@@ -90,9 +90,14 @@ export class CharacterQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async character(variables: CharacterVariables): Promise<CharacterResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            {
+                kind: "notOnly",
+                names: ["asHtml", "mediaSort", "mediaOnList", "mediaPage", "mediaPerPage"],
+            },
+            "The Character query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             isBirthday: "boolean",

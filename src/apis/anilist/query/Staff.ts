@@ -9,7 +9,7 @@ import {
     StaffSortMappings,
 } from "../types/Sort";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { StaffSchema } from "../schemas/responses/query/Staff";
 
 /**
@@ -133,9 +133,14 @@ export class StaffQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async staff(variables: StaffVariables): Promise<StaffResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
+        requireVariables(
+            variables,
+            {
+                kind: "any",
+                names: ["id", "isBirthday", "search", "id_not", "id_in", "id_not_in", "sort"],
+            },
+            "The Staff query requires at least one filter variable."
+        );
         const variableTypeMappings = {
             id: "number",
             isBirthday: "boolean",

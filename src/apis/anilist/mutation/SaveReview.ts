@@ -1,4 +1,4 @@
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { ReviewSchema } from "../schemas/responses/query/Review";
@@ -60,9 +60,11 @@ export class SaveReviewMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/mutation
      */
     async saveReview(variables: SaveReviewVariables): Promise<ReviewResponse> {
-        if (!variables.id && !variables.mediaId) {
-            throw new Error("id or mediaId variable is required");
-        }
+        requireVariables(
+            variables,
+            { kind: "any", names: ["id", "mediaId"] },
+            "The SaveReview mutation requires an id or a mediaId variable."
+        );
         const variableTypeMappings = {
             id: "number",
             mediaId: "number",

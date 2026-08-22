@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { validateVariables } from "../../../base/ValidateVariables";
+import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type Activity } from "../interfaces/Activity";
 import { ListActivitySchema } from "../schemas/Activity";
 
@@ -40,9 +40,11 @@ export class SaveListActivityMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/mutation
      */
     async saveListActivity(variables: SaveListActivityVariables): Promise<Activity> {
-        if (!variables.id) {
-            throw new Error("id variable is required");
-        }
+        requireVariables(
+            variables,
+            { kind: "all", names: ["id"] },
+            "The SaveListActivity mutation requires an id variable."
+        );
         const variableTypeMappings = {
             id: "number",
             locked: "boolean",

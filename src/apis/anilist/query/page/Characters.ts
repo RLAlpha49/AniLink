@@ -96,9 +96,6 @@ export class CharactersQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/query
      */
     async characters(variables: CharactersVariables): Promise<CharactersPageResponse> {
-        if (!variables) {
-            throw new Error("At least one variable must be set");
-        }
         const variableTypeMappings = {
             page: "number",
             perPage: "number",
