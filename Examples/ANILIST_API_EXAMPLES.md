@@ -108,9 +108,6 @@ aniLink.anilist.query.siteStatistics();
 // Querying external link source collection data
 aniLink.anilist.query.externalLinkSourceCollection();
 
-// Querying users who liked a model
-aniLink.anilist.query.like({ likeableId: 723422275, type: "ACTIVITY" });
-
 // Querying users page data
 aniLink.anilist.query.page.users({ id: 542244, asHtml: true });
 

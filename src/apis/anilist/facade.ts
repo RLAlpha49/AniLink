@@ -30,7 +30,6 @@ import { FollowingsQuery, type FollowingsVariables } from "./query/page/Followin
 import { type FollowingsPageResponse } from "./interfaces/responses/page/Followings";
 import { GenreCollectionQuery } from "./query/GenreCollection";
 import { LikesQuery, type LikesVariables } from "./query/page/Likes";
-import { LikeQuery, type LikeVariables } from "./query/Like";
 import { MarkdownQuery, type MarkdownVariables } from "./query/Markdown";
 import {
     MediaListCollectionQuery,
@@ -413,19 +412,6 @@ export type AniListApi = {
         mediaListCollection: (
             variables: MediaListCollectionVariables
         ) => Promise<MediaListCollectionResponse>;
-
-        /**
-         * Fetches users who liked a model from the Anilist API.
-         * @param {LikeVariables} variables - The variables for the query.
-         * @returns {Promise<BasicUser>} A promise that resolves to the users who liked the model.
-         *
-         * @example
-         * ```typescript
-         * await aniLink.anilist.query.like({likeableId: 723235883, type: 'ACTIVITY'});
-         * ```
-         * @see https://docs.anilist.co/reference/query
-         */
-        like: (variables: LikeVariables) => Promise<BasicUser>;
 
         /**
          * Fetches genre collection data from the Anilist API.
@@ -1497,7 +1483,6 @@ export function buildAniListApi(authToken?: string, options?: AniLinkOptions): A
     const staffQueryInstance = new StaffQuery(authToken);
     const mediaListQueryInstance = new MediaListQuery(authToken);
     const mediaListCollectionQueryInstance = new MediaListCollectionQuery(authToken);
-    const likeQueryInstance = new LikeQuery(authToken);
     const genreCollectionQueryInstance = new GenreCollectionQuery(authToken);
     const mediaTagCollectionQueryInstance = new MediaTagCollectionQuery(authToken);
     const viewerQueryInstance = new ViewerQuery(authToken);
@@ -1588,7 +1573,6 @@ export function buildAniListApi(authToken?: string, options?: AniLinkOptions): A
             mediaListCollection: mediaListCollectionQueryInstance.mediaListCollection.bind(
                 mediaListCollectionQueryInstance
             ),
-            like: likeQueryInstance.like.bind(likeQueryInstance),
             genreCollection: genreCollectionQueryInstance.genreCollection.bind(
                 genreCollectionQueryInstance
             ),
