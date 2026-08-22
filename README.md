@@ -93,6 +93,31 @@ const aniLink = new AniLink();
 
 Get a token by registering an application on the [AniList developer settings](https://anilist.co/settings/developer).
 
+#### Client options
+
+The second constructor argument accepts optional transport settings. Options are **per instance**: creating a second `AniLink` never changes how an existing one behaves.
+
+| Option | Type | Default | Description |
+| ------ | ---- | ------- | ----------- |
+| `timeout` | `number` | `30000` | Milliseconds before a request is aborted. `0` disables the timeout. |
+| `signal` | `AbortSignal` | — | Cancel in-flight requests (for example when a user navigates away). |
+| `retry` | `boolean \| Partial<RetryPolicy>` | `false` | Opt into automatic retries for transient failures. See [Retry with backoff](#retry-with-backoff). |
+| `onError` | `(error, context) => void` | — | Invoked when an attempt fails and once more when retries are exhausted. |
+| `onRetry` | `(error, context) => void` | — | Invoked before each retry wait with the scheduled delay. |
+| `onRequestStart` | `(context) => void` | — | Invoked just before each attempt is sent. |
+| `onResponse` | `(context) => void` | — | Invoked after each attempt completes, with the elapsed `durationMs`. |
+| `exposeRawAxiosError` | `boolean` | `false` | Attach the original Axios error to thrown errors for local debugging. |
+
+```typescript
+const aniLink = new AniLink("your-auth-token", {
+    timeout: 10_000,
+    retry: { maxRetries: 2 },
+    onResponse: ({ url, durationMs }) => console.log(url, `${durationMs}ms`),
+});
+```
+
+The hook context carries `url`, `method`, the 1-based `attempt`, the stable error `code`, the HTTP `status` for API failures, and `nextDelayMs` when the failure will be retried.
+
 ### OAuth
 
 AniLink ships helpers for the AniList OAuth2 authorization-code flow, so you can obtain and refresh the token you pass to the `AniLink` constructor instead of hand-rolling the HTTP calls.
@@ -104,10 +129,13 @@ Send the user to the authorization URL to approve your application:
 ```typescript
 import { buildAuthorizationUrl } from "anilink-api-wrapper";
 
-const authorizeUrl = buildAuthorizationUrl("your-client-id", "https://example.com/callback");
+const state = crypto.randomUUID(); // a fresh random value per login attempt
+const authorizeUrl = buildAuthorizationUrl("your-client-id", "https://example.com/callback", state);
 // Redirect the user to `authorizeUrl`. After approval, AniList sends them back
-// to your redirect URI with a `?code=` query parameter.
+// to your redirect URI with `?code=` and `state=` query parameters.
 ```
+
+The third `state` parameter is **optional** but strongly recommended as additional CSRF protection. Always pass a random `state`, bind it to the user's session, and validate that the `state` on the redirect matches before exchanging the code. This cross-site request forgery (CSRF) check stops attackers from completing authorization flows your users never started.
 
 Exchange the authorization code from the redirect for an access token:
 
@@ -137,6 +165,21 @@ const { access_token, refresh_token: rotated } = await refreshAccessToken(
 
 const nextRefreshToken = rotated ?? refresh_token;
 const aniLink = new AniLink(access_token);
+```
+
+AniList reports the token lifetime as `expires_in` seconds. Use `getTokenExpiry` to refresh proactively before the token expires instead of waiting for a `401`:
+
+```typescript
+import { getTokenExpiry, refreshAccessToken } from "anilink-api-wrapper";
+
+if (Date.now() >= getTokenExpiry(tokenResponse).getTime() - 60_000) {
+    // Refresh at least a minute before expiry.
+    tokenResponse = await refreshAccessToken(
+        "your-client-id",
+        "your-client-secret",
+        nextRefreshToken
+    );
+}
 ```
 
 ### Query
@@ -227,7 +270,7 @@ the upstream AniList response body. AniLink does not expose the raw Axios
 response object, request headers, bearer token, or request internals.
 
 ```typescript
-import { AniLinkApiError, AniLinkAuthError, AniLinkNetworkError } from "anilink-api-wrapper";
+import { AniLinkApiError, AniLinkAuthError, AniLinkGraphQLError, AniLinkNetworkError } from "anilink-api-wrapper";
 
 try {
     const user = await aniLink.anilist.query.user({ id: 542244 });
@@ -237,8 +280,13 @@ try {
         console.error(error.code, error.status, error.data);
 
         if (error.status === 429) {
-            console.error("AniList rate limit reached. Try again later.");
+            // Rate-limit accounting from the response headers, when present.
+            console.error("Quota reset at:", error.rateLimit?.reset);
         }
+    } else if (error instanceof AniLinkGraphQLError) {
+        // The request returned HTTP 200 but carried GraphQL errors.
+        console.error(error.graphqlErrors.map((e) => e.message));
+        console.error(error.data); // any partial data returned alongside the errors
     } else if (error instanceof AniLinkAuthError) {
         console.error(error.code, error.message);
     } else if (error instanceof AniLinkNetworkError) {
@@ -249,8 +297,17 @@ try {
 }
 ```
 
-The available transport codes are `API_ERROR`, `NETWORK_ERROR`,
-`TIMEOUT_ERROR`, `ABORTED_ERROR`, `AUTH_ERROR`, and `UNKNOWN_ERROR`.
+The available transport codes are `API_ERROR`, `GRAPHQL_ERROR`, `NETWORK_ERROR`,
+`TIMEOUT_ERROR`, `ABORTED_ERROR`, `AUTH_ERROR`, `VALIDATION_ERROR`, and `UNKNOWN_ERROR`.
+
+GraphQL-level failures can arrive inside an HTTP 200 response. AniLink throws
+these as `AniLinkGraphQLError` (a subclass of `AniLinkApiError` with `status`
+`200`) instead of returning half-valid data. The upstream `errors` array is
+available on `error.graphqlErrors`, and any partial `data` on `error.data`.
+
+When AniList includes rate-limit headers (`x-ratelimit-limit`,
+`x-ratelimit-remaining`, `x-ratelimit-reset`), every `AniLinkApiError` exposes
+them as a read-only `rateLimit` object so schedulers and UIs can self-throttle.
 
 For local debugging, you can opt into the original Axios error:
 
@@ -294,9 +351,16 @@ const aniLink = new AniLink("your-auth-token", {
         maxDelayMs: 5_000, // backoff cap
         retryOnStatus: [429, 500, 502, 503, 504],
         retryOnNetworkError: true,
+        jitter: true, // randomize each wait within [0, computed delay]
     },
 });
 ```
+
+Backoff delays use **full jitter** by default: each wait is a random value
+between `0` and the computed exponential cap. This spreads out retries from
+many concurrent clients instead of letting them re-fire in lockstep against
+the shared rate limit. Server-dictated `Retry-After` waits are never jittered.
+Pass `jitter: false` for deterministic delays.
 
 Retries are disabled by default so you stay in control of when requests
 are retried. Set `retry: false` explicitly to make that intent clear.
@@ -319,6 +383,39 @@ const aniLink = new AniLink("your-auth-token", {
     },
 });
 ```
+
+### Observability hooks
+
+Beyond `onError`, three optional hooks let you instrument the request
+lifecycle without wrapping any methods. All are per-instance options:
+
+```typescript
+const aniLink = new AniLink("your-auth-token", {
+    // Fires just before each attempt is sent.
+    onRequestStart: ({ url, method, attempt }) => {
+        console.log(`#${attempt} -> ${method} ${url}`);
+    },
+    // Fires after each attempt completes, success or failure.
+    onResponse: ({ url, durationMs }) => {
+        console.log(`${url} took ${durationMs}ms`);
+    },
+    // Fires before each retry wait, with the scheduled delay.
+    onRetry: (error, { attempt, nextDelayMs, status }) => {
+        console.warn(`attempt ${attempt} failed (${status ?? error.code}); retrying in ${nextDelayMs}ms`);
+    },
+});
+```
+
+- `onRequestStart` receives `{ url, method, attempt }`.
+- `onResponse` receives the same context plus `durationMs`, and fires for
+  failed attempts too, so it can drive latency histograms.
+- `onRetry` receives the normalized error plus `{ url, method, attempt, code,
+  status?, nextDelayMs }`. When you do not set `onRetry`, per-attempt
+  notifications fall back to `onError` (which then fires before each retry
+  wait and once more at terminal failure).
+
+These hooks are synchronous and fire in addition to the promise result; they
+never change request behavior.
 
 Common status codes from the AniList API:
 
