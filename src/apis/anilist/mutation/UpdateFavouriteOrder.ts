@@ -1,6 +1,7 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { validateVariables } from "../../../base/ValidateVariables";
+import { AniLinkValidationError } from "../../../base/AniLinkError";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
 
 /**
@@ -81,7 +82,9 @@ export class UpdateFavouriteOrderMutation extends APIWrapper {
             (!variables.staffIds && variables.staffOrder) ||
             (!variables.studioIds && variables.studioOrder)
         ) {
-            throw new Error("The order array requires the corresponding id array to be present.");
+            throw new AniLinkValidationError([
+                "The order array requires the corresponding id array to be present.",
+            ]);
         }
         const variableTypeMappings = {
             animeIds: "number[]",
