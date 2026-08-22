@@ -5,6 +5,7 @@ import {
     mockSendRequest,
     setMockResponse,
 } from "./helpers/mockRequestHandler";
+import { AniLinkErrorCodes, AniLinkValidationError } from "../src/base/AniLinkError";
 import { describe, expect, test } from "vitest";
 
 /** Method names are validated against the public API surface at compile time. */
@@ -112,6 +113,46 @@ test("custom() defaults omitted variables to an empty object", async () => {
     expect(getLastRequest()?.data).toEqual({
         query: expect.stringContaining("Viewer"),
         variables: {},
+    });
+});
+
+describe("custom() local input guards", () => {
+    const rejectedInputs: Array<[string, unknown]> = [
+        ["an empty string", ""],
+        ["a whitespace-only string", "   \n\t  "],
+        ["a number instead of a document", 42],
+        ["null instead of a document", null],
+        ["a document without a query or mutation keyword", "{ Viewer { id } }"],
+    ];
+
+    test.each(rejectedInputs)(
+        "%s is rejected locally with a validation error",
+        async (_name, input) => {
+            const client = createTestClient("guard-token");
+
+            const outcome = await client.anilist.custom(input as string).then(
+                () => "resolved",
+                (error: unknown) => error
+            );
+
+            expect(outcome).toBeInstanceOf(AniLinkValidationError);
+            expect((outcome as AniLinkValidationError).code).toBe(AniLinkErrorCodes.VALIDATION);
+            expect(mockSendRequest).not.toHaveBeenCalled();
+            expect(getLastRequest()).toBeUndefined();
+        }
+    );
+
+    test("a valid mutation document passes the guard and reaches the transport", async () => {
+        const client = createTestClient("guarded-mutation-token");
+
+        await client.anilist.custom('mutation { UpdateUser (about: "ok") { id } }');
+
+        expect(mockSendRequest).toHaveBeenCalledTimes(1);
+        expect(getLastRequest()?.data).toEqual(
+            expect.objectContaining({
+                query: expect.stringContaining("UpdateUser"),
+            })
+        );
     });
 });
 
