@@ -160,7 +160,7 @@ export interface ActivitiesVariables {
 /**
  * `ActivitiesQuery` is a class representing a query for activities.
  * It includes a method to get activities.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export class ActivitiesQuery extends APIWrapper {
     /**
@@ -168,7 +168,7 @@ export class ActivitiesQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The activities for the requested page with pagination metadata.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/union/activityunion
      */
     async activities(variables: ActivitiesVariables): Promise<ActivitiesPageResponse> {
         const variableTypeMappings = {

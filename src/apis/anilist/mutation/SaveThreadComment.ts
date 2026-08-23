@@ -43,7 +43,7 @@ export interface SaveThreadCommentVariables {
 /**
  * `SaveThreadCommentMutation` is a class representing a mutation to save a thread comment.
  * It includes a method to save a thread
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export class SaveThreadCommentMutation extends APIWrapper {
     /**
@@ -52,7 +52,7 @@ export class SaveThreadCommentMutation extends APIWrapper {
      * @param variables - An object of type `SaveThreadCommentVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/mutation
+     *   * @see https://docs.anilist.co/reference/object/threadcomment
      */
     async saveThreadComment(variables: SaveThreadCommentVariables): Promise<ThreadCommentResponse> {
         requireVariables(

@@ -122,7 +122,7 @@ export interface StaffVariables {
 /**
  * `StaffQuery` is a class representing a query for staff data.
  * It includes a method to send the staff query and receive the response.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/staff
  */
 export class StaffQuery extends APIWrapper {
     /**
@@ -130,7 +130,7 @@ export class StaffQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/staff
      */
     async staff(variables: StaffVariables): Promise<StaffResponse> {
         requireVariables(

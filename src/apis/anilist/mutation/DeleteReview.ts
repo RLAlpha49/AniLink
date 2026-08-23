@@ -17,7 +17,7 @@ export interface DeleteReviewVariables {
 /**
  * `DeleteReviewMutation` is a class representing a mutation to delete a review.
  * It includes a method to delete a review.
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/deleted
  */
 export class DeleteReviewMutation extends APIWrapper {
     /**
@@ -31,7 +31,7 @@ export class DeleteReviewMutation extends APIWrapper {
      * @param variables - An object of type `DeleteReviewVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the review was deleted by this call and `false` when it was already absent.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     * @see https://docs.anilist.co/reference/mutation
+     * @see https://docs.anilist.co/reference/object/deleted
      */
     async deleteReview(variables: DeleteReviewVariables): Promise<DeleteResult> {
         requireVariables(

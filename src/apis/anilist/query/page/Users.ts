@@ -75,7 +75,7 @@ export interface UsersVariables {
 /**
  * `UsersQuery` is a class representing a query for users.
  * It includes a method to get users.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/user
  */
 export class UsersQuery extends APIWrapper {
     /**
@@ -83,7 +83,7 @@ export class UsersQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/user
      */
     async users(variables: UsersVariables): Promise<UsersPageResponse> {
         const variableTypeMappings = {

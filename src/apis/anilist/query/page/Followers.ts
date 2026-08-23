@@ -60,7 +60,7 @@ export interface FollowersVariables {
 /**
  * `FollowersQuery` is a class representing a query for followers.
  * It includes a method to get followers.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/user
  */
 export class FollowersQuery extends APIWrapper {
     /**
@@ -68,7 +68,7 @@ export class FollowersQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/user
      */
     async followers(variables: FollowersVariables): Promise<FollowersPageResponse> {
         requireVariables(

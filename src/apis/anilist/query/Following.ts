@@ -54,7 +54,7 @@ export interface FollowingVariables {
 /**
  * `FollowingQuery` is a class representing a query for following users.
  * It includes a method to get following users.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/user
  */
 export class FollowingQuery extends APIWrapper {
     /**
@@ -62,7 +62,7 @@ export class FollowingQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/user
      */
     async following(variables: FollowingVariables): Promise<UserResponse> {
         requireVariables(

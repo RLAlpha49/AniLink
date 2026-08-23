@@ -16,7 +16,7 @@ export interface MarkdownVariables {
 /**
  * `MarkdownQuery` is a class representing a query for converting Markdown text to HTML.
  * It includes a method to send the Markdown text and receive the converted HTML.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/parsedmarkdown
  */
 export class MarkdownQuery extends APIWrapper {
     /**
@@ -24,7 +24,7 @@ export class MarkdownQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/parsedmarkdown
      */
     async markdown(variables: MarkdownVariables): Promise<string> {
         requireVariables(

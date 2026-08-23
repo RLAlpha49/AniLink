@@ -38,7 +38,7 @@ export interface ToggleFavouriteVariables {
 /**
  * `ToggleFavouriteMutation` is a class that contains the method to toggle a favourite.
  * It includes a method to toggle a favourite.
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/favourites
  */
 export class ToggleFavouriteMutation extends APIWrapper {
     /**
@@ -47,7 +47,7 @@ export class ToggleFavouriteMutation extends APIWrapper {
      * @param variables - An object of type `ToggleFavouriteVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     * @see https://docs.anilist.co/reference/mutation
+     * @see https://docs.anilist.co/reference/object/favourites
      */
     async toggleFavourite(variables: ToggleFavouriteVariables): Promise<Favourites> {
         requireVariables(

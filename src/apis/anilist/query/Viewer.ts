@@ -39,7 +39,7 @@ export interface ViewerVariables {
 /**
  * `ViewerQuery` is a class representing a query for viewer data.
  * It includes a method to send the viewer query and receive the response.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/user
  */
 export class ViewerQuery extends APIWrapper {
     /**
@@ -47,7 +47,7 @@ export class ViewerQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/user
      */
     async viewer(variables: ViewerVariables = {}): Promise<UserResponse> {
         const variableTypeMappings = {

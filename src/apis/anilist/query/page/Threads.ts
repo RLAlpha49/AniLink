@@ -75,7 +75,7 @@ export interface ThreadsVariables {
 /**
  * `ThreadsQuery` is a class representing a query for threads.
  * It includes a method to get threads.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/thread
  */
 export class ThreadsQuery extends APIWrapper {
     /**
@@ -83,7 +83,7 @@ export class ThreadsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/thread
      */
     async threads(variables: ThreadsVariables): Promise<ThreadsPageResponse> {
         const variableTypeMappings = {

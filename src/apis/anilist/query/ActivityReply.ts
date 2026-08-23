@@ -28,7 +28,7 @@ export interface ActivityReplyVariables {
 /**
  * `ActivityReplyQuery` is a class representing a query for activity replies.
  * It includes a method to get activity replies.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/activityreply
  */
 export class ActivityReplyQuery extends APIWrapper {
     /**
@@ -36,7 +36,7 @@ export class ActivityReplyQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/activityreply
      */
     async activityReply(variables: ActivityReplyVariables): Promise<ActivityReply> {
         requireVariables(

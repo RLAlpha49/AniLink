@@ -145,7 +145,7 @@ export interface StudiosVariables {
 /**
  * `StudiosQuery` is a class representing a query for studios.
  * It includes a method to get studios.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/studio
  */
 export class StudiosQuery extends APIWrapper {
     /**
@@ -153,7 +153,7 @@ export class StudiosQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/studio
      */
     async studios(variables: StudiosVariables): Promise<StudiosPageResponse> {
         const variableTypeMappings = {

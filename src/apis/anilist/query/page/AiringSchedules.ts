@@ -125,7 +125,7 @@ export interface AiringSchedulesVariables {
 /**
  * `AiringSchedulesQuery` is a class representing a query for airing schedules.
  * It includes a method to get airing schedules.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/airingschedule
  */
 export class AiringSchedulesQuery extends APIWrapper {
     /**
@@ -133,7 +133,7 @@ export class AiringSchedulesQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/airingschedule
      */
     async airingSchedules(
         variables: AiringSchedulesVariables

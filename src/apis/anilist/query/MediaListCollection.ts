@@ -140,7 +140,7 @@ export interface MediaListCollectionVariables {
 /**
  * `MediaListCollectionQuery` is a class representing a query for media list collection data.
  * It includes a method to send the media list collection query and receive the response.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/medialistcollection
  */
 export class MediaListCollectionQuery extends APIWrapper {
     /**
@@ -164,7 +164,7 @@ export class MediaListCollectionQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request, including `lists` and `hasNextChunk`.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/medialistcollection
      */
     async mediaListCollection(
         variables: MediaListCollectionVariables

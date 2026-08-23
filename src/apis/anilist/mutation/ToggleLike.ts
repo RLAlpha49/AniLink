@@ -24,7 +24,7 @@ export interface ToggleLikeVariables {
 /**
  * `ToggleLikeMutation` is a class representing a mutation to toggle a like.
  * It includes a method to delete an activity
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/user
  */
 export class ToggleLikeMutation extends APIWrapper {
     /**
@@ -33,7 +33,7 @@ export class ToggleLikeMutation extends APIWrapper {
      * @param variables - An object of type `ToggleLikeVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the user who performed the like toggle.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/mutation
+     *   * @see https://docs.anilist.co/reference/object/user
      */
     async toggleLike(variables: ToggleLikeVariables): Promise<BasicUser> {
         requireVariables(

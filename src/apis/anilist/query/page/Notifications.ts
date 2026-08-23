@@ -45,7 +45,7 @@ export interface NotificationsVariables {
 /**
  * `NotificationsQuery` is a class representing a query for notifications.
  * It includes a method to get notifications.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export class NotificationsQuery extends APIWrapper {
     /**
@@ -53,7 +53,7 @@ export class NotificationsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/union/notificationunion
      */
     async notifications(variables: NotificationsVariables): Promise<NotificationsPageResponse> {
         const variableTypeMappings = {

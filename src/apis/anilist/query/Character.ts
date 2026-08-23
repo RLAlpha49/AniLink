@@ -79,7 +79,7 @@ export interface CharacterVariables {
 /**
  * `CharacterQuery` is a class representing a query for characters.
  * It includes a method to get characters.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/character
  */
 export class CharacterQuery extends APIWrapper {
     /**
@@ -87,7 +87,7 @@ export class CharacterQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/character
      */
     async character(variables: CharacterVariables): Promise<CharacterResponse> {
         requireVariables(

@@ -38,7 +38,7 @@ export interface ActivityRepliesVariables {
 /**
  * `ActivityRepliesQuery` is a class representing a query for activity replies.
  * It includes a method to get activity replies.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/activityreply
  */
 export class ActivityRepliesQuery extends APIWrapper {
     /**
@@ -46,7 +46,7 @@ export class ActivityRepliesQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The activity replies for the requested page with pagination metadata.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/activityreply
      */
     async activityReplies(
         variables: ActivityRepliesVariables

@@ -75,7 +75,7 @@ export interface RecommendationsVariables {
 /**
  * `RecommendationsQuery` is a class representing a query for recommendations.
  * It includes a method to get recommendations.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/recommendation
  */
 export class RecommendationsQuery extends APIWrapper {
     /**
@@ -83,7 +83,7 @@ export class RecommendationsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/recommendation
      */
     async recommendations(
         variables: RecommendationsVariables

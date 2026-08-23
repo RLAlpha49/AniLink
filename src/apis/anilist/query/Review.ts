@@ -45,7 +45,7 @@ export interface ReviewVariables {
 /**
  * `ReviewQuery` is a class representing a query for review data.
  * It includes a method to send the review query and receive the response.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/review
  */
 export class ReviewQuery extends APIWrapper {
     /**
@@ -53,7 +53,7 @@ export class ReviewQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/review
      */
     async review(variables: ReviewVariables): Promise<ReviewResponse> {
         requireVariables(

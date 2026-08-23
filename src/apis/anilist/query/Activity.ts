@@ -150,7 +150,7 @@ export interface ActivityVariables {
 /**
  * `ActivityQuery` is a class representing a query for activities.
  * It includes a method to get activities.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export class ActivityQuery extends APIWrapper {
     /**
@@ -158,7 +158,7 @@ export class ActivityQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/union/activityunion
      */
     async activity(variables: ActivityVariables): Promise<Activity> {
         requireVariables(

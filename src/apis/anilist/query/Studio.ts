@@ -141,7 +141,7 @@ export interface StudioVariables {
 /**
  * `StudioQuery` is a class representing a query for studio data.
  * It includes a method to send the studio query and receive the response.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/studio
  */
 export class StudioQuery extends APIWrapper {
     /**
@@ -149,7 +149,7 @@ export class StudioQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/studio
      */
     async studio(variables: StudioVariables): Promise<StudioResponse> {
         requireVariables(

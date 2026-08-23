@@ -370,7 +370,7 @@ export interface MediaVariables {
 /**
  * `MediaQuery` is a class representing a query for media data.
  * It includes a method to send the media query and receive the response.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/media
  */
 export class MediaQuery extends APIWrapper {
     /**
@@ -378,7 +378,7 @@ export class MediaQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/media
      */
     async media(variables: MediaVariables): Promise<MediaResponse> {
         requireVariables(

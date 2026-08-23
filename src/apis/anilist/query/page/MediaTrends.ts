@@ -155,7 +155,7 @@ export interface MediaTrendsVariables {
 /**
  * `MediaTrendsQuery` is a class representing a query for media trends.
  * It includes a method to get media trends.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/mediatrend
  */
 export class MediaTrendsQuery extends APIWrapper {
     /**
@@ -163,7 +163,7 @@ export class MediaTrendsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/mediatrend
      */
     async mediaTrends(variables: MediaTrendsVariables): Promise<MediaTrendsPageResponse> {
         const variableTypeMappings = {

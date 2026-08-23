@@ -28,7 +28,7 @@ export interface ToggleActivityPinVariables {
 /**
  * `ToggleActivityPinMutation` is a class representing a mutation to pin an activity.
  * It includes a method to pin an activity
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export class ToggleActivityPinMutation extends APIWrapper {
     /**
@@ -37,7 +37,7 @@ export class ToggleActivityPinMutation extends APIWrapper {
      * @param variables - An object of type `ToggleActivityPinVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/mutation
+     *   * @see https://docs.anilist.co/reference/union/activityunion
      */
     async toggleActivityPin(variables: ToggleActivityPinVariables): Promise<Activity> {
         requireVariables(

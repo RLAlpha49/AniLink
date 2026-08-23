@@ -55,7 +55,7 @@ export interface ReviewsVariables {
 /**
  * `ReviewsQuery` is a class representing a query for reviews.
  * It includes a method to get reviews.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/review
  */
 export class ReviewsQuery extends APIWrapper {
     /**
@@ -63,7 +63,7 @@ export class ReviewsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/review
      */
     async reviews(variables: ReviewsVariables): Promise<ReviewsPageResponse> {
         const variableTypeMappings = {

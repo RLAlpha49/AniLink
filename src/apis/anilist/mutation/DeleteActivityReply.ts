@@ -17,7 +17,7 @@ export interface DeleteActivityReplyVariables {
 /**
  * `DeleteActivityReplyMutation` is a class representing a mutation to delete an activity reply.
  * It includes a method to delete an activity
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/deleted
  */
 export class DeleteActivityReplyMutation extends APIWrapper {
     /**
@@ -31,7 +31,7 @@ export class DeleteActivityReplyMutation extends APIWrapper {
      * @param variables - An object of type `DeleteActivityReplyVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the reply was deleted by this call and `false` when it was already absent.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     * @see https://docs.anilist.co/reference/mutation
+     * @see https://docs.anilist.co/reference/object/deleted
      */
     async deleteActivityReply(variables: DeleteActivityReplyVariables): Promise<DeleteResult> {
         requireVariables(

@@ -158,7 +158,7 @@ export interface MediaListVariables {
 /**
  * `MediaListQuery` is a class representing a query for media list data.
  * It includes a method to send the media list query and receive the response.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/medialist
  */
 export class MediaListQuery extends APIWrapper {
     /**
@@ -166,7 +166,7 @@ export class MediaListQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/medialist
      */
     async mediaList(variables: MediaListVariables): Promise<MediaListResponse> {
         requireVariables(

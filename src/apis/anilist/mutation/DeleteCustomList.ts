@@ -23,7 +23,7 @@ export interface DeleteCustomListVariables {
 /**
  * `DeleteCustomListMutation` is a class representing a mutation to delete a custom list.
  * It includes a method to delete a custom list
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/deleted
  */
 export class DeleteCustomListMutation extends APIWrapper {
     /**
@@ -37,7 +37,7 @@ export class DeleteCustomListMutation extends APIWrapper {
      * @param variables - An object of type `DeleteCustomListVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the custom list was deleted by this call and `false` when it was already absent.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     * @see https://docs.anilist.co/reference/mutation
+     * @see https://docs.anilist.co/reference/object/deleted
      */
     async deleteCustomList(variables: DeleteCustomListVariables): Promise<DeleteResult> {
         requireVariables(

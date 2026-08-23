@@ -325,7 +325,7 @@ export interface UpdateUserResponse {
 /**
  * `UpdateUserMutation` is a class representing a mutation to update a user.
  * It includes a method to update a user.
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/user
  */
 export class UpdateUserMutation extends APIWrapper {
     /**
@@ -334,7 +334,7 @@ export class UpdateUserMutation extends APIWrapper {
      * @param variables - An object of type `UpdateUserVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to an object of type `UpdateUserResponse`. This object includes the updated user details
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     * @see https://docs.anilist.co/reference/mutation
+     * @see https://docs.anilist.co/reference/object/user
      */
     async updateUser(variables: UpdateUserVariables): Promise<UpdateUserResponse> {
         const variableTypeMappings = {

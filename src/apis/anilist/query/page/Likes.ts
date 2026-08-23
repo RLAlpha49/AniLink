@@ -34,7 +34,7 @@ export interface LikesVariables {
 /**
  * `LikesQuery` is a class representing a query for likes.
  * It includes a method to get likes.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/union/likeableunion
  */
 export class LikesQuery extends APIWrapper {
     /**
@@ -42,7 +42,7 @@ export class LikesQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The users who liked the item for the requested page, with pagination metadata.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/union/likeableunion
      */
     async likes(variables: LikesVariables): Promise<LikesPageResponse> {
         requireVariables(

@@ -126,7 +126,7 @@ export interface StaffsVariables {
 /**
  * `StaffsQuery` is a class representing a query for staffs.
  * It includes a method to get staffs.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/staff
  */
 export class StaffsQuery extends APIWrapper {
     /**
@@ -134,7 +134,7 @@ export class StaffsQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/staff
      */
     async staffs(variables: StaffsVariables): Promise<StaffsPageResponse> {
         const variableTypeMappings = {

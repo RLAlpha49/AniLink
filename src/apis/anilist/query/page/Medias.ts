@@ -381,14 +381,14 @@ export interface MediasVariables {
 /**
  * `MediasQuery` is a class that extends the `APIWrapper` class.
  * It defines the `medias` method that returns a `MediaResponse`.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/media
  */
 export class MediasQuery extends APIWrapper {
     /**
      * Returns a `MediaResponse` object.
      * @param variables - A `MediasVariables` object representing the variables for the query.
      * @returns A `MediaResponse` object.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/media
      */
     async medias(variables: MediasVariables): Promise<MediasPageResponse> {
         const variableTypeMappings = {

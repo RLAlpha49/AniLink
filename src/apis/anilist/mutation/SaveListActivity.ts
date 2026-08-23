@@ -28,7 +28,7 @@ export interface SaveListActivityVariables {
 /**
  * `SaveListActivityMutation` is a class representing a mutation to save a list activity.
  * It includes a method to save a list activity
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export class SaveListActivityMutation extends APIWrapper {
     /**
@@ -37,7 +37,7 @@ export class SaveListActivityMutation extends APIWrapper {
      * @param variables - An object of type `SaveListActivityVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/mutation
+     *   * @see https://docs.anilist.co/reference/union/activityunion
      */
     async saveListActivity(variables: SaveListActivityVariables): Promise<Activity> {
         requireVariables(

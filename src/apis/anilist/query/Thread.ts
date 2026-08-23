@@ -64,7 +64,7 @@ export interface ThreadVariables {
 /**
  * `ThreadQuery` is a class representing a query for thread data.
  * It includes a method to send the thread query and receive the response.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/thread
  */
 export class ThreadQuery extends APIWrapper {
     /**
@@ -72,7 +72,7 @@ export class ThreadQuery extends APIWrapper {
      *
      * @param variables - The variables for the query.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/thread
      */
     async thread(variables: ThreadVariables): Promise<ThreadResponse> {
         requireVariables(

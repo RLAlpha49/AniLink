@@ -29,7 +29,7 @@ export interface UpdateAniChartSettingsVariables {
 
 /**
  * `UpdateAniChartSettingsMutation` is a class that represents a mutation to update the AniChart settings.
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/anichartuser
  */
 export class UpdateAniChartSettingsMutation extends APIWrapper {
     /**
@@ -38,7 +38,7 @@ export class UpdateAniChartSettingsMutation extends APIWrapper {
      * @param variables - An object of type `UpdateAniChartSettingsVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the updated AniChart settings string.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     * @see https://docs.anilist.co/reference/mutation
+     * @see https://docs.anilist.co/reference/object/anichartuser
      */
     async updateAniChartSettings(variables: UpdateAniChartSettingsVariables): Promise<string> {
         requireVariables(

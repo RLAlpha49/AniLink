@@ -86,7 +86,7 @@ export interface UpdateMediaListEntriesVariables {
 /**
  * `UpdateMediaListEntriesMutation` is a class representing a mutation to update media list entries.
  * It includes a method to update media list entries.
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/medialist
  */
 export class UpdateMediaListEntriesMutation extends APIWrapper {
     /**
@@ -95,7 +95,7 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
      * @param variables - An object of type `UpdateMediaListEntriesVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/mutation
+     *   * @see https://docs.anilist.co/reference/object/medialist
      */
     async updateMediaListEntries(
         variables: UpdateMediaListEntriesVariables

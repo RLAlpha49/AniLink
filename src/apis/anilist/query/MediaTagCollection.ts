@@ -19,7 +19,7 @@ export interface MediaTagCollectionVariables {
 /**
  * `MediaTagCollectionQuery` is a class representing a query for media tag collection data.
  * It includes a method to send the media tag collection query and receive the response.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/mediatag
  */
 export class MediaTagCollectionQuery extends APIWrapper {
     /**
@@ -27,7 +27,7 @@ export class MediaTagCollectionQuery extends APIWrapper {
      *
      * @param variables - The variables for the query. If not provided, an empty object will be used.
      * @returns The response from the query request.
-     * @see https://docs.anilist.co/reference/query
+     * @see https://docs.anilist.co/reference/object/mediatag
      */
     async mediaTagCollection(
         variables: MediaTagCollectionVariables = {}

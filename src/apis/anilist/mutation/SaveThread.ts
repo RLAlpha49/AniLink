@@ -53,7 +53,7 @@ export interface SaveThreadVariables {
 /**
  * `SaveThreadMutation` is a class representing a mutation to save a thread.
  * It includes a method to save a thread
- * @see https://docs.anilist.co/reference/mutation
+ * @see https://docs.anilist.co/reference/object/thread
  */
 export class SaveThreadMutation extends APIWrapper {
     /**
@@ -62,7 +62,7 @@ export class SaveThreadMutation extends APIWrapper {
      * @param variables - An object of type `SaveThreadVariables` representing the variables for the mutation.
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/mutation
+     *   * @see https://docs.anilist.co/reference/object/thread
      */
     async saveThread(variables: SaveThreadVariables): Promise<ThreadResponse> {
         requireVariables(

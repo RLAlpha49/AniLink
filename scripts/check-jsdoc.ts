@@ -9,14 +9,38 @@ const ANILIST_API_REFERENCE_PREFIX = "https://docs.anilist.co/reference/";
  */
 let referencePages: Set<string> | undefined;
 
+/**
+ * Per-operation mapping to the most specific AniList reference page available.
+ * Operations whose subject has no dedicated page fall back to the generic
+ * `/reference/query` or `/reference/mutation` index. Loaded from the
+ * `operationReferences` field of scripts/reference-pages.json.
+ */
+let operationReferences: Map<string, string> | undefined;
+
+interface ReferencePagesFile {
+    pages: string[];
+    operationReferences?: Record<string, string>;
+}
+
 async function loadReferencePages(): Promise<Set<string>> {
     if (referencePages) return referencePages;
 
     const pagesPath = join(__dirname, "reference-pages.json");
     const raw = await readFile(pagesPath, "utf8");
-    const parsed = JSON.parse(raw) as { pages: string[] };
+    const parsed = JSON.parse(raw) as ReferencePagesFile;
     referencePages = new Set(parsed.pages);
+    operationReferences = new Map(Object.entries(parsed.operationReferences ?? {}));
     return referencePages;
+}
+
+/**
+ * Resolves the specific reference page mapped to an operation, if any.
+ * Returns `undefined` for operations with no entry in the mapping (they are
+ * allowed to link to the generic query/mutation index).
+ */
+async function expectedOperationReference(operation: string): Promise<string | undefined> {
+    await loadReferencePages();
+    return operationReferences!.get(operation);
 }
 
 function normalizeReferencePath(reference: string): string | undefined {
@@ -81,10 +105,13 @@ export async function checkAniLinkSource(source: string, file: string): Promise<
 
     for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
         const line = lines[lineIndex];
-        const property = /^ {12,}([A-Za-z]\w*): *\(/.exec(line.text);
+        // Operation properties live at 8-space indent (query/mutation) or
+        // 12-space indent (page) inside the AniListApi interface. Match either
+        // leading-whitespace shape; group 2 holds the operation name.
+        const property = /^( {8}| {12})([A-Za-z]\w*): *\(/.exec(line.text);
         if (!property) continue;
 
-        const index = line.start + line.text.indexOf(property[1]);
+        const index = line.start + line.text.indexOf(property[2]);
         const documentation = findDocumentation(source, index);
         const signature = getPropertySignature(lines, lineIndex);
         const openParen = signature.indexOf("(");
@@ -108,7 +135,7 @@ export async function checkAniLinkSource(source: string, file: string): Promise<
                 index,
                 documentation,
                 String.raw`@param\s+(?:{[^}]+}\s+)?${parameter}`,
-                `AniLink operation ${property[1]} must document its ${parameter} parameter`
+                `AniLink operation ${property[2]} must document its ${parameter} parameter`
             );
         }
 
@@ -119,7 +146,7 @@ export async function checkAniLinkSource(source: string, file: string): Promise<
             index,
             documentation,
             "@returns",
-            `AniLink operation ${property[1]} must document its return value`
+            `AniLink operation ${property[2]} must document its return value`
         );
         requireTag(
             issues,
@@ -128,15 +155,16 @@ export async function checkAniLinkSource(source: string, file: string): Promise<
             index,
             documentation,
             "@example",
-            `AniLink operation ${property[1]} must include an executable usage example`
+            `AniLink operation ${property[2]} must include an executable usage example`
         );
-        await requireApiReference(
+        await requireSpecificApiReference(
             issues,
             source,
             file,
             index,
             documentation,
-            `AniLink operation ${property[1]}`
+            `AniLink operation ${property[2]}`,
+            property[2]
         );
     }
 
@@ -329,9 +357,11 @@ export async function checkTypeSource(source: string, file: string): Promise<Jsd
 export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
     const sourceRoot = resolve(projectRoot, "src");
-    const aniLinkPath = join(sourceRoot, "AniLink.ts");
-    const aniLinkSource = await readFile(aniLinkPath, "utf8");
-    issues.push(...(await checkAniLinkSource(aniLinkSource, relative(projectRoot, aniLinkPath))));
+    for (const relativePath of ["AniLink.ts", "apis/anilist/anilist-api-type.ts"]) {
+        const filePath = join(sourceRoot, relativePath);
+        const source = await readFile(filePath, "utf8");
+        issues.push(...(await checkAniLinkSource(source, relative(projectRoot, filePath))));
+    }
 
     for (const directory of ["apis/anilist/query", "apis/anilist/mutation"]) {
         for (const file of await collectTypeScriptFiles(join(sourceRoot, directory))) {
@@ -456,6 +486,57 @@ async function requireApiReference(
                 index,
                 "@see",
                 `${subject} must link to an actual AniList API reference page`
+            )
+        );
+    }
+}
+
+/**
+ * Like {@link requireApiReference}, but additionally enforces that the `@see`
+ * link points at the specific reference page mapped for the operation (see the
+ * `operationReferences` field in scripts/reference-pages.json) when one exists.
+ * Operations without a specific page mapping may still link to the generic
+ * `/reference/query` or `/reference/mutation` index.
+ */
+async function requireSpecificApiReference(
+    issues: JsdocIssue[],
+    source: string,
+    file: string,
+    index: number,
+    documentation: DocumentationBlock | undefined,
+    subject: string,
+    operation: string
+): Promise<void> {
+    if (!documentation) return;
+
+    const reference = /@see\s+(\S+)/.exec(documentation.text)?.[1];
+    if (!reference || !(await isActualAniListApiReference(reference))) {
+        issues.push(
+            createIssue(
+                source,
+                file,
+                index,
+                "@see",
+                `${subject} must link to an actual AniList API reference page`
+            )
+        );
+        return;
+    }
+
+    const expected = await expectedOperationReference(operation);
+    if (expected === undefined) return;
+
+    const actual = normalizeReferencePath(reference);
+    if (actual !== expected) {
+        issues.push(
+            createIssue(
+                source,
+                file,
+                index,
+                "@see",
+                `${subject} must link to the specific reference page ${expected} (got ${
+                    actual ?? reference
+                })`
             )
         );
     }
