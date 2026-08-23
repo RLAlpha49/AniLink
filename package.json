@@ -50,7 +50,7 @@
     "release": "semantic-release",
     "release:dry": "semantic-release --dry-run --no-ci",
     "prepublishOnly": "npm run build",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run anilist:api:compare"
+    "check": "npm run typecheck && npm run lint && npm run test && npm run format:check && npm run jsdoc:check && npm run anilist:api:compare"
   },
   "keywords": [
     "anilist",
