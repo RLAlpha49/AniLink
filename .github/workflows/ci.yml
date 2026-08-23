@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Verify and build
@@ -23,7 +27,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -35,8 +39,16 @@ jobs:
       - name: Type-check source
         run: npm run typecheck
 
-      - name: Run tests
-        run: npm test
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
 
       - name: Check formatting
         run: npm run format:check
@@ -65,14 +77,18 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Fail if ANILIST_TOKEN is missing
-        if: ${{ env.ANILIST_TOKEN == '' }}
+      - name: Warn when ANILIST_TOKEN is unavailable to a fork pull request
+        if: ${{ env.ANILIST_TOKEN == '' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+        run: echo "::warning::ANILIST_TOKEN secret is not available to fork pull requests; live integration tests are skipped"
+
+      - name: Fail when ANILIST_TOKEN is missing outside fork pull requests
+        if: ${{ env.ANILIST_TOKEN == '' && !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) }}
         run: echo "::error::ANILIST_TOKEN secret is not set; live integration coverage is not running" && exit 1
 
       - name: Run live AniList integration test

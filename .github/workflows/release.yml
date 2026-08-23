@@ -12,11 +12,17 @@ permissions:
   pull-requests: write
   id-token: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     if: ${{ !contains(github.event.head_commit.message || '', '[skip ci]') && !contains(github.event.head_commit.message || '', '[ci skip]') && !contains(github.event.head_commit.message || '', 'chore(release)') }}
     name: semantic-release
     runs-on: ubuntu-latest
+    # Publishes wait for approval through the protected "npm" environment.
+    environment: npm
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -26,7 +32,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
