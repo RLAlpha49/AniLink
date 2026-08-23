@@ -66,9 +66,7 @@
   "author": "RLAlpha49",
   "license": "MIT",
   "devDependencies": {
-    "@8hobbies/typedoc-plugin-404": "^3.2.1",
     "@boneskull/typedoc-plugin-mermaid": "^0.2.1",
-    "@mrfigg/typedoc-plugin-lib-utils": "^1.3.1",
     "@semantic-release/changelog": "^7.0.0",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^11.0.1",
