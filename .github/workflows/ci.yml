@@ -44,6 +44,12 @@ jobs:
       - name: Check JSDoc comments
         run: npm run jsdoc:check
 
+      - name: Check schema/interface sync
+        run: npm run schema:sync -- --strict
+
+      - name: Compare package contracts against AniList schema snapshot
+        run: npm run anilist:api:compare -- --strict --ignore-unimplemented
+
       - name: Build package
         run: npm run build
 

@@ -1,9 +1,9 @@
-name: AniList API comparison
+name: AniList live API drift check
 
+# Snapshot-based contract comparison runs in CI on every push and pull request.
+# This workflow exists only for LIVE comparisons against AniList's current
+# schema: a weekly scheduled check plus on-demand manual runs.
 on:
-  push:
-    branches: [master]
-  pull_request:
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
@@ -11,7 +11,7 @@ on:
       live:
         description: Compare against the current live AniList schema
         required: false
-        default: false
+        default: true
         type: boolean
 
 permissions:

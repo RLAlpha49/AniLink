@@ -39,6 +39,7 @@
     "anilist:api:compare": "tsx scripts/anilist-api-compare/cli.ts compare",
     "anilist:api:update-schema": "tsx scripts/anilist-api-compare/cli.ts update-schema",
     "jsdoc:check": "tsx scripts/check-jsdoc.ts",
+    "schema:sync": "tsx scripts/check-schema-interface-sync.ts",
     "lint": "eslint \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/",
     "lint:fix": "eslint --fix \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/",
     "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\" \"Examples/**/*.md\" scripts/",
