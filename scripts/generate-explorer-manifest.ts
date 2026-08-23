@@ -612,7 +612,7 @@ interface RawOp {
 
 /** Parse the type-declaration block in AniLink.ts into raw operations. */
 function discoverOperations(): RawOp[] {
-    const content = readFileText(join(ANILIST, "facade.ts"));
+    const content = readFileText(join(ANILIST, "anilist-api-type.ts"));
     const lines = content.split("\n");
     const ops: RawOp[] = [];
 
@@ -707,7 +707,7 @@ function tryParseSignature(
 function resolveSourceInfo(
     op: RawOp
 ): { className: string; methodName: string; sourceFile: string } | null {
-    const content = readFileText(join(ANILIST, "facade.ts"));
+    const content = readFileText(join(ANILIST, "anilist-wiring.ts"));
     const escapedName = op.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     // Find all bindings: `name: <instance>.<method>.bind(<instance>)`.
     // The method name does not always equal the operation name (e.g. `following` op
