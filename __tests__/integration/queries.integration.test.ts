@@ -1,4 +1,5 @@
 import { AniLink } from "../../src/AniLink";
+import { AniLinkApiError } from "../../src/base/AniLinkError";
 import { beforeEach, describe, expect, test } from "vitest";
 
 /**
@@ -40,6 +41,10 @@ const FIXTURES = {
     activityTypeText: "TEXT" as const,
     animeType: "ANIME" as const,
 };
+
+/** Ids far beyond the current AniList id space, so lookups miss. */
+const NONEXISTENT_MEDIA_ID = 999_999_999;
+const NONEXISTENT_CHARACTER_ID = 999_999_999;
 
 describe("AniList live integration — root queries", () => {
     test.skipIf(!token)("user resolves by id", async () => {
@@ -406,5 +411,106 @@ describe("AniList live integration — transport behaviour", () => {
     test.skipIf(!token)("unauthenticated client fails auth-required queries", async () => {
         const anonymous = new AniLink();
         await expect(anonymous.anilist.query.viewer()).rejects.toThrow();
+    });
+
+    test.skipIf(!token)("malformed variables surface a validation error envelope", async () => {
+        // AniList answers a variable type mismatch with HTTP 400 and an
+        // errors-only envelope, so the pipeline normalizes it to
+        // AniLinkApiError instead of unwrapping data.
+        const promise = client().anilist.custom<{ id: number }>(
+            "query ($id: Int) { Media (id: $id) { id } }",
+            { id: "not-a-number" }
+        );
+        await expect(promise).rejects.toThrowError(AniLinkApiError);
+        try {
+            await promise;
+        } catch (error) {
+            expect(error).toBeInstanceOf(AniLinkApiError);
+            const apiError = error as AniLinkApiError;
+            expect(apiError.status).toBe(400);
+            expect(apiError.data).toMatchObject({ errors: [{}] });
+        }
+    });
+
+    describe("negative paths — malformed GraphQL responses", () => {
+        test.skipIf(!token)(
+            "media query with nonexistent id rejects with the upstream error preserved",
+            async () => {
+                // A missing entity comes back as HTTP 404 whose body is a
+                // GraphQL envelope carrying an `errors` array plus partial
+                // `data`. Axios rejects before unwrapping, so the pipeline
+                // normalizes it to AniLinkApiError while keeping the full
+                // upstream envelope on `.data` — including the "Not Found."
+                // message and the partial `{ Media: null }` payload.
+                const promise = client().anilist.query.media({
+                    id: NONEXISTENT_MEDIA_ID,
+                    type: FIXTURES.animeType,
+                });
+                await expect(promise).rejects.toThrowError(AniLinkApiError);
+                try {
+                    await promise;
+                } catch (error) {
+                    expect(error).toBeInstanceOf(AniLinkApiError);
+                    const apiError = error as AniLinkApiError;
+                    expect(apiError.status).toBe(404);
+                    const envelope = apiError.data as {
+                        errors?: Array<{ message?: string }>;
+                        data?: Record<string, unknown>;
+                    };
+                    expect(envelope.errors?.[0]?.message).toContain("Not Found");
+                    expect(envelope.data).toMatchObject({ Media: null });
+                }
+            }
+        );
+
+        test.skipIf(!token)(
+            "character query with nonexistent id preserves the upstream envelope",
+            async () => {
+                const promise = client().anilist.query.character({
+                    id: NONEXISTENT_CHARACTER_ID,
+                });
+                await expect(promise).rejects.toThrowError(AniLinkApiError);
+                try {
+                    await promise;
+                } catch (error) {
+                    const apiError = error as AniLinkApiError;
+                    expect(apiError.status).toBe(404);
+                    const envelope = apiError.data as {
+                        errors?: Array<{ message?: string }>;
+                        data?: Record<string, unknown>;
+                    };
+                    expect(envelope.errors?.[0]?.message).toContain("Not Found");
+                    expect(envelope.data).toMatchObject({ Character: null });
+                }
+            }
+        );
+
+        test.skipIf(!token)(
+            "partial multi-root-field failure keeps the envelope in the error payload",
+            async () => {
+                // One aliased root field targets a real entity while the other
+                // misses. AniList still answers HTTP 404 and nulls every root
+                // field in `data`, so this pins down that partial results do
+                // NOT survive: the whole envelope lands on `.data` of the
+                // normalized error, with both fields nulled.
+                const promise = client().anilist.custom<{
+                    good: { id: number } | null;
+                    bad: { id: number } | null;
+                }>("query { good: Media (id: 1) { id } bad: Media (id: 999999999) { id } }");
+                await expect(promise).rejects.toThrowError(AniLinkApiError);
+                try {
+                    await promise;
+                } catch (error) {
+                    const apiError = error as AniLinkApiError;
+                    expect(apiError.status).toBe(404);
+                    const envelope = apiError.data as {
+                        errors?: Array<{ message?: string }>;
+                        data?: Record<string, unknown>;
+                    };
+                    expect(envelope.errors?.[0]?.message).toContain("Not Found");
+                    expect(envelope.data).toEqual({ good: null, bad: null });
+                }
+            }
+        );
     });
 });
