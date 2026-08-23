@@ -1,5 +1,6 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const ANILIST_API_REFERENCE_PREFIX = "https://docs.anilist.co/reference/";
 
@@ -25,7 +26,7 @@ interface ReferencePagesFile {
 async function loadReferencePages(): Promise<Set<string>> {
     if (referencePages) return referencePages;
 
-    const pagesPath = join(__dirname, "reference-pages.json");
+    const pagesPath = join(import.meta.dirname, "reference-pages.json");
     const raw = await readFile(pagesPath, "utf8");
     const parsed = JSON.parse(raw) as ReferencePagesFile;
     referencePages = new Set(parsed.pages);
@@ -557,7 +558,7 @@ function createIssue(
     };
 }
 
-if (require.main === module) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     void checkJsdoc()
         .then((issues) => {
             if (issues.length === 0) {

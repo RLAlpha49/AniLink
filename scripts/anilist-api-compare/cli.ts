@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { comparePackageToSchema } from "../../lib/api-compare/compare";
 import { discoverPackageContracts, discoverPackageOperations } from "./package-inventory";
 import { renderJson, renderMarkdown } from "../../lib/api-compare/report";
@@ -123,7 +124,7 @@ function valueAfter(argv: string[], flag: string): string | undefined {
     return index >= 0 ? argv[index + 1] : undefined;
 }
 
-if (require.main === module) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     const argv = process.argv.slice(2);
     const command = argv.shift() ?? "compare";
     if (command === "update-schema") {

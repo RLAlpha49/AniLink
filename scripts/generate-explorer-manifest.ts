@@ -18,6 +18,7 @@ import {
     copyFileSync,
 } from "node:fs";
 import { dirname, resolve, join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 /** A single variable field on an operation's `*Variables` interface. */
 export interface Field {
@@ -58,7 +59,7 @@ export interface Manifest {
     operations: Operation[];
 }
 
-const ROOT = resolve(__dirname, "..");
+const ROOT = resolve(import.meta.dirname, "..");
 const SRC = join(ROOT, "src");
 const ANILIST = join(SRC, "apis", "anilist");
 const ANILIST_ENDPOINT = "https://graphql.anilist.co";
@@ -868,8 +869,8 @@ function copyExplorerAssets(destDir: string): void {
 }
 
 // CLI entry: `npx tsx scripts/generate-explorer-manifest.ts`
-if (require.main === module) {
-    const outDir = resolve(__dirname, "..", "docs", "explorer");
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+    const outDir = resolve(import.meta.dirname, "..", "docs", "explorer");
     const outPath = join(outDir, "operations.json");
     writeManifest(outPath);
     copyExplorerAssets(outDir);

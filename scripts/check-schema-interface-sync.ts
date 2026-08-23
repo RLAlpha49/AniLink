@@ -238,11 +238,7 @@ function pairConstantsToInterfaces(
     constants: SchemaConstant[],
     shapes: InterfaceShape[]
 ): Array<{ constant: SchemaConstant; shape?: InterfaceShape }> {
-    const shapesByNormalizedName = new Map<string, InterfaceShape[]>();
-    for (const shape of shapes) {
-        const key = normalizeTypeName(shape.name);
-        shapesByNormalizedName.set(key, [...(shapesByNormalizedName.get(key) ?? []), shape]);
-    }
+    const shapesByNormalizedName = Map.groupBy(shapes, (shape) => normalizeTypeName(shape.name));
     const constantsPerFile = new Map<string, number>();
     for (const constant of constants) {
         constantsPerFile.set(constant.filePath, (constantsPerFile.get(constant.filePath) ?? 0) + 1);
@@ -265,7 +261,7 @@ function pairConstantsToInterfaces(
                 constant,
                 shape:
                     mirrored ??
-                    [...candidates].sort((left, right) => left.name.length - right.name.length)[0],
+                    candidates.toSorted((left, right) => left.name.length - right.name.length)[0],
             };
         }
         // File-level mirror for single-constant files (XSchema -> XResponse).
@@ -473,7 +469,7 @@ function diffUnionSelection(
     const declaredMembers = shape.unionMembers ?? shape.properties;
     const declaredSet = new Set(declaredMembers);
     const signatureOf = (properties: string[]): string =>
-        [...properties].sort((left, right) => left.localeCompare(right)).join("|");
+        properties.toSorted((left, right) => left.localeCompare(right)).join("|");
 
     const memberBySignature = new Map<string, string>();
     for (const member of declaredMembers) {
@@ -768,6 +764,8 @@ function main(): number {
     return 0;
 }
 
-if (require.main === module) {
+import { pathToFileURL } from "node:url";
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     process.exitCode = main();
 }

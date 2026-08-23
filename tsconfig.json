@@ -1,23 +1,17 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "commonjs",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "lib": ["ES2022"],
-    "strict": true,
-    "esModuleInterop": true,
-    "types": ["node"],
-    "declaration": true,
-    "declarationMap": true
-  },
-  "include": [
-    "src/**/*.ts",
-    "./src"
-  ],
-  "exclude": [
-    "node_modules",
-    "__tests__",
-    "docs"
-  ]
+    "compilerOptions": {
+        "target": "ES2024",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "lib": ["ES2024"],
+        "strict": true,
+        "esModuleInterop": true,
+        "types": ["node"],
+        "declaration": true,
+        "declarationMap": true
+    },
+    "include": ["src/**/*.ts", "./src"],
+    "exclude": ["node_modules", "__tests__", "docs"]
 }

@@ -1,101 +1,103 @@
 {
-  "name": "anilink-api-wrapper",
-  "version": "1.29.2",
-  "description": "API wrapper for AniManga sites such as Anilist, MyAnimeList, Kitsu.",
-  "main": "dist/AniLink.js",
-  "types": "./dist/AniLink.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/AniLink.d.ts",
-      "require": "./dist/AniLink.js",
-      "import": "./dist/AniLink.js",
-      "default": "./dist/AniLink.js"
+    "name": "anilink-api-wrapper",
+    "version": "1.29.2",
+    "description": "API wrapper for AniManga sites such as Anilist, MyAnimeList, Kitsu.",
+    "type": "module",
+    "main": "dist/AniLink.mjs",
+    "types": "./dist/AniLink.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/AniLink.d.ts",
+            "import": "./dist/AniLink.mjs",
+            "default": "./dist/AniLink.mjs"
+        }
+    },
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "engines": {
+        "node": ">=22"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/RLAlpha49/AniLink.git"
+    },
+    "homepage": "https://rlalpha49.github.io/AniLink/",
+    "bugs": {
+        "url": "https://github.com/RLAlpha49/AniLink/issues"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run",
+        "test:integration": "vitest run --config vitest.integration.config.mts",
+        "test:coverage": "vitest run --coverage",
+        "build": "rimraf dist && unbuild",
+        "anilist:api:compare": "tsx scripts/anilist-api-compare/cli.ts compare",
+        "anilist:api:update-schema": "tsx scripts/anilist-api-compare/cli.ts update-schema",
+        "jsdoc:check": "tsx scripts/check-jsdoc.ts",
+        "schema:sync": "tsx scripts/check-schema-interface-sync.ts",
+        "lint": "eslint \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/ build.config.ts",
+        "lint:fix": "eslint --fix \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/ build.config.ts",
+        "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\" \"Examples/**/*.md\" scripts/ build.config.ts",
+        "format:check": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\" \"Examples/**/*.md\" scripts/ build.config.ts",
+        "docs:explorer": "tsx scripts/generate-explorer-manifest.ts",
+        "docs:generate": "typedoc && npm run docs:explorer",
+        "docs:serve": "npm run docs:generate && npx serve docs",
+        "release": "semantic-release",
+        "release:dry": "semantic-release --dry-run --no-ci",
+        "prepublishOnly": "npm run build",
+        "check": "npm run typecheck && npm run lint && npm run test && npm run format:check && npm run jsdoc:check && npm run anilist:api:compare"
+    },
+    "keywords": [
+        "anilist",
+        "myanimelist",
+        "kitsu",
+        "api",
+        "wrapper",
+        "anilist-api",
+        "anilist-query",
+        "anilist-mutation",
+        "anilist-graphql"
+    ],
+    "author": "RLAlpha49",
+    "license": "MIT",
+    "devDependencies": {
+        "@boneskull/typedoc-plugin-mermaid": "^0.2.1",
+        "@semantic-release/changelog": "^7.0.0",
+        "@semantic-release/commit-analyzer": "^13.0.1",
+        "@semantic-release/git": "^11.0.1",
+        "@semantic-release/github": "^12.0.9",
+        "@semantic-release/npm": "^13.1.5",
+        "@semantic-release/release-notes-generator": "^14.1.1",
+        "@types/node": "^26.2.0",
+        "@typescript-eslint/eslint-plugin": "^8.67.0",
+        "@typescript-eslint/parser": "^8.67.0",
+        "@vitest/coverage-v8": "^4.1.11",
+        "conventional-changelog-conventionalcommits": "^10.4.0",
+        "eslint": "^10.8.1",
+        "eslint-config-prettier": "^10.1.8",
+        "graphql": "^17.0.2",
+        "mermaid": "^11.17.0",
+        "prettier": "^3.9.6",
+        "rimraf": "^6.1.3",
+        "semantic-release": "^25.0.9",
+        "tsx": "^4.23.12",
+        "typedoc": "^0.28.20",
+        "typedoc-github-theme": "^0.4.0",
+        "typedoc-plugin-ga": "^1.1.1",
+        "typedoc-plugin-llms-txt": "^0.1.2",
+        "typedoc-plugin-mdn-links": "^5.1.1",
+        "typedoc-plugin-missing-exports": "^4.1.4",
+        "typescript": "^6.0.3",
+        "unbuild": "^3.6.1",
+        "vitest": "^4.1.11"
+    },
+    "dependencies": {
+        "axios": "^1.19.0"
     }
-  },
-  "files": [
-    "dist"
-  ],
-  "engines": {
-    "node": ">=20"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/RLAlpha49/AniLink.git"
-  },
-  "homepage": "https://rlalpha49.github.io/AniLink/",
-  "bugs": {
-    "url": "https://github.com/RLAlpha49/AniLink/issues"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
-  "scripts": {
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.config.mts",
-    "test:coverage": "vitest run --coverage",
-    "build": "rimraf dist && tsc",
-    "anilist:api:compare": "tsx scripts/anilist-api-compare/cli.ts compare",
-    "anilist:api:update-schema": "tsx scripts/anilist-api-compare/cli.ts update-schema",
-    "jsdoc:check": "tsx scripts/check-jsdoc.ts",
-    "schema:sync": "tsx scripts/check-schema-interface-sync.ts",
-    "lint": "eslint \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/",
-    "lint:fix": "eslint --fix \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/",
-    "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\" \"Examples/**/*.md\" scripts/",
-    "format:check": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\" \"Examples/**/*.md\" scripts/",
-    "docs:explorer": "tsx scripts/generate-explorer-manifest.ts",
-    "docs:generate": "typedoc && npm run docs:explorer",
-    "docs:serve": "npm run docs:generate && npx serve docs",
-    "release": "semantic-release",
-    "release:dry": "semantic-release --dry-run --no-ci",
-    "prepublishOnly": "npm run build",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run format:check && npm run jsdoc:check && npm run anilist:api:compare"
-  },
-  "keywords": [
-    "anilist",
-    "myanimelist",
-    "kitsu",
-    "api",
-    "wrapper",
-    "anilist-api",
-    "anilist-query",
-    "anilist-mutation",
-    "anilist-graphql"
-  ],
-  "author": "RLAlpha49",
-  "license": "MIT",
-  "devDependencies": {
-    "@boneskull/typedoc-plugin-mermaid": "^0.2.1",
-    "@semantic-release/changelog": "^7.0.0",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/git": "^11.0.1",
-    "@semantic-release/github": "^12.0.9",
-    "@semantic-release/npm": "^13.1.5",
-    "@semantic-release/release-notes-generator": "^14.1.1",
-    "@types/node": "^26.2.0",
-    "@typescript-eslint/eslint-plugin": "^8.67.0",
-    "@typescript-eslint/parser": "^8.67.0",
-    "@vitest/coverage-v8": "^4.1.11",
-    "conventional-changelog-conventionalcommits": "^10.4.0",
-    "eslint": "^10.8.1",
-    "eslint-config-prettier": "^10.1.8",
-    "graphql": "^17.0.2",
-    "mermaid": "^11.17.0",
-    "prettier": "^3.9.6",
-    "rimraf": "^6.1.3",
-    "semantic-release": "^25.0.9",
-    "tsx": "^4.23.12",
-    "typedoc": "^0.28.20",
-    "typedoc-github-theme": "^0.4.0",
-    "typedoc-plugin-ga": "^1.1.1",
-    "typedoc-plugin-llms-txt": "^0.1.2",
-    "typedoc-plugin-mdn-links": "^5.1.1",
-    "typedoc-plugin-missing-exports": "^4.1.4",
-    "typescript": "^6.0.3",
-    "vitest": "^4.1.11"
-  },
-  "dependencies": {
-    "axios": "^1.19.0"
-  }
 }
