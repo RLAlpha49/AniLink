@@ -1,5 +1,7 @@
 import { type AniLinkOptions, buildAniListApi, type AniListApi } from "./apis/anilist/facade";
 
+export type { AniLinkOptions } from "./apis/anilist/facade";
+
 export {
     ANILIST_AUTHORIZE_URL,
     ANILIST_TOKEN_URL,
@@ -20,6 +22,14 @@ export {
     AniLinkValidationError,
 } from "./base/AniLinkError";
 export type { AniLinkErrorCode, RateLimitInfo } from "./base/AniLinkError";
+
+export { paginate, paginateChunks, paginatePages } from "./base/Paginator";
+export type {
+    ChunkPaginateOptions,
+    ChunkPaginateResult,
+    PaginateOptions,
+    PaginateResult,
+} from "./base/Paginator";
 
 /**
  * `AniLink` is a class for interacting with the APIs.
