@@ -10,7 +10,7 @@ export type MediaStatus = "FINISHED" | "RELEASING" | "NOT_YET_RELEASED" | "CANCE
  * It can be one of the following: 'FINISHED', 'RELEASING', 'NOT_YET_RELEASED', 'CANCELLED', 'HIATUS'.
  * @see https://docs.anilist.co/reference/enum/mediastatus
  */
-export const MediaStatusMappings = [
+export const MediaStatusMappings: readonly MediaStatus[] = [
     "FINISHED",
     "RELEASING",
     "NOT_YET_RELEASED",
@@ -31,7 +31,7 @@ export type MediaListStatus =
  * It can be one of the following: 'CURRENT', 'PLANNING', 'COMPLETED', 'DROPPED', 'PAUSED', 'REPEATING'.
  * @see https://docs.anilist.co/reference/enum/medialiststatus
  */
-export const MediaListStatusMappings = [
+export const MediaListStatusMappings: readonly MediaListStatus[] = [
     "CURRENT",
     "PLANNING",
     "COMPLETED",

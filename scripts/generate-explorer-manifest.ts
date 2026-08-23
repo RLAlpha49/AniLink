@@ -255,7 +255,11 @@ function findEnumMappings(mappingName: string): string[] {
     for (const name of readdirSync(typesDir)) {
         if (!name.endsWith(".ts")) continue;
         const content = readFileText(join(typesDir, name));
-        const re = new RegExp(String.raw`export const ${mappingName}\s*=\s*\[([\s\S]*?)\]`);
+        // Mapping constants may carry a readonly union annotation
+        // (e.g. `export const MediaSortMappings: readonly MediaSort[] = [...]`).
+        const re = new RegExp(
+            String.raw`export const ${mappingName}\s*(?::\s*[^=]+)?\s*=\s*\[([\s\S]*?)\]`
+        );
         const m = re.exec(content);
         if (m) {
             const vals = m[1].match(/"([^"]+)"/g);

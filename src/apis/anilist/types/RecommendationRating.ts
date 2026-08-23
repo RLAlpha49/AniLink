@@ -10,4 +10,8 @@ export type RecommendationRating = "NO_RATING" | "RATE_UP" | "RATE_DOWN";
  * It can be one of the following: 'NO_RATING', 'RATE_UP', 'RATE_DOWN'.
  * @see https://docs.anilist.co/reference/enum/recommendationrating
  */
-export const RecommendationRatingMappings = ["NO_RATING", "RATE_UP", "RATE_DOWN"];
+export const RecommendationRatingMappings: readonly RecommendationRating[] = [
+    "NO_RATING",
+    "RATE_UP",
+    "RATE_DOWN",
+];

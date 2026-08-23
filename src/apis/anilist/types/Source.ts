@@ -26,7 +26,7 @@ export type MediaSource =
  * It can be one of the following: 'ORIGINAL', 'MANGA', 'LIGHT_NOVEL', 'VISUAL_NOVEL', 'VIDEO_GAME', 'OTHER', 'NOVEL', 'DOUJINSHI', 'ANIME', 'WEB_NOVEL', 'LIVE_ACTION', 'GAME', 'BOOK', 'MUSIC', 'MULTIMEDIA_PROJECT', 'PICTURE_BOOK'.
  * @see https://docs.anilist.co/reference/enum/mediasource
  */
-export const MediaSourceMappings = [
+export const MediaSourceMappings: readonly MediaSource[] = [
     "ORIGINAL",
     "MANGA",
     "LIGHT_NOVEL",

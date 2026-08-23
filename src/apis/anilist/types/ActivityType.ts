@@ -10,4 +10,10 @@ export type ActivityType = "TEXT" | "ANIME_LIST" | "MANGA_LIST" | "MESSAGE" | "M
  * It can be one of the following: 'TEXT', 'ANIME_LIST', 'MANGA_LIST', 'MESSAGE', 'MEDIA_LIST'.
  * @see https://docs.anilist.co/reference/enum/activitytype
  */
-export const ActivityTypeMappings = ["TEXT", "ANIME_LIST", "MANGA_LIST", "MESSAGE", "MEDIA_LIST"];
+export const ActivityTypeMappings: readonly ActivityType[] = [
+    "TEXT",
+    "ANIME_LIST",
+    "MANGA_LIST",
+    "MESSAGE",
+    "MEDIA_LIST",
+];

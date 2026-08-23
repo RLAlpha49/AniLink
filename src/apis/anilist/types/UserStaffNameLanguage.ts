@@ -11,7 +11,7 @@ export type UserStaffNameLanguage =
  * It can be one of the following: 'ROMAJI', 'ENGLISH', 'NATIVE', 'ROMAJI_STYLISED', 'ENGLISH_STYLISED', 'NATIVE_STYLISED'.
  * @see https://docs.anilist.co/reference/enum/userstaffnamelanguage
  */
-export const UserStaffNameLanguageMapping = [
+export const UserStaffNameLanguageMapping: readonly UserStaffNameLanguage[] = [
     "ROMAJI",
     "ENGLISH",
     "NATIVE",

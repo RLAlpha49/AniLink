@@ -10,4 +10,4 @@ export type ReviewRating = "NO_VOTE" | "UP_VOTE" | "DOWN_VOTE";
  * It can be one of the following: 'NO_VOTE', 'UP_VOTE', 'DOWN_VOTE'.
  * @see https://docs.anilist.co/reference/enum/reviewrating
  */
-export const ReviewRatingMappings = ["NO_VOTE", "UP_VOTE", "DOWN_VOTE"];
+export const ReviewRatingMappings: readonly ReviewRating[] = ["NO_VOTE", "UP_VOTE", "DOWN_VOTE"];

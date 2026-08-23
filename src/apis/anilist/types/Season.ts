@@ -10,4 +10,4 @@ export type MediaSeason = "WINTER" | "SPRING" | "SUMMER" | "FALL";
  * It can be one of the following: 'WINTER', 'SPRING', 'SUMMER', 'FALL'.
  * @see https://docs.anilist.co/reference/enum/mediaseason
  */
-export const MediaSeasonMappings = ["WINTER", "SPRING", "SUMMER", "FALL"];
+export const MediaSeasonMappings: readonly MediaSeason[] = ["WINTER", "SPRING", "SUMMER", "FALL"];

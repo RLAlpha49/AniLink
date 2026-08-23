@@ -20,7 +20,7 @@ export type MediaFormat =
  * It can be one of the following: 'TV', 'TV_SHORT', 'MOVIE', 'SPECIAL', 'OVA', 'ONA', 'MUSIC', 'MANGA', 'NOVEL', 'ONE_SHOT'.
  * @see https://docs.anilist.co/reference/enum/mediaformat
  */
-export const MediaFormatMappings = [
+export const MediaFormatMappings: readonly MediaFormat[] = [
     "TV",
     "TV_SHORT",
     "MOVIE",
@@ -45,7 +45,7 @@ export type ScoreFormat = "POINT_100" | "POINT_10_DECIMAL" | "POINT_10" | "POINT
  * It can be one of the following: 'POINT_100', 'POINT_10_DECIMAL', 'POINT_10', 'POINT_5', 'POINT_3'.
  * @see https://docs.anilist.co/reference/enum/scoreformat
  */
-export const ScoreFormatMapping = [
+export const ScoreFormatMapping: readonly ScoreFormat[] = [
     "POINT_100",
     "POINT_10_DECIMAL",
     "POINT_10",
