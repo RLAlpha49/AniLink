@@ -200,8 +200,40 @@ export interface GraphQLResponseEnvelope {
  * The AniList API returns every operation's result inside a `{ data }` envelope.
  * For operations whose selection set has exactly one root field (for example
  * `User`, `Media`, or `MediaListCollection`), this helper returns the bare
- * field value. For responses with multiple root fields, or responses without
- * a `data` object, the full envelope is returned unchanged.
+ * field value. When the envelope carries zero or multiple root fields, or no
+ * `data` object at all, it returns `undefined` so callers can decide what to
+ * do with a document whose shape does not match the single-root-field
+ * contract.
+ *
+ * @param response - The full GraphQL response envelope.
+ * @returns The bare root-field value, or `undefined` when the document does not have exactly one root field.
+ */
+export const unwrapSingleRootField = <T>(response: unknown): T | undefined => {
+    const envelope = response as GraphQLResponseEnvelope | null | undefined;
+    const queryData = envelope?.data;
+
+    if (!queryData || typeof queryData !== "object") {
+        return undefined;
+    }
+
+    const fields = Object.keys(queryData);
+
+    if (fields.length === 1) {
+        return (queryData as Record<string, T>)[fields[0]];
+    }
+
+    return undefined;
+};
+
+/**
+ * Unwraps a GraphQL response envelope.
+ *
+ * This is the tolerant wrapper around {@link unwrapSingleRootField} used by
+ * the request pipeline. Documents with exactly one root field resolve to the
+ * bare field value; documents with multiple root fields (or none) are returned
+ * as the full envelope unchanged. All shipped operations are single-root-field,
+ * so consumers of typed operations always receive the bare value; only custom
+ * multi-field documents surface the envelope shape.
  *
  * An envelope carrying a non-empty `errors` array (an HTTP 200 GraphQL
  * failure) throws an {@link AniLinkGraphQLError} instead of returning data.
@@ -212,21 +244,12 @@ export interface GraphQLResponseEnvelope {
  */
 export const unwrapGraphQLResponse = <T>(response: unknown): T => {
     const envelope = response as GraphQLResponseEnvelope | null | undefined;
-    const queryData = envelope?.data;
 
     if (Array.isArray(envelope?.errors) && envelope.errors.length > 0) {
-        throw new AniLinkGraphQLError(envelope.errors, queryData);
+        throw new AniLinkGraphQLError(envelope.errors, envelope?.data);
     }
 
-    if (queryData && typeof queryData === "object") {
-        const fields = Object.keys(queryData);
-
-        if (fields.length === 1) {
-            return (queryData as Record<string, T>)[fields[0]];
-        }
-    }
-
-    return response as T;
+    return unwrapSingleRootField<T>(response) ?? (response as T);
 };
 
 const getRawAxiosError = (resolved: ResolvedRequestOptions, error: unknown): unknown =>
@@ -495,10 +518,12 @@ const executeWithRetry = async <T>(
  * @param token - The authentication token to include in the request headers.
  * @param requiresAuth - Whether the operation requires an authentication token.
  * @param options - Per-request transport settings. When omitted, library defaults apply (30 second timeout, no retry, no hooks).
- * @returns The unwrapped response data. For operations with a single root
- * field this is the bare field value; otherwise it is the full `{ data }`
- * envelope. Use {@link unwrapGraphQLResponse} to apply the same rule to a
- * response yourself.
+ * @returns The unwrapped response data. For documents with a single root
+ * field this is the bare field value; multi-root-field (or zero-root-field)
+ * documents are returned as the full `{ data }` envelope unchanged. Use
+ * {@link unwrapGraphQLResponse} for the tolerant rule or
+ * {@link unwrapSingleRootField} when a caller needs the strict single-root-field
+ * result (`undefined` signals the document did not match).
  * @throws An error if the request fails.
  */
 export const sendRequest = async <T = unknown>(

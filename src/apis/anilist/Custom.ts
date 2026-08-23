@@ -23,10 +23,17 @@ export class CustomRequest extends APIWrapper {
      * The response follows the same unwrapping rule as every other operation:
      * a document with a single root field resolves to the bare field value,
      * while a document with multiple root fields resolves to the full
-     * `{ data }` envelope. Annotate `T` with the shape you expect:
+     * `{ data }` envelope. Annotate `T` with the shape you expect — the bare
+     * value for single-root-field documents, or the envelope type itself when
+     * the document selects several root fields:
      *
      * ```typescript
      * const viewer = await aniLink.anilist.custom<{ id: number }>("query { Viewer { id } }");
+     *
+     * // Multi-root-field document: T is the full envelope.
+     * const both = await aniLink.anilist.custom<{ data: { Media: { id: number }; User: { id: number } } }>(
+     *     "query { Media (id: 1) { id } User (id: 1) { id } }"
+     * );
      * ```
      *
      * @param query - The GraphQL document to execute. It must declare a `query` or `mutation` operation.

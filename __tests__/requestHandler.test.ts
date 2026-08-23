@@ -7,7 +7,12 @@ import {
     AniLinkGraphQLError,
     AniLinkNetworkError,
 } from "../src/base/AniLinkError";
-import { DEFAULT_REQUEST_TIMEOUT, sendRequest } from "../src/base/RequestHandler";
+import {
+    DEFAULT_REQUEST_TIMEOUT,
+    sendRequest,
+    unwrapGraphQLResponse,
+    unwrapSingleRootField,
+} from "../src/base/RequestHandler";
 import { AniLink } from "../src/AniLink";
 
 const mocks = vi.hoisted(() => {
@@ -333,6 +338,39 @@ test("passes through the full envelope when the response has multiple root field
     await expect(
         sendRequest("https://graphql.anilist.co", "POST", { query: "query" })
     ).resolves.toEqual(envelope);
+});
+
+test("unwrapSingleRootField returns the bare value for a single-root-field envelope", () => {
+    const envelope = { data: { Media: { id: 7 } } };
+
+    expect(unwrapSingleRootField<{ id: number }>(envelope)).toEqual({ id: 7 });
+});
+
+test("unwrapSingleRootField returns undefined for multi-root-field envelopes", () => {
+    const envelope = { data: { Media: { id: 1 }, User: { id: 2 } } };
+
+    expect(unwrapSingleRootField(envelope)).toBeUndefined();
+});
+
+test("unwrapSingleRootField returns undefined when data is missing or null", () => {
+    expect(unwrapSingleRootField({ errors: [{ message: "boom" }] })).toBeUndefined();
+    expect(unwrapSingleRootField({ data: null })).toBeUndefined();
+    expect(unwrapSingleRootField(null)).toBeUndefined();
+});
+
+test("unwrapGraphQLResponse keeps the envelope for a zero-root-field document", async () => {
+    const envelope = { data: {} };
+    mocks.request.mockResolvedValueOnce({ data: envelope });
+
+    await expect(
+        sendRequest("https://graphql.anilist.co", "POST", { query: "query" })
+    ).resolves.toEqual(envelope);
+});
+
+test("unwrapGraphQLResponse unwraps the single root field through the strict helper", () => {
+    const envelope = { data: { Media: { id: 5 } } };
+
+    expect(unwrapGraphQLResponse(envelope)).toEqual({ id: 5 });
 });
 
 test("throws AniLinkGraphQLError for a 200 envelope without a data object", async () => {
