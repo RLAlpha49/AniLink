@@ -30,3 +30,9 @@ updates:
     commit-message:
       prefix: "npm"
       include: "scope"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
