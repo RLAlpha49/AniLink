@@ -41,6 +41,13 @@ The report summary includes separate counts for unimplemented, removed, and depr
 - `1`: actionable discrepancies were found.
 - `2`: the comparison tool could not load, fetch, or parse its inputs.
 
+### Unimplemented operations
+
+Unimplemented-operation warnings are handled in two layers with different intents:
+
+- **Engine-level ignore** (`IGNORED_UNIMPLEMENTED_OPERATIONS` in `lib/api-compare/compare.ts`): operations that can never be wrapped, such as `query.Like` (AniList only serves likes through the paged `Page.likes` field). These are never reported at all.
+- **CLI flag** (`--ignore-unimplemented`): while implementing operations one at a time, their absence is expected work-in-progress, not a defect. CI runs with `--strict --ignore-unimplemented`, so an unwrapped operation never fails the build — but real contract drift (missing fields, wrong types) always does.
+
 ## Maintenance workflow
 
-GitHub Actions runs the snapshot comparison on pushes and pull requests. To investigate an AniList API update, run the workflow manually with its live option, review the generated reports, then update the snapshot with `npm run anilist:api:update-schema`.
+CI runs the snapshot comparison (`--strict`) on every push and pull request, so package-vs-snapshot drift fails the build immediately. A separate scheduled workflow ("AniList live API drift check") compares against AniList's live schema every Monday and can also be triggered manually from the Actions tab to investigate an AniList API update: review the generated reports, then update the snapshot with `npm run anilist:api:update-schema`.

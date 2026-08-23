@@ -1,23 +1,22 @@
-import { parse, type FieldNode, type OperationDefinitionNode } from "graphql";
-import type { SelectionNode, VariableDefinition } from "./types";
+import {
+    parse,
+    type FieldNode,
+    type FragmentDefinitionNode,
+    type InlineFragmentNode,
+    type OperationDefinitionNode,
+} from "graphql";
+import { INLINE_FRAGMENT_NAME, type SelectionNode, type VariableDefinition } from "./types";
 
 export function normalizeSelectionSet(document: string): SelectionNode[] {
-    const operation = parse(normalizeTemplateDocument(document)).definitions.find(
+    const parsed = parse(normalizeTemplateDocument(document));
+    const operation = parsed.definitions.find(
         (definition): definition is OperationDefinitionNode =>
             definition.kind === "OperationDefinition"
     );
     if (!operation) throw new Error("GraphQL document contains no operation");
 
-    return operation.selectionSet.selections
-        .filter((selection): selection is FieldNode => selection.kind === "Field")
-        .map((field) => ({
-            name: field.name.value,
-            ...(field.alias ? { alias: field.alias.value } : {}),
-            arguments: field.arguments?.map((argument) => argument.name.value) ?? [],
-            selection: field.selectionSet
-                ? normalizeSelectionNodes(field.selectionSet.selections)
-                : [],
-        }));
+    const fragmentDefinitions = collectFragmentDefinitions(document);
+    return normalizeSelectionNodes(operation.selectionSet.selections, fragmentDefinitions);
 }
 
 export function extractOperationMetadata(document: string): {
@@ -25,7 +24,8 @@ export function extractOperationMetadata(document: string): {
     variables: VariableDefinition[];
     selection: SelectionNode[];
 } {
-    const operation = parse(normalizeTemplateDocument(document)).definitions.find(
+    const parsed = parse(normalizeTemplateDocument(document));
+    const operation = parsed.definitions.find(
         (definition): definition is OperationDefinitionNode =>
             definition.kind === "OperationDefinition"
     );
@@ -33,6 +33,7 @@ export function extractOperationMetadata(document: string): {
         throw new Error("GraphQL document must contain a query or mutation operation");
     }
 
+    const fragmentDefinitions = collectFragmentDefinitions(document);
     return {
         kind: operation.operation,
         variables: (operation.variableDefinitions ?? []).map((definition) => ({
@@ -40,7 +41,7 @@ export function extractOperationMetadata(document: string): {
             type: printType(definition.type),
             required: definition.type.kind === "NonNullType",
         })),
-        selection: normalizeSelectionNodes(operation.selectionSet.selections),
+        selection: normalizeSelectionNodes(operation.selectionSet.selections, fragmentDefinitions),
     };
 }
 
@@ -52,18 +53,60 @@ function normalizeTemplateDocument(document: string): string {
 }
 
 function normalizeSelectionNodes(
-    selections: readonly OperationDefinitionNode["selectionSet"]["selections"][number][]
+    selections: readonly OperationDefinitionNode["selectionSet"]["selections"][number][],
+    fragmentDefinitions: Map<string, FragmentDefinitionNode> = new Map()
 ): SelectionNode[] {
-    return selections
-        .filter((selection): selection is FieldNode => selection.kind === "Field")
-        .map((field) => ({
-            name: field.name.value,
-            ...(field.alias ? { alias: field.alias.value } : {}),
-            arguments: field.arguments?.map((argument) => argument.name.value) ?? [],
-            selection: field.selectionSet
-                ? normalizeSelectionNodes(field.selectionSet.selections)
-                : [],
-        }));
+    return selections.flatMap((selection) => {
+        if (selection.kind === "InlineFragment") {
+            const fragment = selection as InlineFragmentNode;
+            return [
+                {
+                    name: `${INLINE_FRAGMENT_NAME} ${printTypeCondition(fragment)}`,
+                    typeCondition: printTypeCondition(fragment),
+                    arguments: [],
+                    selection: normalizeSelectionNodes(
+                        fragment.selectionSet.selections,
+                        fragmentDefinitions
+                    ),
+                },
+            ];
+        }
+        // Named spreads resolve against definitions in the same document;
+        // interpolated placeholders (...PackageSelection) have no definition
+        // and stay skipped, matching the pre-fragment behaviour.
+        if (selection.kind === "FragmentSpread") {
+            const definition = fragmentDefinitions.get(selection.name.value);
+            if (!definition) return [];
+            return normalizeSelectionNodes(definition.selectionSet.selections, fragmentDefinitions);
+        }
+        if (selection.kind !== "Field") return [];
+        const field = selection as FieldNode;
+        return [
+            {
+                name: field.name.value,
+                ...(field.alias ? { alias: field.alias.value } : {}),
+                arguments: field.arguments?.map((argument) => argument.name.value) ?? [],
+                selection: field.selectionSet
+                    ? normalizeSelectionNodes(field.selectionSet.selections, fragmentDefinitions)
+                    : [],
+            },
+        ];
+    });
+}
+
+function printTypeCondition(fragment: InlineFragmentNode): string {
+    if (!fragment.typeCondition) return "";
+    return fragment.typeCondition.name.value;
+}
+
+/** Collects named fragment definitions from a document, keyed by fragment name. */
+function collectFragmentDefinitions(document: string): Map<string, FragmentDefinitionNode> {
+    const definitions = new Map<string, FragmentDefinitionNode>();
+    for (const definition of parse(normalizeTemplateDocument(document)).definitions) {
+        if (definition.kind !== "FragmentDefinition") continue;
+        definitions.set(definition.name.value, definition);
+    }
+    return definitions;
 }
 
 function printType(type: OperationDefinitionNode["variableDefinitions"][number]["type"]): string {

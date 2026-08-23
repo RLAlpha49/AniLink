@@ -6,7 +6,16 @@ import type {
     Schema,
     SelectionNode,
 } from "./types";
+import { INLINE_FRAGMENT_NAME } from "./types";
 import type { TypeScriptContracts, TypeScriptProperty } from "./typescript-contracts";
+
+/**
+ * AniList operations AniLink deliberately does not wrap, excluded from
+ * comparisons by default. `query.Like` exists in the GraphQL schema but
+ * AniList only serves likes through the paged `Page.likes` field, which
+ * AniLink already implements as `likes()`; the unpaged operation is unusable.
+ */
+export const IGNORED_UNIMPLEMENTED_OPERATIONS = new Set(["query.Like"]);
 
 export function comparePackageToSchema(input: {
     schema: Schema;
@@ -67,6 +76,7 @@ export function comparePackageToSchema(input: {
     });
 
     for (const operation of unimplementedOperations) {
+        if (IGNORED_UNIMPLEMENTED_OPERATIONS.has(operation)) continue;
         discrepancies.push({
             severity: "warning",
             category: "unimplemented-operation",
@@ -151,6 +161,37 @@ function compareResponseContract(
     const nextVisitedTypes = new Set(visitedTypes).add(responseTypeName);
 
     for (const node of selection) {
+        // Inline fragments (`... on Member`) select fields of a specific union
+        // member; verify them against that member's contract instead of the
+        // union contract, which only carries the shared fields.
+        if (node.typeCondition) {
+            const memberContract = contracts.types[node.typeCondition];
+            if (!memberContract) {
+                discrepancies.push({
+                    severity: "warning",
+                    category: "missing-union-member-contract",
+                    operation: operation.exportName,
+                    sourcePath: operation.sourcePath,
+                    packageValue: node.name,
+                    message: `No TypeScript contract found for union member ${node.typeCondition}`,
+                });
+                continue;
+            }
+            compareResponseContract(
+                operation,
+                node.selection,
+                node.typeCondition,
+                memberContract,
+                contracts,
+                discrepancies,
+                nextVisitedTypes
+            );
+            continue;
+        }
+
+        // Synthetic node for an unresolvable fragment spread placeholder.
+        if (node.name === INLINE_FRAGMENT_NAME) continue;
+
         const property = responseContract[node.name];
         if (!property) {
             discrepancies.push({
@@ -225,6 +266,35 @@ function compareSelection(
     const objectType = unwrapObject(typeRef, types);
     if (!objectType) return;
     for (const node of selection) {
+        // Inline fragments (`... on Member`) select fields of a specific union
+        // member; verify them against the member object type rather than the
+        // union itself, which does not carry the member fields.
+        if (node.typeCondition) {
+            const memberType = types.get(node.typeCondition);
+            if (memberType?.kind !== "OBJECT") {
+                discrepancies.push({
+                    severity: "warning",
+                    category: "unknown-union-member",
+                    operation: operation.exportName,
+                    sourcePath: operation.sourcePath,
+                    packageValue: node.typeCondition,
+                    message: `Union member ${node.typeCondition} is not an object type in AniList`,
+                });
+                continue;
+            }
+            compareSelection(
+                operation,
+                node.selection,
+                { kind: "OBJECT", name: node.typeCondition, ofType: null },
+                types,
+                discrepancies
+            );
+            continue;
+        }
+
+        // Synthetic node for an unresolvable fragment spread placeholder.
+        if (node.name === INLINE_FRAGMENT_NAME) continue;
+
         const field = getField(objectType, node.name);
         if (!field) {
             discrepancies.push({

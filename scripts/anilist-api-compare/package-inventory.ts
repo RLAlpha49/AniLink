@@ -48,7 +48,7 @@ export function parseOperationSource(
     const operations: PackageOperation[] = [];
     const classMatch = /export class (\w+?)(Query|Mutation)\s+extends/.exec(sourceText);
     const variableTypeName = /export interface (\w+Variables)/.exec(sourceText)?.[1];
-    const responseTypeName = /import\s+\{\s*type\s+(\w+Response)/.exec(sourceText)?.[1];
+    const responseTypeName = resolveResponseTypeName(sourceText);
     const rawDocument =
         /(?:const\s+)?(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(sourceText)?.[1] ??
         referencedDocument;
@@ -78,6 +78,37 @@ export function parseOperationSource(
         ...(responseTypeName ? { responseTypeName } : {}),
     });
     return operations;
+}
+
+/**
+ * Built-in TypeScript types that can never name an extracted response
+ * contract; `Promise<void>`-style returns must not be treated as contracts.
+ */
+const NON_CONTRACT_TYPE_NAMES = new Set([
+    "any",
+    "boolean",
+    "never",
+    "number",
+    "object",
+    "string",
+    "unknown",
+    "void",
+]);
+
+/**
+ * Resolves the response contract type name for an operation source.
+ *
+ * Operations traditionally import a dedicated `<Name>Response` interface; when
+ * no such import exists (page operations returning unions or shared shapes),
+ * fall back to the method's declared `Promise<T>` return type so contract
+ * comparisons still run against the imported type.
+ */
+function resolveResponseTypeName(sourceText: string): string | undefined {
+    const responseImport = /import\s+\{\s*type\s+(\w+Response)\b/.exec(sourceText)?.[1];
+    if (responseImport) return responseImport;
+    const declared = /async\s+\w+\s*\([^)]*\)\s*:\s*Promise<(\w+)>/.exec(sourceText)?.[1];
+    if (!declared || NON_CONTRACT_TYPE_NAMES.has(declared)) return undefined;
+    return declared;
 }
 
 function expandImportedSelections(

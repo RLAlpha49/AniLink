@@ -6,12 +6,22 @@ export interface VariableDefinition {
     required: boolean;
 }
 
+/**
+ * A field in a package selection set. Inline fragments are represented as
+ * synthetic nodes whose `name` is `…on <TypeCondition>` so union selections
+ * keep their member-specific fields visible to contract comparisons.
+ */
 export interface SelectionNode {
     name: string;
     alias?: string;
     arguments: string[];
+    /** Type condition of an inline fragment (`... on X`); absent for fields. */
+    typeCondition?: string;
     selection: SelectionNode[];
 }
+
+/** Discriminates inline-fragment nodes from regular field nodes. */
+export const INLINE_FRAGMENT_NAME = "…on";
 
 export interface PackageOperation {
     sourcePath: string;

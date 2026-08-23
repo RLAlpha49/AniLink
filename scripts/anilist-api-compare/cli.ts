@@ -45,10 +45,25 @@ export async function runCli(options: CliOptions): Promise<CliResult> {
         if (strict) {
             log("Strict mode enabled: any discrepancy will fail the comparison");
         }
+        // `--ignore-unimplemented` supports incremental development: while
+        // operations are being wrapped one at a time, their absence is
+        // expected work-in-progress rather than a defect, so CI stays green.
+        // Real contract drift (missing fields, wrong types) still fails.
+        // Operations that can never be wrapped belong in
+        // `IGNORED_UNIMPLEMENTED_OPERATIONS` instead and are never reported.
+        const ignoreUnimplemented = options.argv.includes("--ignore-unimplemented");
+        if (ignoreUnimplemented) {
+            log("Ignoring unimplemented-operation warnings");
+        }
         const result = await (options.compare ?? runComparison)(options.argv, provider);
+        const relevantDiscrepancies = ignoreUnimplemented
+            ? result.discrepancies.filter(
+                  (discrepancy) => discrepancy.category !== "unimplemented-operation"
+              )
+            : result.discrepancies;
         const hasErrors = strict
-            ? result.discrepancies.length > 0
-            : result.discrepancies.some((discrepancy) => discrepancy.severity === "error");
+            ? relevantDiscrepancies.length > 0
+            : relevantDiscrepancies.some((discrepancy) => discrepancy.severity === "error");
         log(`Implemented operations: ${result.implementedOperations ?? "unknown"}`);
         log(`Discrepancies found: ${result.discrepancies.length}`);
         log(
