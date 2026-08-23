@@ -242,9 +242,9 @@ export interface MediaResponse {
                 id: number;
 
                 /**
-                 * `title` is an instance of `FuzzyDate` representing the title of the node.
+                 * `title` is an instance of `Title` representing the title of the node.
                  */
-                title: FuzzyDate;
+                title: Title;
             };
         }>;
     };

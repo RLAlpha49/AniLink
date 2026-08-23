@@ -1,6 +1,6 @@
 /**
  * `Name` is an interface representing a name.
- * It includes the first name, last name, full name, native name, alternative name, and user preferred name each having their own properties.
+ * It includes the first name, last name, full name, and native name each having their own properties.
  * @see https://docs.anilist.co/reference/object/charactername
  */
 export interface Name {
@@ -23,14 +23,4 @@ export interface Name {
      * `native` is a string representing the native name.
      */
     native: string;
-
-    /**
-     * `alternative` is a string representing the alternative name.
-     */
-    alternative: string;
-
-    /**
-     * `userPreferred` is a string representing the user preferred name.
-     */
-    userPreferred: string;
 }

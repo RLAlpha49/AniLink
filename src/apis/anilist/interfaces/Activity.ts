@@ -1,7 +1,4 @@
 import { type BasicUser } from "./Basic";
-import { ActivityReplySchema } from "../schemas/Activity";
-import { BasicUserSchema } from "../schemas/Basic";
-import { TitleSchema } from "../schemas/Title";
 
 /**
  * `ActivityReply` is an interface representing a reply to an activity.
@@ -56,678 +53,308 @@ export interface ActivityReply {
 }
 
 /**
- * `Activity` is an interface representing the response from an activity query.
- * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties.
- * @see https://docs.anilist.co/reference/union/activityunion
+ * `TextActivity` is an interface representing a text activity.
+ * It includes the id, user id, type, reply count, text, site url, lock status, subscription status, like count, like status, pin status, creation date, user details, replies, and likes.
+ * @see https://docs.anilist.co/reference/object/textactivity
  */
-export interface Activity {
+export interface TextActivity {
     /**
-     * `TextActivity` is an object representing a text activity.
-     * It includes the id, user id, type, reply count, text, site url, lock status, subscription status, like count, like status, pin status, creation date, user details, replies, and likes.
+     * `id` is a number representing the unique identifier of the text activity.
      */
-    TextActivity: {
-        /**
-         * `id` is a number representing the unique identifier of the text activity.
-         */
-        id: number;
-
-        /**
-         * `userId` is a number representing the unique identifier of the user who made the text activity.
-         */
-        userId: number;
-
-        /**
-         * `type` is a string representing the type of the text activity.
-         */
-        type: string;
-
-        /**
-         * `replyCount` is a number representing the count of replies the text activity has received.
-         */
-        replyCount: number;
-
-        /**
-         * `text` is a string representing the text of the text activity.
-         */
-        text: string;
-
-        /**
-         * `siteUrl` is a string representing the URL of the site where the text activity is posted.
-         */
-        siteUrl: string;
-
-        /**
-         * `isLocked` is a boolean representing whether the text activity is locked or not.
-         */
-        isLocked: boolean;
-
-        /**
-         * `isSubscribed` is a boolean representing whether the user is subscribed to the text activity or not.
-         */
-        isSubscribed: boolean;
-
-        /**
-         * `likeCount` is a number representing the count of likes the text activity has received.
-         */
-        likeCount: number;
-
-        /**
-         * `isLiked` is a boolean representing whether the text activity is liked by the user or not.
-         */
-        isLiked: boolean;
-
-        /**
-         * `isPinned` is a boolean representing whether the text activity is pinned or not.
-         */
-        isPinned: boolean;
-
-        /**
-         * `createdAt` is a number representing the Unix timestamp when the text activity was created.
-         */
-        createdAt: number;
-
-        /**
-         * `user` is an object of type `BasicUser` representing the details of the user who made the text activity.
-         */
-        user: BasicUser;
-
-        /**
-         * `replies` is an array of `ActivityReply` objects representing the replies to the text activity.
-         */
-        replies: ActivityReply[];
-
-        /**
-         * `likes` is an array of `BasicUser` objects representing the users who liked the text activity.
-         */
-        likes: BasicUser[];
-    };
+    id: number;
 
     /**
-     * `ListActivity` is an object representing a list activity.
-     * It includes the id, user id, type, reply count, status, progress, lock status, subscription status, like count, like status, pin status, site url, creation date, media details, user details, replies, and likes.
+     * `userId` is a number representing the unique identifier of the user who made the text activity.
      */
-    ListActivity: {
-        /**
-         * `id` is a number representing the unique identifier of the list activity.
-         */
-        id: number;
-
-        /**
-         * `userId` is a number representing the unique identifier of the user who made the list activity.
-         */
-        userId: number;
-
-        /**
-         * `type` is a string representing the type of the list activity.
-         */
-        type: string;
-
-        /**
-         * `replyCount` is a number representing the count of replies the list activity has received.
-         */
-        replyCount: number;
-
-        /**
-         * `status` is a string representing the status of the list activity.
-         */
-        status: string;
-
-        /**
-         * `progress` is a number representing the progress of the list activity.
-         */
-        progress: number;
-
-        /**
-         * `isLocked` is a boolean representing whether the list activity is locked or not.
-         */
-        isLocked: boolean;
-
-        /**
-         * `isSubscribed` is a boolean representing whether the user is subscribed to the list activity or not.
-         */
-        isSubscribed: boolean;
-
-        /**
-         * `likeCount` is a number representing the count of likes the list activity has received.
-         */
-        likeCount: number;
-
-        /**
-         * `isLiked` is a boolean representing whether the list activity is liked by the user or not.
-         */
-        isLiked: boolean;
-
-        /**
-         * `isPinned` is a boolean representing whether the list activity is pinned or not.
-         */
-        isPinned: boolean;
-
-        /**
-         * `siteUrl` is a string representing the URL of the site where the list activity is posted.
-         */
-        siteUrl: string;
-
-        /**
-         * `createdAt` is a number representing the Unix timestamp when the list activity was created.
-         */
-        createdAt: number;
-
-        /**
-         * `media` is an object representing the media details of the list activity.
-         * It includes the id and the title of the media.
-         */
-        media: {
-            /**
-             * `id` is a number representing the unique identifier of the media.
-             */
-            id: number;
-
-            /**
-             * `title` is an object representing the title of the media.
-             * It includes the romaji and english title of the media.
-             */
-            title: {
-                /**
-                 * `romaji` is a string representing the romaji title of the media.
-                 */
-                romaji: string;
-
-                /**
-                 * `english` is a string representing the english title of the media.
-                 */
-                english: string;
-            };
-        };
-
-        /**
-         * `user` is an object of type `BasicUser` representing the details of the user who made the list activity.
-         */
-        user: BasicUser;
-
-        /**
-         * `replies` is an array of `ActivityReply` objects representing the replies to the list activity.
-         */
-        replies: ActivityReply[];
-
-        /**
-         * `likes` is an array of `BasicUser` objects representing the users who liked the list activity.
-         */
-        likes: BasicUser[];
-    };
+    userId: number;
 
     /**
-     * `MessageActivity` is an object representing a message activity.
-     * It includes the id, recipient id, messenger id, type, reply count, message, lock status, subscription status, like count, like status, privacy status, site url, creation date, recipient details, messenger details, replies, and likes.
+     * `type` is the activity type discriminator of the text activity.
+     * It is always "TEXT", which lets `Activity` work as a discriminated union.
      */
-    MessageActivity: {
-        /**
-         * `id` is a number representing the unique identifier of the message activity.
-         */
-        id: number;
-
-        /**
-         * `recipientId` is a number representing the unique identifier of the recipient of the message activity.
-         */
-        recipientId: number;
-
-        /**
-         * `messengerId` is a number representing the unique identifier of the messenger of the message activity.
-         */
-        messengerId: number;
-
-        /**
-         * `type` is a string representing the type of the message activity.
-         */
-        type: string;
-
-        /**
-         * `replyCount` is a number representing the count of replies the message activity has received.
-         */
-        replyCount: number;
-
-        /**
-         * `message` is a string representing the message of the message activity.
-         */
-        message: string;
-
-        /**
-         * `isLocked` is a boolean representing whether the message activity is locked or not.
-         */
-        isLocked: boolean;
-
-        /**
-         * `isSubscribed` is a boolean representing whether the user is subscribed to the message activity or not.
-         */
-        isSubscribed: boolean;
-
-        /**
-         * `likeCount` is a number representing the count of likes the message activity has received.
-         */
-        likeCount: number;
-
-        /**
-         * `isLiked` is a boolean representing whether the message activity is liked by the user or not.
-         */
-        isLiked: boolean;
-
-        /**
-         * `isPrivate` is a boolean representing whether the message activity is private or not.
-         */
-        isPrivate: boolean;
-
-        /**
-         * `siteUrl` is a string representing the URL of the site where the message activity is posted.
-         */
-        siteUrl: string;
-
-        /**
-         * `createdAt` is a number representing the Unix timestamp when the message activity was created.
-         */
-        createdAt: number;
-
-        /**
-         * `recipient` is an object of type `BasicUser` representing the details of the recipient of the message activity.
-         */
-        recipient: BasicUser;
-
-        /**
-         * `messenger` is an object of type `BasicUser` representing the details of the messenger of the message activity.
-         */
-        messenger: BasicUser;
-
-        /**
-         * `replies` is an array of `ActivityReply` objects representing the replies to the message activity.
-         */
-        replies: ActivityReply[];
-
-        /**
-         * `likes` is an array of `BasicUser` objects representing the users who liked the message activity.
-         */
-        likes: BasicUser[];
-    };
+    type: "TEXT";
 
     /**
-     * `ActivityReply` is an object representing an activity reply.
-     * It includes the id, user id, activity id, text, like count, like status, creation date, user details, and likes.
+     * `replyCount` is a number representing the count of replies the text activity has received.
      */
-    ActivityReply: {
-        /**
-         * `id` is a number representing the unique identifier of the activity reply.
-         */
-        id: number;
-
-        /**
-         * `userId` is a number representing the unique identifier of the user who made the activity reply.
-         */
-        userId: number;
-
-        /**
-         * `activityId` is a number representing the unique identifier of the activity the reply is made to.
-         */
-        activityId: number;
-
-        /**
-         * `text` is a string representing the text of the activity reply.
-         */
-        text: string;
-
-        /**
-         * `likeCount` is a number representing the count of likes the activity reply has received.
-         */
-        likeCount: number;
-
-        /**
-         * `isLiked` is a boolean representing whether the activity reply is liked by the user or not.
-         */
-        isLiked: boolean;
-
-        /**
-         * `createdAt` is a number representing the Unix timestamp when the activity reply was created.
-         */
-        createdAt: number;
-
-        /**
-         * `user` is an object of type `BasicUser` representing the details of the user who made the activity reply.
-         */
-        user: BasicUser;
-
-        /**
-         * `likes` is an array of `BasicUser` objects representing the users who liked the activity reply.
-         */
-        likes: BasicUser[];
-    };
+    replyCount: number;
 
     /**
-     * `Thread` is an object representing a thread.
-     * It includes the id, title, body, user id, reply user id, reply comment id, reply count, view count, lock status, sticky status, subscription status, like count, like status, replied date, creation date, update date, user details, reply user details, likes, site url, categories, media categories.
+     * `text` is a string representing the text of the text activity.
      */
-    Thread: {
-        /**
-         * `id` is a number representing the unique identifier of the thread.
-         */
-        id: number;
-
-        /**
-         * `title` is a string representing the title of the thread.
-         */
-        title: string;
-
-        /**
-         * `body` is a string representing the body of the thread.
-         */
-        body: string;
-
-        /**
-         * `userId` is a number representing the unique identifier of the user who made the thread.
-         */
-        userId: number;
-
-        /**
-         * `replyUserId` is a number representing the unique identifier of the user who replied to the thread.
-         */
-        replyUserId: number;
-
-        /**
-         * `replyCommentId` is a number representing the unique identifier of the comment the thread is a reply to.
-         */
-        replyCommentId: number;
-
-        /**
-         * `replyCount` is a number representing the count of replies the thread has received.
-         */
-        replyCount: number;
-
-        /**
-         * `viewCount` is a number representing the count of views the thread has received.
-         */
-        viewCount: number;
-
-        /**
-         * `isLocked` is a boolean representing whether the thread is locked or not.
-         */
-        isLocked: boolean;
-
-        /**
-         * `isSticky` is a boolean representing whether the thread is sticky or not.
-         */
-        isSticky: boolean;
-
-        /**
-         * `isSubscribed` is a boolean representing whether the user is subscribed to the thread or not.
-         */
-        isSubscribed: boolean;
-
-        /**
-         * `likeCount` is a number representing the count of likes the thread has received.
-         */
-        likeCount: number;
-
-        /**
-         * `isLiked` is a boolean representing whether the thread is liked by the user or not.
-         */
-        isLiked: boolean;
-
-        /**
-         * `repliedAt` is a number representing the Unix timestamp when the thread was replied to.
-         */
-        repliedAt: number;
-
-        /**
-         * `createdAt` is a number representing the Unix timestamp when the thread was created.
-         */
-        createdAt: number;
-
-        /**
-         * `updatedAt` is a number representing the Unix timestamp when the thread was last updated.
-         */
-        updatedAt: number;
-
-        /**
-         * `user` is an object of type `BasicUser` representing the details of the user who made the thread.
-         */
-        user: BasicUser;
-    };
+    text: string;
 
     /**
-     * `ThreadComment` is an object representing a thread comment.
-     * It includes the id, user id, thread id, comment, like count, like status, site url, creation date, update date, thread details, user details, likes, child comments, lock status.
+     * `siteUrl` is a string representing the URL of the site where the text activity is posted.
      */
-    ThreadComment: {
-        /**
-         * `id` is a number representing the unique identifier of the thread comment.
-         */
-        id: number;
+    siteUrl: string;
 
-        /**
-         * `userId` is a number representing the unique identifier of the user who made the thread comment.
-         */
-        userId: number;
+    /**
+     * `isLocked` is a boolean representing whether the text activity is locked or not.
+     */
+    isLocked: boolean;
 
-        /**
-         * `threadId` is a number representing the unique identifier of the thread the comment is made to.
-         */
-        threadId: number;
+    /**
+     * `isSubscribed` is a boolean representing whether the user is subscribed to the text activity or not.
+     */
+    isSubscribed: boolean;
 
-        /**
-         * `comment` is a string representing the comment of the thread.
-         */
-        comment: string;
+    /**
+     * `likeCount` is a number representing the count of likes the text activity has received.
+     */
+    likeCount: number;
 
-        /**
-         * `likeCount` is a number representing the count of likes the thread comment has received.
-         */
-        likeCount: number;
+    /**
+     * `isLiked` is a boolean representing whether the text activity is liked by the user or not.
+     */
+    isLiked: boolean;
 
-        /**
-         * `isLiked` is a boolean representing whether the thread comment is liked by the user or not.
-         */
-        isLiked: boolean;
+    /**
+     * `isPinned` is a boolean representing whether the text activity is pinned or not.
+     */
+    isPinned: boolean;
 
-        /**
-         * `siteUrl` is a string representing the URL of the site where the thread comment is posted.
-         */
-        siteUrl: string;
+    /**
+     * `createdAt` is a number representing the Unix timestamp when the text activity was created.
+     */
+    createdAt: number;
 
-        /**
-         * `createdAt` is a number representing the Unix timestamp when the thread comment was created.
-         */
-        createdAt: number;
+    /**
+     * `user` is an object of type `BasicUser` representing the details of the user who made the text activity.
+     */
+    user: BasicUser;
 
-        /**
-         * `updatedAt` is a number representing the Unix timestamp when the thread comment was last updated.
-         */
-        updatedAt: number;
+    /**
+     * `replies` is an array of `ActivityReply` objects representing the replies to the text activity.
+     */
+    replies: ActivityReply[];
 
-        /**
-         * `thread` is an object representing the details of the thread the comment is made to.
-         * It includes the id and the title of the thread.
-         */
-        thread: {
-            /**
-             * `id` is a number representing the unique identifier of the thread.
-             */
-            id: number;
-
-            /**
-             * `title` is a string representing the title of the thread.
-             */
-            title: string;
-        };
-
-        /**
-         * `user` is an object of type `BasicUser` representing the details of the user who made the thread comment.
-         */
-        user: BasicUser;
-
-        /**
-         * `likes` is an array of `BasicUser` objects representing the users who liked the thread comment.
-         */
-        likes: BasicUser[];
-
-        /**
-         * `isLocked` is a boolean representing whether the thread comment is locked or not.
-         */
-        isLocked: boolean;
-    };
+    /**
+     * `likes` is an array of `BasicUser` objects representing the users who liked the text activity.
+     */
+    likes: BasicUser[];
 }
 
-export const ActivitySchemaV2 = `
-  ... on TextActivity {
-    id
-    userId
-    type
-    replyCount
-    text (asHtml: $asHtml)
-    siteUrl
-    isLocked
-    isSubscribed
-    likeCount
-    isLiked
-    isPinned
-    createdAt
-    user {
-      ${BasicUserSchema}
-    }
-    replies {
-      ${ActivityReplySchema}
-    }
-    likes {
-      ${BasicUserSchema}
-    }
-  }
-  ... on ListActivity {
-    id
-    userId
-    type
-    replyCount
-    status
-    progress
-    isLocked
-    isSubscribed
-    likeCount
-    isLiked
-    isPinned
-    siteUrl
-    createdAt
-    media {
-      id
-      title {
-        romaji
-        english
-      }
-    }
-    user {
-      ${BasicUserSchema}
-    }
-    replies {
-      ${ActivityReplySchema}
-    }
-    likes {
-      ${BasicUserSchema}
-    }
-  }
-  ... on MessageActivity {
-    id
-    recipientId
-    messengerId
-    type
-    replyCount
-    message (asHtml: $asHtml)
-    isLocked
-    isSubscribed
-    likeCount
-    isLiked
-    isPrivate
-    siteUrl
-    createdAt
-    recipient {
-      ${BasicUserSchema}
-    }
-    messenger {
-      ${BasicUserSchema}
-    }
-    replies {
-      ${ActivityReplySchema}
-    }
-    likes {
-      ${BasicUserSchema}
-    }
-  }
-  ... on ActivityReply {
-    id
-    userId
-    activityId
-    text (asHtml: $asHtml)
-    likeCount
-    isLiked
-    createdAt
-    user {
-      ${BasicUserSchema}
-    }
-    likes {
-      ${BasicUserSchema}
-    }
-  }
-  ... on Thread {
-    id
-    title
-    body (asHtml: $asHtml)
-    ThreadUserId: userId
-    replyUserId
-    replyCommentId
-    ThreadReplyCount: replyCount
-    viewCount
-    isLocked
-    isSticky
-    isSubscribed
-    likeCount
-    isLiked
-    repliedAt
-    createdAt
-    updatedAt
-    user {
-      ${BasicUserSchema}
-    }
-    replyUser {
-      ${BasicUserSchema}
-    }
-    likes {
-      ${BasicUserSchema}
-    }
-    siteUrl
-    categories {
-      id
-      name
-    }
-    mediaCategories {
-      id
-      ${TitleSchema}
-    }
-  }
-  ... on ThreadComment {
-    id
-    userId
-    threadId
-    comment (asHtml: $asHtml)
-    likeCount
-    isLiked
-    siteUrl
-    createdAt
-    updatedAt
-    thread {
-      id
-      title
-    }
-    user {
-      ${BasicUserSchema}
-    }
-    likes {
-      ${BasicUserSchema}
-    }
-    childComments
-    isLocked
-  }
-`;
+/**
+ * `ListActivity` is an interface representing a list activity.
+ * It includes the id, user id, type, reply count, status, progress, lock status, subscription status, like count, like status, pin status, site url, creation date, media details, user details, replies, and likes.
+ * @see https://docs.anilist.co/reference/object/listactivity
+ */
+export interface ListActivity {
+    /**
+     * `id` is a number representing the unique identifier of the list activity.
+     */
+    id: number;
+
+    /**
+     * `userId` is a number representing the unique identifier of the user who made the list activity.
+     */
+    userId: number;
+
+    /**
+     * `type` is the activity type discriminator of the list activity.
+     * It is "ANIME_LIST" for anime list activities and "MANGA_LIST" for manga list activities,
+     * which lets `Activity` work as a discriminated union.
+     */
+    type: "ANIME_LIST" | "MANGA_LIST";
+
+    /**
+     * `replyCount` is a number representing the count of replies the list activity has received.
+     */
+    replyCount: number;
+
+    /**
+     * `status` is a string representing the status of the list activity.
+     */
+    status: string;
+
+    /**
+     * `progress` is a number representing the progress of the list activity.
+     */
+    progress: number;
+
+    /**
+     * `isLocked` is a boolean representing whether the list activity is locked or not.
+     */
+    isLocked: boolean;
+
+    /**
+     * `isSubscribed` is a boolean representing whether the user is subscribed to the list activity or not.
+     */
+    isSubscribed: boolean;
+
+    /**
+     * `likeCount` is a number representing the count of likes the list activity has received.
+     */
+    likeCount: number;
+
+    /**
+     * `isLiked` is a boolean representing whether the list activity is liked by the user or not.
+     */
+    isLiked: boolean;
+
+    /**
+     * `isPinned` is a boolean representing whether the list activity is pinned or not.
+     */
+    isPinned: boolean;
+
+    /**
+     * `siteUrl` is a string representing the URL of the site where the list activity is posted.
+     */
+    siteUrl: string;
+
+    /**
+     * `createdAt` is a number representing the Unix timestamp when the list activity was created.
+     */
+    createdAt: number;
+
+    /**
+     * `media` is an object representing the media details of the list activity.
+     * It includes the id and the title of the media.
+     */
+    media: {
+        /**
+         * `id` is a number representing the unique identifier of the media.
+         */
+        id: number;
+
+        /**
+         * `title` is an object representing the title of the media.
+         * It includes the romaji and english title of the media.
+         */
+        title: {
+            /**
+             * `romaji` is a string representing the romaji title of the media.
+             */
+            romaji: string;
+
+            /**
+             * `english` is a string representing the english title of the media.
+             */
+            english: string;
+        };
+    };
+
+    /**
+     * `user` is an object of type `BasicUser` representing the details of the user who made the list activity.
+     */
+    user: BasicUser;
+
+    /**
+     * `replies` is an array of `ActivityReply` objects representing the replies to the list activity.
+     */
+    replies: ActivityReply[];
+
+    /**
+     * `likes` is an array of `BasicUser` objects representing the users who liked the list activity.
+     */
+    likes: BasicUser[];
+}
+
+/**
+ * `MessageActivity` is an interface representing a message activity.
+ * It includes the id, recipient id, messenger id, type, reply count, message, lock status, subscription status, like count, like status, privacy status, site url, creation date, recipient details, messenger details, replies, and likes.
+ * @see https://docs.anilist.co/reference/object/messageactivity
+ */
+export interface MessageActivity {
+    /**
+     * `id` is a number representing the unique identifier of the message activity.
+     */
+    id: number;
+
+    /**
+     * `recipientId` is a number representing the unique identifier of the recipient of the message activity.
+     */
+    recipientId: number;
+
+    /**
+     * `messengerId` is a number representing the unique identifier of the messenger of the message activity.
+     */
+    messengerId: number;
+
+    /**
+     * `type` is the activity type discriminator of the message activity.
+     * It is always "MESSAGE", which lets `Activity` work as a discriminated union.
+     */
+    type: "MESSAGE";
+
+    /**
+     * `replyCount` is a number representing the count of replies the message activity has received.
+     */
+    replyCount: number;
+
+    /**
+     * `message` is a string representing the message of the message activity.
+     */
+    message: string;
+
+    /**
+     * `isLocked` is a boolean representing whether the message activity is locked or not.
+     */
+    isLocked: boolean;
+
+    /**
+     * `isSubscribed` is a boolean representing whether the user is subscribed to the message activity or not.
+     */
+    isSubscribed: boolean;
+
+    /**
+     * `likeCount` is a number representing the count of likes the message activity has received.
+     */
+    likeCount: number;
+
+    /**
+     * `isLiked` is a boolean representing whether the message activity is liked by the user or not.
+     */
+    isLiked: boolean;
+
+    /**
+     * `isPrivate` is a boolean representing whether the message activity is private or not.
+     */
+    isPrivate: boolean;
+
+    /**
+     * `siteUrl` is a string representing the URL of the site where the message activity is posted.
+     */
+    siteUrl: string;
+
+    /**
+     * `createdAt` is a number representing the Unix timestamp when the message activity was created.
+     */
+    createdAt: number;
+
+    /**
+     * `recipient` is an object of type `BasicUser` representing the details of the recipient of the message activity.
+     */
+    recipient: BasicUser;
+
+    /**
+     * `messenger` is an object of type `BasicUser` representing the details of the messenger of the message activity.
+     */
+    messenger: BasicUser;
+
+    /**
+     * `replies` is an array of `ActivityReply` objects representing the replies to the message activity.
+     */
+    replies: ActivityReply[];
+
+    /**
+     * `likes` is an array of `BasicUser` objects representing the users who liked the message activity.
+     */
+    likes: BasicUser[];
+}
+
+/**
+ * `Activity` is a discriminated union representing a single activity returned by the activity query
+ * and the activity-related mutations. The GraphQL selection sets flatten the `ActivityUnion` with
+ * one `...on X` fragment per member, so exactly one member shape is present at runtime; narrow on
+ * the literal `type` field to access member-specific properties.
+ *
+ * For the broader likeable-entity payload returned by `ToggleLikeV2` (which additionally selects
+ * `ActivityReply`, `Thread`, and `ThreadComment` fragments), see the `Likeable` union.
+ * @see https://docs.anilist.co/reference/union/activityunion
+ */
+export type Activity = TextActivity | ListActivity | MessageActivity;
 
 /**
  * `ActivityHistory` is an interface representing the history of an activity.
@@ -771,9 +398,16 @@ export interface ActivityNotification {
     userId: number;
 
     /**
-     * `type` is a string representing the type of the notification.
+     * `type` is the notification type discriminator of the activity notification.
+     * It is one of "ACTIVITY_MENTION", "ACTIVITY_REPLY", "ACTIVITY_LIKE", "ACTIVITY_REPLY_LIKE",
+     * or "ACTIVITY_REPLY_SUBSCRIBED", which lets `NotificationResponse` work as a discriminated union.
      */
-    type: string;
+    type:
+        | "ACTIVITY_MENTION"
+        | "ACTIVITY_REPLY"
+        | "ACTIVITY_LIKE"
+        | "ACTIVITY_REPLY_LIKE"
+        | "ACTIVITY_REPLY_SUBSCRIBED";
 
     /**
      * `activityId` is a number representing the unique identifier of the activity associated with the notification.

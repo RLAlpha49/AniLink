@@ -1,4 +1,6 @@
+import { type Image } from "../../Image";
 import { type Media } from "../../Media";
+import { type Name } from "../../Name";
 import { type Staff } from "../../Staff";
 
 /**
@@ -74,14 +76,30 @@ export interface StudioResponse {
             voiceActors: Staff;
 
             /**
-             * `voiceActorRole` is an object representing the role of the voice actor.
-             * It includes the voice actor's name, any role notes, and the dub group.
+             * `voiceActorRoles` is an array of objects describing the voice actor roles
+             * for the character. Each entry includes the voice actor (with id, name, and
+             * image), any role notes, and the dub group.
              */
-            voiceActorRole: {
+            voiceActorRoles: Array<{
                 /**
-                 * `voiceActor` is a string representing the name of the voice actor.
+                 * `voiceActor` is an object representing the voice actor.
                  */
-                voiceActor: string;
+                voiceActor: {
+                    /**
+                     * `id` is a number representing the id of the voice actor.
+                     */
+                    id: number;
+
+                    /**
+                     * `name` is an instance of `Name` representing the name of the voice actor.
+                     */
+                    name: Name;
+
+                    /**
+                     * `image` is an instance of `Image` representing the image of the voice actor.
+                     */
+                    image: Image;
+                };
 
                 /**
                  * `roleNotes` is a string representing any notes about the role of the voice actor.
@@ -92,7 +110,7 @@ export interface StudioResponse {
                  * `dubGroup` is a string representing the dub group of the voice actor.
                  */
                 dubGroup: string;
-            };
+            }>;
 
             /**
              * `favouriteOrder` is a number representing the order of the favourite.
@@ -104,6 +122,41 @@ export interface StudioResponse {
              */
             node: Media;
         }>;
+
+        /**
+         * `nodes` is an array of `Media` objects representing the media of the studio.
+         */
+        nodes: Media[];
+
+        /**
+         * `pageInfo` is an object describing the pagination state of the media connection.
+         */
+        pageInfo: {
+            /**
+             * `total` is the total number of items across all pages.
+             */
+            total: number;
+
+            /**
+             * `perPage` is the number of items returned per page.
+             */
+            perPage: number;
+
+            /**
+             * `currentPage` is the current page number.
+             */
+            currentPage: number;
+
+            /**
+             * `lastPage` is the number of the last page.
+             */
+            lastPage: number;
+
+            /**
+             * `hasNextPage` indicates whether another page is available.
+             */
+            hasNextPage: boolean;
+        };
     };
 
     /**

@@ -1,4 +1,9 @@
 import type { AniListApi } from "../src/apis/anilist/facade";
+import type { ActivitiesPageResponse } from "../src/apis/anilist/interfaces/responses/page/Activities";
+import type { ActivityRepliesPageResponse } from "../src/apis/anilist/interfaces/responses/page/ActivityReplies";
+import type { LikesPageResponse } from "../src/apis/anilist/interfaces/responses/page/Likes";
+import type { TextActivity } from "../src/apis/anilist/interfaces/Activity";
+import type { BasicUser } from "../src/apis/anilist/interfaces/Basic";
 import {
     createTestClient,
     getLastRequest,
@@ -123,4 +128,99 @@ test("passes an error-only response through a page operation unchanged", async (
     const result = await client.anilist.query.page.medias({ page: 1, perPage: 10 });
 
     expect(result).toEqual({ errors: [{ message: "Not Found" }] });
+});
+
+/** Build a `PageInfo` object for page-response tests. */
+function testPageInfo(): ActivitiesPageResponse["pageInfo"] {
+    return { total: 1, perPage: 50, currentPage: 1, lastPage: 1, hasNextPage: false };
+}
+
+function testBasicUser(id: number, name: string): BasicUser {
+    return { id, name, avatar: { large: `https://img.example/${name}.jpg` } };
+}
+
+function testTextActivity(id: number): TextActivity {
+    return {
+        id,
+        userId: id,
+        type: "TEXT",
+        replyCount: 0,
+        text: "hello",
+        siteUrl: `https://anilist.co/activity/${id}`,
+        isLocked: false,
+        isSubscribed: false,
+        likeCount: 0,
+        isLiked: false,
+        isPinned: false,
+        createdAt: 1_700_000_000,
+        user: testBasicUser(id, "poster"),
+        replies: [],
+        likes: [],
+    };
+}
+
+describe("page operations return paginated envelopes", () => {
+    test("activities resolves to { pageInfo, activities } with discriminated members", async () => {
+        const client = createTestClient("shape-token");
+        setMockResponse({ pageInfo: testPageInfo(), activities: [testTextActivity(1)] });
+
+        const result: ActivitiesPageResponse = await client.anilist.query.page.activities({
+            id: 723235883,
+            asHtml: true,
+        });
+
+        expect(result.pageInfo).toEqual(testPageInfo());
+        expect(result.activities.map((item) => item.id)).toEqual([1]);
+
+        const [first] = result.activities;
+        if (first?.type === "TEXT") {
+            // Narrowing on the literal `type` field proves the discriminated
+            // union flows through the declared page response.
+            expect(first.text).toBe("hello");
+        } else {
+            throw new Error("expected a TextActivity member");
+        }
+    });
+
+    test("activityReplies resolves to { pageInfo, activityReplies }", async () => {
+        const client = createTestClient("shape-token");
+        setMockResponse({
+            pageInfo: testPageInfo(),
+            activityReplies: [
+                {
+                    id: 9,
+                    userId: 1,
+                    activityId: 723235883,
+                    text: "nice",
+                    likeCount: 0,
+                    isLiked: false,
+                    createdAt: 1_700_000_000,
+                    user: testBasicUser(2, "replier"),
+                    likes: [],
+                },
+            ],
+        });
+
+        const result: ActivityRepliesPageResponse = await client.anilist.query.page.activityReplies(
+            { activityId: 723235883 }
+        );
+
+        expect(result.activityReplies.map((item) => item.id)).toEqual([9]);
+        expect(result.activityReplies[0]?.user.name).toBe("replier");
+    });
+
+    test("likes resolves to { pageInfo, likes }", async () => {
+        const client = createTestClient("shape-token");
+        setMockResponse({
+            pageInfo: testPageInfo(),
+            likes: [testBasicUser(3, "liker")],
+        });
+
+        const result: LikesPageResponse = await client.anilist.query.page.likes({
+            likeableId: 723422275,
+            type: "ACTIVITY",
+        });
+
+        expect(result.likes.map((user) => user.name)).toEqual(["liker"]);
+    });
 });

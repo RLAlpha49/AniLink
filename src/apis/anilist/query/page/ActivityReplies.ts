@@ -1,6 +1,6 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { validateVariables } from "../../../../base/ValidateVariables";
-import { type ActivityReply } from "../../interfaces/Activity";
+import { type ActivityRepliesPageResponse } from "../../interfaces/responses/page/ActivityReplies";
 import { ActivityReplySchema } from "../../schemas/Activity";
 
 /**
@@ -45,10 +45,12 @@ export class ActivityRepliesQuery extends APIWrapper {
      * `activityReplies` is a method that sends a query request to get activity replies.
      *
      * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @returns The activity replies for the requested page with pagination metadata.
      * @see https://docs.anilist.co/reference/query
      */
-    async activityReplies(variables: ActivityRepliesVariables): Promise<ActivityReply> {
+    async activityReplies(
+        variables: ActivityRepliesVariables
+    ): Promise<ActivityRepliesPageResponse> {
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

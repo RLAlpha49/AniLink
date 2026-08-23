@@ -144,22 +144,6 @@ export interface StaffResponse {
     };
 
     /**
-     * `staff` is an object representing the staff associated with the staff response.
-     * It includes the staff's id and name.
-     */
-    staff: {
-        /**
-         * `id` is a number representing the id of the staff.
-         */
-        id: number;
-
-        /**
-         * `name` is an instance of `Name` representing the name of the staff.
-         */
-        name: Name;
-    };
-
-    /**
      * `submitter` is an object representing the submitter of the staff response.
      * It includes the submitter's id and name.
      */
@@ -170,28 +154,33 @@ export interface StaffResponse {
         id: number;
 
         /**
-         * `name` is a string representing the name of the submitter.
+         * `name` is an instance of `Name` representing the name of the submitter,
+         * matching the user name sub-selection used by the query.
          */
-        name: string;
+        name: Name;
     };
 
     /**
      * `submissionStatus` is a number representing the submission status of the staff response.
+     * It is only returned to users with moderator permissions.
      */
-    submissionStatus: number;
+    submissionStatus?: number;
 
     /**
      * `submissionNotes` is a string representing the submission notes of the staff response.
+     * It is only returned to users with moderator permissions.
      */
-    submissionNotes: string;
+    submissionNotes?: string;
 
     /**
      * `favourites` is a number representing the count of favourites for the staff.
+     * It requires authentication.
      */
-    favourites: number;
+    favourites?: number;
 
     /**
      * `modNotes` is a string representing the mod notes for the staff.
+     * It is only returned to users with moderator permissions.
      */
-    modNotes: string;
+    modNotes?: string;
 }

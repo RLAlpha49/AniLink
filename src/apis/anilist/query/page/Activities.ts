@@ -1,5 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
-import { type Activity } from "../../interfaces/Activity";
+import { type ActivitiesPageResponse } from "../../interfaces/responses/page/Activities";
 import { ActivityTypeMappings } from "../../types/ActivityType";
 import { ActivitySortMappings } from "../../types/Sort";
 import { validateVariables } from "../../../../base/ValidateVariables";
@@ -167,10 +167,10 @@ export class ActivitiesQuery extends APIWrapper {
      * `activities` is a method that sends a query request to get activities.
      *
      * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @returns The activities for the requested page with pagination metadata.
      * @see https://docs.anilist.co/reference/query
      */
-    async activities(variables: ActivitiesVariables): Promise<Activity> {
+    async activities(variables: ActivitiesVariables): Promise<ActivitiesPageResponse> {
         const variableTypeMappings = {
             page: "number",
             perPage: "number",

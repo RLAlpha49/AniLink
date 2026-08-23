@@ -1,10 +1,9 @@
 import { type Media } from "../../Media";
 import { type FuzzyDate } from "../../FuzzyDate";
-import { type BasicUser } from "../../Basic";
 
 /**
  * `MediaListResponse` is an interface representing the response from a media list query.
- * It includes the id, user id, media id, status, score, progress, progress volumes, repeat, priority, private status, notes, hidden from status lists status, custom lists, advanced scores, started at date, completed at date, updated at timestamp, created at timestamp, media, and user.
+ * It includes the id, user id, media id, status, score, progress, progress volumes, repeat, priority, private status, notes, hidden from status lists status, custom lists, advanced scores, started at date, completed at date, updated at timestamp, created at timestamp, and media.
  * @see https://docs.anilist.co/reference/object/medialist
  */
 export interface MediaListResponse {
@@ -103,9 +102,4 @@ export interface MediaListResponse {
      * `media` is an instance of `Media` representing the media associated with the media list.
      */
     media: Media;
-
-    /**
-     * `user` is an instance representing the user associated with the media list.
-     */
-    user: BasicUser;
 }

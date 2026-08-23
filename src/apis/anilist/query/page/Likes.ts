@@ -1,7 +1,7 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { type LikeableType, LikeableTypeMappings } from "../../types/Type";
 import { requireVariables, validateVariables } from "../../../../base/ValidateVariables";
-import { type BasicUser } from "../../interfaces/Basic";
+import { type LikesPageResponse } from "../../interfaces/responses/page/Likes";
 import { BasicUserSchema } from "../../schemas/Basic";
 
 /**
@@ -41,10 +41,10 @@ export class LikesQuery extends APIWrapper {
      * `likes` is a method that sends a query request to get likes.
      *
      * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @returns The users who liked the item for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/query
      */
-    async likes(variables: LikesVariables): Promise<BasicUser> {
+    async likes(variables: LikesVariables): Promise<LikesPageResponse> {
         requireVariables(
             variables,
             { kind: "all", names: ["likeableId", "type"] },

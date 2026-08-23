@@ -6,10 +6,13 @@
  * means adding its class import here plus one entry in the constructor wiring.
  */
 import { type ActivityReply, type Activity } from "./interfaces/Activity";
+import { type Likeable } from "./interfaces/Likeable";
 import { ActivityQuery, type ActivityVariables } from "./query/Activity";
 import { ActivityReplyQuery, type ActivityReplyVariables } from "./query/ActivityReply";
 import { ActivityRepliesQuery, type ActivityRepliesVariables } from "./query/page/ActivityReplies";
 import { ActivitiesQuery, type ActivitiesVariables } from "./query/page/Activities";
+import { type ActivitiesPageResponse } from "./interfaces/responses/page/Activities";
+import { type ActivityRepliesPageResponse } from "./interfaces/responses/page/ActivityReplies";
 import { AiringScheduleQuery, type AiringScheduleVariables } from "./query/AiringSchedule";
 import { type AiringScheduleResponse } from "./interfaces/responses/query/AiringSchedule";
 import { AiringSchedulesQuery, type AiringSchedulesVariables } from "./query/page/AiringSchedules";
@@ -30,6 +33,7 @@ import { FollowingsQuery, type FollowingsVariables } from "./query/page/Followin
 import { type FollowingsPageResponse } from "./interfaces/responses/page/Followings";
 import { GenreCollectionQuery } from "./query/GenreCollection";
 import { LikesQuery, type LikesVariables } from "./query/page/Likes";
+import { type LikesPageResponse } from "./interfaces/responses/page/Likes";
 import { MarkdownQuery, type MarkdownVariables } from "./query/Markdown";
 import {
     MediaListCollectionQuery,
@@ -810,7 +814,7 @@ export type AniListApi = {
             /**
              * Fetches activities data from the Anilist API.
              * @param {ActivitiesVariables} variables - The variables for the query.
-             * @returns {Promise<Activity>} A promise that resolves to the activities data.
+             * @returns {Promise<ActivitiesPageResponse>} A promise that resolves to the activities data and pagination metadata.
              *
              * @example
              * ```typescript
@@ -818,12 +822,12 @@ export type AniListApi = {
              * ```
              * @see https://docs.anilist.co/reference/query
              */
-            activities: (variables: ActivitiesVariables) => Promise<Activity>;
+            activities: (variables: ActivitiesVariables) => Promise<ActivitiesPageResponse>;
 
             /**
              * Fetches activity replies data from the Anilist API.
              * @param {ActivityRepliesVariables} variables - The variables for the query.
-             * @returns {Promise<ActivityReply>} A promise that resolves to the activity replies data.
+             * @returns {Promise<ActivityRepliesPageResponse>} A promise that resolves to the activity replies data and pagination metadata.
              *
              * @example
              * ```typescript
@@ -831,7 +835,9 @@ export type AniListApi = {
              * ```
              * @see https://docs.anilist.co/reference/query
              */
-            activityReplies: (variables: ActivityRepliesVariables) => Promise<ActivityReply>;
+            activityReplies: (
+                variables: ActivityRepliesVariables
+            ) => Promise<ActivityRepliesPageResponse>;
 
             /**
              * Fetches threads data from the Anilist API.
@@ -892,14 +898,14 @@ export type AniListApi = {
             /**
              * Fetches likes data from the Anilist API.
              * @param {LikesVariables} variables - The variables for the query.
-             * @returns {Promise<BasicUser>} A promise that resolves to the likes data.
+             * @returns {Promise<LikesPageResponse>} A promise that resolves to the likes data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeAbleId: 1});
              * @see https://docs.anilist.co/reference/query
              */
-            likes: (variables: LikesVariables) => Promise<BasicUser>;
+            likes: (variables: LikesVariables) => Promise<LikesPageResponse>;
         };
     };
     /**
@@ -1158,7 +1164,8 @@ export type AniListApi = {
          * Toggles a like on the Anilist API.
          * Returns a different response than the `toggleLike` mutation.
          * @param {ToggleLikeVariables} variables - The variables for the mutation.
-         * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
+         * @returns {Promise<Likeable>} A promise that resolves to the liked entity: an activity,
+         * activity reply, thread, or thread comment depending on the likeable type.
          *
          * @example
          * ```typescript
@@ -1166,7 +1173,7 @@ export type AniListApi = {
          * ```
          * @see https://docs.anilist.co/reference/mutation
          */
-        toggleLikeV2: (variables: ToggleLikeVariables) => Promise<Activity>;
+        toggleLikeV2: (variables: ToggleLikeVariables) => Promise<Likeable>;
 
         /**
          * Toggles a follow on the Anilist API.
