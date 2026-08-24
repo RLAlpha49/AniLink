@@ -1,27 +1,16 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { AniLinkApiError, AniLinkNetworkError } from "../src/base/AniLinkError";
 import { type RequestOptions, sendRequest } from "../src/base/RequestHandler";
+import { getAxiosStub, makeAxiosResponseError as apiError } from "./helpers/axiosStub";
 
-const mocks = vi.hoisted(() => {
-    const request = vi.fn(async () => ({ data: { data: { Media: { id: 1 } } } }));
-    const create = vi.fn(() => request);
-    const isAxiosError = vi.fn((error: unknown) =>
-        Boolean((error as { isAxiosError?: boolean })?.isAxiosError)
-    );
-    const isCancel = vi.fn((error: unknown) =>
-        Boolean((error as { isCanceled?: boolean })?.isCanceled)
-    );
-
-    return { request, create, isAxiosError, isCancel };
+vi.mock("axios", async () => {
+    const { createAxiosStub: build, stashAxiosStub } = await import("./helpers/axiosStub");
+    const stub = build();
+    stashAxiosStub(stub);
+    return stub.module;
 });
 
-vi.mock("axios", () => ({
-    default: Object.assign(vi.fn(), {
-        create: mocks.create,
-        isAxiosError: mocks.isAxiosError,
-        isCancel: mocks.isCancel,
-    }),
-}));
+const mocks = getAxiosStub();
 
 // Transport settings are passed per request since the global
 // `configureRequestOptions` setter was removed.
@@ -34,11 +23,6 @@ const configureRequestOptions = (options: RequestOptions): void => {
 };
 const callSendRequest = (url: string, method: "GET" | "POST", data?: object): Promise<unknown> =>
     sendRequest(url, method, data, undefined, false, pendingOptions);
-
-const apiError = (status: number, headers: Record<string, string> = {}): object => ({
-    isAxiosError: true,
-    response: { status, data: { message: `status ${status}` }, headers },
-});
 
 beforeEach(() => {
     vi.clearAllMocks();

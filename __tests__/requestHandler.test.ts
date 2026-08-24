@@ -1,4 +1,3 @@
-import axios from "axios";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
     AniLinkApiError,
@@ -14,27 +13,16 @@ import {
     unwrapSingleRootField,
 } from "../src/base/RequestHandler";
 import { AniLink } from "../src/AniLink";
+import { getAxiosStub } from "./helpers/axiosStub";
 
-const mocks = vi.hoisted(() => {
-    const request = vi.fn(async () => ({ data: { data: { Media: { id: 1 } } } }));
-    const create = vi.fn(() => request);
-    const isAxiosError = vi.fn((error: unknown) =>
-        Boolean((error as { isAxiosError?: boolean })?.isAxiosError)
-    );
-    const isCancel = vi.fn((error: unknown) =>
-        Boolean((error as { isCanceled?: boolean })?.isCanceled)
-    );
-
-    return { request, create, isAxiosError, isCancel };
+vi.mock("axios", async () => {
+    const { createAxiosStub: build, stashAxiosStub } = await import("./helpers/axiosStub");
+    const stub = build();
+    stashAxiosStub(stub);
+    return stub.module;
 });
 
-vi.mock("axios", () => ({
-    default: Object.assign(vi.fn(), {
-        create: mocks.create,
-        isAxiosError: mocks.isAxiosError,
-        isCancel: mocks.isCancel,
-    }),
-}));
+const mocks = getAxiosStub();
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -820,5 +808,3 @@ describe("missing-token auth error context", () => {
         expect((error as Error).message).not.toContain("(operation:");
     });
 });
-
-void axios;
