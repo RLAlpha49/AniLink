@@ -45,7 +45,7 @@ export class AniLink {
     /**
      * Creates a new AniLink instance. The `authToken` parameter is optional and only required for authenticated queries and mutations. If no `authToken` is provided, only public queries will be available. You are able to create multiple AniLink instances with different `authToken`s.
      * @param {string} [authToken] - The authentication token to use for API requests.
-     * @param {AniLinkOptions} [options] - Transport settings scoped to this instance: `timeout`, `signal` cancellation, opt-in `retry` policy, the `onError`/`onRetry`/`onRequestStart`/`onResponse` observability hooks, and `exposeRawAxiosError` debugging. Options never leak between instances.
+     * @param {AniLinkOptions} [options] - Transport settings scoped to this instance: `timeout`, `signal` cancellation, automatic retries under the default policy (`retry: false` opts out), opt-in `paceWithRateLimit` pacing and `circuitBreaker` fast-fail, the `onError`/`onRetry`/`onRequestStart`/`onResponse` observability hooks, and `exposeRawAxiosError` debugging. Options never leak between instances.
      * @public
      * @example
      * ```typescript
@@ -56,7 +56,7 @@ export class AniLink {
      * // Per-instance transport settings:
      * const tuned = new AniLink('authToken', {
      *     timeout: 10_000,
-     *     retry: true,
+     *     retry: false, // opt out of the default retry policy
      *     onResponse: ({ url, durationMs }) => console.log(url, durationMs),
      * });
      * ```

@@ -99,9 +99,12 @@ The second constructor argument accepts optional transport settings. Options are
 
 | Option | Type | Default | Description |
 | ------ | ---- | ------- | ----------- |
-| `timeout` | `number` | `30000` | Milliseconds before a request is aborted. `0` disables the timeout. |
+| `timeout` | `number` | `30000` | Milliseconds before a request is aborted. `0` disables the timeout. Timeout errors carry the effective duration as `timeoutMs`. |
 | `signal` | `AbortSignal` | — | Cancel in-flight requests (for example when a user navigates away). |
-| `retry` | `boolean \| Partial<RetryPolicy>` | `false` | Opt into automatic retries for transient failures. See [Retry with backoff](#retry-with-backoff). |
+| `retry` | `boolean \| Partial<RetryPolicy>` | default policy | Automatic retries for transient failures are **on by default** (`maxRetries: 3` over HTTP `429`/`5xx`, network, and timeout errors). Pass `retry: false` to opt out. See [Retry with backoff](#retry-with-backoff). |
+| `paceWithRateLimit` | `boolean` | `false` | Opt into proactive pacing: when the `x-ratelimit-remaining` header drops below `rateLimitFloor`, the next request waits until the window resets instead of discovering the limit via a `429`. |
+| `rateLimitFloor` | `number` | `1` | Remaining-quota threshold below which `paceWithRateLimit` delays the next request. |
+| `circuitBreaker` | `{ threshold: number; cooldownMs: number }` | — | Opt into a per-client circuit breaker: after `threshold` consecutive failures, requests fail fast with `CIRCUIT_OPEN_ERROR` until `cooldownMs` elapses. |
 | `onError` | `(error, context) => void` | — | Invoked when an attempt fails and once more when retries are exhausted. |
 | `onRetry` | `(error, context) => void` | — | Invoked before each retry wait with the scheduled delay. |
 | `onRequestStart` | `(context) => void` | — | Invoked just before each attempt is sent. |
@@ -298,7 +301,8 @@ try {
 ```
 
 The available transport codes are `API_ERROR`, `GRAPHQL_ERROR`, `NETWORK_ERROR`,
-`TIMEOUT_ERROR`, `ABORTED_ERROR`, `AUTH_ERROR`, `VALIDATION_ERROR`, and `UNKNOWN_ERROR`.
+`TIMEOUT_ERROR`, `ABORTED_ERROR`, `CIRCUIT_OPEN_ERROR`, `AUTH_ERROR`,
+`VALIDATION_ERROR`, and `UNKNOWN_ERROR`.
 
 GraphQL-level failures can arrive inside an HTTP 200 response. AniLink throws
 these as `AniLinkGraphQLError` (a subclass of `AniLinkApiError` with `status`
@@ -331,19 +335,18 @@ headers.
 
 ### Retry with backoff
 
-AniLink can retry transient failures for you. Retrying is **opt-in**: by
-default requests are sent exactly once and every failure is thrown to
-your code. Pass `retry: true` to use the default policy, or pass a
-partial policy to tune it. When enabled, AniLink retries HTTP `429` and
-`5xx` responses plus network and timeout errors, with exponential
-backoff. The `Retry-After` header is honored for `429` responses
-(capped at 30 seconds).
+AniLink retries transient failures for you by default: HTTP `429` and `5xx`
+responses plus network and timeout errors are retried with exponential
+backoff (`maxRetries: 3`). The `Retry-After` header is honored for `429`
+responses (capped at 60 seconds). Pass `retry: false` to opt out and send
+every request exactly once, or pass a partial policy to tune individual
+knobs on top of the defaults.
 
 ```typescript
-// Opt in with the default policy
-const aniLink = new AniLink("your-auth-token", { retry: true });
+// Opt out of the default policy
+const aniLink = new AniLink("your-auth-token", { retry: false });
 
-// Or tune the policy
+// Or tune the default policy
 const aniLink = new AniLink("your-auth-token", {
     retry: {
         maxRetries: 3, // retries after the initial attempt
@@ -362,8 +365,33 @@ many concurrent clients instead of letting them re-fire in lockstep against
 the shared rate limit. Server-dictated `Retry-After` waits are never jittered.
 Pass `jitter: false` for deterministic delays.
 
-Retries are disabled by default so you stay in control of when requests
-are retried. Set `retry: false` explicitly to make that intent clear.
+### Rate-limit pacing and circuit breaking
+
+Two further resilience knobs are available per instance, both off by default:
+
+```typescript
+import { AniLinkNetworkError } from "anilink-api-wrapper";
+
+const aniLink = new AniLink("your-auth-token", {
+    // Slow down before AniList does: once a successful response reports fewer
+    // remaining requests than `rateLimitFloor`, hold the next request until
+    // the window resets instead of eating a 429.
+    paceWithRateLimit: true,
+    rateLimitFloor: 5,
+    // Fail fast during sustained outages: after 5 consecutive failures,
+    // requests throw `CIRCUIT_OPEN_ERROR` without touching the network for
+    // 30 seconds, then one probe request is let through again.
+    circuitBreaker: { threshold: 5, cooldownMs: 30_000 },
+});
+
+try {
+    await aniLink.anilist.query.user({ id: 542244 });
+} catch (error: unknown) {
+    if (error instanceof AniLinkNetworkError && error.code === "CIRCUIT_OPEN_ERROR") {
+        // Back off; the breaker will probe recovery automatically.
+    }
+}
+```
 
 ### Error hook
 
@@ -415,7 +443,9 @@ const aniLink = new AniLink("your-auth-token", {
   wait and once more at terminal failure).
 
 These hooks are synchronous and fire in addition to the promise result; they
-never change request behavior.
+never change request behavior. Hook exceptions are isolated: a throwing hook
+is reported as a console warning and never crashes a request or distorts
+retry and error classification.
 
 Common status codes from the AniList API:
 

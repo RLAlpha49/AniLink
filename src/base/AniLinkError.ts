@@ -10,6 +10,7 @@ export const AniLinkErrorCodes = {
     NETWORK: "NETWORK_ERROR",
     TIMEOUT: "TIMEOUT_ERROR",
     ABORTED: "ABORTED_ERROR",
+    CIRCUIT: "CIRCUIT_OPEN_ERROR",
     AUTH: "AUTH_ERROR",
     VALIDATION: "VALIDATION_ERROR",
     UNKNOWN: "UNKNOWN_ERROR",
@@ -93,24 +94,57 @@ export class AniLinkApiError extends AniLinkError {
     }
 }
 
+/**
+ * A single upstream GraphQL error object as carried by an HTTP 200 envelope.
+ *
+ * AniList error entries always carry a human-readable `message` and usually a
+ * numeric `status` (for example `404` for "Not Found" versus `500` for an
+ * internal server error); `locations` and `extensions` appear when the server
+ * includes them. Any additional upstream fields are preserved verbatim via the
+ * index signature so consumers never need to string-match messages to
+ * classify a failure.
+ */
+export interface GraphQLUpstreamError {
+    /** The human-readable error message returned by AniList. */
+    message: string;
+    /** The upstream HTTP-like status for the error, when present (e.g. `404`, `500`). */
+    status?: number | string;
+    /** The GraphQL source locations the error refers to, when present. */
+    locations?: unknown;
+    /** Arbitrary upstream extension metadata, when present. */
+    extensions?: Record<string, unknown> | null;
+    /** Any additional upstream fields, preserved verbatim. */
+    [key: string]: unknown;
+}
+
 /** A GraphQL-level failure returned inside an HTTP 200 envelope. */
 export class AniLinkGraphQLError extends AniLinkApiError {
     /**
-     * The upstream GraphQL `errors` array carried by the envelope. Each entry
-     * has a human-readable `message`; partial `data` returned alongside the
-     * errors remains available on {@link AniLinkApiError.data}.
+     * The upstream GraphQL `errors` array carried by the envelope, preserved
+     * verbatim. Beyond `message`, entries typically carry an upstream `status`
+     * (distinguishing "entity does not exist" from a server fault) plus
+     * `locations` and `extensions` when AniList includes them.
      */
-    public readonly graphqlErrors: ReadonlyArray<{ message: string }>;
+    public readonly graphqlErrors: ReadonlyArray<GraphQLUpstreamError>;
+
+    /**
+     * The partial `data` object returned alongside the GraphQL errors, when
+     * AniList produced a partial success. GraphQL can resolve some fields
+     * while failing others; the usable portion survives here (and on the
+     * inherited {@link AniLinkApiError.data} field) instead of being
+     * discarded, so consumers can recover the fields that did resolve.
+     */
+    declare public readonly partialData?: unknown;
 
     /**
      * Creates a GraphQL error from an HTTP 200 envelope's `errors` array.
      *
      * @param errors - The upstream GraphQL errors; each entry should carry a `message`.
-     * @param data - The partial `data` object returned alongside the errors, when any.
+     * @param data - The partial `data` object returned alongside the errors, when any. Exposed as {@link AniLinkGraphQLError.partialData}.
      * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
      */
     constructor(
-        errors: ReadonlyArray<{ message: string }>,
+        errors: ReadonlyArray<GraphQLUpstreamError>,
         data?: unknown,
         rawAxiosError?: unknown
     ) {
@@ -121,6 +155,9 @@ export class AniLinkGraphQLError extends AniLinkApiError {
             .map((graphqlError) => graphqlError.message)
             .join("; ")}`;
         this.graphqlErrors = errors;
+        if (data !== undefined) {
+            this.partialData = data;
+        }
     }
 }
 
@@ -128,10 +165,14 @@ export class AniLinkGraphQLError extends AniLinkApiError {
 export class AniLinkAuthError extends AniLinkError {
     /**
      * Creates an authentication error for a token-required operation.
+     *
+     * @param operation - Optional name of the operation that required authentication, appended to the message so the failing call is identifiable from logs alone.
      */
-    constructor() {
+    constructor(operation?: string) {
         super(
-            "This operation requires an authentication token. Create an instance of AniLink and pass the token as an argument.",
+            operation === undefined
+                ? "This operation requires an authentication token. Create an instance of AniLink and pass the token as an argument."
+                : `This operation requires an authentication token. Create an instance of AniLink and pass the token as an argument. (operation: ${operation})`,
             AniLinkErrorCodes.AUTH
         );
         this.name = "AniLinkAuthError";
@@ -158,24 +199,44 @@ export class AniLinkValidationError extends AniLinkError {
     }
 }
 
-/** A network, timeout, or cancellation failure. */
+/** Additional metadata attached to a transport failure. */
+export interface AniLinkNetworkErrorOptions {
+    /** The effective per-attempt timeout in milliseconds, when a timeout was configured and enforced. */
+    timeoutMs?: number;
+}
+
+/** A network, timeout, cancellation, or circuit-breaker failure. */
 export class AniLinkNetworkError extends AniLinkError {
+    /**
+     * The effective timeout duration in milliseconds when this failure was a
+     * timeout and a finite timeout was configured. Use it to correlate the
+     * error with the `timeout` option that produced it; absent when the
+     * timeout is disabled (`0`) or the failure is not a timeout.
+     */
+    declare public readonly timeoutMs?: number;
+
     /**
      * Creates a sanitized transport error.
      *
      * @param code - The stable code for the transport failure.
      * @param message - A safe message intended for application logs.
      * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
+     * @param options - Additional transport metadata such as the effective timeout duration.
      */
     constructor(
         code:
             | typeof AniLinkErrorCodes.NETWORK
             | typeof AniLinkErrorCodes.TIMEOUT
-            | typeof AniLinkErrorCodes.ABORTED,
+            | typeof AniLinkErrorCodes.ABORTED
+            | typeof AniLinkErrorCodes.CIRCUIT,
         message: string,
-        rawAxiosError?: unknown
+        rawAxiosError?: unknown,
+        options?: AniLinkNetworkErrorOptions
     ) {
         super(message, code, rawAxiosError);
         this.name = "AniLinkNetworkError";
+        if (options?.timeoutMs !== undefined) {
+            this.timeoutMs = options.timeoutMs;
+        }
     }
 }

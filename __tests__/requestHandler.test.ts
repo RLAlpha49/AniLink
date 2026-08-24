@@ -136,9 +136,9 @@ test("normalizes an HTTP failure without exposing the Axios response", async () 
         request: { headers: { Authorization: "Bearer secret-token" } },
     });
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
-        (requestError: unknown) => requestError
-    );
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
+        retry: false,
+    }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkApiError);
     expect(error).toMatchObject({ name: "AniLinkApiError", code: "API_ERROR", status: 429 });
@@ -180,9 +180,9 @@ test("does not expose the raw Axios error by default", async () => {
     };
     mocks.request.mockRejectedValueOnce(axiosError);
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
-        (requestError: unknown) => requestError
-    );
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
+        retry: false,
+    }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkApiError);
     expect(error).not.toHaveProperty("rawAxiosError");
@@ -198,6 +198,7 @@ test("exposes the original Axios error when explicitly enabled", async () => {
 
     const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
         exposeRawAxiosError: true,
+        retry: false,
     }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkApiError);
@@ -212,9 +213,9 @@ test("normalizes a network failure with a stable code", async () => {
         request: { headers: { Authorization: "Bearer secret-token" } },
     });
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
-        (requestError: unknown) => requestError
-    );
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
+        retry: false,
+    }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkNetworkError);
     expect(error).toMatchObject({ name: "AniLinkNetworkError", code: "NETWORK_ERROR" });
@@ -229,12 +230,16 @@ test("classifies Axios timeout failures separately from other network failures",
         message: "timeout for secret-token",
     });
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
-        (requestError: unknown) => requestError
-    );
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
+        retry: false,
+    }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkNetworkError);
-    expect(error).toMatchObject({ name: "AniLinkNetworkError", code: "TIMEOUT_ERROR" });
+    expect(error).toMatchObject({
+        name: "AniLinkNetworkError",
+        code: "TIMEOUT_ERROR",
+        timeoutMs: DEFAULT_REQUEST_TIMEOUT,
+    });
     expect((error as Error).message).toBe("AniList request timed out.");
 });
 
@@ -455,19 +460,28 @@ describe("per-call options", () => {
     });
 
     test("falls back to library defaults when no options are passed", async () => {
-        mocks.request.mockRejectedValueOnce({
-            isAxiosError: true,
-            response: { status: 500, data: {} },
-        });
-        await expect(sendRequest("https://graphql.anilist.co", "POST")).rejects.toBeInstanceOf(
-            AniLinkApiError
-        );
-        expect(mocks.request).toHaveBeenCalledTimes(1); // retry defaults to disabled
+        vi.useFakeTimers();
+        try {
+            // The default policy retries a 500 even when no options are passed.
+            mocks.request
+                .mockRejectedValueOnce({
+                    isAxiosError: true,
+                    response: { status: 500, data: {} },
+                })
+                .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
 
-        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" });
-        expect(mocks.request).toHaveBeenLastCalledWith(
-            expect.objectContaining({ timeout: DEFAULT_REQUEST_TIMEOUT })
-        );
+            const promise = sendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+            await vi.advanceTimersByTimeAsync(10_000);
+            await expect(promise).resolves.toEqual({ id: 1 });
+            expect(mocks.request).toHaveBeenCalledTimes(2); // initial attempt + default-policy retry
+
+            await sendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+            expect(mocks.request).toHaveBeenLastCalledWith(
+                expect.objectContaining({ timeout: DEFAULT_REQUEST_TIMEOUT })
+            );
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });
 
@@ -571,9 +585,14 @@ describe("rate limit info", () => {
             },
         });
 
-        const error = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
-            (requestError: unknown) => requestError
-        );
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            {},
+            undefined,
+            false,
+            { retry: false }
+        ).catch((requestError: unknown) => requestError);
 
         expect(error).toBeInstanceOf(AniLinkApiError);
         expect((error as AniLinkApiError).rateLimit).toEqual({
@@ -602,10 +621,203 @@ describe("rate limit info", () => {
                 headers: { "x-ratelimit-limit": "90" },
             },
         });
-        const incomplete = await sendRequest("https://graphql.anilist.co", "POST", {}).catch(
-            (requestError: unknown) => requestError
-        );
+        const incomplete = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            {},
+            undefined,
+            false,
+            { retry: false }
+        ).catch((requestError: unknown) => requestError);
         expect((incomplete as AniLinkApiError).rateLimit).toBeUndefined();
+    });
+});
+
+describe("hook exception isolation", () => {
+    test("a throwing onRequestStart hook does not crash the request", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        await expect(
+            sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query" },
+                undefined,
+                false,
+                {
+                    retry: false,
+                    onRequestStart: () => {
+                        throw new Error("telemetry exploded");
+                    },
+                }
+            )
+        ).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+        expect(warn).toHaveBeenCalledWith(
+            "[AniLink] onRequestStart hook threw and was ignored:",
+            "telemetry exploded"
+        );
+        warn.mockRestore();
+    });
+
+    test("a throwing onResponse hook on success is swallowed and not retried", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        await expect(
+            sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query" },
+                undefined,
+                false,
+                {
+                    retry: true,
+                    onResponse: () => {
+                        throw new Error("metrics down");
+                    },
+                }
+            )
+        ).resolves.toEqual({ id: 1 });
+        // The hook failure must not be counted as a transport failure.
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+        expect(warn).toHaveBeenCalledWith(
+            "[AniLink] onResponse hook threw and was ignored:",
+            "metrics down"
+        );
+        warn.mockRestore();
+    });
+
+    test("a throwing onResponse hook on failure does not distort error classification", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 404, data: {} },
+        });
+
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            {},
+            undefined,
+            false,
+            {
+                retry: false,
+                onResponse: () => {
+                    throw new Error("boom");
+                },
+            }
+        ).catch((requestError: unknown) => requestError);
+
+        // The original 404 classification survives; the hook failure is not
+        // normalized as the request failure.
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        expect((error as AniLinkApiError).status).toBe(404);
+        expect(warn).toHaveBeenCalled();
+        warn.mockRestore();
+    });
+});
+
+describe("GraphQL error metadata preservation", () => {
+    test("preserves upstream status, locations, and extensions on AniLinkGraphQLError", async () => {
+        const upstreamErrors = [
+            {
+                message: "Not Found.",
+                status: 404,
+                locations: [{ line: 1, column: 3 }],
+                extensions: { code: "NOT_FOUND" },
+            },
+        ];
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: upstreamErrors, data: null },
+        });
+
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            false,
+            { retry: false }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+        expect((error as AniLinkGraphQLError).graphqlErrors).toEqual(upstreamErrors);
+        expect((error as AniLinkGraphQLError).graphqlErrors[0]?.status).toBe(404);
+        expect((error as AniLinkGraphQLError).graphqlErrors[0]?.extensions).toEqual({
+            code: "NOT_FOUND",
+        });
+    });
+
+    test("exposes partialData when GraphQL errors and data coexist", async () => {
+        const partialData = { Media: { id: 1 } };
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: partialData,
+                errors: [{ message: "favourite failed", status: 500 }],
+            },
+        });
+
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            false,
+            { retry: false }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+        expect((error as AniLinkGraphQLError).partialData).toEqual(partialData);
+        expect((error as AniLinkGraphQLError).data).toEqual(partialData);
+    });
+
+    test("leaves partialData unset when no data accompanies the errors", async () => {
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "Not authenticated." }] },
+        });
+
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            false,
+            { retry: false }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+        expect((error as AniLinkGraphQLError).partialData).toBeUndefined();
+    });
+});
+
+describe("missing-token auth error context", () => {
+    test("includes the operation name in the auth error message", async () => {
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            {},
+            undefined,
+            true,
+            undefined,
+            "SaveMediaListEntryMutation"
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkAuthError);
+        expect(error).toMatchObject({ code: "AUTH_ERROR" });
+        expect((error as Error).message).toContain("SaveMediaListEntryMutation");
+    });
+
+    test("keeps the generic message when no operation label is provided", async () => {
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            {},
+            undefined,
+            true
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkAuthError);
+        expect((error as Error).message).not.toContain("(operation:");
     });
 });
 

@@ -20,7 +20,7 @@ export {
 } from "../../base/AniLinkError";
 export type { AniLinkErrorCode, RateLimitInfo } from "../../base/AniLinkError";
 
-/** Transport settings accepted by an `AniLink` client: `timeout`, `signal`, opt-in `retry`, lifecycle hooks, and `exposeRawAxiosError`. */
+/** Transport settings accepted by an `AniLink` client: `timeout`, `signal`, automatic retries under the default policy (`retry: false` opts out), opt-in `paceWithRateLimit` pacing and `circuitBreaker` fast-fail, lifecycle hooks, and `exposeRawAxiosError`. */
 export type AniLinkOptions = RequestOptions;
 
 /**

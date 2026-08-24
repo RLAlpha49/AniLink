@@ -26,6 +26,9 @@ vi.mock("axios", () => ({
 // Transport settings are passed per request since the global
 // `configureRequestOptions` setter was removed.
 let pendingOptions: RequestOptions | undefined;
+// Fake-timer timestamp captured before each test so tests can assert that no
+// hidden pacing delay elapsed.
+let startedAt = 0;
 const configureRequestOptions = (options: RequestOptions): void => {
     pendingOptions = options;
 };
@@ -41,6 +44,7 @@ beforeEach(() => {
     vi.clearAllMocks();
     mocks.request.mockImplementation(async () => ({ data: { data: { Media: { id: 1 } } } }));
     vi.useFakeTimers();
+    startedAt = Date.now();
     configureRequestOptions({});
 });
 
@@ -127,15 +131,20 @@ describe("retry with backoff", () => {
         expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 
-    test("does not retry by default (opt-in)", async () => {
-        mocks.request.mockRejectedValue(apiError(500));
+    test("retries under the default policy when no retry option is given", async () => {
+        mocks.request
+            .mockRejectedValueOnce(apiError(500))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 5 } } } });
 
         configureRequestOptions({});
 
-        await expect(
-            callSendRequest("https://graphql.anilist.co", "POST", { query: "query" })
-        ).rejects.toBeInstanceOf(AniLinkApiError);
-        expect(mocks.request).toHaveBeenCalledTimes(1);
+        const promise = callSendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        });
+
+        await vi.advanceTimersByTimeAsync(10_000);
+        await expect(promise).resolves.toEqual({ id: 5 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
     });
 
     test("retries with the default policy when retry is true", async () => {
@@ -275,6 +284,31 @@ describe("retry hooks", () => {
         ] as [{ nextDelayMs?: number } | undefined, { nextDelayMs?: number } | undefined];
         expect(firstContext?.nextDelayMs).toBeDefined();
         expect(terminalContext?.nextDelayMs).toBeUndefined();
+    });
+
+    test("a throwing onRetry hook does not break the backoff wait", async () => {
+        mocks.request
+            .mockRejectedValueOnce(apiError(500))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 9 } } } });
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        configureRequestOptions({
+            retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 },
+            onRetry: () => {
+                throw new Error("retry sink failed");
+            },
+        });
+
+        const promise = callSendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(promise).resolves.toEqual({ id: 9 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+        expect(warn).toHaveBeenCalledWith(
+            "[AniLink] onRetry hook threw and was ignored:",
+            "retry sink failed"
+        );
+        warn.mockRestore();
     });
 
     test("reports nextDelayMs matching Retry-After on a 429", async () => {
@@ -429,5 +463,235 @@ describe("Retry-After handling", () => {
         await expect(promise).resolves.toBeDefined();
         expect(mocks.request).toHaveBeenCalledTimes(2);
         expect((onRetry.mock.calls[0]?.[1] as { nextDelayMs: number }).nextDelayMs).toBe(2_000);
+    });
+});
+
+describe("circuit breaker", () => {
+    const breaker = { threshold: 2, cooldownMs: 1_000 };
+    const url = "https://graphql.anilist.co";
+
+    test("stays off when not configured so every request reaches the network", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+
+        configureRequestOptions({ retry: false });
+
+        for (let index = 0; index < 5; index += 1) {
+            await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+                AniLinkApiError
+            );
+        }
+        expect(mocks.request).toHaveBeenCalledTimes(5);
+    });
+
+    test("opens after the failure budget and fast-fails with CIRCUIT_OPEN_ERROR", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+
+        configureRequestOptions({ retry: false, circuitBreaker: breaker });
+
+        // Each failed request counts toward the consecutive-failure budget.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+
+        // The breaker is open: requests fail fast without touching the network.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            name: "AniLinkNetworkError",
+            code: "CIRCUIT_OPEN_ERROR",
+        });
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "CIRCUIT_OPEN_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("lets a probe through after the cooldown and closes on success", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+
+        configureRequestOptions({ retry: false, circuitBreaker: breaker });
+
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+
+        // Still inside the cooldown: fast-fail.
+        await vi.advanceTimersByTimeAsync(999);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "CIRCUIT_OPEN_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+
+        // Cooldown elapsed: the next request probes the upstream and succeeds.
+        await vi.advanceTimersByTimeAsync(1);
+        mocks.request.mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        await expect(callSendRequest(url, "POST", { query: "query" })).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+
+        // Success reset the streak, so a single new failure cannot re-open it.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(4);
+    });
+
+    test("re-opens immediately when the post-cooldown probe fails", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+
+        configureRequestOptions({ retry: false, circuitBreaker: breaker });
+
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+
+        await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
+
+        // The probe itself fails, which re-opens the breaker.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "CIRCUIT_OPEN_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+    });
+
+    test("keeps breaker state scoped to each client's own options object", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+
+        const clientAOptions = { retry: false as const, circuitBreaker: breaker };
+        const clientBOptions = { retry: false as const, circuitBreaker: breaker };
+
+        await expect(
+            sendRequest(url, "POST", { query: "query" }, undefined, false, clientAOptions)
+        ).rejects.toBeInstanceOf(AniLinkApiError);
+        await expect(
+            sendRequest(url, "POST", { query: "query" }, undefined, false, clientAOptions)
+        ).rejects.toBeInstanceOf(AniLinkApiError);
+
+        // Client A tripped its breaker...
+        await expect(
+            sendRequest(url, "POST", { query: "query" }, undefined, false, clientAOptions)
+        ).rejects.toMatchObject({ code: "CIRCUIT_OPEN_ERROR" });
+        // ...but client B still reaches the network.
+        await expect(
+            sendRequest(url, "POST", { query: "query" }, undefined, false, clientBOptions)
+        ).rejects.toMatchObject({ code: "API_ERROR" });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+    });
+});
+
+describe("rate-limit pacing", () => {
+    const url = "https://graphql.anilist.co";
+    const pacedResponse = (remaining: number, secondsUntilReset: number): object => ({
+        data: { data: { Media: { id: 1 } } },
+        headers: {
+            "x-ratelimit-limit": "90",
+            "x-ratelimit-remaining": String(remaining),
+            "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + secondsUntilReset),
+        },
+    });
+
+    test("is inactive by default even when the reported quota is exhausted", async () => {
+        mocks.request.mockResolvedValue(pacedResponse(0, 60));
+
+        configureRequestOptions({});
+
+        await callSendRequest(url, "POST", { query: "query" });
+        await callSendRequest(url, "POST", { query: "query" });
+
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+        expect(Date.now() - startedAt).toBeLessThan(1_000);
+    });
+
+    test("delays the next request until the window resets once remaining drops below the floor", async () => {
+        mocks.request.mockResolvedValue(pacedResponse(0, 5));
+
+        configureRequestOptions({ paceWithRateLimit: true });
+
+        // The first response already reports an exhausted quota, so even this
+        // first caller waits for the reset before its result settles.
+        const first = callSendRequest(url, "POST", { query: "query" });
+        first.catch(() => {});
+        await vi.advanceTimersByTimeAsync(4_999);
+        expect(mocks.request).toHaveBeenCalledTimes(1); // still waiting for the reset
+
+        await vi.advanceTimersByTimeAsync(1);
+        await expect(first).resolves.toEqual({ id: 1 });
+
+        // The next request is paced again by the refreshed headers.
+        const second = callSendRequest(url, "POST", { query: "query" });
+        second.catch(() => {});
+        await vi.advanceTimersByTimeAsync(5_000);
+        await expect(second).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("does not pace while remaining quota stays at or above the floor", async () => {
+        mocks.request.mockResolvedValue(pacedResponse(30, 60));
+
+        configureRequestOptions({ paceWithRateLimit: true });
+
+        await callSendRequest(url, "POST", { query: "query" });
+        await callSendRequest(url, "POST", { query: "query" });
+
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+        expect(Date.now() - startedAt).toBeLessThan(1_000);
+    });
+
+    test("paces when remaining quota drops below a raised rateLimitFloor", async () => {
+        mocks.request.mockResolvedValue(pacedResponse(3, 4));
+
+        configureRequestOptions({ paceWithRateLimit: true, rateLimitFloor: 5 });
+
+        const first = callSendRequest(url, "POST", { query: "query" });
+        first.catch(() => {});
+        await vi.advanceTimersByTimeAsync(4_000);
+        await expect(first).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        const promise = callSendRequest(url, "POST", { query: "query" });
+        promise.catch(() => {});
+
+        await vi.advanceTimersByTimeAsync(4_000);
+        await expect(promise).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("propagates an abort during the pacing wait without re-reporting the finished attempt", async () => {
+        const controller = new AbortController();
+        const onResponse = vi.fn();
+        mocks.request.mockResolvedValue(pacedResponse(0, 60));
+
+        configureRequestOptions({
+            paceWithRateLimit: true,
+            signal: controller.signal,
+            onResponse,
+        });
+
+        const promise = callSendRequest(url, "POST", { query: "query" });
+        promise.catch(() => {});
+
+        await vi.advanceTimersByTimeAsync(0); // attempt done, pacing wait scheduled
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        controller.abort();
+        await vi.advanceTimersByTimeAsync(60_000);
+
+        await expect(promise).rejects.toMatchObject({ code: "ABORTED_ERROR" });
+        // The successful attempt is reported exactly once; the pacing abort is
+        // not mistaken for a second attempt outcome.
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 });

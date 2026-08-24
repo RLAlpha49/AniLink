@@ -10,6 +10,7 @@ import {
     AniLinkGraphQLError,
     AniLinkNetworkError,
     type AniLinkErrorCode,
+    type GraphQLUpstreamError,
     type RateLimitInfo,
 } from "./AniLinkError";
 
@@ -18,6 +19,22 @@ export const DEFAULT_REQUEST_TIMEOUT = 30_000;
 
 /** The maximum time a `Retry-After` header may delay a retry. */
 const MAX_RETRY_AFTER_MS = 60_000;
+
+/** Socket bounds for the shared keep-alive agents (see `MAX_SOCKETS`). */
+const MAX_FREE_SOCKETS = 5;
+
+/**
+ * Upper bound on concurrent sockets per shared keep-alive agent.
+ *
+ * The Node defaults are unbounded (`maxSockets: Infinity`), which lets bursts
+ * open far more connections than connection reuse can benefit from and lets
+ * idle keep-alive sockets linger until the server closes them. 20 concurrent
+ * sockets comfortably covers legitimate pagination concurrency while keeping
+ * pressure on AniList bounded; freed sockets are retained up to
+ * {@link MAX_FREE_SOCKETS} with LIFO scheduling so the warmest connection is
+ * reused first.
+ */
+const MAX_SOCKETS = 20;
 
 /**
  * Retry policy for transient transport failures.
@@ -91,7 +108,7 @@ export type OnResponseHandler = (context: RequestContext & { durationMs: number 
  * per instance and never leak across clients.
  */
 export interface RequestOptions {
-    /** Milliseconds before a request is aborted. `0` disables the Axios timeout. Defaults to 30 seconds. */
+    /** Milliseconds before a request is aborted. `0` disables the Axios timeout. Defaults to 30 seconds; timeout errors carry the effective duration as `timeoutMs`. */
     timeout?: number;
     /** Signal used to cancel in-flight requests. */
     signal?: AbortSignal;
@@ -102,11 +119,34 @@ export interface RequestOptions {
      */
     exposeRawAxiosError?: boolean;
     /**
-     * Opt into automatic retries for transient failures: `true` uses the
-     * default policy, a partial policy tunes it, and `false` (the default)
-     * sends every request exactly once.
+     * Automatic retries for transient failures. Defaults to the built-in
+     * policy (`maxRetries: 3`, jittered exponential backoff over HTTP `429`
+     * and `5xx` responses plus network and timeout errors). Pass `false` to
+     * opt out and send every request exactly once, or pass a partial policy
+     * to tune individual knobs on top of the defaults.
      */
     retry?: boolean | Partial<RetryPolicy>;
+    /**
+     * Opt into proactive request pacing driven by the `x-ratelimit-*` headers
+     * of every successful response: when the reported remaining quota drops
+     * below `rateLimitFloor` (default 1), the next attempt waits until the
+     * window resets instead of discovering the limit via a `429`. Off by default.
+     */
+    paceWithRateLimit?: boolean;
+    /**
+     * Remaining-quota threshold below which {@link RequestOptions.paceWithRateLimit}
+     * delays the next request until the window resets. Defaults to `1`.
+     */
+    rateLimitFloor?: number;
+    /**
+     * Opt into a per-client circuit breaker for sustained upstream outages:
+     * after `threshold` consecutive failed attempts, further requests fail
+     * fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has
+     * elapsed since the last failure, after which the next request is allowed
+     * through as a probe. Off by default; when unset, no failure accounting
+     * happens across requests.
+     */
+    circuitBreaker?: { threshold: number; cooldownMs: number };
     /** Invoked when an attempt fails, and once more when retries are exhausted. */
     onError?: OnErrorHandler;
     /** Invoked before each retry wait with the scheduled delay in `nextDelayMs`. Falls back to per-attempt `onError` calls when unset. */
@@ -128,8 +168,18 @@ const DEFAULT_RETRY_POLICY: Required<Pick<RetryPolicy, "jitter">> & RetryPolicy 
 
 const axiosClient = axios.create({
     timeout: DEFAULT_REQUEST_TIMEOUT,
-    httpAgent: new http.Agent({ keepAlive: true }),
-    httpsAgent: new https.Agent({ keepAlive: true }),
+    httpAgent: new http.Agent({
+        keepAlive: true,
+        maxSockets: MAX_SOCKETS,
+        maxFreeSockets: MAX_FREE_SOCKETS,
+        scheduling: "lifo",
+    }),
+    httpsAgent: new https.Agent({
+        keepAlive: true,
+        maxSockets: MAX_SOCKETS,
+        maxFreeSockets: MAX_FREE_SOCKETS,
+        scheduling: "lifo",
+    }),
 });
 
 interface ResolvedRequestOptions {
@@ -137,6 +187,9 @@ interface ResolvedRequestOptions {
     signal?: AbortSignal;
     exposeRawAxiosError: boolean;
     retry: RetryPolicy | null;
+    paceWithRateLimit: boolean;
+    rateLimitFloor: number;
+    circuitBreaker?: { threshold: number; cooldownMs: number };
     onError?: OnErrorHandler;
     onRetry?: OnErrorHandler;
     onRequestStart?: OnRequestStartHandler;
@@ -146,10 +199,10 @@ interface ResolvedRequestOptions {
 const resolveRetryPolicy = (
     retry: boolean | Partial<RetryPolicy> | undefined
 ): RetryPolicy | null => {
-    if (retry === undefined || retry === false) {
+    if (retry === false) {
         return null;
     }
-    if (retry === true) {
+    if (retry === undefined || retry === true) {
         return { ...DEFAULT_RETRY_POLICY };
     }
     return { ...DEFAULT_RETRY_POLICY, ...retry };
@@ -178,6 +231,9 @@ const resolveRequestOptions = (options: RequestOptions = {}): ResolvedRequestOpt
         signal: options.signal,
         exposeRawAxiosError: options.exposeRawAxiosError ?? false,
         retry: resolveRetryPolicy(options.retry),
+        paceWithRateLimit: options.paceWithRateLimit ?? false,
+        rateLimitFloor: Math.max(1, options.rateLimitFloor ?? 1),
+        circuitBreaker: options.circuitBreaker,
         onError: options.onError,
         onRetry: options.onRetry,
         onRequestStart: options.onRequestStart,
@@ -191,7 +247,7 @@ const resolveRequestOptions = (options: RequestOptions = {}): ResolvedRequestOpt
  */
 export interface GraphQLResponseEnvelope {
     data?: unknown;
-    errors?: Array<{ message: string }>;
+    errors?: GraphQLUpstreamError[];
 }
 
 /**
@@ -295,7 +351,8 @@ const normalizeAxiosError = (resolved: ResolvedRequestOptions, error: AxiosError
         return new AniLinkNetworkError(
             AniLinkErrorCodes.TIMEOUT,
             "AniList request timed out.",
-            getRawAxiosError(resolved, error)
+            getRawAxiosError(resolved, error),
+            resolved.timeout > 0 ? { timeoutMs: resolved.timeout } : undefined
         );
     }
 
@@ -441,6 +498,106 @@ interface ExecuteOptions {
 }
 
 /**
+ * Invokes a user-supplied lifecycle hook without letting its exceptions
+ * escape into the request pipeline. A throwing hook is reported as a console
+ * warning and otherwise ignored: it must not crash the request, be counted as
+ * an attempt, or distort retry and error classification.
+ *
+ * @param hook - The hook callback, if configured.
+ * @param name - The hook's option name, used in the warning.
+ * @param args - Arguments forwarded verbatim to the hook.
+ */
+const safeInvoke = (
+    hook: ((...args: never[]) => void) | undefined,
+    name: string,
+    ...args: unknown[]
+): void => {
+    if (hook === undefined) {
+        return;
+    }
+    try {
+        (hook as (...hookArgs: unknown[]) => void)(...args);
+    } catch (hookError: unknown) {
+        console.warn(
+            `[AniLink] ${name} hook threw and was ignored:`,
+            hookError instanceof Error ? hookError.message : hookError
+        );
+    }
+};
+
+/**
+ * Shared circuit-breaker state, keyed by the caller's transport-settings
+ * object so every request built on one `AniLink` instance shares its breaker
+ * while concurrent clients never trip each other's. Only populated when a
+ * request opts in via `circuitBreaker`; disabled configurations allocate
+ * nothing.
+ */
+const circuitStates = new WeakMap<object, CircuitState>();
+
+interface CircuitState {
+    consecutiveFailures: number;
+    openedAt: number | null;
+}
+
+const getCircuitState = (key: object): CircuitState => {
+    let state = circuitStates.get(key);
+    if (state === undefined) {
+        state = { consecutiveFailures: 0, openedAt: null };
+        circuitStates.set(key, state);
+    }
+    return state;
+};
+
+/**
+ * Fast-fails while the circuit is open and clears the open state once the
+ * cooldown has elapsed so the next attempt can probe the upstream again.
+ *
+ * @param circuit - The caller's breaker state, when the breaker is enabled.
+ * @param breaker - The breaker configuration, when enabled.
+ * @throws An {@link AniLinkNetworkError} with code `CIRCUIT_OPEN_ERROR` while the cooldown is still running.
+ */
+const throwIfCircuitOpen = (
+    circuit: CircuitState | undefined,
+    breaker: { threshold: number; cooldownMs: number } | undefined
+): void => {
+    if (circuit === undefined || breaker === undefined || circuit.openedAt === null) {
+        return;
+    }
+    if (Date.now() - circuit.openedAt < breaker.cooldownMs) {
+        throw new AniLinkNetworkError(
+            AniLinkErrorCodes.CIRCUIT,
+            `AniList request failed fast: the circuit breaker is open after ${breaker.threshold} consecutive failures. Retrying is possible after the cooldown elapses.`
+        );
+    }
+    // Cooldown elapsed: allow the next attempt through as the probe.
+    circuit.openedAt = null;
+};
+
+/** Resets the failure streak after a successful attempt. */
+const recordCircuitSuccess = (circuit: CircuitState | undefined): void => {
+    if (circuit !== undefined) {
+        circuit.consecutiveFailures = 0;
+    }
+};
+
+/**
+ * Counts a failed attempt and opens the circuit once the consecutive-failure
+ * budget is exhausted.
+ */
+const recordCircuitFailure = (
+    circuit: CircuitState | undefined,
+    breaker: { threshold: number; cooldownMs: number } | undefined
+): void => {
+    if (circuit === undefined || breaker === undefined) {
+        return;
+    }
+    circuit.consecutiveFailures += 1;
+    if (circuit.consecutiveFailures >= breaker.threshold) {
+        circuit.openedAt = Date.now();
+    }
+};
+
+/**
  * Builds the context object handed to the request lifecycle hooks.
  *
  * @param url - The URL the request was sent to.
@@ -465,18 +622,101 @@ const buildErrorContext = (
     ...(nextDelayMs === undefined ? {} : { nextDelayMs }),
 });
 
+/**
+ * Applies opt-in rate-limit pacing after a successful response: when the
+ * reported remaining quota drops below the configured floor, waits until the
+ * window resets before the caller proceeds.
+ */
+const paceAfterSuccess = async (
+    response: AxiosResponse,
+    resolved: ResolvedRequestOptions
+): Promise<void> => {
+    if (!resolved.paceWithRateLimit) {
+        return;
+    }
+    const info = getRateLimitInfo(response.headers as Record<string, unknown>);
+    if (info !== undefined && info.remaining < resolved.rateLimitFloor) {
+        await sleep(Math.max(0, info.reset * 1000 - Date.now()), resolved.signal);
+    }
+};
+
+/**
+ * Reports a failed attempt through the error hooks. A retryable failure goes
+ * to `onRetry` (falling back to `onError`) with the scheduled delay; a
+ * terminal failure goes to `onError` only.
+ */
+const reportFailure = (
+    url: string,
+    method: "GET" | "POST",
+    attempt: number,
+    normalized: AniLinkError,
+    resolved: ResolvedRequestOptions,
+    nextDelayMs?: number
+): void => {
+    const context = buildErrorContext(url, method, attempt, normalized, nextDelayMs);
+    if (nextDelayMs !== undefined) {
+        safeInvoke(
+            resolved.onRetry ?? resolved.onError,
+            resolved.onRetry === undefined ? "onError" : "onRetry",
+            normalized,
+            context
+        );
+        return;
+    }
+    safeInvoke(resolved.onError, "onError", normalized, context);
+};
+
+/**
+ * Detects an abort raised by the post-success pacing wait rather than by the
+ * request attempt itself. Such an abort happens outside the retry loop's
+ * failure accounting: the attempt already succeeded, so rethrowing it keeps
+ * `onResponse` from firing twice for one attempt and keeps the circuit-breaker
+ * streak free of phantom failures.
+ *
+ * @param resolved - The resolved request options carrying the pacing flag.
+ * @param error - The value caught after a successful attempt.
+ * @returns Whether the error is a pacing-wait cancellation.
+ */
+const isPacingAbort = (resolved: ResolvedRequestOptions, error: unknown): boolean =>
+    resolved.paceWithRateLimit &&
+    error instanceof AniLinkNetworkError &&
+    error.code === AniLinkErrorCodes.ABORTED &&
+    !axios.isCancel(error);
+
+/**
+ * Rethrows a pacing-wait cancellation so it escapes the retry loop's failure
+ * accounting. Kept as a throwing helper so the retry loop itself stays free
+ * of extra branching.
+ *
+ * @param resolved - The resolved request options carrying the pacing flag.
+ * @param error - The value caught after a successful attempt.
+ */
+const rethrowIfPacingAbort = (resolved: ResolvedRequestOptions, error: unknown): void => {
+    if (isPacingAbort(resolved, error)) {
+        throw error;
+    }
+};
+
 const executeWithRetry = async <T>(
     options: ExecuteOptions,
-    resolved: ResolvedRequestOptions
+    resolved: ResolvedRequestOptions,
+    stateKey?: object,
+    rawPassthrough = false
 ): Promise<T> => {
     const { url, method, data, headers } = options;
     const policy = resolved.retry;
+    const circuit =
+        resolved.circuitBreaker !== undefined && stateKey !== undefined
+            ? getCircuitState(stateKey)
+            : undefined;
     let attempt = 0;
 
     for (;;) {
+        throwIfCircuitOpen(circuit, resolved.circuitBreaker);
+
         const startedAt = Date.now();
         const hookContext = { url, method, attempt: attempt + 1 };
-        resolved.onRequestStart?.(hookContext);
+        safeInvoke(resolved.onRequestStart, "onRequestStart", hookContext);
         try {
             const response: AxiosResponse = await axiosClient({
                 url,
@@ -486,26 +726,32 @@ const executeWithRetry = async <T>(
                 timeout: resolved.timeout,
                 signal: resolved.signal,
             });
-            resolved.onResponse?.({ ...hookContext, durationMs: Date.now() - startedAt });
-            return unwrapGraphQLResponse<T>(response.data);
+            safeInvoke(resolved.onResponse, "onResponse", {
+                ...hookContext,
+                durationMs: Date.now() - startedAt,
+            });
+            recordCircuitSuccess(circuit);
+            await paceAfterSuccess(response, resolved);
+            return rawPassthrough ? (response.data as T) : unwrapGraphQLResponse<T>(response.data);
         } catch (error: unknown) {
-            resolved.onResponse?.({ ...hookContext, durationMs: Date.now() - startedAt });
+            // A pacing-wait abort is not an attempt outcome: it must neither
+            // re-fire onResponse for the finished attempt nor count as a
+            // circuit failure, so it bypasses the failure accounting below.
+            rethrowIfPacingAbort(resolved, error);
+            safeInvoke(resolved.onResponse, "onResponse", {
+                ...hookContext,
+                durationMs: Date.now() - startedAt,
+            });
             const normalized = normalizeRequestError(resolved, error);
+            recordCircuitFailure(circuit, resolved.circuitBreaker);
             const delay =
                 policy === null ? null : getRetryDelay(normalized, error, attempt, policy);
-
-            if (delay !== null) {
-                (resolved.onRetry ?? resolved.onError)?.(
-                    normalized,
-                    buildErrorContext(url, method, attempt + 1, normalized, delay)
-                );
-                attempt += 1;
-                await sleep(delay, resolved.signal);
-                continue;
+            reportFailure(url, method, attempt + 1, normalized, resolved, delay ?? undefined);
+            if (delay === null) {
+                throw normalized;
             }
-
-            resolved.onError?.(normalized, buildErrorContext(url, method, attempt + 1, normalized));
-            throw normalized;
+            attempt += 1;
+            await sleep(delay, resolved.signal);
         }
     }
 };
@@ -517,13 +763,16 @@ const executeWithRetry = async <T>(
  * @param data - The data to send with the request.
  * @param token - The authentication token to include in the request headers.
  * @param requiresAuth - Whether the operation requires an authentication token.
- * @param options - Per-request transport settings. When omitted, library defaults apply (30 second timeout, no retry, no hooks).
+ * @param options - Per-request transport settings. When omitted, library defaults apply: 30 second timeout, automatic retries under the default policy, no hooks.
+ * @param operation - Optional operation name included in missing-token auth errors.
+ * @param contentType - Optional `Content-Type` override for non-GraphQL endpoints (for example form-urlencoded OAuth token requests). When provided, the response body is returned verbatim instead of being unwrapped as a GraphQL envelope.
  * @returns The unwrapped response data. For documents with a single root
  * field this is the bare field value; multi-root-field (or zero-root-field)
  * documents are returned as the full `{ data }` envelope unchanged. Use
  * {@link unwrapGraphQLResponse} for the tolerant rule or
  * {@link unwrapSingleRootField} when a caller needs the strict single-root-field
- * result (`undefined` signals the document did not match).
+ * result (`undefined` signals the document did not match). With a `contentType`
+ * override, the parsed response body is returned as-is.
  * @throws An error if the request fails.
  */
 export const sendRequest = async <T = unknown>(
@@ -532,20 +781,33 @@ export const sendRequest = async <T = unknown>(
     data?: object,
     token?: string,
     requiresAuth = false,
-    options?: RequestOptions
+    options?: RequestOptions,
+    operation?: string,
+    contentType?: string
 ): Promise<T> => {
     if (requiresAuth && (token === null || token === undefined || token === "")) {
-        throw new AniLinkAuthError();
+        throw new AniLinkAuthError(operation);
     }
 
-    const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-    };
+    const headers: Record<string, string> =
+        contentType === undefined
+            ? {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+              }
+            : { "Content-Type": contentType };
 
     if (token !== null && token !== undefined && token !== "") {
         headers.Authorization = `Bearer ${token}`;
     }
 
-    return executeWithRetry<T>({ url, method, data, headers }, resolveRequestOptions(options));
+    // The caller's settings object doubles as the circuit-breaker state key:
+    // it is stable per `AniLink` instance, so its requests share one breaker.
+    const result = await executeWithRetry<unknown>(
+        { url, method, data, headers },
+        resolveRequestOptions(options),
+        options,
+        contentType !== undefined
+    );
+    return result as T;
 };

@@ -7,6 +7,19 @@ import { type RequestOptions, sendRequest } from "./RequestHandler";
 export const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
 
 /**
+ * Resolves the label identifying which operation required authentication.
+ *
+ * Operations know their own identity, so the concrete subclass name is used
+ * unless a caller passes something more specific. Returns `undefined` when no
+ * usable name exists so the auth error keeps its generic message instead of
+ * appending an empty detail.
+ */
+const resolveOperationLabel = (wrapper: APIWrapper): string | undefined => {
+    const name = wrapper.constructor?.name;
+    return typeof name === "string" && name.length > 0 ? name : undefined;
+};
+
+/**
  * `APIWrapper` is the base class for all API operations.
  *
  * It owns the shared transport plumbing — the endpoint, the authentication
@@ -45,13 +58,15 @@ export class APIWrapper {
      * @param query - The GraphQL document to execute.
      * @param variables - The variables for the document. When omitted the request body contains only the query.
      * @param requiresAuth - Whether the operation requires an authentication token.
+     * @param operation - Optional human-readable operation name included in missing-token auth errors. Defaults to the concrete operation class name.
      * @returns The unwrapped response data. For documents with a single root field this is the bare field value; otherwise it is the full `{ data }` envelope.
      * @throws An `AniLinkAuthError` when `requiresAuth` is true and no token is set, or a normalized `AniLinkError` when the request fails.
      */
     protected async request<T = unknown>(
         query: string,
         variables?: unknown,
-        requiresAuth = false
+        requiresAuth = false,
+        operation?: string
     ): Promise<T> {
         const data = variables === undefined ? { query } : { query, variables };
         return await sendRequest<T>(
@@ -60,7 +75,8 @@ export class APIWrapper {
             data,
             this.authToken,
             requiresAuth || undefined,
-            this.resolvedOptions
+            this.resolvedOptions,
+            operation ?? resolveOperationLabel(this)
         );
     }
 }
