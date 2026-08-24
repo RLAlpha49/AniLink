@@ -1,13 +1,25 @@
 import type { PageInfo } from "../apis/anilist/interfaces/responses/page/PageInfo";
 
-/** Default items requested per page. AniList caps `perPage` at 50. */
+/**
+ * Default items requested per page. AniList caps `perPage` at 50; caller-supplied
+ * values above the cap are clamped down to it.
+ */
 const DEFAULT_PER_PAGE = 50;
+
+/** Hard cap on items requested per page; larger values are clamped down to this. */
+const MAX_PER_PAGE = DEFAULT_PER_PAGE;
 
 /** Default hard cap on pages fetched, guarding against unbounded loops. */
 const DEFAULT_MAX_PAGES = 100;
 
-/** Default entries requested per `MediaListCollection` chunk. */
+/**
+ * Default entries requested per `MediaListCollection` chunk. Values above the
+ * documented maximum of 500 are clamped down to it.
+ */
 const DEFAULT_PER_CHUNK = 500;
+
+/** Hard cap on entries requested per chunk; larger values are clamped down to this. */
+const MAX_PER_CHUNK = DEFAULT_PER_CHUNK;
 
 /** Default hard cap on chunks fetched, guarding against unbounded loops. */
 const DEFAULT_MAX_CHUNKS = 100;
@@ -26,7 +38,10 @@ type ArrayElement<T, K extends keyof T> = T[K] extends readonly (infer U)[] ? U 
 
 /** Options controlling a `paginate` traversal over `PageInfo`-based pages. */
 export interface PaginateOptions {
-    /** Items requested per page. AniList caps this at 50. Defaults to 50. */
+    /**
+     * Items requested per page. AniList caps this at 50; values above 50 are
+     * clamped down to 50. Defaults to 50.
+     */
     perPage?: number;
 
     /** 1-based page number to start from. Defaults to 1. */
@@ -38,7 +53,10 @@ export interface PaginateOptions {
 
 /** Options controlling a `paginateChunks` traversal over `hasNextChunk`-based chunks. */
 export interface ChunkPaginateOptions {
-    /** Entries requested per chunk. Defaults to 500. */
+    /**
+     * Entries requested per chunk. Values above the documented maximum of 500
+     * are clamped down to 500. Defaults to 500.
+     */
     perChunk?: number;
 
     /** 1-based chunk number to start from. Defaults to 1. */
@@ -91,6 +109,18 @@ function resolvePositiveInt(value: number | undefined, fallback: number): number
 }
 
 /**
+ * Resolve a numeric option like {@link resolvePositiveInt}, then clamp any result
+ * above `max` down to exactly `max` so upstream API limits are never exceeded.
+ * @param value - The caller-supplied value (may be `undefined`).
+ * @param max - The upper bound; larger values are reduced to this.
+ * @param fallback - The default to use when `value` is not a usable positive integer.
+ * @returns A positive, finite integer no greater than `max`.
+ */
+function resolveCappedInt(value: number | undefined, max: number, fallback: number): number {
+    return Math.min(resolvePositiveInt(value, fallback), max);
+}
+
+/**
  * Iterate `PageInfo`-based pages until `hasNextPage` is false or `maxPages` is reached.
  *
  * The helper calls `fetchPage(page, perPage)` for each page, extracts the items
@@ -122,7 +152,7 @@ export async function paginate<
     itemsKey: K,
     options?: PaginateOptions
 ): Promise<PaginateResult<ArrayElement<TPage, K>>> {
-    const perPage = resolvePositiveInt(options?.perPage, DEFAULT_PER_PAGE);
+    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE);
     const startPage = resolvePositiveInt(options?.startPage, 1);
     const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES);
 
@@ -180,7 +210,7 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
     fetchPage: (page: number, perPage: number) => Promise<TPage>,
     options?: PaginateOptions
 ): AsyncGenerator<TPage> {
-    const perPage = resolvePositiveInt(options?.perPage, DEFAULT_PER_PAGE);
+    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE);
     const startPage = resolvePositiveInt(options?.startPage, 1);
     const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES);
 
@@ -233,7 +263,7 @@ export async function paginateChunks<
     itemsKey: K,
     options?: ChunkPaginateOptions
 ): Promise<ChunkPaginateResult<ArrayElement<TChunk, K>>> {
-    const perChunk = resolvePositiveInt(options?.perChunk, DEFAULT_PER_CHUNK);
+    const perChunk = resolveCappedInt(options?.perChunk, MAX_PER_CHUNK, DEFAULT_PER_CHUNK);
     const startChunk = resolvePositiveInt(options?.startChunk, 1);
     const maxChunks = resolvePositiveInt(options?.maxChunks, DEFAULT_MAX_CHUNKS);
 

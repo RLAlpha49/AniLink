@@ -121,6 +121,30 @@ describe("paginate", () => {
         expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50);
         expect(result.pageCount).toBe(1);
     });
+
+    test("clamps perPage above AniList's cap of 50 down to 50", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
+            media: [{ id: page }],
+        }));
+
+        const result = await paginate(fetchPage, "media", { perPage: 100 });
+
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50);
+        expect(result.pageCount).toBe(1);
+    });
+
+    test("keeps perPage unchanged at the boundary value of 50", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
+            media: [{ id: page }],
+        }));
+
+        const result = await paginate(fetchPage, "media", { perPage: 50 });
+
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50);
+        expect(result.pageCount).toBe(1);
+    });
 });
 
 describe("paginatePages", () => {
@@ -170,6 +194,22 @@ describe("paginatePages", () => {
         }
 
         expect(fetchPage).toHaveBeenCalledTimes(2);
+    });
+
+    test("clamps perPage above AniList's cap of 50 down to 50", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+            media: [{ id: page }],
+        }));
+
+        for await (const _page of paginatePages(fetchPage, {
+            perPage: 100,
+            maxPages: 1,
+        })) {
+            void _page;
+        }
+
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50);
     });
 });
 
@@ -235,6 +275,18 @@ describe("paginateChunks", () => {
             startChunk: 0,
             maxChunks: Infinity,
         } as ChunkPaginateOptions);
+
+        expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500);
+        expect(result.chunkCount).toBe(1);
+    });
+
+    test("clamps perChunk above the documented max of 500 down to 500", async () => {
+        const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
+            hasNextChunk: false,
+            lists: [{ name: `list-${chunk}` }],
+        }));
+
+        const result = await paginateChunks(fetchChunk, "lists", { perChunk: 1000 });
 
         expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500);
         expect(result.chunkCount).toBe(1);
