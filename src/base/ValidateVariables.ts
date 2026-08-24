@@ -38,6 +38,17 @@ const isAllowlist = (mapping: unknown): mapping is readonly string[] => Array.is
 const isObjectMapping = (mapping: unknown): mapping is { readonly [key: string]: unknown } =>
     typeof mapping === "object" && mapping !== null && !Array.isArray(mapping);
 
+const describeValue = (value: unknown): string => {
+    if (value === null || (typeof value !== "object" && typeof value !== "function")) {
+        return String(value);
+    }
+    try {
+        return JSON.stringify(value) ?? String(value);
+    } catch {
+        return `[${typeof value}]`;
+    }
+};
+
 const validateValue = (
     path: string,
     value: unknown,
@@ -47,17 +58,15 @@ const validateValue = (
 ): void => {
     if (isPrimitive(mapping)) {
         if (typeof value !== mapping) {
-            errors.push(`Invalid ${path}: ${String(value)}. Expected type: ${mapping}`);
+            errors.push(`Invalid ${path}: ${describeValue(value)}. Expected type: ${mapping}`);
         }
         return;
     }
 
     if (isArrayType(mapping)) {
         const elementType = mapping.slice(0, -2);
-        if (!Array.isArray(value)) {
-            errors.push(`Invalid ${path}: ${String(value)}. Expected type: ${mapping}`);
-        } else if (!value.every((element) => typeof element === elementType)) {
-            errors.push(`Invalid ${path}: ${String(value)}. Expected type: ${mapping}`);
+        if (!Array.isArray(value) || !value.every((element) => typeof element === elementType)) {
+            errors.push(`Invalid ${path}: ${describeValue(value)}. Expected type: ${mapping}`);
         }
         return;
     }
@@ -67,13 +76,13 @@ const validateValue = (
             value.forEach((item, index) => {
                 if (!mapping.includes(item as string)) {
                     errors.push(
-                        `Invalid ${path}[${index}]: ${String(item)}. Expected one of: ${mapping.join(", ")}`
+                        `Invalid ${path}[${index}]: ${describeValue(item)}. Expected one of: ${mapping.join(", ")}`
                     );
                 }
             });
         } else if (!mapping.includes(value as string)) {
             errors.push(
-                `Invalid ${path}: ${String(value)}. Expected one of: ${mapping.join(", ")}`
+                `Invalid ${path}: ${describeValue(value)}. Expected one of: ${mapping.join(", ")}`
             );
         }
         return;
@@ -98,7 +107,7 @@ const validateObject = (
     rejectUnknownKeys: boolean
 ): void => {
     if (value === null || typeof value !== "object") {
-        errors.push(`Invalid ${path}: ${String(value)}. Expected an object.`);
+        errors.push(`Invalid ${path}: ${describeValue(value)}. Expected an object.`);
         return;
     }
 
