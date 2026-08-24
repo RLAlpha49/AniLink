@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 import { type Likeable } from "../interfaces/Likeable";
 import { ActivitySchemaV2 } from "../schemas/Activity";
@@ -42,19 +41,6 @@ export class ToggleLikeV2Mutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/union/likeableunion
      */
     async toggleLikeV2(variables: ToggleLikeV2Variables): Promise<Likeable> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["id", "type"] },
-            "The ToggleLikeV2 mutation requires id and type variables."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            type: LikeableTypeMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int, $type: LikeableType, $asHtml: Boolean) {
         ToggleLikeV2 (id: $id, type: $type) {
@@ -62,7 +48,20 @@ export class ToggleLikeV2Mutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<Likeable>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["id", "type"],
+                    message: "The ToggleLikeV2 mutation requires id and type variables.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                type: LikeableTypeMappings,
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

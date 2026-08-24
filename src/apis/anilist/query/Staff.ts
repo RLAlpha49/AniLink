@@ -9,7 +9,6 @@ import {
     StaffSortMappings,
 } from "../types/Sort";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { StaffSchema } from "../schemas/responses/query/Staff";
 
 /**
@@ -133,39 +132,6 @@ export class StaffQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/staff
      */
     async staff(variables: StaffVariables): Promise<StaffResponse> {
-        requireVariables(
-            variables,
-            {
-                kind: "any",
-                names: ["id", "isBirthday", "search", "id_not", "id_in", "id_not_in", "sort"],
-            },
-            "The Staff query requires at least one filter variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            isBirthday: "boolean",
-            search: "String",
-            id_not: "number",
-            id_in: "number[]",
-            id_not_in: "number[]",
-            sort: StaffSortMappings,
-            asHtml: "boolean",
-            staffMediaSort: MediaSortMappings,
-            staffMediaType: MediaTypeMappings,
-            staffMediaOnList: "boolean",
-            staffMediaPage: "number",
-            staffMediaPerPage: "number",
-            charactersSort: CharacterSortMappings,
-            charactersPage: "number",
-            charactersPerPage: "number",
-            characterMediaSort: MediaSortMappings,
-            characterMediaOnList: "boolean",
-            characterMediaPage: "number",
-            characterMediaPerPage: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StaffSort], $asHtml: Boolean, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Staff (id: $id, isBirthday: $isBirthday, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {
@@ -173,7 +139,29 @@ export class StaffQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<StaffResponse>(query, variables, {
+            mappings: {
+                id: "number",
+                isBirthday: "boolean",
+                search: "String",
+                id_not: "number",
+                id_in: "number[]",
+                id_not_in: "number[]",
+                sort: StaffSortMappings,
+                asHtml: "boolean",
+                staffMediaSort: MediaSortMappings,
+                staffMediaType: MediaTypeMappings,
+                staffMediaOnList: "boolean",
+                staffMediaPage: "number",
+                staffMediaPerPage: "number",
+                charactersSort: CharacterSortMappings,
+                charactersPage: "number",
+                charactersPerPage: "number",
+                characterMediaSort: MediaSortMappings,
+                characterMediaOnList: "boolean",
+                characterMediaPage: "number",
+                characterMediaPerPage: "number",
+            },
+        });
     }
 }

@@ -2,7 +2,6 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type UsersPageResponse } from "../../interfaces/responses/page/Users";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
-import { validateVariables } from "../../../../base/ValidateVariables";
 import { UserSchema } from "../../schemas/responses/query/User";
 
 /**
@@ -86,23 +85,6 @@ export class UsersQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/user
      */
     async users(variables: UsersVariables): Promise<UsersPageResponse> {
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            id: "number",
-            name: "string",
-            isModerator: "boolean",
-            search: "string",
-            sort: UserSortMappings,
-            asHtml: "boolean",
-            animeStatLimit: "number",
-            mangaStatLimit: "number",
-            animeStatSort: UserStatisticSortMappings,
-            mangaStatSort: UserStatisticSortMappings,
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Page (page: $page, perPage: $perPage) {
@@ -119,7 +101,21 @@ export class UsersQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<UsersPageResponse>(query, variables, {
+            mappings: {
+                page: "number",
+                perPage: "number",
+                id: "number",
+                name: "string",
+                isModerator: "boolean",
+                search: "string",
+                sort: UserSortMappings,
+                asHtml: "boolean",
+                animeStatLimit: "number",
+                mangaStatLimit: "number",
+                animeStatSort: UserStatisticSortMappings,
+                mangaStatSort: UserStatisticSortMappings,
+            },
+        });
     }
 }

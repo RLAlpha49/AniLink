@@ -1,5 +1,4 @@
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
@@ -65,24 +64,6 @@ export class SaveThreadMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/object/thread
      */
     async saveThread(variables: SaveThreadVariables): Promise<ThreadResponse> {
-        requireVariables(
-            variables,
-            { kind: "any", names: ["id", "title"] },
-            "The SaveThread mutation requires an id or a title variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            title: "string",
-            body: "string",
-            categories: "number[]",
-            mediaCategories: "number[]",
-            sticky: "boolean",
-            locked: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int, $title: String, $body: String, $categories: [Int], $mediaCategories: [Int], $sticky: Boolean, $locked: Boolean, $asHtml: Boolean) {
         SaveThread (id: $id, title: $title, body: $body, categories: $categories, mediaCategories: $mediaCategories, sticky: $sticky, locked: $locked) {
@@ -90,7 +71,25 @@ export class SaveThreadMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<ThreadResponse>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "any",
+                    names: ["id", "title"],
+                    message: "The SaveThread mutation requires an id or a title variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                title: "string",
+                body: "string",
+                categories: "number[]",
+                mediaCategories: "number[]",
+                sticky: "boolean",
+                locked: "boolean",
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

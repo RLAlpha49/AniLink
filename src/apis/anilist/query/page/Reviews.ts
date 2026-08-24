@@ -2,7 +2,6 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type ReviewsPageResponse } from "../../interfaces/responses/page/Reviews";
 import { ReviewSortMappings } from "../../types/Sort";
-import { validateVariables } from "../../../../base/ValidateVariables";
 import { ReviewSchema } from "../../schemas/responses/query/Review";
 
 /**
@@ -66,19 +65,6 @@ export class ReviewsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/review
      */
     async reviews(variables: ReviewsVariables): Promise<ReviewsPageResponse> {
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            id: "number",
-            mediaId: "number",
-            userId: "number",
-            mediaType: "string",
-            sort: ReviewSortMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $mediaId: Int, $userId: Int, $mediaType: MediaType, $sort: [ReviewSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -95,7 +81,17 @@ export class ReviewsQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<ReviewsPageResponse>(query, variables, {
+            mappings: {
+                page: "number",
+                perPage: "number",
+                id: "number",
+                mediaId: "number",
+                userId: "number",
+                mediaType: "string",
+                sort: ReviewSortMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

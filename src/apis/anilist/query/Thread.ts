@@ -1,7 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { type ThreadSort, ThreadSortMappings } from "../types/Sort";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
 /**
@@ -75,26 +74,6 @@ export class ThreadQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/thread
      */
     async thread(variables: ThreadVariables): Promise<ThreadResponse> {
-        requireVariables(
-            variables,
-            { kind: "notOnly", names: ["asHtml"] },
-            "The Thread query requires at least one filter variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            userId: "number",
-            replyUserId: "number",
-            subscribed: "boolean",
-            categoryId: "number",
-            mediaCategoryId: "number",
-            search: "string",
-            id_in: "number[]",
-            sort: ThreadSortMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $userId: Int, $replyUserId: Int, $subscribed: Boolean, $categoryId: Int, $mediaCategoryId: Int, $search: String, $id_in: [Int], $sort: [ThreadSort], $asHtml: Boolean) {
         Thread (id: $id, userId: $userId, replyUserId: $replyUserId, subscribed: $subscribed, categoryId: $categoryId, mediaCategoryId: $mediaCategoryId, search: $search, id_in: $id_in, sort: $sort) {
@@ -102,7 +81,26 @@ export class ThreadQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<ThreadResponse>(query, variables, {
+            requirements: [
+                {
+                    kind: "notOnly",
+                    names: ["asHtml"],
+                    message: "The Thread query requires at least one filter variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                userId: "number",
+                replyUserId: "number",
+                subscribed: "boolean",
+                categoryId: "number",
+                mediaCategoryId: "number",
+                search: "string",
+                id_in: "number[]",
+                sort: ThreadSortMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

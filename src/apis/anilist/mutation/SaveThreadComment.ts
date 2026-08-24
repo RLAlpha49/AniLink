@@ -1,4 +1,3 @@
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
@@ -55,22 +54,6 @@ export class SaveThreadCommentMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/object/threadcomment
      */
     async saveThreadComment(variables: SaveThreadCommentVariables): Promise<ThreadCommentResponse> {
-        requireVariables(
-            variables,
-            { kind: "any", names: ["id", "threadId"] },
-            "The SaveThreadComment mutation requires an id or a threadId variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            threadId: "number",
-            parentCommentId: "number",
-            comment: "string",
-            locked: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int, $threadId: Int, $parentCommentId: Int, $comment: String, $locked: Boolean, $asHtml: Boolean) {
         SaveThreadComment (id: $id, threadId: $threadId, parentCommentId: $parentCommentId, comment: $comment, locked: $locked) {
@@ -78,7 +61,24 @@ export class SaveThreadCommentMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<ThreadCommentResponse>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "any",
+                    names: ["id", "threadId"],
+                    message:
+                        "The SaveThreadComment mutation requires an id or a threadId variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                threadId: "number",
+                parentCommentId: "number",
+                comment: "string",
+                locked: "boolean",
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

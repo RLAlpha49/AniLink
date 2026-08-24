@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
-import { validateVariables } from "../../../../base/ValidateVariables";
 import { type ActivityRepliesPageResponse } from "../../interfaces/responses/page/ActivityReplies";
 import { ActivityReplySchema } from "../../schemas/Activity";
 
@@ -51,16 +50,6 @@ export class ActivityRepliesQuery extends APIWrapper {
     async activityReplies(
         variables: ActivityRepliesVariables
     ): Promise<ActivityRepliesPageResponse> {
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            id: "number",
-            activityId: "number",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $activityId: Int, $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -77,7 +66,14 @@ export class ActivityRepliesQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<ActivityRepliesPageResponse>(query, variables, {
+            mappings: {
+                page: "number",
+                perPage: "number",
+                id: "number",
+                activityId: "number",
+                asHtml: "boolean",
+            },
+        });
     }
 }

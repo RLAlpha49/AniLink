@@ -2,7 +2,6 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type MediaTrendsPageResponse } from "../../interfaces/responses/page/MediaTrends";
 import { MediaTrendSortMappings } from "../../types/Sort";
-import { validateVariables } from "../../../../base/ValidateVariables";
 import { MediaTrendSchema } from "../../schemas/responses/query/MediaTrend";
 
 /**
@@ -166,39 +165,6 @@ export class MediaTrendsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/mediatrend
      */
     async mediaTrends(variables: MediaTrendsVariables): Promise<MediaTrendsPageResponse> {
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            mediaId: "number",
-            date: "number",
-            trending: "number",
-            averageScore: "number",
-            popularity: "number",
-            episode: "number",
-            releasing: "boolean",
-            mediaId_not: "number",
-            mediaId_in: "number[]",
-            mediaId_not_in: "number[]",
-            date_greater: "number",
-            date_lesser: "number",
-            trending_greater: "number",
-            trending_lesser: "number",
-            trending_not: "number",
-            averageScore_greater: "number",
-            averageScore_lesser: "number",
-            averageScore_not: "number",
-            popularity_greater: "number",
-            popularity_lesser: "number",
-            popularity_not: "number",
-            episode_greater: "number",
-            episode_lesser: "number",
-            episode_not: "number",
-            sort: MediaTrendSortMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($page: Int, $perPage: Int, $mediaId: Int, $date: Int, $trending: Int, $averageScore: Int, $popularity: Int, $episode: Int, $releasing: Boolean, $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $date_greater: Int, $date_lesser: Int, $trending_greater: Int, $trending_lesser: Int, $trending_not: Int, $averageScore_greater: Int, $averageScore_lesser: Int, $averageScore_not: Int, $popularity_greater: Int, $popularity_lesser: Int, $popularity_not: Int, $episode_greater: Int, $episode_lesser: Int, $episode_not: Int, $sort: [MediaTrendSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -215,7 +181,37 @@ export class MediaTrendsQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<MediaTrendsPageResponse>(query, variables, {
+            mappings: {
+                page: "number",
+                perPage: "number",
+                mediaId: "number",
+                date: "number",
+                trending: "number",
+                averageScore: "number",
+                popularity: "number",
+                episode: "number",
+                releasing: "boolean",
+                mediaId_not: "number",
+                mediaId_in: "number[]",
+                mediaId_not_in: "number[]",
+                date_greater: "number",
+                date_lesser: "number",
+                trending_greater: "number",
+                trending_lesser: "number",
+                trending_not: "number",
+                averageScore_greater: "number",
+                averageScore_lesser: "number",
+                averageScore_not: "number",
+                popularity_greater: "number",
+                popularity_lesser: "number",
+                popularity_not: "number",
+                episode_greater: "number",
+                episode_lesser: "number",
+                episode_not: "number",
+                sort: MediaTrendSortMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

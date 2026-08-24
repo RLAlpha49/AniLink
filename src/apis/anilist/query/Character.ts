@@ -6,7 +6,6 @@ import {
     type MediaSort,
     MediaSortMappings,
 } from "../types/Sort";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { CharacterSchema } from "../schemas/responses/query/Character";
 
 /**
@@ -90,31 +89,6 @@ export class CharacterQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/character
      */
     async character(variables: CharacterVariables): Promise<CharacterResponse> {
-        requireVariables(
-            variables,
-            {
-                kind: "notOnly",
-                names: ["asHtml", "mediaSort", "mediaOnList", "mediaPage", "mediaPerPage"],
-            },
-            "The Character query requires at least one filter variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            isBirthday: "boolean",
-            search: "string",
-            id_not: "number",
-            id_in: "number[]",
-            id_not_in: "number[]",
-            sort: CharacterSortMappings,
-            asHtml: "boolean",
-            mediaSort: MediaSortMappings,
-            mediaOnList: "boolean",
-            mediaPage: "number",
-            mediaPerPage: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [CharacterSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int) {
         Character (id: $id, isBirthday: $isBirthday, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {
@@ -122,7 +96,21 @@ export class CharacterQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<CharacterResponse>(query, variables, {
+            mappings: {
+                id: "number",
+                isBirthday: "boolean",
+                search: "string",
+                id_not: "number",
+                id_in: "number[]",
+                id_not_in: "number[]",
+                sort: CharacterSortMappings,
+                asHtml: "boolean",
+                mediaSort: MediaSortMappings,
+                mediaOnList: "boolean",
+                mediaPage: "number",
+                mediaPerPage: "number",
+            },
+        });
     }
 }

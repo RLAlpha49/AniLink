@@ -4,7 +4,6 @@ import {
     type RecommendationRating,
     RecommendationRatingMappings,
 } from "../types/RecommendationRating";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { RecommendationSchema } from "../schemas/responses/query/Recommendation";
 
 /**
@@ -51,20 +50,6 @@ export class SaveRecommendationMutation extends APIWrapper {
     async saveRecommendation(
         variables: SaveRecommendationVariables
     ): Promise<RecommendationResponse> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["mediaId", "mediaRecommendationId", "rating"] },
-            "The SaveRecommendation mutation requires mediaId, mediaRecommendationId, and rating variables."
-        );
-        const variableTypeMappings = {
-            mediaId: "number",
-            mediaRecommendationId: "number",
-            rating: RecommendationRatingMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($mediaId: Int, $mediaRecommendationId: Int, $rating: RecommendationRating, $asHtml: Boolean) {
         SaveRecommendation(mediaId: $mediaId, mediaRecommendationId: $mediaRecommendationId, rating: $rating) {
@@ -72,7 +57,22 @@ export class SaveRecommendationMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<RecommendationResponse>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["mediaId", "mediaRecommendationId", "rating"],
+                    message:
+                        "The SaveRecommendation mutation requires mediaId, mediaRecommendationId, and rating variables.",
+                },
+            ],
+            mappings: {
+                mediaId: "number",
+                mediaRecommendationId: "number",
+                rating: RecommendationRatingMappings,
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

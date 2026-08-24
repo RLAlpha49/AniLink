@@ -1,6 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type ExternalLinkSourceCollectionResponse } from "../interfaces/responses/query/ExternalLinkSourceCollection";
-import { validateVariables } from "../../../base/ValidateVariables";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 
 /**
@@ -41,14 +40,6 @@ export class ExternalLinkSourceCollectionQuery extends APIWrapper {
     async externalLinkSourceCollection(
         variables: ExternalLinkSourceCollectionVariables = {}
     ): Promise<ExternalLinkSourceCollectionResponse> {
-        const variableTypeMappings = {
-            id: "number",
-            type: "string",
-            mediaType: MediaTypeMappings,
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $type: ExternalLinkType, $mediaType: ExternalLinkMediaType) {
         ExternalLinkSourceCollection (id: $id, type: $type, mediaType: $mediaType) {
@@ -65,7 +56,12 @@ export class ExternalLinkSourceCollectionQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<ExternalLinkSourceCollectionResponse>(query, variables, {
+            mappings: {
+                id: "number",
+                type: "string",
+                mediaType: MediaTypeMappings,
+            },
+        });
     }
 }

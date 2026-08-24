@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type Activity } from "../interfaces/Activity";
 import { TextActivitySchema } from "../schemas/Activity";
 
@@ -45,20 +44,6 @@ export class SaveTextActivityMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/union/activityunion
      */
     async saveTextActivity(variables: SaveTextActivityVariables): Promise<Activity> {
-        requireVariables(
-            variables,
-            { kind: "any", names: ["id", "text"] },
-            "The SaveTextActivity mutation requires an id or a text variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            text: "string",
-            locked: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int, $text: String, $locked: Boolean, $asHtml: Boolean) {
         SaveTextActivity(id: $id, text: $text, locked:$locked) {
@@ -66,7 +51,21 @@ export class SaveTextActivityMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<Activity>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "any",
+                    names: ["id", "text"],
+                    message: "The SaveTextActivity mutation requires an id or a text variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                text: "string",
+                locked: "boolean",
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

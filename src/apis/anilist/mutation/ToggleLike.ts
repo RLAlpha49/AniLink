@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 import { BasicUserSchema } from "../schemas/Basic";
 import { type BasicUser } from "../interfaces/Basic";
@@ -36,18 +35,6 @@ export class ToggleLikeMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/object/user
      */
     async toggleLike(variables: ToggleLikeVariables): Promise<BasicUser> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["id", "type"] },
-            "The ToggleLike mutation requires id and type variables."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            type: LikeableTypeMappings,
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int, $type: LikeableType) {
         ToggleLike (id: $id, type: $type) {
@@ -55,7 +42,19 @@ export class ToggleLikeMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<BasicUser>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["id", "type"],
+                    message: "The ToggleLike mutation requires id and type variables.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                type: LikeableTypeMappings,
+            },
+            requiresAuth: true,
+        });
     }
 }

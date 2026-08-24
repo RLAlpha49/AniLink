@@ -6,7 +6,6 @@ import {
     type UserStatisticSort,
     UserStatisticSortMappings,
 } from "../types/Sort";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { UserSchema } from "../schemas/responses/query/User";
 
 /**
@@ -80,35 +79,6 @@ export class UserQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/user
      */
     async user(variables: UserVariables): Promise<UserResponse> {
-        requireVariables(
-            variables,
-            {
-                kind: "notOnly",
-                names: [
-                    "asHtml",
-                    "animeStatLimit",
-                    "mangaStatLimit",
-                    "animeStatSort",
-                    "mangaStatSort",
-                ],
-            },
-            "The User query requires at least one filter variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            name: "string",
-            isModerator: "boolean",
-            search: "string",
-            sort: UserSortMappings,
-            asHtml: "boolean",
-            animeStatLimit: "number",
-            mangaStatLimit: "number",
-            animeStatSort: UserStatisticSortMappings,
-            mangaStatSort: UserStatisticSortMappings,
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         User (id: $id, name: $name, isModerator: $isModerator, search: $search, sort: $sort) {
@@ -116,7 +86,19 @@ export class UserQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<UserResponse>(query, variables, {
+            mappings: {
+                id: "number",
+                name: "string",
+                isModerator: "boolean",
+                search: "string",
+                sort: UserSortMappings,
+                asHtml: "boolean",
+                animeStatLimit: "number",
+                mangaStatLimit: "number",
+                animeStatSort: UserStatisticSortMappings,
+                mangaStatSort: UserStatisticSortMappings,
+            },
+        });
     }
 }

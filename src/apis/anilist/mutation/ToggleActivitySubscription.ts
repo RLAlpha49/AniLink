@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type Activity } from "../interfaces/Activity";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
 
@@ -42,19 +41,6 @@ export class ToggleActivitySubscriptionMutation extends APIWrapper {
     async toggleActivitySubscription(
         variables: ToggleActivitySubscriptionVariables
     ): Promise<Activity> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["activityId", "subscribe"] },
-            "The ToggleActivitySubscription mutation requires activityId and subscribe variables."
-        );
-        const variableTypeMappings = {
-            activityId: "number",
-            subscribe: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($activityId: Int, $subscribe: Boolean, $asHtml: Boolean) {
         ToggleActivitySubscription(activityId: $activityId, subscribe: $subscribe) {
@@ -62,7 +48,21 @@ export class ToggleActivitySubscriptionMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<Activity>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["activityId", "subscribe"],
+                    message:
+                        "The ToggleActivitySubscription mutation requires activityId and subscribe variables.",
+                },
+            ],
+            mappings: {
+                activityId: "number",
+                subscribe: "boolean",
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

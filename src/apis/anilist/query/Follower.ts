@@ -6,7 +6,6 @@ import {
     type UserStatisticSort,
     UserStatisticSortMappings,
 } from "../types/Sort";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { UserSchema } from "../schemas/responses/query/User";
 
 /**
@@ -65,23 +64,6 @@ export class FollowerQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/user
      */
     async follower(variables: FollowerVariables): Promise<UserResponse> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["userId"] },
-            "The Follower query requires a userId."
-        );
-        const variableTypeMappings = {
-            userId: "number",
-            sort: UserSortMappings,
-            asHtml: "boolean",
-            animeStatLimit: "number",
-            mangaStatLimit: "number",
-            animeStatSort: UserStatisticSortMappings,
-            mangaStatSort: UserStatisticSortMappings,
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($userId: Int!, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Follower (userId: $userId, sort: $sort) {
@@ -89,7 +71,23 @@ export class FollowerQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<UserResponse>(query, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["userId"],
+                    message: "The Follower query requires a userId.",
+                },
+            ],
+            mappings: {
+                userId: "number",
+                sort: UserSortMappings,
+                asHtml: "boolean",
+                animeStatLimit: "number",
+                mangaStatLimit: "number",
+                animeStatSort: UserStatisticSortMappings,
+                mangaStatSort: UserStatisticSortMappings,
+            },
+        });
     }
 }

@@ -2,7 +2,6 @@ import { APIWrapper } from "../../../base/APIWrapper";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { type MediaType } from "../types/Type";
 import { type ReviewSort, ReviewSortMappings } from "../types/Sort";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { ReviewSchema } from "../schemas/responses/query/Review";
 
 /**
@@ -56,22 +55,6 @@ export class ReviewQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/review
      */
     async review(variables: ReviewVariables): Promise<ReviewResponse> {
-        requireVariables(
-            variables,
-            { kind: "notOnly", names: ["asHtml"] },
-            "The Review query requires at least one filter variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            mediaId: "number",
-            userId: "number",
-            mediaType: "string",
-            sort: ReviewSortMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $mediaId: Int, $userId: Int, $mediaType: MediaType, $sort: [ReviewSort], $asHtml: Boolean) {
         Review (id: $id, mediaId: $mediaId, userId: $userId, mediaType: $mediaType, sort: $sort) {
@@ -79,7 +62,22 @@ export class ReviewQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<ReviewResponse>(query, variables, {
+            requirements: [
+                {
+                    kind: "notOnly",
+                    names: ["asHtml"],
+                    message: "The Review query requires at least one filter variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                mediaId: "number",
+                userId: "number",
+                mediaType: "string",
+                sort: ReviewSortMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

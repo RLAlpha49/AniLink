@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type Activity } from "../interfaces/Activity";
 import { MessageActivitySchema } from "../schemas/Activity";
 
@@ -60,23 +59,6 @@ export class SaveMessageActivityMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/union/activityunion
      */
     async saveMessageActivity(variables: SaveMessageActivityVariables): Promise<Activity> {
-        requireVariables(
-            variables,
-            { kind: "any", names: ["id", "message"] },
-            "The SaveMessageActivity mutation requires an id or a message variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            message: "string",
-            recipientId: "number",
-            private: "boolean",
-            locked: "boolean",
-            asMod: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int, $message: String, $recipientId: Int, $private: Boolean, $locked: Boolean, $asMod: Boolean, $asHtml: Boolean) {
         SaveMessageActivity(id: $id, message: $message, recipientId: $recipientId, private: $private, locked:$locked, asMod: $asMod) {
@@ -84,7 +66,25 @@ export class SaveMessageActivityMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<Activity>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "any",
+                    names: ["id", "message"],
+                    message:
+                        "The SaveMessageActivity mutation requires an id or a message variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                message: "string",
+                recipientId: "number",
+                private: "boolean",
+                locked: "boolean",
+                asMod: "boolean",
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

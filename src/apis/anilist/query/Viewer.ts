@@ -1,7 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type UserResponse } from "../interfaces/responses/query/User";
 import { type UserStatisticSort, UserStatisticSortMappings } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
 import { UserSchema } from "../schemas/responses/query/User";
 
 /**
@@ -50,16 +49,6 @@ export class ViewerQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/user
      */
     async viewer(variables: ViewerVariables = {}): Promise<UserResponse> {
-        const variableTypeMappings = {
-            asHtml: "boolean",
-            animeStatLimit: "number",
-            mangaStatLimit: "number",
-            animeStatSort: UserStatisticSortMappings,
-            mangaStatSort: UserStatisticSortMappings,
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Viewer {
@@ -67,7 +56,15 @@ export class ViewerQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables, true);
+        return await this.execute<UserResponse>(query, variables, {
+            mappings: {
+                asHtml: "boolean",
+                animeStatLimit: "number",
+                mangaStatLimit: "number",
+                animeStatSort: UserStatisticSortMappings,
+                mangaStatSort: UserStatisticSortMappings,
+            },
+            requiresAuth: true,
+        });
     }
 }

@@ -1,6 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type FuzzyDate } from "../interfaces/FuzzyDate";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
 import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
@@ -100,30 +99,6 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
     async updateMediaListEntries(
         variables: UpdateMediaListEntriesVariables
     ): Promise<MediaListResponse[]> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["ids"] },
-            "The UpdateMediaListEntries mutation requires an ids variable."
-        );
-        const variableTypeMappings = {
-            status: MediaListStatusMappings,
-            score: "number",
-            scoreRaw: "number",
-            progress: "number",
-            progressVolumes: "number",
-            repeat: "number",
-            priority: "number",
-            private: "boolean",
-            notes: "string",
-            hiddenFromStatusLists: "boolean",
-            advancedScores: "number[]",
-            startedAt: FuzzyDateMappings,
-            completedAt: FuzzyDateMappings,
-            ids: "number[]",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($status: MediaListStatus, $score: Float, $scoreRaw: Int, $progress: Int, $progressVolumes: Int, $repeat: Int, $priority: Int, $private: Boolean, $notes: String, $hiddenFromStatusLists: Boolean, $advancedScores: [Float], $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $ids: [Int]) {
         UpdateMediaListEntries(status: $status, score: $score, scoreRaw: $scoreRaw, progress: $progress, progressVolumes: $progressVolumes, repeat: $repeat, priority: $priority, private: $private, notes: $notes, hiddenFromStatusLists: $hiddenFromStatusLists, advancedScores: $advancedScores, startedAt: $startedAt, completedAt: $completedAt, ids: $ids) {
@@ -147,7 +122,31 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<MediaListResponse[]>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["ids"],
+                    message: "The UpdateMediaListEntries mutation requires an ids variable.",
+                },
+            ],
+            mappings: {
+                status: MediaListStatusMappings,
+                score: "number",
+                scoreRaw: "number",
+                progress: "number",
+                progressVolumes: "number",
+                repeat: "number",
+                priority: "number",
+                private: "boolean",
+                notes: "string",
+                hiddenFromStatusLists: "boolean",
+                advancedScores: "number[]",
+                startedAt: FuzzyDateMappings,
+                completedAt: FuzzyDateMappings,
+                ids: "number[]",
+            },
+            requiresAuth: true,
+        });
     }
 }

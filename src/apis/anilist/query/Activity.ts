@@ -1,6 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type Activity } from "../interfaces/Activity";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type ActivitySort, ActivitySortMappings } from "../types/Sort";
 import { type ActivityType, ActivityTypeMappings } from "../types/ActivityType";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
@@ -161,43 +160,6 @@ export class ActivityQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/union/activityunion
      */
     async activity(variables: ActivityVariables): Promise<Activity> {
-        requireVariables(
-            variables,
-            { kind: "notOnly", names: ["asHtml"] },
-            "The Activity query requires at least one filter variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            userId: "number",
-            messengerId: "number",
-            mediaId: "number",
-            type: ActivityTypeMappings,
-            isFollowing: "boolean",
-            hasReplies: "boolean",
-            hasRepliesOrTypeText: "boolean",
-            createdAt: "number",
-            id_not: "number",
-            id_in: "number[]",
-            id_not_in: "number[]",
-            userId_not: "number",
-            userId_in: "number[]",
-            userId_not_in: "number[]",
-            messengerId_not: "number",
-            messengerId_in: "number[]",
-            messengerId_not_in: "number[]",
-            mediaId_not: "number",
-            mediaId_in: "number[]",
-            mediaId_not_in: "number[]",
-            type_not: ActivityTypeMappings,
-            type_in: ActivityTypeMappings,
-            type_not_in: ActivityTypeMappings,
-            createdAt_greater: "number",
-            sort: ActivitySortMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $userId: Int, $messengerId: Int, $mediaId: Int, $type: ActivityType, $isFollowing: Boolean, $hasReplies: Boolean, $hasRepliesOrTypeText: Boolean, $createdAt: Int, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $userId_not: Int, $userId_in: [Int], $userId_not_in: [Int], $messengerId_not: Int, $messengerId_in: [Int], $messengerId_not_in: [Int], $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $type_not: ActivityType, $type_in: [ActivityType], $type_not_in: [ActivityType], $createdAt_greater: Int, $sort: [ActivitySort], $asHtml: Boolean) {
         Activity (id: $id, userId: $userId, messengerId: $messengerId, mediaId: $mediaId, type: $type, isFollowing: $isFollowing, hasReplies: $hasReplies, hasRepliesOrTypeText: $hasRepliesOrTypeText, createdAt: $createdAt, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, userId_not: $userId_not, userId_in: $userId_in, userId_not_in: $userId_not_in, messengerId_not: $messengerId_not, messengerId_in: $messengerId_in, messengerId_not_in: $messengerId_not_in, mediaId_not: $mediaId_not, mediaId_in: $mediaId_in, mediaId_not_in: $mediaId_not_in, type_not: $type_not, type_in: $type_in, type_not_in: $type_not_in, createdAt_greater: $createdAt_greater, sort: $sort) {
@@ -205,7 +167,43 @@ export class ActivityQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<Activity>(query, variables, {
+            requirements: [
+                {
+                    kind: "notOnly",
+                    names: ["asHtml"],
+                    message: "The Activity query requires at least one filter variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                userId: "number",
+                messengerId: "number",
+                mediaId: "number",
+                type: ActivityTypeMappings,
+                isFollowing: "boolean",
+                hasReplies: "boolean",
+                hasRepliesOrTypeText: "boolean",
+                createdAt: "number",
+                id_not: "number",
+                id_in: "number[]",
+                id_not_in: "number[]",
+                userId_not: "number",
+                userId_in: "number[]",
+                userId_not_in: "number[]",
+                messengerId_not: "number",
+                messengerId_in: "number[]",
+                messengerId_not_in: "number[]",
+                mediaId_not: "number",
+                mediaId_in: "number[]",
+                mediaId_not_in: "number[]",
+                type_not: ActivityTypeMappings,
+                type_in: ActivityTypeMappings,
+                type_not_in: ActivityTypeMappings,
+                createdAt_greater: "number",
+                sort: ActivitySortMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

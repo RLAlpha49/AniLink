@@ -2,7 +2,6 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type FollowersPageResponse } from "../../interfaces/responses/page/Followers";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
-import { requireVariables, validateVariables } from "../../../../base/ValidateVariables";
 import { UserSchema } from "../../schemas/responses/query/User";
 
 /**
@@ -71,25 +70,6 @@ export class FollowersQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/user
      */
     async followers(variables: FollowersVariables): Promise<FollowersPageResponse> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["userId"] },
-            "The Page.followers query requires a userId."
-        );
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            userId: "number",
-            sort: UserSortMappings,
-            asHtml: "boolean",
-            animeStatLimit: "number",
-            mangaStatLimit: "number",
-            animeStatSort: UserStatisticSortMappings,
-            mangaStatSort: UserStatisticSortMappings,
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($page: Int, $perPage: Int, $userId: Int!, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Page (page: $page, perPage: $perPage) {
@@ -106,7 +86,25 @@ export class FollowersQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<FollowersPageResponse>(query, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["userId"],
+                    message: "The Page.followers query requires a userId.",
+                },
+            ],
+            mappings: {
+                page: "number",
+                perPage: "number",
+                userId: "number",
+                sort: UserSortMappings,
+                asHtml: "boolean",
+                animeStatLimit: "number",
+                mangaStatLimit: "number",
+                animeStatSort: UserStatisticSortMappings,
+                mangaStatSort: UserStatisticSortMappings,
+            },
+        });
     }
 }

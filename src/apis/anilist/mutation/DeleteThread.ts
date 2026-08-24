@@ -1,6 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type DeleteResult } from "../types/DeleteResult";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 
 /**
  * `DeleteThreadVariables` is an interface representing the variables to delete a thread.
@@ -34,17 +33,6 @@ export class DeleteThreadMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/deleted
      */
     async deleteThread(variables: DeleteThreadVariables): Promise<DeleteResult> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["id"] },
-            "The DeleteThread mutation requires an id variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int) {
         DeleteThread (id: $id) {
@@ -52,7 +40,18 @@ export class DeleteThreadMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<DeleteResult>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["id"],
+                    message: "The DeleteThread mutation requires an id variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+            },
+            requiresAuth: true,
+        });
     }
 }

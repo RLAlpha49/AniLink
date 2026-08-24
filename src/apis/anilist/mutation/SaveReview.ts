@@ -1,4 +1,3 @@
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { ReviewSchema } from "../schemas/responses/query/Review";
@@ -60,23 +59,6 @@ export class SaveReviewMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/review
      */
     async saveReview(variables: SaveReviewVariables): Promise<ReviewResponse> {
-        requireVariables(
-            variables,
-            { kind: "any", names: ["id", "mediaId"] },
-            "The SaveReview mutation requires an id or a mediaId variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            mediaId: "number",
-            body: "string",
-            summary: "string",
-            score: "number",
-            private: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int, $mediaId: Int, $body: String, $summary: String, $score: Int, $private: Boolean, $asHtml: Boolean) {
         SaveReview(id: $id, mediaId: $mediaId, body: $body, summary: $summary, score: $score, private: $private) {
@@ -84,6 +66,24 @@ export class SaveReviewMutation extends APIWrapper {
         }
       }
     `;
-        return await this.request(mutation, variables, true);
+        return await this.execute<ReviewResponse>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "any",
+                    names: ["id", "mediaId"],
+                    message: "The SaveReview mutation requires an id or a mediaId variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                mediaId: "number",
+                body: "string",
+                summary: "string",
+                score: "number",
+                private: "boolean",
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

@@ -1,4 +1,3 @@
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 
 /**
@@ -36,25 +35,27 @@ export class UpdateAniChartHighlightsMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/anichartuser
      */
     async updateAniChartHighlights(variables: UpdateAniChartHighlightsVariables): Promise<string> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["highlights"] },
-            "The UpdateAniChartHighlights mutation requires a highlights variable."
-        );
-        const variableTypeMappings = {
-            highlights: {
-                mediaId: "number",
-                highlight: "boolean",
-            },
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($highlights: [AniChartHighlightInput]) {
         UpdateAniChartHighlights (highlights: $highlights)
       }
     `;
-        return await this.request(mutation, variables, true);
+        return await this.execute<string>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["highlights"],
+                    message:
+                        "The UpdateAniChartHighlights mutation requires a highlights variable.",
+                },
+            ],
+            mappings: {
+                highlights: {
+                    mediaId: "number",
+                    highlight: "boolean",
+                },
+            },
+            requiresAuth: true,
+        });
     }
 }

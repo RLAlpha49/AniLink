@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type ActivityReply } from "../interfaces/Activity";
 import { ActivityReplySchema } from "../schemas/Activity";
 
@@ -50,21 +49,6 @@ export class SaveActivityReplyMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/object/activityreply
      */
     async saveActivityReply(variables: SaveActivityReplyVariables): Promise<ActivityReply> {
-        requireVariables(
-            variables,
-            { kind: "any", names: ["id", "text"] },
-            "The SaveActivityReply mutation requires an id or a text variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            activityId: "number",
-            text: "string",
-            asMod: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int, $activityId: Int, $text: String, $asMod: Boolean, $asHtml: Boolean) {
         SaveActivityReply (id: $id, activityId: $activityId, text: $text, asMod: $asMod) {
@@ -72,7 +56,22 @@ export class SaveActivityReplyMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<ActivityReply>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "any",
+                    names: ["id", "text"],
+                    message: "The SaveActivityReply mutation requires an id or a text variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                activityId: "number",
+                text: "string",
+                asMod: "boolean",
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

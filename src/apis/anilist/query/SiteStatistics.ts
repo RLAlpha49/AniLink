@@ -1,7 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type SiteStatisticsResponse } from "../interfaces/responses/query/SiteStatistics";
 import { type SiteTrendSort, SiteTrendSortMappings } from "../types/Sort";
-import { validateVariables } from "../../../base/ValidateVariables";
 import { SiteStatisticsSchema } from "../schemas/responses/query/SiteStatistics";
 
 /**
@@ -130,32 +129,6 @@ export class SiteStatisticsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/sitestatistics
      */
     async siteStatistics(variables: SiteStatisticsVariables = {}): Promise<SiteStatisticsResponse> {
-        const variableTypeMappings = {
-            usersSort: SiteTrendSortMappings,
-            usersPage: "number",
-            usersPerPage: "number",
-            animeSort: SiteTrendSortMappings,
-            animePage: "number",
-            animePerPage: "number",
-            mangaSort: SiteTrendSortMappings,
-            mangaPage: "number",
-            mangaPerPage: "number",
-            charactersSort: SiteTrendSortMappings,
-            charactersPage: "number",
-            charactersPerPage: "number",
-            staffSort: SiteTrendSortMappings,
-            staffPage: "number",
-            staffPerPage: "number",
-            studiosSort: SiteTrendSortMappings,
-            studiosPage: "number",
-            studiosPerPage: "number",
-            reviewsSort: SiteTrendSortMappings,
-            reviewsPage: "number",
-            reviewsPerPage: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($usersSort: [SiteTrendSort], $usersPage: Int, $usersPerPage: Int, $animeSort: [SiteTrendSort], $animePage: Int, $animePerPage: Int, $mangaSort: [SiteTrendSort], $mangaPage: Int, $mangaPerPage: Int, $charactersSort: [SiteTrendSort], $charactersPage: Int, $charactersPerPage: Int, $staffSort: [SiteTrendSort], $staffPage: Int, $staffPerPage: Int, $studiosSort: [SiteTrendSort], $studiosPage: Int, $studiosPerPage: Int, $reviewsSort: [SiteTrendSort], $reviewsPage: Int, $reviewsPerPage: Int) {
         SiteStatistics {
@@ -163,7 +136,30 @@ export class SiteStatisticsQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<SiteStatisticsResponse>(query, variables, {
+            mappings: {
+                usersSort: SiteTrendSortMappings,
+                usersPage: "number",
+                usersPerPage: "number",
+                animeSort: SiteTrendSortMappings,
+                animePage: "number",
+                animePerPage: "number",
+                mangaSort: SiteTrendSortMappings,
+                mangaPage: "number",
+                mangaPerPage: "number",
+                charactersSort: SiteTrendSortMappings,
+                charactersPage: "number",
+                charactersPerPage: "number",
+                staffSort: SiteTrendSortMappings,
+                staffPage: "number",
+                staffPerPage: "number",
+                studiosSort: SiteTrendSortMappings,
+                studiosPage: "number",
+                studiosPerPage: "number",
+                reviewsSort: SiteTrendSortMappings,
+                reviewsPage: "number",
+                reviewsPerPage: "number",
+            },
+        });
     }
 }

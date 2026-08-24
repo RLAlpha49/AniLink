@@ -1,4 +1,3 @@
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
@@ -50,21 +49,6 @@ export class ToggleFavouriteMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/favourites
      */
     async toggleFavourite(variables: ToggleFavouriteVariables): Promise<Favourites> {
-        requireVariables(
-            variables,
-            { kind: "any", names: ["animeId", "mangaId", "characterId", "staffId", "studioId"] },
-            "The ToggleFavourite mutation requires an animeId, mangaId, characterId, staffId, or studioId variable."
-        );
-        const variableTypeMappings = {
-            animeId: "number",
-            mangaId: "number",
-            characterId: "number",
-            staffId: "number",
-            studioId: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($animeId: Int, $mangaId: Int, $characterId: Int, $staffId: Int, $studioId: Int) {
         ToggleFavourite (animeId: $animeId, mangaId: $mangaId, characterId: $characterId, staffId: $staffId, studioId: $studioId) {
@@ -72,7 +56,23 @@ export class ToggleFavouriteMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<Favourites>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "any",
+                    names: ["animeId", "mangaId", "characterId", "staffId", "studioId"],
+                    message:
+                        "The ToggleFavourite mutation requires an animeId, mangaId, characterId, staffId, or studioId variable.",
+                },
+            ],
+            mappings: {
+                animeId: "number",
+                mangaId: "number",
+                characterId: "number",
+                staffId: "number",
+                studioId: "number",
+            },
+            requiresAuth: true,
+        });
     }
 }

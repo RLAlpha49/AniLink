@@ -5,7 +5,6 @@ import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
 import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListSort, MediaListSortMappings } from "../types/Sort";
 import { type ScoreFormat, ScoreFormatMapping } from "../types/Format";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { MediaListCollectionQuerySchema } from "../schemas/responses/query/MediaListCollectionResponse";
 
 /**
@@ -169,47 +168,46 @@ export class MediaListCollectionQuery extends APIWrapper {
     async mediaListCollection(
         variables: MediaListCollectionVariables
     ): Promise<MediaListCollectionResponse> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["type"] },
-            "The MediaListCollection query requires a type variable."
-        );
-        requireVariables(
-            variables,
-            { kind: "any", names: ["userId", "userName"] },
-            "The MediaListCollection query requires a userId or a userName."
-        );
-        const variableTypeMappings = {
-            userId: "number",
-            userName: "string",
-            type: MediaTypeMappings,
-            status: "string",
-            notes: "string",
-            startedAt: FuzzyDateMappings,
-            completedAt: FuzzyDateMappings,
-            forceSingleCompletedList: "boolean",
-            chunk: "number",
-            perChunk: "number",
-            status_in: MediaListStatusMappings,
-            status_not_in: MediaListStatusMappings,
-            status_not: MediaListStatusMappings,
-            notes_like: "string",
-            startedAt_greater: FuzzyDateMappings,
-            startedAt_lesser: FuzzyDateMappings,
-            startedAt_like: "string",
-            completedAt_greater: FuzzyDateMappings,
-            completedAt_lesser: FuzzyDateMappings,
-            completedAt_like: "string",
-            sort: MediaListSortMappings,
-            scoreFormat: ScoreFormatMapping,
-            asArray: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = MediaListCollectionQuerySchema;
-
-        return await this.request(query, variables);
+        return await this.execute<MediaListCollectionResponse>(query, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["type"],
+                    message: "The MediaListCollection query requires a type variable.",
+                },
+                {
+                    kind: "any",
+                    names: ["userId", "userName"],
+                    message: "The MediaListCollection query requires a userId or a userName.",
+                },
+            ],
+            mappings: {
+                userId: "number",
+                userName: "string",
+                type: MediaTypeMappings,
+                status: "string",
+                notes: "string",
+                startedAt: FuzzyDateMappings,
+                completedAt: FuzzyDateMappings,
+                forceSingleCompletedList: "boolean",
+                chunk: "number",
+                perChunk: "number",
+                status_in: MediaListStatusMappings,
+                status_not_in: MediaListStatusMappings,
+                status_not: MediaListStatusMappings,
+                notes_like: "string",
+                startedAt_greater: FuzzyDateMappings,
+                startedAt_lesser: FuzzyDateMappings,
+                startedAt_like: "string",
+                completedAt_greater: FuzzyDateMappings,
+                completedAt_lesser: FuzzyDateMappings,
+                completedAt_like: "string",
+                sort: MediaListSortMappings,
+                scoreFormat: ScoreFormatMapping,
+                asArray: "boolean",
+                asHtml: "boolean",
+            },
+        });
     }
 }

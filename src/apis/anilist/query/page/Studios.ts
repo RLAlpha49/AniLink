@@ -2,7 +2,6 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type StudiosPageResponse } from "../../interfaces/responses/page/Studios";
 import { CharacterSortMappings, MediaSortMappings, StudioSortMappings } from "../../types/Sort";
-import { validateVariables } from "../../../../base/ValidateVariables";
 import { StudioSchema } from "../../schemas/responses/query/Studio";
 
 /**
@@ -156,36 +155,6 @@ export class StudiosQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/studio
      */
     async studios(variables: StudiosVariables): Promise<StudiosPageResponse> {
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            id: "number",
-            search: "string",
-            id_not: "number",
-            id_in: "number[]",
-            id_not_in: "number[]",
-            sort: StudioSortMappings,
-            asHtml: "boolean",
-            mediaSort: MediaSortMappings,
-            mediaIsMain: "boolean",
-            mediaOnList: "boolean",
-            mediaPage: "number",
-            mediaPerPage: "number",
-            staffMediaSort: MediaSortMappings,
-            staffMediaType: "string",
-            staffMediaOnList: "boolean",
-            staffMediaPage: "number",
-            staffMediaPerPage: "number",
-            charactersSort: CharacterSortMappings,
-            charactersPage: "number",
-            charactersPerPage: "number",
-            characterMediaSort: MediaSortMappings,
-            characterMediaOnList: "boolean",
-            characterMediaPage: "number",
-            characterMediaPerPage: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StudioSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaIsMain: Boolean, $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Page (page: $page, perPage: $perPage) {
@@ -202,7 +171,35 @@ export class StudiosQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<StudiosPageResponse>(query, variables, {
+            mappings: {
+                page: "number",
+                perPage: "number",
+                id: "number",
+                search: "string",
+                id_not: "number",
+                id_in: "number[]",
+                id_not_in: "number[]",
+                sort: StudioSortMappings,
+                asHtml: "boolean",
+                mediaSort: MediaSortMappings,
+                mediaIsMain: "boolean",
+                mediaOnList: "boolean",
+                mediaPage: "number",
+                mediaPerPage: "number",
+                staffMediaSort: MediaSortMappings,
+                staffMediaType: "string",
+                staffMediaOnList: "boolean",
+                staffMediaPage: "number",
+                staffMediaPerPage: "number",
+                charactersSort: CharacterSortMappings,
+                charactersPage: "number",
+                charactersPerPage: "number",
+                characterMediaSort: MediaSortMappings,
+                characterMediaOnList: "boolean",
+                characterMediaPage: "number",
+                characterMediaPerPage: "number",
+            },
+        });
     }
 }

@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type DeleteMediaListEntryResponse } from "../interfaces/responses/mutation/DeleteMediaListEntry";
 
 /**
@@ -36,17 +35,6 @@ export class DeleteMediaListEntryMutation extends APIWrapper {
     async deleteMediaListEntry(
         variables: DeleteMediaListEntryVariables
     ): Promise<DeleteMediaListEntryResponse> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["id"] },
-            "The DeleteMediaListEntry mutation requires an id variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int) {
         DeleteMediaListEntry(id: $id) {
@@ -54,7 +42,18 @@ export class DeleteMediaListEntryMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<DeleteMediaListEntryResponse>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["id"],
+                    message: "The DeleteMediaListEntry mutation requires an id variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+            },
+            requiresAuth: true,
+        });
     }
 }

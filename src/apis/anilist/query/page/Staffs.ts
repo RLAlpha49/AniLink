@@ -3,7 +3,6 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 import { type StaffsPageResponse } from "../../interfaces/responses/page/Staffs";
 import { CharacterSortMappings, MediaSortMappings, StaffSortMappings } from "../../types/Sort";
 import { MediaTypeMappings } from "../../types/Type";
-import { validateVariables } from "../../../../base/ValidateVariables";
 import { StaffSchema } from "../../schemas/responses/query/Staff";
 
 /**
@@ -137,33 +136,6 @@ export class StaffsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/staff
      */
     async staffs(variables: StaffsVariables): Promise<StaffsPageResponse> {
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            id: "number",
-            isBirthday: "boolean",
-            search: "String",
-            id_not: "number",
-            id_in: "number[]",
-            id_not_in: "number[]",
-            sort: StaffSortMappings,
-            asHtml: "boolean",
-            staffMediaSort: MediaSortMappings,
-            staffMediaType: MediaTypeMappings,
-            staffMediaOnList: "boolean",
-            staffMediaPage: "number",
-            staffMediaPerPage: "number",
-            charactersSort: CharacterSortMappings,
-            charactersPage: "number",
-            charactersPerPage: "number",
-            characterMediaSort: MediaSortMappings,
-            characterMediaOnList: "boolean",
-            characterMediaPage: "number",
-            characterMediaPerPage: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StaffSort], $asHtml: Boolean, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Page (page: $page, perPage: $perPage) {
@@ -180,7 +152,31 @@ export class StaffsQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<StaffsPageResponse>(query, variables, {
+            mappings: {
+                page: "number",
+                perPage: "number",
+                id: "number",
+                isBirthday: "boolean",
+                search: "String",
+                id_not: "number",
+                id_in: "number[]",
+                id_not_in: "number[]",
+                sort: StaffSortMappings,
+                asHtml: "boolean",
+                staffMediaSort: MediaSortMappings,
+                staffMediaType: MediaTypeMappings,
+                staffMediaOnList: "boolean",
+                staffMediaPage: "number",
+                staffMediaPerPage: "number",
+                charactersSort: CharacterSortMappings,
+                charactersPage: "number",
+                charactersPerPage: "number",
+                characterMediaSort: MediaSortMappings,
+                characterMediaOnList: "boolean",
+                characterMediaPage: "number",
+                characterMediaPerPage: "number",
+            },
+        });
     }
 }

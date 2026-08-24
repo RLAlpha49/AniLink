@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type Activity } from "../interfaces/Activity";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
 
@@ -40,19 +39,6 @@ export class ToggleActivityPinMutation extends APIWrapper {
      *   * @see https://docs.anilist.co/reference/union/activityunion
      */
     async toggleActivityPin(variables: ToggleActivityPinVariables): Promise<Activity> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["id", "pinned"] },
-            "The ToggleActivityPin mutation requires id and pinned variables."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            pinned: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int, $pinned: Boolean, $asHtml: Boolean) {
         ToggleActivityPin(id: $id, pinned: $pinned) {
@@ -60,7 +46,20 @@ export class ToggleActivityPinMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<Activity>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["id", "pinned"],
+                    message: "The ToggleActivityPin mutation requires id and pinned variables.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                pinned: "boolean",
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

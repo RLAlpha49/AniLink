@@ -19,6 +19,6 @@ export class GenreCollectionQuery extends APIWrapper {
       }
     `;
 
-        return await this.request(query);
+        return await this.execute<string>(query, undefined, {});
     }
 }

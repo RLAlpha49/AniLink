@@ -1,6 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
 import { type LikeableType, LikeableTypeMappings } from "../../types/Type";
-import { requireVariables, validateVariables } from "../../../../base/ValidateVariables";
 import { type LikesPageResponse } from "../../interfaces/responses/page/Likes";
 import { BasicUserSchema } from "../../schemas/Basic";
 
@@ -45,20 +44,6 @@ export class LikesQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/union/likeableunion
      */
     async likes(variables: LikesVariables): Promise<LikesPageResponse> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["likeableId", "type"] },
-            "The Page.likes query requires both a likeableId and a type."
-        );
-        const variableTypeMappings = {
-            likeableId: "number",
-            type: LikeableTypeMappings,
-            page: "number",
-            perPage: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($likeableId: Int, $type: LikeableType, $page: Int, $perPage: Int) {
         Page (page: $page, perPage: $perPage) {
@@ -75,7 +60,20 @@ export class LikesQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<LikesPageResponse>(query, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["likeableId", "type"],
+                    message: "The Page.likes query requires both a likeableId and a type.",
+                },
+            ],
+            mappings: {
+                likeableId: "number",
+                type: LikeableTypeMappings,
+                page: "number",
+                perPage: "number",
+            },
+        });
     }
 }

@@ -2,7 +2,6 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type ThreadsPageResponse } from "../../interfaces/responses/page/Threads";
 import { ThreadSortMappings } from "../../types/Sort";
-import { validateVariables } from "../../../../base/ValidateVariables";
 import { ThreadSchema } from "../../schemas/responses/query/Thread";
 
 /**
@@ -86,23 +85,6 @@ export class ThreadsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/thread
      */
     async threads(variables: ThreadsVariables): Promise<ThreadsPageResponse> {
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            id: "number",
-            userId: "number",
-            replyUserId: "number",
-            subscribed: "boolean",
-            categoryId: "number",
-            mediaCategoryId: "number",
-            search: "string",
-            id_in: "number[]",
-            sort: ThreadSortMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $userId: Int, $replyUserId: Int, $subscribed: Boolean, $categoryId: Int, $mediaCategoryId: Int, $search: String, $id_in: [Int], $sort: [ThreadSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -119,7 +101,21 @@ export class ThreadsQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<ThreadsPageResponse>(query, variables, {
+            mappings: {
+                page: "number",
+                perPage: "number",
+                id: "number",
+                userId: "number",
+                replyUserId: "number",
+                subscribed: "boolean",
+                categoryId: "number",
+                mediaCategoryId: "number",
+                search: "string",
+                id_in: "number[]",
+                sort: ThreadSortMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

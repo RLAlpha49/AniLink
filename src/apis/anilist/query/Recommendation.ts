@@ -1,7 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { type RecommendationSort, RecommendationSortMappings } from "../types/Sort";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { RecommendationSchema } from "../schemas/responses/query/Recommendation";
 
 /**
@@ -75,26 +74,6 @@ export class RecommendationQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/recommendation
      */
     async recommendation(variables: RecommendationVariables): Promise<RecommendationResponse> {
-        requireVariables(
-            variables,
-            { kind: "notOnly", names: ["asHtml"] },
-            "The Recommendation query requires at least one filter variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            mediaId: "number",
-            mediaRecommendationId: "number",
-            userId: "number",
-            rating: "number",
-            onList: "boolean",
-            rating_greater: "number",
-            rating_lesser: "number",
-            sort: RecommendationSortMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $mediaId: Int, $mediaRecommendationId: Int, $userId: Int, $rating: Int, $onList: Boolean, $rating_greater: Int, $rating_lesser: Int, $sort: [RecommendationSort], $asHtml: Boolean) {
         Recommendation (id: $id, mediaId: $mediaId, mediaRecommendationId: $mediaRecommendationId, userId: $userId, rating: $rating, onList: $onList, rating_greater: $rating_greater, rating_lesser: $rating_lesser, sort: $sort) {
@@ -102,7 +81,26 @@ export class RecommendationQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<RecommendationResponse>(query, variables, {
+            requirements: [
+                {
+                    kind: "notOnly",
+                    names: ["asHtml"],
+                    message: "The Recommendation query requires at least one filter variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                mediaId: "number",
+                mediaRecommendationId: "number",
+                userId: "number",
+                rating: "number",
+                onList: "boolean",
+                rating_greater: "number",
+                rating_lesser: "number",
+                sort: RecommendationSortMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

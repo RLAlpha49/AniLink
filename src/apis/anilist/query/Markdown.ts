@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 
 /**
  * `MarkdownVariables` is an interface representing the variables for the `MarkdownQuery`.
@@ -27,17 +26,6 @@ export class MarkdownQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/parsedmarkdown
      */
     async markdown(variables: MarkdownVariables): Promise<string> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["markdown"] },
-            "The Markdown query requires a markdown variable."
-        );
-        const variableTypeMapppings = {
-            markdown: "string",
-        };
-
-        validateVariables(variables, variableTypeMapppings);
-
         const query = `
       query ($markdown: String!) {
         Markdown (markdown: $markdown) {
@@ -45,7 +33,14 @@ export class MarkdownQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<string>(query, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["markdown"],
+                    message: "The Markdown query requires a markdown variable.",
+                },
+            ],
+        });
     }
 }

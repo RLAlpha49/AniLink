@@ -1,6 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type DeleteResult } from "../types/DeleteResult";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 
 /**
  * `DeleteActivityMutation` is an interface representing the variables to delete an activity.
@@ -34,17 +33,6 @@ export class DeleteActivityMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/deleted
      */
     async deleteActivity(variables: DeleteActivityVariables): Promise<DeleteResult> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["id"] },
-            "The DeleteActivity mutation requires an id variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($id: Int) {
         DeleteActivity(id: $id) {
@@ -52,7 +40,18 @@ export class DeleteActivityMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<DeleteResult>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["id"],
+                    message: "The DeleteActivity mutation requires an id variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+            },
+            requiresAuth: true,
+        });
     }
 }

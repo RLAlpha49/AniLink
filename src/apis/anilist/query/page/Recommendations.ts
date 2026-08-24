@@ -2,7 +2,6 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type RecommendationsPageResponse } from "../../interfaces/responses/page/Recommendations";
 import { RecommendationSortMappings } from "../../types/Sort";
-import { validateVariables } from "../../../../base/ValidateVariables";
 import { RecommendationSchema } from "../../schemas/responses/query/Recommendation";
 
 /**
@@ -88,23 +87,6 @@ export class RecommendationsQuery extends APIWrapper {
     async recommendations(
         variables: RecommendationsVariables
     ): Promise<RecommendationsPageResponse> {
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            id: "number",
-            mediaId: "number",
-            mediaRecommendationId: "number",
-            userId: "number",
-            rating: "number",
-            onList: "boolean",
-            rating_greater: "number",
-            rating_lesser: "number",
-            sort: RecommendationSortMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $mediaId: Int, $mediaRecommendationId: Int, $userId: Int, $rating: Int, $onList: Boolean, $rating_greater: Int, $rating_lesser: Int, $sort: [RecommendationSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -121,7 +103,21 @@ export class RecommendationsQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<RecommendationsPageResponse>(query, variables, {
+            mappings: {
+                page: "number",
+                perPage: "number",
+                id: "number",
+                mediaId: "number",
+                mediaRecommendationId: "number",
+                userId: "number",
+                rating: "number",
+                onList: "boolean",
+                rating_greater: "number",
+                rating_lesser: "number",
+                sort: RecommendationSortMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

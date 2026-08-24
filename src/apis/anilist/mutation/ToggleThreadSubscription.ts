@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
@@ -42,19 +41,6 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
     async toggleThreadSubscription(
         variables: ToggleThreadSubscriptionVariables
     ): Promise<ThreadResponse> {
-        requireVariables(
-            variables,
-            { kind: "all", names: ["threadId", "subscribe"] },
-            "The ToggleThreadSubscription mutation requires threadId and subscribe variables."
-        );
-        const variableTypeMappings = {
-            threadId: "number",
-            subscribe: "boolean",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($threadId: Int, $subscribe: Boolean, $asHtml: Boolean) {
         ToggleThreadSubscription (threadId: $threadId, subscribe: $subscribe) {
@@ -62,7 +48,21 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<ThreadResponse>(mutation, variables, {
+            requirements: [
+                {
+                    kind: "all",
+                    names: ["threadId", "subscribe"],
+                    message:
+                        "The ToggleThreadSubscription mutation requires threadId and subscribe variables.",
+                },
+            ],
+            mappings: {
+                threadId: "number",
+                subscribe: "boolean",
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }

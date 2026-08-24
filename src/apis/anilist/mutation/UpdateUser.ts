@@ -4,7 +4,6 @@ import {
     UserStaffNameLanguageMapping,
 } from "../types/UserStaffNameLanguage";
 import { type UserTitleLanguage, UserTitleLanguageMapping } from "../types/UserTitleLanguage";
-import { validateVariables } from "../../../base/ValidateVariables";
 import { type NotificationOptions, NotificationOptionsMapping } from "../types/NotificationOptions";
 import { type MediaListOptions, MediaListOptionsMapping } from "../types/MediaListOptions";
 import {
@@ -337,27 +336,6 @@ export class UpdateUserMutation extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/user
      */
     async updateUser(variables: UpdateUserVariables): Promise<UpdateUserResponse> {
-        const variableTypeMappings = {
-            about: "string",
-            titleLanguage: UserTitleLanguageMapping,
-            displayAdultContent: "boolean",
-            airingNotifications: "boolean",
-            scoreFormat: ScoreFormatMapping,
-            rowOrder: "string",
-            profileColor: "string",
-            donatorBadge: "string",
-            notificationOptions: NotificationOptionsMapping,
-            timezone: "string",
-            activityMergeTime: "number",
-            animeListOptions: MediaListOptionsMapping,
-            mangaListOptions: MediaListOptionsMapping,
-            staffNameLanguage: UserStaffNameLanguageMapping,
-            restrictMessagesToFollowing: "boolean",
-            disabledListActivity: DisabledListActivityMapping,
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($about: String, $titleLanguage: UserTitleLanguage, $displayAdultContent: Boolean, $airingNotifications: Boolean, $scoreFormat: ScoreFormat, $rowOrder: String, $profileColor: String, $donatorBadge: String, $notificationOptions: [NotificationOptionInput], $timezone: String, $activityMergeTime: Int, $animeListOptions: MediaListOptionsInput, $mangaListOptions: MediaListOptionsInput, $staffNameLanguage: UserStaffNameLanguage, $restrictMessagesToFollowing: Boolean, $disabledListActivity: [ListActivityOptionInput]) {
         UpdateUser(about: $about, titleLanguage: $titleLanguage, displayAdultContent: $displayAdultContent, airingNotifications: $airingNotifications, scoreFormat: $scoreFormat, rowOrder: $rowOrder, profileColor: $profileColor, donatorBadge: $donatorBadge, notificationOptions: $notificationOptions, timezone: $timezone, activityMergeTime: $activityMergeTime, animeListOptions: $animeListOptions, mangaListOptions: $mangaListOptions, staffNameLanguage: $staffNameLanguage, restrictMessagesToFollowing: $restrictMessagesToFollowing, disabledListActivity: $disabledListActivity) {
@@ -413,7 +391,26 @@ export class UpdateUserMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<UpdateUserResponse>(mutation, variables, {
+            mappings: {
+                about: "string",
+                titleLanguage: UserTitleLanguageMapping,
+                displayAdultContent: "boolean",
+                airingNotifications: "boolean",
+                scoreFormat: ScoreFormatMapping,
+                rowOrder: "string",
+                profileColor: "string",
+                donatorBadge: "string",
+                notificationOptions: NotificationOptionsMapping,
+                timezone: "string",
+                activityMergeTime: "number",
+                animeListOptions: MediaListOptionsMapping,
+                mangaListOptions: MediaListOptionsMapping,
+                staffNameLanguage: UserStaffNameLanguageMapping,
+                restrictMessagesToFollowing: "boolean",
+                disabledListActivity: DisabledListActivityMapping,
+            },
+            requiresAuth: true,
+        });
     }
 }

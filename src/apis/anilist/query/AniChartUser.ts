@@ -27,6 +27,6 @@ export class AniChartUserQuery extends APIWrapper {
       }
     `;
 
-        return await this.request(query, undefined, true);
+        return await this.execute<AniChartUserResponse>(query, undefined, { requiresAuth: true });
     }
 }

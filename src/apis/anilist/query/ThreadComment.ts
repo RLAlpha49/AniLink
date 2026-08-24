@@ -1,7 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { type ThreadSort, ThreadSortMappings } from "../types/Sort";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
 
 /**
@@ -50,21 +49,6 @@ export class ThreadCommentQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/threadcomment
      */
     async threadComment(variables: ThreadCommentVariables): Promise<ThreadCommentResponse> {
-        requireVariables(
-            variables,
-            { kind: "notOnly", names: ["asHtml"] },
-            "The ThreadComment query requires at least one filter variable."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            threadId: "number",
-            userId: "number",
-            sort: ThreadSortMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $threadId: Int, $userId: Int, $sort: [ThreadCommentSort], $asHtml: Boolean) {
         ThreadComment (id: $id, threadId: $threadId, userId: $userId, sort: $sort) {
@@ -72,7 +56,21 @@ export class ThreadCommentQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<ThreadCommentResponse>(query, variables, {
+            requirements: [
+                {
+                    kind: "notOnly",
+                    names: ["asHtml"],
+                    message: "The ThreadComment query requires at least one filter variable.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                threadId: "number",
+                userId: "number",
+                sort: ThreadSortMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

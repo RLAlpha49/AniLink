@@ -2,7 +2,6 @@ import { APIWrapper } from "../../../../base/APIWrapper";
 
 import { type NotificationsPageResponse } from "../../interfaces/responses/page/Notifications";
 import { NotificationTypeMappings } from "../../types/Type";
-import { validateVariables } from "../../../../base/ValidateVariables";
 import { NotificationSchema } from "../../schemas/responses/query/Notification";
 
 /**
@@ -56,17 +55,6 @@ export class NotificationsQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/union/notificationunion
      */
     async notifications(variables: NotificationsVariables): Promise<NotificationsPageResponse> {
-        const variableTypeMappings = {
-            page: "number",
-            perPage: "number",
-            type: NotificationTypeMappings,
-            resetNotificationCount: "boolean",
-            type_in: NotificationTypeMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($page: Int, $perPage: Int, $type: NotificationType, $resetNotificationCount: Boolean, $type_in: [NotificationType], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -83,7 +71,15 @@ export class NotificationsQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<NotificationsPageResponse>(query, variables, {
+            mappings: {
+                page: "number",
+                perPage: "number",
+                type: NotificationTypeMappings,
+                resetNotificationCount: "boolean",
+                type_in: NotificationTypeMappings,
+                asHtml: "boolean",
+            },
+        });
     }
 }

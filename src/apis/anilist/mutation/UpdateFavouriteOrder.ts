@@ -1,6 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
-import { validateVariables } from "../../../base/ValidateVariables";
 import { AniLinkValidationError } from "../../../base/AniLinkError";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
 
@@ -86,21 +85,6 @@ export class UpdateFavouriteOrderMutation extends APIWrapper {
                 "The order array requires the corresponding id array to be present.",
             ]);
         }
-        const variableTypeMappings = {
-            animeIds: "number[]",
-            mangaIds: "number[]",
-            characterIds: "number[]",
-            staffIds: "number[]",
-            studioIds: "number[]",
-            animeOrder: "number[]",
-            mangaOrder: "number[]",
-            characterOrder: "number[]",
-            staffOrder: "number[]",
-            studioOrder: "number[]",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const mutation = `
       mutation ($animeIds: [Int], $mangaIds: [Int], $characterIds: [Int], $staffIds: [Int], $studioIds: [Int], $animeOrder: [Int], $mangaOrder: [Int], $characterOrder: [Int], $staffOrder: [Int], $studioOrder: [Int]) {
         UpdateFavouriteOrder (animeIds: $animeIds, mangaIds: $mangaIds, characterIds: $characterIds, staffIds: $staffIds, studioIds: $studioIds, animeOrder: $animeOrder, mangaOrder: $mangaOrder, characterOrder: $characterOrder, staffOrder: $staffOrder, studioOrder: $studioOrder) {
@@ -108,7 +92,20 @@ export class UpdateFavouriteOrderMutation extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(mutation, variables, true);
+        return await this.execute<Favourites>(mutation, variables, {
+            mappings: {
+                animeIds: "number[]",
+                mangaIds: "number[]",
+                characterIds: "number[]",
+                staffIds: "number[]",
+                studioIds: "number[]",
+                animeOrder: "number[]",
+                mangaOrder: "number[]",
+                characterOrder: "number[]",
+                staffOrder: "number[]",
+                studioOrder: "number[]",
+            },
+            requiresAuth: true,
+        });
     }
 }

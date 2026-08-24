@@ -1,5 +1,4 @@
 import { APIWrapper } from "../../../base/APIWrapper";
-import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { type ActivityReply } from "../interfaces/Activity";
 import { ActivityReplySchema } from "../schemas/Activity";
 
@@ -39,19 +38,6 @@ export class ActivityReplyQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/object/activityreply
      */
     async activityReply(variables: ActivityReplyVariables): Promise<ActivityReply> {
-        requireVariables(
-            variables,
-            { kind: "any", names: ["id", "activityId"] },
-            "The ActivityReply query requires an id or an activityId."
-        );
-        const variableTypeMappings = {
-            id: "number",
-            activityId: "number",
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($id: Int, $activityId: Int, $asHtml: Boolean) {
         ActivityReply (id: $id, activityId: $activityId) {
@@ -59,7 +45,19 @@ export class ActivityReplyQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables);
+        return await this.execute<ActivityReply>(query, variables, {
+            requirements: [
+                {
+                    kind: "any",
+                    names: ["id", "activityId"],
+                    message: "The ActivityReply query requires an id or an activityId.",
+                },
+            ],
+            mappings: {
+                id: "number",
+                activityId: "number",
+                asHtml: "boolean",
+            },
+        });
     }
 }

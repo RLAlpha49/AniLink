@@ -1,7 +1,6 @@
 import { APIWrapper } from "../../../base/APIWrapper";
 import { type NotificationResponse } from "../interfaces/responses/query/Notification";
 import { type NotificationType, NotificationTypeMappings } from "../types/Type";
-import { validateVariables } from "../../../base/ValidateVariables";
 import { NotificationSchema } from "../schemas/responses/query/Notification";
 
 /**
@@ -45,15 +44,6 @@ export class NotificationQuery extends APIWrapper {
      * @see https://docs.anilist.co/reference/union/notificationunion
      */
     async notification(variables: NotificationVariables): Promise<NotificationResponse> {
-        const variableTypeMappings = {
-            type: NotificationTypeMappings,
-            resetNotificationCount: "boolean",
-            type_in: NotificationTypeMappings,
-            asHtml: "boolean",
-        };
-
-        validateVariables(variables, variableTypeMappings);
-
         const query = `
       query ($type: NotificationType, $resetNotificationCount: Boolean, $type_in: [NotificationType], $asHtml: Boolean) {
         Notification (type: $type, resetNotificationCount: $resetNotificationCount, type_in: $type_in) {
@@ -61,7 +51,14 @@ export class NotificationQuery extends APIWrapper {
         }
       }
     `;
-
-        return await this.request(query, variables, true);
+        return await this.execute<NotificationResponse>(query, variables, {
+            mappings: {
+                type: NotificationTypeMappings,
+                resetNotificationCount: "boolean",
+                type_in: NotificationTypeMappings,
+                asHtml: "boolean",
+            },
+            requiresAuth: true,
+        });
     }
 }
