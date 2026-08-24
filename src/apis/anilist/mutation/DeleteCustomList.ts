@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 
@@ -20,6 +21,17 @@ export interface DeleteCustomListVariables {
 }
 
 /**
+ * The variable type mappings for the `deleteCustomList` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const DeleteCustomListMappings = {
+    customList: "string",
+    type: MediaTypeMappings,
+};
+
+/**
  * `DeleteCustomListMutation` is a class representing a mutation to delete a custom list.
  * It includes a method to delete a custom list
  * @see https://docs.anilist.co/reference/object/deleted
@@ -37,8 +49,12 @@ export class DeleteCustomListMutation extends APIWrapper {
      * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the custom list was deleted by this call and `false` when it was already absent.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/object/deleted
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async deleteCustomList(variables: DeleteCustomListVariables): Promise<DeleteResult> {
+    async deleteCustomList(
+        variables: DeleteCustomListVariables,
+        options?: RequestOptions
+    ): Promise<DeleteResult> {
         const mutation = `
       mutation ($customList: String, $type: MediaType) {
         DeleteCustomList(customList: $customList, type: $type) {
@@ -55,11 +71,9 @@ export class DeleteCustomListMutation extends APIWrapper {
                         "The DeleteCustomList mutation requires customList and type variables.",
                 },
             ],
-            mappings: {
-                customList: "string",
-                type: MediaTypeMappings,
-            },
+            mappings: DeleteCustomListMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

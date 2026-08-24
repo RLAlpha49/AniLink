@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type Activity } from "../interfaces/Activity";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
 
@@ -25,6 +26,18 @@ export interface ToggleActivitySubscriptionVariables {
 }
 
 /**
+ * The variable type mappings for the `toggleActivitySubscription` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ToggleActivitySubscriptionMappings = {
+    activityId: "number",
+    subscribe: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `ToggleActivitySubscriptionMutation` is a class representing a mutation to subscribe to an activity.
  * It includes a method to subscribe to an activity
  * @see https://docs.anilist.co/reference/union/activityunion
@@ -37,9 +50,11 @@ export class ToggleActivitySubscriptionMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/union/activityunion
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
     async toggleActivitySubscription(
-        variables: ToggleActivitySubscriptionVariables
+        variables: ToggleActivitySubscriptionVariables,
+        options?: RequestOptions
     ): Promise<Activity> {
         const mutation = `
       mutation ($activityId: Int, $subscribe: Boolean, $asHtml: Boolean) {
@@ -57,12 +72,9 @@ export class ToggleActivitySubscriptionMutation extends APIWrapper {
                         "The ToggleActivitySubscription mutation requires activityId and subscribe variables.",
                 },
             ],
-            mappings: {
-                activityId: "number",
-                subscribe: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: ToggleActivitySubscriptionMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

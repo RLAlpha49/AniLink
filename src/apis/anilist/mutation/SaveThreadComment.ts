@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
 
@@ -40,6 +41,21 @@ export interface SaveThreadCommentVariables {
 }
 
 /**
+ * The variable type mappings for the `saveThreadComment` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const SaveThreadCommentMappings = {
+    id: "number",
+    threadId: "number",
+    parentCommentId: "number",
+    comment: "string",
+    locked: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `SaveThreadCommentMutation` is a class representing a mutation to save a thread comment.
  * It includes a method to save a thread
  * @see https://docs.anilist.co/reference/object/threadcomment
@@ -52,8 +68,12 @@ export class SaveThreadCommentMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/object/threadcomment
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async saveThreadComment(variables: SaveThreadCommentVariables): Promise<ThreadCommentResponse> {
+    async saveThreadComment(
+        variables: SaveThreadCommentVariables,
+        options?: RequestOptions
+    ): Promise<ThreadCommentResponse> {
         const mutation = `
       mutation ($id: Int, $threadId: Int, $parentCommentId: Int, $comment: String, $locked: Boolean, $asHtml: Boolean) {
         SaveThreadComment (id: $id, threadId: $threadId, parentCommentId: $parentCommentId, comment: $comment, locked: $locked) {
@@ -70,15 +90,9 @@ export class SaveThreadCommentMutation extends APIWrapper {
                         "The SaveThreadComment mutation requires an id or a threadId variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-                threadId: "number",
-                parentCommentId: "number",
-                comment: "string",
-                locked: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: SaveThreadCommentMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

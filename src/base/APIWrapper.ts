@@ -6,6 +6,23 @@ import {
 } from "./ValidateVariables";
 
 /**
+ * Merges per-request transport settings over the instance-level ones.
+ *
+ * The merge is shallow and mirrors `resolveRequestOptions` precedence in
+ * `RequestHandler`: a field set on `overrides` wins; every other field keeps
+ * the instance value. Passing no overrides returns the instance options
+ * unchanged, so the zero-cost path stays allocation-free.
+ */
+const mergeOptions = (
+    base: RequestOptions | undefined,
+    overrides: RequestOptions | undefined
+): RequestOptions | undefined => {
+    if (overrides === undefined) return base;
+    if (base === undefined) return overrides;
+    return { ...base, ...overrides };
+};
+
+/**
  * The AniList GraphQL endpoint used by every AniLink operation. It is defined
  * once here and imported everywhere it is needed.
  */
@@ -49,6 +66,14 @@ export interface ExecuteOptions {
      * `false` (public queries).
      */
     readonly requiresAuth?: boolean;
+
+    /**
+     * Per-request transport settings (`timeout`, `signal`, retry policy,
+     * lifecycle hooks, pacing, circuit breaker) merged over the instance-level
+     * options for this single call. A field set here wins; unset fields keep
+     * the instance value.
+     */
+    readonly transportOptions?: RequestOptions;
 }
 
 /**
@@ -104,6 +129,7 @@ export class APIWrapper {
      * @param variables - The variables for the document. When omitted the request body contains only the query.
      * @param requiresAuth - Whether the operation requires an authentication token.
      * @param operation - Optional human-readable operation name included in missing-token auth errors. Defaults to the concrete operation class name.
+     * @param transportOptions - Optional per-request transport settings merged over the instance-level ones. A field set here wins; unset fields keep the instance value.
      * @returns The unwrapped response data. For documents with a single root field this is the bare field value; otherwise it is the full `{ data }` envelope.
      * @throws An `AniLinkAuthError` when `requiresAuth` is true and no token is set, or a normalized `AniLinkError` when the request fails.
      */
@@ -111,7 +137,8 @@ export class APIWrapper {
         query: string,
         variables?: unknown,
         requiresAuth = false,
-        operation?: string
+        operation?: string,
+        transportOptions?: RequestOptions
     ): Promise<T> {
         const data = variables === undefined ? { query } : { query, variables };
         return await sendRequest<T>(
@@ -120,7 +147,7 @@ export class APIWrapper {
             data,
             this.authToken,
             requiresAuth || undefined,
-            this.resolvedOptions,
+            mergeOptions(this.resolvedOptions, transportOptions),
             operation ?? resolveOperationLabel(this)
         );
     }
@@ -137,6 +164,7 @@ export class APIWrapper {
      * @param variables - The variables for the document. Pass `undefined` for
      * operations that take no variables.
      * @param options - The declarative validation and auth contract.
+     * @param transportOptions - Optional per-request transport settings forwarded to {@link APIWrapper.request}.
      * @returns The unwrapped response data, as described by {@link APIWrapper.request}.
      * @throws An {@link AniLinkValidationError} when a requirement or type check
      * fails, or a normalized `AniLinkError` when the request fails.
@@ -146,7 +174,7 @@ export class APIWrapper {
         variables: object | undefined,
         options: ExecuteOptions
     ): Promise<T> {
-        const { requirements, mappings, requiresAuth } = options;
+        const { requirements, mappings, requiresAuth, transportOptions } = options;
 
         if (requirements && variables !== undefined) {
             for (const requirement of requirements) {
@@ -158,6 +186,6 @@ export class APIWrapper {
             validateVariables(variables, mappings);
         }
 
-        return await this.request<T>(query, variables, requiresAuth);
+        return await this.request<T>(query, variables, requiresAuth, undefined, transportOptions);
     }
 }

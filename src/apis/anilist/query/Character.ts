@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type CharacterResponse } from "../interfaces/responses/query/Character";
 import {
     type CharacterSort,
@@ -76,6 +77,27 @@ export interface CharacterVariables {
 }
 
 /**
+ * The variable type mappings for the `character` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const CharacterMappings = {
+    id: "number",
+    isBirthday: "boolean",
+    search: "string",
+    id_not: "number",
+    id_in: "number[]",
+    id_not_in: "number[]",
+    sort: CharacterSortMappings,
+    asHtml: "boolean",
+    mediaSort: MediaSortMappings,
+    mediaOnList: "boolean",
+    mediaPage: "number",
+    mediaPerPage: "number",
+};
+
+/**
  * `CharacterQuery` is a class representing a query for characters.
  * It includes a method to get characters.
  * @see https://docs.anilist.co/reference/object/character
@@ -87,8 +109,12 @@ export class CharacterQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/character
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async character(variables: CharacterVariables): Promise<CharacterResponse> {
+    async character(
+        variables: CharacterVariables,
+        options?: RequestOptions
+    ): Promise<CharacterResponse> {
         const query = `
       query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [CharacterSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int) {
         Character (id: $id, isBirthday: $isBirthday, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {
@@ -97,20 +123,8 @@ export class CharacterQuery extends APIWrapper {
       }
     `;
         return await this.execute<CharacterResponse>(query, variables, {
-            mappings: {
-                id: "number",
-                isBirthday: "boolean",
-                search: "string",
-                id_not: "number",
-                id_in: "number[]",
-                id_not_in: "number[]",
-                sort: CharacterSortMappings,
-                asHtml: "boolean",
-                mediaSort: MediaSortMappings,
-                mediaOnList: "boolean",
-                mediaPage: "number",
-                mediaPerPage: "number",
-            },
+            mappings: CharacterMappings,
+            transportOptions: options,
         });
     }
 }

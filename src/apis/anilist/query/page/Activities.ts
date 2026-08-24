@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
+import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type ActivitiesPageResponse } from "../../interfaces/responses/page/Activities";
 import { ActivityTypeMappings } from "../../types/ActivityType";
 import { ActivitySortMappings } from "../../types/Sort";
@@ -157,6 +158,44 @@ export interface ActivitiesVariables {
 }
 
 /**
+ * The variable type mappings for the `activities` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ActivitiesMappings = {
+    page: "number",
+    perPage: "number",
+    id: "number",
+    userId: "number",
+    messengerId: "number",
+    mediaId: "number",
+    type: ActivityTypeMappings,
+    isFollowing: "boolean",
+    hasReplies: "boolean",
+    hasRepliesOrTypeText: "boolean",
+    createdAt: "number",
+    id_not: "number",
+    id_in: "number[]",
+    id_not_in: "number[]",
+    userId_not: "number",
+    userId_in: "number[]",
+    userId_not_in: "number[]",
+    messengerId_not: "number",
+    messengerId_in: "number[]",
+    messengerId_not_in: "number[]",
+    mediaId_not: "number",
+    mediaId_in: "number[]",
+    mediaId_not_in: "number[]",
+    type_not: ActivityTypeMappings,
+    type_in: ActivityTypeMappings,
+    type_not_in: ActivityTypeMappings,
+    createdAt_greater: "number",
+    sort: ActivitySortMappings,
+    asHtml: "boolean",
+};
+
+/**
  * `ActivitiesQuery` is a class representing a query for activities.
  * It includes a method to get activities.
  * @see https://docs.anilist.co/reference/union/activityunion
@@ -168,8 +207,12 @@ export class ActivitiesQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The activities for the requested page with pagination metadata.
      * @see https://docs.anilist.co/reference/union/activityunion
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async activities(variables: ActivitiesVariables): Promise<ActivitiesPageResponse> {
+    async activities(
+        variables: ActivitiesVariables,
+        options?: RequestOptions
+    ): Promise<ActivitiesPageResponse> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $userId: Int, $messengerId: Int, $mediaId: Int, $type: ActivityType, $isFollowing: Boolean, $hasReplies: Boolean, $hasRepliesOrTypeText: Boolean, $createdAt: Int, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $userId_not: Int, $userId_in: [Int], $userId_not_in: [Int], $messengerId_not: Int, $messengerId_in: [Int], $messengerId_not_in: [Int], $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $type_not: ActivityType, $type_in: [ActivityType], $type_not_in: [ActivityType], $createdAt_greater: Int, $sort: [ActivitySort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -187,37 +230,8 @@ export class ActivitiesQuery extends APIWrapper {
       }
     `;
         return await this.execute<ActivitiesPageResponse>(query, variables, {
-            mappings: {
-                page: "number",
-                perPage: "number",
-                id: "number",
-                userId: "number",
-                messengerId: "number",
-                mediaId: "number",
-                type: ActivityTypeMappings,
-                isFollowing: "boolean",
-                hasReplies: "boolean",
-                hasRepliesOrTypeText: "boolean",
-                createdAt: "number",
-                id_not: "number",
-                id_in: "number[]",
-                id_not_in: "number[]",
-                userId_not: "number",
-                userId_in: "number[]",
-                userId_not_in: "number[]",
-                messengerId_not: "number",
-                messengerId_in: "number[]",
-                messengerId_not_in: "number[]",
-                mediaId_not: "number",
-                mediaId_in: "number[]",
-                mediaId_not_in: "number[]",
-                type_not: ActivityTypeMappings,
-                type_in: ActivityTypeMappings,
-                type_not_in: ActivityTypeMappings,
-                createdAt_greater: "number",
-                sort: ActivitySortMappings,
-                asHtml: "boolean",
-            },
+            mappings: ActivitiesMappings,
+            transportOptions: options,
         });
     }
 }

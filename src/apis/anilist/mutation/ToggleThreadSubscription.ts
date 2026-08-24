@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
@@ -25,6 +26,18 @@ export interface ToggleThreadSubscriptionVariables {
 }
 
 /**
+ * The variable type mappings for the `toggleThreadSubscription` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ToggleThreadSubscriptionMappings = {
+    threadId: "number",
+    subscribe: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `ToggleThreadSubscriptionMutation` is a class representing a mutation to subscribe to a thread.
  * It includes a method to subscribe to a thread
  * @see https://docs.anilist.co/reference/object/thread
@@ -37,9 +50,11 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/object/thread
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
     async toggleThreadSubscription(
-        variables: ToggleThreadSubscriptionVariables
+        variables: ToggleThreadSubscriptionVariables,
+        options?: RequestOptions
     ): Promise<ThreadResponse> {
         const mutation = `
       mutation ($threadId: Int, $subscribe: Boolean, $asHtml: Boolean) {
@@ -57,12 +72,9 @@ export class ToggleThreadSubscriptionMutation extends APIWrapper {
                         "The ToggleThreadSubscription mutation requires threadId and subscribe variables.",
                 },
             ],
-            mappings: {
-                threadId: "number",
-                subscribe: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: ToggleThreadSubscriptionMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

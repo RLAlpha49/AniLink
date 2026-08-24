@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type UserResponse } from "../interfaces/responses/query/User";
 import {
     type UserSort,
@@ -51,6 +52,22 @@ export interface FollowerVariables {
 }
 
 /**
+ * The variable type mappings for the `follower` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const FollowerMappings = {
+    userId: "number",
+    sort: UserSortMappings,
+    asHtml: "boolean",
+    animeStatLimit: "number",
+    mangaStatLimit: "number",
+    animeStatSort: UserStatisticSortMappings,
+    mangaStatSort: UserStatisticSortMappings,
+};
+
+/**
  * `FollowerQuery` is a class representing a query for followers.
  * It includes a method to get followers.
  * @see https://docs.anilist.co/reference/object/user
@@ -62,8 +79,9 @@ export class FollowerQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/user
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async follower(variables: FollowerVariables): Promise<UserResponse> {
+    async follower(variables: FollowerVariables, options?: RequestOptions): Promise<UserResponse> {
         const query = `
       query ($userId: Int!, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Follower (userId: $userId, sort: $sort) {
@@ -79,15 +97,8 @@ export class FollowerQuery extends APIWrapper {
                     message: "The Follower query requires a userId.",
                 },
             ],
-            mappings: {
-                userId: "number",
-                sort: UserSortMappings,
-                asHtml: "boolean",
-                animeStatLimit: "number",
-                mangaStatLimit: "number",
-                animeStatSort: UserStatisticSortMappings,
-                mangaStatSort: UserStatisticSortMappings,
-            },
+            mappings: FollowerMappings,
+            transportOptions: options,
         });
     }
 }

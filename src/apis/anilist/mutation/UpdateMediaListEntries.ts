@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type FuzzyDate } from "../interfaces/FuzzyDate";
 import { FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
@@ -83,6 +84,29 @@ export interface UpdateMediaListEntriesVariables {
 }
 
 /**
+ * The variable type mappings for the `updateMediaListEntries` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const UpdateMediaListEntriesMappings = {
+    status: MediaListStatusMappings,
+    score: "number",
+    scoreRaw: "number",
+    progress: "number",
+    progressVolumes: "number",
+    repeat: "number",
+    priority: "number",
+    private: "boolean",
+    notes: "string",
+    hiddenFromStatusLists: "boolean",
+    advancedScores: "number[]",
+    startedAt: FuzzyDateMappings,
+    completedAt: FuzzyDateMappings,
+    ids: "number[]",
+};
+
+/**
  * `UpdateMediaListEntriesMutation` is a class representing a mutation to update media list entries.
  * It includes a method to update media list entries.
  * @see https://docs.anilist.co/reference/object/medialist
@@ -95,9 +119,11 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/object/medialist
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
     async updateMediaListEntries(
-        variables: UpdateMediaListEntriesVariables
+        variables: UpdateMediaListEntriesVariables,
+        options?: RequestOptions
     ): Promise<MediaListResponse[]> {
         const mutation = `
       mutation ($status: MediaListStatus, $score: Float, $scoreRaw: Int, $progress: Int, $progressVolumes: Int, $repeat: Int, $priority: Int, $private: Boolean, $notes: String, $hiddenFromStatusLists: Boolean, $advancedScores: [Float], $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $ids: [Int]) {
@@ -130,23 +156,9 @@ export class UpdateMediaListEntriesMutation extends APIWrapper {
                     message: "The UpdateMediaListEntries mutation requires an ids variable.",
                 },
             ],
-            mappings: {
-                status: MediaListStatusMappings,
-                score: "number",
-                scoreRaw: "number",
-                progress: "number",
-                progressVolumes: "number",
-                repeat: "number",
-                priority: "number",
-                private: "boolean",
-                notes: "string",
-                hiddenFromStatusLists: "boolean",
-                advancedScores: "number[]",
-                startedAt: FuzzyDateMappings,
-                completedAt: FuzzyDateMappings,
-                ids: "number[]",
-            },
+            mappings: UpdateMediaListEntriesMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

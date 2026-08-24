@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
+import type { RequestOptions } from "../../../../base/RequestHandler";
 
 import { type StaffsPageResponse } from "../../interfaces/responses/page/Staffs";
 import { CharacterSortMappings, MediaSortMappings, StaffSortMappings } from "../../types/Sort";
@@ -123,6 +124,37 @@ export interface StaffsVariables {
 }
 
 /**
+ * The variable type mappings for the `staffs` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const StaffsMappings = {
+    page: "number",
+    perPage: "number",
+    id: "number",
+    isBirthday: "boolean",
+    search: "String",
+    id_not: "number",
+    id_in: "number[]",
+    id_not_in: "number[]",
+    sort: StaffSortMappings,
+    asHtml: "boolean",
+    staffMediaSort: MediaSortMappings,
+    staffMediaType: MediaTypeMappings,
+    staffMediaOnList: "boolean",
+    staffMediaPage: "number",
+    staffMediaPerPage: "number",
+    charactersSort: CharacterSortMappings,
+    charactersPage: "number",
+    charactersPerPage: "number",
+    characterMediaSort: MediaSortMappings,
+    characterMediaOnList: "boolean",
+    characterMediaPage: "number",
+    characterMediaPerPage: "number",
+};
+
+/**
  * `StaffsQuery` is a class representing a query for staffs.
  * It includes a method to get staffs.
  * @see https://docs.anilist.co/reference/object/staff
@@ -134,8 +166,12 @@ export class StaffsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/staff
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async staffs(variables: StaffsVariables): Promise<StaffsPageResponse> {
+    async staffs(
+        variables: StaffsVariables,
+        options?: RequestOptions
+    ): Promise<StaffsPageResponse> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StaffSort], $asHtml: Boolean, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Page (page: $page, perPage: $perPage) {
@@ -153,30 +189,8 @@ export class StaffsQuery extends APIWrapper {
       }
     `;
         return await this.execute<StaffsPageResponse>(query, variables, {
-            mappings: {
-                page: "number",
-                perPage: "number",
-                id: "number",
-                isBirthday: "boolean",
-                search: "String",
-                id_not: "number",
-                id_in: "number[]",
-                id_not_in: "number[]",
-                sort: StaffSortMappings,
-                asHtml: "boolean",
-                staffMediaSort: MediaSortMappings,
-                staffMediaType: MediaTypeMappings,
-                staffMediaOnList: "boolean",
-                staffMediaPage: "number",
-                staffMediaPerPage: "number",
-                charactersSort: CharacterSortMappings,
-                charactersPage: "number",
-                charactersPerPage: "number",
-                characterMediaSort: MediaSortMappings,
-                characterMediaOnList: "boolean",
-                characterMediaPage: "number",
-                characterMediaPerPage: "number",
-            },
+            mappings: StaffsMappings,
+            transportOptions: options,
         });
     }
 }

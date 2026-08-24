@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type MediaListCollectionResponse } from "../interfaces/responses/query/MediaListCollectionResponse";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
@@ -137,6 +138,39 @@ export interface MediaListCollectionVariables {
 }
 
 /**
+ * The variable type mappings for the `mediaListCollection` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const MediaListCollectionMappings = {
+    userId: "number",
+    userName: "string",
+    type: MediaTypeMappings,
+    status: "string",
+    notes: "string",
+    startedAt: FuzzyDateMappings,
+    completedAt: FuzzyDateMappings,
+    forceSingleCompletedList: "boolean",
+    chunk: "number",
+    perChunk: "number",
+    status_in: MediaListStatusMappings,
+    status_not_in: MediaListStatusMappings,
+    status_not: MediaListStatusMappings,
+    notes_like: "string",
+    startedAt_greater: FuzzyDateMappings,
+    startedAt_lesser: FuzzyDateMappings,
+    startedAt_like: "string",
+    completedAt_greater: FuzzyDateMappings,
+    completedAt_lesser: FuzzyDateMappings,
+    completedAt_like: "string",
+    sort: MediaListSortMappings,
+    scoreFormat: ScoreFormatMapping,
+    asArray: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `MediaListCollectionQuery` is a class representing a query for media list collection data.
  * It includes a method to send the media list collection query and receive the response.
  * @see https://docs.anilist.co/reference/object/medialistcollection
@@ -164,9 +198,11 @@ export class MediaListCollectionQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request, including `lists` and `hasNextChunk`.
      * @see https://docs.anilist.co/reference/object/medialistcollection
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
     async mediaListCollection(
-        variables: MediaListCollectionVariables
+        variables: MediaListCollectionVariables,
+        options?: RequestOptions
     ): Promise<MediaListCollectionResponse> {
         const query = MediaListCollectionQuerySchema;
         return await this.execute<MediaListCollectionResponse>(query, variables, {
@@ -182,32 +218,8 @@ export class MediaListCollectionQuery extends APIWrapper {
                     message: "The MediaListCollection query requires a userId or a userName.",
                 },
             ],
-            mappings: {
-                userId: "number",
-                userName: "string",
-                type: MediaTypeMappings,
-                status: "string",
-                notes: "string",
-                startedAt: FuzzyDateMappings,
-                completedAt: FuzzyDateMappings,
-                forceSingleCompletedList: "boolean",
-                chunk: "number",
-                perChunk: "number",
-                status_in: MediaListStatusMappings,
-                status_not_in: MediaListStatusMappings,
-                status_not: MediaListStatusMappings,
-                notes_like: "string",
-                startedAt_greater: FuzzyDateMappings,
-                startedAt_lesser: FuzzyDateMappings,
-                startedAt_like: "string",
-                completedAt_greater: FuzzyDateMappings,
-                completedAt_lesser: FuzzyDateMappings,
-                completedAt_like: "string",
-                sort: MediaListSortMappings,
-                scoreFormat: ScoreFormatMapping,
-                asArray: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: MediaListCollectionMappings,
+            transportOptions: options,
         });
     }
 }

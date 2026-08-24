@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
 
@@ -35,6 +36,20 @@ export interface ToggleFavouriteVariables {
 }
 
 /**
+ * The variable type mappings for the `toggleFavourite` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ToggleFavouriteMappings = {
+    animeId: "number",
+    mangaId: "number",
+    characterId: "number",
+    staffId: "number",
+    studioId: "number",
+};
+
+/**
  * `ToggleFavouriteMutation` is a class that contains the method to toggle a favourite.
  * It includes a method to toggle a favourite.
  * @see https://docs.anilist.co/reference/object/favourites
@@ -47,8 +62,12 @@ export class ToggleFavouriteMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/object/favourites
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async toggleFavourite(variables: ToggleFavouriteVariables): Promise<Favourites> {
+    async toggleFavourite(
+        variables: ToggleFavouriteVariables,
+        options?: RequestOptions
+    ): Promise<Favourites> {
         const mutation = `
       mutation ($animeId: Int, $mangaId: Int, $characterId: Int, $staffId: Int, $studioId: Int) {
         ToggleFavourite (animeId: $animeId, mangaId: $mangaId, characterId: $characterId, staffId: $staffId, studioId: $studioId) {
@@ -65,14 +84,9 @@ export class ToggleFavouriteMutation extends APIWrapper {
                         "The ToggleFavourite mutation requires an animeId, mangaId, characterId, staffId, or studioId variable.",
                 },
             ],
-            mappings: {
-                animeId: "number",
-                mangaId: "number",
-                characterId: "number",
-                staffId: "number",
-                studioId: "number",
-            },
+            mappings: ToggleFavouriteMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

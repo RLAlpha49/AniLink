@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type AniChartUserResponse } from "../interfaces/responses/query/AniChartUser";
 import { BasicUserSchema } from "../schemas/Basic";
 
@@ -13,8 +14,9 @@ export class AniChartUserQuery extends APIWrapper {
      *
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/anichartuser
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async aniChartUser(): Promise<AniChartUserResponse> {
+    async aniChartUser(options?: RequestOptions): Promise<AniChartUserResponse> {
         const query = `
       query {
         AniChartUser {
@@ -27,6 +29,9 @@ export class AniChartUserQuery extends APIWrapper {
       }
     `;
 
-        return await this.execute<AniChartUserResponse>(query, undefined, { requiresAuth: true });
+        return await this.execute<AniChartUserResponse>(query, undefined, {
+            requiresAuth: true,
+            transportOptions: options,
+        });
     }
 }

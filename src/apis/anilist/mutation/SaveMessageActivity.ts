@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type Activity } from "../interfaces/Activity";
 import { MessageActivitySchema } from "../schemas/Activity";
 
@@ -45,6 +46,22 @@ export interface SaveMessageActivityVariables {
 }
 
 /**
+ * The variable type mappings for the `saveMessageActivity` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const SaveMessageActivityMappings = {
+    id: "number",
+    message: "string",
+    recipientId: "number",
+    private: "boolean",
+    locked: "boolean",
+    asMod: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `SaveMessageActivityMutation` is a class representing a mutation to save a message activity.
  * It includes a method to save a message activity
  * @see https://docs.anilist.co/reference/union/activityunion
@@ -57,8 +74,12 @@ export class SaveMessageActivityMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/union/activityunion
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async saveMessageActivity(variables: SaveMessageActivityVariables): Promise<Activity> {
+    async saveMessageActivity(
+        variables: SaveMessageActivityVariables,
+        options?: RequestOptions
+    ): Promise<Activity> {
         const mutation = `
       mutation ($id: Int, $message: String, $recipientId: Int, $private: Boolean, $locked: Boolean, $asMod: Boolean, $asHtml: Boolean) {
         SaveMessageActivity(id: $id, message: $message, recipientId: $recipientId, private: $private, locked:$locked, asMod: $asMod) {
@@ -75,16 +96,9 @@ export class SaveMessageActivityMutation extends APIWrapper {
                         "The SaveMessageActivity mutation requires an id or a message variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-                message: "string",
-                recipientId: "number",
-                private: "boolean",
-                locked: "boolean",
-                asMod: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: SaveMessageActivityMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

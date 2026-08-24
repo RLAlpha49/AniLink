@@ -1,5 +1,6 @@
 import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import {
     type RecommendationRating,
     RecommendationRatingMappings,
@@ -34,6 +35,19 @@ export interface SaveRecommendationVariables {
 }
 
 /**
+ * The variable type mappings for the `saveRecommendation` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const SaveRecommendationMappings = {
+    mediaId: "number",
+    mediaRecommendationId: "number",
+    rating: RecommendationRatingMappings,
+    asHtml: "boolean",
+};
+
+/**
  * `SaveRecommendationMutation` is a class representing a mutation to save a recommendation.
  * It includes a method to save a recommendation.
  * @see https://docs.anilist.co/reference/object/recommendation
@@ -46,9 +60,11 @@ export class SaveRecommendationMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/object/recommendation
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
     async saveRecommendation(
-        variables: SaveRecommendationVariables
+        variables: SaveRecommendationVariables,
+        options?: RequestOptions
     ): Promise<RecommendationResponse> {
         const mutation = `
       mutation ($mediaId: Int, $mediaRecommendationId: Int, $rating: RecommendationRating, $asHtml: Boolean) {
@@ -66,13 +82,9 @@ export class SaveRecommendationMutation extends APIWrapper {
                         "The SaveRecommendation mutation requires mediaId, mediaRecommendationId, and rating variables.",
                 },
             ],
-            mappings: {
-                mediaId: "number",
-                mediaRecommendationId: "number",
-                rating: RecommendationRatingMappings,
-                asHtml: "boolean",
-            },
+            mappings: SaveRecommendationMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

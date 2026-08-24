@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 
 /**
  * `GenreCollectionQuery` is a class representing a query for genre collections.
@@ -11,14 +12,15 @@ export class GenreCollectionQuery extends APIWrapper {
      *
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/query
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async genreCollection(): Promise<string> {
+    async genreCollection(options?: RequestOptions): Promise<string> {
         const query = `
       query {
         GenreCollection
       }
     `;
 
-        return await this.execute<string>(query, undefined, {});
+        return await this.execute<string>(query, undefined, { transportOptions: options });
     }
 }

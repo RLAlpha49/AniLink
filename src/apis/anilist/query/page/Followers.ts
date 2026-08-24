@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
+import type { RequestOptions } from "../../../../base/RequestHandler";
 
 import { type FollowersPageResponse } from "../../interfaces/responses/page/Followers";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
@@ -57,6 +58,24 @@ export interface FollowersVariables {
 }
 
 /**
+ * The variable type mappings for the `followers` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const FollowersMappings = {
+    page: "number",
+    perPage: "number",
+    userId: "number",
+    sort: UserSortMappings,
+    asHtml: "boolean",
+    animeStatLimit: "number",
+    mangaStatLimit: "number",
+    animeStatSort: UserStatisticSortMappings,
+    mangaStatSort: UserStatisticSortMappings,
+};
+
+/**
  * `FollowersQuery` is a class representing a query for followers.
  * It includes a method to get followers.
  * @see https://docs.anilist.co/reference/object/user
@@ -68,8 +87,12 @@ export class FollowersQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/user
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async followers(variables: FollowersVariables): Promise<FollowersPageResponse> {
+    async followers(
+        variables: FollowersVariables,
+        options?: RequestOptions
+    ): Promise<FollowersPageResponse> {
         const query = `
       query ($page: Int, $perPage: Int, $userId: Int!, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Page (page: $page, perPage: $perPage) {
@@ -94,17 +117,8 @@ export class FollowersQuery extends APIWrapper {
                     message: "The Page.followers query requires a userId.",
                 },
             ],
-            mappings: {
-                page: "number",
-                perPage: "number",
-                userId: "number",
-                sort: UserSortMappings,
-                asHtml: "boolean",
-                animeStatLimit: "number",
-                mangaStatLimit: "number",
-                animeStatSort: UserStatisticSortMappings,
-                mangaStatSort: UserStatisticSortMappings,
-            },
+            mappings: FollowersMappings,
+            transportOptions: options,
         });
     }
 }

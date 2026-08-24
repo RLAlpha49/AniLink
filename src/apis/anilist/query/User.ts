@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type UserResponse } from "../interfaces/responses/query/User";
 import {
     type UserSort,
@@ -66,6 +67,25 @@ export interface UserVariables {
 }
 
 /**
+ * The variable type mappings for the `user` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const UserMappings = {
+    id: "number",
+    name: "string",
+    isModerator: "boolean",
+    search: "string",
+    sort: UserSortMappings,
+    asHtml: "boolean",
+    animeStatLimit: "number",
+    mangaStatLimit: "number",
+    animeStatSort: UserStatisticSortMappings,
+    mangaStatSort: UserStatisticSortMappings,
+};
+
+/**
  * `UserQuery` is a class representing a query for user data.
  * It includes a method to send the user query and receive the response.
  * @see https://docs.anilist.co/reference/object/user
@@ -77,8 +97,9 @@ export class UserQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/user
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async user(variables: UserVariables): Promise<UserResponse> {
+    async user(variables: UserVariables, options?: RequestOptions): Promise<UserResponse> {
         const query = `
       query ($id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         User (id: $id, name: $name, isModerator: $isModerator, search: $search, sort: $sort) {
@@ -87,18 +108,8 @@ export class UserQuery extends APIWrapper {
       }
     `;
         return await this.execute<UserResponse>(query, variables, {
-            mappings: {
-                id: "number",
-                name: "string",
-                isModerator: "boolean",
-                search: "string",
-                sort: UserSortMappings,
-                asHtml: "boolean",
-                animeStatLimit: "number",
-                mangaStatLimit: "number",
-                animeStatSort: UserStatisticSortMappings,
-                mangaStatSort: UserStatisticSortMappings,
-            },
+            mappings: UserMappings,
+            transportOptions: options,
         });
     }
 }

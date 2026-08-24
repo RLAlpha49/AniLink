@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { ReviewSchema } from "../schemas/responses/query/Review";
 
@@ -45,6 +46,22 @@ export interface SaveReviewVariables {
 }
 
 /**
+ * The variable type mappings for the `saveReview` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const SaveReviewMappings = {
+    id: "number",
+    mediaId: "number",
+    body: "string",
+    summary: "string",
+    score: "number",
+    private: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `SaveReviewMutation` is a class representing a mutation to save a review.
  * It includes a method to save a review.
  * @see https://docs.anilist.co/reference/object/review
@@ -57,8 +74,12 @@ export class SaveReviewMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/object/review
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async saveReview(variables: SaveReviewVariables): Promise<ReviewResponse> {
+    async saveReview(
+        variables: SaveReviewVariables,
+        options?: RequestOptions
+    ): Promise<ReviewResponse> {
         const mutation = `
       mutation ($id: Int, $mediaId: Int, $body: String, $summary: String, $score: Int, $private: Boolean, $asHtml: Boolean) {
         SaveReview(id: $id, mediaId: $mediaId, body: $body, summary: $summary, score: $score, private: $private) {
@@ -74,16 +95,9 @@ export class SaveReviewMutation extends APIWrapper {
                     message: "The SaveReview mutation requires an id or a mediaId variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-                mediaId: "number",
-                body: "string",
-                summary: "string",
-                score: "number",
-                private: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: SaveReviewMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

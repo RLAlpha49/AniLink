@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type Activity } from "../interfaces/Activity";
 import { ListActivitySchema } from "../schemas/Activity";
 
@@ -25,6 +26,18 @@ export interface SaveListActivityVariables {
 }
 
 /**
+ * The variable type mappings for the `saveListActivity` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const SaveListActivityMappings = {
+    id: "number",
+    locked: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `SaveListActivityMutation` is a class representing a mutation to save a list activity.
  * It includes a method to save a list activity
  * @see https://docs.anilist.co/reference/union/activityunion
@@ -37,8 +50,12 @@ export class SaveListActivityMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/union/activityunion
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async saveListActivity(variables: SaveListActivityVariables): Promise<Activity> {
+    async saveListActivity(
+        variables: SaveListActivityVariables,
+        options?: RequestOptions
+    ): Promise<Activity> {
         const mutation = `
       mutation ($id: Int, $locked: Boolean, $asHtml: Boolean) {
         SaveListActivity(id: $id, locked:$locked)
@@ -53,12 +70,9 @@ export class SaveListActivityMutation extends APIWrapper {
                     message: "The SaveListActivity mutation requires an id variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-                locked: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: SaveListActivityMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

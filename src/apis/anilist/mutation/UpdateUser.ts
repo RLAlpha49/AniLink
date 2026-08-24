@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import {
     type UserStaffNameLanguage,
     UserStaffNameLanguageMapping,
@@ -322,6 +323,31 @@ export interface UpdateUserResponse {
 }
 
 /**
+ * The variable type mappings for the `updateUser` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const UpdateUserMappings = {
+    about: "string",
+    titleLanguage: UserTitleLanguageMapping,
+    displayAdultContent: "boolean",
+    airingNotifications: "boolean",
+    scoreFormat: ScoreFormatMapping,
+    rowOrder: "string",
+    profileColor: "string",
+    donatorBadge: "string",
+    notificationOptions: NotificationOptionsMapping,
+    timezone: "string",
+    activityMergeTime: "number",
+    animeListOptions: MediaListOptionsMapping,
+    mangaListOptions: MediaListOptionsMapping,
+    staffNameLanguage: UserStaffNameLanguageMapping,
+    restrictMessagesToFollowing: "boolean",
+    disabledListActivity: DisabledListActivityMapping,
+};
+
+/**
  * `UpdateUserMutation` is a class representing a mutation to update a user.
  * It includes a method to update a user.
  * @see https://docs.anilist.co/reference/object/user
@@ -334,8 +360,12 @@ export class UpdateUserMutation extends APIWrapper {
      * @returns A Promise that resolves to an object of type `UpdateUserResponse`. This object includes the updated user details
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/object/user
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async updateUser(variables: UpdateUserVariables): Promise<UpdateUserResponse> {
+    async updateUser(
+        variables: UpdateUserVariables,
+        options?: RequestOptions
+    ): Promise<UpdateUserResponse> {
         const mutation = `
       mutation ($about: String, $titleLanguage: UserTitleLanguage, $displayAdultContent: Boolean, $airingNotifications: Boolean, $scoreFormat: ScoreFormat, $rowOrder: String, $profileColor: String, $donatorBadge: String, $notificationOptions: [NotificationOptionInput], $timezone: String, $activityMergeTime: Int, $animeListOptions: MediaListOptionsInput, $mangaListOptions: MediaListOptionsInput, $staffNameLanguage: UserStaffNameLanguage, $restrictMessagesToFollowing: Boolean, $disabledListActivity: [ListActivityOptionInput]) {
         UpdateUser(about: $about, titleLanguage: $titleLanguage, displayAdultContent: $displayAdultContent, airingNotifications: $airingNotifications, scoreFormat: $scoreFormat, rowOrder: $rowOrder, profileColor: $profileColor, donatorBadge: $donatorBadge, notificationOptions: $notificationOptions, timezone: $timezone, activityMergeTime: $activityMergeTime, animeListOptions: $animeListOptions, mangaListOptions: $mangaListOptions, staffNameLanguage: $staffNameLanguage, restrictMessagesToFollowing: $restrictMessagesToFollowing, disabledListActivity: $disabledListActivity) {
@@ -392,25 +422,9 @@ export class UpdateUserMutation extends APIWrapper {
       }
     `;
         return await this.execute<UpdateUserResponse>(mutation, variables, {
-            mappings: {
-                about: "string",
-                titleLanguage: UserTitleLanguageMapping,
-                displayAdultContent: "boolean",
-                airingNotifications: "boolean",
-                scoreFormat: ScoreFormatMapping,
-                rowOrder: "string",
-                profileColor: "string",
-                donatorBadge: "string",
-                notificationOptions: NotificationOptionsMapping,
-                timezone: "string",
-                activityMergeTime: "number",
-                animeListOptions: MediaListOptionsMapping,
-                mangaListOptions: MediaListOptionsMapping,
-                staffNameLanguage: UserStaffNameLanguageMapping,
-                restrictMessagesToFollowing: "boolean",
-                disabledListActivity: DisabledListActivityMapping,
-            },
+            mappings: UpdateUserMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

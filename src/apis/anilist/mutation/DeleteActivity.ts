@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 
 /**
@@ -12,6 +13,16 @@ export interface DeleteActivityVariables {
      */
     id: number;
 }
+
+/**
+ * The variable type mappings for the `deleteActivity` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const DeleteActivityMappings = {
+    id: "number",
+};
 
 /**
  * `DeleteActivityMutation` is a class representing a mutation to delete a activity.
@@ -31,8 +42,12 @@ export class DeleteActivityMutation extends APIWrapper {
      * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the activity was deleted by this call and `false` when it was already absent.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/object/deleted
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async deleteActivity(variables: DeleteActivityVariables): Promise<DeleteResult> {
+    async deleteActivity(
+        variables: DeleteActivityVariables,
+        options?: RequestOptions
+    ): Promise<DeleteResult> {
         const mutation = `
       mutation ($id: Int) {
         DeleteActivity(id: $id) {
@@ -48,10 +63,9 @@ export class DeleteActivityMutation extends APIWrapper {
                     message: "The DeleteActivity mutation requires an id variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-            },
+            mappings: DeleteActivityMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

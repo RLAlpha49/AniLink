@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type NotificationResponse } from "../interfaces/responses/query/Notification";
 import { type NotificationType, NotificationTypeMappings } from "../types/Type";
 import { NotificationSchema } from "../schemas/responses/query/Notification";
@@ -31,6 +32,19 @@ export interface NotificationVariables {
 }
 
 /**
+ * The variable type mappings for the `notification` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const NotificationMappings = {
+    type: NotificationTypeMappings,
+    resetNotificationCount: "boolean",
+    type_in: NotificationTypeMappings,
+    asHtml: "boolean",
+};
+
+/**
  * `NotificationQuery` is a class representing a query for notification data.
  * It includes a method to send the notification query and receive the response.
  * @see https://docs.anilist.co/reference/union/notificationunion
@@ -42,8 +56,12 @@ export class NotificationQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/union/notificationunion
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async notification(variables: NotificationVariables): Promise<NotificationResponse> {
+    async notification(
+        variables: NotificationVariables,
+        options?: RequestOptions
+    ): Promise<NotificationResponse> {
         const query = `
       query ($type: NotificationType, $resetNotificationCount: Boolean, $type_in: [NotificationType], $asHtml: Boolean) {
         Notification (type: $type, resetNotificationCount: $resetNotificationCount, type_in: $type_in) {
@@ -52,13 +70,9 @@ export class NotificationQuery extends APIWrapper {
       }
     `;
         return await this.execute<NotificationResponse>(query, variables, {
-            mappings: {
-                type: NotificationTypeMappings,
-                resetNotificationCount: "boolean",
-                type_in: NotificationTypeMappings,
-                asHtml: "boolean",
-            },
+            mappings: NotificationMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

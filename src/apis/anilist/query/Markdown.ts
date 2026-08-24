@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 
 /**
  * `MarkdownVariables` is an interface representing the variables for the `MarkdownQuery`.
@@ -24,8 +25,9 @@ export class MarkdownQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/parsedmarkdown
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async markdown(variables: MarkdownVariables): Promise<string> {
+    async markdown(variables: MarkdownVariables, options?: RequestOptions): Promise<string> {
         const query = `
       query ($markdown: String!) {
         Markdown (markdown: $markdown) {
@@ -41,6 +43,7 @@ export class MarkdownQuery extends APIWrapper {
                     message: "The Markdown query requires a markdown variable.",
                 },
             ],
+            transportOptions: options,
         });
     }
 }

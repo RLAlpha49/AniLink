@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
+import type { RequestOptions } from "../../../../base/RequestHandler";
 
 import { type UsersPageResponse } from "../../interfaces/responses/page/Users";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
@@ -72,6 +73,27 @@ export interface UsersVariables {
 }
 
 /**
+ * The variable type mappings for the `users` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const UsersMappings = {
+    page: "number",
+    perPage: "number",
+    id: "number",
+    name: "string",
+    isModerator: "boolean",
+    search: "string",
+    sort: UserSortMappings,
+    asHtml: "boolean",
+    animeStatLimit: "number",
+    mangaStatLimit: "number",
+    animeStatSort: UserStatisticSortMappings,
+    mangaStatSort: UserStatisticSortMappings,
+};
+
+/**
  * `UsersQuery` is a class representing a query for users.
  * It includes a method to get users.
  * @see https://docs.anilist.co/reference/object/user
@@ -83,8 +105,9 @@ export class UsersQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/user
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async users(variables: UsersVariables): Promise<UsersPageResponse> {
+    async users(variables: UsersVariables, options?: RequestOptions): Promise<UsersPageResponse> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Page (page: $page, perPage: $perPage) {
@@ -102,20 +125,8 @@ export class UsersQuery extends APIWrapper {
       }
     `;
         return await this.execute<UsersPageResponse>(query, variables, {
-            mappings: {
-                page: "number",
-                perPage: "number",
-                id: "number",
-                name: "string",
-                isModerator: "boolean",
-                search: "string",
-                sort: UserSortMappings,
-                asHtml: "boolean",
-                animeStatLimit: "number",
-                mangaStatLimit: "number",
-                animeStatSort: UserStatisticSortMappings,
-                mangaStatSort: UserStatisticSortMappings,
-            },
+            mappings: UsersMappings,
+            transportOptions: options,
         });
     }
 }

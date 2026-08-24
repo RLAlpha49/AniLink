@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type StaffResponse } from "../interfaces/responses/query/Staff";
 import {
     type CharacterSort,
@@ -119,6 +120,35 @@ export interface StaffVariables {
 }
 
 /**
+ * The variable type mappings for the `staff` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const StaffMappings = {
+    id: "number",
+    isBirthday: "boolean",
+    search: "String",
+    id_not: "number",
+    id_in: "number[]",
+    id_not_in: "number[]",
+    sort: StaffSortMappings,
+    asHtml: "boolean",
+    staffMediaSort: MediaSortMappings,
+    staffMediaType: MediaTypeMappings,
+    staffMediaOnList: "boolean",
+    staffMediaPage: "number",
+    staffMediaPerPage: "number",
+    charactersSort: CharacterSortMappings,
+    charactersPage: "number",
+    charactersPerPage: "number",
+    characterMediaSort: MediaSortMappings,
+    characterMediaOnList: "boolean",
+    characterMediaPage: "number",
+    characterMediaPerPage: "number",
+};
+
+/**
  * `StaffQuery` is a class representing a query for staff data.
  * It includes a method to send the staff query and receive the response.
  * @see https://docs.anilist.co/reference/object/staff
@@ -130,8 +160,9 @@ export class StaffQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/staff
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async staff(variables: StaffVariables): Promise<StaffResponse> {
+    async staff(variables: StaffVariables, options?: RequestOptions): Promise<StaffResponse> {
         const query = `
       query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StaffSort], $asHtml: Boolean, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Staff (id: $id, isBirthday: $isBirthday, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {
@@ -140,28 +171,8 @@ export class StaffQuery extends APIWrapper {
       }
     `;
         return await this.execute<StaffResponse>(query, variables, {
-            mappings: {
-                id: "number",
-                isBirthday: "boolean",
-                search: "String",
-                id_not: "number",
-                id_in: "number[]",
-                id_not_in: "number[]",
-                sort: StaffSortMappings,
-                asHtml: "boolean",
-                staffMediaSort: MediaSortMappings,
-                staffMediaType: MediaTypeMappings,
-                staffMediaOnList: "boolean",
-                staffMediaPage: "number",
-                staffMediaPerPage: "number",
-                charactersSort: CharacterSortMappings,
-                charactersPage: "number",
-                charactersPerPage: "number",
-                characterMediaSort: MediaSortMappings,
-                characterMediaOnList: "boolean",
-                characterMediaPage: "number",
-                characterMediaPerPage: "number",
-            },
+            mappings: StaffMappings,
+            transportOptions: options,
         });
     }
 }

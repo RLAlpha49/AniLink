@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { AniLinkValidationError } from "../../../base/AniLinkError";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
@@ -60,6 +61,25 @@ export interface UpdateFavouriteOrderVariables {
 }
 
 /**
+ * The variable type mappings for the `updateFavouriteOrder` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const UpdateFavouriteOrderMappings = {
+    animeIds: "number[]",
+    mangaIds: "number[]",
+    characterIds: "number[]",
+    staffIds: "number[]",
+    studioIds: "number[]",
+    animeOrder: "number[]",
+    mangaOrder: "number[]",
+    characterOrder: "number[]",
+    staffOrder: "number[]",
+    studioOrder: "number[]",
+};
+
+/**
  * `UpdateFavouriteOrderMutation` is a class that contains the method to update the order of the favourites.
  * It includes a method to update the order of the favourites.
  * @see https://docs.anilist.co/reference/object/favourites
@@ -72,8 +92,12 @@ export class UpdateFavouriteOrderMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if authentication is missing, validation fails, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/favourites
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async updateFavouriteOrder(variables: UpdateFavouriteOrderVariables): Promise<Favourites> {
+    async updateFavouriteOrder(
+        variables: UpdateFavouriteOrderVariables,
+        options?: RequestOptions
+    ): Promise<Favourites> {
         if (
             (!variables.animeIds && variables.animeOrder) ||
             (!variables.mangaIds && variables.mangaOrder) ||
@@ -93,19 +117,9 @@ export class UpdateFavouriteOrderMutation extends APIWrapper {
       }
     `;
         return await this.execute<Favourites>(mutation, variables, {
-            mappings: {
-                animeIds: "number[]",
-                mangaIds: "number[]",
-                characterIds: "number[]",
-                staffIds: "number[]",
-                studioIds: "number[]",
-                animeOrder: "number[]",
-                mangaOrder: "number[]",
-                characterOrder: "number[]",
-                staffOrder: "number[]",
-                studioOrder: "number[]",
-            },
+            mappings: UpdateFavouriteOrderMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

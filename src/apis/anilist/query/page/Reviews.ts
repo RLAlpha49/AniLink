@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
+import type { RequestOptions } from "../../../../base/RequestHandler";
 
 import { type ReviewsPageResponse } from "../../interfaces/responses/page/Reviews";
 import { ReviewSortMappings } from "../../types/Sort";
@@ -52,6 +53,23 @@ export interface ReviewsVariables {
 }
 
 /**
+ * The variable type mappings for the `reviews` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ReviewsMappings = {
+    page: "number",
+    perPage: "number",
+    id: "number",
+    mediaId: "number",
+    userId: "number",
+    mediaType: "string",
+    sort: ReviewSortMappings,
+    asHtml: "boolean",
+};
+
+/**
  * `ReviewsQuery` is a class representing a query for reviews.
  * It includes a method to get reviews.
  * @see https://docs.anilist.co/reference/object/review
@@ -63,8 +81,12 @@ export class ReviewsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/review
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async reviews(variables: ReviewsVariables): Promise<ReviewsPageResponse> {
+    async reviews(
+        variables: ReviewsVariables,
+        options?: RequestOptions
+    ): Promise<ReviewsPageResponse> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $mediaId: Int, $userId: Int, $mediaType: MediaType, $sort: [ReviewSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -82,16 +104,8 @@ export class ReviewsQuery extends APIWrapper {
       }
     `;
         return await this.execute<ReviewsPageResponse>(query, variables, {
-            mappings: {
-                page: "number",
-                perPage: "number",
-                id: "number",
-                mediaId: "number",
-                userId: "number",
-                mediaType: "string",
-                sort: ReviewSortMappings,
-                asHtml: "boolean",
-            },
+            mappings: ReviewsMappings,
+            transportOptions: options,
         });
     }
 }

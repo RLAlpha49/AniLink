@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
+import type { RequestOptions } from "../../../../base/RequestHandler";
 
 import { type AiringSchedulesPageResponse } from "../../interfaces/responses/page/AiringSchedules";
 import { AiringSortMappings } from "../../types/Sort";
@@ -122,6 +123,37 @@ export interface AiringSchedulesVariables {
 }
 
 /**
+ * The variable type mappings for the `airingSchedules` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const AiringSchedulesMappings = {
+    page: "number",
+    perPage: "number",
+    id: "number",
+    mediaId: "number",
+    episode: "number",
+    airingAt: "number",
+    notYetAired: "boolean",
+    id_not: "number",
+    id_in: "number[]",
+    id_not_in: "number[]",
+    mediaId_not: "number",
+    mediaId_in: "number[]",
+    mediaId_not_in: "number[]",
+    episode_not: "number",
+    episode_in: "number[]",
+    episode_not_in: "number[]",
+    episode_greater: "number",
+    episode_lesser: "number",
+    airingAt_greater: "number",
+    airingAt_lesser: "number",
+    sort: AiringSortMappings,
+    asHtml: "boolean",
+};
+
+/**
  * `AiringSchedulesQuery` is a class representing a query for airing schedules.
  * It includes a method to get airing schedules.
  * @see https://docs.anilist.co/reference/object/airingschedule
@@ -133,9 +165,11 @@ export class AiringSchedulesQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/airingschedule
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
     async airingSchedules(
-        variables: AiringSchedulesVariables
+        variables: AiringSchedulesVariables,
+        options?: RequestOptions
     ): Promise<AiringSchedulesPageResponse> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $mediaId: Int, $episode: Int, $airingAt: Int, $notYetAired: Boolean, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $episode_not: Int, $episode_in: [Int], $episode_not_in: [Int], $episode_greater: Int, $episode_lesser: Int, $airingAt_greater: Int, $airingAt_lesser: Int, $sort: [AiringSort], $asHtml: Boolean) {
@@ -154,30 +188,8 @@ export class AiringSchedulesQuery extends APIWrapper {
       }
     `;
         return await this.execute<AiringSchedulesPageResponse>(query, variables, {
-            mappings: {
-                page: "number",
-                perPage: "number",
-                id: "number",
-                mediaId: "number",
-                episode: "number",
-                airingAt: "number",
-                notYetAired: "boolean",
-                id_not: "number",
-                id_in: "number[]",
-                id_not_in: "number[]",
-                mediaId_not: "number",
-                mediaId_in: "number[]",
-                mediaId_not_in: "number[]",
-                episode_not: "number",
-                episode_in: "number[]",
-                episode_not_in: "number[]",
-                episode_greater: "number",
-                episode_lesser: "number",
-                airingAt_greater: "number",
-                airingAt_lesser: "number",
-                sort: AiringSortMappings,
-                asHtml: "boolean",
-            },
+            mappings: AiringSchedulesMappings,
+            transportOptions: options,
         });
     }
 }

@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { type ThreadSort, ThreadSortMappings } from "../types/Sort";
 import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
@@ -36,6 +37,20 @@ export interface ThreadCommentVariables {
 }
 
 /**
+ * The variable type mappings for the `threadComment` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ThreadCommentMappings = {
+    id: "number",
+    threadId: "number",
+    userId: "number",
+    sort: ThreadSortMappings,
+    asHtml: "boolean",
+};
+
+/**
  * `ThreadCommentQuery` is a class representing a query for thread comment data.
  * It includes a method to send the thread comment query and receive the response.
  * @see https://docs.anilist.co/reference/object/threadcomment
@@ -47,8 +62,12 @@ export class ThreadCommentQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/threadcomment
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async threadComment(variables: ThreadCommentVariables): Promise<ThreadCommentResponse> {
+    async threadComment(
+        variables: ThreadCommentVariables,
+        options?: RequestOptions
+    ): Promise<ThreadCommentResponse> {
         const query = `
       query ($id: Int, $threadId: Int, $userId: Int, $sort: [ThreadCommentSort], $asHtml: Boolean) {
         ThreadComment (id: $id, threadId: $threadId, userId: $userId, sort: $sort) {
@@ -64,13 +83,8 @@ export class ThreadCommentQuery extends APIWrapper {
                     message: "The ThreadComment query requires at least one filter variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-                threadId: "number",
-                userId: "number",
-                sort: ThreadSortMappings,
-                asHtml: "boolean",
-            },
+            mappings: ThreadCommentMappings,
+            transportOptions: options,
         });
     }
 }

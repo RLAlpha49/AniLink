@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type Activity } from "../interfaces/Activity";
 import { TextActivitySchema } from "../schemas/Activity";
 
@@ -30,6 +31,19 @@ export interface SaveTextActivityVariables {
 }
 
 /**
+ * The variable type mappings for the `saveTextActivity` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const SaveTextActivityMappings = {
+    id: "number",
+    text: "string",
+    locked: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `SaveTextActivityMutation` is a class representing a mutation to save a text activity.
  * It includes a method to save a text activity
  * @see https://docs.anilist.co/reference/union/activityunion
@@ -42,8 +56,12 @@ export class SaveTextActivityMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/union/activityunion
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async saveTextActivity(variables: SaveTextActivityVariables): Promise<Activity> {
+    async saveTextActivity(
+        variables: SaveTextActivityVariables,
+        options?: RequestOptions
+    ): Promise<Activity> {
         const mutation = `
       mutation ($id: Int, $text: String, $locked: Boolean, $asHtml: Boolean) {
         SaveTextActivity(id: $id, text: $text, locked:$locked) {
@@ -59,13 +77,9 @@ export class SaveTextActivityMutation extends APIWrapper {
                     message: "The SaveTextActivity mutation requires an id or a text variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-                text: "string",
-                locked: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: SaveTextActivityMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

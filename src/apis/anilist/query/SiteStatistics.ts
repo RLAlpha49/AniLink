@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type SiteStatisticsResponse } from "../interfaces/responses/query/SiteStatistics";
 import { type SiteTrendSort, SiteTrendSortMappings } from "../types/Sort";
 import { SiteStatisticsSchema } from "../schemas/responses/query/SiteStatistics";
@@ -116,6 +117,36 @@ export interface SiteStatisticsVariables {
 }
 
 /**
+ * The variable type mappings for the `siteStatistics` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const SiteStatisticsMappings = {
+    usersSort: SiteTrendSortMappings,
+    usersPage: "number",
+    usersPerPage: "number",
+    animeSort: SiteTrendSortMappings,
+    animePage: "number",
+    animePerPage: "number",
+    mangaSort: SiteTrendSortMappings,
+    mangaPage: "number",
+    mangaPerPage: "number",
+    charactersSort: SiteTrendSortMappings,
+    charactersPage: "number",
+    charactersPerPage: "number",
+    staffSort: SiteTrendSortMappings,
+    staffPage: "number",
+    staffPerPage: "number",
+    studiosSort: SiteTrendSortMappings,
+    studiosPage: "number",
+    studiosPerPage: "number",
+    reviewsSort: SiteTrendSortMappings,
+    reviewsPage: "number",
+    reviewsPerPage: "number",
+};
+
+/**
  * `SiteStatisticsQuery` is a class representing a query for site statistics data.
  * It includes a method to send the site statistics query and receive the response.
  * @see https://docs.anilist.co/reference/object/sitestatistics
@@ -127,8 +158,12 @@ export class SiteStatisticsQuery extends APIWrapper {
      * @param variables - The variables for the query. If not provided, an empty object will be used.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/sitestatistics
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async siteStatistics(variables: SiteStatisticsVariables = {}): Promise<SiteStatisticsResponse> {
+    async siteStatistics(
+        variables: SiteStatisticsVariables = {},
+        options?: RequestOptions
+    ): Promise<SiteStatisticsResponse> {
         const query = `
       query ($usersSort: [SiteTrendSort], $usersPage: Int, $usersPerPage: Int, $animeSort: [SiteTrendSort], $animePage: Int, $animePerPage: Int, $mangaSort: [SiteTrendSort], $mangaPage: Int, $mangaPerPage: Int, $charactersSort: [SiteTrendSort], $charactersPage: Int, $charactersPerPage: Int, $staffSort: [SiteTrendSort], $staffPage: Int, $staffPerPage: Int, $studiosSort: [SiteTrendSort], $studiosPage: Int, $studiosPerPage: Int, $reviewsSort: [SiteTrendSort], $reviewsPage: Int, $reviewsPerPage: Int) {
         SiteStatistics {
@@ -137,29 +172,8 @@ export class SiteStatisticsQuery extends APIWrapper {
       }
     `;
         return await this.execute<SiteStatisticsResponse>(query, variables, {
-            mappings: {
-                usersSort: SiteTrendSortMappings,
-                usersPage: "number",
-                usersPerPage: "number",
-                animeSort: SiteTrendSortMappings,
-                animePage: "number",
-                animePerPage: "number",
-                mangaSort: SiteTrendSortMappings,
-                mangaPage: "number",
-                mangaPerPage: "number",
-                charactersSort: SiteTrendSortMappings,
-                charactersPage: "number",
-                charactersPerPage: "number",
-                staffSort: SiteTrendSortMappings,
-                staffPage: "number",
-                staffPerPage: "number",
-                studiosSort: SiteTrendSortMappings,
-                studiosPage: "number",
-                studiosPerPage: "number",
-                reviewsSort: SiteTrendSortMappings,
-                reviewsPage: "number",
-                reviewsPerPage: "number",
-            },
+            mappings: SiteStatisticsMappings,
+            transportOptions: options,
         });
     }
 }

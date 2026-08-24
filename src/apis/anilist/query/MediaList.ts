@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
@@ -155,6 +156,43 @@ export interface MediaListVariables {
 }
 
 /**
+ * The variable type mappings for the `mediaList` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const MediaListMappings = {
+    id: "number",
+    userId: "number",
+    userName: "string",
+    type: MediaTypeMappings,
+    status: MediaListStatusMappings,
+    mediaId: "number",
+    isFollowing: "boolean",
+    notes: "string",
+    startedAt: FuzzyDateMappings,
+    completedAt: FuzzyDateMappings,
+    compareWithAuthList: "boolean",
+    userId_in: "number[]",
+    status_in: MediaListStatusMappings,
+    status_not_in: MediaListStatusMappings,
+    status_not: MediaListStatusMappings,
+    mediaId_in: "number[]",
+    mediaId_not_in: "number[]",
+    notes_like: "string",
+    startedAt_greater: FuzzyDateMappings,
+    startedAt_lesser: FuzzyDateMappings,
+    startedAt_like: "string",
+    completedAt_greater: FuzzyDateMappings,
+    completedAt_lesser: FuzzyDateMappings,
+    completedAt_like: "string",
+    sort: MediaListSortMappings,
+    scoreFormat: ScoreFormatMapping,
+    asArray: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `MediaListQuery` is a class representing a query for media list data.
  * It includes a method to send the media list query and receive the response.
  * @see https://docs.anilist.co/reference/object/medialist
@@ -166,8 +204,12 @@ export class MediaListQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/medialist
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async mediaList(variables: MediaListVariables): Promise<MediaListResponse> {
+    async mediaList(
+        variables: MediaListVariables,
+        options?: RequestOptions
+    ): Promise<MediaListResponse> {
         const query = `
             query ($id: Int, $userId: Int, $userName: String, $type: MediaType, $status: MediaListStatus, $mediaId: Int, $isFollowing: Boolean, $notes: String, $startedAt: FuzzyDateInt, $completedAt: FuzzyDateInt, $compareWithAuthList: Boolean, $userId_in: [Int], $status_in: [MediaListStatus], $status_not_in: [MediaListStatus], $status_not: MediaListStatus, $mediaId_in: [Int], $mediaId_not_in: [Int], $notes_like: String, $startedAt_greater: FuzzyDateInt, $startedAt_lesser: FuzzyDateInt, $startedAt_like: String, $completedAt_greater: FuzzyDateInt, $completedAt_lesser: FuzzyDateInt, $completedAt_like: String, $sort: [MediaListSort], $scoreFormat: ScoreFormat, $asArray: Boolean, $asHtml: Boolean) {
                 MediaList (id: $id, userId: $userId, userName: $userName, type: $type, status: $status, mediaId: $mediaId, isFollowing: $isFollowing, notes: $notes, startedAt: $startedAt, completedAt: $completedAt, compareWithAuthList: $compareWithAuthList, userId_in: $userId_in, status_in: $status_in, status_not_in: $status_not_in, status_not: $status_not, mediaId_in: $mediaId_in, mediaId_not_in: $mediaId_not_in, notes_like: $notes_like, startedAt_greater: $startedAt_greater, startedAt_lesser: $startedAt_lesser, startedAt_like: $startedAt_like, completedAt_greater: $completedAt_greater, completedAt_lesser: $completedAt_lesser, completedAt_like: $completedAt_like, sort: $sort) {
@@ -176,36 +218,8 @@ export class MediaListQuery extends APIWrapper {
       }
     `;
         return await this.execute<MediaListResponse>(query, variables, {
-            mappings: {
-                id: "number",
-                userId: "number",
-                userName: "string",
-                type: MediaTypeMappings,
-                status: MediaListStatusMappings,
-                mediaId: "number",
-                isFollowing: "boolean",
-                notes: "string",
-                startedAt: FuzzyDateMappings,
-                completedAt: FuzzyDateMappings,
-                compareWithAuthList: "boolean",
-                userId_in: "number[]",
-                status_in: MediaListStatusMappings,
-                status_not_in: MediaListStatusMappings,
-                status_not: MediaListStatusMappings,
-                mediaId_in: "number[]",
-                mediaId_not_in: "number[]",
-                notes_like: "string",
-                startedAt_greater: FuzzyDateMappings,
-                startedAt_lesser: FuzzyDateMappings,
-                startedAt_like: "string",
-                completedAt_greater: FuzzyDateMappings,
-                completedAt_lesser: FuzzyDateMappings,
-                completedAt_like: "string",
-                sort: MediaListSortMappings,
-                scoreFormat: ScoreFormatMapping,
-                asArray: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: MediaListMappings,
+            transportOptions: options,
         });
     }
 }

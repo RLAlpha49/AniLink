@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { type ReviewRating, ReviewRatingMappings } from "../types/ReviewRating";
 import { ReviewSchema } from "../schemas/responses/query/Review";
@@ -21,6 +22,17 @@ export interface RateReviewVariables {
 }
 
 /**
+ * The variable type mappings for the `rateReview` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const RateReviewMappings = {
+    reviewId: "number",
+    rating: ReviewRatingMappings,
+};
+
+/**
  * `RateReviewMutation` is a class representing a mutation to rate a review.
  * It includes a method to send the rate review mutation and receive the response.
  * @see https://docs.anilist.co/reference/object/review
@@ -33,8 +45,12 @@ export class RateReviewMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if authentication is missing, validation fails, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/review
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async rateReview(variables: RateReviewVariables): Promise<ReviewResponse> {
+    async rateReview(
+        variables: RateReviewVariables,
+        options?: RequestOptions
+    ): Promise<ReviewResponse> {
         const mutation = `
       mutation ($reviewId: Int, $rating: ReviewRating) {
         RateReview (reviewId: $reviewId, rating: $rating) {
@@ -50,11 +66,9 @@ export class RateReviewMutation extends APIWrapper {
                     message: "The RateReview mutation requires reviewId and rating variables.",
                 },
             ],
-            mappings: {
-                reviewId: "number",
-                rating: ReviewRatingMappings,
-            },
+            mappings: RateReviewMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

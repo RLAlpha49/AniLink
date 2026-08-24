@@ -4,6 +4,10 @@
  */
 import { type ActivityReply, type Activity } from "./interfaces/Activity";
 import { type Likeable } from "./interfaces/Likeable";
+import type { RequestOptions } from "../../base/RequestHandler";
+import { type MediaTagCollectionVariables } from "./query/MediaTagCollection";
+import { type SiteStatisticsVariables } from "./query/SiteStatistics";
+import { type ExternalLinkSourceCollectionVariables } from "./query/ExternalLinkSourceCollection";
 import { type ActivityVariables } from "./query/Activity";
 import { type ActivityReplyVariables } from "./query/ActivityReply";
 import { type ActivityRepliesVariables } from "./query/page/ActivityReplies";
@@ -151,7 +155,11 @@ export type AniListApi = {
      * const response = await aniLink.anilist.custom(mutation, variables);
      * ```
      */
-    custom: <T = unknown>(query: string, variables?: Record<string, unknown>) => Promise<T>;
+    custom: <T = unknown>(
+        query: string,
+        variables?: Record<string, unknown>,
+        options?: RequestOptions
+    ) => Promise<T>;
 
     /**
      * Query methods for fetching data from the Anilist API.
@@ -196,8 +204,9 @@ export type AniListApi = {
          * await aniLink.anilist.query.user({id: 542244, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/user
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        user: (variables: UserVariables) => Promise<UserResponse>;
+        user: (variables: UserVariables, options?: RequestOptions) => Promise<UserResponse>;
 
         /**
          * Fetches media data from the Anilist API.
@@ -209,8 +218,9 @@ export type AniListApi = {
          * await aniLink.anilist.query.media({id: 1, type: 'ANIME'});
          * ```
          * @see https://docs.anilist.co/reference/object/media
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        media: (variables: MediaVariables) => Promise<MediaResponse>;
+        media: (variables: MediaVariables, options?: RequestOptions) => Promise<MediaResponse>;
 
         /**
          * Fetches media trend data from the Anilist API.
@@ -222,8 +232,12 @@ export type AniListApi = {
          * await aniLink.anilist.query.mediaTrend({mediaId: 1, type: 'ANIME'});
          * ```
          * @see https://docs.anilist.co/reference/object/mediatrend
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        mediaTrend: (variables: MediaTrendVariables) => Promise<MediaTrendResponse>;
+        mediaTrend: (
+            variables: MediaTrendVariables,
+            options?: RequestOptions
+        ) => Promise<MediaTrendResponse>;
 
         /**
          * Fetches airing schedule data from the Anilist API.
@@ -236,8 +250,12 @@ export type AniListApi = {
          * ```
          * Must be quering an airing anime. Returns error if not.
          * @see https://docs.anilist.co/reference/object/airingschedule
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        airingSchedule: (variables: AiringScheduleVariables) => Promise<AiringScheduleResponse>;
+        airingSchedule: (
+            variables: AiringScheduleVariables,
+            options?: RequestOptions
+        ) => Promise<AiringScheduleResponse>;
 
         /**
          * Fetches character data from the Anilist API.
@@ -257,8 +275,12 @@ export type AniListApi = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/character
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        character: (variables: CharacterVariables) => Promise<CharacterResponse>;
+        character: (
+            variables: CharacterVariables,
+            options?: RequestOptions
+        ) => Promise<CharacterResponse>;
 
         /**
          * Fetches staff data from the Anilist API.
@@ -285,8 +307,9 @@ export type AniListApi = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/staff
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        staff: (variables: StaffVariables) => Promise<StaffResponse>;
+        staff: (variables: StaffVariables, options?: RequestOptions) => Promise<StaffResponse>;
 
         /**
          * Fetches media list data from the Anilist API.
@@ -298,8 +321,12 @@ export type AniListApi = {
          * await aniLink.anilist.query.mediaList({userId: 542244});
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        mediaList: (variables: MediaListVariables) => Promise<MediaListResponse>;
+        mediaList: (
+            variables: MediaListVariables,
+            options?: RequestOptions
+        ) => Promise<MediaListResponse>;
 
         /**
          * Fetches media list collection data from the Anilist API.
@@ -317,9 +344,11 @@ export type AniListApi = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/medialistcollection
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         mediaListCollection: (
-            variables: MediaListCollectionVariables
+            variables: MediaListCollectionVariables,
+            options?: RequestOptions
         ) => Promise<MediaListCollectionResponse>;
 
         /**
@@ -331,8 +360,9 @@ export type AniListApi = {
          * await aniLink.anilist.query.genreCollection()
          * ```
          * @see https://docs.anilist.co/reference/query
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        genreCollection: () => Promise<string>;
+        genreCollection: (options?: RequestOptions) => Promise<string>;
 
         /**
          * Fetches media tag collection data from the Anilist API.
@@ -343,8 +373,12 @@ export type AniListApi = {
          * await aniLink.anilist.query.mediaTagCollection()
          * ```
          * @see https://docs.anilist.co/reference/object/mediatag
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        mediaTagCollection: () => Promise<MediaTagCollectionResponse>;
+        mediaTagCollection: (
+            variables?: MediaTagCollectionVariables,
+            options?: RequestOptions
+        ) => Promise<MediaTagCollectionResponse>;
 
         /**
          * Fetches viewer data from the Anilist API.
@@ -357,8 +391,9 @@ export type AniListApi = {
          * ```
          * Must be authenticated.
          * @see https://docs.anilist.co/reference/object/user
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        viewer: (variables: UserVariables) => Promise<UserResponse>;
+        viewer: (variables: UserVariables, options?: RequestOptions) => Promise<UserResponse>;
 
         /**
          * Fetches notification data from the Anilist API.
@@ -371,8 +406,12 @@ export type AniListApi = {
          * ```
          * Must be authenticated.
          * @see https://docs.anilist.co/reference/union/notificationunion
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        notification: (variables: NotificationVariables) => Promise<NotificationResponse>;
+        notification: (
+            variables: NotificationVariables,
+            options?: RequestOptions
+        ) => Promise<NotificationResponse>;
 
         /**
          * Fetches studio data from the Anilist API.
@@ -384,8 +423,9 @@ export type AniListApi = {
          * await aniLink.anilist.query.studio({id: 561, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/studio
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        studio: (variables: StudioVariables) => Promise<StudioResponse>;
+        studio: (variables: StudioVariables, options?: RequestOptions) => Promise<StudioResponse>;
 
         /**
          * Fetches review data from the Anilist API.
@@ -397,8 +437,9 @@ export type AniListApi = {
          * await aniLink.anilist.query.review({id: 8008, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/review
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        review: (variables: ReviewVariables) => Promise<ReviewResponse>;
+        review: (variables: ReviewVariables, options?: RequestOptions) => Promise<ReviewResponse>;
 
         /**
          * Fetches activity data from the Anilist API.
@@ -410,8 +451,9 @@ export type AniListApi = {
          * await aniLink.anilist.query.activity({id: 723235883, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        activity: (variables: ActivityVariables) => Promise<Activity>;
+        activity: (variables: ActivityVariables, options?: RequestOptions) => Promise<Activity>;
 
         /**
          * Fetches activity reply data from the Anilist API.
@@ -423,8 +465,12 @@ export type AniListApi = {
          * await aniLink.anilist.query.activityReply({id: 12191046, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/activityreply
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        activityReply: (variables: ActivityReplyVariables) => Promise<ActivityReply>;
+        activityReply: (
+            variables: ActivityReplyVariables,
+            options?: RequestOptions
+        ) => Promise<ActivityReply>;
 
         /**
          * Fetches following data from the Anilist API.
@@ -436,8 +482,12 @@ export type AniListApi = {
          * await aniLink.anilist.query.following({userId: 542244});
          * ```
          * @see https://docs.anilist.co/reference/object/user
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        following: (variables: FollowingVariables) => Promise<UserResponse>;
+        following: (
+            variables: FollowingVariables,
+            options?: RequestOptions
+        ) => Promise<UserResponse>;
 
         /**
          * Fetches follower data from the Anilist API.
@@ -449,8 +499,9 @@ export type AniListApi = {
          * await aniLink.anilist.query.follower({userId: 542244});
          * ```
          * @see https://docs.anilist.co/reference/object/user
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        follower: (variables: FollowerVariables) => Promise<UserResponse>;
+        follower: (variables: FollowerVariables, options?: RequestOptions) => Promise<UserResponse>;
 
         /**
          * Fetches thread data from the Anilist API.
@@ -462,8 +513,9 @@ export type AniListApi = {
          * await aniLink.anilist.query.thread({id: 71881, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/thread
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        thread: (variables: ThreadVariables) => Promise<ThreadResponse>;
+        thread: (variables: ThreadVariables, options?: RequestOptions) => Promise<ThreadResponse>;
 
         /**
          * Fetches thread comment data from the Anilist API.
@@ -475,8 +527,12 @@ export type AniListApi = {
          * await aniLink.anilist.query.threadComment({id: 2555166, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/threadcomment
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        threadComment: (variables: ThreadCommentVariables) => Promise<ThreadCommentResponse>;
+        threadComment: (
+            variables: ThreadCommentVariables,
+            options?: RequestOptions
+        ) => Promise<ThreadCommentResponse>;
 
         /**
          * Fetches recommendation data from the Anilist API.
@@ -488,8 +544,12 @@ export type AniListApi = {
          * await aniLink.anilist.query.recommendation({mediaId: 156822, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/recommendation
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        recommendation: (variables: RecommendationVariables) => Promise<RecommendationResponse>;
+        recommendation: (
+            variables: RecommendationVariables,
+            options?: RequestOptions
+        ) => Promise<RecommendationResponse>;
 
         /**
          * Fetches markdown data from the Anilist API.
@@ -501,8 +561,9 @@ export type AniListApi = {
          * await aniLink.anilist.query.markdown({markdown: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/object/parsedmarkdown
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        markdown: (variables: MarkdownVariables) => Promise<string>;
+        markdown: (variables: MarkdownVariables, options?: RequestOptions) => Promise<string>;
 
         /**
          * Fetches aniChart user data from the Anilist API.
@@ -514,8 +575,9 @@ export type AniListApi = {
          * ```
          * Must be authenticated.
          * @see https://docs.anilist.co/reference/object/anichartuser
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        aniChartUser: () => Promise<AniChartUserResponse>;
+        aniChartUser: (options?: RequestOptions) => Promise<AniChartUserResponse>;
 
         /**
          * Fetches site statistics data from the Anilist API.
@@ -526,8 +588,12 @@ export type AniListApi = {
          * await aniLink.anilist.query.siteStatistics();
          * ```
          * @see https://docs.anilist.co/reference/object/sitestatistics
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        siteStatistics: () => Promise<SiteStatisticsResponse>;
+        siteStatistics: (
+            variables?: SiteStatisticsVariables,
+            options?: RequestOptions
+        ) => Promise<SiteStatisticsResponse>;
 
         /**
          * Fetches external link source collection data from the Anilist API.
@@ -538,8 +604,12 @@ export type AniListApi = {
          * await aniLink.anilist.query.externalLinkSourceCollection();
          * ```
          * @see https://docs.anilist.co/reference/query
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        externalLinkSourceCollection: () => Promise<ExternalLinkSourceCollectionResponse>;
+        externalLinkSourceCollection: (
+            variables?: ExternalLinkSourceCollectionVariables,
+            options?: RequestOptions
+        ) => Promise<ExternalLinkSourceCollectionResponse>;
 
         /**
          * Fetches pages of data from the Anilist API.
@@ -577,8 +647,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.users({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/user
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            users: (variables: UsersVariables) => Promise<UsersPageResponse>;
+            users: (
+                variables: UsersVariables,
+                options?: RequestOptions
+            ) => Promise<UsersPageResponse>;
 
             /**
              * Fetches medias data from the Anilist API.
@@ -590,8 +664,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.medias({page: 1, perPage: 10, type: 'ANIME'});
              * ```
              * @see https://docs.anilist.co/reference/object/media
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            medias: (variables: MediasVariables) => Promise<MediasPageResponse>;
+            medias: (
+                variables: MediasVariables,
+                options?: RequestOptions
+            ) => Promise<MediasPageResponse>;
 
             /**
              * Fetches characters data from the Anilist API.
@@ -603,8 +681,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.characters({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/character
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            characters: (variables: CharactersVariables) => Promise<CharactersPageResponse>;
+            characters: (
+                variables: CharactersVariables,
+                options?: RequestOptions
+            ) => Promise<CharactersPageResponse>;
 
             /**
              * Fetches staffs data from the Anilist API.
@@ -616,8 +698,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.staffs({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/staff
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            staffs: (variables: StaffsVariables) => Promise<StaffsPageResponse>;
+            staffs: (
+                variables: StaffsVariables,
+                options?: RequestOptions
+            ) => Promise<StaffsPageResponse>;
 
             /**
              * Fetches studios data from the Anilist API.
@@ -629,8 +715,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.studios({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/studio
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            studios: (variables: StudiosVariables) => Promise<StudiosPageResponse>;
+            studios: (
+                variables: StudiosVariables,
+                options?: RequestOptions
+            ) => Promise<StudiosPageResponse>;
 
             /**
              * Fetches media lists data from the Anilist API.
@@ -642,8 +732,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.mediaLists({page: 1, perPage: 10, userId: 542244});
              * ```
              * @see https://docs.anilist.co/reference/object/medialist
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            mediaLists: (variables: MediaListsVariables) => Promise<MediaListsPageResponse>;
+            mediaLists: (
+                variables: MediaListsVariables,
+                options?: RequestOptions
+            ) => Promise<MediaListsPageResponse>;
 
             /**
              * Fetches airing schedules data from the Anilist API.
@@ -655,9 +749,11 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.airingSchedules({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/airingschedule
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             airingSchedules: (
-                variables: AiringSchedulesVariables
+                variables: AiringSchedulesVariables,
+                options?: RequestOptions
             ) => Promise<AiringSchedulesPageResponse>;
 
             /**
@@ -671,8 +767,12 @@ export type AniListApi = {
              * ```
              * Must be quering an airing anime. Returns error if not.
              * @see https://docs.anilist.co/reference/object/mediatrend
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            mediaTrends: (variables: MediaTrendsVariables) => Promise<MediaTrendsPageResponse>;
+            mediaTrends: (
+                variables: MediaTrendsVariables,
+                options?: RequestOptions
+            ) => Promise<MediaTrendsPageResponse>;
 
             /**
              * Fetches notifications data from the Anilist API.
@@ -684,9 +784,11 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.notifications({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/union/notificationunion
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             notifications: (
-                variables: NotificationsVariables
+                variables: NotificationsVariables,
+                options?: RequestOptions
             ) => Promise<NotificationsPageResponse>;
 
             /**
@@ -699,8 +801,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.followers({page: 1, perPage: 10, userId: 542244});
              * ```
              * @see https://docs.anilist.co/reference/object/user
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            followers: (variables: FollowersVariables) => Promise<FollowersPageResponse>;
+            followers: (
+                variables: FollowersVariables,
+                options?: RequestOptions
+            ) => Promise<FollowersPageResponse>;
 
             /**
              * Fetches following data from the Anilist API.
@@ -712,8 +818,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.following({page: 1, perPage: 10, userId: 542244});
              * ```
              * @see https://docs.anilist.co/reference/object/user
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            following: (variables: FollowingsVariables) => Promise<FollowingsPageResponse>;
+            following: (
+                variables: FollowingsVariables,
+                options?: RequestOptions
+            ) => Promise<FollowingsPageResponse>;
 
             /**
              * Fetches activities data from the Anilist API.
@@ -725,8 +835,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.activities({page: 1, perPage: 10, userId: 542244});
              * ```
              * @see https://docs.anilist.co/reference/union/activityunion
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            activities: (variables: ActivitiesVariables) => Promise<ActivitiesPageResponse>;
+            activities: (
+                variables: ActivitiesVariables,
+                options?: RequestOptions
+            ) => Promise<ActivitiesPageResponse>;
 
             /**
              * Fetches activity replies data from the Anilist API.
@@ -738,9 +852,11 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.activityReplies({page: 1, perPage: 10, activityId: 723235883});
              * ```
              * @see https://docs.anilist.co/reference/object/activityreply
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             activityReplies: (
-                variables: ActivityRepliesVariables
+                variables: ActivityRepliesVariables,
+                options?: RequestOptions
             ) => Promise<ActivityRepliesPageResponse>;
 
             /**
@@ -753,8 +869,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.threads({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/thread
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            threads: (variables: ThreadsVariables) => Promise<ThreadsPageResponse>;
+            threads: (
+                variables: ThreadsVariables,
+                options?: RequestOptions
+            ) => Promise<ThreadsPageResponse>;
 
             /**
              * Fetches thread comments data from the Anilist API.
@@ -766,9 +886,11 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.threadComments({page: 1, perPage: 10, threadId: 71881});
              * ```
              * @see https://docs.anilist.co/reference/object/threadcomment
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             threadComments: (
-                variables: ThreadCommentsVariables
+                variables: ThreadCommentsVariables,
+                options?: RequestOptions
             ) => Promise<ThreadCommentsPageResponse>;
 
             /**
@@ -781,8 +903,12 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.reviews({page: 1, perPage: 10, mediaId: 1});
              * ```
              * @see https://docs.anilist.co/reference/object/review
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            reviews: (variables: ReviewsVariables) => Promise<ReviewsPageResponse>;
+            reviews: (
+                variables: ReviewsVariables,
+                options?: RequestOptions
+            ) => Promise<ReviewsPageResponse>;
 
             /**
              * Fetches recommendations data from the Anilist API.
@@ -794,9 +920,11 @@ export type AniListApi = {
              * await aniLink.anilist.query.page.recommendations({page: 1, perPage: 10, mediaId: 1});
              * ```
              * @see https://docs.anilist.co/reference/object/recommendation
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             recommendations: (
-                variables: RecommendationsVariables
+                variables: RecommendationsVariables,
+                options?: RequestOptions
             ) => Promise<RecommendationsPageResponse>;
 
             /**
@@ -808,8 +936,12 @@ export type AniListApi = {
              * ```typescript
              * await aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeAbleId: 1});
              * @see https://docs.anilist.co/reference/union/likeableunion
+             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
-            likes: (variables: LikesVariables) => Promise<LikesPageResponse>;
+            likes: (
+                variables: LikesVariables,
+                options?: RequestOptions
+            ) => Promise<LikesPageResponse>;
         };
     };
     /**
@@ -876,8 +1008,12 @@ export type AniListApi = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/user
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        updateUser: (variables: UpdateUserVariables) => Promise<UpdateUserResponse>;
+        updateUser: (
+            variables: UpdateUserVariables,
+            options?: RequestOptions
+        ) => Promise<UpdateUserResponse>;
 
         /**
          * Saves a media list entry on the Anilist API.
@@ -889,8 +1025,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.saveMediaListEntry({mediaId: 1, status: 'COMPLETED'});
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        saveMediaListEntry: (variables: SaveMediaListEntryVariables) => Promise<MediaListResponse>;
+        saveMediaListEntry: (
+            variables: SaveMediaListEntryVariables,
+            options?: RequestOptions
+        ) => Promise<MediaListResponse>;
 
         /**
          * Updates media list entries on the Anilist API.
@@ -907,9 +1047,11 @@ export type AniListApi = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         updateMediaListEntries: (
-            variables: UpdateMediaListEntriesVariables
+            variables: UpdateMediaListEntriesVariables,
+            options?: RequestOptions
         ) => Promise<MediaListResponse[]>;
 
         /**
@@ -923,9 +1065,11 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.deleteMediaListEntry({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         deleteMediaListEntry: (
-            variables: DeleteMediaListEntryVariables
+            variables: DeleteMediaListEntryVariables,
+            options?: RequestOptions
         ) => Promise<DeleteMediaListEntryResponse>;
 
         /**
@@ -938,8 +1082,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.deleteCustomLists({customList: 'test'});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        deleteCustomList: (variables: DeleteCustomListVariables) => Promise<DeleteResult>;
+        deleteCustomList: (
+            variables: DeleteCustomListVariables,
+            options?: RequestOptions
+        ) => Promise<DeleteResult>;
 
         /**
          * Saves a text activity on the Anilist API. If no `id` is provided, a new activity will be created. If an `id` is provided, the activity with that `id` will be updated.
@@ -951,8 +1099,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.saveTextActivity({text: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        saveTextActivity: (variables: SaveTextActivityVariables) => Promise<Activity>;
+        saveTextActivity: (
+            variables: SaveTextActivityVariables,
+            options?: RequestOptions
+        ) => Promise<Activity>;
 
         /**
          * Saves a message activity on the Anilist API. If no `id` is provided, a new activity will be created. If an `id` is provided, the activity with that `id` will be updated.
@@ -964,8 +1116,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.saveMessageActivity({text: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        saveMessageActivity: (variables: SaveMessageActivityVariables) => Promise<Activity>;
+        saveMessageActivity: (
+            variables: SaveMessageActivityVariables,
+            options?: RequestOptions
+        ) => Promise<Activity>;
 
         /**
          * Saves a list activity on the Anilist API.
@@ -978,8 +1134,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.saveListActivity({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        saveListActivity: (variables: SaveListActivityVariables) => Promise<Activity>;
+        saveListActivity: (
+            variables: SaveListActivityVariables,
+            options?: RequestOptions
+        ) => Promise<Activity>;
 
         /**
          * Deletes an activity on the Anilist API.
@@ -992,8 +1152,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.deleteActivity({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        deleteActivity: (variables: DeleteActivityVariables) => Promise<DeleteResult>;
+        deleteActivity: (
+            variables: DeleteActivityVariables,
+            options?: RequestOptions
+        ) => Promise<DeleteResult>;
 
         /**
          * Toggles the pin status of an activity on the Anilist API.
@@ -1006,8 +1170,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.toggleActivityPin({id: 1, pinned: true});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        toggleActivityPin: (variables: ToggleActivityPinVariables) => Promise<Activity>;
+        toggleActivityPin: (
+            variables: ToggleActivityPinVariables,
+            options?: RequestOptions
+        ) => Promise<Activity>;
 
         /**
          * Toggles the subscription status of an activity on the Anilist API.
@@ -1020,9 +1188,11 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.toggleActivitySubscription({activityId: 1, subscribe: true});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         toggleActivitySubscription: (
-            variables: ToggleActivitySubscriptionVariables
+            variables: ToggleActivitySubscriptionVariables,
+            options?: RequestOptions
         ) => Promise<Activity>;
 
         /**
@@ -1035,8 +1205,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.saveActivityReply({activityId: 1, text: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/object/activityreply
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        saveActivityReply: (variables: SaveActivityReplyVariables) => Promise<ActivityReply>;
+        saveActivityReply: (
+            variables: SaveActivityReplyVariables,
+            options?: RequestOptions
+        ) => Promise<ActivityReply>;
 
         /**
          * Deletes an activity reply on the Anilist API.
@@ -1048,8 +1222,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.deleteActivityReply({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        deleteActivityReply: (variables: DeleteActivityReplyVariables) => Promise<DeleteResult>;
+        deleteActivityReply: (
+            variables: DeleteActivityReplyVariables,
+            options?: RequestOptions
+        ) => Promise<DeleteResult>;
 
         /**
          * Toggles a like on the Anilist API.
@@ -1061,8 +1239,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.toggleLike({id: 1, type: 'ACTIVITY'});
          * ```
          * @see https://docs.anilist.co/reference/object/user
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        toggleLike: (variables: ToggleLikeVariables) => Promise<BasicUser>;
+        toggleLike: (
+            variables: ToggleLikeVariables,
+            options?: RequestOptions
+        ) => Promise<BasicUser>;
 
         /**
          * Toggles a like on the Anilist API.
@@ -1076,8 +1258,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.toggleLikeV2({id: 1, type: 'ACTIVITY'});
          * ```
          * @see https://docs.anilist.co/reference/union/likeableunion
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        toggleLikeV2: (variables: ToggleLikeVariables) => Promise<Likeable>;
+        toggleLikeV2: (
+            variables: ToggleLikeVariables,
+            options?: RequestOptions
+        ) => Promise<Likeable>;
 
         /**
          * Toggles a follow on the Anilist API.
@@ -1089,8 +1275,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.toggleFollow({userId: 542244});
          * ```
          * @see https://docs.anilist.co/reference/object/user
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        toggleFollow: (variables: ToggleFollowVariables) => Promise<UserResponse>;
+        toggleFollow: (
+            variables: ToggleFollowVariables,
+            options?: RequestOptions
+        ) => Promise<UserResponse>;
 
         /**
          * Toggles a favorite on the Anilist API.
@@ -1102,8 +1292,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.toggleFavorite({studioId: 561});
          * ```
          * @see https://docs.anilist.co/reference/object/favourites
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        toggleFavourite: (variables: ToggleFavouriteVariables) => Promise<Favourites>;
+        toggleFavourite: (
+            variables: ToggleFavouriteVariables,
+            options?: RequestOptions
+        ) => Promise<Favourites>;
 
         /**
          * Updates the order of favourites on the Anilist API.
@@ -1115,8 +1309,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.updateFavouriteOrder({ids: [1, 2, 3]});
          * ```
          * @see https://docs.anilist.co/reference/object/favourites
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        updateFavouriteOrder: (variables: UpdateFavouriteOrderVariables) => Promise<Favourites>;
+        updateFavouriteOrder: (
+            variables: UpdateFavouriteOrderVariables,
+            options?: RequestOptions
+        ) => Promise<Favourites>;
 
         /**
          * Saves a review on the Anilist API. If no `id` is provided, a new review will be created. If an `id` is provided, the review with that `id` will be updated.
@@ -1128,8 +1326,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.saveReview({mediaId: 1, body: 'testing', summary: 'testing', score: 8, private: true});
          * ```
          * @see https://docs.anilist.co/reference/object/review
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        saveReview: (variables: SaveReviewVariables) => Promise<ReviewResponse>;
+        saveReview: (
+            variables: SaveReviewVariables,
+            options?: RequestOptions
+        ) => Promise<ReviewResponse>;
 
         /**
          * Rates a review on the Anilist API.
@@ -1141,8 +1343,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.rateReview({reviewId: 8008, rating: 'UP_VOTE'});
          * ```
          * @see https://docs.anilist.co/reference/object/review
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        rateReview: (variables: RateReviewVariables) => Promise<ReviewResponse>;
+        rateReview: (
+            variables: RateReviewVariables,
+            options?: RequestOptions
+        ) => Promise<ReviewResponse>;
 
         /**
          * Deletes a review on the Anilist API.
@@ -1154,8 +1360,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.deleteReview({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        deleteReview: (variables: DeleteReviewVariables) => Promise<DeleteResult>;
+        deleteReview: (
+            variables: DeleteReviewVariables,
+            options?: RequestOptions
+        ) => Promise<DeleteResult>;
 
         /**
          * Saves a recommendation on the Anilist API.
@@ -1167,9 +1377,11 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.saveRecommendation({mediaId: 1, mediaRecommendationId: 2, rating: 8});
          * ```
          * @see https://docs.anilist.co/reference/object/recommendation
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveRecommendation: (
-            variables: SaveRecommendationVariables
+            variables: SaveRecommendationVariables,
+            options?: RequestOptions
         ) => Promise<RecommendationResponse>;
 
         /**
@@ -1182,8 +1394,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.saveThread({title: 'Hello, world!', body: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/object/thread
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        saveThread: (variables: SaveThreadVariables) => Promise<ThreadResponse>;
+        saveThread: (
+            variables: SaveThreadVariables,
+            options?: RequestOptions
+        ) => Promise<ThreadResponse>;
 
         /**
          * Deletes a thread on the Anilist API.
@@ -1195,8 +1411,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.deleteThread({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        deleteThread: (variables: DeleteThreadVariables) => Promise<DeleteResult>;
+        deleteThread: (
+            variables: DeleteThreadVariables,
+            options?: RequestOptions
+        ) => Promise<DeleteResult>;
 
         /**
          * Toggles a thread subscription on the Anilist API.
@@ -1208,9 +1428,11 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.toggleThreadSubscription({threadId: 1, subscribe: true});
          * ```
          * @see https://docs.anilist.co/reference/object/thread
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         toggleThreadSubscription: (
-            variables: ToggleThreadSubscriptionVariables
+            variables: ToggleThreadSubscriptionVariables,
+            options?: RequestOptions
         ) => Promise<ThreadResponse>;
 
         /**
@@ -1223,9 +1445,11 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.saveThreadComment({threadId: 1, comment: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/object/threadcomment
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveThreadComment: (
-            variables: SaveThreadCommentVariables
+            variables: SaveThreadCommentVariables,
+            options?: RequestOptions
         ) => Promise<ThreadCommentResponse>;
 
         /**
@@ -1238,8 +1462,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.deleteThreadComment({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        deleteThreadComment: (variables: DeleteThreadCommentVariables) => Promise<DeleteResult>;
+        deleteThreadComment: (
+            variables: DeleteThreadCommentVariables,
+            options?: RequestOptions
+        ) => Promise<DeleteResult>;
 
         /**
          * Updates the AniChart settings for a user on the Anilist API.
@@ -1251,8 +1479,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.updateAniChartSettings({titleLanguage: 'romaji', theme: 'dark'});
          * ```
          * @see https://docs.anilist.co/reference/object/anichartuser
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        updateAniChartSettings: (variables: UpdateAniChartSettingsVariables) => Promise<string>;
+        updateAniChartSettings: (
+            variables: UpdateAniChartSettingsVariables,
+            options?: RequestOptions
+        ) => Promise<string>;
 
         /**
          * Updates the AniChart highlights for a user on the Anilist API.
@@ -1264,8 +1496,12 @@ export type AniListApi = {
          * await aniLink.anilist.mutation.updateAniChartHighlights({highlights: [{mediaId: 1, highlight: 'test'}]});
          * ```
          * @see https://docs.anilist.co/reference/object/anichartuser
+         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
-        updateAniChartHighlights: (variables: UpdateAniChartHighlightsVariables) => Promise<string>;
+        updateAniChartHighlights: (
+            variables: UpdateAniChartHighlightsVariables,
+            options?: RequestOptions
+        ) => Promise<string>;
     };
 
     /**

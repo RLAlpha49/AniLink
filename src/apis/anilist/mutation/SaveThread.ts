@@ -1,5 +1,6 @@
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
 /**
@@ -50,6 +51,23 @@ export interface SaveThreadVariables {
 }
 
 /**
+ * The variable type mappings for the `saveThread` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const SaveThreadMappings = {
+    id: "number",
+    title: "string",
+    body: "string",
+    categories: "number[]",
+    mediaCategories: "number[]",
+    sticky: "boolean",
+    locked: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `SaveThreadMutation` is a class representing a mutation to save a thread.
  * It includes a method to save a thread
  * @see https://docs.anilist.co/reference/object/thread
@@ -62,8 +80,12 @@ export class SaveThreadMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/object/thread
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async saveThread(variables: SaveThreadVariables): Promise<ThreadResponse> {
+    async saveThread(
+        variables: SaveThreadVariables,
+        options?: RequestOptions
+    ): Promise<ThreadResponse> {
         const mutation = `
       mutation ($id: Int, $title: String, $body: String, $categories: [Int], $mediaCategories: [Int], $sticky: Boolean, $locked: Boolean, $asHtml: Boolean) {
         SaveThread (id: $id, title: $title, body: $body, categories: $categories, mediaCategories: $mediaCategories, sticky: $sticky, locked: $locked) {
@@ -79,17 +101,9 @@ export class SaveThreadMutation extends APIWrapper {
                     message: "The SaveThread mutation requires an id or a title variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-                title: "string",
-                body: "string",
-                categories: "number[]",
-                mediaCategories: "number[]",
-                sticky: "boolean",
-                locked: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: SaveThreadMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

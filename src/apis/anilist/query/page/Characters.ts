@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
+import type { RequestOptions } from "../../../../base/RequestHandler";
 
 import { type CharactersPageResponse } from "../../interfaces/responses/page/Characters";
 import { CharacterSortMappings, MediaSortMappings } from "../../types/Sort";
@@ -82,6 +83,29 @@ export interface CharactersVariables {
 }
 
 /**
+ * The variable type mappings for the `characters` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const CharactersMappings = {
+    page: "number",
+    perPage: "number",
+    id: "number",
+    isBirthday: "boolean",
+    search: "string",
+    id_not: "number",
+    id_in: "number[]",
+    id_not_in: "number[]",
+    sort: CharacterSortMappings,
+    asHtml: "boolean",
+    mediaSort: MediaSortMappings,
+    mediaOnList: "boolean",
+    mediaPage: "number",
+    mediaPerPage: "number",
+};
+
+/**
  * `CharactersQuery` is a class representing a query for characters.
  * It includes a method to get characters.
  * @see https://docs.anilist.co/reference/object/character
@@ -93,8 +117,12 @@ export class CharactersQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/character
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async characters(variables: CharactersVariables): Promise<CharactersPageResponse> {
+    async characters(
+        variables: CharactersVariables,
+        options?: RequestOptions
+    ): Promise<CharactersPageResponse> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [CharacterSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int) {
         Page (page: $page, perPage: $perPage) {
@@ -112,22 +140,8 @@ export class CharactersQuery extends APIWrapper {
       }
     `;
         return await this.execute<CharactersPageResponse>(query, variables, {
-            mappings: {
-                page: "number",
-                perPage: "number",
-                id: "number",
-                isBirthday: "boolean",
-                search: "string",
-                id_not: "number",
-                id_in: "number[]",
-                id_not_in: "number[]",
-                sort: CharacterSortMappings,
-                asHtml: "boolean",
-                mediaSort: MediaSortMappings,
-                mediaOnList: "boolean",
-                mediaPage: "number",
-                mediaPerPage: "number",
-            },
+            mappings: CharactersMappings,
+            transportOptions: options,
         });
     }
 }

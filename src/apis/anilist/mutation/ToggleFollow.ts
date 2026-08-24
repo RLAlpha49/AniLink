@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type UserResponse } from "../interfaces/responses/query/User";
 import { BasicUserSchema } from "../schemas/Basic";
 
@@ -15,6 +16,16 @@ export interface ToggleFollowVariables {
 }
 
 /**
+ * The variable type mappings for the `toggleFollow` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ToggleFollowMappings = {
+    userId: "number",
+};
+
+/**
  * `ToggleFollowMutation` is a class representing a mutation to toggle a follow.
  * It includes a method to toggle a follow.
  * @see https://docs.anilist.co/reference/object/user
@@ -27,8 +38,12 @@ export class ToggleFollowMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/object/user
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async toggleFollow(variables: ToggleFollowVariables): Promise<UserResponse> {
+    async toggleFollow(
+        variables: ToggleFollowVariables,
+        options?: RequestOptions
+    ): Promise<UserResponse> {
         const mutation = `
       mutation ($userId: Int) {
         ToggleFollow (userId: $userId) {
@@ -44,10 +59,9 @@ export class ToggleFollowMutation extends APIWrapper {
                     message: "The ToggleFollow mutation requires a userId variable.",
                 },
             ],
-            mappings: {
-                userId: "number",
-            },
+            mappings: ToggleFollowMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

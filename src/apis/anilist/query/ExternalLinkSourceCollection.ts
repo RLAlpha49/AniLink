@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type ExternalLinkSourceCollectionResponse } from "../interfaces/responses/query/ExternalLinkSourceCollection";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 
@@ -25,6 +26,18 @@ export interface ExternalLinkSourceCollectionVariables {
 }
 
 /**
+ * The variable type mappings for the `externalLinkSourceCollection` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ExternalLinkSourceCollectionMappings = {
+    id: "number",
+    type: "string",
+    mediaType: MediaTypeMappings,
+};
+
+/**
  * `ExternalLinkSourceCollectionQuery` is a class representing a query for external link source collections.
  * It includes a method to get external link source collections.
  * @see https://docs.anilist.co/reference/query
@@ -36,9 +49,11 @@ export class ExternalLinkSourceCollectionQuery extends APIWrapper {
      * @param variables - The variables for the query. If not provided, an empty object will be used.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/query
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
     async externalLinkSourceCollection(
-        variables: ExternalLinkSourceCollectionVariables = {}
+        variables: ExternalLinkSourceCollectionVariables = {},
+        options?: RequestOptions
     ): Promise<ExternalLinkSourceCollectionResponse> {
         const query = `
       query ($id: Int, $type: ExternalLinkType, $mediaType: ExternalLinkMediaType) {
@@ -57,11 +72,8 @@ export class ExternalLinkSourceCollectionQuery extends APIWrapper {
       }
     `;
         return await this.execute<ExternalLinkSourceCollectionResponse>(query, variables, {
-            mappings: {
-                id: "number",
-                type: "string",
-                mediaType: MediaTypeMappings,
-            },
+            mappings: ExternalLinkSourceCollectionMappings,
+            transportOptions: options,
         });
     }
 }

@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
+import type { RequestOptions } from "../../../../base/RequestHandler";
 
 import { type ThreadCommentsPageResponse } from "../../interfaces/responses/page/ThreadComments";
 import { ThreadSortMappings } from "../../types/Sort";
@@ -47,6 +48,22 @@ export interface ThreadCommentsVariables {
 }
 
 /**
+ * The variable type mappings for the `threadComments` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ThreadCommentsMappings = {
+    page: "number",
+    perPage: "number",
+    id: "number",
+    threadId: "number",
+    userId: "number",
+    sort: ThreadSortMappings,
+    asHtml: "boolean",
+};
+
+/**
  * `ThreadCommentsQuery` is a class representing a query for thread comments.
  * It includes a method to get thread comments.
  * @see https://docs.anilist.co/reference/object/threadcomment
@@ -58,8 +75,12 @@ export class ThreadCommentsQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/threadcomment
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async threadComments(variables: ThreadCommentsVariables): Promise<ThreadCommentsPageResponse> {
+    async threadComments(
+        variables: ThreadCommentsVariables,
+        options?: RequestOptions
+    ): Promise<ThreadCommentsPageResponse> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $threadId: Int, $userId: Int, $sort: [ThreadCommentSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -84,15 +105,8 @@ export class ThreadCommentsQuery extends APIWrapper {
                     message: "The Page.threadComments query requires a threadId or a userId.",
                 },
             ],
-            mappings: {
-                page: "number",
-                perPage: "number",
-                id: "number",
-                threadId: "number",
-                userId: "number",
-                sort: ThreadSortMappings,
-                asHtml: "boolean",
-            },
+            mappings: ThreadCommentsMappings,
+            transportOptions: options,
         });
     }
 }

@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 
 /**
@@ -12,6 +13,16 @@ export interface DeleteReviewVariables {
      */
     id: number;
 }
+
+/**
+ * The variable type mappings for the `deleteReview` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const DeleteReviewMappings = {
+    id: "number",
+};
 
 /**
  * `DeleteReviewMutation` is a class representing a mutation to delete a review.
@@ -31,8 +42,12 @@ export class DeleteReviewMutation extends APIWrapper {
      * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the review was deleted by this call and `false` when it was already absent.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      * @see https://docs.anilist.co/reference/object/deleted
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async deleteReview(variables: DeleteReviewVariables): Promise<DeleteResult> {
+    async deleteReview(
+        variables: DeleteReviewVariables,
+        options?: RequestOptions
+    ): Promise<DeleteResult> {
         const mutation = `
       mutation ($id: Int) {
         DeleteReview(id: $id) {
@@ -48,10 +63,9 @@ export class DeleteReviewMutation extends APIWrapper {
                     message: "The DeleteReview mutation requires an id variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-            },
+            mappings: DeleteReviewMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

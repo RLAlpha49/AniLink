@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../../base/APIWrapper";
+import type { RequestOptions } from "../../../../base/RequestHandler";
 
 import { type StudiosPageResponse } from "../../interfaces/responses/page/Studios";
 import { CharacterSortMappings, MediaSortMappings, StudioSortMappings } from "../../types/Sort";
@@ -142,6 +143,41 @@ export interface StudiosVariables {
 }
 
 /**
+ * The variable type mappings for the `studios` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const StudiosMappings = {
+    page: "number",
+    perPage: "number",
+    id: "number",
+    search: "string",
+    id_not: "number",
+    id_in: "number[]",
+    id_not_in: "number[]",
+    sort: StudioSortMappings,
+    asHtml: "boolean",
+    mediaSort: MediaSortMappings,
+    mediaIsMain: "boolean",
+    mediaOnList: "boolean",
+    mediaPage: "number",
+    mediaPerPage: "number",
+    staffMediaSort: MediaSortMappings,
+    staffMediaType: "string",
+    staffMediaOnList: "boolean",
+    staffMediaPage: "number",
+    staffMediaPerPage: "number",
+    charactersSort: CharacterSortMappings,
+    charactersPage: "number",
+    charactersPerPage: "number",
+    characterMediaSort: MediaSortMappings,
+    characterMediaOnList: "boolean",
+    characterMediaPage: "number",
+    characterMediaPerPage: "number",
+};
+
+/**
  * `StudiosQuery` is a class representing a query for studios.
  * It includes a method to get studios.
  * @see https://docs.anilist.co/reference/object/studio
@@ -153,8 +189,12 @@ export class StudiosQuery extends APIWrapper {
      * @param variables - The variables for the query.
      * @returns The response from the query request.
      * @see https://docs.anilist.co/reference/object/studio
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async studios(variables: StudiosVariables): Promise<StudiosPageResponse> {
+    async studios(
+        variables: StudiosVariables,
+        options?: RequestOptions
+    ): Promise<StudiosPageResponse> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StudioSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaIsMain: Boolean, $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Page (page: $page, perPage: $perPage) {
@@ -172,34 +212,8 @@ export class StudiosQuery extends APIWrapper {
       }
     `;
         return await this.execute<StudiosPageResponse>(query, variables, {
-            mappings: {
-                page: "number",
-                perPage: "number",
-                id: "number",
-                search: "string",
-                id_not: "number",
-                id_in: "number[]",
-                id_not_in: "number[]",
-                sort: StudioSortMappings,
-                asHtml: "boolean",
-                mediaSort: MediaSortMappings,
-                mediaIsMain: "boolean",
-                mediaOnList: "boolean",
-                mediaPage: "number",
-                mediaPerPage: "number",
-                staffMediaSort: MediaSortMappings,
-                staffMediaType: "string",
-                staffMediaOnList: "boolean",
-                staffMediaPage: "number",
-                staffMediaPerPage: "number",
-                charactersSort: CharacterSortMappings,
-                charactersPage: "number",
-                charactersPerPage: "number",
-                characterMediaSort: MediaSortMappings,
-                characterMediaOnList: "boolean",
-                characterMediaPage: "number",
-                characterMediaPerPage: "number",
-            },
+            mappings: StudiosMappings,
+            transportOptions: options,
         });
     }
 }

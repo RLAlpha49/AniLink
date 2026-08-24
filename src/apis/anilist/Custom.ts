@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../base/APIWrapper";
+import type { RequestOptions } from "../../base/RequestHandler";
 import { AniLinkValidationError } from "../../base/AniLinkError";
 
 /**
@@ -38,18 +39,23 @@ export class CustomRequest extends APIWrapper {
      *
      * @param query - The GraphQL document to execute. It must declare a `query` or `mutation` operation.
      * @param variables - The variables for the document. This parameter is optional.
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      * @returns A promise that resolves to the unwrapped response data for single-root-field documents, or the full `{ data }` envelope otherwise.
      * @throws An `AniLinkValidationError` when the query is empty or does not declare a `query` or `mutation` operation.
      * @throws An `AniLinkError` when the request fails.
      * @see https://docs.anilist.co/reference/query
      * @see https://docs.anilist.co/reference/mutation
      */
-    async custom<T = unknown>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
+    async custom<T = unknown>(
+        query: string,
+        variables: Record<string, unknown> = {},
+        options?: RequestOptions
+    ): Promise<T> {
         if (typeof query !== "string" || !GRAPHQL_OPERATION_PATTERN.test(query)) {
             throw new AniLinkValidationError([
                 "custom() requires a GraphQL document declaring a query or mutation operation",
             ]);
         }
-        return await this.request<T>(query, variables);
+        return await this.request<T>(query, variables, false, undefined, options);
     }
 }

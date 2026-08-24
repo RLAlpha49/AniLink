@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 import { BasicUserSchema } from "../schemas/Basic";
 import { type BasicUser } from "../interfaces/Basic";
@@ -21,6 +22,17 @@ export interface ToggleLikeVariables {
 }
 
 /**
+ * The variable type mappings for the `toggleLike` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ToggleLikeMappings = {
+    id: "number",
+    type: LikeableTypeMappings,
+};
+
+/**
  * `ToggleLikeMutation` is a class representing a mutation to toggle a like.
  * It includes a method to delete an activity
  * @see https://docs.anilist.co/reference/object/user
@@ -33,8 +45,9 @@ export class ToggleLikeMutation extends APIWrapper {
      * @returns A Promise that resolves to the user who performed the like toggle.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/object/user
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async toggleLike(variables: ToggleLikeVariables): Promise<BasicUser> {
+    async toggleLike(variables: ToggleLikeVariables, options?: RequestOptions): Promise<BasicUser> {
         const mutation = `
       mutation ($id: Int, $type: LikeableType) {
         ToggleLike (id: $id, type: $type) {
@@ -50,11 +63,9 @@ export class ToggleLikeMutation extends APIWrapper {
                     message: "The ToggleLike mutation requires id and type variables.",
                 },
             ],
-            mappings: {
-                id: "number",
-                type: LikeableTypeMappings,
-            },
+            mappings: ToggleLikeMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

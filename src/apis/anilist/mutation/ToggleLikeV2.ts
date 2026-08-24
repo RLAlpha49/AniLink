@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 import { type Likeable } from "../interfaces/Likeable";
 import { ActivitySchemaV2 } from "../schemas/Activity";
@@ -26,6 +27,18 @@ export interface ToggleLikeV2Variables {
 }
 
 /**
+ * The variable type mappings for the `toggleLikeV2` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const ToggleLikeV2Mappings = {
+    id: "number",
+    type: LikeableTypeMappings,
+    asHtml: "boolean",
+};
+
+/**
  * `ToggleLikeV2Mutation` is a class representing a mutation to toggle a like.
  * It includes a method to delete an activity
  * @see https://docs.anilist.co/reference/union/likeableunion
@@ -39,8 +52,12 @@ export class ToggleLikeV2Mutation extends APIWrapper {
      * or thread comment, depending on which likeable entity the mutation toggled.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/union/likeableunion
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async toggleLikeV2(variables: ToggleLikeV2Variables): Promise<Likeable> {
+    async toggleLikeV2(
+        variables: ToggleLikeV2Variables,
+        options?: RequestOptions
+    ): Promise<Likeable> {
         const mutation = `
       mutation ($id: Int, $type: LikeableType, $asHtml: Boolean) {
         ToggleLikeV2 (id: $id, type: $type) {
@@ -56,12 +73,9 @@ export class ToggleLikeV2Mutation extends APIWrapper {
                     message: "The ToggleLikeV2 mutation requires id and type variables.",
                 },
             ],
-            mappings: {
-                id: "number",
-                type: LikeableTypeMappings,
-                asHtml: "boolean",
-            },
+            mappings: ToggleLikeV2Mappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }

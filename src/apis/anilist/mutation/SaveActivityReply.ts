@@ -1,4 +1,5 @@
 import { APIWrapper } from "../../../base/APIWrapper";
+import type { RequestOptions } from "../../../base/RequestHandler";
 import { type ActivityReply } from "../interfaces/Activity";
 import { ActivityReplySchema } from "../schemas/Activity";
 
@@ -35,6 +36,20 @@ export interface SaveActivityReplyVariables {
 }
 
 /**
+ * The variable type mappings for the `saveActivityReply` operation.
+ *
+ * Hoisted to module scope so repeated calls do not rebuild the same
+ * validation metadata on every request.
+ */
+const SaveActivityReplyMappings = {
+    id: "number",
+    activityId: "number",
+    text: "string",
+    asMod: "boolean",
+    asHtml: "boolean",
+};
+
+/**
  * `SaveActivityReplyMutation` is a class representing a mutation to save an activity reply.
  * It includes a method to save an activity reply
  * @see https://docs.anilist.co/reference/object/activityreply
@@ -47,8 +62,12 @@ export class SaveActivityReplyMutation extends APIWrapper {
      * @returns A Promise that resolves to the response from the mutation request.
      * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
      *   * @see https://docs.anilist.co/reference/object/activityreply
+     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      */
-    async saveActivityReply(variables: SaveActivityReplyVariables): Promise<ActivityReply> {
+    async saveActivityReply(
+        variables: SaveActivityReplyVariables,
+        options?: RequestOptions
+    ): Promise<ActivityReply> {
         const mutation = `
       mutation ($id: Int, $activityId: Int, $text: String, $asMod: Boolean, $asHtml: Boolean) {
         SaveActivityReply (id: $id, activityId: $activityId, text: $text, asMod: $asMod) {
@@ -64,14 +83,9 @@ export class SaveActivityReplyMutation extends APIWrapper {
                     message: "The SaveActivityReply mutation requires an id or a text variable.",
                 },
             ],
-            mappings: {
-                id: "number",
-                activityId: "number",
-                text: "string",
-                asMod: "boolean",
-                asHtml: "boolean",
-            },
+            mappings: SaveActivityReplyMappings,
             requiresAuth: true,
+            transportOptions: options,
         });
     }
 }
