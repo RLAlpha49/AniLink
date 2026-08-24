@@ -422,19 +422,47 @@ function normalizeScalarType(rawType: string): Field["type"] {
     return "string";
 }
 
-/** Parse the `variableTypeMappings` object from an operation's method body. */
+/** Parse the variable type mappings object from an operation's method body. */
 function parseVariableTypeMappings(methodBody: string): Record<string, string> {
-    const m = /const variableTypeMappings\s*=\s*\{([\s\S]*?)\};/.exec(methodBody);
-    if (!m) return {};
-    const body = m[1];
+    // The mappings object is declared either as a standalone `const
+    // variableTypeMappings = {...}` (legacy shape) or inline as the `mappings:`
+    // property of the `execute` options object. Match either form and extract
+    // the object body up to the matching closing brace.
     const out: Record<string, string> = {};
+    const startRe = /(?:const variableTypeMappings\s*=\s*\{|mappings:\s*\{)/;
+    const startMatch = startRe.exec(methodBody);
+    if (!startMatch) return {};
+    const bodyStart = startMatch.index + startMatch[0].length;
+    const body = extractBalancedBraces(methodBody, bodyStart);
+    if (body === null) return {};
     const entryRe = /(\w+)\s*:\s*("([^"]*)"|([A-Za-z_]\w*))/g;
     let em = entryRe.exec(body);
     while (em !== null) {
-        out[em[1]] = em[3] !== undefined ? em[3] : em[4];
+        out[em[1]] = em[3] ?? em[4];
         em = entryRe.exec(body);
     }
     return out;
+}
+
+/**
+ * Extract the text between balanced braces starting just after an opening
+ * `{` at `start`. Returns `null` if no balanced span is found. Handles nested
+ * objects so the `mappings` block (which may contain nested object mappings
+ * such as `FuzzyDateMappings`) is captured in full.
+ */
+function extractBalancedBraces(source: string, start: number): string | null {
+    let depth = 1;
+    let i = start;
+    while (i < source.length && depth > 0) {
+        const ch = source[i];
+        if (ch === "{") depth++;
+        else if (ch === "}") {
+            depth--;
+            if (depth === 0) return source.slice(start, i);
+        }
+        i++;
+    }
+    return depth === 0 ? source.slice(start, i) : null;
 }
 
 /** Find the file containing `export interface <interfaceName>` starting from a hint file's directory. */
