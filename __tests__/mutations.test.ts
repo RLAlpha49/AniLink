@@ -15,7 +15,7 @@ const mutationCases: Array<[string, MutationMethod, object, string]> = [
     [
         "save media list entry",
         "saveMediaListEntry",
-        { mediaId: 143271, type: "ANIME", status: "CURRENT", progress: 3 },
+        { mediaId: 143271, status: "CURRENT", progress: 3 },
         "SaveMediaListEntry",
     ],
     [

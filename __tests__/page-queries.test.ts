@@ -22,8 +22,8 @@ const pageCases: Array<[string, object, PageMethod, string]> = [
     ["staffs", { id: 132186, asHtml: true }, "staffs", "Page"],
     ["studios", { asHtml: true }, "studios", "Page"],
     ["media lists", { userId: 542244 }, "mediaLists", "Page"],
-    ["airing schedules", { type: "ANIME" }, "airingSchedules", "Page"],
-    ["media trends", { type: "ANIME" }, "mediaTrends", "Page"],
+    ["airing schedules", { id: 1 }, "airingSchedules", "Page"],
+    ["media trends", { mediaId: 1 }, "mediaTrends", "Page"],
     ["notifications", { asHtml: true }, "notifications", "Page"],
     ["followers", { userId: 542244, asHtml: true }, "followers", "Page"],
     ["following", { userId: 542244, asHtml: true }, "following", "Page"],
@@ -33,7 +33,7 @@ const pageCases: Array<[string, object, PageMethod, string]> = [
     ["thread comments", { threadId: 71881, asHtml: true }, "threadComments", "Page"],
     ["reviews", { id: 8008, asHtml: true }, "reviews", "Page"],
     ["recommendations", { mediaId: 156822, asHtml: true }, "recommendations", "Page"],
-    ["likes", { likeableId: 723422275, type: "ACTIVITY", asHtml: true }, "likes", "Page"],
+    ["likes", { likeableId: 723422275, type: "ACTIVITY" }, "likes", "Page"],
 ];
 
 describe("AniList page queries", () => {

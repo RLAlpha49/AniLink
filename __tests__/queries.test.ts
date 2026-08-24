@@ -14,7 +14,7 @@ type QueryMethod = keyof AniListApi["query"];
 const queryCases: Array<[string, QueryMethod, object | undefined, string]> = [
     ["user", "user", { id: 542244, asHtml: true }, "User"],
     ["media", "media", { id: 1, type: "ANIME" }, "Media"],
-    ["media trend", "mediaTrend", { mediaId: 1, type: "ANIME" }, "MediaTrend"],
+    ["media trend", "mediaTrend", { mediaId: 1 }, "MediaTrend"],
     ["airing schedule", "airingSchedule", { mediaId: 130590 }, "AiringSchedule"],
     ["character", "character", { search: "Rimuru Tempest", asHtml: true }, "Character"],
     ["staff", "staff", { id: 132186, asHtml: true }, "Staff"],
