@@ -24,8 +24,17 @@ describe("validateVariables", () => {
         expect(() => validateVariables({}, mappings)).not.toThrow();
     });
 
-    test("ignores unknown variables", () => {
-        expect(() => validateVariables({ id: 1, unknownField: "ignored" }, mappings)).not.toThrow();
+    test("rejects unknown variables by default", () => {
+        let caught: unknown;
+        try {
+            validateVariables({ id: 1, unknownField: "ignored" }, mappings);
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError).toBeInstanceOf(AniLinkValidationError);
+        expect(validationError.details).toContain("Unknown variable: unknownField");
     });
 
     test("rejects a primitive with the wrong type", () => {
@@ -180,5 +189,112 @@ describe("validateVariables", () => {
         expect(validationError.details[0]).toContain("sort[1]");
         expect(validationError.details[0]).toContain("Expected one of: ID, ID_DESC");
         expect(validationError.details[1]).toContain("sort[2]");
+    });
+
+    describe("strict mode", () => {
+        test("rejects an unknown top-level variable", () => {
+            let caught: unknown;
+            try {
+                validateVariables({ id: 1, progressVolmes: 3 }, mappings, {
+                    rejectUnknownKeys: true,
+                });
+            } catch (error) {
+                caught = error;
+            }
+
+            const validationError = caught as AniLinkValidationError;
+            expect(validationError).toBeInstanceOf(AniLinkValidationError);
+            expect(validationError.details).toContain("Unknown variable: progressVolmes");
+            expect(validationError.message).toContain("Unknown variable: progressVolmes");
+        });
+
+        test("reports every unknown variable together", () => {
+            let caught: unknown;
+            try {
+                validateVariables({ typoOne: 1, typoTwo: 2 }, mappings, {
+                    rejectUnknownKeys: true,
+                });
+            } catch (error) {
+                caught = error;
+            }
+
+            const validationError = caught as AniLinkValidationError;
+            expect(validationError.details).toHaveLength(2);
+            expect(validationError.details).toContain("Unknown variable: typoOne");
+            expect(validationError.details).toContain("Unknown variable: typoTwo");
+        });
+
+        test("still validates known keys while rejecting unknown ones", () => {
+            let caught: unknown;
+            try {
+                validateVariables({ id: "nope", typoKey: 1 }, mappings, {
+                    rejectUnknownKeys: true,
+                });
+            } catch (error) {
+                caught = error;
+            }
+
+            const validationError = caught as AniLinkValidationError;
+            expect(validationError.details).toHaveLength(2);
+            expect(validationError.details[0]).toContain("Invalid id");
+            expect(validationError.details[1]).toBe("Unknown variable: typoKey");
+        });
+
+        test("accepts all-valid keys under strict mode", () => {
+            expect(() =>
+                validateVariables({ id: 1, status: "COMPLETED" }, mappings, {
+                    rejectUnknownKeys: true,
+                })
+            ).not.toThrow();
+        });
+
+        test("treats empty variables as a valid no-op under strict mode", () => {
+            expect(() =>
+                validateVariables({}, mappings, { rejectUnknownKeys: true })
+            ).not.toThrow();
+        });
+
+        test("rejects an unknown property of a nested object", () => {
+            let caught: unknown;
+            try {
+                validateVariables({ startedAt: { year: 1998, month: 4, dayy: 3 } }, mappings, {
+                    rejectUnknownKeys: true,
+                });
+            } catch (error) {
+                caught = error;
+            }
+
+            const validationError = caught as AniLinkValidationError;
+            expect(validationError).toBeInstanceOf(AniLinkValidationError);
+            expect(validationError.details).toContain("Unknown property: startedAt.dayy");
+        });
+
+        test("ignores an unknown nested property when rejectUnknownKeys is false", () => {
+            expect(() =>
+                validateVariables({ startedAt: { year: 1998, month: 4, dayy: 3 } }, mappings, {
+                    rejectUnknownKeys: false,
+                })
+            ).not.toThrow();
+        });
+
+        test("rejects unknown top-level variables by default", () => {
+            let caught: unknown;
+            try {
+                validateVariables({ id: 1, unknownField: "ignored" }, mappings);
+            } catch (error) {
+                caught = error;
+            }
+
+            const validationError = caught as AniLinkValidationError;
+            expect(validationError.details).toContain("Unknown variable: unknownField");
+        });
+
+        test("stays lenient when rejectUnknownKeys is explicitly false", () => {
+            expect(() =>
+                validateVariables({ id: 1, unknownField: "ignored" }, mappings, {
+                    rejectUnknownKeys: false,
+                })
+            ).not.toThrow();
+        });
     });
 });

@@ -38,7 +38,13 @@ const isAllowlist = (mapping: unknown): mapping is readonly string[] => Array.is
 const isObjectMapping = (mapping: unknown): mapping is { readonly [key: string]: unknown } =>
     typeof mapping === "object" && mapping !== null && !Array.isArray(mapping);
 
-const validateValue = (path: string, value: unknown, mapping: unknown, errors: string[]): void => {
+const validateValue = (
+    path: string,
+    value: unknown,
+    mapping: unknown,
+    errors: string[],
+    rejectUnknownKeys: boolean
+): void => {
     if (isPrimitive(mapping)) {
         if (typeof value !== mapping) {
             errors.push(`Invalid ${path}: ${String(value)}. Expected type: ${mapping}`);
@@ -76,10 +82,10 @@ const validateValue = (path: string, value: unknown, mapping: unknown, errors: s
     if (isObjectMapping(mapping)) {
         if (Array.isArray(value)) {
             value.forEach((item, index) => {
-                validateObject(`${path}[${index}]`, item, mapping, errors);
+                validateObject(`${path}[${index}]`, item, mapping, errors, rejectUnknownKeys);
             });
         } else {
-            validateObject(path, value, mapping, errors);
+            validateObject(path, value, mapping, errors, rejectUnknownKeys);
         }
     }
 };
@@ -88,7 +94,8 @@ const validateObject = (
     path: string,
     value: unknown,
     mapping: { readonly [key: string]: unknown },
-    errors: string[]
+    errors: string[],
+    rejectUnknownKeys: boolean
 ): void => {
     if (value === null || typeof value !== "object") {
         errors.push(`Invalid ${path}: ${String(value)}. Expected an object.`);
@@ -98,17 +105,21 @@ const validateObject = (
     for (const [prop, propValue] of Object.entries(value as Record<string, unknown>)) {
         const expected = mapping[prop];
         if (expected === undefined) {
+            if (rejectUnknownKeys) {
+                errors.push(`Unknown property: ${path}.${prop}`);
+            }
             continue;
         }
-        validateValue(`${path}.${prop}`, propValue, expected, errors);
+        validateValue(`${path}.${prop}`, propValue, expected, errors, rejectUnknownKeys);
     }
 };
 
 /**
  * Validates the provided variables against the expected types.
  *
- * Unknown variables and properties are ignored, an empty `variables` object is
- * a valid no-op, and validation failures throw an
+ * Unknown variables and properties are rejected by default; pass
+ * `{ rejectUnknownKeys: false }` to ignore them instead. An empty
+ * `variables` object is a valid no-op, and validation failures throw an
  * {@link AniLinkValidationError} whose `details` property lists every problem.
  *
  * @param variables - The variables to validate. Each key is the name of a
@@ -116,21 +127,29 @@ const validateObject = (
  * @param variableTypeMappings - A map of variable names to their expected
  * types. The expected type can be a primitive type name, an array type name,
  * an allowlist of accepted values, or a nested object mapping.
+ * @param options - Optional validation behaviour flags. Set
+ * `rejectUnknownKeys` to `false` to ignore unknown variable keys and unknown
+ * object properties instead of rejecting them.
  * @throws An {@link AniLinkValidationError} when a variable does not match its
- * expected type.
+ * expected type or when a variable or property key is unknown.
  */
 export function validateVariables(
     variables: object,
-    variableTypeMappings: VariableTypeMappings
+    variableTypeMappings: VariableTypeMappings,
+    options?: { readonly rejectUnknownKeys?: boolean }
 ): void {
     const errors: string[] = [];
+    const rejectUnknownKeys = options?.rejectUnknownKeys !== false;
 
     for (const [variable, value] of Object.entries(variables)) {
         const expectedType = variableTypeMappings[variable];
         if (expectedType === undefined) {
+            if (rejectUnknownKeys) {
+                errors.push(`Unknown variable: ${variable}`);
+            }
             continue;
         }
-        validateValue(variable, value, expectedType, errors);
+        validateValue(variable, value, expectedType, errors, rejectUnknownKeys);
     }
 
     if (errors.length > 0) {

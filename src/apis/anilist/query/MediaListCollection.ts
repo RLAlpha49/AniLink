@@ -4,7 +4,7 @@ import { type MediaType, MediaTypeMappings } from "../types/Type";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
 import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListSort, MediaListSortMappings } from "../types/Sort";
-import { type ScoreFormat } from "../types/Format";
+import { type ScoreFormat, ScoreFormatMapping } from "../types/Format";
 import { requireVariables, validateVariables } from "../../../base/ValidateVariables";
 import { MediaListCollectionQuerySchema } from "../schemas/responses/query/MediaListCollectionResponse";
 
@@ -201,6 +201,9 @@ export class MediaListCollectionQuery extends APIWrapper {
             completedAt_lesser: FuzzyDateMappings,
             completedAt_like: "string",
             sort: MediaListSortMappings,
+            scoreFormat: ScoreFormatMapping,
+            asArray: "boolean",
+            asHtml: "boolean",
         };
 
         validateVariables(variables, variableTypeMappings);

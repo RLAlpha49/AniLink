@@ -50,6 +50,7 @@ export class ToggleLikeV2Mutation extends APIWrapper {
         const variableTypeMappings = {
             id: "number",
             type: LikeableTypeMappings,
+            asHtml: "boolean",
         };
 
         validateVariables(variables, variableTypeMappings);
