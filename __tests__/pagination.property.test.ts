@@ -411,3 +411,152 @@ describe("paginateChunks (property-based)", () => {
         );
     });
 });
+
+describe("look-ahead concurrency (property-based)", () => {
+    /**
+     * Build a page fetcher whose per-page artificial delays come from the
+     * property, so pages settle in an arbitrary (often non-sequential) order.
+     * Records the maximum number of requests observed in flight.
+     */
+    function makeDelayedFetcher(maxInFlight: { value: number }) {
+        return async (page: number, delayMs: number): Promise<TestPage> => {
+            maxInFlight.value += 1;
+            if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
+            maxInFlight.value -= 1;
+            return {
+                pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
+                media: [{ id: page }],
+            };
+        };
+    }
+
+    test("never exceeds the configured in-flight window regardless of settle order", () => {
+        fc.assert(
+            fc.asyncProperty(
+                fc.integer({ min: 2, max: 8 }), // concurrency
+                fc.integer({ min: 2, max: 12 }), // pageCount
+                fc.array(fc.integer({ min: 0, max: 10 }), { minLength: 12, maxLength: 12 }), // delays
+                async (concurrency, pageCount, delays) => {
+                    const maxInFlight = { value: 0 };
+                    let launched = 0;
+                    const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+                        launched += 1;
+                        return makeDelayedFetcher(maxInFlight)(page, delays[page - 1] ?? 0);
+                    });
+
+                    const result = await paginate(fetchPage, "media", {
+                        concurrency,
+                        maxPages: pageCount,
+                    });
+
+                    expect(result.pageCount).toBeLessThanOrEqual(pageCount);
+                    expect(launched).toBeLessThanOrEqual(pageCount + concurrency - 1);
+                    expect(maxInFlight.value).toBe(0);
+                    expect(maxInFlight.value).toBeLessThanOrEqual(concurrency);
+                }
+            ),
+            { numRuns: 100 }
+        );
+    });
+
+    test("collects items strictly in page order even when pages settle out of order", () => {
+        fc.assert(
+            fc.asyncProperty(
+                fc.integer({ min: 2, max: 8 }), // concurrency
+                fc.integer({ min: 2, max: 15 }), // pageCount
+                fc.array(fc.integer({ min: 0, max: 8 }), { minLength: 15, maxLength: 15 }), // delays
+                async (concurrency, pageCount, delays) => {
+                    const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+                        const delay = delays[page - 1] ?? 0;
+                        if (delay > 0) await new Promise((r) => setTimeout(r, delay));
+                        return {
+                            pageInfo: pageInfo({
+                                currentPage: page,
+                                hasNextPage: page < pageCount,
+                            }),
+                            media: [{ id: page }],
+                        };
+                    });
+
+                    const result = await paginate(fetchPage, "media", {
+                        concurrency,
+                        maxPages: pageCount,
+                    });
+
+                    expect(result.items.map((item) => item.id)).toEqual(
+                        Array.from({ length: pageCount }, (_, i) => i + 1)
+                    );
+                    expect(result.pages.map((p) => p.pageInfo.currentPage)).toEqual(
+                        Array.from({ length: pageCount }, (_, i) => i + 1)
+                    );
+                }
+            ),
+            { numRuns: 100 }
+        );
+    });
+
+    test("matches sequential results for any stop point and concurrency", () => {
+        fc.assert(
+            fc.asyncProperty(
+                fc.integer({ min: 1, max: 20 }), // stopAfter
+                fc.integer({ min: 1, max: 6 }), // concurrency
+                fc.integer({ min: 1, max: 25 }), // maxPages
+                async (stopAfter, concurrency, maxPages) => {
+                    let callCount = 0;
+                    const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+                        callCount += 1;
+                        const hasNextPage = callCount < stopAfter;
+                        return {
+                            pageInfo: pageInfo({ currentPage: page, hasNextPage }),
+                            media: [{ id: page }],
+                        };
+                    });
+
+                    const result = await paginate(fetchPage, "media", {
+                        concurrency,
+                        maxPages,
+                    });
+
+                    const expectedCount = Math.min(stopAfter, maxPages);
+                    expect(result.pageCount).toBe(expectedCount);
+                    expect(result.items.map((item) => item.id)).toEqual(
+                        Array.from({ length: expectedCount }, (_, i) => i + 1)
+                    );
+                    expect(result.truncated).toBe(maxPages < stopAfter);
+                }
+            ),
+            { numRuns: 200 }
+        );
+    });
+
+    test("paginateChunks preserves chunk order and count under arbitrary settle order", () => {
+        fc.assert(
+            fc.asyncProperty(
+                fc.integer({ min: 2, max: 6 }), // concurrency
+                fc.integer({ min: 2, max: 10 }), // chunkCount
+                fc.array(fc.integer({ min: 0, max: 8 }), { minLength: 10, maxLength: 10 }), // delays
+                async (concurrency, chunkCount, delays) => {
+                    const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => {
+                        const delay = delays[chunk - 1] ?? 0;
+                        if (delay > 0) await new Promise((r) => setTimeout(r, delay));
+                        return {
+                            hasNextChunk: chunk < chunkCount,
+                            lists: [{ name: `list-${chunk}` }],
+                        };
+                    });
+
+                    const result = await paginateChunks(fetchChunk, "lists", {
+                        concurrency,
+                        maxChunks: chunkCount,
+                    });
+
+                    expect(result.chunkCount).toBe(chunkCount);
+                    expect(result.items).toEqual(
+                        Array.from({ length: chunkCount }, (_, i) => ({ name: `list-${i + 1}` }))
+                    );
+                }
+            ),
+            { numRuns: 100 }
+        );
+    });
+});

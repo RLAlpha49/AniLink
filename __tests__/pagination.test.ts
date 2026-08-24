@@ -293,6 +293,166 @@ describe("paginateChunks", () => {
     });
 });
 
+describe("paginate concurrency", () => {
+    test("defaults to sequential fetches when concurrency is not set", async () => {
+        let inFlight = 0;
+        let maxObserved = 0;
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+            inFlight += 1;
+            maxObserved = Math.max(maxObserved, inFlight);
+            await Promise.resolve();
+            inFlight -= 1;
+            return {
+                pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 3 }),
+                media: [{ id: page }],
+            };
+        });
+
+        const result = await paginate(fetchPage, "media");
+
+        expect(maxObserved).toBe(1);
+        expect(result.pageCount).toBe(3);
+        expect(result.items).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
+    });
+
+    test("keeps multiple pages in flight with concurrency above one", async () => {
+        let inFlight = 0;
+        let maxObserved = 0;
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+            inFlight += 1;
+            maxObserved = Math.max(maxObserved, inFlight);
+            await new Promise((resolve) => setTimeout(resolve, 10));
+            inFlight -= 1;
+            return {
+                pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 4 }),
+                media: [{ id: page }],
+            };
+        });
+
+        const result = await paginate(fetchPage, "media", { concurrency: 3 });
+
+        // Pages 1-3 launch together before the first 10 ms timer fires.
+        expect(maxObserved).toBeGreaterThanOrEqual(2);
+        expect(result.pageCount).toBe(4);
+        expect(result.items).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]);
+    });
+
+    test("collects results strictly in page order even when later pages settle first", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+            // Later pages resolve sooner than earlier ones.
+            const delay = page === 1 ? 20 : page === 2 ? 10 : 0;
+            if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
+            return {
+                pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 3 }),
+                media: [{ id: page }],
+            };
+        });
+
+        const result = await paginate(fetchPage, "media", { concurrency: 3 });
+
+        expect(result.pages.map((p) => p.pageInfo.currentPage)).toEqual([1, 2, 3]);
+        expect(result.items).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
+    });
+
+    test("stops scheduling new pages once a terminal page settles", async () => {
+        const gates: Array<() => void> = [];
+        const launchedPages: number[] = [];
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+            launchedPages.push(page);
+            await new Promise<void>((resolve) => gates.push(resolve));
+            return {
+                pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 2 }),
+                media: [{ id: page }],
+            };
+        });
+
+        const pending = paginate(fetchPage, "media", { concurrency: 3 });
+        await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3]));
+
+        // Page 1 settles with more data ahead, so the window refills with page 4.
+        const releaseFirst = gates[0];
+        releaseFirst?.();
+        await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3, 4]));
+
+        // Page 2 is terminal: no further pages may be scheduled.
+        const releaseSecond = gates[1];
+        releaseSecond?.();
+        await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3, 4]));
+        expect(gates).toHaveLength(4);
+
+        for (const release of gates) release();
+        const result = await pending;
+
+        expect(result.pageCount).toBe(2);
+        expect(result.items).toEqual([{ id: 1 }, { id: 2 }]);
+        expect(result.truncated).toBe(false);
+    });
+
+    test("still reports truncation at maxPages with concurrency above one", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+            media: [{ id: page }],
+        }));
+
+        const result = await paginate(fetchPage, "media", { concurrency: 4, maxPages: 6 });
+
+        expect(fetchPage).toHaveBeenCalledTimes(6);
+        expect(result.pageCount).toBe(6);
+        expect(result.items).toHaveLength(6);
+        expect(result.truncated).toBe(true);
+    });
+    test("falls back to sequential fetches when concurrency is invalid", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
+            media: [{ id: page }],
+        }));
+
+        const result = await paginate(fetchPage, "media", {
+            concurrency: -3,
+        } as PaginateOptions);
+
+        expect(fetchPage).toHaveBeenCalledTimes(1);
+        expect(result.pageCount).toBe(1);
+    });
+
+    test("clamps concurrency above the cap of 8 down to 8", async () => {
+        let inFlight = 0;
+        let maxObserved = 0;
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+            inFlight += 1;
+            maxObserved = Math.max(maxObserved, inFlight);
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            inFlight -= 1;
+            return {
+                pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+                media: [{ id: page }],
+            };
+        });
+
+        const result = await paginate(fetchPage, "media", { concurrency: 50, maxPages: 30 });
+
+        expect(maxObserved).toBe(8);
+        expect(result.pageCount).toBe(30);
+        expect(result.truncated).toBe(true);
+    });
+
+    test("paginateChunks keeps chunks in flight and collects them in chunk order", async () => {
+        const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => {
+            // Earlier chunks resolve later than later chunks.
+            const delay = chunk === 1 ? 15 : chunk === 2 ? 5 : 0;
+            if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
+            return { hasNextChunk: chunk < 3, lists: [{ name: `list-${chunk}` }] };
+        });
+
+        const result = await paginateChunks(fetchChunk, "lists", { concurrency: 3 });
+
+        expect(result.chunkCount).toBe(3);
+        expect(result.chunks.map((c) => c.hasNextChunk)).toEqual([true, true, false]);
+        expect(result.items).toEqual([{ name: "list-1" }, { name: "list-2" }, { name: "list-3" }]);
+        expect(result.truncated).toBe(false);
+    });
+});
+
 describe("fuzzyDate", () => {
     test("builds a full date from year, month, and day", () => {
         const result = fuzzyDate({ year: 2024, month: 4, day: 15 });

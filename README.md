@@ -249,6 +249,19 @@ console.log(result.items.length, result.chunkCount, result.truncated);
 
 Each helper returns `truncated: true` when it stopped at the guard before the source ran out of pages or chunks.
 
+By default pages and chunks are fetched strictly one at a time. Pass `concurrency` to keep several requests in flight while collecting results — useful for large traversals where per-page latency dominates. Results are always returned in order regardless of which request finishes first, scheduling stops as soon as the source reports no more data, and the `maxPages` / `maxChunks` guards still apply:
+
+```typescript
+const result = await aniLink.anilist.paginate(
+    (page, perPage) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" }),
+    "media",
+    { perPage: 50, maxPages: 10, concurrency: 4 }
+);
+console.log(result.items.length, result.pageCount, result.truncated);
+```
+
+Keep `concurrency` modest (2–8): AniList rate-limits aggressive clients, and values above 8 are clamped down to 8.
+
 ### Mutate
 
 ```typescript

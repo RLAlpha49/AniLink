@@ -25,6 +25,12 @@ const MAX_PER_CHUNK = DEFAULT_PER_CHUNK;
 const DEFAULT_MAX_CHUNKS = 100;
 
 /**
+ * Upper bound on caller-supplied look-ahead `concurrency`. Values above this are
+ * clamped down so a typo like `concurrency: 1000` cannot hammer AniList.
+ */
+const MAX_CONCURRENCY = 8;
+
+/**
  * Keys of `T` whose value is a readonly array — the items field of a page or
  * chunk response. `PageInfo` and `hasNextChunk` are never arrays, so they are
  * excluded automatically.
@@ -49,6 +55,16 @@ export interface PaginateOptions {
 
     /** Hard cap on pages fetched, guarding against unbounded loops. Defaults to 100. */
     maxPages?: number;
+
+    /**
+     * Maximum number of page requests kept in flight at once while collecting
+     * results. Pages are always returned in order regardless of completion
+     * order, scheduling stops as soon as a fetched page reports
+     * `hasNextPage: false`, and every existing guard (`maxPages`, `perPage`
+     * clamping) still applies. Defaults to `1` (strictly sequential fetches,
+     * matching previous behavior). Values above 8 are clamped down to 8.
+     */
+    concurrency?: number;
 }
 
 /** Options controlling a `paginateChunks` traversal over `hasNextChunk`-based chunks. */
@@ -64,6 +80,16 @@ export interface ChunkPaginateOptions {
 
     /** Hard cap on chunks fetched, guarding against unbounded loops. Defaults to 100. */
     maxChunks?: number;
+
+    /**
+     * Maximum number of chunk requests kept in flight at once while collecting
+     * results. Chunks are always returned in order regardless of completion
+     * order, scheduling stops as soon as a fetched chunk reports
+     * `hasNextChunk: false`, and every existing guard (`maxChunks`, `perChunk`
+     * clamping) still applies. Defaults to `1` (strictly sequential fetches,
+     * matching previous behavior). Values above 8 are clamped down to 8.
+     */
+    concurrency?: number;
 }
 
 /** The outcome of a `paginate` traversal. */
@@ -121,17 +147,126 @@ function resolveCappedInt(value: number | undefined, max: number, fallback: numb
 }
 
 /**
+ * Shared look-ahead driver for {@link paginate} and {@link paginateChunks}.
+ *
+ * Fetches entries through a sliding window of at most `concurrency` launched-
+ * but-unconsumed requests so round-trip latency overlaps instead of stacking,
+ * while results are appended strictly in entry-number order no matter when each
+ * request settles. Scheduling stops as soon as an entry reports "no more data"
+ * or the `maxEntries` guard fires; `truncated` mirrors the sequential semantics.
+ *
+ * Because the window runs ahead of consumption, up to `concurrency - 1`
+ * already-launched requests may complete past a terminal entry; their payloads
+ * are drained and discarded so the collected prefix matches what a strictly
+ * sequential traversal would have returned.
+ *
+ * @typeParam TEntry - The raw response shape of a single page or chunk.
+ * @param fetch - Callback that fetches a single entry given its 1-based number.
+ * @param startNumber - First entry number to request (already resolved/validated).
+ * @param maxEntries - Hard cap on entries fetched (already resolved/validated).
+ * @param concurrency - Look-ahead window size (already resolved/clamped).
+ * @returns The responses in entry order, how many were fetched, and whether
+ *          the guard truncated the run.
+ */
+async function fetchWithLookAhead<TEntry>(
+    fetch: (number: number) => Promise<TEntry>,
+    startNumber: number,
+    maxEntries: number,
+    concurrency: number
+): Promise<{
+    /** Responses ordered by entry number. */
+    responses: TEntry[];
+    /** Number of entries actually fetched. */
+    count: number;
+    /** Whether the traversal stopped at `maxEntries` before the source ran out. */
+    truncated: boolean;
+}> {
+    const responses: TEntry[] = [];
+    // Requests indexed by slot. Entries are never removed: awaiting an
+    // already-settled request must remain possible, because several siblings
+    // can settle during the same tick and consumption still happens in order.
+    const pending: Promise<void>[] = [];
+    let launched = 0;
+    let count = 0;
+    let truncated = false;
+
+    while (count < maxEntries) {
+        // Refill: keep at most `concurrency` requests launched but unconsumed.
+        while (launched < maxEntries && launched - count < concurrency) {
+            const slot = launched;
+            launched += 1;
+            const request = fetch(startNumber + slot).then((response) => {
+                responses[slot] = response;
+            });
+            pending[slot] = request;
+            // A sibling may reject before this request is ever awaited; mark
+            // that secondary rejection handled so Node does not report it as
+            // unhandled. The original rejection still propagates through
+            // `pending[slot]` when this slot is consumed.
+            void request.catch(() => {});
+        }
+
+        if (count >= launched) break;
+
+        // Wait for the next unconsumed entry in order. Awaiting an
+        // already-settled request is safe: `responses[slot]` is assigned before
+        // the corresponding promise resolves.
+        await pending[count];
+        count += 1;
+
+        const hasMore = extractHasMore(responses[count - 1]);
+        if (!hasMore) {
+            // Terminal entry: drain already-launched stragglers so nothing
+            // dangles, discard their payloads, and stop. Entries past a
+            // terminal response are never newly scheduled, and a failure in a
+            // drained straggler must not fail the traversal.
+            await Promise.allSettled(pending.slice(count));
+            responses.length = count;
+            return { responses, count, truncated: false };
+        }
+        if (count >= maxEntries) {
+            await Promise.allSettled(pending.slice(count));
+            truncated = true;
+            break;
+        }
+    }
+
+    return { responses, count, truncated };
+}
+
+/**
+ * Read the "more data available" flag from a fetched entry without knowing its
+ * concrete shape. Returns `false` for malformed responses so a broken payload
+ * ends the traversal instead of looping forever.
+ * @param response - A fetched page (`pageInfo.hasNextPage`) or chunk (`hasNextChunk`).
+ * @returns Whether further entries exist beyond this one.
+ */
+function extractHasMore(response: unknown): boolean {
+    if (typeof response !== "object" || response === null) return false;
+    if ("pageInfo" in response) {
+        const pageInfo = (response as { pageInfo?: unknown }).pageInfo;
+        if (typeof pageInfo === "object" && pageInfo !== null) {
+            return (pageInfo as { hasNextPage?: unknown }).hasNextPage === true;
+        }
+        return false;
+    }
+    return (response as { hasNextChunk?: unknown }).hasNextChunk === true;
+}
+
+/**
  * Iterate `PageInfo`-based pages until `hasNextPage` is false or `maxPages` is reached.
  *
  * The helper calls `fetchPage(page, perPage)` for each page, extracts the items
  * array at `itemsKey`, and stops when AniList reports no further pages or when the
  * `maxPages` guard fires. The guard prevents accidental unbounded fetch loops.
+ * Pass `concurrency` to keep multiple page requests in flight at once; results
+ * are still collected strictly in page order.
  *
  * @typeParam TPage - The page response shape (must include `pageInfo`).
  * @typeParam K - The key of the items array on `TPage`.
  * @param fetchPage - Callback that fetches a single page given its 1-based number and `perPage`.
  * @param itemsKey - The key of the items array on the page response (e.g. `"media"`, `"users"`).
- * @param options - Optional `perPage`, `startPage`, and `maxPages` controls.
+ * @param options - Optional `perPage`, `startPage`, `maxPages`, and `concurrency` controls.
  * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run.
  * @see https://docs.anilist.co/reference/object/pageinfo
  * @example
@@ -139,7 +274,7 @@ function resolveCappedInt(value: number | undefined, max: number, fallback: numb
  * const result = await paginate(
  *   (page, perPage) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" }),
  *   "media",
- *   { perPage: 50, maxPages: 10 }
+ *   { perPage: 50, maxPages: 10, concurrency: 4 }
  * );
  * console.log(result.items.length, result.truncated);
  * ```
@@ -155,33 +290,24 @@ export async function paginate<
     const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE);
     const startPage = resolvePositiveInt(options?.startPage, 1);
     const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES);
+    const concurrency = resolveCappedInt(options?.concurrency, MAX_CONCURRENCY, 1);
+
+    const { responses, count, truncated } = await fetchWithLookAhead(
+        (number) => fetchPage(number, perPage),
+        startPage,
+        maxPages,
+        concurrency
+    );
 
     const items: ArrayElement<TPage, K>[] = [];
     const pages: Array<{ pageInfo: PageInfo; items: ArrayElement<TPage, K>[] }> = [];
-    let page = startPage;
-    let pageCount = 0;
-    let truncated = false;
-
-    while (pageCount < maxPages) {
-        const response = await fetchPage(page, perPage);
+    for (const response of responses) {
         const pageItems = response[itemsKey] as unknown as ArrayElement<TPage, K>[];
-        const pageInfo = response.pageInfo;
-
-        pages.push({ pageInfo, items: pageItems });
+        pages.push({ pageInfo: response.pageInfo, items: pageItems });
         items.push(...pageItems);
-        pageCount += 1;
-
-        if (!pageInfo.hasNextPage) {
-            break;
-        }
-        if (pageCount >= maxPages) {
-            truncated = true;
-            break;
-        }
-        page += 1;
     }
 
-    return { items, pages, pageCount, truncated };
+    return { items, pages, pageCount: count, truncated };
 }
 
 /**
@@ -234,13 +360,15 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
  * AniList returns large user lists in chunks via the `chunk`/`perChunk`/`hasNextChunk`
  * contract on `MediaListCollection`. This helper advances `chunk` from `startChunk`,
  * extracts the items array at `itemsKey` (typically `"lists"`), and stops when AniList
- * reports no further chunks or when the `maxChunks` guard fires.
+ * reports no further chunks or when the `maxChunks` guard fires. Pass
+ * `concurrency` to keep multiple chunk requests in flight at once; results are
+ * still collected strictly in chunk order.
  *
  * @typeParam TChunk - The chunk response shape (must include `hasNextChunk`).
  * @typeParam K - The key of the items array on `TChunk`.
  * @param fetchChunk - Callback that fetches a single chunk given its 1-based number and `perChunk`.
  * @param itemsKey - The key of the items array on the chunk response (e.g. `"lists"`).
- * @param options - Optional `perChunk`, `startChunk`, and `maxChunks` controls.
+ * @param options - Optional `perChunk`, `startChunk`, `maxChunks`, and `concurrency` controls.
  * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run.
  * @see https://docs.anilist.co/reference/object/medialistcollection
  * @example
@@ -250,7 +378,7 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
  *     { userId: 542244, type: "ANIME", chunk, perChunk }
  *   ),
  *   "lists",
- *   { perChunk: 500, maxChunks: 20 }
+ *   { perChunk: 500, maxChunks: 20, concurrency: 3 }
  * );
  * console.log(result.items.length, result.truncated);
  * ```
@@ -266,31 +394,22 @@ export async function paginateChunks<
     const perChunk = resolveCappedInt(options?.perChunk, MAX_PER_CHUNK, DEFAULT_PER_CHUNK);
     const startChunk = resolvePositiveInt(options?.startChunk, 1);
     const maxChunks = resolvePositiveInt(options?.maxChunks, DEFAULT_MAX_CHUNKS);
+    const concurrency = resolveCappedInt(options?.concurrency, MAX_CONCURRENCY, 1);
+
+    const { responses, count, truncated } = await fetchWithLookAhead(
+        (number) => fetchChunk(number, perChunk),
+        startChunk,
+        maxChunks,
+        concurrency
+    );
 
     const items: ArrayElement<TChunk, K>[] = [];
     const chunks: Array<{ hasNextChunk: boolean; items: ArrayElement<TChunk, K>[] }> = [];
-    let chunk = startChunk;
-    let chunkCount = 0;
-    let truncated = false;
-
-    while (chunkCount < maxChunks) {
-        const response = await fetchChunk(chunk, perChunk);
+    for (const response of responses) {
         const chunkItems = response[itemsKey] as unknown as ArrayElement<TChunk, K>[];
-        const hasNextChunk = response.hasNextChunk;
-
-        chunks.push({ hasNextChunk, items: chunkItems });
+        chunks.push({ hasNextChunk: response.hasNextChunk, items: chunkItems });
         items.push(...chunkItems);
-        chunkCount += 1;
-
-        if (!hasNextChunk) {
-            break;
-        }
-        if (chunkCount >= maxChunks) {
-            truncated = true;
-            break;
-        }
-        chunk += 1;
     }
 
-    return { items, chunks, chunkCount, truncated };
+    return { items, chunks, chunkCount: count, truncated };
 }

@@ -423,25 +423,53 @@ function normalizeScalarType(rawType: string): Field["type"] {
 }
 
 /** Parse the variable type mappings object from an operation's method body. */
-function parseVariableTypeMappings(methodBody: string): Record<string, string> {
+function parseVariableTypeMappings(
+    methodBody: string,
+    sourceFile?: string
+): Record<string, string> {
     // The mappings object is declared either as a standalone `const
-    // variableTypeMappings = {...}` (legacy shape) or inline as the `mappings:`
-    // property of the `execute` options object. Match either form and extract
-    // the object body up to the matching closing brace.
+    // variableTypeMappings = {...}` (legacy shape), inline as the `mappings:`
+    // property of the `execute` options object, or as a reference to a
+    // module-level constant (`mappings: MediasMappings`) hoisted beside the
+    // document template. Match all three forms and extract the object body up
+    // to the matching closing brace.
     const out: Record<string, string> = {};
     const startRe = /(?:const variableTypeMappings\s*=\s*\{|mappings:\s*\{)/;
     const startMatch = startRe.exec(methodBody);
-    if (!startMatch) return {};
+    if (!startMatch) {
+        // Hoisted form: `mappings: <Identifier>` referencing a module-level
+        // `const <Identifier> = {...}` declared in the same source file.
+        const refMatch = /mappings:\s*([A-Za-z_]\w*)\s*,/.exec(methodBody);
+        if (refMatch && sourceFile) {
+            const constName = refMatch[1];
+            const declRe = new RegExp(`(?:const|let|var)\\s+${constName}\\s*=\\s*\\{`);
+            const fileText = readFileText(sourceFile);
+            const decl = declRe.exec(fileText);
+            if (decl) {
+                const declBodyStart = decl.index + decl[0].length;
+                const declBody = extractBalancedBraces(fileText, declBodyStart);
+                if (declBody !== null) {
+                    collectMappingEntries(declBody, out);
+                }
+            }
+        }
+        return out;
+    }
     const bodyStart = startMatch.index + startMatch[0].length;
     const body = extractBalancedBraces(methodBody, bodyStart);
     if (body === null) return {};
+    collectMappingEntries(body, out);
+    return out;
+}
+
+/** Collect `name: "type"` / `name: Identifier` entries from a mappings body. */
+function collectMappingEntries(body: string, out: Record<string, string>): void {
     const entryRe = /(\w+)\s*:\s*("([^"]*)"|([A-Za-z_]\w*))/g;
     let em = entryRe.exec(body);
     while (em !== null) {
         out[em[1]] = em[3] ?? em[4];
         em = entryRe.exec(body);
     }
-    return out;
 }
 
 /**
@@ -497,7 +525,7 @@ function buildFields(
     const resolved = findInterfaceFile(interfaceFilePath, interfaceName) ?? interfaceFilePath;
     const members = parseInterfaceMembers(resolved, interfaceName);
     if (members.length === 0) return [];
-    const mappings = parseVariableTypeMappings(methodBody);
+    const mappings = parseVariableTypeMappings(methodBody, interfaceFilePath);
 
     return members.map((mem) => {
         const mapping = mappings[mem.name];
@@ -675,21 +703,28 @@ function discoverOperations(): RawOp[] {
             continue;
         }
 
-        // Custom signature (single line).
-        if (
-            /^\s*custom:\s*<[^>]*>\(query:\s*string,\s*variables\?:\s*Record<string, unknown>\)\s*=>\s*Promise<[^>]*>;\s*$/.test(
-                line
-            )
-        ) {
-            ops.push({
-                category: "custom",
-                name: "custom",
-                variablesType: "",
-                responseType: "any",
-                description: jsdocMainText(findJsdocAbove(lines, i)),
-                className: null,
-            });
-            continue;
+        // Custom signature — may span one or several lines.
+        if (/^\s*custom:\s*</.test(line)) {
+            let combined = line;
+            for (let k = i + 1; k < Math.min(i + 8, lines.length); k++) {
+                combined += " " + lines[k].trim();
+                if (lines[k].includes("=>") && lines[k].includes(";")) break;
+            }
+            if (
+                /^\s*custom:\s*<[^>]*>\(\s*query:\s*string,\s*variables\?:\s*Record<string, unknown>(?:,\s*options\?:\s*[A-Za-z]+)?\s*\)\s*=>\s*Promise<[^>]*>;/.test(
+                    combined
+                )
+            ) {
+                ops.push({
+                    category: "custom",
+                    name: "custom",
+                    variablesType: "",
+                    responseType: "any",
+                    description: jsdocMainText(findJsdocAbove(lines, i)),
+                    className: null,
+                });
+                continue;
+            }
         }
 
         // Operation signature — may span one or several lines.
@@ -715,7 +750,7 @@ function tryParseSignature(
 ): { name: string; variablesType: string; responseType: string } | null {
     // Single-line form: `name: (variables: XVars) => Promise<XResp>;`
     const single =
-        /^\s+([a-zA-Z]+):\s*\(variables:\s*([A-Za-z]+)\)\s*=>\s*Promise<([A-Za-z]+)>;\s*$/.exec(
+        /^\s+([a-zA-Z]+):\s*\(variables:\s*([A-Za-z]+)(?:,\s*options\?:\s*[A-Za-z]+)?\)\s*=>\s*Promise<([A-Za-z]+)>;\s*$/.exec(
             lines[start]
         );
     if (single) {
@@ -731,7 +766,10 @@ function tryParseSignature(
         combined += " " + lines[k].trim();
         if (lines[k].includes("=>") && lines[k].includes(";")) break;
     }
-    const m = /\(\s*variables:\s*([A-Za-z]+)\s*\)\s*=>\s*Promise<([A-Za-z]+)>;/.exec(combined);
+    const m =
+        /\(\s*variables:\s*([A-Za-z]+)(?:,\s*options\?:\s*[A-Za-z]+)?\s*\)\s*=>\s*Promise<([A-Za-z]+)>;/.exec(
+            combined
+        );
     if (!m) return null;
     return { name, variablesType: m[1], responseType: m[2] };
 }

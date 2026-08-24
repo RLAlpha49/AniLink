@@ -175,10 +175,11 @@ aniLink.anilist.query.page.medias({
 });
 
 // Collecting every item across all pages with paginate
+// (concurrency keeps up to 4 page requests in flight; results stay in page order)
 const result = await aniLink.anilist.paginate(
     (page, perPage) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" }),
     "media",
-    { perPage: 50, maxPages: 10 }
+    { perPage: 50, maxPages: 10, concurrency: 4 }
 );
 console.log(result.items.length, result.pageCount, result.truncated);
 
