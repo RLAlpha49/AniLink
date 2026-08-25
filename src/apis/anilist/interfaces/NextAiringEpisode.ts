@@ -1,21 +1,33 @@
 /**
- * `NextAiringEpisode` is an interface representing the next airing episode of a media.
- * It includes the airing time, time until airing, and the episode number each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `NextAiringEpisode` — the upcoming airing schedule entry of an anime.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/airingschedule
  */
 export interface NextAiringEpisode {
     /**
-     * `airingAt` is a number representing the airing time of the next episode.
+     * The time the episode airs at
      */
     airingAt: number;
 
     /**
-     * `timeUntilAiring` is a number representing the time until the next episode airs.
+     * Seconds until episode starts airing
      */
     timeUntilAiring: number;
 
     /**
-     * `episode` is a number representing the episode number of the next airing episode.
+     * The airing episode number
      */
     episode: number;
 }
+
+// @generated-end

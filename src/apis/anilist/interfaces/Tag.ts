@@ -1,51 +1,63 @@
 /**
- * `Tag` is an interface representing a tag.
- * It includes the id, name, description, category, rank, isGeneralSpoiler, isMediaSpoiler, isAdult, and userId each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `Tag` — a content tag attached to a media.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediatag
  */
 export interface Tag {
     /**
-     * `id` is a number representing the id of the tag.
+     * The id of the tag
      */
     id: number;
 
     /**
-     * `name` is a string representing the name of the tag.
+     * The name of the tag
      */
     name: string;
 
     /**
-     * `description` is a string representing the description of the tag.
+     * A general description of the tag
      */
     description: string;
 
     /**
-     * `category` is a string representing the category of the tag.
+     * The categories of tags this tag belongs to
      */
     category: string;
 
     /**
-     * `rank` is a number representing the rank of the tag.
+     * The relevance ranking of the tag out of the 100 for this media
      */
     rank: number;
 
     /**
-     * `isGeneralSpoiler` is a boolean representing whether the tag is a general spoiler.
+     * If the tag could be a spoiler for any media
      */
     isGeneralSpoiler: boolean;
 
     /**
-     * `isMediaSpoiler` is a boolean representing whether the tag is a media spoiler.
+     * If the tag is a spoiler for this media
      */
     isMediaSpoiler: boolean;
 
     /**
-     * `isAdult` is a boolean representing whether the tag is adult.
+     * If the tag is only for adult 18+ media
      */
     isAdult: boolean;
 
     /**
-     * `userId` is a number representing the id of the user who created the tag.
+     * The user who submitted the tag
      */
     userId: number;
 }
+
+// @generated-end

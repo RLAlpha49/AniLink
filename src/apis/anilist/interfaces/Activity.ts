@@ -1,406 +1,381 @@
-import { type BasicUser } from "./Basic";
-
 /**
- * `ActivityReply` is an interface representing a reply to an activity.
- * It includes the id of the reply, the user id, the activity id, the text of the reply, the like count, the like status, the creation date, the user details, and the likes details.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type BasicUser } from "./Basic";
+/**
+ * `ActivityReply` — a reply to an activity.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/activityreply
  */
 export interface ActivityReply {
     /**
-     * `id` is a number representing the unique identifier of the reply.
+     * The id of the reply
      */
     id: number;
 
     /**
-     * `userId` is a number representing the unique identifier of the user who made the reply.
+     * The id of the replies creator
      */
     userId: number;
 
     /**
-     * `activityId` is a number representing the unique identifier of the activity to which the reply was made.
+     * The id of the parent activity
      */
     activityId: number;
 
     /**
-     * `text` is a string representing the text of the reply.
+     * The reply text
      */
     text: string;
 
     /**
-     * `likeCount` is a number representing the count of likes the reply has received.
+     * The amount of likes the reply has
      */
     likeCount: number;
 
     /**
-     * `isLiked` is a boolean representing whether the reply is liked by the user or not.
+     * If the currently authenticated user liked the reply
      */
     isLiked: boolean;
 
     /**
-     * `createdAt` is a number representing the Unix timestamp when the reply was created.
+     * The time the reply was created at
      */
     createdAt: number;
 
     /**
-     * `user` is an object of type `BasicUser` representing the details of the user who made the reply.
+     * The user who created reply
      */
     user: BasicUser;
 
     /**
-     * `likes` is an array of `BasicUser` objects representing the details of the users who liked the reply.
+     * The users who liked the reply
      */
     likes: BasicUser[];
 }
 
 /**
- * `TextActivity` is an interface representing a text activity.
- * It includes the id, user id, type, reply count, text, site url, lock status, subscription status, like count, like status, pin status, creation date, user details, replies, and likes.
+ * `TextActivity` — a text status activity of a user.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/textactivity
  */
 export interface TextActivity {
     /**
-     * `id` is a number representing the unique identifier of the text activity.
+     * The id of the activity
      */
     id: number;
 
     /**
-     * `userId` is a number representing the unique identifier of the user who made the text activity.
+     * The user id of the activity's creator
      */
     userId: number;
 
     /**
-     * `type` is the activity type discriminator of the text activity.
-     * It is always "TEXT", which lets `Activity` work as a discriminated union.
+     * The type of activity
      */
     type: "TEXT";
 
     /**
-     * `replyCount` is a number representing the count of replies the text activity has received.
+     * The number of activity replies
      */
     replyCount: number;
 
     /**
-     * `text` is a string representing the text of the text activity.
+     * The status text (Markdown)
      */
     text: string;
 
     /**
-     * `siteUrl` is a string representing the URL of the site where the text activity is posted.
+     * The url for the activity page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `isLocked` is a boolean representing whether the text activity is locked or not.
+     * If the activity is locked and can receive replies
      */
     isLocked: boolean;
 
     /**
-     * `isSubscribed` is a boolean representing whether the user is subscribed to the text activity or not.
+     * If the currently authenticated user is subscribed to the activity
      */
     isSubscribed: boolean;
 
     /**
-     * `likeCount` is a number representing the count of likes the text activity has received.
+     * The amount of likes the activity has
      */
     likeCount: number;
 
     /**
-     * `isLiked` is a boolean representing whether the text activity is liked by the user or not.
+     * If the currently authenticated user liked the activity
      */
     isLiked: boolean;
 
     /**
-     * `isPinned` is a boolean representing whether the text activity is pinned or not.
+     * If the activity is pinned to the top of the users activity feed
      */
     isPinned: boolean;
 
     /**
-     * `createdAt` is a number representing the Unix timestamp when the text activity was created.
+     * The time the activity was created at
      */
     createdAt: number;
 
     /**
-     * `user` is an object of type `BasicUser` representing the details of the user who made the text activity.
+     * The user who created the activity
      */
     user: BasicUser;
 
     /**
-     * `replies` is an array of `ActivityReply` objects representing the replies to the text activity.
+     * The written replies to the activity
      */
     replies: ActivityReply[];
 
     /**
-     * `likes` is an array of `BasicUser` objects representing the users who liked the text activity.
+     * The users who liked the activity
      */
     likes: BasicUser[];
 }
 
 /**
- * `ListActivity` is an interface representing a list activity.
- * It includes the id, user id, type, reply count, status, progress, lock status, subscription status, like count, like status, pin status, site url, creation date, media details, user details, replies, and likes.
+ * `ListActivity` — a list update activity of a user.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/listactivity
  */
 export interface ListActivity {
     /**
-     * `id` is a number representing the unique identifier of the list activity.
+     * The id of the activity
      */
     id: number;
 
     /**
-     * `userId` is a number representing the unique identifier of the user who made the list activity.
+     * The user id of the activity's creator
      */
     userId: number;
 
     /**
-     * `type` is the activity type discriminator of the list activity.
-     * It is "ANIME_LIST" for anime list activities and "MANGA_LIST" for manga list activities,
-     * which lets `Activity` work as a discriminated union.
+     * The type of activity
      */
     type: "ANIME_LIST" | "MANGA_LIST";
 
     /**
-     * `replyCount` is a number representing the count of replies the list activity has received.
+     * The number of activity replies
      */
     replyCount: number;
 
     /**
-     * `status` is a string representing the status of the list activity.
+     * The list item's textual status
      */
     status: string;
 
     /**
-     * `progress` is a number representing the progress of the list activity.
+     * The list progress made
      */
-    progress: number;
+    progress: string;
 
     /**
-     * `isLocked` is a boolean representing whether the list activity is locked or not.
+     * If the activity is locked and can receive replies
      */
     isLocked: boolean;
 
     /**
-     * `isSubscribed` is a boolean representing whether the user is subscribed to the list activity or not.
+     * If the currently authenticated user is subscribed to the activity
      */
     isSubscribed: boolean;
 
     /**
-     * `likeCount` is a number representing the count of likes the list activity has received.
+     * The amount of likes the activity has
      */
     likeCount: number;
 
     /**
-     * `isLiked` is a boolean representing whether the list activity is liked by the user or not.
+     * If the currently authenticated user liked the activity
      */
     isLiked: boolean;
 
     /**
-     * `isPinned` is a boolean representing whether the list activity is pinned or not.
+     * If the activity is pinned to the top of the users activity feed
      */
     isPinned: boolean;
 
     /**
-     * `siteUrl` is a string representing the URL of the site where the list activity is posted.
+     * The url for the activity page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `createdAt` is a number representing the Unix timestamp when the list activity was created.
+     * The time the activity was created at
      */
     createdAt: number;
 
     /**
-     * `media` is an object representing the media details of the list activity.
-     * It includes the id and the title of the media.
+     * The associated media to the activity update
      */
     media: {
         /**
-         * `id` is a number representing the unique identifier of the media.
+         * The id of the media
          */
         id: number;
 
         /**
-         * `title` is an object representing the title of the media.
-         * It includes the romaji and english title of the media.
+         * The official titles of the media in various languages
          */
         title: {
             /**
-             * `romaji` is a string representing the romaji title of the media.
+             * The romanization of the native language title
              */
             romaji: string;
 
             /**
-             * `english` is a string representing the english title of the media.
+             * The official english title
              */
             english: string;
         };
     };
 
     /**
-     * `user` is an object of type `BasicUser` representing the details of the user who made the list activity.
+     * The owner of the activity
      */
     user: BasicUser;
 
     /**
-     * `replies` is an array of `ActivityReply` objects representing the replies to the list activity.
+     * The written replies to the activity
      */
     replies: ActivityReply[];
 
     /**
-     * `likes` is an array of `BasicUser` objects representing the users who liked the list activity.
+     * The users who liked the activity
      */
     likes: BasicUser[];
 }
 
 /**
- * `MessageActivity` is an interface representing a message activity.
- * It includes the id, recipient id, messenger id, type, reply count, message, lock status, subscription status, like count, like status, privacy status, site url, creation date, recipient details, messenger details, replies, and likes.
+ * `MessageActivity` — a direct message activity between two users.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/messageactivity
  */
 export interface MessageActivity {
     /**
-     * `id` is a number representing the unique identifier of the message activity.
+     * The id of the activity
      */
     id: number;
 
     /**
-     * `recipientId` is a number representing the unique identifier of the recipient of the message activity.
+     * The user id of the activity's recipient
      */
     recipientId: number;
 
     /**
-     * `messengerId` is a number representing the unique identifier of the messenger of the message activity.
+     * The user id of the activity's sender
      */
     messengerId: number;
 
     /**
-     * `type` is the activity type discriminator of the message activity.
-     * It is always "MESSAGE", which lets `Activity` work as a discriminated union.
+     * The type of the activity
      */
     type: "MESSAGE";
 
     /**
-     * `replyCount` is a number representing the count of replies the message activity has received.
+     * The number of activity replies
      */
     replyCount: number;
 
     /**
-     * `message` is a string representing the message of the message activity.
+     * The message text (Markdown)
      */
     message: string;
 
     /**
-     * `isLocked` is a boolean representing whether the message activity is locked or not.
+     * If the activity is locked and can receive replies
      */
     isLocked: boolean;
 
     /**
-     * `isSubscribed` is a boolean representing whether the user is subscribed to the message activity or not.
+     * If the currently authenticated user is subscribed to the activity
      */
     isSubscribed: boolean;
 
     /**
-     * `likeCount` is a number representing the count of likes the message activity has received.
+     * The amount of likes the activity has
      */
     likeCount: number;
 
     /**
-     * `isLiked` is a boolean representing whether the message activity is liked by the user or not.
+     * If the currently authenticated user liked the activity
      */
     isLiked: boolean;
 
     /**
-     * `isPrivate` is a boolean representing whether the message activity is private or not.
+     * If the message is private and only viewable to the sender and recipients
      */
     isPrivate: boolean;
 
     /**
-     * `siteUrl` is a string representing the URL of the site where the message activity is posted.
+     * The url for the activity page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `createdAt` is a number representing the Unix timestamp when the message activity was created.
+     * The time the activity was created at
      */
     createdAt: number;
 
     /**
-     * `recipient` is an object of type `BasicUser` representing the details of the recipient of the message activity.
+     * The user who the activity message was sent to
      */
     recipient: BasicUser;
 
     /**
-     * `messenger` is an object of type `BasicUser` representing the details of the messenger of the message activity.
+     * The user who sent the activity message
      */
     messenger: BasicUser;
 
     /**
-     * `replies` is an array of `ActivityReply` objects representing the replies to the message activity.
+     * The written replies to the activity
      */
     replies: ActivityReply[];
 
     /**
-     * `likes` is an array of `BasicUser` objects representing the users who liked the message activity.
+     * The users who liked the activity
      */
     likes: BasicUser[];
 }
 
 /**
- * `Activity` is a discriminated union representing a single activity returned by the activity query
- * and the activity-related mutations. The GraphQL selection sets flatten the `ActivityUnion` with
- * one `...on X` fragment per member, so exactly one member shape is present at runtime; narrow on
- * the literal `type` field to access member-specific properties.
+ * `Activity` — a single activity returned by the activity query and activity mutations; narrow on the literal `type` field.
  *
- * For the broader likeable-entity payload returned by `ToggleLikeV2` (which additionally selects
- * `ActivityReply`, `Thread`, and `ThreadComment` fragments), see the `Likeable` union.
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
 export type Activity = TextActivity | ListActivity | MessageActivity;
 
 /**
- * `ActivityHistory` is an interface representing the history of an activity.
- * It includes the date of the activity, the amount of the activity, and the level of the activity.
- * @see https://docs.anilist.co/reference/object/useractivityhistory
- */
-export interface ActivityHistory {
-    /**
-     * `date` is a number representing the date of the activity.
-     * It is expressed as a Unix timestamp.
-     */
-    date: number;
-
-    /**
-     * `amount` is a number representing the amount of the activity.
-     * The exact meaning of this property depends on the context in which the `ActivityHistory` interface is used.
-     */
-    amount: number;
-
-    /**
-     * `level` is a number representing the level of the activity.
-     * The exact meaning of this property depends on the context in which the `ActivityHistory` interface is used.
-     */
-    level: number;
-}
-
-/**
- * `ActivityNotification` is an interface representing a notification related to an activity.
- * It includes the id of the notification, the user id, the type of the notification, the activity id, the context, the creation date, the activity details, and the user details.
+ * `ActivityNotification` — an activity-related notification; narrow on the literal `type` field.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface ActivityNotification {
     /**
-     * `id` is a number representing the unique identifier of the notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `userId` is a number representing the unique identifier of the user associated with the notification.
+     * The id of the user who mentioned the authenticated user
      */
     userId: number;
 
     /**
-     * `type` is the notification type discriminator of the activity notification.
-     * It is one of "ACTIVITY_MENTION", "ACTIVITY_REPLY", "ACTIVITY_LIKE", "ACTIVITY_REPLY_LIKE",
-     * or "ACTIVITY_REPLY_SUBSCRIBED", which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type:
         | "ACTIVITY_MENTION"
@@ -410,27 +385,29 @@ export interface ActivityNotification {
         | "ACTIVITY_REPLY_SUBSCRIBED";
 
     /**
-     * `activityId` is a number representing the unique identifier of the activity associated with the notification.
+     * The id of the activity where mentioned
      */
     activityId: number;
 
     /**
-     * `context` is a string representing the context of the notification.
+     * The notification context text
      */
     context: string;
 
     /**
-     * `createdAt` is a number representing the Unix timestamp when the notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 
     /**
-     * `activity` is an object of type `Activity` representing the details of the activity associated with the notification.
+     * The liked activity
      */
     activity: Activity;
 
     /**
-     * `user` is an object of type `BasicUser` representing the details of the user associated with the notification.
+     * The user who mentioned the authenticated user
      */
     user: BasicUser;
 }
+
+// @generated-end

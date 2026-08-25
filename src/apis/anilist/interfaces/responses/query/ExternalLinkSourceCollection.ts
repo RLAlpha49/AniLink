@@ -1,56 +1,68 @@
 /**
- * `ExternalLinkSourceCollectionResponse` is an interface representing the response from an external link source collection query.
- * It includes the id, url, site, siteId, type, language, color, icon, notes, and the disabled status of the external link source.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `ExternalLinkSourceCollectionResponse` — an external link source with streaming metadata.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediaexternallink
  */
 export interface ExternalLinkSourceCollectionResponse {
     /**
-     * `id` is a number representing the id of the external link source.
+     * The id of the external link
      */
     id: number;
 
     /**
-     * `url` is a string representing the url of the external link source.
+     * The url of the external link or base url of link source
      */
     url: string;
 
     /**
-     * `site` is a string representing the site of the external link source.
+     * The links website site name
      */
     site: string;
 
     /**
-     * `siteId` is a string representing the site id of the external link source.
+     * The links website site id
      */
-    siteId: string;
+    siteId: number;
 
     /**
-     * `type` is a string representing the type of the external link source.
+     * `type` is a string value representing the type.
      */
     type: string;
 
     /**
-     * `language` is a string representing the language of the external link source.
+     * Language the site content is in. See Staff language field for values.
      */
     language: string;
 
     /**
-     * `color` is a string representing the color of the external link source.
+     * `color` is a string value representing the color.
      */
     color: string;
 
     /**
-     * `icon` is a string representing the icon of the external link source.
+     * The icon image url of the site. Not available for all links. Transparent PNG 64x64
      */
     icon: string;
 
     /**
-     * `notes` is a string representing the notes of the external link source.
+     * `notes` is a string value representing the notes.
      */
     notes: string;
 
     /**
-     * `isDisabled` is a boolean representing the disabled status of the external link source.
+     * `isDisabled` is a boolean value representing the is disabled.
      */
     isDisabled: boolean;
 }
+
+// @generated-end

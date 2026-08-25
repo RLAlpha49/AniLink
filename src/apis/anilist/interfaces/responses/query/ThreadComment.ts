@@ -1,79 +1,89 @@
-import { type ThreadResponse } from "./Thread";
-import { type BasicUser } from "../../Basic";
-
 /**
- * `ThreadCommentResponse` is an interface representing the response from a thread comment query.
- * It includes the comment's id, userId, threadId, comment, likeCount, isLiked status, siteUrl, createdAt, updatedAt, thread of type `ThreadResponse`, user of type `BasicUser`, likes of type `BasicUser[]`, childComments of type `ThreadCommentResponse[]`, and isLocked status.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type BasicUser } from "../../Basic";
+import { type ThreadResponse } from "./Thread";
+/**
+ * `ThreadCommentResponse` — a forum-thread comment with its thread, author, and nested replies.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export interface ThreadCommentResponse {
     /**
-     * `id` is a number representing the id of the thread comment.
+     * The id of the comment
      */
     id: number;
 
     /**
-     * `userId` is a number representing the id of the user who made the comment.
+     * The user id of the comment's owner
      */
     userId: number;
 
     /**
-     * `threadId` is a number representing the id of the thread where the comment was made.
+     * The id of thread the comment belongs to
      */
     threadId: number;
 
     /**
-     * `comment` is a string representing the content of the comment.
+     * The text content of the comment (Markdown)
      */
     comment: string;
 
     /**
-     * `likeCount` is a number representing the number of likes the comment has received.
+     * The amount of likes the comment has
      */
     likeCount: number;
 
     /**
-     * `isLiked` is a boolean indicating whether the comment is liked by the user.
+     * If the currently authenticated user liked the comment
      */
     isLiked: boolean;
 
     /**
-     * `siteUrl` is a string representing the URL of the comment on the site.
+     * The url for the comment page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the comment was created.
+     * The time of the comments creation
      */
     createdAt: number;
 
     /**
-     * `updatedAt` is a number representing the timestamp when the comment was last updated.
+     * The time of the comments last update
      */
     updatedAt: number;
 
     /**
-     * `thread` is an instance of `ThreadResponse` representing the thread where the comment was made.
+     * The thread the comment belongs to
      */
     thread: ThreadResponse;
 
     /**
-     * `user` is an instance of `BasicUser` representing the user who made the comment.
+     * The user who created the comment
      */
     user: BasicUser;
 
     /**
-     * `likes` is an array of `BasicUser` representing the users who liked the comment.
+     * The users who liked the comment
      */
     likes: BasicUser[];
 
     /**
-     * `childComments` is an array of `ThreadCommentResponse` representing the child comments of the comment.
+     * The comment's child reply comments
      */
-    childComments: ThreadCommentResponse[];
+    childComments: unknown;
 
     /**
-     * `isLocked` is a boolean indicating whether the comment is locked.
+     * If the comment tree is locked and may not receive replies or edits
      */
     isLocked: boolean;
 }
+
+// @generated-end

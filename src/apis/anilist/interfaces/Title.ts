@@ -1,26 +1,38 @@
 /**
- * `Title` is an interface representing a title.
- * It includes the romaji, english, native, and userPreferred each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `Title` — the localized title variants of a media.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediatitle
  */
 export interface Title {
     /**
-     * `romaji` is a string representing the romaji of the title.
+     * The romanization of the native language title
      */
     romaji: string;
 
     /**
-     * `english` is a string representing the english of the title.
+     * The official english title
      */
     english: string;
 
     /**
-     * `native` is a string representing the native of the title.
+     * Official title in it's native language
      */
     native: string;
 
     /**
-     * `userPreferred` is a string representing the user preferred of the title.
+     * The currently authenticated users preferred title language. Default romaji for non-authenticated
      */
     userPreferred: string;
 }
+
+// @generated-end

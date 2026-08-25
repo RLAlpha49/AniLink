@@ -1,21 +1,33 @@
 /**
- * `ExternalLink` is an interface representing an external link.
- * It includes the id, url, and site each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `ExternalLink` — an external link associated with a media.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediaexternallink
  */
 export interface ExternalLink {
     /**
-     * `id` is a number representing the unique identifier of the external link.
+     * The id of the external link
      */
     id: number;
 
     /**
-     * `url` is a string representing the URL of the external link.
+     * The url of the external link or base url of link source
      */
     url: string;
 
     /**
-     * `site` is a string representing the site of the external link.
+     * The links website site name
      */
     site: string;
 }
+
+// @generated-end

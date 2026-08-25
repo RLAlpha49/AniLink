@@ -1,26 +1,38 @@
 /**
- * `CoverImage` is an interface representing a cover image.
- * It includes the extra large, large, medium size images and color each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `CoverImage` — a media cover image.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediacoverimage
  */
 export interface CoverImage {
     /**
-     * `extraLarge` is a string representing the URL of the extra large size cover image.
+     * The cover image url of the media at its largest size. If this size isn't available, large will be provided instead.
      */
     extraLarge: string;
 
     /**
-     * `large` is a string representing the URL of the large size cover image.
+     * The cover image url of the media at a large size
      */
     large: string;
 
     /**
-     * `medium` is a string representing the URL of the medium size cover image.
+     * The cover image url of the media at medium size
      */
     medium: string;
 
     /**
-     * `color` is a string representing the color of the cover image.
+     * Average #hex color of cover image
      */
     color: string;
 }
+
+// @generated-end

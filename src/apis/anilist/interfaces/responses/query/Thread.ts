@@ -1,130 +1,139 @@
-import { type MediaResponse } from "./Media";
-import { type BasicUser } from "../../Basic";
-
 /**
- * `ThreadResponse` is an interface representing the response from a thread query.
- * It includes the thread's id, title, body, userId, replyUserId, replyCommentId, replyCount, viewCount, isLocked status, isSticky status, isSubscribed status, likeCount, isLiked status, repliedAt, createdAt, updatedAt, user of type `BasicUser`, replyUser of type `BasicUser`, likes of type `BasicUser[]`, siteUrl, categories, and mediaCategories of type `MediaResponse[]`.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type BasicUser } from "../../Basic";
+import { type Media } from "../../Media";
+/**
+ * `ThreadResponse` — a forum thread with its body, categories, and participants.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/thread
  */
 export interface ThreadResponse {
     /**
-     * `id` is a number representing the id of the thread.
+     * The id of the thread
      */
     id: number;
 
     /**
-     * `title` is a string representing the title of the thread.
+     * The title of the thread
      */
     title: string;
 
     /**
-     * `body` is a string representing the body of the thread.
+     * The text body of the thread (Markdown)
      */
     body: string;
 
     /**
-     * `userId` is a number representing the id of the user who created the thread.
+     * The id of the thread owner user
      */
     userId: number;
 
     /**
-     * `replyUserId` is a number representing the id of the user who replied to the thread.
+     * The id of the user who most recently commented on the thread
      */
     replyUserId: number;
 
     /**
-     * `replyCommentId` is a number representing the id of the comment that was replied to in the thread.
+     * The id of the most recent comment on the thread
      */
     replyCommentId: number;
 
     /**
-     * `replyCount` is a number representing the number of replies in the thread.
+     * The number of comments on the thread
      */
     replyCount: number;
 
     /**
-     * `viewCount` is a number representing the number of views the thread has received.
+     * The number of times users have viewed the thread
      */
     viewCount: number;
 
     /**
-     * `isLocked` is a boolean indicating whether the thread is locked.
+     * If the thread is locked and can receive comments
      */
     isLocked: boolean;
 
     /**
-     * `isSticky` is a boolean indicating whether the thread is sticky.
+     * If the thread is stickied and should be displayed at the top of the page
      */
     isSticky: boolean;
 
     /**
-     * `isSubscribed` is a boolean indicating whether the user is subscribed to the thread.
+     * If the currently authenticated user is subscribed to the thread
      */
     isSubscribed: boolean;
 
     /**
-     * `likeCount` is a number representing the number of likes the thread has received.
+     * The amount of likes the thread has
      */
     likeCount: number;
 
     /**
-     * `isLiked` is a boolean indicating whether the thread is liked by the user.
+     * If the currently authenticated user liked the thread
      */
     isLiked: boolean;
 
     /**
-     * `repliedAt` is a number representing the timestamp when the thread was replied to.
+     * The time of the last reply
      */
     repliedAt: number;
 
     /**
-     * `createdAt` is a number representing the timestamp when the thread was created.
+     * The time of the thread creation
      */
     createdAt: number;
 
     /**
-     * `updatedAt` is a number representing the timestamp when the thread was last updated.
+     * The time of the thread last update
      */
     updatedAt: number;
 
     /**
-     * `user` is an instance of `BasicUser` representing the user who created the thread.
+     * The owner of the thread
      */
     user: BasicUser;
 
     /**
-     * `replyUser` is an instance of `BasicUser` representing the user who replied to the thread.
+     * The user to last reply to the thread
      */
     replyUser: BasicUser;
 
     /**
-     * `likes` is an array of `BasicUser` representing the users who liked the thread.
+     * The users who liked the thread
      */
     likes: BasicUser[];
 
     /**
-     * `siteUrl` is a string representing the URL of the thread on the site.
+     * The url for the thread page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `categories` is an array of objects, each representing a category associated with the thread.
-     * Each category object includes an `id` and a `name`.
+     * The categories of the thread
      */
     categories: Array<{
         /**
-         * `id` is a number representing the id of the category.
+         * The id of the category
          */
         id: number;
 
         /**
-         * `name` is a string representing the name of the category.
+         * The name of the category
          */
         name: string;
     }>;
 
     /**
-     * `mediaCategories` is an array of `MediaResponse` representing the media categories associated with the thread.
+     * The media categories of the thread
      */
-    mediaCategories: MediaResponse[];
+    mediaCategories: Media[];
 }
+
+// @generated-end

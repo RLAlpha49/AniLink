@@ -1,96 +1,106 @@
-import { type Distribution, type ScoreDistribution } from "./Distribution";
-import { type ListScores } from "./ListScores";
-import { type Favoured } from "./Favoured";
-import { type ActivityHistory } from "./Activity";
-
 /**
- * `UserStats` is an interface representing a user's statistics.
- * It includes the watchedTime, chaptersRead, activityHistory, animeStatusDistribution, mangaStatusDistribution, animeScoreDistribution, mangaScoreDistribution, animeListScores, mangaListScores, favouredGenresOverview, favouredGenres, favouredTags, favouredActors, favouredStaff, favouredStudios, favouredYears, and favouredFormats each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type ActivityHistory } from "./ActivityHistory";
+import { type ScoreDistribution, type StatusDistribution } from "./Distribution";
+import { type Favoured } from "./Favoured";
+import { type ListScores } from "./ListScores";
+/**
+ * `UserStats` — a user's aggregate activity stats, distributions, list scores, and favoured overviews.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/userstats
  */
 export interface UserStats {
     /**
-     * `watchedTime` is a number representing the total time watched by the user.
+     * The amount of anime the user has watched in minutes
      */
     watchedTime: number;
 
     /**
-     * `chaptersRead` is a number representing the total chapters read by the user.
+     * The amount of manga chapters the user has read
      */
     chaptersRead: number;
 
     /**
-     * `activityHistory` is an array of `ActivityHistory` representing the user's activity history.
+     * `activityHistory` is a list of `ActivityHistory` entries representing the activity history.
      */
     activityHistory: ActivityHistory[];
 
     /**
-     * `animeStatusDistribution` is an array of `Distribution` representing the distribution of the user's anime status.
+     * `animeStatusDistribution` is a list of `StatusDistribution` entries representing the anime status distribution.
      */
-    animeStatusDistribution: Distribution[];
+    animeStatusDistribution: StatusDistribution[];
 
     /**
-     * `mangaStatusDistribution` is an array of `Distribution` representing the distribution of the user's manga status.
+     * `mangaStatusDistribution` is a list of `StatusDistribution` entries representing the manga status distribution.
      */
-    mangaStatusDistribution: Distribution[];
+    mangaStatusDistribution: StatusDistribution[];
 
     /**
-     * `animeScoreDistribution` is an array of `ScoreDistribution` representing the distribution of the user's anime scores.
+     * `animeScoreDistribution` is a list of `ScoreDistribution` entries representing the anime score distribution.
      */
     animeScoreDistribution: ScoreDistribution[];
 
     /**
-     * `mangaScoreDistribution` is an array of `ScoreDistribution` representing the distribution of the user's manga scores.
+     * `mangaScoreDistribution` is a list of `ScoreDistribution` entries representing the manga score distribution.
      */
     mangaScoreDistribution: ScoreDistribution[];
 
     /**
-     * `animeListScores` is an instance of `ListScores` representing the user's anime list scores.
+     * `animeListScores` is an instance of `ListScores` representing the anime list scores.
      */
     animeListScores: ListScores;
 
     /**
-     * `mangaListScores` is an instance of `ListScores` representing the user's manga list scores.
+     * `mangaListScores` is an instance of `ListScores` representing the manga list scores.
      */
     mangaListScores: ListScores;
 
     /**
-     * `favouredGenresOverview` is an array of `Favoured` representing the user's favoured genres overview.
+     * `favouredGenresOverview` is a list of `Favoured` entries representing the favoured genres overview.
      */
     favouredGenresOverview: Favoured[];
 
     /**
-     * `favouredGenres` is an array of `Favoured` representing the user's favoured genres.
+     * `favouredGenres` is a list of `Favoured` entries representing the favoured genres.
      */
     favouredGenres: Favoured[];
 
     /**
-     * `favouredTags` is an array of `Favoured` representing the user's favoured tags.
+     * `favouredTags` is a list of `Favoured` entries representing the favoured tags.
      */
     favouredTags: Favoured[];
 
     /**
-     * `favouredActors` is an array of `Favoured` representing the user's favoured actors.
+     * `favouredActors` is a list of `Favoured` entries representing the favoured actors.
      */
     favouredActors: Favoured[];
 
     /**
-     * `favouredStaff` is an array of `Favoured` representing the user's favoured staff.
+     * `favouredStaff` is a list of `Favoured` entries representing the favoured staff.
      */
     favouredStaff: Favoured[];
 
     /**
-     * `favouredStudios` is an array of `Favoured` representing the user's favoured studios.
+     * `favouredStudios` is a list of `Favoured` entries representing the favoured studios.
      */
     favouredStudios: Favoured[];
 
     /**
-     * `favouredYears` is an array of `Favoured` representing the user's favoured years.
+     * `favouredYears` is a list of `Favoured` entries representing the favoured years.
      */
     favouredYears: Favoured[];
 
     /**
-     * `favouredFormats` is an array of `Favoured` representing the user's favoured formats.
+     * `favouredFormats` is a list of `Favoured` entries representing the favoured formats.
      */
     favouredFormats: Favoured[];
 }
+
+// @generated-end

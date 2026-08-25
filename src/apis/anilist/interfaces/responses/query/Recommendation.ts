@@ -1,39 +1,49 @@
-import { type MediaResponse } from "./Media";
-import { type BasicUser } from "../../Basic";
-
 /**
- * `RecommendationResponse` is an interface representing the response from a recommendation query.
- * It includes the id, rating, user rating, media of type `MediaResponse`, media recommendation of type `MediaResponse`, and user of type `BasicUser`.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type BasicUser } from "../../Basic";
+import { type Media } from "../../Media";
+/**
+ * `RecommendationResponse` — a media recommendation with its rating and author.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/recommendation
  */
 export interface RecommendationResponse {
     /**
-     * `id` is a number representing the id of the recommendation.
+     * The id of the recommendation
      */
     id: number;
 
     /**
-     * `rating` is a number representing the overall rating of the recommendation.
+     * Users rating of the recommendation
      */
     rating: number;
 
     /**
-     * `userRating` is a number representing the user's rating of the recommendation.
+     * The rating of the recommendation by currently authenticated user
      */
-    userRating: number;
+    userRating: string;
 
     /**
-     * `media` is an instance of `MediaResponse` representing the media being recommended.
+     * The media the recommendation is from
      */
-    media: MediaResponse;
+    media: Media;
 
     /**
-     * `mediaRecommendation` is an instance of `MediaResponse` representing the media that is being recommended as similar or related.
+     * The recommended media
      */
-    mediaRecommendation: MediaResponse;
+    mediaRecommendation: Media;
 
     /**
-     * `user` is an instance of `BasicUser` representing the user who made the recommendation.
+     * The user that first created the recommendation
      */
     user: BasicUser;
 }
+
+// @generated-end

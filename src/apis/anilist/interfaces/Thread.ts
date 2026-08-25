@@ -1,19 +1,27 @@
+/**
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type ThreadResponse } from "./responses/query/Thread";
 import { type ThreadCommentResponse } from "./responses/query/ThreadComment";
-
 /**
- * `Thread` is a type alias representing a single thread returned by thread-related
- * queries and mutations. The GraphQL selection sets flatten the thread object with
- * one flat field list, so the full `ThreadResponse` shape describes the member.
+ * `Thread` — an alias of ThreadResponse for readability at call sites.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/thread
  */
 export type Thread = ThreadResponse;
 
 /**
- * `ThreadComment` is a type alias representing a single thread comment returned by
- * thread-comment-related queries and mutations. The GraphQL selection sets flatten
- * the thread comment object with one flat field list, so the full
- * `ThreadCommentResponse` shape describes the member.
+ * `ThreadComment` — an alias of ThreadCommentResponse for readability at call sites.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export type ThreadComment = ThreadCommentResponse;
+
+// @generated-end

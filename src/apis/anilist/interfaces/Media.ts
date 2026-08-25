@@ -1,379 +1,270 @@
-import { type Title } from "./Title";
-import { type FuzzyDate } from "./FuzzyDate";
-import { type Trailer } from "./Trailer";
-import { type CoverImage } from "./CoverImage";
-import { type Tag } from "./Tag";
-import { type NextAiringEpisode } from "./NextAiringEpisode";
-import { type ExternalLink } from "./ExternalLink";
-import { type StreamingEpisode } from "./StreamingEpisode";
-import { type Ranking } from "./Ranking";
-import { type Stat } from "./Stat";
-import { type ScoreDistribution, type StatusDistribution } from "./Distribution";
-
 /**
- * `MediaListEntry` is an interface representing an entry in a media list.
- * It includes the id and status each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type CoverImage } from "./CoverImage";
+import { type ExternalLink } from "./ExternalLink";
+import { type FuzzyDate } from "./FuzzyDate";
+import { type MediaStats } from "./MediaStats";
+import { type NextAiringEpisode } from "./NextAiringEpisode";
+import { type Ranking } from "./Ranking";
+import { type StreamingEpisode } from "./StreamingEpisode";
+import { type Tag } from "./Tag";
+import { type Title } from "./Title";
+import { type Trailer } from "./Trailer";
+/**
+ * `MediaListEntry` — the viewer's list entry for a media.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/medialist
  */
 export interface MediaListEntry {
     /**
-     * `id` is a number representing the unique identifier of the media list entry.
+     * The id of the list entry
      */
     id: number;
 
     /**
-     * `status` is a string representing the status of the media list entry.
+     * The watching/reading status
      */
     status: string;
 }
 
 /**
- * `MediaStats` is an interface representing the statistics of a media.
- * It includes score distribution and status distribution each having their own properties.
- * @see https://docs.anilist.co/reference/object/mediastats
- */
-export interface MediaStats {
-    /**
-     * `scoreDistribution` is an array of `ScoreDistribution` objects representing the score distribution of the media.
-     */
-    scoreDistribution: ScoreDistribution[];
-
-    /**
-     * `statusDistribution` is an array of `StatusDistribution` objects representing the status distribution of the media.
-     */
-    statusDistribution: StatusDistribution[];
-}
-
-/**
- * `Media` is an interface representing a media entity.
- * It includes various properties related to the media.
+ * `Media` — a media entity without relation connections.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/media
  */
 export interface Media {
     /**
-     * `id` is a number representing the unique identifier of the media.
+     * The id of the media
      */
     id: number;
 
     /**
-     * `idMal` is a number representing the MyAnimeList identifier of the media.
+     * The mal id of the media
      */
     idMal: number;
 
     /**
-     * `title` is an object of type `Title` representing the title of the media.
+     * The official titles of the media in various languages
      */
     title: Title;
 
     /**
-     * `type` is a string representing the type of the media.
+     * The type of the media; anime or manga
      */
     type: string;
 
     /**
-     * `format` is a string representing the format of the media.
+     * The format the media was released in
      */
     format: string;
 
     /**
-     * `status` is a string representing the status of the media.
+     * The current releasing status of the media
      */
     status: string;
 
     /**
-     * `description` is a string representing the description of the media.
+     * Short description of the media's story and characters
      */
     description: string;
 
     /**
-     * `startDate` is an object of type `FuzzyDate` representing the start date of the media.
+     * The first official release date of the media
      */
     startDate: FuzzyDate;
 
     /**
-     * `endDate` is an object of type `FuzzyDate` representing the end date of the media.
+     * The last official release date of the media
      */
     endDate: FuzzyDate;
 
     /**
-     * `season` is a string representing the season of the media.
+     * The season the media was initially released in
      */
     season: string;
 
     /**
-     * `seasonYear` is a number representing the year of the season of the media.
+     * The season year the media was initially released in
      */
     seasonYear: number;
 
     /**
-     * `seasonInt` is a number representing the integer value of the season of the media.
+     * The year & season the media was initially released in
      */
     seasonInt: number;
 
     /**
-     * `episodes` is an optional number representing the number of episodes of the media.
+     * The amount of episodes the anime has when complete
      */
     episodes?: number;
 
     /**
-     * `duration` is an optional number representing the duration of the media.
+     * The general length of each anime episode in minutes
      */
     duration?: number;
 
     /**
-     * `chapters` is an optional number representing the number of chapters of the media.
+     * The amount of chapters the manga has when complete
      */
     chapters?: number;
 
     /**
-     * `volumes` is an optional number representing the number of volumes of the media.
+     * The amount of volumes the manga has when complete
      */
     volumes?: number;
 
     /**
-     * `countryOfOrigin` is a string representing the country of origin of the media.
+     * Where the media was created. (ISO 3166-1 alpha-2)
      */
     countryOfOrigin: string;
 
     /**
-     * `isLicensed` is a boolean indicating whether the media is licensed.
+     * If the media is officially licensed or a self-published doujin release
      */
     isLicensed: boolean;
 
     /**
-     * `source` is a string representing the source of the media.
+     * Source type the media was adapted from.
      */
     source: string;
 
     /**
-     * `hashtag` is a string representing the hashtag of the media.
+     * Official Twitter hashtags for the media
      */
     hashtag: string;
 
     /**
-     * `trailer` is an object of type `Trailer` representing the trailer of the media.
+     * Media trailer or advertisement
      */
     trailer: Trailer;
 
     /**
-     * `updatedAt` is a number representing the timestamp when the media was last updated.
+     * When the media's data was last updated
      */
     updatedAt: number;
 
     /**
-     * `coverImage` is an object of type `CoverImage` representing the cover image of the media.
+     * The cover images of the media
      */
     coverImage: CoverImage;
 
     /**
-     * `bannerImage` is a string representing the URL of the banner image of the media.
+     * The banner image of the media
      */
     bannerImage: string;
 
     /**
-     * `genres` is an array of strings representing the genres of the media.
+     * The genres of the media
      */
     genres: string[];
 
     /**
-     * `synonyms` is an array of strings representing the synonyms of the media.
+     * Alternative titles of the media
      */
     synonyms: string[];
 
     /**
-     * `averageScore` is a number representing the average score of the media.
+     * A weighted average score of all the user's scores of the media
      */
     averageScore: number;
 
     /**
-     * `meanScore` is a number representing the mean score of the media.
+     * Mean score of all the user's scores of the media
      */
     meanScore: number;
 
     /**
-     * `popularity` is a number representing the popularity of the media.
+     * The number of users with the media on their list
      */
     popularity: number;
 
     /**
-     * `isLocked` is a boolean indicating whether the media is locked.
+     * Locked media may not be added to lists our favorited. This may be due to the entry pending for deletion or other reasons.
      */
     isLocked: boolean;
 
     /**
-     * `trending` is a number representing the trending value of the media.
+     * The amount of related activity in the past hour
      */
     trending: number;
 
     /**
-     * `favourites` is a number representing the number of favourites of the media.
+     * The amount of user's who have favourited the media
      */
     favourites: number;
 
     /**
-     * `tags` is an array of objects of type `Tag` representing the tags of the media.
+     * List of tags that describes elements and themes of the media
      */
     tags: Tag[];
 
     /**
-     * `isFavourite` is a boolean indicating whether the media is a favourite.
+     * If the media is marked as favourite by the current authenticated user
      */
     isFavourite: boolean;
 
     /**
-     * `isAdult` is a boolean indicating whether the media is for adults.
+     * If the media is intended only for 18+ adult audiences
      */
     isAdult: boolean;
 
     /**
-     * `nextAiringEpisode` is an object of type `NextAiringEpisode` representing the next airing episode of the media.
+     * The media's next episode airing schedule
      */
     nextAiringEpisode: NextAiringEpisode;
 
     /**
-     * `externalLinks` is an array of objects of type `ExternalLink` representing the external links of the media.
+     * External links to another site related to the media
      */
     externalLinks: ExternalLink[];
 
     /**
-     * `streamingEpisodes` is an array of objects of type `StreamingEpisode` representing the streaming episodes of the media.
+     * Data and links to legal streaming episodes on external sites
      */
     streamingEpisodes: StreamingEpisode[];
 
     /**
-     * `rankings` is an array of objects of type `Ranking` representing the rankings of the media.
+     * The ranking of the media in a particular time span and format compared to other media
      */
     rankings: Ranking[];
 
     /**
-     * `mediaListEntry` is an object of type `MediaListEntry` representing the media list entry of the media.
+     * The authenticated user's media list entry for the media
      */
     mediaListEntry: MediaListEntry;
 
     /**
-     * `stats` is an object of type `MediaStats` representing the statistics of the media.
+     * `stats` is an instance of `MediaStats` representing the stats.
      */
     stats: MediaStats;
 
     /**
-     * `siteUrl` is a string representing the site URL of the media.
+     * The url for the media page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `autoCreateForumThread` is a boolean indicating whether a forum thread is automatically created for the media.
+     * If the media should have forum thread automatically created for it on airing episode release
      */
     autoCreateForumThread: boolean;
 
     /**
-     * `isRecommendationBlocked` is a boolean indicating whether recommendation is blocked for the media.
+     * If the media is blocked from being recommended to/from
      */
     isRecommendationBlocked: boolean;
 
     /**
-     * `modNotes` is a string representing the moderator notes for the media.
+     * Notes for site moderators
      */
     modNotes: string;
 }
 
-/**
- * `MediaStatistics` is an interface representing the statistics of a media.
- * It includes various properties related to the statistics of the media.
- * @see https://docs.anilist.co/reference/object/userstatistics
- */
-export interface MediaStatistics {
-    /**
-     * `count` is a number representing the count of the media.
-     */
-    count: number;
-
-    /**
-     * `meanScore` is a number representing the mean score of the media.
-     */
-    meanScore: number;
-
-    /**
-     * `standardDeviation` is a number representing the standard deviation of the media.
-     */
-    standardDeviation: number;
-
-    /**
-     * `minutesWatched` is an optional number representing the minutes watched of the media.
-     */
-    minutesWatched?: number;
-
-    /**
-     * `episodesWatched` is an optional number representing the episodes watched of the media.
-     */
-    episodesWatched?: number;
-
-    /**
-     * `chaptersRead` is an optional number representing the chapters read of the media.
-     */
-    chaptersRead?: number;
-
-    /**
-     * `volumesRead` is an optional number representing the volumes read of the media.
-     */
-    volumesRead?: number;
-
-    /**
-     * `formats` is an array of `Stat` objects representing the formats of the media.
-     */
-    formats: Stat[];
-
-    /**
-     * `statuses` is an array of `Stat` objects representing the statuses of the media.
-     */
-    statuses: Stat[];
-
-    /**
-     * `scores` is an array of `Stat` objects representing the scores of the media.
-     */
-    scores: Stat[];
-
-    /**
-     * `lengths` is an array of `Stat` objects representing the lengths of the media.
-     */
-    lengths: Stat[];
-
-    /**
-     * `releaseYears` is an array of `Stat` objects representing the release years of the media.
-     */
-    releaseYears: Stat[];
-
-    /**
-     * `startYears` is an array of `Stat` objects representing the start years of the media.
-     */
-    startYears: Stat[];
-
-    /**
-     * `genres` is an array of `Stat` objects representing the genres of the media.
-     */
-    genres: Stat[];
-
-    /**
-     * `tags` is an array of `Stat` objects representing the tags of the media.
-     */
-    tags: Stat[];
-
-    /**
-     * `countries` is an array of `Stat` objects representing the countries of the media.
-     */
-    countries: Stat[];
-
-    /**
-     * `voiceActors` is an optional array of `Stat` objects representing the voice actors of the media.
-     */
-    voiceActors?: Stat[];
-
-    /**
-     * `staff` is an array of `Stat` objects representing the staff of the media.
-     */
-    staff: Stat[];
-
-    /**
-     * `studios` is an array of `Stat` objects representing the studios of the media.
-     */
-    studios: Stat[];
-}
+// @generated-end

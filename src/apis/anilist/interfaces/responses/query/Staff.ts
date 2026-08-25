@@ -1,186 +1,255 @@
-import { type Name } from "../../Name";
-import { type Image } from "../../Image";
-import { type FuzzyDate } from "../../FuzzyDate";
-import { type Title } from "../../Title";
-
 /**
- * `StaffResponse` is an interface representing the response from a staff query.
- * It includes the staff's id, name, language, image, description, primary occupations, gender, date of birth, date of death, age, years active, hometown, blood type, favourite status, favourite blocked status, site url, staff media, characters, character media, staff, submitter, submission status, submission notes, favourites, and mod notes.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type FuzzyDate } from "../../FuzzyDate";
+import { type Image } from "../../Image";
+import { type Name } from "../../Name";
+/**
+ * `StaffResponse` — a staff member with their roles, characters, and media connections.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/staff
  */
 export interface StaffResponse {
     /**
-     * `id` is a number representing the id of the staff.
+     * The id of the staff member
      */
     id: number;
 
     /**
-     * `name` is an instance of `Name` representing the name of the staff.
+     * The names of the staff member
      */
     name: Name;
 
     /**
-     * `languageV2` is a string representing the language of the staff.
+     * The primary language of the staff member. Current values: Japanese, English, Korean, Italian, Spanish, Portuguese, French, German, Hebrew, Hungarian, Chinese, Arabic, Filipino, Catalan, Finnish, Turkish, Dutch, Swedish, Thai, Tagalog, Malaysian, Indonesian, Vietnamese, Nepali, Hindi, Urdu
      */
     languageV2: string;
 
     /**
-     * `image` is an instance of `Image` representing the image of the staff.
+     * The staff images
      */
     image: Image;
 
     /**
-     * `description` is a string representing the description of the staff.
+     * A general description of the staff member
      */
     description: string;
 
     /**
-     * `primaryOccupations` is an array of strings representing the primary occupations of the staff.
+     * The person's primary occupations
      */
     primaryOccupations: string[];
 
     /**
-     * `gender` is a string representing the gender of the staff.
+     * The staff's gender. Usually Male, Female, or Non-binary but can be any string.
      */
     gender: string;
 
     /**
-     * `dateOfBirth` is an instance of `FuzzyDate` representing the date of birth of the staff.
+     * `dateOfBirth` is an instance of `FuzzyDate` representing the date of birth.
      */
     dateOfBirth: FuzzyDate;
 
     /**
-     * `dateOfDeath` is an instance of `FuzzyDate` representing the date of death of the staff.
+     * `dateOfDeath` is an instance of `FuzzyDate` representing the date of death.
      */
     dateOfDeath: FuzzyDate;
 
     /**
-     * `age` is a number representing the age of the staff.
+     * The person's age in years
      */
     age: number;
 
     /**
-     * `yearsActive` is an array of numbers representing the years the staff has been active.
+     * [startYear, endYear] (If the 2nd value is not present staff is still active)
      */
     yearsActive: number[];
 
     /**
-     * `homeTown` is a string representing the hometown of the staff.
+     * The persons birthplace or hometown
      */
     homeTown: string;
 
     /**
-     * `bloodType` is a string representing the blood type of the staff.
+     * The persons blood type
      */
     bloodType: string;
 
     /**
-     * `isFavourite` is a boolean indicating whether the staff is a favourite.
+     * If the staff member is marked as favourite by the currently authenticated user
      */
     isFavourite: boolean;
 
     /**
-     * `isFavouriteBlocked` is a boolean indicating whether the favourite status of the staff is blocked.
+     * If the staff member is blocked from being added to favourites
      */
     isFavouriteBlocked: boolean;
 
     /**
-     * `siteUrl` is a string representing the URL of the staff on the site.
+     * The url for the staff page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `staffMedia` is an object representing the media associated with the staff.
-     * It includes an array of `nodes` each representing a media node with its own properties.
+     * Media where the staff member has a production role
      */
     staffMedia: {
+        /**
+         * `nodes` is a list of `Media` entries representing the nodes.
+         */
         nodes: Array<{
             /**
-             * `id` is a number representing the id of the media node.
+             * The id of the media
              */
             id: number;
 
             /**
-             * `title` is an instance of `Title` representing the title of the media node.
+             * The official titles of the media in various languages
              */
-            title: Title;
+            title: {
+                /**
+                 * The romanization of the native language title
+                 */
+                romaji: string;
+
+                /**
+                 * The official english title
+                 */
+                english: string;
+
+                /**
+                 * Official title in it's native language
+                 */
+                native: string;
+
+                /**
+                 * The currently authenticated users preferred title language. Default romaji for non-authenticated
+                 */
+                userPreferred: string;
+            };
         }>;
     };
 
     /**
-     * `characters` is an object representing the characters associated with the staff.
-     * It includes an array of `nodes` each representing a character node with its own properties.
+     * Characters voiced by the actor
      */
     characters: {
+        /**
+         * `nodes` is a list of `Character` entries representing the nodes.
+         */
         nodes: Array<{
             /**
-             * `id` is a number representing the id of the character node.
+             * The id of the character
              */
             id: number;
 
             /**
-             * `name` is an instance of `Name` representing the name of the character node.
+             * The names of the character
              */
-            name: Name;
+            name: {
+                /**
+                 * The character's given name
+                 */
+                first: string;
+
+                /**
+                 * The character's surname
+                 */
+                last: string;
+
+                /**
+                 * The character's first and last name
+                 */
+                full: string;
+
+                /**
+                 * The character's full name in their native language
+                 */
+                native: string;
+            };
         }>;
     };
 
     /**
-     * `characterMedia` is an object representing the media associated with the characters of the staff.
-     * It includes an array of `nodes` each representing a media node with its own properties.
+     * Media the actor voiced characters in. (Same data as characters with media as node instead of characters)
      */
     characterMedia: {
+        /**
+         * `nodes` is a list of `Media` entries representing the nodes.
+         */
         nodes: Array<{
             /**
-             * `id` is a number representing the id of the media node.
+             * The id of the media
              */
             id: number;
 
             /**
-             * `title` is an instance of `Title` representing the title of the media node.
+             * The official titles of the media in various languages
              */
-            title: Title;
+            title: {
+                /**
+                 * The romanization of the native language title
+                 */
+                romaji: string;
+
+                /**
+                 * The official english title
+                 */
+                english: string;
+
+                /**
+                 * Official title in it's native language
+                 */
+                native: string;
+
+                /**
+                 * The currently authenticated users preferred title language. Default romaji for non-authenticated
+                 */
+                userPreferred: string;
+            };
         }>;
     };
 
     /**
-     * `submitter` is an object representing the submitter of the staff response.
-     * It includes the submitter's id and name.
+     * Submitter for the submission
      */
     submitter: {
         /**
-         * `id` is a number representing the id of the submitter.
+         * The id of the user
          */
         id: number;
 
         /**
-         * `name` is an instance of `Name` representing the name of the submitter,
-         * matching the user name sub-selection used by the query.
+         * The name of the user
          */
-        name: Name;
+        name: string;
     };
 
     /**
-     * `submissionStatus` is a number representing the submission status of the staff response.
-     * It is only returned to users with moderator permissions.
+     * Status of the submission
      */
     submissionStatus?: number;
 
     /**
-     * `submissionNotes` is a string representing the submission notes of the staff response.
-     * It is only returned to users with moderator permissions.
+     * Inner details of submission status
      */
     submissionNotes?: string;
 
     /**
-     * `favourites` is a number representing the count of favourites for the staff.
-     * It requires authentication.
+     * The amount of user's who have favourited the staff member
      */
     favourites?: number;
 
     /**
-     * `modNotes` is a string representing the mod notes for the staff.
-     * It is only returned to users with moderator permissions.
+     * Notes for site moderators
      */
     modNotes?: string;
 }
+
+// @generated-end

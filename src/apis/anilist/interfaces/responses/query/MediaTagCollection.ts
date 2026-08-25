@@ -1,33 +1,63 @@
 /**
- * `MediaTagCollectionResponse` is an interface representing the response from a media tag collection query.
- * It includes the fields returned for each media tag.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `MediaTagCollectionResponse` — a media tag as returned by the MediaTagCollection query.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediatag
  */
 export interface MediaTagCollectionResponse {
-    /** The unique media tag identifier. */
+    /**
+     * The id of the tag
+     */
     id: number;
 
-    /** The media tag name. */
+    /**
+     * The name of the tag
+     */
     name: string;
 
-    /** The media tag description. */
+    /**
+     * A general description of the tag
+     */
     description: string;
 
-    /** The media tag category. */
+    /**
+     * The categories of tags this tag belongs to
+     */
     category: string;
 
-    /** The media tag rank. */
+    /**
+     * The relevance ranking of the tag out of the 100 for this media
+     */
     rank: number;
 
-    /** Whether the tag is a general spoiler. */
+    /**
+     * If the tag could be a spoiler for any media
+     */
     isGeneralSpoiler: boolean;
 
-    /** Whether the tag is a media spoiler. */
+    /**
+     * If the tag is a spoiler for this media
+     */
     isMediaSpoiler: boolean;
 
-    /** Whether the tag is for adult content. */
+    /**
+     * If the tag is only for adult 18+ media
+     */
     isAdult: boolean;
 
-    /** The identifier of the user who created the tag. */
+    /**
+     * The user who submitted the tag
+     */
     userId: number;
 }
+
+// @generated-end

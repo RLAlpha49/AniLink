@@ -1,20 +1,43 @@
 /**
- * `PageInfo` is pagination metadata returned by an AniList page query.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `PageInfo` — pagination metadata returned by Page connections.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/pageinfo
  */
 export interface PageInfo {
-    /** Total number of items across all pages. */
+    /**
+     * The total number of items. Note: This value is not guaranteed to be accurate, do not rely on this for logic
+     */
     total: number;
 
-    /** Number of items requested for the page. */
+    /**
+     * The count on a page
+     */
     perPage: number;
 
-    /** One-based index of the current page. */
+    /**
+     * The current page
+     */
     currentPage: number;
 
-    /** One-based index of the final page. */
+    /**
+     * The last page
+     */
     lastPage: number;
 
-    /** Whether another page is available. */
+    /**
+     * If there is another page
+     */
     hasNextPage: boolean;
 }
+
+// @generated-end

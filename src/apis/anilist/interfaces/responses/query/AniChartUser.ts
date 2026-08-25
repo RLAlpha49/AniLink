@@ -1,23 +1,33 @@
-import { type UserResponse } from "./User";
-
 /**
- * `AniChartUserResponse` is an interface representing the response from an AniChart user query.
- * It includes the user response, settings, and highlights.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type BasicUser } from "../../Basic";
+/**
+ * `AniChartUserResponse` — a user's AniChart integration data.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/anichartuser
  */
 export interface AniChartUserResponse {
     /**
-     * `user` is an instance of `UserResponse` representing the user's data.
+     * `user` is an instance of `BasicUser` representing the user.
      */
-    user: UserResponse;
+    user: BasicUser;
 
     /**
-     * `settings` is a string representing the user's AniChart settings.
+     * `settings` is a unknown value representing the settings.
      */
-    settings: string;
+    settings: unknown;
 
     /**
-     * `highlights` is a string representing the user's AniChart highlights.
+     * `highlights` is a unknown value representing the highlights.
      */
-    highlights: string;
+    highlights: unknown;
 }
+
+// @generated-end

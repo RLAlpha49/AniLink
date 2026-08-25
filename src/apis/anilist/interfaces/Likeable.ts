@@ -1,13 +1,19 @@
-import { type ActivityReply, type Activity } from "./Activity";
-import { type Thread, type ThreadComment } from "./Thread";
-
 /**
- * `Likeable` is a discriminated union representing a single likeable entity returned
- * by the `ToggleLikeV2` mutation. The GraphQL selection set flattens the likeable
- * union with one `...on X` fragment per member, so exactly one member shape is
- * present at runtime; narrow on the literal `type` field (activities) or on
- * structural shape (threads and thread comments) to access member-specific
- * properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type Activity, type ActivityReply } from "./Activity";
+import { type Thread, type ThreadComment } from "./Thread";
+/**
+ * `Likeable` — a likeable entity returned by ToggleLikeV2; narrow structurally because only activities carry a `type` discriminator.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/mutation
  */
 export type Likeable = Activity | ActivityReply | Thread | ThreadComment;
+
+// @generated-end

@@ -1,424 +1,693 @@
+/**
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type MediaFormat } from "../../../types/Format";
 import { type MediaSeason } from "../../../types/Season";
 import { type MediaSource } from "../../../types/Source";
 import { type MediaStatus } from "../../../types/Status";
 import { type MediaType } from "../../../types/Type";
-import { type Title } from "../../Title";
-import { type FuzzyDate } from "../../FuzzyDate";
-import { type Trailer } from "../../Trailer";
 import { type CoverImage } from "../../CoverImage";
-import { type Tag } from "../../Tag";
-import { type NextAiringEpisode } from "../../NextAiringEpisode";
 import { type ExternalLink } from "../../ExternalLink";
-import { type StreamingEpisode } from "../../StreamingEpisode";
+import { type FuzzyDate } from "../../FuzzyDate";
+import { type MediaListEntry } from "../../Media";
+import { type MediaStats } from "../../MediaStats";
+import { type NextAiringEpisode } from "../../NextAiringEpisode";
 import { type Ranking } from "../../Ranking";
-import { type Name } from "../../Name";
-import { type Image } from "../../Image";
-import { type MediaListEntry, type MediaStats } from "../../Media";
-
+import { type StreamingEpisode } from "../../StreamingEpisode";
+import { type Tag } from "../../Tag";
+import { type Title } from "../../Title";
+import { type Trailer } from "../../Trailer";
 /**
- * `MediaResponse` is an interface representing the response from a media query.
- * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, relations, characters, staff, studios, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
+ * `MediaResponse` — the full media entity including relation, character, staff, and studio connections.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/media
  */
 export interface MediaResponse {
     /**
-     * `id` is a number representing the id of the media.
+     * The id of the media
      */
     id: number;
 
     /**
-     * `idMal` is a number representing the MyAnimeList id of the media.
+     * The mal id of the media
      */
     idMal: number;
 
     /**
-     * `title` is an instance of `Title` representing the title of the media.
+     * The official titles of the media in various languages
      */
     title: Title;
 
     /**
-     * `type` is a string representing the type of the media.
+     * The type of the media; anime or manga
      */
     type: MediaType;
 
     /**
-     * `format` is a string representing the format of the media.
+     * The format the media was released in
      */
     format: MediaFormat;
 
     /**
-     * `status` is a string representing the status of the media.
+     * The current releasing status of the media
      */
     status: MediaStatus;
 
     /**
-     * `description` is a string representing the description of the media.
+     * Short description of the media's story and characters
      */
     description: string;
 
     /**
-     * `startDate` is an instance of `FuzzyDate` representing the start date of the media.
+     * The first official release date of the media
      */
     startDate: FuzzyDate;
 
     /**
-     * `endDate` is an instance of `FuzzyDate` representing the end date of the media.
+     * The last official release date of the media
      */
     endDate: FuzzyDate;
 
     /**
-     * `season` is a string representing the season of the media.
+     * The season the media was initially released in
      */
     season: MediaSeason;
 
     /**
-     * `seasonYear` is a number representing the year of the season of the media.
+     * The season year the media was initially released in
      */
     seasonYear: number;
 
     /**
-     * `seasonInt` is a number representing the integer of the season of the media.
+     * The year & season the media was initially released in
      */
     seasonInt: number;
 
     /**
-     * `episodes` is a number representing the number of episodes of the media.
+     * The amount of episodes the anime has when complete
      */
     episodes?: number;
 
     /**
-     * `duration` is a number representing the duration of the media.
+     * The general length of each anime episode in minutes
      */
     duration?: number;
 
     /**
-     * `chapters` is a number representing the number of chapters of the media.
+     * The amount of chapters the manga has when complete
      */
     chapters?: number;
 
     /**
-     * `volumes` is a number representing the number of volumes of the media.
+     * The amount of volumes the manga has when complete
      */
     volumes?: number;
 
     /**
-     * `countryOfOrigin` is a string representing the country of origin of the media.
+     * Where the media was created. (ISO 3166-1 alpha-2)
      */
     countryOfOrigin: string;
 
     /**
-     * `isLicensed` is a boolean representing whether the media is licensed.
+     * If the media is officially licensed or a self-published doujin release
      */
     isLicensed: boolean;
 
     /**
-     * `source` is a string representing the source of the media.
+     * Source type the media was adapted from.
      */
     source: MediaSource;
 
     /**
-     * `hashtag` is a string representing the hashtag of the media.
+     * Official Twitter hashtags for the media
      */
     hashtag: string;
 
     /**
-     * `trailer` is an instance of `Trailer` representing the trailer of the media.
+     * Media trailer or advertisement
      */
     trailer: Trailer;
 
     /**
-     * `updatedAt` is a number representing the timestamp when the media was last updated.
+     * When the media's data was last updated
      */
     updatedAt: number;
 
     /**
-     * `coverImage` is an instance of `CoverImage` representing the cover image of the media.
+     * The cover images of the media
      */
     coverImage: CoverImage;
 
     /**
-     * `bannerImage` is a string representing the banner image URL of the media.
+     * The banner image of the media
      */
     bannerImage: string;
 
     /**
-     * `genres` is an array of strings representing the genres of the media.
+     * The genres of the media
      */
     genres: string[];
 
     /**
-     * `synonyms` is an array of strings representing the synonyms of the media.
+     * Alternative titles of the media
      */
     synonyms: string[];
 
     /**
-     * `averageScore` is a number representing the average score of the media.
+     * A weighted average score of all the user's scores of the media
      */
     averageScore: number;
 
     /**
-     * `meanScore` is a number representing the mean score of the media.
+     * Mean score of all the user's scores of the media
      */
     meanScore: number;
 
     /**
-     * `popularity` is a number representing the popularity of the media.
+     * The number of users with the media on their list
      */
     popularity: number;
 
     /**
-     * `isLocked` is a boolean representing whether the media is locked.
+     * Locked media may not be added to lists our favorited. This may be due to the entry pending for deletion or other reasons.
      */
     isLocked: boolean;
 
     /**
-     * `trending` is a number representing the trending status of the media.
+     * The amount of related activity in the past hour
      */
     trending: number;
 
     /**
-     * `favourites` is a number representing the number of favourites of the media.
+     * The amount of user's who have favourited the media
      */
     favourites: number;
 
     /**
-     * `tags` is an array of `Tag` representing the tags of the media.
+     * List of tags that describes elements and themes of the media
      */
     tags: Tag[];
 
     /**
-     * `relations` is an object representing the relations of the media.
+     * Other media in the same or connecting franchise
      */
     relations: {
+        /**
+         * `edges` is a list of `MediaEdge` entries representing the edges.
+         */
         edges: Array<{
             /**
-             * `id` is a number representing the id of the relation.
+             * The id of the connection
              */
             id: number;
 
             /**
-             * `relationType` is a string representing the type of the relation.
+             * The type of relation to the parent model
              */
             relationType: string;
 
             /**
-             * `isMainStudio` is a boolean representing whether the relation is the main studio.
+             * If the studio is the main animation studio of the media (For Studio->MediaConnection field only)
              */
             isMainStudio: boolean;
 
             /**
-             * `characterRole` is a string representing the role of the character in the relation.
+             * The characters in the media voiced by the parent actor
+             */
+            characters: Array<{
+                /**
+                 * The id of the character
+                 */
+                id: number;
+
+                /**
+                 * The names of the character
+                 */
+                name: {
+                    /**
+                     * The character's given name
+                     */
+                    first: string;
+
+                    /**
+                     * The character's surname
+                     */
+                    last: string;
+
+                    /**
+                     * The character's first and last name
+                     */
+                    full: string;
+
+                    /**
+                     * The character's full name in their native language
+                     */
+                    native: string;
+                };
+
+                /**
+                 * Character images
+                 */
+                image: {
+                    /**
+                     * The character's image of media at its largest size
+                     */
+                    large: string;
+
+                    /**
+                     * The character's image of media at medium size
+                     */
+                    medium: string;
+                };
+
+                /**
+                 * A general description of the character
+                 */
+                description: string;
+
+                /**
+                 * The character's gender. Usually Male, Female, or Non-binary but can be any string.
+                 */
+                gender: string;
+
+                /**
+                 * The character's birth date
+                 */
+                dateOfBirth: FuzzyDate;
+
+                /**
+                 * The character's age. Note this is a string, not an int, it may contain further text and additional ages.
+                 */
+                age: string;
+
+                /**
+                 * The characters blood type
+                 */
+                bloodType: string;
+
+                /**
+                 * If the character is marked as favourite by the currently authenticated user
+                 */
+                isFavourite: boolean;
+
+                /**
+                 * If the character is blocked from being added to favourites
+                 */
+                isFavouriteBlocked: boolean;
+
+                /**
+                 * The url for the character page on the AniList website
+                 */
+                siteUrl: string;
+
+                /**
+                 * The amount of user's who have favourited the character
+                 */
+                favourites: number;
+
+                /**
+                 * Notes for site moderators
+                 */
+                modNotes: string;
+            }>;
+
+            /**
+             * The characters role in the media
              */
             characterRole: string;
 
             /**
-             * `characterName` is a string representing the name of the character in the relation.
+             * Media specific character name
              */
             characterName: string;
 
             /**
-             * `roleNotes` is a string representing the notes of the role in the relation.
+             * Notes regarding the VA's role for the character
              */
             roleNotes: string;
 
             /**
-             * `dubGroup` is a string representing the dub group of the relation.
+             * Used for grouping roles where multiple dubs exist for the same language. Either dubbing company name or language variant.
              */
             dubGroup: string;
 
             /**
-             * `staffRole` is a string representing the role of the staff in the relation.
+             * The role of the staff member in the production of the media
              */
             staffRole: string;
 
             /**
-             * `node` is an object representing the node of the relation.
+             * `node` is an instance of `Media` representing the node.
              */
             node: {
                 /**
-                 * `id` is a number representing the id of the node.
+                 * The id of the media
                  */
                 id: number;
 
                 /**
-                 * `title` is an instance of `Title` representing the title of the node.
+                 * The official titles of the media in various languages
                  */
-                title: Title;
+                title: {
+                    /**
+                     * The romanization of the native language title
+                     */
+                    romaji: string;
+
+                    /**
+                     * The official english title
+                     */
+                    english: string;
+
+                    /**
+                     * Official title in it's native language
+                     */
+                    native: string;
+
+                    /**
+                     * The currently authenticated users preferred title language. Default romaji for non-authenticated
+                     */
+                    userPreferred: string;
+                };
             };
         }>;
     };
 
     /**
-     * `characters` is an object representing the characters of the media.
+     * The characters in the media
      */
     characters: {
+        /**
+         * `edges` is a list of `CharacterEdge` entries representing the edges.
+         */
         edges: Array<{
             /**
-             * `id` is a number representing the id of the character.
+             * The id of the connection
              */
             id: number;
 
             /**
-             * `role` is a string representing the role of the character.
+             * The characters role in the media
              */
             role: string;
 
             /**
-             * `name` is a string representing the name of the character.
+             * Media specific character name
              */
             name: string;
 
             /**
-             * `voiceActors` is an array of objects, each representing a voice actor of the character.
+             * The voice actors of the character
              */
             voiceActors: Array<{
                 /**
-                 * `id` is a number representing the id of the voice actor.
+                 * The id of the staff member
                  */
                 id: number;
 
                 /**
-                 * `name` is an instance of `Name` representing the name of the voice actor.
+                 * The names of the staff member
                  */
-                name: Name;
+                name: {
+                    /**
+                     * The person's given name
+                     */
+                    first: string;
+
+                    /**
+                     * The person's surname
+                     */
+                    last: string;
+
+                    /**
+                     * The person's first and last name
+                     */
+                    full: string;
+
+                    /**
+                     * The person's full name in their native language
+                     */
+                    native: string;
+                };
 
                 /**
-                 * `image` is an instance of `Image` representing the image of the voice actor.
+                 * The staff images
                  */
-                image: Image;
+                image: {
+                    /**
+                     * The person's image of media at its largest size
+                     */
+                    large: string;
+
+                    /**
+                     * The person's image of media at medium size
+                     */
+                    medium: string;
+                };
             }>;
 
             /**
-             * `media` is an object representing the media of the character.
+             * The media the character is in
              */
-            media: {
+            media: Array<{
                 /**
-                 * `id` is a number representing the id of the media.
+                 * The id of the media
                  */
                 id: number;
 
                 /**
-                 * `title` is an instance of `Title` representing the title of the media.
+                 * The official titles of the media in various languages
                  */
-                title: Title;
+                title: {
+                    /**
+                     * The romanization of the native language title
+                     */
+                    romaji: string;
+
+                    /**
+                     * The official english title
+                     */
+                    english: string;
+
+                    /**
+                     * Official title in it's native language
+                     */
+                    native: string;
+
+                    /**
+                     * The currently authenticated users preferred title language. Default romaji for non-authenticated
+                     */
+                    userPreferred: string;
+                };
 
                 /**
-                 * `coverImage` is an instance of `CoverImage` representing the cover image of the media.
+                 * The cover images of the media
                  */
-                coverImage: CoverImage;
-            };
+                coverImage: {
+                    /**
+                     * The cover image url of the media at its largest size. If this size isn't available, large will be provided instead.
+                     */
+                    extraLarge: string;
+
+                    /**
+                     * The cover image url of the media at a large size
+                     */
+                    large: string;
+
+                    /**
+                     * The cover image url of the media at medium size
+                     */
+                    medium: string;
+
+                    /**
+                     * Average #hex color of cover image
+                     */
+                    color: string;
+                };
+            }>;
 
             /**
-             * `favouriteOrder` is a number representing the order of the favourite character.
+             * The order the character should be displayed from the users favourites
              */
             favouriteOrder: number;
 
             /**
-             * `node` is an object representing the node of the character.
+             * `node` is an instance of `Character` representing the node.
              */
             node: {
                 /**
-                 * `id` is a number representing the id of the node.
+                 * The id of the character
                  */
                 id: number;
 
                 /**
-                 * `name` is an instance of `Name` representing the name of the node.
+                 * The names of the character
                  */
-                name: Name;
+                name: {
+                    /**
+                     * The character's given name
+                     */
+                    first: string;
+
+                    /**
+                     * The character's surname
+                     */
+                    last: string;
+
+                    /**
+                     * The character's first and last name
+                     */
+                    full: string;
+
+                    /**
+                     * The character's full name in their native language
+                     */
+                    native: string;
+                };
 
                 /**
-                 * `image` is an instance of `Image` representing the image of the node.
+                 * Character images
                  */
-                image: Image;
+                image: {
+                    /**
+                     * The character's image of media at its largest size
+                     */
+                    large: string;
+
+                    /**
+                     * The character's image of media at medium size
+                     */
+                    medium: string;
+                };
             };
         }>;
     };
 
     /**
-     * `staff` is an object representing the staff of the media.
+     * The staff who produced the media
      */
     staff: {
+        /**
+         * `edges` is a list of `StaffEdge` entries representing the edges.
+         */
         edges: Array<{
             /**
-             * `id` is a number representing the id of the staff.
+             * The id of the connection
              */
             id: number;
 
             /**
-             * `role` is a string representing the role of the staff.
+             * The role of the staff member in the production of the media
              */
             role: string;
 
             /**
-             * `favouriteOrder` is a number representing the order of the favourite staff.
+             * The order the staff should be displayed from the users favourites
              */
             favouriteOrder: number;
 
             /**
-             * `node` is an object representing the node of the staff.
+             * `node` is an instance of `Staff` representing the node.
              */
             node: {
                 /**
-                 * `id` is a number representing the id of the node.
+                 * The id of the staff member
                  */
                 id: number;
 
                 /**
-                 * `name` is an instance of `Name` representing the name of the node.
+                 * The names of the staff member
                  */
-                name: Name;
+                name: {
+                    /**
+                     * The person's given name
+                     */
+                    first: string;
+
+                    /**
+                     * The person's surname
+                     */
+                    last: string;
+
+                    /**
+                     * The person's first and last name
+                     */
+                    full: string;
+
+                    /**
+                     * The person's full name in their native language
+                     */
+                    native: string;
+                };
 
                 /**
-                 * `image` is an instance of `Image` representing the image of the node.
+                 * The staff images
                  */
-                image: Image;
+                image: {
+                    /**
+                     * The person's image of media at its largest size
+                     */
+                    large: string;
+
+                    /**
+                     * The person's image of media at medium size
+                     */
+                    medium: string;
+                };
             };
         }>;
     };
 
     /**
-     * `studios` is an object representing the studios of the media.
+     * The companies who produced the media
      */
     studios: {
+        /**
+         * `edges` is a list of `StudioEdge` entries representing the edges.
+         */
         edges: Array<{
             /**
-             * `id` is a number representing the id of the studio.
+             * The id of the connection
              */
             id: number;
 
             /**
-             * `isMain` is a boolean representing whether the studio is the main studio.
+             * If the studio is the main animation studio of the anime
              */
             isMain: boolean;
 
             /**
-             * `favouriteOrder` is a number representing the order of the favourite studio.
+             * The order the character should be displayed from the users favourites
              */
             favouriteOrder: number;
 
             /**
-             * `node` is an object representing the node of the studio.
+             * `node` is an instance of `Studio` representing the node.
              */
             node: {
                 /**
-                 * `id` is a number representing the id of the node.
+                 * The id of the studio
                  */
                 id: number;
 
                 /**
-                 * `name` is a string representing the name of the node.
+                 * The name of the studio
                  */
                 name: string;
 
                 /**
-                 * `isAnimationStudio` is a boolean representing whether the node is an animation studio.
+                 * If the studio is an animation studio or a different kind of company
                  */
                 isAnimationStudio: boolean;
 
                 /**
-                 * `siteUrl` is a string representing the site URL of the node.
+                 * The url for the studio page on the AniList website
                  */
                 siteUrl: string;
             };
@@ -426,62 +695,64 @@ export interface MediaResponse {
     };
 
     /**
-     * `isFavourite` is a boolean representing whether the media is a favourite.
+     * If the media is marked as favourite by the current authenticated user
      */
     isFavourite: boolean;
 
     /**
-     * `isAdult` is a boolean representing whether the media is for adults.
+     * If the media is intended only for 18+ adult audiences
      */
     isAdult: boolean;
 
     /**
-     * `nextAiringEpisode` is an instance of `NextAiringEpisode` representing the next airing episode of the media.
+     * The media's next episode airing schedule
      */
     nextAiringEpisode: NextAiringEpisode;
 
     /**
-     * `externalLinks` is an array of `ExternalLink` representing the external links of the media.
+     * External links to another site related to the media
      */
     externalLinks: ExternalLink[];
 
     /**
-     * `streamingEpisodes` is an array of `StreamingEpisode` representing the streaming episodes of the media.
+     * Data and links to legal streaming episodes on external sites
      */
     streamingEpisodes: StreamingEpisode[];
 
     /**
-     * `rankings` is an array of `Ranking` representing the rankings of the media.
+     * The ranking of the media in a particular time span and format compared to other media
      */
     rankings: Ranking[];
 
     /**
-     * `mediaListEntry` is an instance of `MediaListEntry` representing the media list entry of the media.
+     * The authenticated user's media list entry for the media
      */
     mediaListEntry: MediaListEntry;
 
     /**
-     * `stats` is an instance of `MediaStats` representing the stats of the media.
+     * `stats` is an instance of `MediaStats` representing the stats.
      */
     stats: MediaStats;
 
     /**
-     * `siteUrl` is a string representing the site URL of the media.
+     * The url for the media page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `autoCreateForumThread` is a boolean representing whether the media should auto create a forum thread.
+     * If the media should have forum thread automatically created for it on airing episode release
      */
     autoCreateForumThread: boolean;
 
     /**
-     * `isRecommendationBlocked` is a boolean representing whether the media is blocked for recommendation.
+     * If the media is blocked from being recommended to/from
      */
     isRecommendationBlocked: boolean;
 
     /**
-     * `modNotes` is a string representing the mod notes of the media.
+     * Notes for site moderators
      */
     modNotes: string;
 }
+
+// @generated-end

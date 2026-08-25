@@ -1,311 +1,473 @@
+/**
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type ScoreFormat } from "../../../types/Format";
 import { type NotificationType } from "../../../types/Type";
 import { type UserStaffNameLanguage } from "../../../types/UserStaffNameLanguage";
 import { type UserTitleLanguage } from "../../../types/UserTitleLanguage";
-import { type Image } from "../../Image";
 import { type Statistics } from "../../Statistics";
 import { type UserStats } from "../../UserStats";
-import { type Title } from "../../Title";
-
 /**
- * `UserResponse` is an interface representing the response from a user query.
- * It includes the user's id, name, about, avatar, bannerImage, isFollowing status, isFollower status, isBlocked status, bans, options, mediaListOptions, favourites, statistics, stats, unreadNotificationCount, siteUrl, donatorTier, donatorBadge, moderatorRoles, createdAt, updatedAt, and previousNames.
+ * `UserResponse` — a user with their options, list settings, favourites, statistics, and activity stats.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/user
  */
 export interface UserResponse {
     /**
-     * `id` is a number representing the id of the user.
+     * The id of the user
      */
     id: number;
 
     /**
-     * `name` is a string representing the name of the user.
+     * The name of the user
      */
     name: string;
 
     /**
-     * `about` is a string representing the about section of the user.
+     * The bio written by user (Markdown)
      */
     about: string;
 
     /**
-     * `avatar` is an instance of `Image` representing the avatar of the user.
+     * The user's avatar images
      */
-    avatar: Image;
+    avatar: {
+        /**
+         * The avatar of user at its largest size
+         */
+        large: string;
+
+        /**
+         * The avatar of user at medium size
+         */
+        medium: string;
+    };
 
     /**
-     * `bannerImage` is a string representing the banner image of the user.
+     * The user's banner images
      */
     bannerImage: string;
 
     /**
-     * `isFollowing` is a boolean representing whether the user is following.
+     * If the authenticated user if following this user
      */
     isFollowing: boolean;
 
     /**
-     * `isFollower` is a boolean representing whether the user is a follower.
+     * If this user if following the authenticated user
      */
     isFollower: boolean;
 
     /**
-     * `isBlocked` is a boolean representing whether the user is blocked.
+     * If the user is blocked by the authenticated user
      */
     isBlocked: boolean;
 
     /**
-     * `bans` is an array of strings representing the bans of the user.
+     * List of active bans. Mod-only
      */
     bans: string[];
 
     /**
-     * `options` is an object representing the options of the user.
+     * The user's general options
      */
     options: {
         /**
-         * `titleLanguage` is a string representing the title language of the user.
+         * The language the user wants to see media titles in
          */
         titleLanguage: UserTitleLanguage;
 
         /**
-         * `displayAdultContent` is a boolean representing whether the user displays adult content.
+         * Whether the user has enabled viewing of 18+ content
          */
         displayAdultContent: boolean;
 
         /**
-         * `airingNotifications` is a boolean representing whether the user has airing notifications.
+         * Whether the user receives notifications when a show they are watching aires
          */
         airingNotifications: boolean;
 
         /**
-         * `profileColor` is a string representing the profile color of the user.
+         * Profile highlight color (blue, purple, pink, orange, red, green, gray)
          */
         profileColor: string;
 
         /**
-         * `notificationOptions` is an array of objects representing the notification options of the user.
+         * Notification options
          */
         notificationOptions: Array<{
             /**
-             * `type` is a string representing the type of the notification option.
+             * The type of notification
              */
             type: NotificationType;
 
             /**
-             * `enabled` is a boolean representing whether the notification option is enabled.
+             * Whether this type of notification is enabled
              */
             enabled: boolean;
         }>;
 
         /**
-         * `timezone` is a string representing the timezone of the user.
+         * The user's timezone offset (Auth user only)
          */
         timezone: string;
 
         /**
-         * `activityMergeTime` is a number representing the activity merge time of the user.
+         * Minutes between activity for them to be merged together. 0 is Never, Above 2 weeks (20160 mins) is Always.
          */
         activityMergeTime: number;
 
         /**
-         * `staffNameLanguage` is a string representing the staff name language of the user.
+         * The language the user wants to see staff and character names in
          */
         staffNameLanguage: UserStaffNameLanguage;
 
         /**
-         * `restrictMessagesToFollowing` is a boolean representing whether the user restricts messages to following.
+         * Whether the user only allow messages from users they follow
          */
         restrictMessagesToFollowing: boolean;
 
         /**
-         * `disabledListActivity` is an array of objects representing the disabled list activity of the user.
+         * The list activity types the user has disabled from being created from list updates
          */
         disabledListActivity: Array<{
             /**
-             * `disabled` is a boolean representing whether the list activity is disabled.
+             * `disabled` is a boolean value representing the disabled.
              */
             disabled: boolean;
 
             /**
-             * `type` is a string representing the type of the list activity.
+             * `type` is a NotificationType value representing the type.
              */
             type: NotificationType;
         }>;
     };
 
     /**
-     * `mediaListOptions` is an object representing the media list options of the user.
+     * The user's media list options
      */
     mediaListOptions: {
         /**
-         * `scoreFormat` is a string representing the score format of the media list options.
+         * The score format the user is using for media lists
          */
         scoreFormat: ScoreFormat;
 
         /**
-         * `rowOrder` is a string representing the row order of the media list options.
+         * The default order list rows should be displayed in
          */
         rowOrder: string;
 
         /**
-         * `animeList` is an object representing the anime list of the media list options.
+         * The user's anime list options
          */
         animeList: {
             /**
-             * `sectionOrder` is an array of strings representing the section order of the anime list.
+             * The order each list should be displayed in
              */
             sectionOrder: string[];
 
             /**
-             * `splitCompletedSectionByFormat` is a boolean representing whether the completed section is split by format in the anime list.
+             * If the completed sections of the list should be separated by format
              */
             splitCompletedSectionByFormat: boolean;
 
             /**
-             * `customLists` is an array of strings representing the custom lists in the anime list.
+             * The names of the user's custom lists
              */
             customLists: string[];
 
             /**
-             * `advancedScoring` is an array of strings representing the advanced scoring in the anime list.
+             * The names of the user's advanced scoring sections
              */
             advancedScoring: string[];
 
             /**
-             * `advancedScoringEnabled` is a boolean representing whether advanced scoring is enabled in the anime list.
+             * If advanced scoring is enabled
              */
             advancedScoringEnabled: boolean;
         };
 
         /**
-         * `mangaList` is an object representing the manga list of the media list options.
+         * The user's manga list options
          */
         mangaList: {
             /**
-             * `sectionOrder` is an array of strings representing the section order of the manga list.
+             * The order each list should be displayed in
              */
             sectionOrder: string[];
 
             /**
-             * `splitCompletedSectionByFormat` is a boolean representing whether the completed section is split by format in the manga list.
+             * If the completed sections of the list should be separated by format
              */
             splitCompletedSectionByFormat: boolean;
 
             /**
-             * `customLists` is an array of strings representing the custom lists in the manga list.
+             * The names of the user's custom lists
              */
             customLists: string[];
 
             /**
-             * `advancedScoring` is an array of strings representing the advanced scoring in the manga list.
+             * The names of the user's advanced scoring sections
              */
             advancedScoring: string[];
 
             /**
-             * `advancedScoringEnabled` is a boolean representing whether advanced scoring is enabled in the manga list.
+             * If advanced scoring is enabled
              */
             advancedScoringEnabled: boolean;
         };
     };
 
     /**
-     * `favourites` is an object representing the favourites of the user.
+     * The users favourites
      */
     favourites: {
         /**
-         * `anime` is an array of the user's favourite anime, each with its id and title.
+         * Favourite anime
          */
-        anime: Array<{
-            id: number;
-            title: Title;
-        }>;
+        anime: {
+            /**
+             * `edges` is a list of `MediaEdge` entries representing the edges.
+             */
+            edges: Array<{
+                /**
+                 * `node` is an instance of `Media` representing the node.
+                 */
+                node: {
+                    /**
+                     * The id of the media
+                     */
+                    id: number;
+
+                    /**
+                     * The official titles of the media in various languages
+                     */
+                    title: {
+                        /**
+                         * The romanization of the native language title
+                         */
+                        romaji: string;
+
+                        /**
+                         * The official english title
+                         */
+                        english: string;
+
+                        /**
+                         * Official title in it's native language
+                         */
+                        native: string;
+
+                        /**
+                         * The currently authenticated users preferred title language. Default romaji for non-authenticated
+                         */
+                        userPreferred: string;
+                    };
+                };
+            }>;
+
+            /**
+             * `nodes` is a list of `Media` entries representing the nodes.
+             */
+            nodes: Array<{
+                /**
+                 * The id of the media
+                 */
+                id: number;
+
+                /**
+                 * The official titles of the media in various languages
+                 */
+                title: {
+                    /**
+                     * The romanization of the native language title
+                     */
+                    romaji: string;
+
+                    /**
+                     * The official english title
+                     */
+                    english: string;
+
+                    /**
+                     * Official title in it's native language
+                     */
+                    native: string;
+
+                    /**
+                     * The currently authenticated users preferred title language. Default romaji for non-authenticated
+                     */
+                    userPreferred: string;
+                };
+            }>;
+        };
 
         /**
-         * `manga` is an array of the user's favourite manga, each with its id and title.
+         * Favourite manga
          */
-        manga: Array<{
-            id: number;
-            title: Title;
-        }>;
+        manga: {
+            /**
+             * `edges` is a list of `MediaEdge` entries representing the edges.
+             */
+            edges: Array<{
+                /**
+                 * `node` is an instance of `Media` representing the node.
+                 */
+                node: {
+                    /**
+                     * The id of the media
+                     */
+                    id: number;
+
+                    /**
+                     * The official titles of the media in various languages
+                     */
+                    title: {
+                        /**
+                         * The romanization of the native language title
+                         */
+                        romaji: string;
+
+                        /**
+                         * The official english title
+                         */
+                        english: string;
+
+                        /**
+                         * Official title in it's native language
+                         */
+                        native: string;
+
+                        /**
+                         * The currently authenticated users preferred title language. Default romaji for non-authenticated
+                         */
+                        userPreferred: string;
+                    };
+                };
+            }>;
+
+            /**
+             * `nodes` is a list of `Media` entries representing the nodes.
+             */
+            nodes: Array<{
+                /**
+                 * The id of the media
+                 */
+                id: number;
+
+                /**
+                 * The official titles of the media in various languages
+                 */
+                title: {
+                    /**
+                     * The romanization of the native language title
+                     */
+                    romaji: string;
+
+                    /**
+                     * The official english title
+                     */
+                    english: string;
+
+                    /**
+                     * Official title in it's native language
+                     */
+                    native: string;
+
+                    /**
+                     * The currently authenticated users preferred title language. Default romaji for non-authenticated
+                     */
+                    userPreferred: string;
+                };
+            }>;
+        };
 
         /**
-         * `characters` is an array of the user's favourite character edges.
+         * Favourite characters
          */
         characters: unknown[];
 
         /**
-         * `staff` is an array of the user's favourite staff edges.
+         * Favourite staff
          */
         staff: unknown[];
 
         /**
-         * `studios` is an array of the user's favourite studio edges.
+         * Favourite studios
          */
         studios: unknown[];
     };
 
     /**
-     * `statistics` is an instance of `Statistics` representing the statistics of the user.
+     * The users anime & manga list statistics
      */
     statistics: Statistics;
 
     /**
-     * `stats` is an instance of `UserStats` representing the stats of the user.
+     * The user's statistics
      */
     stats: UserStats;
 
     /**
-     * `unreadNotificationCount` is a number representing the unread notification count of the user.
+     * The number of unread notifications the user has
      */
     unreadNotificationCount: number;
 
     /**
-     * `siteUrl` is a string representing the site URL of the user.
+     * The url for the user page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `donatorTier` is a number representing the donator tier of the user.
+     * The donation tier of the user
      */
     donatorTier: number;
 
     /**
-     * `donatorBadge` is a string representing the donator badge of the user.
+     * Custom donation badge text
      */
     donatorBadge: string;
 
     /**
-     * `moderatorRoles` is an array of strings representing the moderator roles of the user.
+     * The user's moderator roles if they are a site moderator
      */
     moderatorRoles: string[];
 
     /**
-     * `createdAt` is a number representing the timestamp when the user was created.
+     * When the user's account was created. (Does not exist for accounts created before 2020)
      */
     createdAt: number;
 
     /**
-     * `updatedAt` is a number representing the timestamp when the user was last updated.
+     * When the user's data was last updated
      */
     updatedAt: number;
 
     /**
-     * `previousNames` is an array of objects representing the previous names of the user.
+     * The user's previously used names.
      */
     previousNames: Array<{
         /**
-         * `name` is a string representing the previous name of the user.
+         * A previous name of the user.
          */
         name: string;
 
         /**
-         * `createdAt` is a number representing the timestamp when the previous name was created.
+         * When the user first changed from this name.
          */
         createdAt: number;
 
         /**
-         * `updatedAt` is a number representing the timestamp when the previous name was last updated.
+         * When the user most recently changed from this name.
          */
         updatedAt: number;
     }>;
 }
+
+// @generated-end

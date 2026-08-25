@@ -1,94 +1,125 @@
-import { type FuzzyDate } from "../../FuzzyDate";
-import { type Name } from "../../Name";
-import { type Image } from "../../Image";
-import { type Title } from "../../Title";
-
 /**
- * `CharacterResponse` is an interface representing the response from a character query.
- * It includes the character's id, name, image, description, gender, date of birth, age, blood type, favourite status, site URL, associated media, number of favourites, and moderator notes.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type FuzzyDate } from "../../FuzzyDate";
+import { type Image } from "../../Image";
+import { type Name } from "../../Name";
+/**
+ * `CharacterResponse` — a character with their description, name, image, and media appearances.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/character
  */
 export interface CharacterResponse {
     /**
-     * `id` is a number representing the id of the character.
+     * The id of the character
      */
     id: number;
 
     /**
-     * `name` is an instance of `Name` representing the name of the character.
+     * The names of the character
      */
     name: Name;
 
     /**
-     * `image` is an instance of `Image` representing the image of the character.
+     * Character images
      */
     image: Image;
 
     /**
-     * `description` is a string representing the description of the character.
+     * A general description of the character
      */
     description: string;
 
     /**
-     * `gender` is a string representing the gender of the character.
+     * The character's gender. Usually Male, Female, or Non-binary but can be any string.
      */
     gender: string;
 
     /**
-     * `dateOfBirth` is an instance of `FuzzyDate` representing the date of birth of the character.
+     * The character's birth date
      */
     dateOfBirth: FuzzyDate;
 
     /**
-     * `age` is a string representing the age of the character.
+     * The character's age. Note this is a string, not an int, it may contain further text and additional ages.
      */
     age: string;
 
     /**
-     * `bloodType` is a string representing the blood type of the character.
+     * The characters blood type
      */
     bloodType: string;
 
     /**
-     * `isFavourite` is a boolean representing whether the character is a favourite.
+     * If the character is marked as favourite by the currently authenticated user
      */
     isFavourite: boolean;
 
     /**
-     * `isFavouriteBlocked` is a boolean representing whether the favourite status of the character is blocked.
+     * If the character is blocked from being added to favourites
      */
     isFavouriteBlocked: boolean;
 
     /**
-     * `siteUrl` is a string representing the site URL of the character.
+     * The url for the character page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `media` is an object that includes an array of nodes, each representing a media associated with the character.
-     * Each node includes the id and title of the media.
+     * Media that includes the character
      */
     media: {
+        /**
+         * `nodes` is a list of `Media` entries representing the nodes.
+         */
         nodes: Array<{
             /**
-             * `id` is a number representing the id of the media.
+             * The id of the media
              */
             id: number;
 
             /**
-             * `title` is an instance of `Title` representing the title of the media.
+             * The official titles of the media in various languages
              */
-            title: Title;
+            title: {
+                /**
+                 * The romanization of the native language title
+                 */
+                romaji: string;
+
+                /**
+                 * The official english title
+                 */
+                english: string;
+
+                /**
+                 * Official title in it's native language
+                 */
+                native: string;
+
+                /**
+                 * The currently authenticated users preferred title language. Default romaji for non-authenticated
+                 */
+                userPreferred: string;
+            };
         }>;
     };
 
     /**
-     * `favourites` is a number representing the number of favourites of the character.
+     * The amount of user's who have favourited the character
      */
     favourites: number;
 
     /**
-     * `modNotes` is a string representing the moderator notes of the character.
+     * Notes for site moderators
      */
     modNotes: string;
 }
+
+// @generated-end

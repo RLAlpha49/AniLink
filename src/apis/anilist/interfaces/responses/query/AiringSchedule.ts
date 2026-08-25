@@ -1,38 +1,48 @@
-import { type Media } from "../../Media";
-
 /**
- * `AiringScheduleResponse` is an interface representing the response from an airing schedule query.
- * It includes the id, airing time, time until airing, episode number, media id, and the media itself.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type Media } from "../../Media";
+/**
+ * `AiringScheduleResponse` — an airing schedule entry together with its media.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/airingschedule
  */
 export interface AiringScheduleResponse {
     /**
-     * `id` is a number representing the id of the airing schedule.
+     * The id of the airing schedule item
      */
     id: number;
 
     /**
-     * `airingAt` is a number representing the airing time of the airing schedule.
+     * The time the episode airs at
      */
     airingAt: number;
 
     /**
-     * `timeUntilAiring` is a number representing the time until the airing of the schedule.
+     * Seconds until episode starts airing
      */
     timeUntilAiring: number;
 
     /**
-     * `episode` is a number representing the episode number of the airing schedule.
+     * The airing episode number
      */
     episode: number;
 
     /**
-     * `mediaId` is a number representing the id of the media associated with the airing schedule.
+     * The associate media id of the airing episode
      */
     mediaId: number;
 
     /**
-     * `media` is an instance of `Media` representing the media associated with the airing schedule.
+     * The associate media of the airing episode
      */
     media: Media;
 }
+
+// @generated-end

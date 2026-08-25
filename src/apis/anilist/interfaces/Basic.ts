@@ -1,76 +1,89 @@
 /**
- * `BasicUser` is an interface representing a basic user.
- * It includes the id, name, and avatar each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `BasicUser` — the minimal user shape embedded in likes and replies.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/user
  */
 export interface BasicUser {
     /**
-     * `id` is a number representing the unique identifier of the user.
+     * The id of the user
      */
     id: number;
 
     /**
-     * `name` is a string representing the name of the user.
+     * The name of the user
      */
     name: string;
 
     /**
-     * `avatar` is an object representing the avatar of the user.
-     * It includes a large size avatar.
+     * The user's avatar images
      */
     avatar: {
         /**
-         * `large` is a string representing the URL of the large size avatar of the user.
+         * The avatar of user at its largest size
          */
         large: string;
     };
 }
 
 /**
- * `BasicThread` is an interface representing a basic thread.
- * It includes the id, title, body, and site url each having their own properties.
+ * `BasicThread` — the minimal thread shape embedded in notifications.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/thread
  */
 export interface BasicThread {
     /**
-     * `id` is a number representing the unique identifier of the thread.
+     * The id of the thread
      */
     id: number;
 
     /**
-     * `title` is a string representing the title of the thread.
+     * The title of the thread
      */
     title: string;
 
     /**
-     * `body` is a string representing the body content of the thread.
+     * The text body of the thread (Markdown)
      */
     body: string;
 
     /**
-     * `siteUrl` is a string representing the URL of the site where the thread is posted.
+     * The url for the thread page on the AniList website
      */
     siteUrl: string;
 }
 
 /**
- * `BasicComment` is an interface representing a basic comment.
- * It includes the id, user id, and thread id each having their own properties.
+ * `BasicComment` — the minimal thread-comment shape embedded in notifications.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export interface BasicComment {
     /**
-     * `id` is a number representing the unique identifier of the comment.
+     * The id of the comment
      */
     id: number;
 
     /**
-     * `userId` is a number representing the unique identifier of the user who made the comment.
+     * The user id of the comment's owner
      */
     userId: number;
 
     /**
-     * `threadId` is a number representing the unique identifier of the thread where the comment is posted.
+     * The id of thread the comment belongs to
      */
     threadId: number;
 }
+
+// @generated-end

@@ -6,24 +6,28 @@
  */
 // @generated-start
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
-import { type BasicUser } from "../../Basic";
-import { type PageInfo } from "./PageInfo";
+
 /**
- * `LikesPageResponse` — the users who liked an entity, with pagination metadata.
+ * `ActivityHistory` — a daily activity history entry of a user.
  *
  * Generated from the schema fragments; do not edit by hand.
- * @see https://docs.anilist.co/reference/object/user
+ * @see https://docs.anilist.co/reference/object/useractivityhistory
  */
-export interface LikesPageResponse {
+export interface ActivityHistory {
     /**
-     * The pagination information
+     * The day the activity took place (Unix timestamp)
      */
-    pageInfo: PageInfo;
+    date: number;
 
     /**
-     * `likes` is a list of `BasicUser` entries representing the likes.
+     * The amount of activity on the day
      */
-    likes: BasicUser[];
+    amount: number;
+
+    /**
+     * The level of activity represented on a 1-10 scale
+     */
+    level: number;
 }
 
 // @generated-end

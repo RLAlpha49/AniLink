@@ -1,21 +1,33 @@
 /**
- * `FuzzyDate` is an interface representing a fuzzy date.
- * It includes the year, month, and day each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `FuzzyDate` — a fuzzy date with optional year, month, and day components.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/fuzzydate
  */
 export interface FuzzyDate {
     /**
-     * `year` is a number representing the year of the fuzzy date.
+     * Numeric Year (2017)
      */
     year: number;
 
     /**
-     * `month` is a number representing the month of the fuzzy date.
+     * Numeric Month (3)
      */
     month: number;
 
     /**
-     * `day` is a number representing the day of the fuzzy date.
+     * Numeric Day (24)
      */
     day: number;
 }
+
+// @generated-end

@@ -1,85 +1,94 @@
-import { type Media } from "../../Media";
-
-import { type BasicUser } from "../../Basic";
-
 /**
- * `ReviewResponse` is an interface representing the response from a review query.
- * It includes the id, mediaId, userId, mediaType, summary, body, rating, ratingAmount, score, private status, siteUrl, createdAt, updatedAt, user of type `BasicUser`, and media of type `Media`.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type BasicUser } from "../../Basic";
+import { type Media } from "../../Media";
+/**
+ * `ReviewResponse` — a media review with its score, summary, and author.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/review
  */
 export interface ReviewResponse {
     /**
-     * `id` is a number representing the id of the review.
+     * The id of the review
      */
     id: number;
 
     /**
-     * `mediaId` is a number representing the id of the media associated with the review.
+     * The id of the review's media
      */
     mediaId: number;
 
     /**
-     * `userId` is a number representing the id of the user who created the review.
+     * The id of the review's creator
      */
     userId: number;
 
     /**
-     * `mediaType` is a string representing the type of media being reviewed.
+     * For which type of media the review is for
      */
     mediaType: string;
 
     /**
-     * `summary` is a string providing a brief summary of the review.
+     * A short summary of the review
      */
     summary: string;
 
     /**
-     * `body` is a string containing the full text of the review.
+     * The main review body text
      */
     body: string;
 
     /**
-     * `rating` is a number representing the rating given in the review.
+     * The total user rating of the review
      */
     rating: number;
 
     /**
-     * `ratingAmount` is a number representing the amount of ratings the review has received.
+     * The amount of user ratings of the review
      */
     ratingAmount: number;
 
     /**
-     * `score` is a number representing the score given in the review.
+     * The review score of the media
      */
     score: number;
 
     /**
-     * `private` is a boolean indicating whether the review is private.
+     * If the review is not yet publicly published and is only viewable by creator
      */
     private: boolean;
 
     /**
-     * `siteUrl` is a string representing the URL of the review on the site.
+     * The url for the review page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the review was created.
+     * The time of the thread creation
      */
     createdAt: number;
 
     /**
-     * `updatedAt` is a number representing the timestamp when the review was last updated.
+     * The time of the thread last update
      */
     updatedAt: number;
 
     /**
-     * `user` is an instance of `BasicUser` representing the user who created the review.
+     * The creator of the review
      */
     user: BasicUser;
 
     /**
-     * `media` is an instance of `Media` representing the media being reviewed.
+     * The media the review is of
      */
     media: Media;
 }
+
+// @generated-end

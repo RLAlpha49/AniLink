@@ -1,43 +1,53 @@
-import { type SiteTrendConnection } from "../../SiteTrend";
-
 /**
- * `SiteStatisticsResponse` is an interface representing the response from a site statistics query.
- * It includes users, anime, manga, characters, staff, studios, and reviews of type `SiteTrendConnection`.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type SiteTrendConnection } from "../../SiteTrend";
+/**
+ * `SiteStatisticsResponse` — site-wide statistic connections across users, anime, manga, and more.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/sitestatistics
  */
 export interface SiteStatisticsResponse {
     /**
-     * `users` is an instance of `SiteTrendConnection` representing the users' statistics.
+     * `users` is an instance of `SiteTrendConnection` representing the users.
      */
     users: SiteTrendConnection;
 
     /**
-     * `anime` is an instance of `SiteTrendConnection` representing the anime statistics.
+     * `anime` is an instance of `SiteTrendConnection` representing the anime.
      */
     anime: SiteTrendConnection;
 
     /**
-     * `manga` is an instance of `SiteTrendConnection` representing the manga statistics.
+     * `manga` is an instance of `SiteTrendConnection` representing the manga.
      */
     manga: SiteTrendConnection;
 
     /**
-     * `characters` is an instance of `SiteTrendConnection` representing the characters' statistics.
+     * `characters` is an instance of `SiteTrendConnection` representing the characters.
      */
     characters: SiteTrendConnection;
 
     /**
-     * `staff` is an instance of `SiteTrendConnection` representing the staff statistics.
+     * `staff` is an instance of `SiteTrendConnection` representing the staff.
      */
     staff: SiteTrendConnection;
 
     /**
-     * `studios` is an instance of `SiteTrendConnection` representing the studios' statistics.
+     * `studios` is an instance of `SiteTrendConnection` representing the studios.
      */
     studios: SiteTrendConnection;
 
     /**
-     * `reviews` is an instance of `SiteTrendConnection` representing the reviews' statistics.
+     * `reviews` is an instance of `SiteTrendConnection` representing the reviews.
      */
     reviews: SiteTrendConnection;
 }
+
+// @generated-end

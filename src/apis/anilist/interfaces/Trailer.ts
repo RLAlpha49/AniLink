@@ -1,21 +1,33 @@
 /**
- * `Trailer` is an interface representing a trailer.
- * It includes the id, site, and thumbnail each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `Trailer` — a media trailer hosted on an external site.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediatrailer
  */
 export interface Trailer {
     /**
-     * `id` is a string representing the id of the trailer.
+     * The trailer video id
      */
     id: string;
 
     /**
-     * `site` is a string representing the site of the trailer.
+     * The site the video is hosted by (Currently either youtube or dailymotion)
      */
     site: string;
 
     /**
-     * `thumbnail` is a string representing the thumbnail of the trailer.
+     * The url for the thumbnail image of the video
      */
     thumbnail: string;
 }
+
+// @generated-end

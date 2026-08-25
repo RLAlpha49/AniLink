@@ -1,140 +1,149 @@
+/**
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type FuzzyDate } from "../../FuzzyDate";
 import { type Media } from "../../Media";
-
 /**
- * `MediaListCollectionResponse` is an interface representing the response from a media list collection query.
- * It includes the `MediaListCollection` object with its lists and hasNextChunk status.
+ * `MediaListCollectionResponse` — a chunked collection of a user's media lists.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/medialistcollection
  */
 export interface MediaListCollectionResponse {
     /**
-     * `lists` is an array of objects, each representing a list with entries, name, isCustomList, isSplitCompletedList, and status.
+     * Grouped media list entries
      */
     lists: Array<{
         /**
-         * `entries` is an array of objects, each representing a media list entry.
-         * Each entry includes the id, userId, mediaId, status, score, progress, progressVolumes, repeat, priority, private, notes, hiddenFromStatusLists, customLists, advancedScores, startedAt, completedAt, updatedAt, createdAt, and media.
+         * Media list entries
          */
         entries: Array<{
             /**
-             * `id` is a number representing the id of the media list entry.
+             * The id of the list entry
              */
             id: number;
 
             /**
-             * `userId` is a number representing the id of the user associated with the media list entry.
+             * The id of the user owner of the list entry
              */
             userId: number;
 
             /**
-             * `mediaId` is a number representing the id of the media associated with the media list entry.
+             * The id of the media
              */
             mediaId: number;
 
             /**
-             * `status` is a string representing the status of the media list entry.
+             * The watching/reading status
              */
             status: string;
 
             /**
-             * `score` is a number representing the score of the media list entry.
+             * The score of the entry
              */
             score: number;
 
             /**
-             * `progress` is a number representing the progress of the media list entry.
+             * The amount of episodes/chapters consumed by the user
              */
             progress: number;
 
             /**
-             * `progressVolumes` is a number representing the progress volumes of the media list entry.
+             * The amount of volumes read by the user
              */
             progressVolumes: number;
 
             /**
-             * `repeat` is a number representing the repeat status of the media list entry.
+             * The amount of times the user has rewatched/read the media
              */
             repeat: number;
 
             /**
-             * `priority` is a number representing the priority of the media list entry.
+             * Priority of planning
              */
             priority: number;
 
             /**
-             * `private` is a boolean representing the privacy status of the media list entry.
+             * If the entry should only be visible to authenticated user
              */
             private: boolean;
 
             /**
-             * `notes` is a string representing the notes of the media list entry.
+             * Text notes
              */
             notes: string;
 
             /**
-             * `hiddenFromStatusLists` is a boolean representing whether the media list entry is hidden from status lists.
+             * If the entry shown be hidden from non-custom lists
              */
             hiddenFromStatusLists: boolean;
 
             /**
-             * `customLists` is an array of booleans representing the custom lists of the media list entry.
+             * Map of booleans for which custom lists the entry are in
              */
-            customLists: boolean[];
+            customLists: unknown;
 
             /**
-             * `advancedScores` is an array of numbers representing the advanced scores of the media list entry.
+             * Map of advanced scores with name keys
              */
-            advancedScores: number[];
+            advancedScores: unknown;
 
             /**
-             * `startedAt` is an instance of `FuzzyDate` representing the date when the media list entry started.
+             * When the entry was started by the user
              */
             startedAt: FuzzyDate;
 
             /**
-             * `completedAt` is an instance of `FuzzyDate` representing the date when the media list entry was completed.
+             * When the entry was completed by the user
              */
             completedAt: FuzzyDate;
 
             /**
-             * `updatedAt` is a number representing the timestamp when the media list entry was last updated.
+             * When the entry data was last updated
              */
             updatedAt: number;
 
             /**
-             * `createdAt` is a number representing the timestamp when the media list entry was created.
+             * When the entry data was created
              */
             createdAt: number;
 
             /**
-             * `media` is an instance of `Media` representing the media associated with the media list entry.
+             * `media` is an instance of `Media` representing the media.
              */
             media: Media;
         }>;
+
         /**
-         * `name` is a string representing the name of the list in the media list collection.
+         * `name` is a string value representing the name.
          */
         name: string;
 
         /**
-         * `isCustomList` is a boolean indicating whether the list is a custom list.
+         * `isCustomList` is a boolean value representing the is custom list.
          */
         isCustomList: boolean;
 
         /**
-         * `isSplitCompletedList` is a boolean indicating whether the list is a split completed list.
+         * `isSplitCompletedList` is a boolean value representing the is split completed list.
          */
         isSplitCompletedList: boolean;
 
         /**
-         * `status` is a string representing the status of the list in the media list collection.
+         * `status` is a string value representing the status.
          */
         status: string;
     }>;
+
     /**
-     * `hasNextChunk` is a boolean indicating whether more chunks remain in the media list collection.
-     * When `true`, advance the `chunk` variable and re-issue the query to fetch the next chunk.
-     * Use the shared `paginateChunks` helper (see `src/base/Paginator.ts`) to walk chunks with a guard.
+     * If there is another chunk
      */
     hasNextChunk: boolean;
 }
+
+// @generated-end

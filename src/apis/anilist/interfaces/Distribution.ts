@@ -1,50 +1,46 @@
 /**
- * `Distribution` is an interface representing a distribution.
- * It includes the status and amount each having their own properties.
- * @see https://docs.anilist.co/reference/object/statusdistribution
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
  */
-export interface Distribution {
-    /**
-     * `status` is a string representing the status of the distribution.
-     */
-    status: string;
-
-    /**
-     * `amount` is a number representing the amount of the distribution.
-     */
-    amount: number;
-}
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `ScoreDistribution` is an interface representing the score distribution of a media.
- * It includes the score and the amount each having their own properties.
+ * `ScoreDistribution` — how many media fall into each 10-point score bucket.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/scoredistribution
  */
 export interface ScoreDistribution {
     /**
-     * `score` is a number representing the score of the media.
+     * `score` is a number value representing the score.
      */
     score: number;
 
     /**
-     * `amount` is a number representing the amount of the score.
+     * The amount of list entries with this score
      */
     amount: number;
 }
 
 /**
- * `StatusDistribution` is an interface representing the distribution of statuses.
- * It includes the status and amount each having their own properties.
+ * `StatusDistribution` — how many media carry each list status.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/statusdistribution
  */
 export interface StatusDistribution {
     /**
-     * `status` is a string representing the status.
+     * The day the activity took place (Unix timestamp)
      */
     status: string;
 
     /**
-     * `amount` is a number representing the amount of the status.
+     * The amount of entries with this status
      */
     amount: number;
 }
+
+// @generated-end

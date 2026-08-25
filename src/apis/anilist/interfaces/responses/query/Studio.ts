@@ -1,176 +1,215 @@
-import { type Image } from "../../Image";
-import { type Media } from "../../Media";
-import { type Name } from "../../Name";
-import { type Staff } from "../../Staff";
-
 /**
- * `StudioResponse` is an interface representing the response from a studio query.
- * It includes the studio's id, name, animation studio status, media, site url, favourite status, and favourites count.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type Media } from "../../Media";
+import { type CharacterResponse } from "./Character";
+import { type StaffResponse } from "./Staff";
+/**
+ * `StudioResponse` — a studio with its produced media connections.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/studio
  */
 export interface StudioResponse {
     /**
-     * `id` is a number representing the id of the studio.
+     * The id of the studio
      */
     id: number;
 
     /**
-     * `name` is a string representing the name of the studio.
+     * The name of the studio
      */
     name: string;
 
     /**
-     * `isAnimationStudio` is a boolean indicating whether the studio is an animation studio.
+     * If the studio is an animation studio or a different kind of company
      */
     isAnimationStudio: boolean;
 
     /**
-     * `media` is an object representing the media associated with the studio.
-     * It includes an array of `edges` each representing a media edge with its own properties.
+     * The media the studio has worked on
      */
     media: {
+        /**
+         * `edges` is a list of `MediaEdge` entries representing the edges.
+         */
         edges: Array<{
             /**
-             * `id` is a number representing the id of the media edge.
+             * The id of the connection
              */
             id: number;
 
             /**
-             * `relationType` is a string representing the type of relation.
+             * The type of relation to the parent model
              */
             relationType: string;
 
             /**
-             * `isMainStudio` is a boolean indicating whether the studio is the main studio for the media.
+             * If the studio is the main animation studio of the media (For Studio->MediaConnection field only)
              */
             isMainStudio: boolean;
 
             /**
-             * `characters` is an instance of `Staff` representing the characters associated with the media.
+             * The characters in the media voiced by the parent actor
              */
-            characters: Staff;
+            characters: CharacterResponse[];
 
             /**
-             * `characterRole` is a string representing the role of the character.
+             * The characters role in the media
              */
             characterRole: string;
 
             /**
-             * `characterName` is a string representing the name of the character.
+             * Media specific character name
              */
             characterName: string;
 
             /**
-             * `roleNotes` is a string representing any notes about the role.
+             * Notes regarding the VA's role for the character
              */
             roleNotes: string;
 
             /**
-             * `dubGroup` is a string representing the dub group.
+             * Used for grouping roles where multiple dubs exist for the same language. Either dubbing company name or language variant.
              */
             dubGroup: string;
 
             /**
-             * `voiceActors` is an instance of `Staff` representing the voice actors for the media.
+             * The voice actors of the character
              */
-            voiceActors: Staff;
+            voiceActors: StaffResponse[];
 
             /**
-             * `voiceActorRoles` is an array of objects describing the voice actor roles
-             * for the character. Each entry includes the voice actor (with id, name, and
-             * image), any role notes, and the dub group.
+             * The voice actors of the character with role date
              */
             voiceActorRoles: Array<{
                 /**
-                 * `voiceActor` is an object representing the voice actor.
+                 * The voice actors of the character
                  */
                 voiceActor: {
                     /**
-                     * `id` is a number representing the id of the voice actor.
+                     * The id of the staff member
                      */
                     id: number;
 
                     /**
-                     * `name` is an instance of `Name` representing the name of the voice actor.
+                     * The names of the staff member
                      */
-                    name: Name;
+                    name: {
+                        /**
+                         * The person's given name
+                         */
+                        first: string;
+
+                        /**
+                         * The person's surname
+                         */
+                        last: string;
+
+                        /**
+                         * The person's first and last name
+                         */
+                        full: string;
+
+                        /**
+                         * The person's full name in their native language
+                         */
+                        native: string;
+                    };
 
                     /**
-                     * `image` is an instance of `Image` representing the image of the voice actor.
+                     * The staff images
                      */
-                    image: Image;
+                    image: {
+                        /**
+                         * The person's image of media at its largest size
+                         */
+                        large: string;
+
+                        /**
+                         * The person's image of media at medium size
+                         */
+                        medium: string;
+                    };
                 };
 
                 /**
-                 * `roleNotes` is a string representing any notes about the role of the voice actor.
+                 * Notes regarding the VA's role for the character
                  */
                 roleNotes: string;
 
                 /**
-                 * `dubGroup` is a string representing the dub group of the voice actor.
+                 * Used for grouping roles where multiple dubs exist for the same language. Either dubbing company name or language variant.
                  */
                 dubGroup: string;
             }>;
 
             /**
-             * `favouriteOrder` is a number representing the order of the favourite.
+             * The order the media should be displayed from the users favourites
              */
             favouriteOrder: number;
 
             /**
-             * `node` is an instance of `Media` representing the media node.
+             * `node` is an instance of `Media` representing the node.
              */
             node: Media;
         }>;
 
         /**
-         * `nodes` is an array of `Media` objects representing the media of the studio.
+         * `nodes` is a list of `Media` entries representing the nodes.
          */
         nodes: Media[];
 
         /**
-         * `pageInfo` is an object describing the pagination state of the media connection.
+         * The pagination information
          */
         pageInfo: {
             /**
-             * `total` is the total number of items across all pages.
+             * The total number of items. Note: This value is not guaranteed to be accurate, do not rely on this for logic
              */
             total: number;
 
             /**
-             * `perPage` is the number of items returned per page.
+             * The count on a page
              */
             perPage: number;
 
             /**
-             * `currentPage` is the current page number.
+             * The current page
              */
             currentPage: number;
 
             /**
-             * `lastPage` is the number of the last page.
+             * The last page
              */
             lastPage: number;
 
             /**
-             * `hasNextPage` indicates whether another page is available.
+             * If there is another page
              */
             hasNextPage: boolean;
         };
     };
 
     /**
-     * `siteUrl` is a string representing the URL of the studio on the site.
+     * The url for the studio page on the AniList website
      */
     siteUrl: string;
 
     /**
-     * `isFavourite` is a boolean indicating whether the studio is a favourite.
+     * If the studio is marked as favourite by the currently authenticated user
      */
     isFavourite: boolean;
 
     /**
-     * `favourites` is a number representing the count of favourites for the studio.
+     * The amount of user's who have favourited the studio
      */
     favourites: number;
 }
+
+// @generated-end

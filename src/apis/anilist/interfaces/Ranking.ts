@@ -1,46 +1,58 @@
 /**
- * `Ranking` is an interface representing the ranking of a media.
- * It includes the id, rank, type, format, year, season, all-time status, and context each having their own properties.
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
+ */
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+
+/**
+ * `Ranking` — a media ranking on a ranked chart.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediarank
  */
 export interface Ranking {
     /**
-     * `id` is a number representing the id of the ranking.
+     * The id of the rank
      */
     id: number;
 
     /**
-     * `rank` is a number representing the rank of the media.
+     * The numerical rank of the media
      */
     rank: number;
 
     /**
-     * `type` is a string representing the type of the ranking.
+     * The type of ranking
      */
     type: string;
 
     /**
-     * `format` is a string representing the format of the ranking.
+     * The format the media is ranked within
      */
     format: string;
 
     /**
-     * `year` is a number representing the year of the ranking.
+     * The year the media is ranked within
      */
     year: number;
 
     /**
-     * `season` is a string representing the season of the ranking.
+     * The season the media is ranked within
      */
     season: string;
 
     /**
-     * `allTime` is a boolean representing whether the ranking is all-time or not.
+     * If the ranking is based on all time instead of a season/year
      */
     allTime: boolean;
 
     /**
-     * `context` is a string representing the context of the ranking.
+     * String that gives context to the ranking type and time span
      */
     context: string;
 }
+
+// @generated-end

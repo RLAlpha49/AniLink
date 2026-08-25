@@ -1,43 +1,31 @@
-import { type BasicComment, type BasicThread, type BasicUser } from "./Basic";
-import { type Title } from "./Title";
-
 /**
- * `NotificationOptionInput` is an interface representing the options for a notification.
- * It includes the type and enabled status each having their own properties.
- * @see https://docs.anilist.co/reference/input/notificationoptioninput
+ * Response interfaces generated from the schema fragments under
+ * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * Run `npm run interfaces:generate` after changing a fragment;
+ * do not edit the generated block by hand.
  */
-export interface NotificationOptionInput {
-    /**
-     * `type` is a string representing the type of the notification.
-     */
-    type: string;
-
-    /**
-     * `enabled` is a boolean representing whether the notification is enabled or not.
-     */
-    enabled: boolean;
-}
-
+// @generated-start
+// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
+import { type BasicComment, type BasicThread, type BasicUser } from "./Basic";
 /**
- * `ThreadNotification` is an interface representing a thread notification.
- * It includes the id, userId, type, commentId, context, createdAt, thread, comment, and user each having their own properties.
+ * `ThreadNotification` — a thread-comment notification; narrow on the literal `type` field.
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface ThreadNotification {
     /**
-     * `id` is a number representing the id of the thread notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `userId` is a number representing the id of the user associated with the thread notification.
+     * The id of the user who mentioned the authenticated user
      */
     userId: number;
 
     /**
-     * `type` is the notification type discriminator of the thread notification.
-     * It is one of "THREAD_COMMENT_MENTION", "THREAD_COMMENT_REPLY", "THREAD_SUBSCRIBED", or "THREAD_COMMENT_LIKE",
-     * which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type:
         | "THREAD_COMMENT_MENTION"
@@ -46,542 +34,618 @@ export interface ThreadNotification {
         | "THREAD_COMMENT_LIKE";
 
     /**
-     * `commentId` is a number representing the id of the comment associated with the thread notification.
+     * The id of the comment where mentioned
      */
     commentId: number;
 
     /**
-     * `context` is a string representing the context of the thread notification.
+     * The notification context text
      */
     context: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the thread notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 
     /**
-     * `thread` is an instance of `BasicThread` representing the thread associated with the thread notification.
+     * The thread that the relevant comment belongs to
      */
     thread: BasicThread;
 
     /**
-     * `comment` is an instance of `BasicComment` representing the comment associated with the thread notification.
+     * The thread comment that included the @ mention
      */
     comment: BasicComment;
 
     /**
-     * `user` is an instance of `BasicUser` representing the user associated with the thread notification.
+     * The user who mentioned the authenticated user
      */
     user: BasicUser;
 }
 
 /**
- * `AiringNotification` is an interface representing an airing notification.
- * It includes the id, type, animeId, episode, contexts, createdAt, and media of the notification.
+ * `AiringNotification` — an episode-airing notification; `type` is always "AIRING".
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface AiringNotification {
     /**
-     * `id` is a number representing the id of the airing notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `type` is the notification type discriminator of the airing notification.
-     * It is always "AIRING", which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type: "AIRING";
 
     /**
-     * `animeId` is a number representing the id of the anime associated with the airing notification.
+     * The id of the aired anime
      */
     animeId: number;
 
     /**
-     * `episode` is a number representing the episode number of the anime associated with the airing notification.
+     * The episode number that just aired
      */
     episode: number;
 
     /**
-     * `contexts` is a string representing the contexts of the airing notification.
+     * The notification context text
      */
-    contexts: string;
+    contexts: string[];
 
     /**
-     * `createdAt` is a number representing the timestamp when the airing notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 
     /**
-     * `media` is an object representing the media associated with the airing notification.
-     * It includes the id and title of the media.
+     * The associated media of the airing schedule
      */
     media: {
         /**
-         * `id` is a number representing the id of the media.
+         * The id of the media
          */
         id: number;
 
         /**
-         * `title` is an instance of `Title` representing the title of the media.
+         * The official titles of the media in various languages
          */
-        title: Title;
+        title: {
+            /**
+             * The romanization of the native language title
+             */
+            romaji: string;
+
+            /**
+             * The official english title
+             */
+            english: string;
+
+            /**
+             * Official title in it's native language
+             */
+            native: string;
+
+            /**
+             * The currently authenticated users preferred title language. Default romaji for non-authenticated
+             */
+            userPreferred: string;
+        };
     };
 }
 
 /**
- * `FollowingNotification` is an interface representing a following notification.
- * It includes the id, type, userId, context, createdAt, and user of the notification.
+ * `FollowingNotification` — a new-follower notification; `type` is always "FOLLOWING".
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface FollowingNotification {
     /**
-     * `id` is a number representing the id of the following notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `type` is the notification type discriminator of the following notification.
-     * It is always "FOLLOWING", which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type: "FOLLOWING";
 
     /**
-     * `userId` is a number representing the id of the user associated with the following notification.
+     * The id of the user who followed the authenticated user
      */
     userId: number;
 
     /**
-     * `context` is a string representing the context of the following notification.
+     * The notification context text
      */
     context: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the following notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 
     /**
-     * `user` is an instance of `BasicUser` representing the user associated with the following notification.
+     * The liked activity
      */
     user: BasicUser;
 }
 
 /**
- * `ActivityMessageNotification` is an interface representing an activity message notification.
- * It includes the id, userId, type, activityId, context, createdAt, message, and user of the notification.
+ * `ActivityMessageNotification` — a direct-message notification; `type` is always "ACTIVITY_MESSAGE".
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface ActivityMessageNotification {
     /**
-     * `id` is a number representing the id of the activity message notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `userId` is a number representing the id of the user associated with the activity message notification.
+     * The if of the user who send the message
      */
     userId: number;
 
     /**
-     * `type` is the notification type discriminator of the activity message notification.
-     * It is always "ACTIVITY_MESSAGE", which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type: "ACTIVITY_MESSAGE";
 
     /**
-     * `activityId` is a number representing the id of the activity associated with the activity message notification.
+     * The id of the activity message
      */
     activityId: number;
 
     /**
-     * `context` is a string representing the context of the activity message notification.
+     * The notification context text
      */
     context: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the activity message notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 
     /**
-     * `message` is an object representing the message associated with the activity message notification.
-     * It includes the id, recipientId, messengerId, type, replyCount, message, isLocked, isSubscribed, likeCount, isLiked, isPrivate, siteUrl, createdAt, replies, and likes of the message.
+     * The message activity
      */
     message: {
         /**
-         * `id` is a number representing the id of the message.
+         * The id of the activity
          */
         id: number;
 
         /**
-         * `recipientId` is a number representing the id of the recipient of the message.
+         * The user id of the activity's recipient
          */
         recipientId: number;
 
         /**
-         * `messengerId` is a number representing the id of the messenger of the message.
+         * The user id of the activity's sender
          */
         messengerId: number;
 
         /**
-         * `type` is a string representing the type of the message.
+         * The type of the activity
          */
         type: string;
 
         /**
-         * `replyCount` is a number representing the reply count of the message.
+         * The number of activity replies
          */
         replyCount: number;
 
         /**
-         * `message` is a string representing the content of the message.
+         * The message text (Markdown)
          */
         message: string;
 
         /**
-         * `isLocked` is a boolean indicating whether the message is locked.
+         * If the activity is locked and can receive replies
          */
         isLocked: boolean;
 
         /**
-         * `isSubscribed` is a boolean indicating whether the user is subscribed to the message.
+         * If the currently authenticated user is subscribed to the activity
          */
         isSubscribed: boolean;
 
         /**
-         * `likeCount` is a number representing the like count of the message.
+         * The amount of likes the activity has
          */
         likeCount: number;
 
         /**
-         * `isLiked` is a boolean indicating whether the message is liked by the user.
+         * If the currently authenticated user liked the activity
          */
         isLiked: boolean;
 
         /**
-         * `isPrivate` is a boolean indicating whether the message is private.
+         * If the message is private and only viewable to the sender and recipients
          */
         isPrivate: boolean;
 
         /**
-         * `siteUrl` is a string representing the URL of the message on the site.
+         * The url for the activity page on the AniList website
          */
         siteUrl: string;
 
         /**
-         * `createdAt` is a number representing the timestamp when the message was created.
+         * The time the activity was created at
          */
         createdAt: number;
 
         /**
-         * `replies` is an array of objects representing the replies to the message.
-         * Each object includes the id, userId, activityId, text, createdAt, likeCount, isLiked, user, and likes of the reply.
+         * The written replies to the activity
          */
         replies: Array<{
             /**
-             * `id` is a number representing the id of the reply.
+             * The id of the reply
              */
             id: number;
 
             /**
-             * `userId` is a number representing the id of the user who replied.
+             * The id of the replies creator
              */
             userId: number;
 
             /**
-             * `activityId` is a number representing the id of the activity associated with the reply.
+             * The id of the parent activity
              */
             activityId: number;
 
             /**
-             * `text` is a string representing the content of the reply.
+             * The reply text
              */
             text: string;
 
             /**
-             * `createdAt` is a number representing the timestamp when the reply was created.
+             * The time the reply was created at
              */
             createdAt: number;
 
             /**
-             * `likeCount` is a number representing the like count of the reply.
+             * The amount of likes the reply has
              */
             likeCount: number;
 
             /**
-             * `isLiked` is a boolean indicating whether the reply is liked by the user.
+             * If the currently authenticated user liked the reply
              */
             isLiked: boolean;
 
             /**
-             * `user` is an instance of `BasicUser` representing the user who replied.
+             * The user who created reply
              */
             user: BasicUser;
 
             /**
-             * `likes` is an array of instances of `BasicUser` representing the users who liked the reply.
+             * The users who liked the reply
              */
             likes: BasicUser[];
         }>;
 
         /**
-         * `likes` is an array of instances of `BasicUser` representing the users who liked the message.
+         * The users who liked the activity
          */
         likes: BasicUser[];
     };
 
     /**
-     * `user` is an instance of `BasicUser` representing the user associated with the activity message notification.
+     * The user who sent the message
      */
     user: BasicUser;
 }
 
 /**
- * `ThreadLikeNotification` is an interface representing a thread like notification.
- * It includes the id, userId, type, context, createdAt, thread, comment, and user of the notification.
+ * `ThreadLikeNotification` — a thread-like notification; `type` is always "THREAD_LIKE".
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface ThreadLikeNotification {
     /**
-     * `id` is a number representing the id of the thread like notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `userId` is a number representing the id of the user associated with the thread like notification.
+     * The id of the user who liked to the activity
      */
     userId: number;
 
     /**
-     * `type` is the notification type discriminator of the thread like notification.
-     * It is always "THREAD_LIKE", which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type: "THREAD_LIKE";
 
     /**
-     * `context` is a string representing the context of the thread like notification.
+     * The notification context text
      */
     context: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the thread like notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 
     /**
-     * `thread` is an instance of `BasicThread` representing the thread associated with the thread like notification.
+     * The thread that the relevant comment belongs to
      */
     thread: BasicThread;
 
     /**
-     * `comment` is an instance of `BasicComment` representing the comment associated with the thread like notification.
+     * The liked thread comment
      */
     comment: BasicComment;
 
     /**
-     * `user` is an instance of `BasicUser` representing the user associated with the thread like notification.
+     * The user who liked the activity
      */
     user: BasicUser;
 }
 
 /**
- * `RelatedMediaAdditionNotification` is an interface representing a related media addition notification.
- * It includes the id, type, mediaId, context, createdAt, and media of the notification.
+ * `RelatedMediaAdditionNotification` — a media-added-to-list notification; `type` is always "RELATED_MEDIA_ADDITION".
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface RelatedMediaAdditionNotification {
     /**
-     * `id` is a number representing the id of the related media addition notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `type` is the notification type discriminator of the related media addition notification.
-     * It is always "RELATED_MEDIA_ADDITION", which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type: "RELATED_MEDIA_ADDITION";
 
     /**
-     * `mediaId` is a number representing the id of the media associated with the related media addition notification.
+     * The id of the new media
      */
     mediaId: number;
 
     /**
-     * `context` is a string representing the context of the related media addition notification.
+     * The notification context text
      */
     context: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the related media addition notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 
     /**
-     * `media` is an object representing the media associated with the related media addition notification.
-     * It includes the id and title of the media.
+     * The associated media of the airing schedule
      */
     media: {
         /**
-         * `id` is a number representing the id of the media.
+         * The id of the media
          */
         id: number;
 
         /**
-         * `title` is an instance of `Title` representing the title of the media.
+         * The official titles of the media in various languages
          */
-        title: Title;
+        title: {
+            /**
+             * The romanization of the native language title
+             */
+            romaji: string;
+
+            /**
+             * The official english title
+             */
+            english: string;
+
+            /**
+             * Official title in it's native language
+             */
+            native: string;
+
+            /**
+             * The currently authenticated users preferred title language. Default romaji for non-authenticated
+             */
+            userPreferred: string;
+        };
     };
 }
 
 /**
- * `MediaDataChangeNotification` is an interface representing a media data change notification.
- * It includes the id, type, mediaId, context, reason, createdAt, and media of the notification.
+ * `MediaDataChangeNotification` — a media data-change notification; `type` is always "MEDIA_DATA_CHANGE".
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface MediaDataChangeNotification {
     /**
-     * `id` is a number representing the id of the media data change notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `type` is the notification type discriminator of the media data change notification.
-     * It is always "MEDIA_DATA_CHANGE", which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type: "MEDIA_DATA_CHANGE";
 
     /**
-     * `mediaId` is a number representing the id of the media associated with the media data change notification.
+     * The id of the media that received data changes
      */
     mediaId: number;
 
     /**
-     * `context` is a string representing the context of the media data change notification.
+     * The reason for the media data change
      */
     context: string;
 
     /**
-     * `reason` is a string representing the reason for the media data change.
+     * The reason for the media data change
      */
     reason: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the media data change notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 
     /**
-     * `media` is an object representing the media associated with the media data change notification.
-     * It includes the id and title of the media.
+     * The media that received data changes
      */
     media: {
         /**
-         * `id` is a number representing the id of the media.
+         * The id of the media
          */
         id: number;
 
         /**
-         * `title` is an instance of `Title` representing the title of the media.
+         * The official titles of the media in various languages
          */
-        title: Title;
+        title: {
+            /**
+             * The romanization of the native language title
+             */
+            romaji: string;
+
+            /**
+             * The official english title
+             */
+            english: string;
+
+            /**
+             * Official title in it's native language
+             */
+            native: string;
+
+            /**
+             * The currently authenticated users preferred title language. Default romaji for non-authenticated
+             */
+            userPreferred: string;
+        };
     };
 }
 
 /**
- * `MediaMergeNotification` is an interface representing a media merge notification.
- * It includes the id, type, mediaId, deletedMediaTitles, context, reason, createdAt, and media of the notification.
+ * `MediaMergeNotification` — a media-merge notification; `type` is always "MEDIA_MERGE".
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface MediaMergeNotification {
     /**
-     * `id` is a number representing the id of the media merge notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `type` is the notification type discriminator of the media merge notification.
-     * It is always "MEDIA_MERGE", which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type: "MEDIA_MERGE";
 
     /**
-     * `mediaId` is a number representing the id of the media associated with the media merge notification.
+     * The id of the media that was merged into
      */
     mediaId: number;
 
     /**
-     * `deletedMediaTitles` is an array of strings representing the titles of the deleted media in the media merge notification.
+     * The title of the deleted media
      */
     deletedMediaTitles: string[];
 
     /**
-     * `context` is a string representing the context of the media merge notification.
+     * The reason for the media data change
      */
     context: string;
 
     /**
-     * `reason` is a string representing the reason for the media merge.
+     * The reason for the media merge
      */
     reason: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the media merge notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 
     /**
-     * `media` is an object representing the media associated with the media merge notification.
-     * It includes the id and title of the media.
+     * The media that was merged into
      */
     media: {
         /**
-         * `id` is a number representing the id of the media.
+         * The id of the media
          */
         id: number;
 
         /**
-         * `title` is an instance of `Title` representing the title of the media.
+         * The official titles of the media in various languages
          */
-        title: Title;
+        title: {
+            /**
+             * The romanization of the native language title
+             */
+            romaji: string;
+
+            /**
+             * The official english title
+             */
+            english: string;
+
+            /**
+             * Official title in it's native language
+             */
+            native: string;
+
+            /**
+             * The currently authenticated users preferred title language. Default romaji for non-authenticated
+             */
+            userPreferred: string;
+        };
     };
 }
 
 /**
- * `MediaDeletionNotification` is an interface representing a media deletion notification.
- * It includes the id, type, deletedMediaTitle, context, reason, and createdAt of the notification.
+ * `MediaDeletionNotification` — a media-deletion notification; `type` is always "MEDIA_DELETION".
+ *
+ * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface MediaDeletionNotification {
     /**
-     * `id` is a number representing the id of the media deletion notification.
+     * The id of the Notification
      */
     id: number;
 
     /**
-     * `type` is the notification type discriminator of the media deletion notification.
-     * It is always "MEDIA_DELETION", which lets `NotificationResponse` work as a discriminated union.
+     * The type of notification
      */
     type: "MEDIA_DELETION";
 
     /**
-     * `deletedMediaTitle` is a string representing the title of the deleted media in the media deletion notification.
+     * The title of the deleted media
      */
     deletedMediaTitle: string;
 
     /**
-     * `context` is a string representing the context of the media deletion notification.
+     * The reason for the media deletion
      */
     context: string;
 
     /**
-     * `reason` is a string representing the reason for the media deletion.
+     * The reason for the media deletion
      */
     reason: string;
 
     /**
-     * `createdAt` is a number representing the timestamp when the media deletion notification was created.
+     * The time the notification was created at
      */
     createdAt: number;
 }
+
+// @generated-end
