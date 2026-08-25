@@ -17,9 +17,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Verify and build
+  quality:
+    name: Quality gates and build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -39,17 +40,6 @@ jobs:
       - name: Type-check source
         run: npm run typecheck
 
-      - name: Run tests with coverage
-        run: npm run test:coverage
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-report
-          path: coverage/
-          retention-days: 14
-
       - name: Check formatting
         run: npm run format:check
 
@@ -65,11 +55,16 @@ jobs:
       - name: Build package
         run: npm run build
 
-  integration:
-    name: Live AniList integration test
-    runs-on: ubuntu-latest
-    env:
-      ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -83,6 +78,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always() && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+  integration:
+    name: Live AniList integration test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      # Token availability is decided before anything expensive runs so fork
+      # pull requests and misconfigured runs finish in seconds.
       - name: Warn when ANILIST_TOKEN is unavailable to a fork pull request
         if: ${{ env.ANILIST_TOKEN == '' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
         run: echo "::warning::ANILIST_TOKEN secret is not available to fork pull requests; live integration tests are skipped"
@@ -91,5 +109,17 @@ jobs:
         if: ${{ env.ANILIST_TOKEN == '' && !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) }}
         run: echo "::error::ANILIST_TOKEN secret is not set; live integration coverage is not running" && exit 1
 
+      - name: Set up Node.js
+        if: ${{ env.ANILIST_TOKEN != '' }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: ${{ env.ANILIST_TOKEN != '' }}
+        run: npm ci
+
       - name: Run live AniList integration test
+        if: ${{ env.ANILIST_TOKEN != '' }}
         run: npm run test:integration
