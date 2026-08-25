@@ -791,6 +791,33 @@ function tryParseSignature(
 function resolveSourceInfo(
     op: RawOp
 ): { className: string; methodName: string; sourceFile: string } | null {
+    const registryPath = join(ANILIST, "registry.ts");
+    if (existsSync(registryPath)) {
+        const content = readFileText(registryPath);
+        // Registry entries: `op("name", NameClass)` / `opAs("name", NameClass, "method")`.
+        const escapedName = op.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(
+            `op(?:As)?\\(\\s*"${escapedName}"\\s*,\\s*(\\w+)\\s*(?:,\\s*"([\\w]+)")?\\s*\\)`,
+            "g"
+        );
+        const candidates: Array<{ methodName: string; className: string }> = [];
+        let m = re.exec(content);
+        while (m !== null) {
+            candidates.push({ className: m[1], methodName: m[2] ?? op.name });
+            m = re.exec(content);
+        }
+        for (const cand of candidates) {
+            const sourceFile = findClassFile(cand.className, op.category);
+            if (sourceFile && interfaceInFile(sourceFile, op.variablesType)) {
+                return { ...cand, sourceFile };
+            }
+        }
+        for (const cand of candidates) {
+            const sourceFile = findClassFile(cand.className, op.category);
+            if (sourceFile) return { ...cand, sourceFile };
+        }
+        return null;
+    }
     const content = readFileText(join(ANILIST, "anilist-wiring.ts"));
     const escapedName = op.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     // Find all bindings: `name: <instance>.<method>.bind(<instance>)`.
