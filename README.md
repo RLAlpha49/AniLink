@@ -97,19 +97,19 @@ Get a token by registering an application on the [AniList developer settings](ht
 
 The second constructor argument accepts optional transport settings. Options are **per instance**: creating a second `AniLink` never changes how an existing one behaves.
 
-| Option | Type | Default | Description |
-| ------ | ---- | ------- | ----------- |
-| `timeout` | `number` | `30000` | Milliseconds before a request is aborted. `0` disables the timeout. Timeout errors carry the effective duration as `timeoutMs`. |
-| `signal` | `AbortSignal` | — | Cancel in-flight requests (for example when a user navigates away). |
-| `retry` | `boolean \| Partial<RetryPolicy>` | default policy | Automatic retries for transient failures are **on by default** (`maxRetries: 3` over HTTP `429`/`5xx`, network, and timeout errors). Pass `retry: false` to opt out. See [Retry with backoff](#retry-with-backoff). |
-| `paceWithRateLimit` | `boolean` | `false` | Opt into proactive pacing: when the `x-ratelimit-remaining` header drops below `rateLimitFloor`, the next request waits until the window resets instead of discovering the limit via a `429`. |
-| `rateLimitFloor` | `number` | `1` | Remaining-quota threshold below which `paceWithRateLimit` delays the next request. |
-| `circuitBreaker` | `{ threshold: number; cooldownMs: number }` | — | Opt into a per-client circuit breaker: after `threshold` consecutive failures, requests fail fast with `CIRCUIT_OPEN_ERROR` until `cooldownMs` elapses. |
-| `onError` | `(error, context) => void` | — | Invoked when an attempt fails and once more when retries are exhausted. |
-| `onRetry` | `(error, context) => void` | — | Invoked before each retry wait with the scheduled delay. |
-| `onRequestStart` | `(context) => void` | — | Invoked just before each attempt is sent. |
-| `onResponse` | `(context) => void` | — | Invoked after each attempt completes, with the elapsed `durationMs`. |
-| `exposeRawAxiosError` | `boolean` | `false` | Attach the original Axios error to thrown errors for local debugging. |
+| Option                | Type                                        | Default        | Description                                                                                                                                                                                                         |
+| --------------------- | ------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `timeout`             | `number`                                    | `30000`        | Milliseconds before a request is aborted. `0` disables the timeout. Timeout errors carry the effective duration as `timeoutMs`.                                                                                     |
+| `signal`              | `AbortSignal`                               | —              | Cancel in-flight requests (for example when a user navigates away).                                                                                                                                                 |
+| `retry`               | `boolean \| Partial<RetryPolicy>`           | default policy | Automatic retries for transient failures are **on by default** (`maxRetries: 3` over HTTP `429`/`5xx`, network, and timeout errors). Pass `retry: false` to opt out. See [Retry with backoff](#retry-with-backoff). |
+| `paceWithRateLimit`   | `boolean`                                   | `false`        | Opt into proactive pacing: when the `x-ratelimit-remaining` header drops below `rateLimitFloor`, the next request waits until the window resets instead of discovering the limit via a `429`.                       |
+| `rateLimitFloor`      | `number`                                    | `1`            | Remaining-quota threshold below which `paceWithRateLimit` delays the next request.                                                                                                                                  |
+| `circuitBreaker`      | `{ threshold: number; cooldownMs: number }` | —              | Opt into a per-client circuit breaker: after `threshold` consecutive failures, requests fail fast with `CIRCUIT_OPEN_ERROR` until `cooldownMs` elapses.                                                             |
+| `onError`             | `(error, context) => void`                  | —              | Invoked when an attempt fails and once more when retries are exhausted.                                                                                                                                             |
+| `onRetry`             | `(error, context) => void`                  | —              | Invoked before each retry wait with the scheduled delay.                                                                                                                                                            |
+| `onRequestStart`      | `(context) => void`                         | —              | Invoked just before each attempt is sent.                                                                                                                                                                           |
+| `onResponse`          | `(context) => void`                         | —              | Invoked after each attempt completes, with the elapsed `durationMs`.                                                                                                                                                |
+| `exposeRawAxiosError` | `boolean`                                   | `false`        | Attach the original Axios error to thrown errors for local debugging.                                                                                                                                               |
 
 ```typescript
 const aniLink = new AniLink("your-auth-token", {
@@ -286,7 +286,12 @@ the upstream AniList response body. AniLink does not expose the raw Axios
 response object, request headers, bearer token, or request internals.
 
 ```typescript
-import { AniLinkApiError, AniLinkAuthError, AniLinkGraphQLError, AniLinkNetworkError } from "anilink-api-wrapper";
+import {
+    AniLinkApiError,
+    AniLinkAuthError,
+    AniLinkGraphQLError,
+    AniLinkNetworkError,
+} from "anilink-api-wrapper";
 
 try {
     const user = await aniLink.anilist.query.user({ id: 542244 });
@@ -442,7 +447,9 @@ const aniLink = new AniLink("your-auth-token", {
     },
     // Fires before each retry wait, with the scheduled delay.
     onRetry: (error, { attempt, nextDelayMs, status }) => {
-        console.warn(`attempt ${attempt} failed (${status ?? error.code}); retrying in ${nextDelayMs}ms`);
+        console.warn(
+            `attempt ${attempt} failed (${status ?? error.code}); retrying in ${nextDelayMs}ms`
+        );
     },
 });
 ```
@@ -451,7 +458,7 @@ const aniLink = new AniLink("your-auth-token", {
 - `onResponse` receives the same context plus `durationMs`, and fires for
   failed attempts too, so it can drive latency histograms.
 - `onRetry` receives the normalized error plus `{ url, method, attempt, code,
-  status?, nextDelayMs }`. When you do not set `onRetry`, per-attempt
+status?, nextDelayMs }`. When you do not set `onRetry`, per-attempt
   notifications fall back to `onError` (which then fires before each retry
   wait and once more at terminal failure).
 
@@ -473,6 +480,26 @@ Common status codes from the AniList API:
 Full method and parameter reference: [AniLink documentation](https://rlalpha49.github.io/AniLink/).
 
 More usage examples: [ANILIST_API_EXAMPLES](https://github.com/RLAlpha49/AniLink/blob/master/Examples/ANILIST_API_EXAMPLES.md).
+
+Coverage versus the current AniList schema — which upstream operations AniLink wraps, which it deliberately does not, and any detected drift — is rendered into [`artifacts/anilist-api-compare/report.md`](artifacts/anilist-api-compare/report.md) by every CI run and kept as a retained workflow artifact.
+
+### Upstream compatibility
+
+AniList's GraphQL API is unversioned: fields can appear, be deprecated, or disappear at any time. AniLink pins a schema snapshot and gates every pull request against it with `npm run anilist:api:compare -- --strict --ignore-unimplemented`, so drift is caught before merge rather than at your runtime. The comparison report classifies upstream changes as:
+
+- **Discrepancy** — an implemented operation's contract no longer matches the snapshot (missing field, changed type). Strict mode fails CI; these ship as a patch or minor fix-forward.
+- **Removed operation** — an operation AniLink wrapped no longer exists upstream. The wrapper method is dropped and the removal ships as a **minor** release with a documented migration snippet using `custom()`.
+- **Deprecated operation** — AniList marked a field or operation deprecated. AniLink keeps wrapping it, tracks the deprecation in the report, and removes it only when AniList does.
+- **Unimplemented operation** — an upstream operation AniLink has never wrapped. These are listed in the report; operations that can never be wrapped are recorded with a dated review note in `IGNORED_UNIMPLEMENTED_OPERATIONS` (`lib/api-compare/compare.ts`).
+
+Until a removal ships, `custom()` lets you call any upstream operation directly:
+
+```typescript
+const result = await aniLink.anilist.custom(
+    "query ($id: Int) { Media (id: $id) { id title { romaji } } }",
+    { id: 1 }
+);
+```
 
 ## Development
 

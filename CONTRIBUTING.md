@@ -9,23 +9,27 @@ AniLink is a TypeScript wrapper for the AniList GraphQL API. The source lives in
 ## Getting Started
 
 1. Fork the repository and create your branch from `master`.
-2. Install Node.js 20 or later and npm.
+2. Install Node.js 22 or later and npm.
 3. Run `npm install` to install dependencies.
 
 ## Development Workflow
 
-| Command                    | What it does                                   |
-| -------------------------- | ---------------------------------------------- |
-| `npm run lint`             | Lints source, tests, and scripts with ESLint   |
-| `npm run typecheck`        | Runs `tsc --noEmit`                            |
-| `npm test`                 | Runs the unit tests with Vitest                |
-| `npm run test:integration` | Runs the integration tests (needs the network) |
-| `npm run format:check`     | Checks formatting with Prettier                |
-| `npm run jsdoc:check`      | Validates the JSDoc contract                   |
-| `npm run build`            | Builds `dist/`                                 |
-| `npm run docs:generate`    | Generates the API docs into `docs/`            |
+| Command                                  | What it does                                                                                                      |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `npm run lint`                           | Lints source, tests, and scripts with ESLint                                                                      |
+| `npm run typecheck`                      | Runs `tsc --noEmit`                                                                                               |
+| `npm test`                               | Runs the unit tests with Vitest                                                                                   |
+| `npm run test:integration`               | Runs the integration tests (needs the network)                                                                    |
+| `npm run format:check`                   | Checks formatting with Prettier                                                                                   |
+| `npm run jsdoc:check`                    | Validates the JSDoc contract                                                                                      |
+| `npm run interfaces:generate -- --check` | Validates generated interfaces stay in sync with the AniList schema snapshot                                      |
+| `npm run anilist:api:compare`            | Compares package contracts against the AniList schema snapshot; CI runs it with `--strict --ignore-unimplemented` |
+| `npm run build`                          | Builds `dist/`                                                                                                    |
+| `npm run docs:generate`                  | Generates the API docs into `docs/`                                                                               |
 
-Run `npm run lint`, `npm run typecheck`, `npm test`, `npm run jsdoc:check`, `npm run format:check`, and `npm run build` before you push. CI runs the same gates on every pull request, and a pull request merges only when all checks pass.
+Run `npm run check` before you push. It chains every gate CI enforces on a pull request — typecheck, lint, coverage-thresholded tests, formatting, JSDoc, interface sync, the strict API-drift compare, and the build — so local and CI verdicts match one-for-one. A pull request merges only when all checks pass.
+
+The `graphql` devDependency is used by the API-drift tooling (`lib/api-compare/`) to parse AniList's introspection schema; do not remove it even though `src/` never imports it.
 
 ## JSDoc Contract
 
@@ -42,6 +46,8 @@ This project uses [semantic-release](https://semantic-release.org/) with convent
 | `feat!:` or a `BREAKING CHANGE:` footer | major   |
 
 Docs, style, refactor, and dependency commits also produce patch releases. Write the summary line in the imperative mood, for example `add pagination guard`.
+
+When the strict API-drift compare fails because AniList itself changed, see [Upstream compatibility](README.md#upstream-compatibility) in the README for how removals and deprecations map to release categories.
 
 ## Pull Requests
 

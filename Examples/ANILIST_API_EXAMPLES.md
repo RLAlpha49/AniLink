@@ -2,6 +2,74 @@
 
 Here are examples of how to use AniLink to interact with the AniList API:
 
+## Authenticating
+
+AniLink ships helpers for the AniList OAuth2 authorization-code flow, so you can obtain and refresh the token you pass to the `AniLink` constructor instead of hand-rolling the HTTP calls.
+
+Register an application on the [AniList developer settings](https://anilist.co/settings/developer) to get a client ID and client secret, then send the user to the authorization URL:
+
+```typescript
+import { buildAuthorizationUrl } from "anilink-api-wrapper";
+
+const state = crypto.randomUUID(); // a fresh random value per login attempt
+const authorizeUrl = buildAuthorizationUrl("your-client-id", "https://example.com/callback", state);
+// Redirect the user to `authorizeUrl`. After approval, AniList sends them back
+// to your redirect URI with `?code=` and `state=` query parameters.
+```
+
+The third `state` parameter is optional but strongly recommended as CSRF protection: bind it to the user's session and validate that the `state` on the redirect matches before exchanging the code.
+
+Exchange the authorization code from the redirect for an access token:
+
+```typescript
+import { getAccessToken, AniLink } from "anilink-api-wrapper";
+
+const { access_token, refresh_token } = await getAccessToken(
+    "your-client-id",
+    "your-client-secret",
+    code, // the `code` query parameter from the redirect
+    "https://example.com/callback"
+);
+
+const aniLink = new AniLink(access_token);
+```
+
+When the access token expires, exchange the stored refresh token for a new one. The refresh response may not include a new `refresh_token`, in which case you keep using the one you stored:
+
+```typescript
+import { refreshAccessToken } from "anilink-api-wrapper";
+
+const { access_token, refresh_token: rotated } = await refreshAccessToken(
+    "your-client-id",
+    "your-client-secret",
+    refresh_token
+);
+
+const nextRefreshToken = rotated ?? refresh_token;
+```
+
+AniList reports the token lifetime as `expires_in` seconds. Use `getTokenExpiry` to refresh proactively before the token expires instead of waiting for a `401`:
+
+```typescript
+import { getTokenExpiry, refreshAccessToken } from "anilink-api-wrapper";
+
+if (Date.now() >= getTokenExpiry(tokenResponse).getTime() - 60_000) {
+    // Refresh at least a minute before expiry.
+    tokenResponse = await refreshAccessToken(
+        "your-client-id",
+        "your-client-secret",
+        nextRefreshToken
+    );
+}
+```
+
+Read-only operations such as public media or character queries work without any token; pass no argument to the constructor:
+
+```typescript
+const aniLink = new AniLink();
+const anime = await aniLink.anilist.query.media({ id: 1, type: "ANIME" });
+```
+
 ## Querying
 
 ```typescript
@@ -378,3 +446,69 @@ aniLink.anilist.mutation.updateAniChartHighlights({
     highlights: [{ mediaId: 1, highlight: true }],
 });
 ```
+
+## Handling errors
+
+AniLink throws typed errors with stable `code` values. HTTP failures are represented by `AniLinkApiError` (which exposes the HTTP `status`); network, timeout, and cancellation failures use `AniLinkNetworkError`; calling an authenticated operation without a token throws `AniLinkAuthError`; GraphQL-level failures inside an HTTP 200 response throw `AniLinkGraphQLError`.
+
+```typescript
+import {
+    AniLinkApiError,
+    AniLinkAuthError,
+    AniLinkGraphQLError,
+    AniLinkNetworkError,
+} from "anilink-api-wrapper";
+
+try {
+    const user = await aniLink.anilist.query.user({ id: 542244 });
+    console.log(user);
+} catch (error: unknown) {
+    if (error instanceof AniLinkGraphQLError) {
+        // The request returned HTTP 200 but carried GraphQL errors.
+        console.error(error.graphqlErrors.map((e) => e.message));
+        console.error(error.data); // any partial data returned alongside the errors
+    } else if (error instanceof AniLinkApiError) {
+        console.error(error.code, error.status, error.data);
+
+        if (error.status === 429) {
+            // Rate-limit accounting from the response headers, when present.
+            console.error("Quota reset at:", error.rateLimit?.reset);
+        }
+    } else if (error instanceof AniLinkAuthError) {
+        console.error("Token missing or rejected:", error.code, error.message);
+    } else if (error instanceof AniLinkNetworkError) {
+        console.error(error.code, error.message);
+    } else {
+        throw error;
+    }
+}
+```
+
+The available transport codes are `API_ERROR`, `GRAPHQL_ERROR`, `NETWORK_ERROR`, `TIMEOUT_ERROR`, `ABORTED_ERROR`, `CIRCUIT_OPEN_ERROR`, `AUTH_ERROR`, `VALIDATION_ERROR`, and `UNKNOWN_ERROR`. When AniList includes rate-limit headers (`x-ratelimit-limit`, `x-ratelimit-remaining`, `x-ratelimit-reset`), every `AniLinkApiError` exposes them as a read-only `rateLimit` object so schedulers and UIs can self-throttle.
+
+## Retrying transient failures
+
+Retries for transient failures are automatic. The default policy retries up to 3 attempts with exponential backoff, honors the `Retry-After` header on `429` responses, and never retries mutations unless you opt in:
+
+```typescript
+import { AniLink } from "anilink-api-wrapper";
+
+// Opt out of the default policy
+const aniLink = new AniLink("your-auth-token", { retry: false });
+
+// Or tune the default policy
+const tuned = new AniLink("your-auth-token", {
+    retry: {
+        maxRetries: 3, // retries after the initial attempt
+        baseDelayMs: 250, // first backoff delay
+        maxDelayMs: 5_000, // backoff cap
+        retryOnStatus: [429, 500, 502, 503, 504],
+        retryOnNetworkError: true,
+        jitter: true, // randomize each wait within [0, computed delay]
+    },
+});
+```
+
+Backoff delays use full jitter by default: each wait is a random value between `0` and the computed exponential cap. Server-dictated `Retry-After` waits are never jittered; pass `jitter: false` for deterministic delays.
+
+When a request exhausts its retries, the last error is thrown — catch it as shown in [Handling errors](#handling-errors).
