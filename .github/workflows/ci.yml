@@ -56,8 +56,8 @@ jobs:
       - name: Check JSDoc comments
         run: npm run jsdoc:check
 
-      - name: Check schema/interface sync
-        run: npm run schema:sync -- --strict
+      - name: Check generated interfaces are up to date
+        run: npm run interfaces:generate -- --check
 
       - name: Compare package contracts against AniList schema snapshot
         run: npm run anilist:api:compare -- --strict --ignore-unimplemented
