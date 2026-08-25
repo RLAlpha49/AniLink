@@ -1,9 +1,12 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { comparePackageToSchema } from "../../lib/api-compare/compare";
+import {
+    comparePackageToSchema,
+    findIgnoredOperationsMissingReviewNote,
+} from "../../lib/api-compare/compare";
 import { discoverPackageContracts, discoverPackageOperations } from "./package-inventory";
-import { renderJson, renderMarkdown } from "../../lib/api-compare/report";
+import { renderJson, renderMarkdown, renderCoverageSections } from "../../lib/api-compare/report";
 import { fetchSchema, loadSchema, writeSchema } from "../../lib/api-compare/schema";
 import type { ComparisonResult } from "../../lib/api-compare/types";
 import { resolveProvider, type ProviderConfig } from "./providers";
@@ -103,7 +106,7 @@ async function runComparison(argv: string[], provider: ProviderConfig): Promise<
     await mkdir(reportDirectory, { recursive: true });
     await writeFile(
         resolve(reportDirectory, "report.md"),
-        renderMarkdown(result, { schemaSource }),
+        renderMarkdown(result, { schemaSource }) + renderCoverageSections(result),
         "utf8"
     );
     await writeFile(
@@ -117,6 +120,25 @@ async function runComparison(argv: string[], provider: ProviderConfig): Promise<
 async function updateSchema(provider: ProviderConfig): Promise<void> {
     const schema = await fetchSchema(fetch, { url: provider.graphqlUrl });
     await writeSchema(resolve(process.cwd(), provider.schemaPath), schema);
+}
+
+/**
+ * Warns when an entry in `IGNORED_UNIMPLEMENTED_OPERATIONS` lacks a dated
+ * `review: YYYY-Qn` note, so the ignore list cannot grow silently.
+ */
+export async function warnOnUndatedIgnoredOperations(
+    log: (message: string) => void = console.warn
+): Promise<void> {
+    try {
+        const source = await readFile(resolve(process.cwd(), "lib/api-compare/compare.ts"), "utf8");
+        for (const operation of findIgnoredOperationsMissingReviewNote(source)) {
+            log(
+                `::warning::Ignored unimplemented operation "${operation}" has no dated review note (review: YYYY-Qn) in lib/api-compare/compare.ts`
+            );
+        }
+    } catch {
+        // The compare module is a repo file; absence only happens outside a checkout.
+    }
 }
 
 function valueAfter(argv: string[], flag: string): string | undefined {
@@ -133,6 +155,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
             process.exitCode = exitCode;
         });
     } else {
+        void warnOnUndatedIgnoredOperations();
         void runCli({ argv, compare: runComparison }).then(({ exitCode, error }) => {
             if (error) console.error(error);
             process.exitCode = exitCode;

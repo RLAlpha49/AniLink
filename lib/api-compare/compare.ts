@@ -11,11 +11,35 @@ import type { TypeScriptContracts, TypeScriptProperty } from "./typescript-contr
 
 /**
  * AniList operations AniLink deliberately does not wrap, excluded from
- * comparisons by default. `query.Like` exists in the GraphQL schema but
- * AniList only serves likes through the paged `Page.likes` field, which
- * AniLink already implements as `likes()`; the unpaged operation is unusable.
+ * comparisons by default. Each entry carries a dated review note so the
+ * ignore list stays an explicit, revisited contract instead of a silent one:
+ *
+ * - `query.Like` (review: 2026-Q4) exists in the GraphQL schema but AniList
+ *   only serves likes through the paged `Page.likes` field, which AniLink
+ *   already implements as `likes()`; the unpaged operation is unusable.
  */
 export const IGNORED_UNIMPLEMENTED_OPERATIONS = new Set(["query.Like"]);
+
+/** Matches a `review: YYYY-Qn` note documenting when an entry was last revisited. */
+export const REVIEW_NOTE_PATTERN = /review:\s*(\d{4}-Q[1-4])/;
+
+/**
+ * Extracts the review notes documented for ignored operations from the
+ * compare module source. Returns entries that lack a dated note so the CLI
+ * can warn before the ignore list grows silently.
+ */
+export function findIgnoredOperationsMissingReviewNote(source: string): string[] {
+    const missing: string[] = [];
+    for (const operation of IGNORED_UNIMPLEMENTED_OPERATIONS) {
+        // The note lives next to the operation name in the doc comment above.
+        const escaped = operation.replaceAll(".", String.raw`\.`);
+        const pattern = new RegExp(
+            String.raw`${escaped}[^\n]*\(review:\s*\d{4}-Q[1-4]\)`
+        );
+        if (!pattern.test(source)) missing.push(operation);
+    }
+    return missing;
+}
 
 export function comparePackageToSchema(input: {
     schema: Schema;
