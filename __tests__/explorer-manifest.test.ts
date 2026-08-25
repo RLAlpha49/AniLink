@@ -50,6 +50,17 @@ describe("generateManifest - discovery", () => {
         const manifest = generateManifest();
         expect(manifest.operations.length).toBeGreaterThan(50);
     });
+
+    it("resolves every operation to a source file with extracted GraphQL and fields", () => {
+        const manifest = generateManifest();
+        const unresolved = manifest.operations.filter(
+            (o) => o.category !== "custom" && (o.graphql === "" || o.fields.length === 0)
+        );
+        expect(
+            unresolved.map((o) => `${o.category}:${o.name}`),
+            "every non-custom operation must resolve to its source method"
+        ).toEqual([]);
+    });
 });
 
 describe("field extraction", () => {
