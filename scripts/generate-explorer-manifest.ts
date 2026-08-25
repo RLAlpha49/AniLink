@@ -950,11 +950,11 @@ export function generateManifest(): Manifest {
     };
 }
 
-/** Write the manifest to `outPath` as pretty-printed JSON. */
+/** Write the manifest to `outPath` as minified JSON to cut transfer size. */
 export function writeManifest(outPath: string): void {
     const manifest = generateManifest();
     mkdirSync(dirname(outPath), { recursive: true });
-    writeFileSync(outPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
+    writeFileSync(outPath, JSON.stringify(manifest), "utf8");
 }
 
 /** Copy the static explorer UI assets from `explorer-src/` into the docs output directory. */
