@@ -78,7 +78,7 @@ import { fuzzyDate } from "./helpers/fuzzyDate";
 import { flattenMediaListCollection } from "./helpers/flattenMediaListCollection";
 import { paginate, paginatePages, paginateChunks } from "../../base/Paginator";
 import { type RequestOptions } from "../../base/RequestHandler";
-import type { AniListApi } from "./anilist-api-type";
+import type { AniListApi } from "./facade";
 
 /**
  * Builds the AniList facade from the operation classes.

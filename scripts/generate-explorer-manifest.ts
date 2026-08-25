@@ -671,9 +671,22 @@ interface RawOp {
     className: string | null;
 }
 
-/** Parse the type-declaration block in AniLink.ts into raw operations. */
+/**
+ * Parse the type-declaration blocks of the `facade/` group modules
+ * into raw operations. Each module is scanned independently and the section
+ * state resets between files.
+ */
 function discoverOperations(): RawOp[] {
-    const content = readFileText(join(ANILIST, "anilist-api-type.ts"));
+    const ops: RawOp[] = [];
+    for (const fileName of ["custom.ts", "query.ts", "mutation.ts", "helpers.ts"]) {
+        ops.push(...discoverOperationsInFile(join(ANILIST, "facade", fileName)));
+    }
+    return ops;
+}
+
+/** Parse one facade group module into raw operations. */
+function discoverOperationsInFile(filePath: string): RawOp[] {
+    const content = readFileText(filePath);
     const lines = content.split("\n");
     const ops: RawOp[] = [];
 

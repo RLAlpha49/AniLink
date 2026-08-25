@@ -358,7 +358,13 @@ export async function checkTypeSource(source: string, file: string): Promise<Jsd
 export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
     const sourceRoot = resolve(projectRoot, "src");
-    for (const relativePath of ["AniLink.ts", "apis/anilist/anilist-api-type.ts"]) {
+    const apiTypeFiles = [
+        ...(await collectTypeScriptFiles(join(sourceRoot, "apis/anilist/facade"))),
+    ].sort((left, right) => left.localeCompare(right));
+    for (const relativePath of [
+        "AniLink.ts",
+        ...apiTypeFiles.map((f) => relative(sourceRoot, f)),
+    ]) {
         const filePath = join(sourceRoot, relativePath);
         const source = await readFile(filePath, "utf8");
         issues.push(...(await checkAniLinkSource(source, relative(projectRoot, filePath))));

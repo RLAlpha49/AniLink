@@ -2,10 +2,14 @@
  * AniList provider facade.
  *
  * Adding an operation touches four sites: the operation class under `query/`
- * or `mutation/`, its declaration on `AniListApi` in
- * `anilist-api-type.ts`, and its instance wiring in `anilist-wiring.ts`.
+ * or `mutation/`, its declaration on one of the group types under `facade/`
+ * (composed into `AniListApi` below), and its instance wiring in
+ * `anilist-wiring.ts`.
  */
-import type { AniListApi } from "./anilist-api-type";
+import type { AniListCustom } from "./facade/custom";
+import type { AniListQueries } from "./facade/query";
+import type { AniListMutations } from "./facade/mutation";
+import type { AniListHelpers } from "./facade/helpers";
 import { buildAniListWiring } from "./anilist-wiring";
 import type { RequestOptions } from "../../base/RequestHandler";
 
@@ -57,4 +61,8 @@ export function buildAniListApi(authToken?: string, options?: AniLinkOptions): A
     return buildAniListWiring(authToken, options);
 }
 
-export type { AniListApi };
+/**
+ * The AniList API surface exposed at `aniLink.anilist`, composed from the
+ * group types under `facade/`.
+ */
+export type AniListApi = AniListCustom & AniListQueries & AniListMutations & AniListHelpers;
