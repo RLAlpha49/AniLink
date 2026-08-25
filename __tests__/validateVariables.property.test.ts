@@ -100,11 +100,25 @@ describe("validateVariables (property-based)", () => {
                     fc.constantFrom("string", "number", "boolean"),
                     fc.array(fc.anything()),
                     (elementType, raw) => {
-                        const value = raw.map((item) => {
-                            if (elementType === "string") return String(item);
-                            if (elementType === "number") return Number(item);
-                            return Boolean(item);
-                        });
+                        // Coerce defensively: hostile values from fc.anything()
+                        // (e.g. objects with a non-callable `toString`) make
+                        // ToPrimitive throw and cannot take part in an array
+                        // that satisfies the mapping, so they exit the case.
+                        const value: unknown[] = [];
+                        for (const item of raw) {
+                            let coerced: unknown;
+                            try {
+                                coerced =
+                                    elementType === "string"
+                                        ? String(item)
+                                        : elementType === "number"
+                                          ? Number(item)
+                                          : Boolean(item);
+                            } catch {
+                                return;
+                            }
+                            value.push(coerced);
+                        }
                         const mapping = { v: `${elementType}[]` as const };
                         expect(() => validateVariables({ v: value }, mapping)).not.toThrow();
                     }
