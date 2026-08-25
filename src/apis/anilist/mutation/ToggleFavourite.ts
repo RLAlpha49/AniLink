@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";

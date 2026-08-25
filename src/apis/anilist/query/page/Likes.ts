@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../../base/APIWrapper";
+import { APIWrapper } from "../../APIWrapper";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type LikeableType, LikeableTypeMappings } from "../../types/Type";
 import { type LikesPageResponse } from "../../interfaces/responses/page/Likes";

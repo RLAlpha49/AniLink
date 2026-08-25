@@ -1,9 +1,9 @@
-import { type RequestOptions, sendRequest } from "./RequestHandler";
+import { type RequestOptions, sendRequest } from "../../base/RequestHandler";
 import {
     type VariableTypeMappings,
     requireVariables,
     validateVariables,
-} from "./ValidateVariables";
+} from "../../base/ValidateVariables";
 
 /**
  * Merges per-request transport settings over the instance-level ones.

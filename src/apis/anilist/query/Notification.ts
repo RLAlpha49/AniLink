@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type NotificationResponse } from "../interfaces/responses/query/Notification";
 import { type NotificationType, NotificationTypeMappings } from "../types/Type";

@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { ReviewSchema } from "../schemas/responses/query/Review";

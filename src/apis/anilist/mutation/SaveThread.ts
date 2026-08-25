@@ -1,5 +1,5 @@
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 

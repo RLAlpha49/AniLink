@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type AiringScheduleResponse } from "../interfaces/responses/query/AiringSchedule";
 import { type AiringSort, AiringSortMappings } from "../types/Sort";

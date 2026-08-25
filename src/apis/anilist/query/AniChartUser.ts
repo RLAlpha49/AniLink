@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type AniChartUserResponse } from "../interfaces/responses/query/AniChartUser";
 import { BasicUserSchema } from "../schemas/Basic";

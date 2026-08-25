@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { type ThreadSort, ThreadSortMappings } from "../types/Sort";

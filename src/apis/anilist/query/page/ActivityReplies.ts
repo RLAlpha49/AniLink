@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../../base/APIWrapper";
+import { APIWrapper } from "../../APIWrapper";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type ActivityRepliesPageResponse } from "../../interfaces/responses/page/ActivityReplies";
 import { ActivityReplySchema } from "../../schemas/Activity";

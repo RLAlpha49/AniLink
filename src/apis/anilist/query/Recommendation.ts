@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { type RecommendationSort, RecommendationSortMappings } from "../types/Sort";

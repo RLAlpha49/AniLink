@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type UserResponse } from "../interfaces/responses/query/User";
 import { type UserStatisticSort, UserStatisticSortMappings } from "../types/Sort";

@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type FuzzyDate } from "../interfaces/FuzzyDate";
 import { FuzzyDateMappings } from "../types/FuzzyDate";

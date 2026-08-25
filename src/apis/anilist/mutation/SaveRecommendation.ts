@@ -1,5 +1,5 @@
 import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import {
     type RecommendationRating,

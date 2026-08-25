@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
 import { type MediaType, MediaTypeMappings } from "../types/Type";

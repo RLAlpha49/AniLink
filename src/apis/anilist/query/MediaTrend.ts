@@ -1,4 +1,4 @@
-import { APIWrapper } from "../../../base/APIWrapper";
+import { APIWrapper } from "../APIWrapper";
 import type { RequestOptions } from "../../../base/RequestHandler";
 import { type MediaTrendResponse } from "../interfaces/responses/query/MediaTrend";
 import { type MediaTrendSort, MediaTrendSortMappings } from "../types/Sort";
