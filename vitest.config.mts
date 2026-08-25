@@ -8,6 +8,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**'],
+      exclude: ['explorer-src/**', 'node_modules/**', 'dist/**'],
       reporter: ['text', 'lcov'],
       thresholds: {
         statements: 90,

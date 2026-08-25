@@ -7,7 +7,13 @@ import {
     getTokenExpiry,
     refreshAccessToken,
 } from "../src/auth/AniListAuth";
-import { AniLinkApiError, AniLinkErrorCodes, AniLinkNetworkError } from "../src/base/AniLinkError";
+import {
+    AniLinkApiError,
+    AniLinkError,
+    AniLinkErrorCodes,
+    AniLinkNetworkError,
+    AniLinkValidationError,
+} from "../src/base/AniLinkError";
 
 const mocks = vi.hoisted(() => {
     const request = vi.fn(async () => ({
@@ -285,6 +291,45 @@ describe("token request failure normalization", () => {
             getAccessToken("client-id", "client-secret", "auth-code")
         ).rejects.toBeInstanceOf(AniLinkApiError);
         expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+    test("surfaces a cancelled token request as a sanitized AniLinkError", async () => {
+        mocks.request.mockRejectedValueOnce({ isCanceled: true });
+
+        const error = await getAccessToken("client-id", "client-secret", "auth-code").catch(
+            (caught: unknown) => caught
+        );
+
+        // Cancellations are normalized by the shared pipeline before the auth
+        // layer sees them; the surfaced error must stay sanitized either way.
+        expect(error).toBeInstanceOf(AniLinkError);
+    });
+
+    test("passes an already-normalized AniLinkError through without rewrapping", async () => {
+        // Validation failures are not retried by the default policy, so the
+        // rejection reaches the auth normalization directly.
+        const original = new AniLinkValidationError(["field is required"]);
+        mocks.request.mockRejectedValueOnce(original);
+
+        const error = await getAccessToken("client-id", "client-secret", "auth-code").catch(
+            (caught: unknown) => caught
+        );
+
+        expect(error).toBe(original);
+    });
+
+    test("wraps an unknown rejection in a generic AniLinkError", async () => {
+        mocks.request.mockRejectedValueOnce(new Error("something unexpected"));
+
+        const error = await getAccessToken("client-id", "client-secret", "auth-code").catch(
+            (caught: unknown) => caught
+        );
+
+        expect(error).toBeInstanceOf(AniLinkError);
+        expect(error).not.toBeInstanceOf(AniLinkApiError);
+        expect(error).not.toBeInstanceOf(AniLinkNetworkError);
+        // The pipeline already sanitized the raw failure; the auth layer must
+        // not rewrap it into something less specific.
+        expect((error as AniLinkError).code).toBe(AniLinkErrorCodes.UNKNOWN);
     });
 });
 
