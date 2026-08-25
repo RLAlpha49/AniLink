@@ -1,11 +1,32 @@
 import parser from '@typescript-eslint/parser';
 import plugin from '@typescript-eslint/eslint-plugin';
+import security from 'eslint-plugin-security';
 import prettierConfig from 'eslint-config-prettier';
 
 export default [
   ...plugin.configs['flat/recommended'],
   {
-    files: ['**/*.ts'],
+    files: ['src/**/*.ts'],
+    languageOptions: {
+      parser,
+      parserOptions: {
+        sourceType: 'module',
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': plugin,
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/require-await': 'error',
+    },
+    ...prettierConfig,
+  },
+  {
+    files: ['__tests__/**/*.ts', 'scripts/**/*.ts', '*.ts'],
     languageOptions: {
       parser,
       parserOptions: {
@@ -15,8 +36,17 @@ export default [
     plugins: {
       '@typescript-eslint': plugin,
     },
-    rules: {},
     ...prettierConfig,
+  },
+  {
+    files: ['src/**/*.ts', 'scripts/**/*.ts', '__tests__/**/*.ts', '*.ts'],
+    plugins: {
+      security,
+    },
+    rules: {
+      ...security.configs.recommended.rules,
+      'security/detect-object-injection': 'off',
+    },
   },
   {
     files: ['explorer-src/**/*.js'],
