@@ -4,7 +4,7 @@ import {
     type AniListApi,
 } from "./apis/graphql/anilist/facade";
 
-export type { AniLinkOptions } from "./apis/graphql/anilist/facade";
+export type { AniListApi, AniLinkOptions } from "./apis/graphql/anilist/facade";
 
 export {
     ANILIST_AUTHORIZE_URL,

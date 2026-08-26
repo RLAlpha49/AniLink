@@ -10,6 +10,11 @@
             "types": "./dist/AniLink.d.ts",
             "import": "./dist/AniLink.mjs",
             "default": "./dist/AniLink.mjs"
+        },
+        "./anilist": {
+            "types": "./dist/anilist.d.ts",
+            "import": "./dist/anilist.mjs",
+            "default": "./dist/anilist.mjs"
         }
     },
     "sideEffects": false,
@@ -37,7 +42,7 @@
         "test:integration": "vitest run --config vitest.integration.config.mts",
         "test:package": "node scripts/package-smoke/run.mjs",
         "test:coverage": "vitest run --coverage",
-        "build": "rimraf dist && unbuild && node -e \"require('fs').rmSync('dist/AniLink.d.mts',{force:true})\"",
+        "build": "rimraf dist && unbuild && node -e \"for (const f of require('fs').readdirSync('dist')) if (f.endsWith('.d.mts')) require('fs').rmSync('dist/' + f)\"",
         "anilist:api:compare": "tsx scripts/anilist-api-compare/cli.ts compare",
         "anilist:api:update-schema": "tsx scripts/anilist-api-compare/cli.ts update-schema",
         "jsdoc:check": "tsx scripts/check-jsdoc.ts",
