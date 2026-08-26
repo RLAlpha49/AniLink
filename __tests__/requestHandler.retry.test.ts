@@ -574,6 +574,32 @@ describe("circuit breaker", () => {
         ).rejects.toMatchObject({ code: "API_ERROR" });
         expect(mocks.request).toHaveBeenCalledTimes(3);
     });
+
+    test("keeps breaker state scoped to each upstream host within one client", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+
+        const options = { retry: false as const, circuitBreaker: breaker };
+        const anilistUrl = "https://graphql.anilist.co";
+        const malUrl = "https://api.myanimelist.net/v2/anime";
+
+        // Trip the breaker against AniList.
+        await expect(
+            sendRequest(anilistUrl, "POST", { query: "query" }, undefined, false, options)
+        ).rejects.toBeInstanceOf(AniLinkApiError);
+        await expect(
+            sendRequest(anilistUrl, "POST", { query: "query" }, undefined, false, options)
+        ).rejects.toBeInstanceOf(AniLinkApiError);
+
+        // AniList is now fast-failing...
+        await expect(
+            sendRequest(anilistUrl, "POST", { query: "query" }, undefined, false, options)
+        ).rejects.toMatchObject({ code: "CIRCUIT_OPEN_ERROR" });
+        // ...but a second provider on the same client still reaches its host.
+        await expect(
+            sendRequest(malUrl, "GET", undefined, undefined, false, options)
+        ).rejects.toMatchObject({ code: "API_ERROR" });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+    });
 });
 
 describe("rate-limit pacing", () => {

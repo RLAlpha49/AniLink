@@ -535,24 +535,43 @@ const safeInvoke = (
 };
 
 /**
- * Shared circuit-breaker state, keyed by the caller's transport-settings
- * object so every request built on one `AniLink` instance shares its breaker
- * while concurrent clients never trip each other's. Only populated when a
+ * Shared circuit-breaker state, keyed first by the caller's transport-settings
+ * object (so concurrent `AniLink` clients never trip each other's breaker)
+ * and then by the upstream host (so one provider's outage cannot fast-fail
+ * another provider's requests on a multi-API client). Only populated when a
  * request opts in via `circuitBreaker`; disabled configurations allocate
  * nothing.
  */
-const circuitStates = new WeakMap<object, CircuitState>();
+const circuitStates = new WeakMap<object, Map<string, CircuitState>>();
 
 interface CircuitState {
     consecutiveFailures: number;
     openedAt: number | null;
 }
 
-const getCircuitState = (key: object): CircuitState => {
-    let state = circuitStates.get(key);
+/**
+ * Extracts the upstream identity for breaker scoping from a request URL.
+ * Falls back to the empty string when the URL cannot be parsed, which keeps
+ * such requests sharing one bucket without failing the call.
+ */
+const circuitScopeOf = (url: string): string => {
+    try {
+        return new URL(url).host;
+    } catch {
+        return "";
+    }
+};
+
+const getCircuitState = (owner: object, scope: string): CircuitState => {
+    let scopes = circuitStates.get(owner);
+    if (scopes === undefined) {
+        scopes = new Map();
+        circuitStates.set(owner, scopes);
+    }
+    let state = scopes.get(scope);
     if (state === undefined) {
         state = { consecutiveFailures: 0, openedAt: null };
-        circuitStates.set(key, state);
+        scopes.set(scope, state);
     }
     return state;
 };
@@ -716,7 +735,7 @@ const executeWithRetry = async <T>(
     const policy = resolved.retry;
     const circuit =
         resolved.circuitBreaker !== undefined && stateKey !== undefined
-            ? getCircuitState(stateKey)
+            ? getCircuitState(stateKey, circuitScopeOf(url))
             : undefined;
     let attempt = 0;
 
@@ -816,8 +835,9 @@ export const sendRequest = async <T = unknown>(
         headers.Authorization = `Bearer ${token}`;
     }
 
-    // The caller's settings object doubles as the circuit-breaker state key:
-    // it is stable per `AniLink` instance, so its requests share one breaker.
+    // The caller's settings object doubles as the circuit-breaker owner key
+    // (stable per `AniLink` instance); the upstream host scopes the breaker so
+    // multi-provider clients isolate one provider's outage from the others.
     const result = await executeWithRetry<unknown>(
         { url, method, data, headers },
         resolveRequestOptions(options),
