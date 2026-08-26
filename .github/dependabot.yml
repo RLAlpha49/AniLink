@@ -7,6 +7,13 @@ updates:
     commit-message:
       prefix: "npm"
       include: "scope"
+    ignore:
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
     groups:
       # Batch all @typescript-eslint/* packages so plugin/parser/config updates land together
       typescript-eslint:
