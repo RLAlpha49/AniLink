@@ -123,3 +123,29 @@ jobs:
       - name: Run live AniList integration test
         if: ${{ env.ANILIST_TOKEN != '' }}
         run: npm run test:integration
+
+  package-smoke:
+    name: Packaged package smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The tarball is installed into an isolated consumer project and driven
+      # through its public entry point, so this job catches packaging
+      # regressions (exports map, missing files, broken ESM output) that the
+      # workspace-level suites cannot see. Queries only — never mutations.
+      - name: Pack, install locally, and run live query smoke test
+        run: npm run test:package
