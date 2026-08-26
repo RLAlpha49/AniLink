@@ -1,6 +1,10 @@
-import { type AniLinkOptions, buildAniListApi, type AniListApi } from "./apis/anilist/facade";
+import {
+    type AniLinkOptions,
+    buildAniListApi,
+    type AniListApi,
+} from "./apis/graphql/anilist/facade";
 
-export type { AniLinkOptions } from "./apis/anilist/facade";
+export type { AniLinkOptions } from "./apis/graphql/anilist/facade";
 
 export {
     ANILIST_AUTHORIZE_URL,
@@ -10,7 +14,7 @@ export {
     getAccessToken,
     getTokenExpiry,
     refreshAccessToken,
-} from "./auth/AniListAuth";
+} from "./apis/graphql/anilist/auth";
 
 export {
     AniLinkApiError,
@@ -19,17 +23,18 @@ export {
     AniLinkErrorCodes,
     AniLinkGraphQLError,
     AniLinkNetworkError,
+    AniLinkRestError,
     AniLinkValidationError,
 } from "./base/AniLinkError";
 export type { AniLinkErrorCode, RateLimitInfo } from "./base/AniLinkError";
 
-export { paginate, paginateChunks, paginatePages } from "./base/Paginator";
+export { paginate, paginateChunks, paginatePages } from "./apis/graphql/anilist/Paginator";
 export type {
     ChunkPaginateOptions,
     ChunkPaginateResult,
     PaginateOptions,
     PaginateResult,
-} from "./base/Paginator";
+} from "./apis/graphql/anilist/Paginator";
 
 /**
  * `AniLink` is a class for interacting with the APIs.

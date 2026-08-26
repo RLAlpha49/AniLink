@@ -207,7 +207,7 @@ test("normalizes a network failure with a stable code", async () => {
 
     expect(error).toBeInstanceOf(AniLinkNetworkError);
     expect(error).toMatchObject({ name: "AniLinkNetworkError", code: "NETWORK_ERROR" });
-    expect((error as Error).message).toBe("AniList request failed due to a network error.");
+    expect((error as Error).message).toBe("The request failed due to a network error.");
     expect((error as Error).message).not.toContain("secret-token");
 });
 
@@ -228,7 +228,7 @@ test("classifies Axios timeout failures separately from other network failures",
         code: "TIMEOUT_ERROR",
         timeoutMs: DEFAULT_REQUEST_TIMEOUT,
     });
-    expect((error as Error).message).toBe("AniList request timed out.");
+    expect((error as Error).message).toBe("The request timed out.");
 });
 
 test("classifies Axios cancellation failures separately from timeouts", async () => {
@@ -245,7 +245,7 @@ test("classifies Axios cancellation failures separately from timeouts", async ()
 
     expect(error).toBeInstanceOf(AniLinkNetworkError);
     expect(error).toMatchObject({ name: "AniLinkNetworkError", code: "ABORTED_ERROR" });
-    expect((error as Error).message).toBe("AniList request was cancelled.");
+    expect((error as Error).message).toBe("The request was cancelled.");
 });
 
 test("normalizes unexpected transport failures without rethrowing raw values", async () => {
@@ -257,7 +257,7 @@ test("normalizes unexpected transport failures without rethrowing raw values", a
 
     expect(error).toBeInstanceOf(AniLinkError);
     expect(error).toMatchObject({ name: "AniLinkError", code: "UNKNOWN_ERROR" });
-    expect((error as Error).message).toBe("AniList request failed.");
+    expect((error as Error).message).toBe("The request failed.");
     expect((error as Error).message).not.toContain("secret-token");
 });
 

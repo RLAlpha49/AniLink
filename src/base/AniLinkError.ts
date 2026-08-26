@@ -42,7 +42,13 @@ export class AniLinkError extends Error {
     }
 }
 
-/** Rate-limit accounting reported by the AniList response headers. */
+/**
+ * Rate-limit accounting parsed from provider response headers.
+ *
+ * Populated from the `x-ratelimit-*` header family (AniList) or the
+ * `X-RateLimit-*` / `Retry-After` family used by REST providers such as
+ * MyAnimeList, whenever the upstream includes the required headers.
+ */
 export interface RateLimitInfo {
     /** The maximum number of requests allowed in the current window. */
     limit: number;
@@ -52,7 +58,14 @@ export interface RateLimitInfo {
     reset: number;
 }
 
-/** A failure returned by the AniList HTTP API. */
+/**
+ * A failure returned by an upstream HTTP API.
+ *
+ * This is the transport-level failure for every provider: GraphQL providers
+ * surface HTTP failures through it and protocol-level failures through
+ * {@link AniLinkGraphQLError}; REST providers surface every non-2xx response
+ * through it directly.
+ */
 export class AniLinkApiError extends AniLinkError {
     public readonly status: number;
     public readonly data: unknown;
@@ -80,11 +93,7 @@ export class AniLinkApiError extends AniLinkError {
         rawAxiosError?: unknown,
         options?: { rateLimit?: RateLimitInfo }
     ) {
-        super(
-            `AniList API request failed with status ${status}.`,
-            AniLinkErrorCodes.API,
-            rawAxiosError
-        );
+        super(`API request failed with status ${status}.`, AniLinkErrorCodes.API, rawAxiosError);
         this.name = "AniLinkApiError";
         this.status = status;
         this.data = data;
@@ -151,7 +160,7 @@ export class AniLinkGraphQLError extends AniLinkApiError {
         super(200, data, rawAxiosError);
         this.name = "AniLinkGraphQLError";
         this.code = AniLinkErrorCodes.GRAPHQL;
-        this.message = `AniList request failed with GraphQL errors: ${errors
+        this.message = `The request failed with GraphQL errors: ${errors
             .map((graphqlError) => graphqlError.message)
             .join("; ")}`;
         this.graphqlErrors = errors;
@@ -191,13 +200,24 @@ export class AniLinkValidationError extends AniLinkError {
      */
     constructor(details: readonly string[]) {
         super(
-            `AniList request variables are invalid:\n${details.join("\n")}`,
+            `Request variables are invalid:\n${details.join("\n")}`,
             AniLinkErrorCodes.VALIDATION
         );
         this.name = "AniLinkValidationError";
         this.details = details;
     }
 }
+
+/**
+ * A REST-level failure returned by a REST-style provider.
+ *
+ * REST APIs report failures as plain HTTP status codes with a JSON (or HTML)
+ * body rather than inside a GraphQL envelope, so this subclass exists to give
+ * consumers a stable type to branch on without inspecting status codes. It
+ * carries no additional fields beyond {@link AniLinkApiError}; its value is
+ * the named type itself.
+ */
+export class AniLinkRestError extends AniLinkApiError {}
 
 /** Additional metadata attached to a transport failure. */
 export interface AniLinkNetworkErrorOptions {

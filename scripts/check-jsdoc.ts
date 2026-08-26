@@ -358,8 +358,10 @@ export async function checkTypeSource(source: string, file: string): Promise<Jsd
 export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
     const sourceRoot = resolve(projectRoot, "src");
+    // Provider-scoped directories. Adding a new provider means adding its
+    // facade/query/mutation/types paths here; the shared checks apply as-is.
     const apiTypeFiles = [
-        ...(await collectTypeScriptFiles(join(sourceRoot, "apis/anilist/facade"))),
+        ...(await collectTypeScriptFiles(join(sourceRoot, "apis/graphql/anilist/facade"))),
     ].sort((left, right) => left.localeCompare(right));
     for (const relativePath of [
         "AniLink.ts",
@@ -370,14 +372,14 @@ export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssu
         issues.push(...(await checkAniLinkSource(source, relative(projectRoot, filePath))));
     }
 
-    for (const directory of ["apis/anilist/query", "apis/anilist/mutation"]) {
+    for (const directory of ["apis/graphql/anilist/query", "apis/graphql/anilist/mutation"]) {
         for (const file of await collectTypeScriptFiles(join(sourceRoot, directory))) {
             const source = await readFile(file, "utf8");
             issues.push(...(await checkOperationSource(source, relative(projectRoot, file))));
         }
     }
 
-    const typeDirectory = join(sourceRoot, "apis/anilist/types");
+    const typeDirectory = join(sourceRoot, "apis/graphql/anilist/types");
     for (const file of await collectTypeScriptFiles(typeDirectory)) {
         const source = await readFile(file, "utf8");
         issues.push(...(await checkTypeSource(source, relative(projectRoot, file))));
@@ -565,21 +567,19 @@ function createIssue(
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-    void checkJsdoc()
-        .then((issues) => {
-            if (issues.length === 0) {
-                console.log("JSDoc check passed.");
-                return;
-            }
-
+    try {
+        const issues = await checkJsdoc();
+        if (issues.length === 0) {
+            console.log("JSDoc check passed.");
+        } else {
             console.error(`JSDoc check found ${issues.length} issue(s):`);
             for (const issue of issues) {
                 console.error(`${issue.file}:${issue.line} [${issue.tag}] ${issue.message}`);
             }
             process.exitCode = 1;
-        })
-        .catch((error: unknown) => {
-            console.error(error instanceof Error ? error.message : String(error));
-            process.exitCode = 2;
-        });
+        }
+    } catch (error: unknown) {
+        console.error(error instanceof Error ? error.message : String(error));
+        process.exitCode = 2;
+    }
 }

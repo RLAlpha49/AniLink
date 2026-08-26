@@ -26,7 +26,7 @@ export const providerConfigs: Record<string, ProviderConfig> = {
         name: "anilist",
         label: "AniList",
         schemaPath: "scripts/anilist-api-compare/anilist-schema.json",
-        sourceRoot: "src/apis/anilist",
+        sourceRoot: "src/apis/graphql/anilist",
         reportDirectory: "artifacts/anilist-api-compare",
         graphqlUrl: "https://graphql.anilist.co",
     },

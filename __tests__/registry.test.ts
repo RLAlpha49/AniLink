@@ -1,7 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
-import { ANILIST_OPERATION_REGISTRY, type OperationCategory } from "../src/apis/anilist/registry";
-import { buildAniListWiring } from "../src/apis/anilist/anilist-wiring";
-import type { AniListApi } from "../src/apis/anilist/facade";
+import {
+    ANILIST_OPERATION_REGISTRY,
+    type OperationCategory,
+} from "../src/apis/graphql/anilist/registry";
+import { buildAniListWiring } from "../src/apis/graphql/anilist/wiring";
+import type { AniListApi } from "../src/apis/graphql/anilist/facade";
 
 /**
  * Registry integrity and wiring coverage.

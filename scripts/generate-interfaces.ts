@@ -64,7 +64,7 @@ function collectTypeLocations(
     for (const [name, module] of Object.entries(generatorConfig.aliasImports)) {
         locations.set(name, module);
     }
-    const interfacesDir = join(REPO_ROOT, "src", "apis", "anilist", "interfaces");
+    const interfacesDir = join(REPO_ROOT, "src", "apis", "graphql", "anilist", "interfaces");
     const walk = (directory: string): void => {
         for (const entry of readdirSync(directory, { withFileTypes: true })) {
             const entryPath = join(directory, entry.name);

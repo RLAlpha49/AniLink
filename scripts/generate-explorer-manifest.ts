@@ -39,7 +39,13 @@ export interface Field {
     nestedFields?: Field[];
 }
 
-/** A single AniLink operation surfaced in the explorer. */
+/**
+ * A single AniLink operation surfaced in the explorer.
+ *
+ * The `graphql` field and the `query`/`page`/`mutation` categories are
+ * GraphQL-provider concepts; a REST provider would extend this shape (for
+ * example with `method` and `path` fields) rather than reuse them.
+ */
 export interface Operation {
     category: "query" | "mutation" | "page" | "custom";
     name: string;
@@ -61,7 +67,13 @@ export interface Manifest {
 
 const ROOT = resolve(import.meta.dirname, "..");
 const SRC = join(ROOT, "src");
-const ANILIST = join(SRC, "apis", "anilist");
+/**
+ * Provider-specific constants. This generator currently parses only the
+ * AniList (GraphQL) tree; adding another provider means parameterizing these
+ * paths and the manifest shape per provider rather than mixing both providers'
+ * operations into one flat list.
+ */
+const ANILIST = join(SRC, "apis", "graphql", "anilist");
 const ANILIST_ENDPOINT = "https://graphql.anilist.co";
 
 /** Read a file as UTF-8 text, returning "" if missing. */
@@ -678,7 +690,12 @@ interface RawOp {
  */
 function discoverOperations(): RawOp[] {
     const ops: RawOp[] = [];
-    for (const fileName of ["custom.ts", "query.ts", "mutation.ts", "helpers.ts"]) {
+    for (const fileName of [
+        "custom-group.ts",
+        "query-group.ts",
+        "mutation-group.ts",
+        "helpers-group.ts",
+    ]) {
         ops.push(...discoverOperationsInFile(join(ANILIST, "facade", fileName)));
     }
     return ops;
@@ -818,7 +835,7 @@ function resolveSourceInfo(
         }
         return null;
     }
-    const content = readFileText(join(ANILIST, "anilist-wiring.ts"));
+    const content = readFileText(join(ANILIST, "wiring.ts"));
     const escapedName = op.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     // Find all bindings: `name: <instance>.<method>.bind(<instance>)`.
     // The method name does not always equal the operation name (e.g. `following` op

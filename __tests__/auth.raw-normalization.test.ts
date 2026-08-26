@@ -26,7 +26,7 @@ vi.mock("../src/base/RequestHandler", () => ({
     sendRequest: mocks.sendRequest,
 }));
 
-import { getAccessToken, refreshAccessToken } from "../src/auth/AniListAuth";
+import { getAccessToken, refreshAccessToken } from "../src/apis/graphql/anilist/auth";
 import { AniLinkError } from "../src/base/AniLinkError";
 
 beforeEach(() => {
@@ -60,7 +60,7 @@ describe("token request normalization of raw transport failures", () => {
         const apiError = error as AniLinkApiError;
         expect(apiError.status).toBe(403);
         expect(apiError.data).toEqual({ error: "forbidden" });
-        expect(apiError.message).toContain("token request failed with status 403");
+        expect(apiError.message).toContain("Token request failed with status 403");
     });
 
     test("maps a raw axios timeout code to the TIMEOUT code", async () => {

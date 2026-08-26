@@ -6,7 +6,7 @@ import {
     AniLinkGraphQLError,
     AniLinkNetworkError,
 } from "../src/base/AniLinkError";
-import { ANILIST_GRAPHQL_URL } from "../src/apis/anilist/APIWrapper";
+import { ANILIST_GRAPHQL_URL } from "../src/apis/graphql/anilist/AniListOperation";
 import { AniLink } from "../src/AniLink";
 import { getAxiosStub, makeAxiosResponseError } from "./helpers/axiosStub";
 

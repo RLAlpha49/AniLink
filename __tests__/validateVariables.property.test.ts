@@ -417,7 +417,7 @@ describe("validateVariables (property-based)", () => {
                         for (const detail of error!.details) {
                             expect(error!.message).toContain(detail);
                         }
-                        expect(error!.message).toContain("AniList request variables are invalid:");
+                        expect(error!.message).toContain("Request variables are invalid:");
                     }
                 ),
                 { numRuns: 200 }

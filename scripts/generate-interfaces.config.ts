@@ -1,21 +1,21 @@
 /**
  * Generation manifest for the response interfaces under
- * `src/apis/anilist/interfaces/`.
+ * `src/apis/graphql/anilist/interfaces/`.
  *
  * Each output derives its exported types from a schema-fragment constant under
- * `src/apis/anilist/schemas/`, resolved against the committed AniList schema
+ * `src/apis/graphql/anilist/schemas/`, resolved against the committed AniList schema
  * snapshot. Adding or removing a fragment field is reflected by rerunning
  * `npm run interfaces:generate` — no interface edit required.
  *
  * Overrides encode deliberate typing decisions that mechanical resolution
  * cannot make:
- * - `fieldTypes` pins enum aliases from `src/apis/anilist/types/`,
+ * - `fieldTypes` pins enum aliases from `src/apis/graphql/anilist/types/`,
  *   discriminator literals for unions, references to handwritten aggregate
  *   interfaces, and compatibility shapes (e.g. `unknown[]` placeholders).
  * - `optionalFields` preserves today's handwritten optionality instead of
  *   narrowing it from upstream nullability.
  *
- * Every interface file under `src/apis/anilist/interfaces/` is fully generated
+ * Every interface file under `src/apis/graphql/anilist/interfaces/` is fully generated
  * EXCEPT these deliberately handwritten single-sources (they have no faithful
  * schema-fragment or operation twin):
  * - `Stat.ts` / `Favoured.ts` — superset unions across per-slot discriminator
@@ -105,7 +105,7 @@ function pageWrapper(
     extraFieldTypes?: Record<string, { refType: string }>
 ): OutputSpec {
     return {
-        path: `src/apis/anilist/interfaces/responses/page/${name}.ts`,
+        path: `src/apis/graphql/anilist/interfaces/responses/page/${name}.ts`,
         mode: "file",
         exports: [
             {
@@ -114,7 +114,7 @@ function pageWrapper(
                 summary,
                 graphqlType: "Page",
                 source: {
-                    operation: { file: `src/apis/anilist/query/page/${name}.ts` },
+                    operation: { file: `src/apis/graphql/anilist/query/page/${name}.ts` },
                     unwrappedOperation: true,
                     wrapped: true,
                 },
@@ -129,17 +129,17 @@ function pageWrapper(
 
 export const generatorConfig: GeneratorConfig = {
     schemaSnapshotPath: "scripts/anilist-api-compare/anilist-schema.json",
-    schemasDir: "src/apis/anilist/schemas",
+    schemasDir: "src/apis/graphql/anilist/schemas",
     aliasImports: {
-        MediaFormat: "src/apis/anilist/types/Format.ts",
-        ScoreFormat: "src/apis/anilist/types/Format.ts",
-        MediaSeason: "src/apis/anilist/types/Season.ts",
-        MediaSource: "src/apis/anilist/types/Source.ts",
-        MediaStatus: "src/apis/anilist/types/Status.ts",
-        MediaType: "src/apis/anilist/types/Type.ts",
-        NotificationType: "src/apis/anilist/types/Type.ts",
-        UserStaffNameLanguage: "src/apis/anilist/types/UserStaffNameLanguage.ts",
-        UserTitleLanguage: "src/apis/anilist/types/UserTitleLanguage.ts",
+        MediaFormat: "src/apis/graphql/anilist/types/Format.ts",
+        ScoreFormat: "src/apis/graphql/anilist/types/Format.ts",
+        MediaSeason: "src/apis/graphql/anilist/types/Season.ts",
+        MediaSource: "src/apis/graphql/anilist/types/Source.ts",
+        MediaStatus: "src/apis/graphql/anilist/types/Status.ts",
+        MediaType: "src/apis/graphql/anilist/types/Type.ts",
+        NotificationType: "src/apis/graphql/anilist/types/Type.ts",
+        UserStaffNameLanguage: "src/apis/graphql/anilist/types/UserStaffNameLanguage.ts",
+        UserTitleLanguage: "src/apis/graphql/anilist/types/UserTitleLanguage.ts",
     },
     scalarTypes: {
         CountryCode: "string",
@@ -150,7 +150,7 @@ export const generatorConfig: GeneratorConfig = {
         // Shared entity shapes (schemas/ root)
         // ------------------------------------------------------------------
         {
-            path: "src/apis/anilist/interfaces/FuzzyDate.ts",
+            path: "src/apis/graphql/anilist/interfaces/FuzzyDate.ts",
             mode: "file",
             exports: [
                 {
@@ -163,7 +163,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Image.ts",
+            path: "src/apis/graphql/anilist/interfaces/Image.ts",
             mode: "file",
             exports: [
                 {
@@ -176,7 +176,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/CoverImage.ts",
+            path: "src/apis/graphql/anilist/interfaces/CoverImage.ts",
             mode: "file",
             exports: [
                 {
@@ -189,7 +189,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Title.ts",
+            path: "src/apis/graphql/anilist/interfaces/Title.ts",
             mode: "file",
             exports: [
                 {
@@ -202,7 +202,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Name.ts",
+            path: "src/apis/graphql/anilist/interfaces/Name.ts",
             mode: "file",
             exports: [
                 {
@@ -215,7 +215,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Tag.ts",
+            path: "src/apis/graphql/anilist/interfaces/Tag.ts",
             mode: "file",
             exports: [
                 {
@@ -228,7 +228,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Trailer.ts",
+            path: "src/apis/graphql/anilist/interfaces/Trailer.ts",
             mode: "file",
             exports: [
                 {
@@ -241,7 +241,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/NextAiringEpisode.ts",
+            path: "src/apis/graphql/anilist/interfaces/NextAiringEpisode.ts",
             mode: "file",
             exports: [
                 {
@@ -254,7 +254,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/ExternalLink.ts",
+            path: "src/apis/graphql/anilist/interfaces/ExternalLink.ts",
             mode: "file",
             exports: [
                 {
@@ -267,7 +267,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/StreamingEpisode.ts",
+            path: "src/apis/graphql/anilist/interfaces/StreamingEpisode.ts",
             mode: "file",
             exports: [
                 {
@@ -280,7 +280,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Ranking.ts",
+            path: "src/apis/graphql/anilist/interfaces/Ranking.ts",
             mode: "file",
             exports: [
                 {
@@ -293,7 +293,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Basic.ts",
+            path: "src/apis/graphql/anilist/interfaces/Basic.ts",
             mode: "file",
             exports: [
                 {
@@ -320,7 +320,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/SiteTrend.ts",
+            path: "src/apis/graphql/anilist/interfaces/SiteTrend.ts",
             mode: "file",
             exports: [
                 {
@@ -340,7 +340,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Distribution.ts",
+            path: "src/apis/graphql/anilist/interfaces/Distribution.ts",
             mode: "file",
             exports: [
                 {
@@ -360,7 +360,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/ActivityHistory.ts",
+            path: "src/apis/graphql/anilist/interfaces/ActivityHistory.ts",
             mode: "file",
             exports: [
                 {
@@ -373,7 +373,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/ListScores.ts",
+            path: "src/apis/graphql/anilist/interfaces/ListScores.ts",
             mode: "file",
             exports: [
                 {
@@ -386,7 +386,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/MediaStats.ts",
+            path: "src/apis/graphql/anilist/interfaces/MediaStats.ts",
             mode: "file",
             exports: [
                 {
@@ -402,7 +402,7 @@ export const generatorConfig: GeneratorConfig = {
         // Activity entities and unions
         // ------------------------------------------------------------------
         {
-            path: "src/apis/anilist/interfaces/Activity.ts",
+            path: "src/apis/graphql/anilist/interfaces/Activity.ts",
             mode: "file",
             exports: [
                 {
@@ -462,7 +462,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Likeable.ts",
+            path: "src/apis/graphql/anilist/interfaces/Likeable.ts",
             mode: "file",
             exports: [
                 {
@@ -480,7 +480,7 @@ export const generatorConfig: GeneratorConfig = {
         // Notification members and union
         // ------------------------------------------------------------------
         {
-            path: "src/apis/anilist/interfaces/Notification.ts",
+            path: "src/apis/graphql/anilist/interfaces/Notification.ts",
             mode: "file",
             exports: [
                 {
@@ -576,7 +576,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/Notification.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/Notification.ts",
             mode: "file",
             exports: [
                 {
@@ -602,7 +602,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Media.ts",
+            path: "src/apis/graphql/anilist/interfaces/Media.ts",
             mode: "file",
             exports: [
                 {
@@ -624,7 +624,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/Media.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/Media.ts",
             mode: "file",
             exports: [
                 {
@@ -647,7 +647,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/MediaStatistics.ts",
+            path: "src/apis/graphql/anilist/interfaces/MediaStatistics.ts",
             mode: "file",
             exports: [
                 {
@@ -679,7 +679,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Statistics.ts",
+            path: "src/apis/graphql/anilist/interfaces/Statistics.ts",
             mode: "file",
             exports: [
                 {
@@ -696,7 +696,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/UserStats.ts",
+            path: "src/apis/graphql/anilist/interfaces/UserStats.ts",
             mode: "file",
             exports: [
                 {
@@ -730,7 +730,7 @@ export const generatorConfig: GeneratorConfig = {
         // Query / mutation responses
         // ------------------------------------------------------------------
         {
-            path: "src/apis/anilist/interfaces/responses/query/AiringSchedule.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/AiringSchedule.ts",
             mode: "file",
             exports: [
                 {
@@ -743,7 +743,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/Character.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/Character.ts",
             mode: "file",
             exports: [
                 {
@@ -757,7 +757,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/MediaList.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/MediaList.ts",
             mode: "file",
             exports: [
                 {
@@ -773,7 +773,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/MediaListCollectionResponse.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/MediaListCollectionResponse.ts",
             mode: "file",
             exports: [
                 {
@@ -790,7 +790,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/MediaTrend.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/MediaTrend.ts",
             mode: "file",
             exports: [
                 {
@@ -803,7 +803,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/Recommendation.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/Recommendation.ts",
             mode: "file",
             exports: [
                 {
@@ -816,7 +816,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/Review.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/Review.ts",
             mode: "file",
             exports: [
                 {
@@ -829,7 +829,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/SiteStatistics.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/SiteStatistics.ts",
             mode: "file",
             exports: [
                 {
@@ -843,7 +843,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/Staff.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/Staff.ts",
             mode: "file",
             exports: [
                 {
@@ -862,7 +862,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/Studio.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/Studio.ts",
             mode: "file",
             exports: [
                 {
@@ -875,7 +875,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/Thread.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/Thread.ts",
             mode: "file",
             exports: [
                 {
@@ -888,7 +888,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/ThreadComment.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/ThreadComment.ts",
             mode: "file",
             exports: [
                 {
@@ -901,7 +901,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/mutation/Favourites.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/mutation/Favourites.ts",
             mode: "file",
             exports: [
                 {
@@ -915,7 +915,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/User.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/User.ts",
             mode: "file",
             exports: [
                 {
@@ -945,7 +945,7 @@ export const generatorConfig: GeneratorConfig = {
         // Operation-derived responses (page connections and misc operations)
         // ------------------------------------------------------------------
         {
-            path: "src/apis/anilist/interfaces/responses/page/PageInfo.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/page/PageInfo.ts",
             mode: "file",
             exports: [
                 {
@@ -954,7 +954,7 @@ export const generatorConfig: GeneratorConfig = {
                     summary: "pagination metadata returned by Page connections.",
                     graphqlType: "PageInfo",
                     source: {
-                        operation: { file: "src/apis/anilist/query/page/Likes.ts" },
+                        operation: { file: "src/apis/graphql/anilist/query/page/Likes.ts" },
                         unwrappedOperation: true,
                         wrapped: 2,
                     },
@@ -1062,7 +1062,7 @@ export const generatorConfig: GeneratorConfig = {
         ),
         pageWrapper("Users", "users", SEE.user, "a page of users with pagination metadata."),
         {
-            path: "src/apis/anilist/interfaces/responses/mutation/DeleteMediaListEntry.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/mutation/DeleteMediaListEntry.ts",
             mode: "file",
             exports: [
                 {
@@ -1071,7 +1071,9 @@ export const generatorConfig: GeneratorConfig = {
                     summary: "the payload returned after deleting a media list entry.",
                     graphqlType: "Deleted",
                     source: {
-                        operation: { file: "src/apis/anilist/mutation/DeleteMediaListEntry.ts" },
+                        operation: {
+                            file: "src/apis/graphql/anilist/mutation/DeleteMediaListEntry.ts",
+                        },
                         unwrappedOperation: true,
                         wrapped: true,
                     },
@@ -1079,7 +1081,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/MediaTagCollection.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/MediaTagCollection.ts",
             mode: "file",
             exports: [
                 {
@@ -1088,7 +1090,7 @@ export const generatorConfig: GeneratorConfig = {
                     summary: "a media tag as returned by the MediaTagCollection query.",
                     graphqlType: "MediaTag",
                     source: {
-                        operation: { file: "src/apis/anilist/query/MediaTagCollection.ts" },
+                        operation: { file: "src/apis/graphql/anilist/query/MediaTagCollection.ts" },
                         unwrappedOperation: true,
                         wrapped: true,
                     },
@@ -1096,7 +1098,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/AniChartUser.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/AniChartUser.ts",
             mode: "file",
             exports: [
                 {
@@ -1105,7 +1107,7 @@ export const generatorConfig: GeneratorConfig = {
                     summary: "a user's AniChart integration data.",
                     graphqlType: "AniChartUser",
                     source: {
-                        operation: { file: "src/apis/anilist/query/AniChartUser.ts" },
+                        operation: { file: "src/apis/graphql/anilist/query/AniChartUser.ts" },
                         unwrappedOperation: true,
                         wrapped: true,
                     },
@@ -1113,7 +1115,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/responses/query/ExternalLinkSourceCollection.ts",
+            path: "src/apis/graphql/anilist/interfaces/responses/query/ExternalLinkSourceCollection.ts",
             mode: "file",
             exports: [
                 {
@@ -1123,7 +1125,7 @@ export const generatorConfig: GeneratorConfig = {
                     graphqlType: "MediaExternalLink",
                     source: {
                         operation: {
-                            file: "src/apis/anilist/query/ExternalLinkSourceCollection.ts",
+                            file: "src/apis/graphql/anilist/query/ExternalLinkSourceCollection.ts",
                         },
                         unwrappedOperation: true,
                         wrapped: true,
@@ -1132,7 +1134,7 @@ export const generatorConfig: GeneratorConfig = {
             ],
         },
         {
-            path: "src/apis/anilist/interfaces/Thread.ts",
+            path: "src/apis/graphql/anilist/interfaces/Thread.ts",
             mode: "file",
             exports: [
                 {

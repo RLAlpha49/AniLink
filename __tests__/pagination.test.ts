@@ -5,11 +5,11 @@ import {
     paginateChunks,
     type PaginateOptions,
     type ChunkPaginateOptions,
-} from "../src/base/Paginator";
-import type { PageInfo } from "../src/apis/anilist/interfaces/responses/page/PageInfo";
-import { fuzzyDate } from "../src/apis/anilist/helpers/fuzzyDate";
-import { flattenMediaListCollection } from "../src/apis/anilist/helpers/flattenMediaListCollection";
-import type { MediaListCollectionResponse } from "../src/apis/anilist/interfaces/responses/query/MediaListCollectionResponse";
+} from "../src/apis/graphql/anilist/Paginator";
+import type { PageInfo } from "../src/apis/graphql/anilist/interfaces/responses/page/PageInfo";
+import { fuzzyDate } from "../src/apis/graphql/anilist/helpers/fuzzyDate";
+import { flattenMediaListCollection } from "../src/apis/graphql/anilist/helpers/flattenMediaListCollection";
+import type { MediaListCollectionResponse } from "../src/apis/graphql/anilist/interfaces/responses/query/MediaListCollectionResponse";
 
 /** Build a `PageInfo` object for tests. */
 function pageInfo(overrides: Partial<PageInfo> = {}): PageInfo {

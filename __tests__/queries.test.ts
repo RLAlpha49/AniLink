@@ -1,4 +1,4 @@
-import type { AniListApi } from "../src/apis/anilist/facade";
+import type { AniListApi } from "../src/apis/graphql/anilist/facade";
 import {
     createTestClient,
     getLastRequest,

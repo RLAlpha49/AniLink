@@ -562,7 +562,7 @@ describe("resolveExportSpec", () => {
                 exportedName: "LikesPageResponse",
                 graphqlType: "Page",
                 source: {
-                    operation: { file: "src/apis/anilist/query/page/Likes.ts" },
+                    operation: { file: "src/apis/graphql/anilist/query/page/Likes.ts" },
                     wrapped: true,
                 },
                 fieldTypes: { pageInfo: { refType: "PageInfo" } },
@@ -571,7 +571,7 @@ describe("resolveExportSpec", () => {
                 constants: new Map(),
                 operations: new Map([
                     [
-                        "src/apis/anilist/query/page/Likes.ts",
+                        "src/apis/graphql/anilist/query/page/Likes.ts",
                         "query ($page: Int) {\n  Page (page: $page) {\n    pageInfo {\n      total\n    }\n    likes {\n      id\n    }\n  }\n}",
                     ],
                 ]),
@@ -705,7 +705,7 @@ describe("buildGeneratedFiles", () => {
             schemaJson: schema,
             outputs: [
                 {
-                    path: "src/apis/anilist/interfaces/FuzzyDate.ts",
+                    path: "src/apis/graphql/anilist/interfaces/FuzzyDate.ts",
                     exports: [
                         {
                             exportedName: "FuzzyDate",
@@ -718,7 +718,7 @@ describe("buildGeneratedFiles", () => {
                 },
             ],
         });
-        const content = files.get("src/apis/anilist/interfaces/FuzzyDate.ts") ?? "";
+        const content = files.get("src/apis/graphql/anilist/interfaces/FuzzyDate.ts") ?? "";
         expect(content).toContain("@generated-start");
         expect(content).toContain("@generated-end");
         expect(content).toContain("export interface FuzzyDate {");

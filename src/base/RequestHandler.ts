@@ -59,12 +59,21 @@ export interface RetryPolicy {
     jitter?: boolean;
 }
 
+/**
+ * HTTP methods the shared transport accepts.
+ *
+ * GraphQL providers use `POST` only; REST providers additionally use `GET`,
+ * `PUT`, and `DELETE`. The union is shared so hooks and error contexts stay
+ * provider-agnostic.
+ */
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+
 /** Context passed to the request lifecycle hooks for a single attempt. */
 export interface RequestErrorContext {
     /** The URL the request was sent to. */
     url: string;
     /** The HTTP method of the request. */
-    method: "GET" | "POST";
+    method: HttpMethod;
     /** The 1-based attempt that failed. */
     attempt: number;
     /** The stable code of the normalized failure. */
@@ -83,7 +92,7 @@ export interface RequestContext {
     /** The URL the request is being sent to. */
     url: string;
     /** The HTTP method of the request. */
-    method: "GET" | "POST";
+    method: HttpMethod;
     /** The 1-based attempt about to run. */
     attempt: number;
 }
@@ -333,7 +342,7 @@ const normalizeAxiosError = (resolved: ResolvedRequestOptions, error: AxiosError
     if (axios.isCancel(error)) {
         return new AniLinkNetworkError(
             AniLinkErrorCodes.ABORTED,
-            "AniList request was cancelled.",
+            "The request was cancelled.",
             getRawAxiosError(resolved, error)
         );
     }
@@ -350,7 +359,7 @@ const normalizeAxiosError = (resolved: ResolvedRequestOptions, error: AxiosError
     if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
         return new AniLinkNetworkError(
             AniLinkErrorCodes.TIMEOUT,
-            "AniList request timed out.",
+            "The request timed out.",
             getRawAxiosError(resolved, error),
             resolved.timeout > 0 ? { timeoutMs: resolved.timeout } : undefined
         );
@@ -358,7 +367,7 @@ const normalizeAxiosError = (resolved: ResolvedRequestOptions, error: AxiosError
 
     return new AniLinkNetworkError(
         AniLinkErrorCodes.NETWORK,
-        "AniList request failed due to a network error.",
+        "The request failed due to a network error.",
         getRawAxiosError(resolved, error)
     );
 };
@@ -373,7 +382,7 @@ const normalizeRequestError = (resolved: ResolvedRequestOptions, error: unknown)
     }
 
     return new AniLinkError(
-        "AniList request failed.",
+        "The request failed.",
         AniLinkErrorCodes.UNKNOWN,
         getRawAxiosError(resolved, error)
     );
@@ -479,7 +488,7 @@ const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
         const abort = (): void => {
             clearTimeout(timeout);
             reject(
-                new AniLinkNetworkError(AniLinkErrorCodes.ABORTED, "AniList request was cancelled.")
+                new AniLinkNetworkError(AniLinkErrorCodes.ABORTED, "The request was cancelled.")
             );
         };
 
@@ -492,7 +501,7 @@ const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
 
 interface ExecuteOptions {
     url: string;
-    method: "GET" | "POST";
+    method: HttpMethod;
     data?: object;
     headers: Record<string, string>;
 }
@@ -566,7 +575,7 @@ const throwIfCircuitOpen = (
     if (Date.now() - circuit.openedAt < breaker.cooldownMs) {
         throw new AniLinkNetworkError(
             AniLinkErrorCodes.CIRCUIT,
-            `AniList request failed fast: the circuit breaker is open after ${breaker.threshold} consecutive failures. Retrying is possible after the cooldown elapses.`
+            `The request failed fast: the circuit breaker is open after ${breaker.threshold} consecutive failures. Retrying is possible after the cooldown elapses.`
         );
     }
     // Cooldown elapsed: allow the next attempt through as the probe.
@@ -609,7 +618,7 @@ const recordCircuitFailure = (
  */
 const buildErrorContext = (
     url: string,
-    method: "GET" | "POST",
+    method: HttpMethod,
     attempt: number,
     normalized: AniLinkError,
     nextDelayMs?: number
@@ -647,7 +656,7 @@ const paceAfterSuccess = async (
  */
 const reportFailure = (
     url: string,
-    method: "GET" | "POST",
+    method: HttpMethod,
     attempt: number,
     normalized: AniLinkError,
     resolved: ResolvedRequestOptions,
@@ -758,14 +767,20 @@ const executeWithRetry = async <T>(
 
 /**
  * Sends a request to the specified URL.
+ *
+ * This is the provider-agnostic transport entry point. GraphQL callers get
+ * envelope unwrapping by leaving `contentType` unset; REST callers pass an
+ * explicit `contentType` (for example `application/json`) and receive the
+ * parsed body verbatim.
+ *
  * @param url - The URL to send the request to.
- * @param method - The HTTP method to use ('GET' or 'POST').
+ * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
  * @param data - The data to send with the request.
  * @param token - The authentication token to include in the request headers.
  * @param requiresAuth - Whether the operation requires an authentication token.
  * @param options - Per-request transport settings. When omitted, library defaults apply: 30 second timeout, automatic retries under the default policy, no hooks.
  * @param operation - Optional operation name included in missing-token auth errors.
- * @param contentType - Optional `Content-Type` override for non-GraphQL endpoints (for example form-urlencoded OAuth token requests). When provided, the response body is returned verbatim instead of being unwrapped as a GraphQL envelope.
+ * @param contentType - Optional `Content-Type` override for non-GraphQL endpoints (for example form-urlencoded OAuth token requests, or `application/json` for REST calls). When provided, the response body is returned verbatim instead of being unwrapped as a GraphQL envelope.
  * @returns The unwrapped response data. For documents with a single root
  * field this is the bare field value; multi-root-field (or zero-root-field)
  * documents are returned as the full `{ data }` envelope unchanged. Use
@@ -777,7 +792,7 @@ const executeWithRetry = async <T>(
  */
 export const sendRequest = async <T = unknown>(
     url: string,
-    method: "GET" | "POST",
+    method: HttpMethod,
     data?: object,
     token?: string,
     requiresAuth = false,

@@ -170,7 +170,7 @@ describe("validateVariables", () => {
         const validationError = caught as AniLinkValidationError;
         expect(validationError).toBeInstanceOf(AniLinkValidationError);
         expect(validationError.details).toHaveLength(3);
-        expect(validationError.message).toContain("AniList request variables are invalid:");
+        expect(validationError.message).toContain("Request variables are invalid:");
         for (const detail of validationError.details) {
             expect(validationError.message).toContain(detail);
         }

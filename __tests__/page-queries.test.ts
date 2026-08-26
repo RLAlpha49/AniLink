@@ -1,9 +1,9 @@
-import type { AniListApi } from "../src/apis/anilist/facade";
-import type { ActivitiesPageResponse } from "../src/apis/anilist/interfaces/responses/page/Activities";
-import type { ActivityRepliesPageResponse } from "../src/apis/anilist/interfaces/responses/page/ActivityReplies";
-import type { LikesPageResponse } from "../src/apis/anilist/interfaces/responses/page/Likes";
-import type { TextActivity } from "../src/apis/anilist/interfaces/Activity";
-import type { BasicUser } from "../src/apis/anilist/interfaces/Basic";
+import type { AniListApi } from "../src/apis/graphql/anilist/facade";
+import type { ActivitiesPageResponse } from "../src/apis/graphql/anilist/interfaces/responses/page/Activities";
+import type { ActivityRepliesPageResponse } from "../src/apis/graphql/anilist/interfaces/responses/page/ActivityReplies";
+import type { LikesPageResponse } from "../src/apis/graphql/anilist/interfaces/responses/page/Likes";
+import type { TextActivity } from "../src/apis/graphql/anilist/interfaces/Activity";
+import type { BasicUser } from "../src/apis/graphql/anilist/interfaces/Basic";
 import {
     createTestClient,
     getLastRequest,

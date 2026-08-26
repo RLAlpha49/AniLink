@@ -6,7 +6,7 @@ import {
     getAccessToken,
     getTokenExpiry,
     refreshAccessToken,
-} from "../src/auth/AniListAuth";
+} from "../src/apis/graphql/anilist/auth";
 import {
     AniLinkApiError,
     AniLinkError,
@@ -215,7 +215,7 @@ describe("token request failure normalization", () => {
             error: "invalid_grant",
             error_description: "Invalid authorization code.",
         });
-        expect(apiError.message).toContain("token request failed with status 400");
+        expect(apiError.message).toContain("Token request failed with status 400");
         expect(apiError.rawAxiosError).toBeUndefined();
 
         // The safe message carries no credential material.

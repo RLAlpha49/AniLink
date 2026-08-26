@@ -9,8 +9,8 @@
  */
 import { describe, expect, test, vi } from "vitest";
 import fc from "fast-check";
-import { paginate, paginatePages, paginateChunks } from "../src/base/Paginator";
-import type { PageInfo } from "../src/apis/anilist/interfaces/responses/page/PageInfo";
+import { paginate, paginatePages, paginateChunks } from "../src/apis/graphql/anilist/Paginator";
+import type { PageInfo } from "../src/apis/graphql/anilist/interfaces/responses/page/PageInfo";
 
 /** Build a `PageInfo` object for tests. */
 function pageInfo(overrides: Partial<PageInfo> = {}): PageInfo {

@@ -4,7 +4,7 @@ import { AniLink } from "../src/AniLink";
 /**
  * Per-request transport option overrides.
  *
- * These tests exercise the real `APIWrapper` merge logic and the real
+ * These tests exercise the real operation-base merge logic and the real
  * `sendRequest` pipeline against a stubbed Axios layer, so they prove that a
  * per-call options object reaches the transport merged over the instance-level
  * settings — not just that arguments are passed through.
