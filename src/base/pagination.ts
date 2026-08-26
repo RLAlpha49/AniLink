@@ -7,6 +7,11 @@
  * strictly in entry order. Schema-specific contracts — what a page looks
  * like, where the "more data available" flag lives, and per-page size caps —
  * stay with each provider.
+ *
+ * The driver is key-agnostic: providers with numeric paging (AniList pages,
+ * chunks) use slot arithmetic from `startNumber`, while providers with
+ * cursor-based paging (MyAnimeList) supply an `extractNextKey` callback so
+ * each follow-up request uses the key carried by the previous entry.
  */
 
 /**
@@ -56,7 +61,7 @@ export function resolveCappedInt(value: number | undefined, max: number, fallbac
  *
  * Fetches entries through a sliding window of at most `concurrency` launched-
  * but-unconsumed requests so round-trip latency overlaps instead of stacking,
- * while results are appended strictly in entry-number order no matter when each
+ * while results are appended strictly in entry order no matter when each
  * request settles. Scheduling stops as soon as an entry reports "no more data"
  * (per the caller-supplied `extractHasMore`) or the `maxEntries` guard fires;
  * `truncated` mirrors the sequential semantics.
@@ -66,22 +71,69 @@ export function resolveCappedInt(value: number | undefined, max: number, fallbac
  * are drained and discarded so the collected prefix matches what a strictly
  * sequential traversal would have returned.
  *
+ * Two call shapes are supported:
+ *
+ * 1. Numeric paging (AniList pages and chunks):
+ *    `fetchWithLookAhead(fetch, extractHasMore, undefined, startNumber, maxEntries, concurrency)`
+ *    or the shorthand five-argument form
+ *    `fetchWithLookAhead(fetch, extractHasMore, startNumber, maxEntries, concurrency)`.
+ *    Keys advance by slot arithmetic (`startNumber + slot`).
+ *
+ * 2. Cursor paging (MyAnimeList and any provider whose next key is carried by
+ *    the previous response): pass an `extractNextKey` callback as the third
+ *    argument. Each consumed entry supplies the key for its successor; the
+ *    first key is `firstKey`. Cursor mode never schedules past a terminal
+ *    entry even if that entry still carries a stale next key.
+ *
  * @typeParam TEntry - The raw response shape of a single page or chunk.
- * @param fetch - Callback that fetches a single entry given its 1-based number.
+ * @typeParam TKey - The paging key type: a page number in numeric mode, or an opaque cursor value in cursor mode.
+ * @param fetch - Callback that fetches a single entry given its paging key.
  * @param extractHasMore - Reads the "more data available" flag from a fetched entry. Return `false` for malformed responses so a broken payload ends the traversal instead of looping forever.
- * @param startNumber - First entry number to request (already resolved/validated).
+ * @param extractNextKey - Optional callback reading the next paging key from a fetched entry. Pass `undefined` (or omit trailing arguments) for numeric page-number paging.
+ * @param firstKey - First paging key: the starting page number in numeric mode, or the initial cursor in cursor mode (already resolved/validated).
  * @param maxEntries - Hard cap on entries fetched (already resolved/validated).
  * @param concurrency - Look-ahead window size (already resolved/clamped).
  * @returns The responses in entry order, how many were fetched, and whether
  *          the guard truncated the run.
  */
-export async function fetchWithLookAhead<TEntry>(
-    fetch: (entryNumber: number) => Promise<TEntry>,
+export async function fetchWithLookAhead<TEntry, TKey = number>(
+    fetch: (key: TKey) => Promise<TEntry>,
     extractHasMore: (response: TEntry) => boolean,
-    startNumber: number,
-    maxEntries: number,
-    concurrency: number
+    ...rest:
+        | [startNumber: number, maxEntries: number, concurrency: number]
+        | [
+              extractNextKey: ((response: TEntry) => TKey) | undefined,
+              firstKey: TKey,
+              maxEntries: number,
+              concurrency: number,
+          ]
 ): Promise<LookAheadResult<TEntry>> {
+    // Normalize the two call shapes into one internal configuration.
+    let extractNextKey: ((response: TEntry) => TKey) | undefined;
+    let firstKey: TKey;
+    let numericStart: number | undefined;
+    let maxEntries: number;
+    let concurrency: number;
+
+    if (rest.length === 4) {
+        // Six-argument shape: (extractNextKey, firstKey, maxEntries, concurrency).
+        // extractNextKey may be undefined here too; firstKey still names the
+        // starting key explicitly.
+        [extractNextKey, firstKey, maxEntries, concurrency] = rest as [
+            ((response: TEntry) => TKey) | undefined,
+            TKey,
+            number,
+            number,
+        ];
+        if (extractNextKey === undefined) {
+            numericStart = firstKey as unknown as number;
+        }
+    } else {
+        // Five-argument numeric shape: (startNumber, maxEntries, concurrency).
+        [numericStart, maxEntries, concurrency] = rest as unknown as [number, number, number];
+        firstKey = numericStart as unknown as TKey;
+    }
+
     const responses: TEntry[] = [];
     // Requests indexed by slot. Entries are never removed: awaiting an
     // already-settled request must remain possible, because several siblings
@@ -90,13 +142,27 @@ export async function fetchWithLookAhead<TEntry>(
     let launched = 0;
     let count = 0;
     let truncated = false;
+    // The key each not-yet-launched slot will use. In numeric mode this is
+    // derived from slot arithmetic; in cursor mode it is updated after each
+    // consumed entry.
+    let pendingCursorKey: TKey | undefined = extractNextKey === undefined ? undefined : firstKey;
+
+    // In cursor mode the next key is carried by the previous response, so
+    // requests form a dependency chain: at most one may be in flight, and the
+    // caller-supplied window cannot be honored. Numeric mode keeps the full
+    // look-ahead window because keys are computable without any response.
+    const effectiveConcurrency = extractNextKey === undefined ? concurrency : 1;
 
     while (count < maxEntries) {
-        // Refill: keep at most `concurrency` requests launched but unconsumed.
-        while (launched < maxEntries && launched - count < concurrency) {
+        // Refill: keep at most `effectiveConcurrency` requests launched but unconsumed.
+        while (launched < maxEntries && launched - count < effectiveConcurrency) {
             const slot = launched;
+            const key =
+                extractNextKey === undefined
+                    ? (numericStart as number) + slot
+                    : (pendingCursorKey as TKey);
             launched += 1;
-            const request = fetch(startNumber + slot).then((response) => {
+            const request = fetch(key as TKey).then((response) => {
                 responses[slot] = response;
             });
             pending[slot] = request;
@@ -115,7 +181,8 @@ export async function fetchWithLookAhead<TEntry>(
         await pending[count];
         count += 1;
 
-        const hasMore = extractHasMore(responses[count - 1]);
+        const consumed = responses[count - 1];
+        const hasMore = extractHasMore(consumed);
         if (!hasMore) {
             // Terminal entry: drain already-launched stragglers so nothing
             // dangles, discard their payloads, and stop. Entries past a
@@ -124,6 +191,12 @@ export async function fetchWithLookAhead<TEntry>(
             await Promise.allSettled(pending.slice(count));
             responses.length = count;
             return { responses, count, truncated: false };
+        }
+        if (extractNextKey !== undefined) {
+            // Cursor mode: the just-consumed entry decides the next key. The
+            // refill loop launches at most one successor per consumed entry,
+            // so a single pending key is sufficient.
+            pendingCursorKey = extractNextKey(consumed);
         }
         if (count >= maxEntries) {
             await Promise.allSettled(pending.slice(count));
