@@ -182,7 +182,7 @@ export class MediaListCollectionQuery extends AniListOperation {
      * Chunk semantics: AniList returns large user lists in chunks. Set `chunk` (1-based) and
      * `perChunk` (entries per chunk) to fetch a single chunk; the response's `hasNextChunk` flag
      * indicates whether more chunks remain. To retrieve an entire list, advance `chunk` from 1
-     * while `hasNextChunk` is `true`. Use the shared `paginateChunks` helper (see `src/base/Paginator.ts`)
+     * while `hasNextChunk` is `true`. Use the shared `paginateChunks` helper (see `src/apis/graphql/anilist/Paginator.ts`)
      * to walk chunks with a `maxChunks` guard instead of hand-rolling the loop:
      *
      * ```typescript
