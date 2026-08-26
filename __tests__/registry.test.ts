@@ -138,6 +138,25 @@ describe("buildAniListWiring", () => {
         expect(typeof wiring.flattenMediaListCollection).toBe("function");
     });
 
+    test("rejects registry entries whose operation method is missing", () => {
+        type MutableRegistryEntry = {
+            name: string;
+            operationClass: new (...args: never[]) => unknown;
+            methodName?: string;
+        };
+        class MissingMethodOperation {}
+        const queryEntries = ANILIST_OPERATION_REGISTRY.query as unknown as MutableRegistryEntry[];
+        queryEntries.push({ name: "brokenOperation", operationClass: MissingMethodOperation });
+
+        try {
+            expect(() => buildAniListWiring()).toThrow(
+                'Operation "brokenOperation" does not expose a "brokenOperation" method to bind.'
+            );
+        } finally {
+            queryEntries.pop();
+        }
+    });
+
     test("custom is bound to its own CustomRequest instance", () => {
         expect(typeof wiring.custom).toBe("function");
     });

@@ -172,6 +172,22 @@ describe("retry with backoff", () => {
         ).rejects.toBeInstanceOf(AniLinkNetworkError);
         expect(mocks.request).toHaveBeenCalledTimes(1);
     });
+
+    test("rejects immediately when the retry signal is already aborted", async () => {
+        const controller = new AbortController();
+        controller.abort();
+        mocks.request.mockRejectedValueOnce(apiError(500));
+
+        configureRequestOptions({
+            signal: controller.signal,
+            retry: { maxRetries: 1, baseDelayMs: 1, maxDelayMs: 1, jitter: false },
+        });
+
+        await expect(
+            callSendRequest("https://graphql.anilist.co", "POST", { query: "query" })
+        ).rejects.toMatchObject({ code: "ABORTED_ERROR" });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe("onError hook", () => {
@@ -358,6 +374,34 @@ describe("backoff jitter", () => {
 });
 
 describe("Retry-After handling", () => {
+    test.each([
+        ["empty", ""],
+        ["invalid", "not-a-date"],
+        ["non-string", 7],
+    ])("falls back to exponential backoff for a %s Retry-After header", async (_name, value) => {
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            code: "ERR_BAD_RESPONSE",
+            response: { status: 429, data: {}, headers: { "retry-after": value } },
+            config: {},
+        });
+        const onRetry = vi.fn();
+
+        configureRequestOptions({
+            retry: { maxRetries: 1, baseDelayMs: 1, maxDelayMs: 1, jitter: false },
+            onRetry,
+        });
+
+        const promise = callSendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        });
+        promise.catch(() => {});
+        await vi.advanceTimersByTimeAsync(1);
+
+        await expect(promise).resolves.toEqual({ id: 1 });
+        expect(onRetry.mock.calls[0]?.[1]).toMatchObject({ nextDelayMs: 1 });
+    });
+
     test("clamps an oversized Retry-After to the 60 second maximum", async () => {
         mocks.request.mockRejectedValueOnce(apiError(429, { "retry-after": "120" }));
         const onRetry = vi.fn();
@@ -465,6 +509,15 @@ describe("circuit breaker", () => {
             );
         }
         expect(mocks.request).toHaveBeenCalledTimes(5);
+    });
+
+    test("uses a shared fallback scope when the circuit URL is invalid", async () => {
+        configureRequestOptions({ retry: false, circuitBreaker: breaker });
+
+        await expect(
+            callSendRequest("not a valid URL", "POST", { query: "query" })
+        ).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 
     test("opens after the failure budget and fast-fails with CIRCUIT_OPEN_ERROR", async () => {

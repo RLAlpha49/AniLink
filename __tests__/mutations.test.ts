@@ -5,6 +5,7 @@ import {
     mockSendRequest,
     setMockResponse,
 } from "./helpers/mockRequestHandler";
+import { AniLinkValidationError } from "../src/base/AniLinkError";
 import { describe, expect, test } from "vitest";
 
 /** Method names are validated against the public API surface at compile time. */
@@ -147,6 +148,21 @@ describe("AniList mutations without remote side effects", () => {
             })
         );
     });
+});
+
+test.each([
+    ["anime", { animeOrder: [1] }],
+    ["manga", { mangaOrder: [1] }],
+    ["character", { characterOrder: [1] }],
+    ["staff", { staffOrder: [1] }],
+    ["studio", { studioOrder: [1] }],
+])("rejects a %s order when its id array is missing", async (_name, variables) => {
+    const client = createTestClient("validation-token");
+
+    await expect(
+        client.anilist.mutation.updateFavouriteOrder(variables as never)
+    ).rejects.toBeInstanceOf(AniLinkValidationError);
+    expect(mockSendRequest).not.toHaveBeenCalled();
 });
 
 const transportContractCases: Array<{

@@ -122,6 +122,19 @@ describe("paginate", () => {
         expect(result.pageCount).toBe(1);
     });
 
+    test("stops when a response has no usable pageInfo object", async () => {
+        const fetchPage = vi.fn(async (): Promise<TestPage> => ({
+            pageInfo: undefined as never,
+            media: [{ id: 1 }],
+        }));
+
+        const result = await paginate(fetchPage, "media");
+
+        expect(fetchPage).toHaveBeenCalledTimes(1);
+        expect(result.items).toEqual([{ id: 1 }]);
+        expect(result.truncated).toBe(false);
+    });
+
     test("clamps perPage above AniList's cap of 50 down to 50", async () => {
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
             pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
@@ -649,7 +662,6 @@ describe("flattenMediaListCollection", () => {
 
     test("skips groups with no entries array", () => {
         const collection = makeCollection([
-            { name: "Completed", entries: [] },
             {
                 name: "Watching",
                 entries: [
@@ -657,6 +669,7 @@ describe("flattenMediaListCollection", () => {
                 ],
             },
         ]);
+        collection.lists.unshift({ name: "Broken", entries: undefined } as never);
 
         const entries = flattenMediaListCollection(collection);
 

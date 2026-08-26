@@ -20,6 +20,14 @@ const mocks = getAxiosStub();
 class TestAnimeOperation extends RestOperation {
     protected readonly baseUrl = "https://api.example.test/v2";
 
+    readToken(): string | undefined {
+        return this.token;
+    }
+
+    readInstanceOptions(): object | undefined {
+        return this.instanceOptions;
+    }
+
     async getAnime(id: number, options?: RestExecuteOptions): Promise<unknown> {
         return await this.execute(`/anime/${id}`, options);
     }
@@ -55,6 +63,14 @@ beforeEach(() => {
 });
 
 describe("REST transport seam", () => {
+    test("subclasses can read shared authentication and instance settings", () => {
+        const options = { timeout: 1_234 };
+        const operation = new TestAnimeOperation("rest-token", options);
+
+        expect(operation.readToken()).toBe("rest-token");
+        expect(operation.readInstanceOptions()).toBe(options);
+    });
+
     test("a public GET reaches Axios with the full URL and no auth header", async () => {
         const operation = new TestAnimeOperation();
 

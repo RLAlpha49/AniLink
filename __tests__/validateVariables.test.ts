@@ -43,6 +43,13 @@ describe("validateVariables", () => {
         );
     });
 
+    test("reports circular invalid values without failing while formatting the error", () => {
+        const circular: Record<string, unknown> = {};
+        circular.self = circular;
+
+        expect(() => validateVariables({ id: circular }, mappings)).toThrow("[object]");
+    });
+
     test("throws AniLinkValidationError with a stable code and details", () => {
         let caught: unknown;
         try {

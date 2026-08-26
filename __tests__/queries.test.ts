@@ -1,4 +1,6 @@
 import type { AniListApi } from "../src/apis/graphql/anilist/facade";
+import { ActivityHistorySchema } from "../src/apis/graphql/anilist/schemas/ActivityHistory";
+import { ListScoresSchema } from "../src/apis/graphql/anilist/schemas/ListScores";
 import {
     createTestClient,
     getLastRequest,
@@ -80,6 +82,14 @@ describe("AniList single-resource queries", () => {
             expect(result).toEqual({ __typename: "MockResponse" });
         }
     );
+});
+
+test("exports the standalone selection schemas used by AniList consumers", () => {
+    expect(ActivityHistorySchema).toContain("date");
+    expect(ActivityHistorySchema).toContain("amount");
+    expect(ActivityHistorySchema).toContain("level");
+    expect(ListScoresSchema).toContain("meanScore");
+    expect(ListScoresSchema).toContain("standardDeviation");
 });
 
 test("sends custom query text and variables through the mocked transport", async () => {
