@@ -5,6 +5,12 @@ on:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Run semantic-release in dry-run mode without publishing
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -14,7 +20,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   release:
@@ -22,8 +28,8 @@ jobs:
     name: semantic-release
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Publishes wait for approval through the protected "npm" environment.
-    environment: npm
+    # Live publishes wait for approval; dry runs use an unprotected environment.
+    environment: ${{ inputs.dry_run && 'release-dry-run' || 'npm' }}
     env:
       ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
     steps:
@@ -51,4 +57,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm run release
+        run: ${{ inputs.dry_run && 'npm run release:dry' || 'npm run release' }}
