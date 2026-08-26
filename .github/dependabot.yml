@@ -22,14 +22,6 @@ updates:
           - "@vitest/*"
           - "typedoc"
 
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "daily"
-    security-updates-only: true
-    commit-message:
-      prefix: "npm"
-      include: "scope"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
