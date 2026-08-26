@@ -367,7 +367,9 @@ describe("mutation transport contracts", () => {
 
             const data = request?.data as { query?: string; variables?: unknown } | undefined;
             expect(data?.query).toContain("mutation");
-            expect(data?.query).toMatch(new RegExp(`${rootField}\\s*\\(`));
+            const rootFieldIndex = data?.query?.indexOf(rootField) ?? -1;
+            expect(rootFieldIndex).toBeGreaterThanOrEqual(0);
+            expect(data?.query?.slice(rootFieldIndex + rootField.length)).toMatch(/^\s*\(/);
             expect(data?.variables).toEqual(variables);
         }
     );

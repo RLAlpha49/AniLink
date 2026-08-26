@@ -39,7 +39,7 @@ export default [
     ...prettierConfig,
   },
   {
-    files: ['src/**/*.ts', 'scripts/**/*.ts', '__tests__/**/*.ts', '*.ts'],
+    files: ['src/**/*.ts'],
     plugins: {
       security,
     },
