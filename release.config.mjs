@@ -7,6 +7,8 @@
  */
 
 /** @type {import('semantic-release').GlobalConfig} */
+const isDryRun = process.argv.includes("--dry-run");
+
 export default {
   branches: ["master"],
   plugins: [
@@ -43,7 +45,7 @@ export default {
         },
       },
     ],
-    ["@semantic-release/npm", { npmPublish: true }],
+    ["@semantic-release/npm", { npmPublish: !isDryRun }],
     [
       "@semantic-release/changelog",
       {
