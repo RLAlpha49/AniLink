@@ -1,5 +1,5 @@
 import { BaseOperation } from "../../base/BaseOperation";
-import { type RequestOptions } from "../../base/RequestHandler";
+import { type HttpMethod, type RequestOptions } from "../../base/RequestHandler";
 
 /**
  * The declarative contract a REST operation passes to
@@ -13,7 +13,7 @@ export interface RestExecuteOptions {
     /**
      * The HTTP method for the call. Defaults to `"GET"`.
      */
-    readonly method?: "GET" | "POST" | "PUT" | "DELETE";
+    readonly method?: HttpMethod;
 
     /**
      * Whether the operation requires an authentication token. Defaults to
