@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { AniLink } from "../src/AniLink";
+import { resolveAniListCredentials, resolveMalCredentials } from "../src/base/credentials";
 import { getAxiosStub } from "./helpers/axiosStub";
 
 /**
@@ -36,6 +37,13 @@ beforeEach(() => {
 });
 
 describe("AniList credentials", () => {
+    test("keeps AniList authentication separate from shared transport settings", () => {
+        expect(resolveAniListCredentials({ authToken: "anilist-token", timeout: 9_000 })).toEqual({
+            auth: "anilist-token",
+            options: { timeout: 9_000 },
+        });
+    });
+
     test("legacy positional (authToken, options) still reaches AniList operations", async () => {
         const client = new AniLink("legacy-token", { timeout: 5_000 });
 
@@ -59,6 +67,21 @@ describe("AniList credentials", () => {
 });
 
 describe("per-provider credential isolation", () => {
+    test("removes MAL-only authentication fields before shared transport construction", () => {
+        expect(
+            resolveMalCredentials({
+                accessToken: "mal-token",
+                clientId: "mal-client",
+                clientSecret: "mal-secret",
+                refreshToken: "mal-refresh",
+                timeout: 7_000,
+            })
+        ).toEqual({
+            auth: { token: "mal-token", headers: { "X-MAL-CLIENT-ID": "mal-client" } },
+            options: { timeout: 7_000 },
+        });
+    });
+
     test("mal credentials do not leak into anilist requests", async () => {
         const client = new AniLink({
             anilist: { authToken: "anilist-token" },
@@ -72,12 +95,20 @@ describe("per-provider credential isolation", () => {
         expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 
-    test("anilist-only credentials leave the mal slot undefined for future wiring", () => {
+    test("mal credentials reach the public MAL facade", async () => {
+        const client = new AniLink({ mal: { accessToken: "mal-token" } });
+
+        await client.mal.user.me();
+
+        const config = lastConfig();
+        expect(config.url).toBe("https://api.myanimelist.net/v2/users/@me");
+        expect(config.headers.Authorization).toBe("Bearer mal-token");
+    });
+
+    test("anilist-only credentials still construct a public MAL provider surface", () => {
         const client = new AniLink({ anilist: { authToken: "only-anilist" } });
 
-        // The `mal` namespace does not exist yet; the important contract is
-        // that construction succeeds and the AniList surface is present.
         expect(client.anilist).toBeDefined();
-        expect(client.mal).toBeUndefined();
+        expect(client.mal).toBeDefined();
     });
 });

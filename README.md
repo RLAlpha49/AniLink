@@ -7,7 +7,7 @@
 [![CodeQL](https://github.com/RLAlpha49/AniLink/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/RLAlpha49/AniLink/actions/workflows/codeql.yml)
 [![Documentation](https://img.shields.io/website?url=https%3A%2F%2Frlalpha49.github.io%2FAniLink%2F&label=docs)](https://rlalpha49.github.io/AniLink/)
 
-A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co/). AniLink turns raw AniList GraphQL into a set of named methods. You can query a user, save a list entry, or toggle a favourite. You do not need to write query strings or hand-roll HTTP.
+A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co/) and the [MyAnimeList REST API](https://myanimelist.net/apiconfig/references/api/v2). AniLink turns provider-specific HTTP APIs into named, typed methods. You can query a user, save a list entry, or fetch an anime without writing query strings or hand-rolling HTTP.
 
 > 🧪 Try the [AniLink API Explorer](https://rlalpha49.github.io/AniLink/explorer/) — build and test AniLink calls live against AniList.
 
@@ -17,7 +17,7 @@ AniList exposes a GraphQL API that is flexible but verbose. Every request needs 
 
 ## What You Can Do With It
 
-AniLink uses one instance with a single `anilist` surface:
+AniLink uses one instance with provider-scoped surfaces:
 
 - `anilist.query` fetches data. This includes users, media, characters, staff, studios, reviews, activities, threads, notifications, and more.
 
@@ -28,6 +28,10 @@ AniLink uses one instance with a single `anilist` surface:
 - `anilist.mutation` changes data. You can update your profile, save and delete list entries, and post activities and replies. You can also toggle likes and favourites and manage reviews, threads, and AniChart settings.
 
 - `anilist.custom` sends any raw query or mutation when you need something the named methods do not cover.
+
+- `mal.anime` fetches MyAnimeList anime records, and `mal.user.me` fetches the authenticated user.
+
+- `mal` uses its own OAuth2 PKCE credentials. AniList tokens and MAL access tokens are kept in separate provider slots.
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -50,6 +54,26 @@ await aniLinkAuth.anilist.mutation.saveMediaListEntry({
 // Send a raw query
 const viewer = await aniLinkAuth.anilist.custom("query { Viewer { id } }");
 ```
+
+### Multiple providers
+
+Pass a credentials object when one application needs more than one provider. Each provider receives only its own credentials and transport options:
+
+```typescript
+import { AniLink } from "anilink-api-wrapper";
+
+const client = new AniLink({
+    anilist: { authToken: "anilist-token" },
+    mal: { accessToken: "mal-access-token" },
+});
+
+const malAnime = await client.mal.anime.get(21, {
+    fields: ["id", "title", "main_picture"],
+});
+const malUser = await client.mal.user.me();
+```
+
+Use `buildMalAuthorizationUrl`, `getMalAccessToken`, and `refreshMalAccessToken` for the MAL OAuth2 PKCE flow. See [the multi-provider examples](Examples/MULTI_PROVIDER_EXAMPLES.md) for the complete credential and authorization shape.
 
 ## Key Features
 

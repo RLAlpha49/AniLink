@@ -17,7 +17,7 @@ import { defineBuildConfig } from "unbuild";
  * output is produced.
  */
 export default defineBuildConfig({
-    entries: ["./src/AniLink", "./src/anilist"],
+    entries: ["./src/AniLink", "./src/anilist", "./src/mal"],
     outDir: "dist",
     declaration: "compatible",
     rollup: {

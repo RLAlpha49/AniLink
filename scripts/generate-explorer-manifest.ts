@@ -19,6 +19,11 @@ import {
 } from "node:fs";
 import { dirname, resolve, join } from "node:path";
 import { pathToFileURL } from "node:url";
+import {
+    ANILIST_PROVIDER_CONFIG,
+    type ProviderGenerationConfig,
+    type ProviderProtocol,
+} from "./provider-config";
 
 /** A single variable field on an operation's `*Variables` interface. */
 export interface Field {
@@ -61,6 +66,9 @@ export interface Operation {
 /** The full manifest written to `operations.json`. */
 export interface Manifest {
     generatedAt: string;
+    provider: string;
+    protocol: ProviderProtocol;
+    endpoint: string;
     anilistEndpoint: string;
     operations: Operation[];
 }
@@ -68,14 +76,11 @@ export interface Manifest {
 const ROOT = resolve(import.meta.dirname, "..");
 const SRC = join(ROOT, "src");
 /**
- * Provider-specific constants. This generator currently parses only the
- * AniList (GraphQL) tree; adding another provider means parameterizing these
- * paths and the manifest shape per provider rather than mixing both providers'
- * operations into one flat list.
+ * Provider-specific constants. The manifest generator handles AniList and the
+ * initial MyAnimeList adapter through provider-specific configuration rather
+ * than mixing both providers' operations into one flat list; adding another
+ * provider means parameterizing these paths and the manifest shape per provider.
  */
-const ANILIST = join(SRC, "apis", "graphql", "anilist");
-const ANILIST_ENDPOINT = "https://graphql.anilist.co";
-
 /** Read a file as UTF-8 text, returning "" if missing. */
 function readFileText(p: string): string {
     try {
@@ -182,28 +187,28 @@ function skipTemplateExpr(text: string, start: number): number {
 // Schema cache: resolves `${XSchema}` interpolations in GraphQL templates.
 // ---------------------------------------------------------------------------
 
-const schemaCache = new Map<string, string>();
-const schemaScanDone = { value: false };
+const schemaCaches = new Map<string, Map<string, string>>();
 
 /** Scan the interfaces tree once and populate the schema cache with raw template bodies. */
-function scanSchemas(): void {
-    if (schemaScanDone.value) return;
-    schemaScanDone.value = true;
-    const schemaDirs = [join(ANILIST, "schemas"), join(ANILIST, "interfaces")];
+function scanSchemas(sourceRoot: string): void {
+    if (schemaCaches.has(sourceRoot)) return;
+    const schemaCache = new Map<string, string>();
+    schemaCaches.set(sourceRoot, schemaCache);
+    const schemaDirs = [join(sourceRoot, "schemas"), join(sourceRoot, "interfaces")];
     for (const dir of schemaDirs) {
         if (existsSync(dir)) {
-            collectSchemas(dir);
+            collectSchemas(dir, schemaCache);
         }
     }
 }
 
 /** Recursively walk a directory collecting `export const XSchema = `...`` bodies. */
-function collectSchemas(dir: string): void {
+function collectSchemas(dir: string, schemaCache: Map<string, string>): void {
     for (const name of readdirSync(dir)) {
         const full = join(dir, name);
         const stat = statSync(full);
         if (stat.isDirectory()) {
-            collectSchemas(full);
+            collectSchemas(full, schemaCache);
         } else if (name.endsWith(".ts")) {
             const content = readFileText(full);
             const re = /export const (\w+Schema)\s*=\s*`/g;
@@ -222,12 +227,12 @@ function collectSchemas(dir: string): void {
 }
 
 /** Resolve `${XSchema}` interpolations in a GraphQL template body, recursively. */
-function resolveSchemas(body: string, depth = 0): string {
+function resolveSchemas(body: string, schemaCache: Map<string, string>, depth = 0): string {
     if (depth > 12) return body; // cycle guard
     return body.replace(/\$\{(\w+Schema)\}/g, (_match, name: string) => {
         const cached = schemaCache.get(name);
         if (cached === undefined) return `\${${name}}`; // leave placeholder if unresolvable
-        return resolveSchemas(cached, depth + 1);
+        return resolveSchemas(cached, schemaCache, depth + 1);
     });
 }
 
@@ -251,19 +256,24 @@ function dedent(text: string): string {
 // Enum cache: resolves `*Mappings` arrays to their string literal values.
 // ---------------------------------------------------------------------------
 
-const enumCache = new Map<string, string[]>();
+const enumCaches = new Map<string, Map<string, string[]>>();
 
 /** Resolve a `*Mappings` array constant to its string-literal values. */
-function resolveEnumMappings(mappingName: string): string[] {
+function resolveEnumMappings(mappingName: string, sourceRoot: string): string[] {
+    let enumCache = enumCaches.get(sourceRoot);
+    if (enumCache === undefined) {
+        enumCache = new Map();
+        enumCaches.set(sourceRoot, enumCache);
+    }
     if (enumCache.has(mappingName)) return enumCache.get(mappingName)!;
-    const result = findEnumMappings(mappingName);
+    const result = findEnumMappings(mappingName, sourceRoot);
     enumCache.set(mappingName, result);
     return result;
 }
 
 /** Search the types directory for a `*Mappings` array and return its string values. */
-function findEnumMappings(mappingName: string): string[] {
-    const typesDir = join(ANILIST, "types");
+function findEnumMappings(mappingName: string, sourceRoot: string): string[] {
+    const typesDir = join(sourceRoot, "types");
     if (!existsSync(typesDir)) return [];
     for (const name of readdirSync(typesDir)) {
         if (!name.endsWith(".ts")) continue;
@@ -283,8 +293,11 @@ function findEnumMappings(mappingName: string): string[] {
 }
 
 /** Resolve a `*Mappings` object constant (e.g. FuzzyDateMappings) to a field-name→type map. */
-function resolveObjectMappings(mappingName: string): Record<string, string> | null {
-    const found = findObjectMappingsFile(mappingName);
+function resolveObjectMappings(
+    mappingName: string,
+    sourceRoot: string
+): Record<string, string> | null {
+    const found = findObjectMappingsFile(mappingName, sourceRoot);
     if (!found) return null;
     const body = found.body;
     const out: Record<string, string> = {};
@@ -298,8 +311,11 @@ function resolveObjectMappings(mappingName: string): Record<string, string> | nu
 }
 
 /** Find the file and body of a `*Mappings` object constant; also returns the file path. */
-function findObjectMappingsFile(mappingName: string): { file: string; body: string } | null {
-    const typesDir = join(ANILIST, "types");
+function findObjectMappingsFile(
+    mappingName: string,
+    sourceRoot: string
+): { file: string; body: string } | null {
+    const typesDir = join(sourceRoot, "types");
     if (!existsSync(typesDir)) return null;
     for (const name of readdirSync(typesDir)) {
         if (!name.endsWith(".ts")) continue;
@@ -314,8 +330,8 @@ function findObjectMappingsFile(mappingName: string): { file: string; body: stri
 }
 
 /** Find the type fields for a `*Mappings` object by locating a matching `export type` in the same file. */
-function findTypeFieldsForMapping(mappingName: string): Field[] {
-    const found = findObjectMappingsFile(mappingName);
+function findTypeFieldsForMapping(mappingName: string, sourceRoot: string): Field[] {
+    const found = findObjectMappingsFile(mappingName, sourceRoot);
     if (!found) return [];
     const baseName = mappingName.replace(/Mappings$/, "");
     const content = readFileText(found.file);
@@ -384,9 +400,9 @@ function memberDescriptionAbove(bodyLines: string[], index: number): string {
 }
 
 /** Parse a nested object type (e.g. `FuzzyDateInput`) from its source file into Field[]. */
-function parseNestedObjectFields(typeName: string, depth = 0): Field[] {
+function parseNestedObjectFields(typeName: string, sourceRoot: string, depth = 0): Field[] {
     if (depth > 4) return [];
-    const typesDir = join(ANILIST, "types");
+    const typesDir = join(sourceRoot, "types");
     if (!existsSync(typesDir)) return [];
     for (const name of readdirSync(typesDir)) {
         if (!name.endsWith(".ts")) continue;
@@ -532,7 +548,8 @@ function findInterfaceFile(hintFilePath: string, interfaceName: string): string 
 function buildFields(
     interfaceFilePath: string,
     interfaceName: string,
-    methodBody: string
+    methodBody: string,
+    sourceRoot: string
 ): Field[] {
     const resolved = findInterfaceFile(interfaceFilePath, interfaceName) ?? interfaceFilePath;
     const members = parseInterfaceMembers(resolved, interfaceName);
@@ -547,7 +564,7 @@ function buildFields(
         let nestedFields: Field[] | undefined;
 
         if (mapping) {
-            const resolved = resolveMapping(mapping, isArray);
+            const resolved = resolveMapping(mapping, isArray, sourceRoot);
             type = resolved.type;
             enumValues = resolved.enumValues;
             nestedFields = resolved.nestedFields;
@@ -575,7 +592,8 @@ function buildFields(
 /** Resolve a single mapping value to a field type, enum values, and/or nested fields. */
 function resolveMapping(
     mapping: string,
-    isArray: boolean
+    isArray: boolean,
+    sourceRoot: string
 ): { type: Field["type"]; enumValues?: string[]; nestedFields?: Field[] } {
     if (mapping === "number") return { type: isArray ? "number[]" : "number" };
     if (mapping === "string") return { type: isArray ? "string[]" : "string" };
@@ -585,15 +603,15 @@ function resolveMapping(
     if (mapping === "CountryCode") return { type: "string" };
 
     // Identifier — could be an enum array (XMappings) or an object mapping (XMappings).
-    const enumVals = resolveEnumMappings(mapping);
+    const enumVals = resolveEnumMappings(mapping, sourceRoot);
     if (enumVals.length > 0) {
         return { type: isArray ? "enum[]" : "enum", enumValues: enumVals };
     }
-    const objMap = resolveObjectMappings(mapping);
+    const objMap = resolveObjectMappings(mapping, sourceRoot);
     if (objMap) {
         // The object mapping gives field names + scalar types; enrich descriptions
         // from the actual type definition (e.g. FuzzyDateInput) in the same file.
-        const typeFields = findTypeFieldsForMapping(mapping);
+        const typeFields = findTypeFieldsForMapping(mapping, sourceRoot);
         const descByName = new Map(typeFields.map((f) => [f.name, f.description]));
         const nestedFields = Object.keys(objMap).map((k) => ({
             name: k,
@@ -605,7 +623,7 @@ function resolveMapping(
     }
     // Try resolving as a nested object type by name (strip trailing "Mappings").
     const typeName = mapping.replace(/Mappings$/, "");
-    const nf = parseNestedObjectFields(typeName);
+    const nf = parseNestedObjectFields(typeName, sourceRoot);
     if (nf.length > 0) {
         return { type: isArray ? "object[]" : "object", nestedFields: nf };
     }
@@ -617,7 +635,8 @@ function resolveMapping(
 // ---------------------------------------------------------------------------
 
 /** Extract and schema-resolve the GraphQL template from an operation's method body. */
-function extractGraphql(methodBody: string): string {
+function extractGraphql(methodBody: string, sourceRoot: string): string {
+    const schemaCache = schemaCaches.get(sourceRoot) ?? new Map<string, string>();
     // Form 1: `const query = `...`` or `const mutation = `...`` (template literal).
     const tmpl = /const (query|mutation)\s*=\s*`/.exec(methodBody);
     if (tmpl) {
@@ -625,14 +644,14 @@ function extractGraphql(methodBody: string): string {
         const tickEnd = methodBody.indexOf("`", tickStart + 1);
         if (tickEnd < 0) return "";
         const raw = methodBody.slice(tickStart + 1, tickEnd);
-        return dedent(resolveSchemas(raw));
+        return dedent(resolveSchemas(raw, schemaCache));
     }
     // Form 2: `const query = SomeSchemaIdentifier;` (assigns a schema constant directly).
     const ident = /const (query|mutation)\s*=\s*([A-Za-z_]\w*)\s*;/.exec(methodBody);
     if (ident) {
         const schemaName = ident[2];
         const cached = schemaCache.get(schemaName);
-        if (cached !== undefined) return dedent(resolveSchemas(cached));
+        if (cached !== undefined) return dedent(resolveSchemas(cached, schemaCache));
     }
     return "";
 }
@@ -688,7 +707,7 @@ interface RawOp {
  * into raw operations. Each module is scanned independently and the section
  * state resets between files.
  */
-function discoverOperations(): RawOp[] {
+function discoverOperations(sourceRoot: string): RawOp[] {
     const ops: RawOp[] = [];
     for (const fileName of [
         "custom-group.ts",
@@ -696,7 +715,7 @@ function discoverOperations(): RawOp[] {
         "mutation-group.ts",
         "helpers-group.ts",
     ]) {
-        ops.push(...discoverOperationsInFile(join(ANILIST, "facade", fileName)));
+        ops.push(...discoverOperationsInFile(join(sourceRoot, "facade", fileName)));
     }
     return ops;
 }
@@ -806,9 +825,10 @@ function tryParseSignature(
 
 /** Resolve the source class name, method name, and source file for an operation. */
 function resolveSourceInfo(
-    op: RawOp
+    op: RawOp,
+    sourceRoot: string
 ): { className: string; methodName: string; sourceFile: string } | null {
-    const registryPath = join(ANILIST, "registry.ts");
+    const registryPath = join(sourceRoot, "registry.ts");
     if (existsSync(registryPath)) {
         const content = readFileText(registryPath);
         // Registry entries: `op("name", NameClass)` / `opAs("name", NameClass, "method")`.
@@ -824,18 +844,18 @@ function resolveSourceInfo(
             m = re.exec(content);
         }
         for (const cand of candidates) {
-            const sourceFile = findClassFile(cand.className, op.category);
+            const sourceFile = findClassFile(cand.className, op.category, sourceRoot);
             if (sourceFile && interfaceInFile(sourceFile, op.variablesType)) {
                 return { ...cand, sourceFile };
             }
         }
         for (const cand of candidates) {
-            const sourceFile = findClassFile(cand.className, op.category);
+            const sourceFile = findClassFile(cand.className, op.category, sourceRoot);
             if (sourceFile) return { ...cand, sourceFile };
         }
         return null;
     }
-    const content = readFileText(join(ANILIST, "wiring.ts"));
+    const content = readFileText(join(sourceRoot, "wiring.ts"));
     const escapedName = op.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     // Find all bindings: `name: <instance>.<method>.bind(<instance>)`.
     // The method name does not always equal the operation name (e.g. `following` op
@@ -858,14 +878,14 @@ function resolveSourceInfo(
     // file contains the operation's `variablesType` interface (handles duplicate
     // operation names across query/page, e.g. `following`).
     for (const cand of candidates) {
-        const sourceFile = findClassFile(cand.className, op.category);
+        const sourceFile = findClassFile(cand.className, op.category, sourceRoot);
         if (sourceFile && interfaceInFile(sourceFile, op.variablesType)) {
             return { className: cand.className, methodName: cand.methodName, sourceFile };
         }
     }
     // Fallback: first candidate whose class file exists.
     for (const cand of candidates) {
-        const sourceFile = findClassFile(cand.className, op.category);
+        const sourceFile = findClassFile(cand.className, op.category, sourceRoot);
         if (sourceFile) {
             return { className: cand.className, methodName: cand.methodName, sourceFile };
         }
@@ -881,14 +901,18 @@ function interfaceInFile(filePath: string, interfaceName: string): boolean {
 }
 
 /** Find the source file containing `export class <className>` for a given category. */
-function findClassFile(className: string, category: RawOp["category"]): string | null {
+function findClassFile(
+    className: string,
+    category: RawOp["category"],
+    sourceRoot: string
+): string | null {
     const dirs: string[] = [];
     if (category === "query") {
-        dirs.push(join(ANILIST, "query"), join(ANILIST, "query", "page"));
+        dirs.push(join(sourceRoot, "query"), join(sourceRoot, "query", "page"));
     } else if (category === "page") {
-        dirs.push(join(ANILIST, "query", "page"));
+        dirs.push(join(sourceRoot, "query", "page"));
     } else if (category === "mutation") {
-        dirs.push(join(ANILIST, "mutation"));
+        dirs.push(join(sourceRoot, "mutation"));
     } else {
         return null;
     }
@@ -905,11 +929,11 @@ function findClassFile(className: string, category: RawOp["category"]): string |
 }
 
 /** Build the AniLink call string for an operation. */
-function buildAnilinkCall(op: RawOp): string {
-    if (op.category === "custom") return "aniLink.anilist.custom(query, variables)";
-    if (op.category === "query") return `aniLink.anilist.query.${op.name}(variables)`;
-    if (op.category === "page") return `aniLink.anilist.query.page.${op.name}(variables)`;
-    return `aniLink.anilist.mutation.${op.name}(variables)`;
+function buildProviderCall(op: RawOp, provider: ProviderGenerationConfig): string {
+    if (op.category === "custom") return `aniLink.${provider.id}.custom(query, variables)`;
+    if (op.category === "query") return `aniLink.${provider.id}.query.${op.name}(variables)`;
+    if (op.category === "page") return `aniLink.${provider.id}.query.page.${op.name}(variables)`;
+    return `aniLink.${provider.id}.mutation.${op.name}(variables)`;
 }
 
 // ---------------------------------------------------------------------------
@@ -917,9 +941,12 @@ function buildAnilinkCall(op: RawOp): string {
 // ---------------------------------------------------------------------------
 
 /** Generate the full explorer manifest by parsing the source tree. Pure (no I/O). */
-export function generateManifest(): Manifest {
-    scanSchemas();
-    const rawOps = discoverOperations();
+export function generateManifest(
+    provider: ProviderGenerationConfig = ANILIST_PROVIDER_CONFIG
+): Manifest {
+    const sourceRoot = join(SRC, provider.sourceRoot);
+    scanSchemas(sourceRoot);
+    const rawOps = discoverOperations(sourceRoot);
     const operations: Operation[] = [];
 
     for (const op of rawOps) {
@@ -933,18 +960,18 @@ export function generateManifest(): Manifest {
                 requiresAuth: false,
                 fields: [],
                 graphql: "",
-                anilinkCall: buildAnilinkCall(op),
+                anilinkCall: buildProviderCall(op, provider),
             });
             continue;
         }
 
-        const info = resolveSourceInfo(op);
+        const info = resolveSourceInfo(op, sourceRoot);
         let fields: Field[] = [];
         let graphql = "";
         if (info) {
             const methodBody = extractMethodBody(info.sourceFile, info.methodName);
-            fields = buildFields(info.sourceFile, op.variablesType, methodBody);
-            graphql = extractGraphql(methodBody);
+            fields = buildFields(info.sourceFile, op.variablesType, methodBody, sourceRoot);
+            graphql = extractGraphql(methodBody, sourceRoot);
         }
 
         operations.push({
@@ -956,13 +983,16 @@ export function generateManifest(): Manifest {
             requiresAuth: op.category === "mutation",
             fields,
             graphql,
-            anilinkCall: buildAnilinkCall(op),
+            anilinkCall: buildProviderCall(op, provider),
         });
     }
 
     return {
         generatedAt: new Date().toISOString(),
-        anilistEndpoint: ANILIST_ENDPOINT,
+        provider: provider.id,
+        protocol: provider.protocol,
+        endpoint: provider.endpoint,
+        anilistEndpoint: ANILIST_PROVIDER_CONFIG.endpoint,
         operations,
     };
 }

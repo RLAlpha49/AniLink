@@ -68,6 +68,17 @@ export interface RetryPolicy {
  */
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
+/** Authentication material a provider can apply to an HTTP request. */
+export interface RequestAuth {
+    /** A bearer token, when the provider uses bearer authentication. */
+    readonly token?: string;
+    /** Explicit headers for schemes such as Basic auth or provider API keys. */
+    readonly headers?: Readonly<Record<string, string>>;
+}
+
+/** Legacy string tokens and structured provider authentication accepted by transport. */
+export type RequestAuthInput = string | RequestAuth;
+
 /** Context passed to the request lifecycle hooks for a single attempt. */
 export interface RequestErrorContext {
     /** The URL the request was sent to. */
@@ -795,7 +806,7 @@ const executeWithRetry = async <T>(
  * @param url - The URL to send the request to.
  * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
  * @param data - The data to send with the request.
- * @param token - The authentication token to include in the request headers.
+ * @param auth - The authentication material to include in the request headers. A string is treated as a bearer token for backwards compatibility.
  * @param requiresAuth - Whether the operation requires an authentication token.
  * @param options - Per-request transport settings. When omitted, library defaults apply: 30 second timeout, automatic retries under the default policy, no hooks.
  * @param operation - Optional operation name included in missing-token auth errors.
@@ -813,13 +824,23 @@ export const sendRequest = async <T = unknown>(
     url: string,
     method: HttpMethod,
     data?: object,
-    token?: string,
-    requiresAuth = false,
-    options?: RequestOptions,
-    operation?: string,
-    contentType?: string
+    auth?: RequestAuthInput,
+    ...requestOptions: [
+        requiresAuth?: boolean,
+        options?: RequestOptions,
+        operation?: string,
+        contentType?: string,
+    ]
 ): Promise<T> => {
-    if (requiresAuth && (token === null || token === undefined || token === "")) {
+    const [requiresAuth = false, options, operation, contentType] = requestOptions;
+    const resolvedAuth: RequestAuth | undefined = typeof auth === "string" ? { token: auth } : auth;
+    const hasBearerToken = resolvedAuth?.token !== undefined && resolvedAuth.token !== "";
+    const hasAuthorizationHeader = Object.entries(resolvedAuth?.headers ?? {}).some(
+        ([key, value]) => key.toLowerCase() === "authorization" && value !== ""
+    );
+    const hasAuthMaterial = hasBearerToken || hasAuthorizationHeader;
+
+    if (requiresAuth && !hasAuthMaterial) {
         throw new AniLinkAuthError(operation);
     }
 
@@ -831,8 +852,10 @@ export const sendRequest = async <T = unknown>(
               }
             : { "Content-Type": contentType };
 
-    if (token !== null && token !== undefined && token !== "") {
-        headers.Authorization = `Bearer ${token}`;
+    Object.assign(headers, resolvedAuth?.headers);
+
+    if (hasBearerToken && !hasAuthorizationHeader) {
+        headers.Authorization = `Bearer ${resolvedAuth.token}`;
     }
 
     // The caller's settings object doubles as the circuit-breaker owner key

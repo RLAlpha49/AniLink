@@ -12,6 +12,7 @@
  * Run via: `npm run test:package` (see scripts/test-packaged-package.mjs).
  */
 import { AniLink } from "anilink-api-wrapper";
+import { buildMalAuthorizationUrl } from "anilink-api-wrapper/mal";
 
 /** Well-known public fixtures that are stable in the AniList database. */
 const FIXTURES = {
@@ -57,6 +58,13 @@ function assert(condition, message) {
 }
 
 console.log(`anilink-api-wrapper packaged smoke test (token: ${token ? "present" : "absent"})`);
+
+const malAuthorizeUrl = buildMalAuthorizationUrl("mal-client", "pkce-challenge");
+assert(
+    malAuthorizeUrl.startsWith("https://myanimelist.net/v1/oauth2/authorize?"),
+    "MAL subpath should resolve"
+);
+console.log("  ok   MAL subpath exports resolve");
 
 await check("media resolves by id", async () => {
     const media = await client.anilist.query.media({ id: FIXTURES.mediaId, type: "ANIME" });

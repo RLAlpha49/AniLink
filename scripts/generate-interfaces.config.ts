@@ -30,8 +30,11 @@
  * actually sends.
  */
 import type { OutputSpec } from "../lib/interfaces-codegen/run";
+import { ANILIST_PROVIDER_CONFIG, type ProviderGenerationConfig } from "./provider-config";
 
 export interface GeneratorConfig {
+    /** Provider ownership for this generator configuration. */
+    provider: ProviderGenerationConfig;
     /** Committed introspection snapshot consumed by `anilist:api:compare`. */
     schemaSnapshotPath: string;
     /** Directory holding the handwritten selection-set constants. */
@@ -128,8 +131,9 @@ function pageWrapper(
 }
 
 export const generatorConfig: GeneratorConfig = {
-    schemaSnapshotPath: "scripts/anilist-api-compare/anilist-schema.json",
-    schemasDir: "src/apis/graphql/anilist/schemas",
+    provider: ANILIST_PROVIDER_CONFIG,
+    schemaSnapshotPath: `scripts/anilist-api-compare/anilist-schema.json`,
+    schemasDir: `src/${ANILIST_PROVIDER_CONFIG.sourceRoot}/schemas`,
     aliasImports: {
         MediaFormat: "src/apis/graphql/anilist/types/Format.ts",
         ScoreFormat: "src/apis/graphql/anilist/types/Format.ts",

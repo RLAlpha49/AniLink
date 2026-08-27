@@ -1,4 +1,9 @@
-import { type RequestOptions, sendRequest, type HttpMethod } from "./RequestHandler";
+import {
+    type RequestAuthInput,
+    type RequestOptions,
+    sendRequest,
+    type HttpMethod,
+} from "./RequestHandler";
 
 /**
  * Merges per-request transport settings over the instance-level ones.
@@ -45,7 +50,7 @@ export abstract class BaseOperation {
     /**
      * The authentication token shared by all operations of an instance.
      */
-    private readonly authToken?: string;
+    private readonly requestAuth?: RequestAuthInput;
 
     /**
      * The transport settings resolved at construction time.
@@ -55,11 +60,11 @@ export abstract class BaseOperation {
     /**
      * Constructs a new `BaseOperation` instance.
      *
-     * @param authToken - The authentication token used for API requests.
+     * @param authToken - The authentication material used for API requests. A string is treated as a bearer token for backwards compatibility.
      * @param options - Transport settings scoped to this instance (timeout, cancellation, retry policy, lifecycle hooks).
      */
-    constructor(authToken?: string, options?: RequestOptions) {
-        this.authToken = authToken;
+    constructor(authToken?: RequestAuthInput, options?: RequestOptions) {
+        this.requestAuth = authToken;
         this.resolvedOptions = options;
     }
 
@@ -67,7 +72,12 @@ export abstract class BaseOperation {
      * The instance authentication token, readable by protocol subclasses.
      */
     protected get token(): string | undefined {
-        return this.authToken;
+        return typeof this.requestAuth === "string" ? this.requestAuth : this.requestAuth?.token;
+    }
+
+    /** The provider-specific authentication material, readable by protocol subclasses. */
+    protected get auth(): RequestAuthInput | undefined {
+        return this.requestAuth;
     }
 
     /**
@@ -109,7 +119,7 @@ export abstract class BaseOperation {
             url,
             method,
             data,
-            this.authToken,
+            this.requestAuth,
             requiresAuth || undefined,
             mergeOptions(this.resolvedOptions, transportOptions),
             operation ?? resolveOperationLabel(this),

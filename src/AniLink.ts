@@ -1,9 +1,7 @@
-import {
-    type AniLinkOptions,
-    buildAniListApi,
-    type AniListApi,
-} from "./apis/graphql/anilist/facade";
-import { type AniLinkCredentials, resolveProviderCredentials } from "./base/credentials";
+import { type AniLinkOptions, type AniListApi } from "./apis/graphql/anilist/facade";
+import { buildProviderClients } from "./providers/registry";
+import type { MyAnimeListApi } from "./apis/rest/mal/facade";
+import type { AniLinkCredentials } from "./base/credentials";
 
 export type { AniListApi, AniLinkOptions } from "./apis/graphql/anilist/facade";
 
@@ -42,7 +40,30 @@ export type {
     AniListCredentials,
     MalCredentials,
     ProviderCredentials,
+    ResolvedProviderCredentials,
 } from "./base/credentials";
+export type { RequestAuth, RequestAuthInput } from "./base/RequestHandler";
+export { buildProviderClients } from "./providers/registry";
+export type { ProviderClients, ProviderFactory, ProviderId } from "./providers/registry";
+export {
+    MAL_API_BASE_URL,
+    MAL_API_REFERENCE,
+    MAL_AUTHORIZE_URL,
+    MAL_TOKEN_URL,
+} from "./apis/rest/mal/constants";
+export {
+    buildMalAuthorizationUrl,
+    getMalAccessToken,
+    getMalTokenExpiry,
+    refreshMalAccessToken,
+} from "./apis/rest/mal/auth";
+export type {
+    MalAuthorizationCodeRequest,
+    MalRefreshTokenRequest,
+    MalTokenResponse,
+} from "./apis/rest/mal/auth";
+export { buildMyAnimeListApi } from "./apis/rest/mal/wiring";
+export type { MyAnimeListApi } from "./apis/rest/mal/facade";
 
 /**
  * `AniLink` is a class for interacting with the APIs.
@@ -55,12 +76,8 @@ export class AniLink {
      */
     public anilist: AniListApi;
 
-    /**
-     * MyAnimeList API methods. Populated once the MAL provider module ships;
-     * the constructor already accepts and stores MAL credentials so adding
-     * the provider requires no further constructor change.
-     */
-    public mal?: unknown;
+    /** MyAnimeList REST API methods, exposed under the `mal` namespace. */
+    public mal: MyAnimeListApi;
 
     /**
      * Creates a new AniLink instance. The `authToken` parameter is optional and only required for authenticated queries and mutations. If no `authToken` is provided, only public queries will be available. You are able to create multiple AniLink instances with different `authToken`s.
@@ -95,11 +112,15 @@ export class AniLink {
         authToken?: string | AniLinkCredentials,
         options?: AniLinkOptions & Partial<Record<never, never>>
     ) {
-        if (typeof authToken === "string" || authToken === undefined) {
-            this.anilist = buildAniListApi(authToken, options);
-            return;
+        let clients;
+        if (typeof authToken === "string") {
+            clients = buildProviderClients({ anilist: { authToken } }, options);
+        } else if (authToken === undefined) {
+            clients = buildProviderClients({}, options);
+        } else {
+            clients = buildProviderClients(authToken);
         }
-        const anilistCredentials = resolveProviderCredentials(authToken.anilist);
-        this.anilist = buildAniListApi(anilistCredentials?.authToken, anilistCredentials);
+        this.anilist = clients.anilist;
+        this.mal = clients.mal;
     }
 }

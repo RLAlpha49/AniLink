@@ -3,48 +3,48 @@
  *
  * Every provider owns its own credentials: AniList authenticates with a
  * bearer token, while REST providers such as MyAnimeList carry their own
- * access-token (and later PKCE) fields. All shapes extend
- * {@link ProviderCredentials} so transport settings stay uniform across
- * providers.
+ * access-token and PKCE fields. All shapes extend {@link ProviderCredentials}
+ * so transport settings stay uniform across providers.
  */
-import type { RequestOptions } from "./RequestHandler";
+import { type RequestAuthInput, type RequestOptions } from "./RequestHandler";
 
 /**
- * Credential and transport settings shared by every provider's slot in an
- * {@link AniLinkCredentials} object. A provider-specific credentials type
- * extends this with its own auth fields; the transport settings always apply
- * to that provider's operations only.
+ * Transport settings shared by every provider's slot in an
+ * {@link AniLinkCredentials} object. Provider-specific credential types
+ * extend this with their own authentication fields; the settings always
+ * apply to that provider's operations only.
  */
 export interface ProviderCredentials extends RequestOptions {
-    /**
-     * The bearer token sent as the `Authorization` header on authenticated
-     * requests for this provider. Optional: omit it to use only public
-     * endpoints.
-     */
-    authToken?: string;
+    /** Provider-specific credentials are defined by the provider implementation. */
+    readonly [credential: string]: unknown;
 }
 
 /**
  * AniList-specific credentials. Currently a bearer token plus transport
  * settings; OAuth helper functions live in `apis/graphql/anilist/auth`.
  */
-export type AniListCredentials = ProviderCredentials;
+export interface AniListCredentials extends ProviderCredentials {
+    /** The bearer token sent on authenticated AniList requests. */
+    authToken?: string;
+}
 
 /**
- * MyAnimeList-specific credentials reserved by the multi-provider seam.
+ * MyAnimeList-specific credentials consumed by the REST provider.
  *
  * MAL authenticates with an OAuth2 access token obtained through its PKCE
- * flow; `accessToken` is the field name used by the future MAL wiring so the
- * constructor can already accept and store it without leaking it into other
- * providers' requests.
+ * flow; `accessToken` and `clientId` are translated into the provider-neutral
+ * request-auth value without leaking either field into other providers'
+ * requests.
  */
 export interface MalCredentials extends ProviderCredentials {
-    /**
-     * The MAL OAuth2 access token. Distinct from {@link ProviderCredentials.authToken}
-     * so each provider's token is stored under its own name until the MAL
-     * provider module consumes it.
-     */
+    /** The MAL OAuth2 access token, kept in this provider's credential slot. */
     accessToken?: string;
+    /** The MAL OAuth2 refresh token used to obtain a new access token. */
+    refreshToken?: string;
+    /** The MAL application client ID used by OAuth helpers. */
+    clientId?: string;
+    /** The MAL application secret, when the application requires one. */
+    clientSecret?: string;
 }
 
 /**
@@ -57,7 +57,7 @@ export interface MalCredentials extends ProviderCredentials {
 export interface AniLinkCredentials {
     /** Credentials for the AniList provider surface. */
     anilist?: AniListCredentials;
-    /** Credentials for the MyAnimeList provider surface (reserved). */
+    /** Credentials for the MyAnimeList provider surface. */
     mal?: MalCredentials;
 }
 
@@ -73,10 +73,75 @@ export interface AniLinkCredentials {
  * @param credentials - The credentials given under one provider key.
  * @returns The merged options for that provider, or undefined when no credentials were given.
  */
+export interface ResolvedProviderCredentials {
+    /** Authentication material for the provider's request operations. */
+    auth?: RequestAuthInput;
+    /** Transport settings with provider-only authentication fields removed. */
+    options?: RequestOptions;
+}
+
+const resolveTransportOptions = (
+    credentials: ProviderCredentials,
+    providerFields: readonly string[]
+): RequestOptions | undefined => {
+    const options = Object.fromEntries(
+        Object.entries(credentials).filter(([key]) => !providerFields.includes(key))
+    ) as RequestOptions;
+    return Object.keys(options).length === 0 ? undefined : options;
+};
+
+/**
+ * Splits AniList authentication from the shared transport settings.
+ *
+ * @param credentials - The AniList credential slot.
+ * @returns Provider authentication and transport settings, or empty values when omitted.
+ */
+export function resolveAniListCredentials(
+    credentials: AniListCredentials | undefined
+): ResolvedProviderCredentials {
+    if (credentials === undefined) return {};
+    return {
+        auth: credentials.authToken,
+        options: resolveTransportOptions(credentials, ["authToken"]),
+    };
+}
+
+/**
+ * Splits MAL authentication and OAuth fields from the shared transport settings.
+ *
+ * @param credentials - The MAL credential slot.
+ * @returns Provider authentication and transport settings, or empty values when omitted.
+ */
+export function resolveMalCredentials(
+    credentials: MalCredentials | undefined
+): ResolvedProviderCredentials {
+    if (credentials === undefined) return {};
+    const headers =
+        credentials.clientId === undefined
+            ? undefined
+            : { "X-MAL-CLIENT-ID": credentials.clientId };
+    return {
+        auth:
+            credentials.accessToken === undefined && headers === undefined
+                ? undefined
+                : { token: credentials.accessToken, headers },
+        options: resolveTransportOptions(credentials, [
+            "accessToken",
+            "refreshToken",
+            "clientId",
+            "clientSecret",
+        ]),
+    };
+}
+
+/**
+ * Copies an AniList credential slot for legacy callers.
+ *
+ * @param credentials - The AniList credential slot.
+ * @returns A shallow copy of the slot, or undefined.
+ */
 export function resolveProviderCredentials(
-    credentials: ProviderCredentials | undefined
-): ProviderCredentials | undefined {
-    if (credentials === undefined) return undefined;
-    const { authToken, ...transportOptions } = credentials;
-    return authToken === undefined ? { ...transportOptions } : { ...transportOptions, authToken };
+    credentials: AniListCredentials | undefined
+): AniListCredentials | undefined {
+    return credentials === undefined ? undefined : { ...credentials };
 }

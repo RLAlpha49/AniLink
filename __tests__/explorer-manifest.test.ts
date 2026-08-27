@@ -2,6 +2,13 @@ import { describe, it, expect } from "vitest";
 import { generateManifest } from "../scripts/generate-explorer-manifest";
 
 describe("generateManifest - discovery", () => {
+    it("identifies the provider and protocol explicitly", () => {
+        const manifest = generateManifest();
+        expect(manifest.provider).toBe("anilist");
+        expect(manifest.protocol).toBe("graphql");
+        expect(manifest.endpoint).toBe("https://graphql.anilist.co");
+    });
+
     it("discovers the custom operation", () => {
         const manifest = generateManifest();
         const custom = manifest.operations.find((o) => o.category === "custom");
