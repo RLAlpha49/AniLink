@@ -13,15 +13,6 @@ migrate to ESM.
 directly on the AniLink instance (aniLink.media(...) becomes
 aniLink.anilist.media(...)).
 
-- Extract the operation surface from AniLink.ts into
-  src/apis/anilist/facade.ts (buildAniListApi / AniListApi)
-- Move shared transport plumbing (endpoint, auth token, request helper)
-  into APIWrapper so operation classes only declare variables, document,
-  and a thin method
-- Relocate GraphQL selection-set constants from interfaces/ to a
-  dedicated schemas/ tree
-- Update generate-explorer-manifest to parse facade.ts and scan schemas/
-
 ### ✨ Features
 
 * **anilist:** add like query and review ratings ([2416574](https://github.com/RLAlpha49/AniLink/commit/2416574435e9cef0f21ed45557c8a6167a9de8f4))
