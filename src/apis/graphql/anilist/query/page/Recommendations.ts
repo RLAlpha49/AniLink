@@ -6,9 +6,13 @@ import { RecommendationSortMappings } from "../../types/Sort";
 import { RecommendationSchema } from "../../schemas/responses/query/Recommendation";
 
 /**
- * `RecommendationsVariables` is an interface representing the variables for the `RecommendationsQuery`.
- * It includes optional page, per page, id, media id, media recommendation id, user id, rating, on list, rating greater, rating lesser, sort, and as html.
- * @see https://docs.anilist.co/reference/query
+ * {@link RecommendationsVariables} contains variables for the {@link RecommendationsQuery} operation.
+ *
+ * See {@link RecommendationsQuery} and {@link RecommendationsPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/recommendation
  */
 export interface RecommendationsVariables {
     /**
@@ -73,7 +77,7 @@ export interface RecommendationsVariables {
 }
 
 /**
- * The variable type mappings for the `recommendations` operation.
+ * Validation metadata maps variables to runtime types for the `recommendations` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -94,18 +98,22 @@ const RecommendationsMappings = {
 };
 
 /**
- * `RecommendationsQuery` is a class representing a query for recommendations.
- * It includes a method to get recommendations.
+ * {@link RecommendationsQuery} executes the paginated AniList recommendations query through {@link AniListOperation}.
+ * Its public operation is {@link RecommendationsQuery.recommendations}.
  * @see https://docs.anilist.co/reference/object/recommendation
  */
 export class RecommendationsQuery extends AniListOperation {
     /**
      * `recommendations` is a method that sends a query request to get recommendations.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link RecommendationsVariables} for the query.
+     * @returns The {@link RecommendationsPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/recommendation
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new RecommendationsQuery().recommendations({ mediaId: 1, page: 1 });
+     * ```
      */
     async recommendations(
         variables: RecommendationsVariables,

@@ -13,7 +13,7 @@ import { AniLinkValidationError } from "../../../base/AniLinkError";
 const GRAPHQL_OPERATION_PATTERN = /^\s*(?:query|mutation)\b[\s\S]*\{/;
 
 /**
- * `CustomRequest` is a class representing a custom query or mutation by the user.
+ * {@link CustomRequest} is a class representing a custom query or mutation by the user.
  * @see https://docs.anilist.co/reference/query
  * @see https://docs.anilist.co/reference/mutation
  */
@@ -41,7 +41,7 @@ export class CustomRequest extends AniListOperation {
      * @param variables - The variables for the document. This parameter is optional.
      * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      * @returns A promise that resolves to the unwrapped response data for single-root-field documents, or the full `{ data }` envelope otherwise.
-     * @throws An `AniLinkValidationError` when the query is empty or does not declare a `query` or `mutation` operation.
+     * @throws An {@link AniLinkValidationError} when the query is empty or does not declare a `query` or `mutation` operation.
      * @throws An `AniLinkError` when the request fails.
      * @see https://docs.anilist.co/reference/query
      * @see https://docs.anilist.co/reference/mutation

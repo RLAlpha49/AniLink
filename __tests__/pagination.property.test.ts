@@ -1,5 +1,5 @@
 /**
- * Property-based tests for `paginate`, `paginatePages`, and `paginateChunks`
+ * Property-based tests for {@link paginate}, `paginatePages`, and {@link paginateChunks}
  * invariants.
  *
  * These suites complement the example-based tests in `pagination.test.ts` by
@@ -12,7 +12,7 @@ import fc from "fast-check";
 import { paginate, paginatePages, paginateChunks } from "../src/apis/graphql/anilist/Paginator";
 import type { PageInfo } from "../src/apis/graphql/anilist/interfaces/responses/page/PageInfo";
 
-/** Build a `PageInfo` object for tests. */
+/** Build a {@link PageInfo} object for tests. */
 function pageInfo(overrides: Partial<PageInfo> = {}): PageInfo {
     return {
         total: 100,

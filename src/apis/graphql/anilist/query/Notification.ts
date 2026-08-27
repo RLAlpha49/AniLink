@@ -5,9 +5,13 @@ import { type NotificationType, NotificationTypeMappings } from "../types/Type";
 import { NotificationSchema } from "../schemas/responses/query/Notification";
 
 /**
- * `NotificationVariables` is an interface representing the variables for the `NotificationQuery`.
- * It includes optional parameters for querying notification data.
- * @see https://docs.anilist.co/reference/query
+ * {@link NotificationVariables} contains variables for the {@link NotificationQuery} operation.
+ *
+ * See {@link NotificationQuery} and {@link NotificationResponse} for the operation and response shape.
+ *
+ * Values are validated with `NotificationMappings` before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface NotificationVariables {
     /**
@@ -32,7 +36,7 @@ export interface NotificationVariables {
 }
 
 /**
- * The variable type mappings for the `notification` operation.
+ * Validation metadata maps variables to runtime types for the {@link NotificationQuery.notification} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -45,18 +49,22 @@ const NotificationMappings = {
 };
 
 /**
- * `NotificationQuery` is a class representing a query for notification data.
- * It includes a method to send the notification query and receive the response.
+ * {@link NotificationQuery} executes the authenticated AniList notification query through {@link AniListOperation}.
+ * Its public operation is {@link NotificationQuery.notification}.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export class NotificationQuery extends AniListOperation {
     /**
-     * `notification` is a method that sends a query request to get notification data.
+     * {@link NotificationQuery.notification} sends a query request to get notification data.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link NotificationVariables} for the query.
+     * @returns The {@link NotificationResponse} returned by the query.
      * @see https://docs.anilist.co/reference/union/notificationunion
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new NotificationQuery("authToken").notification({});
+     * ```
      */
     async notification(
         variables: NotificationVariables,

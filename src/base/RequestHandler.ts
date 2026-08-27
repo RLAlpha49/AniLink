@@ -14,7 +14,11 @@ import {
     type RateLimitInfo,
 } from "./AniLinkError";
 
-/** The default maximum time a request may remain in progress. */
+/**
+ * Default maximum time a request may remain in progress, in milliseconds.
+ *
+ * @see {@link RequestOptions.timeout}
+ */
 export const DEFAULT_REQUEST_TIMEOUT = 30_000;
 
 /** The maximum time a `Retry-After` header may delay a retry. */
@@ -43,6 +47,8 @@ const MAX_SOCKETS = 20;
  * each wait is a random value between `0` and the computed exponential cap so
  * concurrent clients do not synchronize their retries (thundering herd).
  * Server-dictated `Retry-After` delays are never jittered.
+ *
+ * @see {@link RequestOptions.retry}
  */
 export interface RetryPolicy {
     /** The maximum number of retries after the initial attempt. */
@@ -65,10 +71,16 @@ export interface RetryPolicy {
  * GraphQL providers use `POST` only; REST providers additionally use `GET`,
  * `PUT`, and `DELETE`. The union is shared so hooks and error contexts stay
  * provider-agnostic.
+ *
+ * @see {@link sendRequest}
  */
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
-/** Authentication material a provider can apply to an HTTP request. */
+/**
+ * Authentication material a provider can apply to an HTTP request.
+ *
+ * @see {@link RequestAuthInput}
+ */
 export interface RequestAuth {
     /** A bearer token, when the provider uses bearer authentication. */
     readonly token?: string;
@@ -76,10 +88,18 @@ export interface RequestAuth {
     readonly headers?: Readonly<Record<string, string>>;
 }
 
-/** Legacy string tokens and structured provider authentication accepted by transport. */
+/**
+ * Legacy string tokens and structured provider authentication accepted by transport.
+ *
+ * @see {@link RequestAuth}
+ */
 export type RequestAuthInput = string | RequestAuth;
 
-/** Context passed to the request lifecycle hooks for a single attempt. */
+/**
+ * Context passed to the request lifecycle hooks for a single failed attempt.
+ *
+ * @see {@link OnErrorHandler}
+ */
 export interface RequestErrorContext {
     /** The URL the request was sent to. */
     url: string;
@@ -87,7 +107,7 @@ export interface RequestErrorContext {
     method: HttpMethod;
     /** The 1-based attempt that failed. */
     attempt: number;
-    /** The stable code of the normalized failure. */
+    /** The stable code of the normalized failure; see {@link AniLinkErrorCode}. */
     code: AniLinkErrorCode;
     /** The HTTP status when the failure came from an API response. */
     status?: number;
@@ -95,10 +115,19 @@ export interface RequestErrorContext {
     nextDelayMs?: number;
 }
 
-/** A callback invoked when an attempt fails, before each retry wait and once more when retries are exhausted. */
+/**
+ * Callback invoked when an attempt fails, before each retry wait and once more when retries are exhausted.
+ *
+ * @see {@link RequestOptions.onError}
+ * @see {@link RequestOptions.onRetry}
+ */
 export type OnErrorHandler = (error: AniLinkError, context: RequestErrorContext) => void;
 
-/** Context passed to the `onRequestStart` hook just before an attempt is sent. */
+/**
+ * Context passed to the `onRequestStart` hook just before an attempt is sent.
+ *
+ * @see {@link OnRequestStartHandler}
+ */
 export interface RequestContext {
     /** The URL the request is being sent to. */
     url: string;
@@ -111,6 +140,8 @@ export interface RequestContext {
 /**
  * A callback invoked immediately before each request attempt is sent. Use it
  * to count request volume or correlate logs with outgoing attempts.
+ *
+ * @see {@link RequestOptions.onRequestStart}
  */
 export type OnRequestStartHandler = (context: RequestContext) => void;
 
@@ -118,17 +149,21 @@ export type OnRequestStartHandler = (context: RequestContext) => void;
  * A callback invoked after each attempt completes, whether it succeeded or
  * failed. The elapsed wall-clock time of the attempt is reported as
  * `durationMs`, making this the natural point for latency metrics.
+ *
+ * @see {@link RequestOptions.onResponse}
  */
 export type OnResponseHandler = (context: RequestContext & { durationMs: number }) => void;
 
 /**
  * Transport settings shared by the AniLink request operations.
  *
- * Pass these as the second argument of the `AniLink` constructor; they apply
+ * Pass these as the second argument of the {@link AniLink} constructor; they apply
  * per instance and never leak across clients.
+ *
+ * @see {@link sendRequest}
  */
 export interface RequestOptions {
-    /** Milliseconds before a request is aborted. `0` disables the Axios timeout. Defaults to 30 seconds; timeout errors carry the effective duration as `timeoutMs`. */
+    /** Milliseconds before a request is aborted. `0` disables the Axios timeout. Defaults to {@link DEFAULT_REQUEST_TIMEOUT}; timeout errors carry the effective duration as {@link AniLinkNetworkError.timeoutMs}. */
     timeout?: number;
     /** Signal used to cancel in-flight requests. */
     signal?: AbortSignal;
@@ -264,9 +299,13 @@ const resolveRequestOptions = (options: RequestOptions = {}): ResolvedRequestOpt
 /**
  * A GraphQL response envelope as returned by the AniList API.
  * The `data` field holds the root selection set of the operation.
+ *
+ * @see {@link unwrapGraphQLResponse}
  */
 export interface GraphQLResponseEnvelope {
+    /** Root selection set returned by the operation, when present. */
     data?: unknown;
+    /** GraphQL-level failures returned inside the envelope, when present. */
     errors?: GraphQLUpstreamError[];
 }
 
@@ -283,6 +322,7 @@ export interface GraphQLResponseEnvelope {
  *
  * @param response - The full GraphQL response envelope.
  * @returns The bare root-field value, or `undefined` when the document does not have exactly one root field.
+ * @see {@link GraphQLResponseEnvelope}
  */
 export const unwrapSingleRootField = <T>(response: unknown): T | undefined => {
     const envelope = response as GraphQLResponseEnvelope | null | undefined;
@@ -312,11 +352,12 @@ export const unwrapSingleRootField = <T>(response: unknown): T | undefined => {
  * multi-field documents surface the envelope shape.
  *
  * An envelope carrying a non-empty `errors` array (an HTTP 200 GraphQL
- * failure) throws an {@link AniLinkGraphQLError} instead of returning data.
+ * failure) throws an `AniLinkGraphQLError` instead of returning data.
  *
  * @param response - The full GraphQL response envelope.
  * @returns The unwrapped single-root-field value, or the envelope as-is.
- * @throws An {@link AniLinkGraphQLError} when the envelope carries GraphQL errors.
+ * @throws An `AniLinkGraphQLError` when the envelope carries GraphQL errors.
+ * @see {@link GraphQLResponseEnvelope}
  */
 export const unwrapGraphQLResponse = <T>(response: unknown): T => {
     const envelope = response as GraphQLResponseEnvelope | null | undefined;
@@ -547,7 +588,7 @@ const safeInvoke = (
 
 /**
  * Shared circuit-breaker state, keyed first by the caller's transport-settings
- * object (so concurrent `AniLink` clients never trip each other's breaker)
+ * object (so concurrent {@link AniLink} clients never trip each other's breaker)
  * and then by the upstream host (so one provider's outage cannot fast-fail
  * another provider's requests on a multi-API client). Only populated when a
  * request opts in via `circuitBreaker`; disabled configurations allocate
@@ -593,7 +634,7 @@ const getCircuitState = (owner: object, scope: string): CircuitState => {
  *
  * @param circuit - The caller's breaker state, when the breaker is enabled.
  * @param breaker - The breaker configuration, when enabled.
- * @throws An {@link AniLinkNetworkError} with code `CIRCUIT_OPEN_ERROR` while the cooldown is still running.
+ * @throws An `AniLinkNetworkError` with code `CIRCUIT_OPEN_ERROR` while the cooldown is still running.
  */
 const throwIfCircuitOpen = (
     circuit: CircuitState | undefined,
@@ -807,10 +848,11 @@ const executeWithRetry = async <T>(
  * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
  * @param data - The data to send with the request.
  * @param auth - The authentication material to include in the request headers. A string is treated as a bearer token for backwards compatibility.
- * @param requiresAuth - Whether the operation requires an authentication token.
- * @param options - Per-request transport settings. When omitted, library defaults apply: 30 second timeout, automatic retries under the default policy, no hooks.
- * @param operation - Optional operation name included in missing-token auth errors.
- * @param contentType - Optional `Content-Type` override for non-GraphQL endpoints (for example form-urlencoded OAuth token requests, or `application/json` for REST calls). When provided, the response body is returned verbatim instead of being unwrapped as a GraphQL envelope.
+ * @param url - The URL to send the request to.
+ * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
+ * @param data - The data to send with the request.
+ * @param auth - The authentication material to include in the request headers. A string is treated as a bearer token for backwards compatibility.
+ * @param requestOptions - Optional positional transport arguments: `requiresAuth` (whether the operation requires an authentication token), `options` (per-request {@link RequestOptions}; when omitted, library defaults apply — 30 second timeout, automatic retries under the default policy, no hooks), `operation` (optional operation name included in missing-token auth errors), and `contentType` (optional `Content-Type` override for non-GraphQL endpoints — for example form-urlencoded OAuth token requests, or `application/json` for REST calls — which also returns the parsed body verbatim instead of unwrapping a GraphQL envelope).
  * @returns The unwrapped response data. For documents with a single root
  * field this is the bare field value; multi-root-field (or zero-root-field)
  * documents are returned as the full `{ data }` envelope unchanged. Use
@@ -818,7 +860,11 @@ const executeWithRetry = async <T>(
  * {@link unwrapSingleRootField} when a caller needs the strict single-root-field
  * result (`undefined` signals the document did not match). With a `contentType`
  * override, the parsed response body is returned as-is.
- * @throws An error if the request fails.
+ * @throws `AniLinkAuthError` when authentication is required but no auth material is configured.
+ * @throws `AniLinkApiError` for an upstream HTTP failure.
+ * @throws `AniLinkGraphQLError` for GraphQL errors in an HTTP 200 envelope.
+ * @throws `AniLinkNetworkError` for network, timeout, cancellation, or circuit-breaker failures.
+ * @see {@link RequestOptions}
  */
 export const sendRequest = async <T = unknown>(
     url: string,

@@ -6,9 +6,13 @@ import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
 import { UserSchema } from "../../schemas/responses/query/User";
 
 /**
- * `UsersVariables` is an interface representing the variables for the `UsersQuery`.
- * It includes optional page, per page, id, name, is moderator, search, sort, as html, anime stat limit, manga stat limit, anime stat sort, and manga stat sort.
- * @see https://docs.anilist.co/reference/query
+ * {@link UsersVariables} contains variables for the {@link UsersQuery} operation.
+ *
+ * See {@link UsersQuery} and {@link UsersPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface UsersVariables {
     /**
@@ -73,7 +77,7 @@ export interface UsersVariables {
 }
 
 /**
- * The variable type mappings for the `users` operation.
+ * Validation metadata maps variables to runtime types for the `users` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -94,18 +98,22 @@ const UsersMappings = {
 };
 
 /**
- * `UsersQuery` is a class representing a query for users.
- * It includes a method to get users.
+ * {@link UsersQuery} executes the paginated AniList users query through {@link AniListOperation}.
+ * Its public operation is {@link UsersQuery.users}.
  * @see https://docs.anilist.co/reference/object/user
  */
 export class UsersQuery extends AniListOperation {
     /**
      * `users` is a method that sends a query request to get users.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link UsersVariables} for the query.
+     * @returns The {@link UsersPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new UsersQuery().users({ search: "AniList", page: 1 });
+     * ```
      */
     async users(variables: UsersVariables, options?: RequestOptions): Promise<UsersPageResponse> {
         const query = `

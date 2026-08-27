@@ -1,7 +1,7 @@
 import { SiteTrendConnectionSchema } from "../../SiteTrend";
 
 /**
- * `SiteStatisticsSchema` is a constant representing the GraphQL schema for a site statistics query.
+ * {@link SiteStatisticsSchema} is a constant representing the GraphQL schema for a site statistics query.
  * It includes users, anime, manga, characters, staff, studios, and reviews of type `SiteTrendConnection`.
  * @see https://docs.anilist.co/reference/object/sitestatistics
  */

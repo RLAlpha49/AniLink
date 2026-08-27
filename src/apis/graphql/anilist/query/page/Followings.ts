@@ -6,9 +6,13 @@ import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
 import { UserSchema } from "../../schemas/responses/query/User";
 
 /**
- * `FollowingsVariables` is an interface representing the variables for the `FollowingsQuery`.
- * It includes optional page, per page, user id, sort, anime stat limit, manga stat limit, anime stat sort, and manga stat sort.
- * @see https://docs.anilist.co/reference/query
+ * {@link FollowingsVariables} contains variables for the {@link FollowingsQuery} operation.
+ *
+ * See {@link FollowingsQuery} and {@link FollowingsPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface FollowingsVariables {
     /**
@@ -58,7 +62,7 @@ export interface FollowingsVariables {
 }
 
 /**
- * The variable type mappings for the `followings` operation.
+ * Validation metadata maps variables to runtime types for the `followings` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -76,18 +80,22 @@ const FollowingsMappings = {
 };
 
 /**
- * `FollowingsQuery` is a class representing a query for followings.
- * It includes a method to get followings.
+ * {@link FollowingsQuery} executes the paginated AniList followings query through {@link AniListOperation}.
+ * Its public operation is {@link FollowingsQuery.followings}.
  * @see https://docs.anilist.co/reference/object/user
  */
 export class FollowingsQuery extends AniListOperation {
     /**
      * `followings` is a method that sends a query request to get followings.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link FollowingsVariables} for the query.
+     * @returns The {@link FollowingsPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new FollowingsQuery().followings({ userId: 1, page: 1, perPage: 10 });
+     * ```
      */
     async followings(
         variables: FollowingsVariables,

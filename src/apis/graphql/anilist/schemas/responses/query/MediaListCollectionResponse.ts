@@ -2,7 +2,7 @@ import { FuzzyDateSchema } from "../../FuzzyDate";
 import { MediaSchema } from "./Media";
 
 /**
- * `MediaListCollectionQuerySchema` is a constant representing the GraphQL schema for a media list collection query.
+ * {@link MediaListCollectionQuerySchema} is a constant representing the GraphQL schema for a media list collection query.
  * It includes the media list collection, lists, entries, user, and hasNextChunk status.
  * @see https://docs.anilist.co/reference/object/medialistcollection
  */

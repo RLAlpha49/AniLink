@@ -1,7 +1,7 @@
 import { TitleSchema } from "../../Title";
 
 /**
- * `FavouritesSchema` is a constant representing the GraphQL schema for a favourites query.
+ * {@link FavouritesSchema} is a constant representing the GraphQL schema for a favourites query.
  * It includes the anime, manga, characters, staff, and studios schema.
  * @see https://docs.anilist.co/reference/object/favourites
  */

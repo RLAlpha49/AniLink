@@ -1,3 +1,9 @@
+/**
+ * Vitest configuration for the unit suite.
+ *
+ * Runs unit tests outside `__tests__/integration` and collects V8 coverage
+ * for `src`, while loading the shared network-blocking test setup.
+ */
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({

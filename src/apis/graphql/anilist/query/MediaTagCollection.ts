@@ -5,9 +5,13 @@ import { type MediaTagCollectionResponse } from "../interfaces/responses/query/M
 import { TagSchema } from "../schemas/Tag";
 
 /**
- * `MediaTagCollectionVariables` is an interface representing the variables for the `MediaTagCollectionQuery`.
- * It includes optional parameters for querying media tag collection data.
- * @see https://docs.anilist.co/reference/query
+ * {@link MediaTagCollectionVariables} contains variables for the {@link MediaTagCollectionQuery} operation.
+ *
+ * See {@link MediaTagCollectionQuery} and {@link MediaTagCollectionResponse} for the operation and response shape.
+ *
+ * Values are validated with `MediaTagCollectionMappings` before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/mediatag
  */
 export interface MediaTagCollectionVariables {
     /**
@@ -17,7 +21,7 @@ export interface MediaTagCollectionVariables {
 }
 
 /**
- * The variable type mappings for the `mediaTagCollection` operation.
+ * Validation metadata maps variables to runtime types for the {@link MediaTagCollectionQuery.mediaTagCollection} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -27,18 +31,22 @@ const MediaTagCollectionMappings = {
 };
 
 /**
- * `MediaTagCollectionQuery` is a class representing a query for media tag collection data.
- * It includes a method to send the media tag collection query and receive the response.
+ * {@link MediaTagCollectionQuery} executes the AniList media-tag collection query through {@link AniListOperation}.
+ * Its public operation is {@link MediaTagCollectionQuery.mediaTagCollection}.
  * @see https://docs.anilist.co/reference/object/mediatag
  */
 export class MediaTagCollectionQuery extends AniListOperation {
     /**
-     * `mediaTagCollection` is a method that sends a query request to get media tag collection data.
+     * {@link MediaTagCollectionQuery.mediaTagCollection} sends a query request to get media tag collection data.
      *
-     * @param variables - The variables for the query. If not provided, an empty object will be used.
-     * @returns The response from the query request.
+     * @param variables - Optional values from {@link MediaTagCollectionVariables}; defaults to an empty object.
+     * @returns The {@link MediaTagCollectionResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/mediatag
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new MediaTagCollectionQuery().mediaTagCollection({});
+     * ```
      */
     async mediaTagCollection(
         variables: MediaTagCollectionVariables = {},

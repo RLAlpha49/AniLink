@@ -3,9 +3,12 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 
 /**
- * `DeleteActivityMutation` is an interface representing the variables to delete an activity.
- * It includes the activity id.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link DeleteActivityVariables} contains variables for the {@link DeleteActivityMutation} operation.
+ *
+ * Holds the `id` of the activity to delete. Use with the {@link DeleteActivityMutation} operation to obtain {@link DeleteResult}.
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/deleted
  */
 export interface DeleteActivityVariables {
     /**
@@ -15,7 +18,8 @@ export interface DeleteActivityVariables {
 }
 
 /**
- * The variable type mappings for the `deleteActivity` operation.
+ * Validation metadata maps {@link DeleteActivityVariables} to runtime types for the
+ * `deleteActivity` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -25,24 +29,29 @@ const DeleteActivityMappings = {
 };
 
 /**
- * `DeleteActivityMutation` is a class representing a mutation to delete a activity.
- * It includes a method to delete an activity
+ * {@link DeleteActivityMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link DeleteActivityMutation.deleteActivity}; variables use
+ * {@link DeleteActivityVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/deleted
  */
 export class DeleteActivityMutation extends AniListOperation {
     /**
-     * `deleteActivity` is a method that sends a mutation request to delete a activity.
+     * {@link DeleteActivityMutation.deleteActivity} sends a mutation request to delete an activity.
      *
      * The response is `{ deleted: boolean }`. A `true` value means the activity was deleted by
      * this call; a `false` value means the activity was not present (already deleted or never
      * existed). The mutation is therefore safe to retry after a partial failure: a `false` result
      * confirms the target is gone rather than reporting an error.
      *
-     * @param variables - An object of type `DeleteActivityVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the activity was deleted by this call and `false` when it was already absent.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link DeleteActivityVariables} for the mutation.
+     * @returns The {@link DeleteResult} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/deleted
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new DeleteActivityMutation("your-token").deleteActivity({ id: 1 });
+     * ```
      */
     async deleteActivity(
         variables: DeleteActivityVariables,

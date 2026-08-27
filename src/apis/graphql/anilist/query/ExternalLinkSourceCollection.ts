@@ -4,8 +4,12 @@ import { type ExternalLinkSourceCollectionResponse } from "../interfaces/respons
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 
 /**
- * `ExternalLinkSourceCollectionVariables` is an interface representing the variables for the `ExternalLinkSourceCollectionQuery`.
- * It includes optional id, type, and mediaType.
+ * {@link ExternalLinkSourceCollectionVariables} contains variables for the {@link ExternalLinkSourceCollectionQuery} operation.
+ *
+ * See {@link ExternalLinkSourceCollectionQuery} and {@link ExternalLinkSourceCollectionResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
  * @see https://docs.anilist.co/reference/query
  */
 export interface ExternalLinkSourceCollectionVariables {
@@ -26,7 +30,7 @@ export interface ExternalLinkSourceCollectionVariables {
 }
 
 /**
- * The variable type mappings for the `externalLinkSourceCollection` operation.
+ * The variable type mappings for the {@link ExternalLinkSourceCollectionQuery.externalLinkSourceCollection} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -38,18 +42,22 @@ const ExternalLinkSourceCollectionMappings = {
 };
 
 /**
- * `ExternalLinkSourceCollectionQuery` is a class representing a query for external link source collections.
- * It includes a method to get external link source collections.
+ * {@link ExternalLinkSourceCollectionQuery} executes the AniList external-link-source query through {@link AniListOperation}.
+ * Its public operation is {@link ExternalLinkSourceCollectionQuery.externalLinkSourceCollection}.
  * @see https://docs.anilist.co/reference/query
  */
 export class ExternalLinkSourceCollectionQuery extends AniListOperation {
     /**
-     * `externalLinkSourceCollection` is a method that sends a query request to get external link source collections.
+     * {@link ExternalLinkSourceCollectionQuery.externalLinkSourceCollection} sends a query request to get external link source collections.
      *
-     * @param variables - The variables for the query. If not provided, an empty object will be used.
-     * @returns The response from the query request.
+     * @param variables - Optional values from {@link ExternalLinkSourceCollectionVariables}; defaults to an empty object.
+     * @returns The {@link ExternalLinkSourceCollectionResponse} returned by the query.
      * @see https://docs.anilist.co/reference/query
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ExternalLinkSourceCollectionQuery().externalLinkSourceCollection({});
+     * ```
      */
     async externalLinkSourceCollection(
         variables: ExternalLinkSourceCollectionVariables = {},

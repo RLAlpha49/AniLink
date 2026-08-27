@@ -3,7 +3,7 @@ import { type Staff } from "./Staff";
 import { type Studio } from "./Studio";
 
 /**
- * `Favoured` is an interface representing a favoured entity.
+ * {@link Favoured} is an interface representing a favoured entity.
  * It includes the genre, amount, meanScore, timeWatched, tag, staff, studio, year, and format each having their own properties.
  * @see https://docs.anilist.co/reference/object/favourites
  */
@@ -29,17 +29,17 @@ export interface Favoured {
     timeWatched: number;
 
     /**
-     * `tag` is an object of type `Tag` representing the tag of the favoured entity.
+     * `tag` is an object of type {@link Tag} representing the tag of the favoured entity.
      */
     tag?: Tag;
 
     /**
-     * `staff` is an object of type `Staff` representing the staff of the favoured entity.
+     * `staff` is an object of type {@link Staff} representing the staff of the favoured entity.
      */
     staff?: Staff;
 
     /**
-     * `studio` is an object of type `Studio` representing the studio of the favoured entity.
+     * `studio` is an object of type {@link Studio} representing the studio of the favoured entity.
      */
     studio?: Studio;
 

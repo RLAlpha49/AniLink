@@ -28,7 +28,7 @@ export const ANILIST_AUTHORIZE_URL = "https://anilist.co/api/v2/oauth/authorize"
  * rotate the refresh token.
  */
 export interface AniListTokenResponse {
-    /** The bearer token to pass to the `AniLink` constructor. */
+    /** The bearer token to pass to the {@link AniLink} constructor. */
     access_token: string;
     /** The token type, typically `Bearer`. */
     token_type: string;
@@ -74,7 +74,7 @@ export const buildAuthorizationUrl = (
 };
 
 /**
- * Normalizes a failed OAuth token request into an `AniLinkError` subclass.
+ * Normalizes a failed OAuth token request into an {@link AniLinkError} subclass.
  *
  * Token request bodies carry `client_secret`, authorization `code`, and
  * `refresh_token` values, so the original Axios error is deliberately
@@ -130,6 +130,14 @@ const normalizeTokenRequestError = (error: unknown): AniLinkError => {
     return new AniLinkError("The token request failed.", AniLinkErrorCodes.UNKNOWN);
 };
 
+/**
+ * Sends one AniList OAuth2 token request through the shared transport.
+ *
+ * @param params - The URL-encoded grant fields (`grant_type`, `client_id`, `client_secret`, and code or refresh token as applicable).
+ * @param signal - Optional `AbortSignal` to cancel the token request while it is in flight.
+ * @returns The parsed {@link AniListTokenResponse} on success.
+ * @throws An {@link AniLinkApiError} when AniList rejects the grant, or an {@link AniLinkNetworkError} on transport failure; both are sanitized by `normalizeTokenRequestError`.
+ */
 const requestToken = async (
     params: Record<string, string>,
     signal?: AbortSignal
@@ -174,7 +182,7 @@ const requestToken = async (
  * @param redirectUri - The redirect URI registered for your AniList application. This parameter is optional but must match the URI used in {@link buildAuthorizationUrl} when AniList requires it.
  * @param signal - Optional `AbortSignal` to cancel the token exchange while it is in flight.
  * @returns A promise that resolves to the token response containing `access_token`.
- * @throws An `AniLinkApiError` when AniList rejects the exchange, for example with `invalid_grant` for an invalid or expired code, or an `AniLinkNetworkError` on transport failure. Errors never include the request body, so the client secret and code are not leaked.
+ * @throws An {@link AniLinkApiError} when AniList rejects the exchange, for example with `invalid_grant` for an invalid or expired code, or an {@link AniLinkNetworkError} on transport failure. Errors never include the request body, so the client secret and code are not leaked.
  * @example
  * ```typescript
  * const { access_token } = await getAccessToken(
@@ -213,7 +221,7 @@ export const getAccessToken = async (
  * @param refreshToken - The refresh token from a previous token response.
  * @param signal - Optional `AbortSignal` to cancel the refresh while it is in flight.
  * @returns A promise that resolves to the token response containing a new `access_token`. The `refresh_token` field may be absent when AniList does not rotate it.
- * @throws An `AniLinkApiError` when AniList rejects the refresh, for example when the refresh token is invalid or revoked, or an `AniLinkNetworkError` on transport failure. Errors never include the request body, so the client secret and refresh token are not leaked.
+ * @throws An {@link AniLinkApiError} when AniList rejects the refresh, for example when the refresh token is invalid or revoked, or an {@link AniLinkNetworkError} on transport failure. Errors never include the request body, so the client secret and refresh token are not leaked.
  * @example
  * ```typescript
  * const { access_token } = await refreshAccessToken("1234", "secret", "stored-refresh-token");

@@ -19,8 +19,18 @@ export interface ProviderConfig {
     graphqlUrl?: string;
 }
 
+/**
+ * Provider name selected when the CLI is invoked without `--provider`.
+ *
+ * Matches the `name` field of the AniList entry in {@link providerConfigs}.
+ */
 export const DEFAULT_PROVIDER_NAME = "anilist";
 
+/**
+ * Registry of every provider the schema-comparison CLI can target, keyed by
+ * the value passed to `--provider`. Adding a provider means adding an entry
+ * here plus a schema snapshot at its `schemaPath`.
+ */
 export const providerConfigs: Record<string, ProviderConfig> = {
     anilist: {
         name: "anilist",
@@ -35,6 +45,11 @@ export const providerConfigs: Record<string, ProviderConfig> = {
 /**
  * Resolves a provider by CLI name, falling back to the default provider when
  * no `--provider` flag is given.
+ *
+ * @param name - Provider identifier from `--provider`, or `undefined` to
+ *   select {@link DEFAULT_PROVIDER_NAME}.
+ * @returns The matching {@link ProviderConfig}.
+ * @throws {Error} When `name` is not a key in {@link providerConfigs}.
  */
 export function resolveProvider(name?: string): ProviderConfig {
     const key = name ?? DEFAULT_PROVIDER_NAME;

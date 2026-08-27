@@ -6,9 +6,13 @@ import { AiringSortMappings } from "../../types/Sort";
 import { AiringScheduleSchema } from "../../schemas/responses/query/AiringSchedule";
 
 /**
- * `AiringSchedulesVariables` is an interface representing the variables for the `AiringSchedulesQuery`.
- * It includes optional page, per page, id, media id, episode, airing at, not yet aired, id not, id in, id not in, media id not, media id in, media id not in, episode not, episode in, episode not in, episode greater, episode lesser, airing at greater, airing at lesser, sort, and as html.
- * @see https://docs.anilist.co/reference/query
+ * {@link AiringSchedulesVariables} contains variables for the {@link AiringSchedulesQuery} operation.
+ *
+ * See {@link AiringSchedulesQuery} and {@link AiringSchedulesPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/airingschedule
  */
 export interface AiringSchedulesVariables {
     /**
@@ -123,7 +127,7 @@ export interface AiringSchedulesVariables {
 }
 
 /**
- * The variable type mappings for the `airingSchedules` operation.
+ * Validation metadata maps variables to runtime types for the `airingSchedules` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -154,18 +158,22 @@ const AiringSchedulesMappings = {
 };
 
 /**
- * `AiringSchedulesQuery` is a class representing a query for airing schedules.
- * It includes a method to get airing schedules.
+ * {@link AiringSchedulesQuery} executes the paginated AniList airing-schedules query through {@link AniListOperation}.
+ * Its public operation is {@link AiringSchedulesQuery.airingSchedules}.
  * @see https://docs.anilist.co/reference/object/airingschedule
  */
 export class AiringSchedulesQuery extends AniListOperation {
     /**
      * `airingSchedules` is a method that sends a query request to get airing schedules.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link AiringSchedulesVariables} for the query.
+     * @returns The {@link AiringSchedulesPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/airingschedule
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new AiringSchedulesQuery().airingSchedules({ page: 1, perPage: 10 });
+     * ```
      */
     async airingSchedules(
         variables: AiringSchedulesVariables,

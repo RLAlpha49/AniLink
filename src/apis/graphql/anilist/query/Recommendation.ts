@@ -5,9 +5,13 @@ import { type RecommendationSort, RecommendationSortMappings } from "../types/So
 import { RecommendationSchema } from "../schemas/responses/query/Recommendation";
 
 /**
- * `RecommendationVariables` is an interface representing the variables for the `RecommendationQuery`.
- * It includes optional parameters for querying recommendation data.
- * @see https://docs.anilist.co/reference/query
+ * {@link RecommendationVariables} contains variables for the {@link RecommendationQuery} operation.
+ *
+ * See {@link RecommendationQuery} and {@link RecommendationResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/recommendation
  */
 export interface RecommendationVariables {
     /**
@@ -62,7 +66,7 @@ export interface RecommendationVariables {
 }
 
 /**
- * The variable type mappings for the `recommendation` operation.
+ * Validation metadata maps variables to runtime types for the {@link RecommendationQuery.recommendation} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -81,18 +85,22 @@ const RecommendationMappings = {
 };
 
 /**
- * `RecommendationQuery` is a class representing a query for recommendation data.
- * It includes a method to send the recommendation query and receive the response.
+ * {@link RecommendationQuery} executes the AniList recommendation query through {@link AniListOperation}.
+ * Its public operation is {@link RecommendationQuery.recommendation}.
  * @see https://docs.anilist.co/reference/object/recommendation
  */
 export class RecommendationQuery extends AniListOperation {
     /**
-     * `recommendation` is a method that sends a query request to get recommendation data.
+     * {@link RecommendationQuery.recommendation} sends a query request to get recommendation data.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link RecommendationVariables} for the query.
+     * @returns The {@link RecommendationResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/recommendation
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new RecommendationQuery().recommendation({ mediaId: 1 });
+     * ```
      */
     async recommendation(
         variables: RecommendationVariables,

@@ -130,7 +130,7 @@ test("passes an error-only response through a page operation unchanged", async (
     expect(result).toEqual({ errors: [{ message: "Not Found" }] });
 });
 
-/** Build a `PageInfo` object for page-response tests. */
+/** Build a {@link PageInfo} object for page-response tests. */
 function testPageInfo(): ActivitiesPageResponse["pageInfo"] {
     return { total: 1, perPage: 50, currentPage: 1, lastPage: 1, hasNextPage: false };
 }

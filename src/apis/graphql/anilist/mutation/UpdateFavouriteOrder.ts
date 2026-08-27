@@ -5,8 +5,13 @@ import { AniLinkValidationError } from "../../../../base/AniLinkError";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
 
 /**
- * `UpdateFavouriteOrderVariables` is an interface that contains the variables that are required to update the order of the favourite anime/manga.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link UpdateFavouriteOrderVariables} contains variables for the {@link UpdateFavouriteOrderMutation} operation.
+ *
+ * See {@link UpdateFavouriteOrderMutation} and {@link Favourites} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/favourites
  */
 export interface UpdateFavouriteOrderVariables {
     /**
@@ -61,7 +66,8 @@ export interface UpdateFavouriteOrderVariables {
 }
 
 /**
- * The variable type mappings for the `updateFavouriteOrder` operation.
+ * Validation metadata maps {@link UpdateFavouriteOrderVariables} to runtime types for the
+ * `updateFavouriteOrder` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -80,19 +86,24 @@ const UpdateFavouriteOrderMappings = {
 };
 
 /**
- * `UpdateFavouriteOrderMutation` is a class that contains the method to update the order of the favourites.
- * It includes a method to update the order of the favourites.
+ * {@link UpdateFavouriteOrderMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link UpdateFavouriteOrderMutation.updateFavouriteOrder}; variables use
+ * {@link UpdateFavouriteOrderVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/favourites
  */
 export class UpdateFavouriteOrderMutation extends AniListOperation {
     /**
-     * `updateFavouriteOrder` is a method that sends a mutation request to update the order of the favourites.
+     * {@link UpdateFavouriteOrderMutation.updateFavouriteOrder} sends a mutation request to update the order of favourites.
      *
-     * @param variables - An object of type `UpdateFavouriteOrderVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if authentication is missing, validation fails, or the mutation request fails.
+     * @param variables - Values from {@link UpdateFavouriteOrderVariables} for the mutation.
+     * @returns The {@link Favourites} returned by the mutation.
+     * @throws Throws if no authentication token is configured, an order array lacks its corresponding ID array, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/favourites
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new UpdateFavouriteOrderMutation("your-token").updateFavouriteOrder({ animeIds: [1], mangaIds: [], characterIds: [], staffIds: [], studioIds: [], animeOrder: [1], mangaOrder: [], characterOrder: [], staffOrder: [], studioOrder: [] });
+     * ```
      */
     async updateFavouriteOrder(
         variables: UpdateFavouriteOrderVariables,

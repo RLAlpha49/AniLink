@@ -12,9 +12,13 @@ import { MediaSortMappings } from "../../types/Sort";
 import { MediaWithRelationsSchema } from "../../schemas/responses/query/Media";
 
 /**
- * `MediasVariables` is an interface representing the variables for the `MediasQuery`.
- * It includes optional page, per page, id, idMal, startDate, endDate, season, seasonYear, type, format, status, episodes, duration, chapters, volumes, isAdult, genre, tag, minimumTagRank, tagCategory, onList, licensedBy, licensedById, averageScore, popularity, source, countryOfOrigin, isLicensed, search, id_not, id_in, id_not_in, idMal_not, idMal_in, idMal_not_in, startDate_greater, startDate_lesser, startDate_like, endDate_greater, endDate_lesser, endDate_like, format_in, format_not, format_not_in, status_in, status_not, status_not_in, episodes_greater, episodes_lesser, duration_greater, duration_lesser, chapters_greater, chapters_lesser, volumes_greater, volumes_lesser, genre_in, genre_not_in, tag_in, tag_not_in, tagCategory_in, tagCategory_not_in, licensedBy_in, licensedById_in, averageScore_not, averageScore_greater, averageScore_lesser, popularity_not, popularity_greater, popularity_lesser, source_in, sort, and asHtml.
- * @see https://docs.anilist.co/reference/query
+ * {@link MediasVariables} contains variables for the {@link MediasQuery} operation.
+ *
+ * See {@link MediasQuery} and {@link MediasPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/media
  */
 export interface MediasVariables {
     /**
@@ -379,7 +383,7 @@ export interface MediasVariables {
 }
 
 /**
- * The variable type mappings for the `medias` operation.
+ * Validation metadata maps variables to runtime types for the `medias` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -460,17 +464,21 @@ const MediasMappings = {
 };
 
 /**
- * `MediasQuery` is a class that extends the `AniListOperation` class.
- * It defines the `medias` method that returns a `MediaResponse`.
+ * {@link MediasQuery} executes the paginated AniList media query.
+ * It extends {@link AniListOperation} and exposes {@link MediasQuery.medias}.
  * @see https://docs.anilist.co/reference/object/media
  */
 export class MediasQuery extends AniListOperation {
     /**
-     * Returns a `MediaResponse` object.
-     * @param variables - A `MediasVariables` object representing the variables for the query.
-     * @returns A `MediaResponse` object.
+     * Returns a {@link MediasPageResponse} object.
+     * @param variables - Values from {@link MediasVariables} for the query.
+     * @returns The {@link MediasPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/media
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new MediasQuery().medias({ search: "Cowboy Bebop", page: 1 });
+     * ```
      */
     async medias(
         variables: MediasVariables,

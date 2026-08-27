@@ -80,79 +80,85 @@ import { type UserResponse } from "../interfaces/responses/query/User";
 import { type UsersVariables } from "../query/page/Users";
 import { type UsersPageResponse } from "../interfaces/responses/page/Users";
 
+/**
+ * Typed AniList query operations exposed by `AniListApi`.
+ *
+ * @see https://docs.anilist.co/reference/query
+ */
 export type AniListQueries = {
     /**
-     * Query methods for fetching data from the Anilist API.
+     * Query methods for fetching data from the AniList API.
      * @public
      * @type {Object}
-     * @property {Function} user - Fetches user data from the Anilist API.
-     * @property {Function} media - Fetches media data from the Anilist API.
-     * @property {Function} mediaTrend - Fetches media trend data from the Anilist API.
-     * @property {Function} airingSchedule - Fetches airing schedule data from the Anilist API.
-     * @property {Function} character - Fetches character data from the Anilist API.
-     * @property {Function} staff - Fetches staff data from the Anilist API.
-     * @property {Function} mediaList - Fetches media list data from the Anilist API.
-     * @property {Function} mediaListCollection - Fetches media list collection data from the Anilist API.
-     * @property {Function} like - Fetches users who liked a model from the Anilist API.
-     * @property {Function} genreCollection - Fetches genre collection data from the Anilist API.
-     * @property {Function} mediaTagCollection - Fetches media tag collection data from the Anilist API.
-     * @property {Function} viewer - Fetches viewer data from the Anilist API.
-     * @property {Function} notification - Fetches notification data from the Anilist API.
-     * @property {Function} studio - Fetches studio data from the Anilist API.
-     * @property {Function} review - Fetches review data from the Anilist API.
-     * @property {Function} activity - Fetches activity data from the Anilist API.
-     * @property {Function} activityReply - Fetches activity reply data from the Anilist API.
-     * @property {Function} following - Fetches following data from the Anilist API.
-     * @property {Function} follower - Fetches follower data from the Anilist API.
-     * @property {Function} thread - Fetches thread data from the Anilist API.
-     * @property {Function} threadComment - Fetches thread comment data from the Anilist API.
-     * @property {Function} recommendation - Fetches recommendation data from the Anilist API.
-     * @property {Function} markdown - Fetches markdown data from the Anilist API.
-     * @property {Function} aniChartUser - Fetches aniChart user data from the Anilist API.
-     * @property {Function} siteStatistics - Fetches site statistics data from the Anilist API.
-     * @property {Function} externalLinkSourceCollection - Fetches external link source collection data from the Anilist API.
-     * @property {Object} page - Fetches pages of data from the Anilist API.
+     * @property {Function} user - Fetches user data from the AniList API.
+     * @property {Function} media - Fetches media data from the AniList API.
+     * @property {Function} mediaTrend - Fetches media trend data from the AniList API.
+     * @property {Function} airingSchedule - Fetches airing schedule data from the AniList API.
+     * @property {Function} character - Fetches character data from the AniList API.
+     * @property {Function} staff - Fetches staff data from the AniList API.
+     * @property {Function} mediaList - Fetches media list data from the AniList API.
+     * @property {Function} mediaListCollection - Fetches media list collection data from the AniList API.
+     * @property {Function} like - Fetches users who liked a model from the AniList API.
+     * @property {Function} genreCollection - Fetches genre collection data from the AniList API.
+     * @property {Function} mediaTagCollection - Fetches media tag collection data from the AniList API.
+     * @property {Function} viewer - Fetches viewer data from the AniList API.
+     * @property {Function} notification - Fetches notification data from the AniList API.
+     * @property {Function} studio - Fetches studio data from the AniList API.
+     * @property {Function} review - Fetches review data from the AniList API.
+     * @property {Function} activity - Fetches activity data from the AniList API.
+     * @property {Function} activityReply - Fetches activity reply data from the AniList API.
+     * @property {Function} following - Fetches following data from the AniList API.
+     * @property {Function} follower - Fetches follower data from the AniList API.
+     * @property {Function} thread - Fetches thread data from the AniList API.
+     * @property {Function} threadComment - Fetches thread comment data from the AniList API.
+     * @property {Function} recommendation - Fetches recommendation data from the AniList API.
+     * @property {Function} markdown - Fetches markdown data from the AniList API.
+     * @property {Function} aniChartUser - Fetches AniChart user data from the AniList API.
+     * @property {Function} siteStatistics - Fetches site statistics data from the AniList API.
+     * @property {Function} externalLinkSourceCollection - Fetches external link source collection data from the AniList API.
+     * @property {Object} page - Fetches pages of data from the AniList API.
+     * @see https://docs.anilist.co/reference/query
      */
     query: {
         /**
-         * Fetches user data from the Anilist API.
-         * @param {UserVariables} variables - The variables for the query.
-         * @returns {Promise<UserResponse>} A promise that resolves to the user's data.
+         * `UserQuery` fetches a single user by `id` or `userName`. Returns a {@link UserResponse}.
+         * @param {UserVariables} variables - The {@link UserVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<UserResponse>} A promise that resolves to the user's {@link UserResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.user({id: 542244, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/user
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         user: (variables: UserVariables, options?: RequestOptions) => Promise<UserResponse>;
 
         /**
-         * Fetches media data from the Anilist API.
-         * @param {MediaVariables} variables - The variables for the query.
-         * @returns {Promise<MediaResponse>} A promise that resolves to the media data.
+         * `MediaQuery` fetches the media data for a single anime or manga by `id` or `idMal`. Returns a {@link MediaResponse}.
+         * @param {MediaVariables} variables - The {@link MediaVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<MediaResponse>} A promise that resolves to the {@link MediaResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.media({id: 1, type: 'ANIME'});
          * ```
          * @see https://docs.anilist.co/reference/object/media
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         media: (variables: MediaVariables, options?: RequestOptions) => Promise<MediaResponse>;
 
         /**
-         * Fetches media trend data from the Anilist API.
-         * @param {MediaTrendVariables} variables - The variables for the query.
-         * @returns {Promise<MediaTrendResponse>} A promise that resolves to the media trend data.
+         * `MediaTrendQuery` fetches the trend entry for a single airing media. Returns a {@link MediaTrendResponse}.
+         * @param {MediaTrendVariables} variables - The {@link MediaTrendVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<MediaTrendResponse>} A promise that resolves to the {@link MediaTrendResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.mediaTrend({mediaId: 1, type: 'ANIME'});
          * ```
          * @see https://docs.anilist.co/reference/object/mediatrend
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         mediaTrend: (
             variables: MediaTrendVariables,
@@ -160,17 +166,17 @@ export type AniListQueries = {
         ) => Promise<MediaTrendResponse>;
 
         /**
-         * Fetches airing schedule data from the Anilist API.
-         * @param {AiringScheduleVariables} variables - The variables for the query.
-         * @returns {Promise<AiringScheduleResponse>} A promise that resolves to the airing schedule data.
+         * `AiringScheduleQuery` fetches a single airing schedule entry by `id` or `mediaId`. Returns an {@link AiringScheduleResponse}.
+         * @param {AiringScheduleVariables} variables - The {@link AiringScheduleVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<AiringScheduleResponse>} A promise that resolves to the {@link AiringScheduleResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.airingSchedule({mediaId: 130590});
          * ```
-         * Must be quering an airing anime. Returns error if not.
+         * Must be querying an airing anime. Returns error if not.
          * @see https://docs.anilist.co/reference/object/airingschedule
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         airingSchedule: (
             variables: AiringScheduleVariables,
@@ -178,9 +184,10 @@ export type AniListQueries = {
         ) => Promise<AiringScheduleResponse>;
 
         /**
-         * Fetches character data from the Anilist API.
-         * @param {CharacterVariables} variables - The variables for the query.
-         * @returns {Promise<CharacterResponse>} A promise that resolves to the character data.
+         * `CharacterQuery` fetches a single character by `id`. Returns a {@link CharacterResponse}.
+         * @param {CharacterVariables} variables - The {@link CharacterVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<CharacterResponse>} A promise that resolves to the {@link CharacterResponse} data.
          *
          * @example
          * ```typescript
@@ -195,7 +202,6 @@ export type AniListQueries = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/character
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         character: (
             variables: CharacterVariables,
@@ -203,9 +209,10 @@ export type AniListQueries = {
         ) => Promise<CharacterResponse>;
 
         /**
-         * Fetches staff data from the Anilist API.
-         * @param {StaffVariables} variables - The variables for the query.
-         * @returns {Promise<StaffResponse>} A promise that resolves to the staff data.
+         * `StaffQuery` fetches a single staff member by `id`. Returns a {@link StaffResponse}.
+         * @param {StaffVariables} variables - The {@link StaffVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<StaffResponse>} A promise that resolves to the {@link StaffResponse} data.
          *
          * @example
          * ```typescript
@@ -227,21 +234,20 @@ export type AniListQueries = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/staff
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         staff: (variables: StaffVariables, options?: RequestOptions) => Promise<StaffResponse>;
 
         /**
-         * Fetches media list data from the Anilist API.
-         * @param {MediaListVariables} variables - The variables for the query.
-         * @returns {Promise<MediaListResponse>} A promise that resolves to the media list data.
+         * `MediaListQuery` fetches a single media list entry by `id`, or by `userName`/`userId` plus `mediaId`. Returns a {@link MediaListResponse}.
+         * @param {MediaListVariables} variables - The {@link MediaListVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<MediaListResponse>} A promise that resolves to the {@link MediaListResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.mediaList({userId: 542244});
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         mediaList: (
             variables: MediaListVariables,
@@ -249,9 +255,10 @@ export type AniListQueries = {
         ) => Promise<MediaListResponse>;
 
         /**
-         * Fetches media list collection data from the Anilist API.
-         * @param {MediaListCollectionVariables} variables - The variables for the query.
-         * @returns {Promise<MediaListCollectionResponse>} A promise that resolves to the media list collection data.
+         * `MediaListCollectionQuery` fetches a user's full list collection, chunked via `chunk`/`perChunk`. Returns a {@link MediaListCollectionResponse}; flatten it with `AniListHelpers.flattenMediaListCollection`.
+         * @param {MediaListCollectionVariables} variables - The {@link MediaListCollectionVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<MediaListCollectionResponse>} A promise that resolves to the {@link MediaListCollectionResponse} data.
          *
          * @example
          * ```typescript
@@ -264,7 +271,6 @@ export type AniListQueries = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/medialistcollection
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         mediaListCollection: (
             variables: MediaListCollectionVariables,
@@ -272,28 +278,29 @@ export type AniListQueries = {
         ) => Promise<MediaListCollectionResponse>;
 
         /**
-         * Fetches genre collection data from the Anilist API.
-         * @returns {Promise<String>} A promise that resolves to the genre collection data.
+         * `GenreCollectionQuery` returns the list of all genres recognized by AniList. No variables are required.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<string>} A promise that resolves to the genre collection data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.genreCollection()
          * ```
          * @see https://docs.anilist.co/reference/query
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         genreCollection: (options?: RequestOptions) => Promise<string>;
 
         /**
-         * Fetches media tag collection data from the Anilist API.
-         * @returns {Promise<MediaTagCollectionResponse>} A promise that resolves to the media tag collection data.
+         * `MediaTagCollectionQuery` returns all media tags recognized by AniList, optionally filtered by `variables`. Returns a {@link MediaTagCollectionResponse}.
+         * @param {MediaTagCollectionVariables} variables - Optional {@link MediaTagCollectionVariables} filters for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<MediaTagCollectionResponse>} A promise that resolves to the {@link MediaTagCollectionResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.mediaTagCollection()
          * ```
          * @see https://docs.anilist.co/reference/object/mediatag
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         mediaTagCollection: (
             variables?: MediaTagCollectionVariables,
@@ -301,9 +308,10 @@ export type AniListQueries = {
         ) => Promise<MediaTagCollectionResponse>;
 
         /**
-         * Fetches viewer data from the Anilist API.
-         * @param {UserVariables} variables - The variables for the query.
-         * @returns {Promise<UserResponse>} A promise that resolves to the viewer data.
+         * `ViewerQuery` fetches the currently authenticated user. Returns a {@link UserResponse}.
+         * @param {UserVariables} variables - The {@link UserVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<UserResponse>} A promise that resolves to the {@link UserResponse} data.
          *
          * @example
          * ```typescript
@@ -311,14 +319,14 @@ export type AniListQueries = {
          * ```
          * Must be authenticated.
          * @see https://docs.anilist.co/reference/object/user
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         viewer: (variables: UserVariables, options?: RequestOptions) => Promise<UserResponse>;
 
         /**
-         * Fetches notification data from the Anilist API.
-         * @param {NotificationVariables} variables - The variables for the query.
-         * @returns {Promise<NotificationResponse>} A promise that resolves to the notification data.
+         * `NotificationQuery` fetches a single notification by `id`. Returns a {@link NotificationResponse}. Must be authenticated.
+         * @param {NotificationVariables} variables - The {@link NotificationVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<NotificationResponse>} A promise that resolves to the {@link NotificationResponse} data.
          *
          * @example
          * ```typescript
@@ -326,7 +334,6 @@ export type AniListQueries = {
          * ```
          * Must be authenticated.
          * @see https://docs.anilist.co/reference/union/notificationunion
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         notification: (
             variables: NotificationVariables,
@@ -334,58 +341,58 @@ export type AniListQueries = {
         ) => Promise<NotificationResponse>;
 
         /**
-         * Fetches studio data from the Anilist API.
-         * @param {StudioVariables} variables - The variables for the query.
-         * @returns {Promise<StudioResponse>} A promise that resolves to the studio data.
+         * `StudioQuery` fetches a single studio by `id`. Returns a {@link StudioResponse}.
+         * @param {StudioVariables} variables - The {@link StudioVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<StudioResponse>} A promise that resolves to the {@link StudioResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.studio({id: 561, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/studio
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         studio: (variables: StudioVariables, options?: RequestOptions) => Promise<StudioResponse>;
 
         /**
-         * Fetches review data from the Anilist API.
-         * @param {ReviewVariables} variables - The variables for the query.
-         * @returns {Promise<ReviewResponse>} A promise that resolves to the review data.
+         * `ReviewQuery` fetches a single review by `id`. Returns a {@link ReviewResponse}.
+         * @param {ReviewVariables} variables - The {@link ReviewVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ReviewResponse>} A promise that resolves to the {@link ReviewResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.review({id: 8008, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/review
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         review: (variables: ReviewVariables, options?: RequestOptions) => Promise<ReviewResponse>;
 
         /**
-         * Fetches activity data from the Anilist API.
-         * @param {ActivityVariables} variables - The variables for the query.
-         * @returns {Promise<Activity>} A promise that resolves to the activity data.
+         * `ActivityQuery` fetches a single activity by `id`. Returns an {@link Activity} (a union of text, message, and list activities).
+         * @param {ActivityVariables} variables - The {@link ActivityVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<Activity>} A promise that resolves to the {@link Activity} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.activity({id: 723235883, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         activity: (variables: ActivityVariables, options?: RequestOptions) => Promise<Activity>;
 
         /**
-         * Fetches activity reply data from the Anilist API.
-         * @param {ActivityReplyVariables} variables - The variables for the query.
-         * @returns {Promise<ActivityReply>} A promise that resolves to the activity reply data.
+         * `ActivityReplyQuery` fetches a single activity reply by `id`. Returns an {@link ActivityReply}.
+         * @param {ActivityReplyVariables} variables - The {@link ActivityReplyVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ActivityReply>} A promise that resolves to the {@link ActivityReply} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.activityReply({id: 12191046, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/activityreply
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         activityReply: (
             variables: ActivityReplyVariables,
@@ -393,16 +400,16 @@ export type AniListQueries = {
         ) => Promise<ActivityReply>;
 
         /**
-         * Fetches following data from the Anilist API.
-         * @param {FollowingVariables} variables - The variables for the query.
-         * @returns {Promise<UserResponse>} A promise that resolves to the following data.
+         * `FollowingQuery` fetches a single user that the given `userId` follows. Returns a {@link UserResponse}.
+         * @param {FollowingVariables} variables - The {@link FollowingVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<UserResponse>} A promise that resolves to the {@link UserResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.following({userId: 542244});
          * ```
          * @see https://docs.anilist.co/reference/object/user
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         following: (
             variables: FollowingVariables,
@@ -410,44 +417,44 @@ export type AniListQueries = {
         ) => Promise<UserResponse>;
 
         /**
-         * Fetches follower data from the Anilist API.
-         * @param {FollowerVariables} variables - The variables for the query.
-         * @returns {Promise<UserResponse>} A promise that resolves to the follower data.
+         * `FollowerQuery` fetches a single follower of the given `userId`. Returns a {@link UserResponse}.
+         * @param {FollowerVariables} variables - The {@link FollowerVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<UserResponse>} A promise that resolves to the {@link UserResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.follower({userId: 542244});
          * ```
          * @see https://docs.anilist.co/reference/object/user
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         follower: (variables: FollowerVariables, options?: RequestOptions) => Promise<UserResponse>;
 
         /**
-         * Fetches thread data from the Anilist API.
-         * @param {ThreadVariables} variables - The variables for the query.
-         * @returns {Promise<ThreadResponse>} A promise that resolves to the thread data.
+         * `ThreadQuery` fetches a single forum thread by `id`. Returns a {@link ThreadResponse}.
+         * @param {ThreadVariables} variables - The {@link ThreadVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ThreadResponse>} A promise that resolves to the {@link ThreadResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.thread({id: 71881, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/thread
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         thread: (variables: ThreadVariables, options?: RequestOptions) => Promise<ThreadResponse>;
 
         /**
-         * Fetches thread comment data from the Anilist API.
-         * @param {ThreadCommentVariables} variables - The variables for the query.
-         * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the thread comment data.
+         * `ThreadCommentQuery` fetches a single thread comment by `id`. Returns a {@link ThreadCommentResponse}.
+         * @param {ThreadCommentVariables} variables - The {@link ThreadCommentVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the {@link ThreadCommentResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.threadComment({id: 2555166, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/threadcomment
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         threadComment: (
             variables: ThreadCommentVariables,
@@ -455,16 +462,16 @@ export type AniListQueries = {
         ) => Promise<ThreadCommentResponse>;
 
         /**
-         * Fetches recommendation data from the Anilist API.
-         * @param {RecommendationVariables} variables - The variables for the query.
-         * @returns {Promise<RecommendationResponse>} A promise that resolves to the recommendation data.
+         * `RecommendationQuery` fetches a single recommendation by `id` or `mediaId`. Returns a {@link RecommendationResponse}.
+         * @param {RecommendationVariables} variables - The {@link RecommendationVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<RecommendationResponse>} A promise that resolves to the {@link RecommendationResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.recommendation({mediaId: 156822, asHtml: true});
          * ```
          * @see https://docs.anilist.co/reference/object/recommendation
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         recommendation: (
             variables: RecommendationVariables,
@@ -472,8 +479,9 @@ export type AniListQueries = {
         ) => Promise<RecommendationResponse>;
 
         /**
-         * Fetches markdown data from the Anilist API.
-         * @param {MarkdownVariables} variables - The variables for the query.
+         * `MarkdownQuery` parses AniList markdown into HTML. Returns the rendered HTML string.
+         * @param {MarkdownVariables} variables - The {@link MarkdownVariables} for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<string>} A promise that resolves to the markdown data.
          *
          * @example
@@ -481,13 +489,13 @@ export type AniListQueries = {
          * await aniLink.anilist.query.markdown({markdown: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/object/parsedmarkdown
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         markdown: (variables: MarkdownVariables, options?: RequestOptions) => Promise<string>;
 
         /**
-         * Fetches aniChart user data from the Anilist API.
-         * @returns {Promise<AniChartUserResponse>} A promise that resolves to the aniChart user data.
+         * `AniChartUserQuery` fetches the AniChart settings for the authenticated user. Returns an {@link AniChartUserResponse}. Must be authenticated.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<AniChartUserResponse>} A promise that resolves to the {@link AniChartUserResponse} data.
          *
          * @example
          * ```typescript
@@ -495,20 +503,20 @@ export type AniListQueries = {
          * ```
          * Must be authenticated.
          * @see https://docs.anilist.co/reference/object/anichartuser
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         aniChartUser: (options?: RequestOptions) => Promise<AniChartUserResponse>;
 
         /**
-         * Fetches site statistics data from the Anilist API.
-         * @returns {Promise<SiteStatisticsResponse>} A promise that resolves to the site statistics data.
+         * `SiteStatisticsQuery` fetches aggregate AniList site statistics, optionally filtered by `variables`. Returns a {@link SiteStatisticsResponse}.
+         * @param {SiteStatisticsVariables} variables - Optional {@link SiteStatisticsVariables} filters for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<SiteStatisticsResponse>} A promise that resolves to the {@link SiteStatisticsResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.siteStatistics();
          * ```
          * @see https://docs.anilist.co/reference/object/sitestatistics
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         siteStatistics: (
             variables?: SiteStatisticsVariables,
@@ -516,15 +524,16 @@ export type AniListQueries = {
         ) => Promise<SiteStatisticsResponse>;
 
         /**
-         * Fetches external link source collection data from the Anilist API.
-         * @returns {Promise<ExternalLinkSourceCollectionResponse>} A promise that resolves to the external link source collection data.
+         * `ExternalLinkSourceCollectionQuery` returns the available external link sources, optionally filtered by `variables`. Returns an {@link ExternalLinkSourceCollectionResponse}.
+         * @param {ExternalLinkSourceCollectionVariables} variables - Optional {@link ExternalLinkSourceCollectionVariables} filters for the query.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ExternalLinkSourceCollectionResponse>} A promise that resolves to the {@link ExternalLinkSourceCollectionResponse} data.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.externalLinkSourceCollection();
          * ```
          * @see https://docs.anilist.co/reference/query
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         externalLinkSourceCollection: (
             variables?: ExternalLinkSourceCollectionVariables,
@@ -532,42 +541,44 @@ export type AniListQueries = {
         ) => Promise<ExternalLinkSourceCollectionResponse>;
 
         /**
-         * Fetches pages of data from the Anilist API.
-         * All page queries have the same structure as original queries with the addition of `page` and `perPage` variables.
+         * {@link AniListQueries} groups the paginated query operations. All page queries mirror the single-object queries above
+         * with the addition of `page` and `perPage` variables, and return a `*PageResponse` carrying the items
+         * plus `PageInfo` pagination metadata. Drive them with `paginate` or
+         * `paginatePages` to walk all pages automatically.
          *
          * @public
          * @type {Object}
-         * @property {Function} users - Fetches users data from the Anilist API.
-         * @property {Function} medias - Fetches medias data from the Anilist API.
-         * @property {Function} characters - Fetches characters data from the Anilist API.
-         * @property {Function} staffs - Fetches staffs data from the Anilist API.
-         * @property {Function} studios - Fetches studios data from the Anilist API.
-         * @property {Function} mediaLists - Fetches media lists data from the Anilist API.
-         * @property {Function} airingSchedules - Fetches airing schedules data from the Anilist API.
-         * @property {Function} mediaTrends - Fetches media trends data from the Anilist API.
-         * @property {Function} notifications - Fetches notifications data from the Anilist API.
-         * @property {Function} followers - Fetches followers data from the Anilist API.
-         * @property {Function} following - Fetches following data from the Anilist API.
-         * @property {Function} activities - Fetches activities data from the Anilist API.
-         * @property {Function} activityReplies - Fetches activity replies data from the Anilist API.
-         * @property {Function} threads - Fetches threads data from the Anilist API.
-         * @property {Function} threadComments - Fetches thread comments data from the Anilist API.
-         * @property {Function} reviews - Fetches reviews data from the Anilist API.
-         * @property {Function} recommendations - Fetches recommendations data from the Anilist API.
-         * @property {Function} likes - Fetches likes data from the Anilist API.
+         * @property {Function} users - Fetches users data from the AniList API.
+         * @property {Function} medias - Fetches medias data from the AniList API.
+         * @property {Function} characters - Fetches characters data from the AniList API.
+         * @property {Function} staffs - Fetches staffs data from the AniList API.
+         * @property {Function} studios - Fetches studios data from the AniList API.
+         * @property {Function} mediaLists - Fetches media lists data from the AniList API.
+         * @property {Function} airingSchedules - Fetches airing schedules data from the AniList API.
+         * @property {Function} mediaTrends - Fetches media trends data from the AniList API.
+         * @property {Function} notifications - Fetches notifications data from the AniList API.
+         * @property {Function} followers - Fetches followers data from the AniList API.
+         * @property {Function} following - Fetches following data from the AniList API.
+         * @property {Function} activities - Fetches activities data from the AniList API.
+         * @property {Function} activityReplies - Fetches activity replies data from the AniList API.
+         * @property {Function} threads - Fetches threads data from the AniList API.
+         * @property {Function} threadComments - Fetches thread comments data from the AniList API.
+         * @property {Function} reviews - Fetches reviews data from the AniList API.
+         * @property {Function} recommendations - Fetches recommendations data from the AniList API.
+         * @property {Function} likes - Fetches likes data from the AniList API.
          */
         page: {
             /**
-             * Fetches users data from the Anilist API.
-             * @param {UsersVariables} variables - The variables for the query.
-             * @returns {Promise<UsersPageResponse>} A promise that resolves to the users data and pagination metadata.
+             * `UsersQuery` fetches a page of users. Returns a {@link UsersPageResponse} with the items and `PageInfo`.
+             * @param {UsersVariables} variables - The {@link UsersVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<UsersPageResponse>} A promise that resolves to the {@link UsersPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.users({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/user
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             users: (
                 variables: UsersVariables,
@@ -575,16 +586,16 @@ export type AniListQueries = {
             ) => Promise<UsersPageResponse>;
 
             /**
-             * Fetches medias data from the Anilist API.
-             * @param {MediasVariables} variables - The variables for the query.
-             * @returns {Promise<MediasPageResponse>} A promise that resolves to the medias data and pagination metadata.
+             * `MediasQuery` fetches a page of anime/manga. Returns a {@link MediasPageResponse} with the items and `PageInfo`.
+             * @param {MediasVariables} variables - The {@link MediasVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<MediasPageResponse>} A promise that resolves to the {@link MediasPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.medias({page: 1, perPage: 10, type: 'ANIME'});
              * ```
              * @see https://docs.anilist.co/reference/object/media
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             medias: (
                 variables: MediasVariables,
@@ -592,16 +603,16 @@ export type AniListQueries = {
             ) => Promise<MediasPageResponse>;
 
             /**
-             * Fetches characters data from the Anilist API.
-             * @param {CharactersVariables} variables - The variables for the query.
-             * @returns {Promise<CharactersPageResponse>} A promise that resolves to the characters data and pagination metadata.
+             * `CharactersQuery` fetches a page of characters. Returns a {@link CharactersPageResponse} with the items and `PageInfo`.
+             * @param {CharactersVariables} variables - The {@link CharactersVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<CharactersPageResponse>} A promise that resolves to the {@link CharactersPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.characters({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/character
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             characters: (
                 variables: CharactersVariables,
@@ -609,16 +620,16 @@ export type AniListQueries = {
             ) => Promise<CharactersPageResponse>;
 
             /**
-             * Fetches staffs data from the Anilist API.
-             * @param {StaffsVariables} variables - The variables for the query.
-             * @returns {Promise<StaffsPageResponse>} A promise that resolves to the staffs data and pagination metadata.
+             * `StaffsQuery` fetches a page of staff members. Returns a {@link StaffsPageResponse} with the items and `PageInfo`.
+             * @param {StaffsVariables} variables - The {@link StaffsVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<StaffsPageResponse>} A promise that resolves to the {@link StaffsPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.staffs({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/staff
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             staffs: (
                 variables: StaffsVariables,
@@ -626,16 +637,16 @@ export type AniListQueries = {
             ) => Promise<StaffsPageResponse>;
 
             /**
-             * Fetches studios data from the Anilist API.
-             * @param {StudiosVariables} variables - The variables for the query.
-             * @returns {Promise<StudiosPageResponse>} A promise that resolves to the studios data and pagination metadata.
+             * `StudiosQuery` fetches a page of studios. Returns a {@link StudiosPageResponse} with the items and `PageInfo`.
+             * @param {StudiosVariables} variables - The {@link StudiosVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<StudiosPageResponse>} A promise that resolves to the {@link StudiosPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.studios({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/studio
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             studios: (
                 variables: StudiosVariables,
@@ -643,16 +654,16 @@ export type AniListQueries = {
             ) => Promise<StudiosPageResponse>;
 
             /**
-             * Fetches media lists data from the Anilist API.
-             * @param {MediaListsVariables} variables - The variables for the query.
-             * @returns {Promise<MediaListsPageResponse>} A promise that resolves to the media lists data and pagination metadata.
+             * `MediaListsQuery` fetches a page of media list entries. Returns a {@link MediaListsPageResponse} with the items and `PageInfo`.
+             * @param {MediaListsVariables} variables - The {@link MediaListsVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<MediaListsPageResponse>} A promise that resolves to the {@link MediaListsPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.mediaLists({page: 1, perPage: 10, userId: 542244});
              * ```
              * @see https://docs.anilist.co/reference/object/medialist
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             mediaLists: (
                 variables: MediaListsVariables,
@@ -660,16 +671,16 @@ export type AniListQueries = {
             ) => Promise<MediaListsPageResponse>;
 
             /**
-             * Fetches airing schedules data from the Anilist API.
-             * @param {AiringSchedulesVariables} variables - The variables for the query.
-             * @returns {Promise<AiringSchedulesPageResponse>} A promise that resolves to the airing schedules data and pagination metadata.
+             * `AiringSchedulesQuery` fetches a page of airing schedule entries. Returns an {@link AiringSchedulesPageResponse} with the items and `PageInfo`.
+             * @param {AiringSchedulesVariables} variables - The {@link AiringSchedulesVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<AiringSchedulesPageResponse>} A promise that resolves to the {@link AiringSchedulesPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.airingSchedules({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/airingschedule
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             airingSchedules: (
                 variables: AiringSchedulesVariables,
@@ -677,17 +688,17 @@ export type AniListQueries = {
             ) => Promise<AiringSchedulesPageResponse>;
 
             /**
-             * Fetches media trends data from the Anilist API.
-             * @param {MediaTrendsVariables} variables - The variables for the query.
-             * @returns {Promise<MediaTrendsPageResponse>} A promise that resolves to the media trends data and pagination metadata.
+             * `MediaTrendsQuery` fetches a page of media trend entries. Returns a {@link MediaTrendsPageResponse} with the items and `PageInfo`.
+             * @param {MediaTrendsVariables} variables - The {@link MediaTrendsVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<MediaTrendsPageResponse>} A promise that resolves to the {@link MediaTrendsPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.mediaTrends({page: 1, perPage: 10, type: 'ANIME'});
              * ```
-             * Must be quering an airing anime. Returns error if not.
+             * Must be querying an airing anime. Returns error if not.
              * @see https://docs.anilist.co/reference/object/mediatrend
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             mediaTrends: (
                 variables: MediaTrendsVariables,
@@ -695,16 +706,16 @@ export type AniListQueries = {
             ) => Promise<MediaTrendsPageResponse>;
 
             /**
-             * Fetches notifications data from the Anilist API.
-             * @param {NotificationsVariables} variables - The variables for the query.
-             * @returns {Promise<NotificationsPageResponse>} A promise that resolves to the notifications data and pagination metadata.\
+             * `NotificationsQuery` fetches a page of the authenticated user's notifications. Returns a {@link NotificationsPageResponse} with the items and `PageInfo`. Must be authenticated.
+             * @param {NotificationsVariables} variables - The {@link NotificationsVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<NotificationsPageResponse>} A promise that resolves to the {@link NotificationsPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.notifications({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/union/notificationunion
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             notifications: (
                 variables: NotificationsVariables,
@@ -712,16 +723,16 @@ export type AniListQueries = {
             ) => Promise<NotificationsPageResponse>;
 
             /**
-             * Fetches followers data from the Anilist API.
-             * @param {FollowersVariables} variables - The variables for the query.
-             * @returns {Promise<FollowersPageResponse>} A promise that resolves to the followers data and pagination metadata.
+             * `FollowersQuery` fetches a page of a user's followers. Returns a {@link FollowersPageResponse} with the items and `PageInfo`.
+             * @param {FollowersVariables} variables - The {@link FollowersVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<FollowersPageResponse>} A promise that resolves to the {@link FollowersPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.followers({page: 1, perPage: 10, userId: 542244});
              * ```
              * @see https://docs.anilist.co/reference/object/user
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             followers: (
                 variables: FollowersVariables,
@@ -729,16 +740,16 @@ export type AniListQueries = {
             ) => Promise<FollowersPageResponse>;
 
             /**
-             * Fetches following data from the Anilist API.
-             * @param {FollowingsVariables} variables - The variables for the query.
-             * @returns {Promise<FollowingsPageResponse>} A promise that resolves to the following data and pagination metadata.
+             * `FollowingsQuery` fetches a page of users that the given `userId` follows. Returns a {@link FollowingsPageResponse} with the items and `PageInfo`.
+             * @param {FollowingsVariables} variables - The {@link FollowingsVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<FollowingsPageResponse>} A promise that resolves to the {@link FollowingsPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.following({page: 1, perPage: 10, userId: 542244});
              * ```
              * @see https://docs.anilist.co/reference/object/user
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             following: (
                 variables: FollowingsVariables,
@@ -746,16 +757,16 @@ export type AniListQueries = {
             ) => Promise<FollowingsPageResponse>;
 
             /**
-             * Fetches activities data from the Anilist API.
-             * @param {ActivitiesVariables} variables - The variables for the query.
-             * @returns {Promise<ActivitiesPageResponse>} A promise that resolves to the activities data and pagination metadata.
+             * `ActivitiesQuery` fetches a page of activities. Returns an {@link ActivitiesPageResponse} with the items and `PageInfo`.
+             * @param {ActivitiesVariables} variables - The {@link ActivitiesVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<ActivitiesPageResponse>} A promise that resolves to the {@link ActivitiesPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.activities({page: 1, perPage: 10, userId: 542244});
              * ```
              * @see https://docs.anilist.co/reference/union/activityunion
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             activities: (
                 variables: ActivitiesVariables,
@@ -763,16 +774,16 @@ export type AniListQueries = {
             ) => Promise<ActivitiesPageResponse>;
 
             /**
-             * Fetches activity replies data from the Anilist API.
-             * @param {ActivityRepliesVariables} variables - The variables for the query.
-             * @returns {Promise<ActivityRepliesPageResponse>} A promise that resolves to the activity replies data and pagination metadata.
+             * `ActivityRepliesQuery` fetches a page of replies for an activity. Returns an {@link ActivityRepliesPageResponse} with the items and `PageInfo`.
+             * @param {ActivityRepliesVariables} variables - The {@link ActivityRepliesVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<ActivityRepliesPageResponse>} A promise that resolves to the {@link ActivityRepliesPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.activityReplies({page: 1, perPage: 10, activityId: 723235883});
              * ```
              * @see https://docs.anilist.co/reference/object/activityreply
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             activityReplies: (
                 variables: ActivityRepliesVariables,
@@ -780,16 +791,16 @@ export type AniListQueries = {
             ) => Promise<ActivityRepliesPageResponse>;
 
             /**
-             * Fetches threads data from the Anilist API.
-             * @param {ThreadsVariables} variables - The variables for the query.
-             * @returns {Promise<ThreadsPageResponse>} A promise that resolves to the threads data and pagination metadata.
+             * `ThreadsQuery` fetches a page of forum threads. Returns a {@link ThreadsPageResponse} with the items and `PageInfo`.
+             * @param {ThreadsVariables} variables - The {@link ThreadsVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<ThreadsPageResponse>} A promise that resolves to the {@link ThreadsPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.threads({page: 1, perPage: 10});
              * ```
              * @see https://docs.anilist.co/reference/object/thread
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             threads: (
                 variables: ThreadsVariables,
@@ -797,16 +808,16 @@ export type AniListQueries = {
             ) => Promise<ThreadsPageResponse>;
 
             /**
-             * Fetches thread comments data from the Anilist API.
-             * @param {ThreadCommentsVariables} variables - The variables for the query.
-             * @returns {Promise<ThreadCommentsPageResponse>} A promise that resolves to the thread comments data and pagination metadata.
+             * `ThreadCommentsQuery` fetches a page of comments for a thread. Returns a {@link ThreadCommentsPageResponse} with the items and `PageInfo`.
+             * @param {ThreadCommentsVariables} variables - The {@link ThreadCommentsVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<ThreadCommentsPageResponse>} A promise that resolves to the {@link ThreadCommentsPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.threadComments({page: 1, perPage: 10, threadId: 71881});
              * ```
              * @see https://docs.anilist.co/reference/object/threadcomment
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             threadComments: (
                 variables: ThreadCommentsVariables,
@@ -814,16 +825,16 @@ export type AniListQueries = {
             ) => Promise<ThreadCommentsPageResponse>;
 
             /**
-             * Fetches reviews data from the Anilist API.
-             * @param {ReviewsVariables} variables - The variables for the query.
-             * @returns {Promise<ReviewsPageResponse>} A promise that resolves to the reviews data and pagination metadata.
+             * `ReviewsQuery` fetches a page of reviews. Returns a {@link ReviewsPageResponse} with the items and `PageInfo`.
+             * @param {ReviewsVariables} variables - The {@link ReviewsVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<ReviewsPageResponse>} A promise that resolves to the {@link ReviewsPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.reviews({page: 1, perPage: 10, mediaId: 1});
              * ```
              * @see https://docs.anilist.co/reference/object/review
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             reviews: (
                 variables: ReviewsVariables,
@@ -831,16 +842,16 @@ export type AniListQueries = {
             ) => Promise<ReviewsPageResponse>;
 
             /**
-             * Fetches recommendations data from the Anilist API.
-             * @param {RecommendationsVariables} variables - The variables for the query.
-             * @returns {Promise<RecommendationsPageResponse>} A promise that resolves to the recommendations data and pagination metadata.
+             * `RecommendationsQuery` fetches a page of recommendations. Returns a {@link RecommendationsPageResponse} with the items and `PageInfo`.
+             * @param {RecommendationsVariables} variables - The {@link RecommendationsVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<RecommendationsPageResponse>} A promise that resolves to the {@link RecommendationsPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.recommendations({page: 1, perPage: 10, mediaId: 1});
              * ```
              * @see https://docs.anilist.co/reference/object/recommendation
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             recommendations: (
                 variables: RecommendationsVariables,
@@ -848,15 +859,16 @@ export type AniListQueries = {
             ) => Promise<RecommendationsPageResponse>;
 
             /**
-             * Fetches likes data from the Anilist API.
-             * @param {LikesVariables} variables - The variables for the query.
-             * @returns {Promise<LikesPageResponse>} A promise that resolves to the likes data and pagination metadata.
+             * `LikesQuery` fetches a page of users who liked a likeable entity. Returns a {@link LikesPageResponse} with the items and `PageInfo`.
+             * @param {LikesVariables} variables - The {@link LikesVariables} for the query.
+             * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+             * @returns {Promise<LikesPageResponse>} A promise that resolves to the {@link LikesPageResponse} data and pagination metadata.
              *
              * @example
              * ```typescript
              * await aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeAbleId: 1});
+             * ```
              * @see https://docs.anilist.co/reference/union/likeableunion
-             * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
              */
             likes: (
                 variables: LikesVariables,

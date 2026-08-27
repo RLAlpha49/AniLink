@@ -4,9 +4,13 @@ import { type DeleteResult } from "../types/DeleteResult";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 
 /**
- * `DeleteCustomListMutation` is an interface representing the variables to delete a custom list.
- * It includes the `customList` and `type` variables of the custom list to delete.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link DeleteCustomListVariables} contains variables for the {@link DeleteCustomListMutation} operation.
+ *
+ * See the {@link DeleteCustomListMutation} operation and {@link DeleteResult} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/deleted
  */
 export interface DeleteCustomListVariables {
     /**
@@ -21,7 +25,8 @@ export interface DeleteCustomListVariables {
 }
 
 /**
- * The variable type mappings for the `deleteCustomList` operation.
+ * Validation metadata maps {@link DeleteCustomListVariables} to runtime types for the
+ * `deleteCustomList` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -32,24 +37,29 @@ const DeleteCustomListMappings = {
 };
 
 /**
- * `DeleteCustomListMutation` is a class representing a mutation to delete a custom list.
- * It includes a method to delete a custom list
+ * {@link DeleteCustomListMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link DeleteCustomListMutation.deleteCustomList}; variables use
+ * {@link DeleteCustomListVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/deleted
  */
 export class DeleteCustomListMutation extends AniListOperation {
     /**
-     * `deleteCustomList` is a method that sends a mutation request to delete a custom list.
+     * {@link DeleteCustomListMutation.deleteCustomList} sends a mutation request to delete a custom list.
      *
      * The response is `{ deleted: boolean }`. A `true` value means the custom list was deleted by
      * this call; a `false` value means the list was not present (already deleted or never existed).
      * The mutation is therefore safe to retry after a partial failure: a `false` result confirms
      * the target is gone rather than reporting an error.
      *
-     * @param variables - An object of type `DeleteCustomListVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the custom list was deleted by this call and `false` when it was already absent.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link DeleteCustomListVariables} for the mutation.
+     * @returns The {@link DeleteResult} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `customList` or `type` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/deleted
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new DeleteCustomListMutation("your-token").deleteCustomList({ customList: "watching", type: "ANIME" });
+     * ```
      */
     async deleteCustomList(
         variables: DeleteCustomListVariables,

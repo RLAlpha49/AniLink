@@ -4,9 +4,13 @@ import { type ActivityReply } from "../interfaces/Activity";
 import { ActivityReplySchema } from "../schemas/Activity";
 
 /**
- * `SaveActivityReplyMutation` is an interface representing the variables to save an activity reply.
- * It includes the id of the activity, the activity id, the text of the activity reply, the locked status of the activity reply, and the status of the activity reply.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link SaveActivityReplyVariables} contains variables for the {@link SaveActivityReplyMutation} operation.
+ *
+ * See the {@link SaveActivityReplyMutation} operation and {@link ActivityReply} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/activityreply
  */
 export interface SaveActivityReplyVariables {
     /**
@@ -36,7 +40,8 @@ export interface SaveActivityReplyVariables {
 }
 
 /**
- * The variable type mappings for the `saveActivityReply` operation.
+ * Validation metadata maps {@link SaveActivityReplyVariables} to runtime types for the
+ * `saveActivityReply` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -50,19 +55,24 @@ const SaveActivityReplyMappings = {
 };
 
 /**
- * `SaveActivityReplyMutation` is a class representing a mutation to save an activity reply.
- * It includes a method to save an activity reply
+ * {@link SaveActivityReplyMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link SaveActivityReplyMutation.saveActivityReply}; variables use
+ * {@link SaveActivityReplyVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/activityreply
  */
 export class SaveActivityReplyMutation extends AniListOperation {
     /**
-     * `SaveActivityReply` is a method that sends a mutation request to save an activity reply.
+     * {@link SaveActivityReplyMutation.saveActivityReply} sends a mutation request to save an activity reply.
      *
-     * @param variables - An object of type `SaveActivityReplyVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/object/activityreply
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link SaveActivityReplyVariables} for the mutation.
+     * @returns The {@link ActivityReply} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` or `text` is missing or invalid, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/object/activityreply
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new SaveActivityReplyMutation("your-token").saveActivityReply({ id: 1, text: "Hello, world!" });
+     * ```
      */
     async saveActivityReply(
         variables: SaveActivityReplyVariables,

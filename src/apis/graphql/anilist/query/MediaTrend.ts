@@ -5,9 +5,13 @@ import { type MediaTrendSort, MediaTrendSortMappings } from "../types/Sort";
 import { MediaTrendSchema } from "../schemas/responses/query/MediaTrend";
 
 /**
- * `MediaTrendVariables` is an interface representing the variables for the `MediaTrendQuery`.
- * It includes optional parameters for querying media trend data.
- * @see https://docs.anilist.co/reference/query
+ * {@link MediaTrendVariables} contains variables for the {@link MediaTrendQuery} operation.
+ *
+ * See {@link MediaTrendQuery} and {@link MediaTrendResponse} for the operation and response shape.
+ *
+ * Values are validated with `MediaTrendMappings` before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/mediatrend
  */
 export interface MediaTrendVariables {
     /**
@@ -142,7 +146,7 @@ export interface MediaTrendVariables {
 }
 
 /**
- * The variable type mappings for the `mediaTrend` operation.
+ * Validation metadata maps variables to runtime types for the {@link MediaTrendQuery.mediaTrend} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -177,18 +181,22 @@ const MediaTrendMappings = {
 };
 
 /**
- * `MediaTrendQuery` is a class representing a query for media trend data.
- * It includes a method to send the media trend query and receive the response.
+ * {@link MediaTrendQuery} executes the AniList media-trend query through {@link AniListOperation}.
+ * Its public operation is {@link MediaTrendQuery.mediaTrend}.
  * @see https://docs.anilist.co/reference/object/mediatrend
  */
 export class MediaTrendQuery extends AniListOperation {
     /**
-     * `mediaTrend` is a method that sends a query request to get media trend data.
+     * {@link MediaTrendQuery.mediaTrend} sends a query request to get media trend data.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link MediaTrendVariables} for the query.
+     * @returns The {@link MediaTrendResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/mediatrend
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new MediaTrendQuery().mediaTrend({ mediaId: 1 });
+     * ```
      */
     async mediaTrend(
         variables: MediaTrendVariables,

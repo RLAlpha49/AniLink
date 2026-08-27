@@ -21,7 +21,7 @@ export type VariableRequirement =
 
 /**
  * The declarative contract an operation passes to
- * {@link GraphQLOperation.execute}.
+ * `GraphQLOperation.execute`.
  *
  * Every field is optional: an operation declares only the variation points it
  * needs, and `execute` applies them in a fixed order so validation behaviour
@@ -85,7 +85,7 @@ export abstract class GraphQLOperation extends BaseOperation {
      * @param operation - Optional human-readable operation name included in missing-token auth errors. Defaults to the concrete operation class name.
      * @param transportOptions - Optional per-request transport settings merged over the instance-level ones. A field set here wins; unset fields keep the instance value.
      * @returns The unwrapped response data. For documents with a single root field this is the bare field value; otherwise it is the full `{ data }` envelope.
-     * @throws An `AniLinkAuthError` when `requiresAuth` is true and no token is set, or a normalized `AniLinkError` when the request fails.
+     * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, or a normalized {@link AniLinkError} when the request fails.
      */
     protected async request<T = unknown>(
         query: string,
@@ -119,7 +119,7 @@ export abstract class GraphQLOperation extends BaseOperation {
      * @param options - The declarative validation and auth contract.
      * @returns The unwrapped response data, as described by {@link GraphQLOperation.request}.
      * @throws An {@link AniLinkValidationError} when a requirement or type check
-     * fails, or a normalized `AniLinkError` when the request fails.
+     * fails, or a normalized {@link AniLinkError} when the request fails.
      */
     protected async execute<T = unknown>(
         query: string,

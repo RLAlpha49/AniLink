@@ -3,9 +3,13 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 
 /**
- * `DeleteActivityReplyMutation` is an interface representing the variables to delete an activity reply.
- * It includes the activity reply id.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link DeleteActivityReplyVariables} contains variables for the {@link DeleteActivityReplyMutation} operation.
+ *
+ * See the {@link DeleteActivityReplyMutation} operation and {@link DeleteResult} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/deleted
  */
 export interface DeleteActivityReplyVariables {
     /**
@@ -15,7 +19,8 @@ export interface DeleteActivityReplyVariables {
 }
 
 /**
- * The variable type mappings for the `deleteActivityReply` operation.
+ * Validation metadata maps {@link DeleteActivityReplyVariables} to runtime types for the
+ * `deleteActivityReply` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -25,24 +30,29 @@ const DeleteActivityReplyMappings = {
 };
 
 /**
- * `DeleteActivityReplyMutation` is a class representing a mutation to delete an activity reply.
- * It includes a method to delete an activity
+ * {@link DeleteActivityReplyMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link DeleteActivityReplyMutation.deleteActivityReply}; variables use
+ * {@link DeleteActivityReplyVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/deleted
  */
 export class DeleteActivityReplyMutation extends AniListOperation {
     /**
-     * `DeleteActivityReply` is a method that sends a mutation request to delete an activity reply.
+     * {@link DeleteActivityReplyMutation.deleteActivityReply} sends a mutation request to delete an activity reply.
      *
      * The response is `{ deleted: boolean }`. A `true` value means the reply was deleted by this
      * call; a `false` value means the reply was not present (already deleted or never existed).
      * The mutation is therefore safe to retry after a partial failure: a `false` result confirms
      * the target is gone rather than reporting an error.
      *
-     * @param variables - An object of type `DeleteActivityReplyVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the reply was deleted by this call and `false` when it was already absent.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link DeleteActivityReplyVariables} for the mutation.
+     * @returns The {@link DeleteResult} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/deleted
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new DeleteActivityReplyMutation("your-token").deleteActivityReply({ id: 1 });
+     * ```
      */
     async deleteActivityReply(
         variables: DeleteActivityReplyVariables,

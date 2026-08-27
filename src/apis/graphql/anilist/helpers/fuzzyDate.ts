@@ -1,6 +1,12 @@
 import type { FuzzyDateInput } from "../types/FuzzyDate";
 
-/** Options for the `fuzzyDate` convenience helper. All fields are optional. */
+/**
+ * Options for building a partial {@link FuzzyDateInput} with {@link fuzzyDate}.
+ *
+ * Omitted fields retain the zero-value representation required by AniList's fuzzy-date input.
+ *
+ * @see https://docs.anilist.co/reference/input/fuzzydateinput
+ */
 export interface FuzzyDateOptions {
     /** The year, e.g. `2024`. */
     year?: number;
@@ -13,15 +19,14 @@ export interface FuzzyDateOptions {
 }
 
 /**
- * Build an AniList `FuzzyDateInput` from optional year, month, and day parts.
+ * Build an AniList {@link FuzzyDateInput} from optional year, month, and day parts.
  *
- * AniList accepts partial fuzzy dates (a year alone, or a year and month), and
- * treats missing parts as `null` rather than `0`. This helper omits any part
- * that is not provided so the resulting object only carries the fields the
- * caller actually knows, matching the `FuzzyDateInput` contract.
+ * AniList represents unknown fuzzy-date parts as `0` in this input shape. This
+ * helper fills each omitted part with `0`, so the result always matches the
+ * required fields of the {@link FuzzyDateInput} contract.
  *
- * @param options - The year, month, and day to include. All fields are optional.
- * @returns A `FuzzyDateInput` object containing only the provided parts.
+ * @param options - The {@link FuzzyDateOptions} values to include. All fields are optional.
+ * @returns A {@link FuzzyDateInput} object with omitted parts set to `0`.
  * @see https://docs.anilist.co/reference/input/fuzzydateinput
  * @example
  * ```typescript

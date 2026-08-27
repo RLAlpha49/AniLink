@@ -6,9 +6,13 @@ import { MediaTrendSortMappings } from "../../types/Sort";
 import { MediaTrendSchema } from "../../schemas/responses/query/MediaTrend";
 
 /**
- * `MediaTrendsVariables` is an interface representing the variables for the `MediaTrendsQuery`.
- * It includes optional page, per page, media id, date, trending, average score, popularity, episode, releasing, media id not, media id in, media id not in, date greater, date lesser, trending greater, trending lesser, trending not, average score greater, average score lesser, average score not, popularity greater, popularity lesser, popularity not, episode greater, episode lesser, episode not, sort, and as html.
- * @see https://docs.anilist.co/reference/query
+ * {@link MediaTrendsVariables} contains variables for the {@link MediaTrendsQuery} operation.
+ *
+ * See {@link MediaTrendsQuery} and {@link MediaTrendsPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/mediatrend
  */
 export interface MediaTrendsVariables {
     /**
@@ -153,7 +157,7 @@ export interface MediaTrendsVariables {
 }
 
 /**
- * The variable type mappings for the `mediaTrends` operation.
+ * Validation metadata maps variables to runtime types for the `mediaTrends` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -190,18 +194,22 @@ const MediaTrendsMappings = {
 };
 
 /**
- * `MediaTrendsQuery` is a class representing a query for media trends.
- * It includes a method to get media trends.
+ * {@link MediaTrendsQuery} executes the paginated AniList media-trends query through {@link AniListOperation}.
+ * Its public operation is {@link MediaTrendsQuery.mediaTrends}.
  * @see https://docs.anilist.co/reference/object/mediatrend
  */
 export class MediaTrendsQuery extends AniListOperation {
     /**
      * `mediaTrends` is a method that sends a query request to get media trends.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link MediaTrendsVariables} for the query.
+     * @returns The {@link MediaTrendsPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/mediatrend
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new MediaTrendsQuery().mediaTrends({ mediaId: 1, page: 1, perPage: 10 });
+     * ```
      */
     async mediaTrends(
         variables: MediaTrendsVariables,

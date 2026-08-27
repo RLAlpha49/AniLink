@@ -13,7 +13,7 @@ import {
 import { type PageInfo } from "../interfaces/responses/page/PageInfo";
 import { type FuzzyDateInput } from "../types/FuzzyDate";
 
-/** Callback that fetches a single `PageInfo`-based page. */
+/** Callback that fetches a single {@link PageInfo}-based page. */
 type PageFetcher<TPage extends { pageInfo: PageInfo }> = (
     page: number,
     perPage: number
@@ -25,13 +25,19 @@ type ChunkFetcher<TChunk extends { hasNextChunk: boolean }> = (
     perChunk: number
 ) => Promise<TChunk>;
 
+/**
+ * Pagination and transformation helpers exposed by `AniListApi`.
+ *
+ * @see https://docs.anilist.co/reference/object/pageinfo
+ */
 export type AniListHelpers = {
     /**
-     * Iterates `PageInfo`-based pages until `hasNextPage` is false or `maxPages` is reached.
+     * {@link paginate} walks {@link PageInfo}-based pages until `hasNextPage` is false or `maxPages` is
+     * reached, collecting every item across pages.
      * @param fetchPage - Callback that fetches a single page given its 1-based number and `perPage`.
      * @param itemsKey - The key of the items array on the page response (e.g. `"media"`, `"users"`).
-     * @param options - Optional `perPage`, `startPage`, and `maxPages` controls.
-     * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run.
+     * @param options - Optional `perPage`, `startPage`, and `maxPages` controls; a {@link PaginateOptions}.
+     * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run; a {@link PaginateResult}.
      * @see https://docs.anilist.co/reference/object/pageinfo
      * @example
      * ```typescript
@@ -55,9 +61,10 @@ export type AniListHelpers = {
     ) => Promise<PaginateResult<TPage[K] extends readonly (infer U)[] ? U : never>>;
 
     /**
-     * Async generator yielding each `PageInfo`-based page until `hasNextPage` is false or `maxPages` is reached.
+     * `paginatePages` is an async generator yielding each {@link PageInfo}-based page until
+     * `hasNextPage` is false or `maxPages` is reached.
      * @param fetchPage - Callback that fetches a single page given its 1-based number and `perPage`.
-     * @param options - Optional `perPage`, `startPage`, and `maxPages` controls.
+     * @param options - Optional `perPage`, `startPage`, and `maxPages` controls; a {@link PaginateOptions}.
      * @returns An async generator yielding each raw page response in turn.
      * @see https://docs.anilist.co/reference/object/pageinfo
      * @example
@@ -75,11 +82,12 @@ export type AniListHelpers = {
     ) => AsyncGenerator<TPage>;
 
     /**
-     * Iterates `MediaListCollection` chunks until `hasNextChunk` is false or `maxChunks` is reached.
+     * {@link paginateChunks} iterates {@link MediaListCollectionResponse} chunks until `hasNextChunk` is
+     * false or `maxChunks` is reached, collecting every item across chunks.
      * @param fetchChunk - Callback that fetches a single chunk given its 1-based number and `perChunk`.
      * @param itemsKey - The key of the items array on the chunk response (e.g. `"lists"`).
-     * @param options - Optional `perChunk`, `startChunk`, and `maxChunks` controls.
-     * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run.
+     * @param options - Optional `perChunk`, `startChunk`, and `maxChunks` controls; a {@link ChunkPaginateOptions}.
+     * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run; a {@link ChunkPaginateResult}.
      * @see https://docs.anilist.co/reference/object/medialistcollection
      * @example
      * ```typescript
@@ -105,9 +113,9 @@ export type AniListHelpers = {
     ) => Promise<ChunkPaginateResult<TChunk[K] extends readonly (infer U)[] ? U : never>>;
 
     /**
-     * Builds an AniList `FuzzyDateInput` from optional year, month, and day parts.
-     * @param options - The year, month, and day to include. All fields are optional.
-     * @returns A `FuzzyDateInput` object containing only the provided parts.
+     * {@link fuzzyDate} builds an AniList {@link FuzzyDateInput} from optional year, month, and day parts.
+     * @param options - The year, month, and day to include; a {@link FuzzyDateOptions}. All fields are optional.
+     * @returns A {@link FuzzyDateInput} object containing only the provided parts.
      * @see https://docs.anilist.co/reference/input/fuzzydateinput
      * @example
      * ```typescript
@@ -117,9 +125,10 @@ export type AniListHelpers = {
     fuzzyDate: (options?: FuzzyDateOptions) => FuzzyDateInput;
 
     /**
-     * Flattens a `MediaListCollection` response into a single array of entries tagged with their list group.
-     * @param response - The `MediaListCollectionResponse` returned by `mediaListCollection`.
-     * @returns A flat array of entries across all list groups.
+     * {@link flattenMediaListCollection} flattens a {@link MediaListCollectionResponse} into a single array of
+     * entries tagged with their list group.
+     * @param response - The {@link MediaListCollectionResponse} returned by `mediaListCollection`.
+     * @returns A flat array of {@link FlattenedMediaListEntry} across all list groups.
      * @see https://docs.anilist.co/reference/object/medialistcollection
      * @example
      * ```typescript

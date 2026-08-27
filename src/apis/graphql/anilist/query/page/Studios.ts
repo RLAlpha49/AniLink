@@ -6,9 +6,13 @@ import { CharacterSortMappings, MediaSortMappings, StudioSortMappings } from "..
 import { StudioSchema } from "../../schemas/responses/query/Studio";
 
 /**
- * `StudiosVariables` is an interface representing the variables for the `StudiosQuery`.
- * It includes optional page, per page, id, search, id not, id in, id not in, sort, as html, media sort, media is main, media on list, media page, media per page, staff media sort, staff media type, staff media on list, staff media page, staff media per page, characters sort, characters page, characters per page, character media sort, character media on list, character media page, and character media per page.
- * @see https://docs.anilist.co/reference/query
+ * {@link StudiosVariables} contains variables for the {@link StudiosQuery} operation.
+ *
+ * See {@link StudiosQuery} and {@link StudiosPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/studio
  */
 export interface StudiosVariables {
     /**
@@ -143,7 +147,7 @@ export interface StudiosVariables {
 }
 
 /**
- * The variable type mappings for the `studios` operation.
+ * Validation metadata maps variables to runtime types for the `studios` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -178,18 +182,22 @@ const StudiosMappings = {
 };
 
 /**
- * `StudiosQuery` is a class representing a query for studios.
- * It includes a method to get studios.
+ * {@link StudiosQuery} executes the paginated AniList studios query through {@link AniListOperation}.
+ * Its public operation is {@link StudiosQuery.studios}.
  * @see https://docs.anilist.co/reference/object/studio
  */
 export class StudiosQuery extends AniListOperation {
     /**
      * `studios` is a method that sends a query request to get studios.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link StudiosVariables} for the query.
+     * @returns The {@link StudiosPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/studio
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new StudiosQuery().studios({ search: "Bones", page: 1 });
+     * ```
      */
     async studios(
         variables: StudiosVariables,

@@ -4,9 +4,13 @@ import { type UserResponse } from "../interfaces/responses/query/User";
 import { BasicUserSchema } from "../schemas/Basic";
 
 /**
- * `ToggleFollowVariables` is an interface representing the variables to toggle a follow.
- * It includes a number representing the id of the user to follow.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link ToggleFollowVariables} contains variables for the {@link ToggleFollowMutation} operation.
+ *
+ * See the {@link ToggleFollowMutation} operation and {@link UserResponse} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface ToggleFollowVariables {
     /**
@@ -16,7 +20,8 @@ export interface ToggleFollowVariables {
 }
 
 /**
- * The variable type mappings for the `toggleFollow` operation.
+ * Validation metadata maps {@link ToggleFollowVariables} to runtime types for the
+ * `toggleFollow` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -26,19 +31,24 @@ const ToggleFollowMappings = {
 };
 
 /**
- * `ToggleFollowMutation` is a class representing a mutation to toggle a follow.
- * It includes a method to toggle a follow.
+ * {@link ToggleFollowMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link ToggleFollowMutation.toggleFollow}; variables use
+ * {@link ToggleFollowVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/user
  */
 export class ToggleFollowMutation extends AniListOperation {
     /**
-     * `ToggleFollow` is a method that sends a mutation request to toggle a follow.
+     * {@link ToggleFollowMutation.toggleFollow} sends a mutation request to toggle a follow.
      *
-     * @param variables - An object of type `ToggleFollowVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link ToggleFollowVariables} for the mutation.
+     * @returns The {@link UserResponse} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `userId` is missing or invalid, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/object/user
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ToggleFollowMutation("your-token").toggleFollow({ userId: 1 });
+     * ```
      */
     async toggleFollow(
         variables: ToggleFollowVariables,

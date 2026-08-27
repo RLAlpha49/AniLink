@@ -11,7 +11,7 @@ import { fuzzyDate } from "../src/apis/graphql/anilist/helpers/fuzzyDate";
 import { flattenMediaListCollection } from "../src/apis/graphql/anilist/helpers/flattenMediaListCollection";
 import type { MediaListCollectionResponse } from "../src/apis/graphql/anilist/interfaces/responses/query/MediaListCollectionResponse";
 
-/** Build a `PageInfo` object for tests. */
+/** Build a {@link PageInfo} object for tests. */
 function pageInfo(overrides: Partial<PageInfo> = {}): PageInfo {
     return {
         total: 100,

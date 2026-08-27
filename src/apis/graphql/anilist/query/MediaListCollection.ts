@@ -9,9 +9,13 @@ import { type ScoreFormat, ScoreFormatMapping } from "../types/Format";
 import { MediaListCollectionQuerySchema } from "../schemas/responses/query/MediaListCollectionResponse";
 
 /**
- * `MediaListCollectionVariables` is an interface representing the variables for the `MediaListCollectionQuery`.
- * The AniList API requires a `type` plus a `userId` or a `userName`; every other parameter is optional.
- * @see https://docs.anilist.co/reference/query
+ * {@link MediaListCollectionVariables} contains variables for the {@link MediaListCollectionQuery} operation.
+ *
+ * See {@link MediaListCollectionQuery} and {@link MediaListCollectionResponse} for the operation and response shape.
+ *
+ * Values are validated with `MediaListCollectionMappings` before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/medialistcollection
  */
 export interface MediaListCollectionVariables {
     /**
@@ -138,7 +142,7 @@ export interface MediaListCollectionVariables {
 }
 
 /**
- * The variable type mappings for the `mediaListCollection` operation.
+ * Validation metadata maps variables to runtime types for the {@link MediaListCollectionQuery.mediaListCollection} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -171,13 +175,13 @@ const MediaListCollectionMappings = {
 };
 
 /**
- * `MediaListCollectionQuery` is a class representing a query for media list collection data.
- * It includes a method to send the media list collection query and receive the response.
+ * {@link MediaListCollectionQuery} executes the AniList media-list-collection query through {@link AniListOperation}.
+ * Its public operation is {@link MediaListCollectionQuery.mediaListCollection}.
  * @see https://docs.anilist.co/reference/object/medialistcollection
  */
 export class MediaListCollectionQuery extends AniListOperation {
     /**
-     * `mediaListCollection` is a method that sends a query request to get media list collection data.
+     * {@link MediaListCollectionQuery.mediaListCollection} sends a query request to get media list collection data.
      *
      * Chunk semantics: AniList returns large user lists in chunks. Set `chunk` (1-based) and
      * `perChunk` (entries per chunk) to fetch a single chunk; the response's `hasNextChunk` flag
@@ -195,10 +199,17 @@ export class MediaListCollectionQuery extends AniListOperation {
      * );
      * ```
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request, including `lists` and `hasNextChunk`.
+     * @param variables - Values from {@link MediaListCollectionVariables} for the query.
+     * @returns The {@link MediaListCollectionResponse} from the query request, including `lists` and `hasNextChunk`.
      * @see https://docs.anilist.co/reference/object/medialistcollection
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new MediaListCollectionQuery().mediaListCollection({
+     *     type: "ANIME",
+     *     userId: 1,
+     * });
+     * ```
      */
     async mediaListCollection(
         variables: MediaListCollectionVariables,

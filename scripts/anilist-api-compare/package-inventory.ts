@@ -8,6 +8,16 @@ import {
 } from "../../lib/api-compare/typescript-contracts";
 import type { PackageOperation } from "../../lib/api-compare/types";
 
+/**
+ * Walks a provider's `query/` and `mutation/` directories and parses every
+ * TypeScript operation file into a {@link PackageOperation}.
+ *
+ * @param sourceRoot - Root of the provider's source tree, usually an absolute
+ *   path resolved from a repository-relative provider configuration.
+ * @returns The discovered operations, in directory-sorted order.
+ * @throws {Error} When any operation file cannot be parsed, wrapping the
+ *   underlying cause with the offending path.
+ */
 export async function discoverPackageOperations(sourceRoot: string): Promise<PackageOperation[]> {
     const operations: PackageOperation[] = [];
     for (const directory of ["query", "mutation"]) {
@@ -29,6 +39,14 @@ export async function discoverPackageOperations(sourceRoot: string): Promise<Pac
     return operations;
 }
 
+/**
+ * Extracts the TypeScript type contracts (response interfaces and aliases)
+ * declared across a provider's source tree.
+ *
+ * @param sourceRoot - Repository-relative root of the provider's source tree.
+ * @returns Aggregated {@link TypeScriptContracts} with per-type definitions
+ *   and any extraction warnings.
+ */
 export async function discoverPackageContracts(sourceRoot: string): Promise<TypeScriptContracts> {
     const contracts: TypeScriptContracts = { types: {}, warnings: [] };
     for (const sourcePath of await collectTypeScriptFiles(sourceRoot)) {
@@ -40,6 +58,22 @@ export async function discoverPackageContracts(sourceRoot: string): Promise<Type
     return contracts;
 }
 
+/**
+ * Parses a single operation source file into one {@link PackageOperation}.
+ *
+ * Resolves the GraphQL document from an inline template literal, or from an
+ * imported schema constant when `referencedDocument` is supplied, then
+ * expands imported selection sets and extracts operation metadata.
+ *
+ * @param sourcePath - Absolute path of the operation file (used for import
+ *   resolution and error context).
+ * @param sourceText - File contents.
+ * @param referencedDocument - Pre-resolved GraphQL document for the
+ *   `const query = Identifier` form, when the document is imported rather
+ *   than inline.
+ * @returns A single-element array when a class and document are found, or
+ *   an empty array when the file declares no parseable operation.
+ */
 export function parseOperationSource(
     sourcePath: string,
     sourceText: string,
@@ -111,6 +145,19 @@ function resolveResponseTypeName(sourceText: string): string | undefined {
     return declared;
 }
 
+/**
+ * Recursively replace imported GraphQL selection-set placeholders in a document.
+ *
+ * A visited-key set prevents cyclic schema constants from recursing forever;
+ * unresolved or repeated placeholders remain empty or unchanged according to
+ * whether the import itself could be resolved.
+ *
+ * @param sourcePath - Path of the module containing the current document.
+ * @param sourceText - Source text used to resolve imported constants.
+ * @param document - GraphQL document whose `${Name}` placeholders are expanded.
+ * @param visited - Import keys already expanded in the current traversal.
+ * @returns The document with resolvable imported selections expanded.
+ */
 function expandImportedSelections(
     sourcePath: string,
     sourceText: string,
@@ -134,6 +181,14 @@ function expandImportedSelections(
     });
 }
 
+/**
+ * Resolve a relative TypeScript import to an exported template-literal constant.
+ *
+ * @param sourcePath - Importing module path.
+ * @param sourceText - Importing module source text.
+ * @param reference - Imported constant name.
+ * @returns The imported module and document, or `undefined` when unresolved.
+ */
 function resolveImportedConstant(
     sourcePath: string,
     sourceText: string,
@@ -165,6 +220,7 @@ function resolveImportedConstant(
     return undefined;
 }
 
+/** Recursively collect TypeScript files below a directory in deterministic order. */
 async function collectTypeScriptFiles(directoryPath: string): Promise<string[]> {
     const files: string[] = [];
     const entries = (await readdir(directoryPath, { withFileTypes: true })).sort((left, right) =>
@@ -183,6 +239,13 @@ async function collectTypeScriptFiles(directoryPath: string): Promise<string[]> 
     return files;
 }
 
+/**
+ * Resolve the imported document used by a `const query/mutation = Name` declaration.
+ *
+ * @param sourcePath - Operation module path used to resolve the relative import.
+ * @param sourceText - Operation module source text.
+ * @returns The imported GraphQL document, or `undefined` for inline/unresolved forms.
+ */
 async function resolveReferencedDocument(
     sourcePath: string,
     sourceText: string
@@ -212,6 +275,13 @@ async function resolveReferencedDocument(
     return undefined;
 }
 
+/**
+ * Extract the minimal operation metadata needed when the GraphQL parser rejects a document.
+ *
+ * @param document - GraphQL document to inspect with conservative regular expressions.
+ * @returns Operation kind, variables, root field, and root arguments.
+ * @throws {Error} When the document contains no recognizable root field.
+ */
 function extractFallbackMetadata(document: string): ReturnType<typeof extractOperationMetadata> {
     const kind = /\bmutation\b/.test(document) ? "mutation" : "query";
     const variableText = /\b(?:query|mutation)\s*\(([^)]*)\)/.exec(document)?.[1] ?? "";

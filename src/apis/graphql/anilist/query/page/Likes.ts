@@ -5,9 +5,13 @@ import { type LikesPageResponse } from "../../interfaces/responses/page/Likes";
 import { BasicUserSchema } from "../../schemas/Basic";
 
 /**
- * `LikesVariables` is an interface representing the variables for the `LikesQuery`.
- * The AniList API requires both `likeableId` and `type`; `page` and `perPage` are optional.
- * @see https://docs.anilist.co/reference/query
+ * {@link LikesVariables} contains variables for the {@link LikesQuery} operation.
+ *
+ * See {@link LikesQuery} and {@link LikesPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/union/likeableunion
  */
 export interface LikesVariables {
     /**
@@ -32,7 +36,7 @@ export interface LikesVariables {
 }
 
 /**
- * The variable type mappings for the `likes` operation.
+ * Validation metadata maps variables to runtime types for the `likes` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -45,18 +49,22 @@ const LikesMappings = {
 };
 
 /**
- * `LikesQuery` is a class representing a query for likes.
- * It includes a method to get likes.
+ * {@link LikesQuery} executes the paginated AniList likes query through {@link AniListOperation}.
+ * Its public operation is {@link LikesQuery.likes}.
  * @see https://docs.anilist.co/reference/union/likeableunion
  */
 export class LikesQuery extends AniListOperation {
     /**
      * `likes` is a method that sends a query request to get likes.
      *
-     * @param variables - The variables for the query.
-     * @returns The users who liked the item for the requested page, with pagination metadata.
+     * @param variables - Values from {@link LikesVariables} for the query.
+     * @returns The {@link LikesPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/union/likeableunion
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new LikesQuery().likes({ likeableId: 1, type: "ACTIVITY" });
+     * ```
      */
     async likes(variables: LikesVariables, options?: RequestOptions): Promise<LikesPageResponse> {
         const query = `

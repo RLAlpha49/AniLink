@@ -10,9 +10,13 @@ import {
 import { CharacterSchema } from "../schemas/responses/query/Character";
 
 /**
- * `CharacterVariables` is an interface representing the variables for the `CharacterQuery`.
- * It includes optional id, isBirthday, search, id_not, id_in, id_not_in, sort, asHtml, mediaSort, mediaOnList, mediaPage, and mediaPerPage.
- * @see https://docs.anilist.co/reference/query
+ * {@link CharacterVariables} contains variables for the {@link CharacterQuery} operation.
+ *
+ * See {@link CharacterQuery} and {@link CharacterResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/character
  */
 export interface CharacterVariables {
     /**
@@ -77,7 +81,7 @@ export interface CharacterVariables {
 }
 
 /**
- * The variable type mappings for the `character` operation.
+ * The variable type mappings for the {@link CharacterQuery.character} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -98,18 +102,22 @@ const CharacterMappings = {
 };
 
 /**
- * `CharacterQuery` is a class representing a query for characters.
- * It includes a method to get characters.
+ * {@link CharacterQuery} executes the AniList character query through {@link AniListOperation}.
+ * Its public operation is {@link CharacterQuery.character}.
  * @see https://docs.anilist.co/reference/object/character
  */
 export class CharacterQuery extends AniListOperation {
     /**
-     * `character` is a method that sends a query request to get characters.
+     * {@link CharacterQuery.character} sends a query request to get characters.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link CharacterVariables} for the query.
+     * @returns The {@link CharacterResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/character
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new CharacterQuery().character({ id: 1 });
+     * ```
      */
     async character(
         variables: CharacterVariables,

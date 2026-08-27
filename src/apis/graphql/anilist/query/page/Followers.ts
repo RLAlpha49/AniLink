@@ -6,9 +6,13 @@ import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
 import { UserSchema } from "../../schemas/responses/query/User";
 
 /**
- * `FollowersVariables` is an interface representing the variables for the `FollowersQuery`.
- * It includes optional page, per page, user id, sort, anime stat limit, manga stat limit, anime stat sort, and manga stat sort.
- * @see https://docs.anilist.co/reference/query
+ * {@link FollowersVariables} contains variables for the {@link FollowersQuery} operation.
+ *
+ * See {@link FollowersQuery} and {@link FollowersPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface FollowersVariables {
     /**
@@ -58,7 +62,7 @@ export interface FollowersVariables {
 }
 
 /**
- * The variable type mappings for the `followers` operation.
+ * Validation metadata maps variables to runtime types for the `followers` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -76,18 +80,22 @@ const FollowersMappings = {
 };
 
 /**
- * `FollowersQuery` is a class representing a query for followers.
- * It includes a method to get followers.
+ * {@link FollowersQuery} executes the paginated AniList followers query through {@link AniListOperation}.
+ * Its public operation is {@link FollowersQuery.followers}.
  * @see https://docs.anilist.co/reference/object/user
  */
 export class FollowersQuery extends AniListOperation {
     /**
      * `followers` is a method that sends a query request to get followers.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link FollowersVariables} for the query.
+     * @returns The {@link FollowersPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new FollowersQuery().followers({ userId: 1, page: 1, perPage: 10 });
+     * ```
      */
     async followers(
         variables: FollowersVariables,

@@ -33,7 +33,7 @@ const MAX_CONCURRENCY = 8;
 
 /**
  * Keys of `T` whose value is a readonly array — the items field of a page or
- * chunk response. `PageInfo` and `hasNextChunk` are never arrays, so they are
+ * chunk response. {@link PageInfo} and `hasNextChunk` are never arrays, so they are
  * excluded automatically.
  */
 type ArrayKeys<T> = {
@@ -43,7 +43,7 @@ type ArrayKeys<T> = {
 /** Extract the element type of the array stored at key `K` of `T`. */
 type ArrayElement<T, K extends keyof T> = T[K] extends readonly (infer U)[] ? U : never;
 
-/** Options controlling a `paginate` traversal over `PageInfo`-based pages. */
+/** Options controlling a {@link paginate} traversal over {@link PageInfo}-based pages. */
 export interface PaginateOptions {
     /**
      * Items requested per page. AniList caps this at 50; values above 50 are
@@ -68,7 +68,7 @@ export interface PaginateOptions {
     concurrency?: number;
 }
 
-/** Options controlling a `paginateChunks` traversal over `hasNextChunk`-based chunks. */
+/** Options controlling a {@link paginateChunks} traversal over `hasNextChunk`-based chunks. */
 export interface ChunkPaginateOptions {
     /**
      * Entries requested per chunk. Values above the documented maximum of 500
@@ -93,7 +93,7 @@ export interface ChunkPaginateOptions {
     concurrency?: number;
 }
 
-/** The outcome of a `paginate` traversal. */
+/** The outcome of a {@link paginate} traversal. */
 export interface PaginateResult<TItem> {
     /** Every item collected across all fetched pages, in page order. */
     items: TItem[];
@@ -108,7 +108,7 @@ export interface PaginateResult<TItem> {
     truncated: boolean;
 }
 
-/** The outcome of a `paginateChunks` traversal. */
+/** The outcome of a {@link paginateChunks} traversal. */
 export interface ChunkPaginateResult<TItem> {
     /** Every item collected across all fetched chunks, in chunk order. */
     items: TItem[];
@@ -143,7 +143,7 @@ function extractHasMore(response: unknown): boolean {
 }
 
 /**
- * Iterate `PageInfo`-based pages until `hasNextPage` is false or `maxPages` is reached.
+ * Iterate {@link PageInfo}-based pages until `hasNextPage` is false or `maxPages` is reached.
  *
  * The helper calls `fetchPage(page, perPage)` for each page, extracts the items
  * array at `itemsKey`, and stops when AniList reports no further pages or when the
@@ -201,7 +201,7 @@ export async function paginate<
 }
 
 /**
- * Async generator that yields each `PageInfo`-based page response until
+ * Async generator that yields each {@link PageInfo}-based page response until
  * `hasNextPage` is false or `maxPages` is reached.
  *
  * Use this for streaming or early-exit workflows where collecting every item

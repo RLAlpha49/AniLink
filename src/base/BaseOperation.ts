@@ -12,6 +12,11 @@ import {
  * `RequestHandler`: a field set on `overrides` wins; every other field keeps
  * the instance value. Passing no overrides returns the instance options
  * unchanged, so the zero-cost path stays allocation-free.
+ *
+ * @param base - Instance-level transport settings, when configured.
+ * @param overrides - Per-request settings that take precedence over `base`.
+ * @returns The merged settings, or the defined input when only one side exists.
+ * @see {@link RequestOptions}
  */
 export const mergeOptions = (
     base: RequestOptions | undefined,
@@ -29,6 +34,9 @@ export const mergeOptions = (
  * unless a caller passes something more specific. Returns `undefined` when no
  * usable name exists so the auth error keeps its generic message instead of
  * appending an empty detail.
+ *
+ * @param operation - Operation instance whose constructor name is inspected.
+ * @returns A non-empty operation label, or `undefined` when none is available.
  */
 export const resolveOperationLabel = (operation: object): string | undefined => {
     const name = operation.constructor?.name;
@@ -70,18 +78,26 @@ export abstract class BaseOperation {
 
     /**
      * The instance authentication token, readable by protocol subclasses.
+     *
+     * @returns The bearer token from {@link RequestAuthInput}, or `undefined`.
      */
     protected get token(): string | undefined {
         return typeof this.requestAuth === "string" ? this.requestAuth : this.requestAuth?.token;
     }
 
-    /** The provider-specific authentication material, readable by protocol subclasses. */
+    /**
+     * The provider-specific authentication material, readable by protocol subclasses.
+     *
+     * @returns The configured {@link RequestAuthInput}, or `undefined`.
+     */
     protected get auth(): RequestAuthInput | undefined {
         return this.requestAuth;
     }
 
     /**
      * The instance transport settings, readable by protocol subclasses.
+     *
+     * @returns The configured {@link RequestOptions}, or `undefined`.
      */
     protected get instanceOptions(): RequestOptions | undefined {
         return this.resolvedOptions;
@@ -104,7 +120,7 @@ export abstract class BaseOperation {
      * @param transportOptions - Optional per-request transport settings merged over the instance-level ones. A field set here wins; unset fields keep the instance value.
      * @param contentType - Optional `Content-Type` override. When provided, the response body is returned verbatim instead of being unwrapped as a GraphQL envelope.
      * @returns Whatever the shared pipeline resolves for the call.
-     * @throws An `AniLinkAuthError` when `requiresAuth` is true and no token is set, or a normalized `AniLinkError` when the request fails.
+     * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, or a normalized {@link AniLinkError} when the request fails.
      */
     protected async dispatch<T = unknown>(
         url: string,

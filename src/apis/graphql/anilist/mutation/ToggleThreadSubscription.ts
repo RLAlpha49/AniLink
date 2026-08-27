@@ -4,9 +4,13 @@ import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
 /**
- * `ToggleThreadSubscriptionVariables` is an interface representing the variables to subscribe to a thread.
- * It includes threadId and subscribe.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link ToggleThreadSubscriptionVariables} contains variables for the {@link ToggleThreadSubscriptionMutation} operation.
+ *
+ * See {@link ToggleThreadSubscriptionMutation} and {@link ThreadResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/thread
  */
 export interface ToggleThreadSubscriptionVariables {
     /**
@@ -26,7 +30,8 @@ export interface ToggleThreadSubscriptionVariables {
 }
 
 /**
- * The variable type mappings for the `toggleThreadSubscription` operation.
+ * Validation metadata maps {@link ToggleThreadSubscriptionVariables} to runtime types for the
+ * `toggleThreadSubscription` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -38,19 +43,24 @@ const ToggleThreadSubscriptionMappings = {
 };
 
 /**
- * `ToggleThreadSubscriptionMutation` is a class representing a mutation to subscribe to a thread.
- * It includes a method to subscribe to a thread
+ * {@link ToggleThreadSubscriptionMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link ToggleThreadSubscriptionMutation.toggleThreadSubscription}; variables use
+ * {@link ToggleThreadSubscriptionVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/thread
  */
 export class ToggleThreadSubscriptionMutation extends AniListOperation {
     /**
-     * `toggleThreadSubscription` is a method that sends a mutation request to subscribe to an activity.
+     * {@link ToggleThreadSubscriptionMutation.toggleThreadSubscription} sends a mutation request to subscribe to a thread.
      *
-     * @param variables - An object of type `ToggleThreadSubscriptionVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/object/thread
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link ToggleThreadSubscriptionVariables} for the mutation.
+     * @returns The {@link ThreadResponse} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `threadId` or `subscribe` is missing or invalid, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/object/thread
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ToggleThreadSubscriptionMutation("your-token").toggleThreadSubscription({ threadId: 1, subscribe: true });
+     * ```
      */
     async toggleThreadSubscription(
         variables: ToggleThreadSubscriptionVariables,

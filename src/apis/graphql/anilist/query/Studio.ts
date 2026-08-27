@@ -12,9 +12,13 @@ import {
 import { StudioSchema } from "../schemas/responses/query/Studio";
 
 /**
- * `StudioVariables` is an interface representing the variables for the `StudioQuery`.
- * It includes optional parameters for querying studio data.
- * @see https://docs.anilist.co/reference/query
+ * {@link StudioVariables} contains variables for the {@link StudioQuery} operation.
+ *
+ * See {@link StudioQuery} and {@link StudioResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/studio
  */
 export interface StudioVariables {
     /**
@@ -139,7 +143,7 @@ export interface StudioVariables {
 }
 
 /**
- * The variable type mappings for the `studio` operation.
+ * Validation metadata maps variables to runtime types for the {@link StudioQuery.studio} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -172,18 +176,22 @@ const StudioMappings = {
 };
 
 /**
- * `StudioQuery` is a class representing a query for studio data.
- * It includes a method to send the studio query and receive the response.
+ * {@link StudioQuery} executes the AniList studio query through {@link AniListOperation}.
+ * Its public operation is {@link StudioQuery.studio}.
  * @see https://docs.anilist.co/reference/object/studio
  */
 export class StudioQuery extends AniListOperation {
     /**
-     * `studio` is a method that sends a query request to get studio data.
+     * {@link StudioQuery.studio} sends a query request to get studio data.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link StudioVariables} for the query.
+     * @returns The {@link StudioResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/studio
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new StudioQuery().studio({ id: 1 });
+     * ```
      */
     async studio(variables: StudioVariables, options?: RequestOptions): Promise<StudioResponse> {
         const query = `

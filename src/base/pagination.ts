@@ -17,10 +17,17 @@
 /**
  * Upper bound on caller-supplied look-ahead `concurrency`. Values above this
  * are clamped down so a typo like `concurrency: 1000` cannot hammer an API.
+ *
+ * @see {@link fetchWithLookAhead}
  */
 export const MAX_CONCURRENCY = 8;
 
-/** The outcome of a {@link fetchWithLookAhead} traversal. */
+/**
+ * The ordered outcome of a {@link fetchWithLookAhead} traversal.
+ *
+ * @typeParam TEntry - Raw response shape for one fetched page or chunk.
+ * @see {@link fetchWithLookAhead}
+ */
 export interface LookAheadResult<TEntry> {
     /** Responses ordered by entry number. */
     responses: TEntry[];
@@ -37,6 +44,7 @@ export interface LookAheadResult<TEntry> {
  * @param value - The caller-supplied value (may be `undefined`).
  * @param fallback - The default to use when `value` is not a usable positive integer.
  * @returns A positive, finite integer.
+ * @see {@link resolveCappedInt}
  */
 export function resolvePositiveInt(value: number | undefined, fallback: number): number {
     if (value === undefined) return fallback;
@@ -51,6 +59,7 @@ export function resolvePositiveInt(value: number | undefined, fallback: number):
  * @param max - The upper bound; larger values are reduced to this.
  * @param fallback - The default to use when `value` is not a usable positive integer.
  * @returns A positive, finite integer no greater than `max`.
+ * @see {@link resolvePositiveInt}
  */
 export function resolveCappedInt(value: number | undefined, max: number, fallback: number): number {
     return Math.min(resolvePositiveInt(value, fallback), max);
@@ -89,12 +98,11 @@ export function resolveCappedInt(value: number | undefined, max: number, fallbac
  * @typeParam TKey - The paging key type: a page number in numeric mode, or an opaque cursor value in cursor mode.
  * @param fetch - Callback that fetches a single entry given its paging key.
  * @param extractHasMore - Reads the "more data available" flag from a fetched entry. Return `false` for malformed responses so a broken payload ends the traversal instead of looping forever.
- * @param extractNextKey - Optional callback reading the next paging key from a fetched entry. Pass `undefined` (or omit trailing arguments) for numeric page-number paging.
- * @param firstKey - First paging key: the starting page number in numeric mode, or the initial cursor in cursor mode (already resolved/validated).
- * @param maxEntries - Hard cap on entries fetched (already resolved/validated).
- * @param concurrency - Look-ahead window size (already resolved/clamped).
+ * @param rest - Positional paging arguments in one of two shapes: numeric paging `[startNumber, maxEntries, concurrency]`, or cursor paging `[extractNextKey, firstKey, maxEntries, concurrency]` where `extractNextKey` reads the next paging key from a fetched entry (`undefined` selects numeric paging). Keys, caps, and the concurrency window are already resolved and validated when this driver is invoked.
  * @returns The responses in entry order, how many were fetched, and whether
  *          the guard truncated the run.
+ * @throws The rejection from the next unconsumed `fetch` call in entry order.
+ * @see {@link LookAheadResult}
  */
 export async function fetchWithLookAhead<TEntry, TKey = number>(
     fetch: (key: TKey) => Promise<TEntry>,

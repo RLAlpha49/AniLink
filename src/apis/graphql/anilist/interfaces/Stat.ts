@@ -3,7 +3,7 @@ import { type Staff } from "./Staff";
 import { type Studio } from "./Studio";
 
 /**
- * `Stat` is an interface representing the statistics of a media.
+ * {@link Stat} is an interface representing the statistics of a media.
  * It includes the count, mean score, minutes watched, chapters read, media ids, format, status, score, length, release year, start year, genre, tag, country, voice actor, character ids, staff, and studio each having their own properties.
  * @see https://docs.anilist.co/reference/object/userstatistictypes
  */
@@ -69,7 +69,7 @@ export interface Stat {
     genre?: string;
 
     /**
-     * `tag` is an instance of `Tag` representing the tag of the media.
+     * `tag` is an instance of {@link Tag} representing the tag of the media.
      */
     tag?: Tag;
 
@@ -79,7 +79,7 @@ export interface Stat {
     country?: string;
 
     /**
-     * `voiceActor` is an instance of `Staff` representing the voice actor of the media.
+     * `voiceActor` is an instance of {@link Staff} representing the voice actor of the media.
      */
     voiceActor?: Staff;
 
@@ -89,12 +89,12 @@ export interface Stat {
     characterIds?: number[];
 
     /**
-     * `staff` is an instance of `Staff` representing the staff of the media.
+     * `staff` is an instance of {@link Staff} representing the staff of the media.
      */
     staff?: Staff;
 
     /**
-     * `studio` is an instance of `Studio` representing the studio of the media.
+     * `studio` is an instance of {@link Studio} representing the studio of the media.
      */
     studio?: Studio;
 }

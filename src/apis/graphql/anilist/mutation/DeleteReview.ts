@@ -3,9 +3,13 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 
 /**
- * `DeleteReviewVariables` is an interface that contains the variables that are required for the `DeleteReview` mutation.
- * It includes the review ID.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link DeleteReviewVariables} contains variables for the {@link DeleteReviewMutation} operation.
+ *
+ * See the {@link DeleteReviewMutation} operation and {@link DeleteResult} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/deleted
  */
 export interface DeleteReviewVariables {
     /**
@@ -15,7 +19,8 @@ export interface DeleteReviewVariables {
 }
 
 /**
- * The variable type mappings for the `deleteReview` operation.
+ * Validation metadata maps {@link DeleteReviewVariables} to runtime types for the
+ * `deleteReview` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -25,24 +30,29 @@ const DeleteReviewMappings = {
 };
 
 /**
- * `DeleteReviewMutation` is a class representing a mutation to delete a review.
- * It includes a method to delete a review.
+ * {@link DeleteReviewMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link DeleteReviewMutation.deleteReview}; variables use
+ * {@link DeleteReviewVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/deleted
  */
 export class DeleteReviewMutation extends AniListOperation {
     /**
-     * `deleteReview` is a method that sends a mutation request to delete a review.
+     * {@link DeleteReviewMutation.deleteReview} sends a mutation request to delete a review.
      *
      * The response is `{ deleted: boolean }`. A `true` value means the review was deleted by this
      * call; a `false` value means the review was not present (already deleted or never existed).
      * The mutation is therefore safe to retry after a partial failure: a `false` result confirms
      * the target is gone rather than reporting an error.
      *
-     * @param variables - An object of type `DeleteReviewVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the review was deleted by this call and `false` when it was already absent.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link DeleteReviewVariables} for the mutation.
+     * @returns The {@link DeleteResult} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/deleted
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new DeleteReviewMutation("your-token").deleteReview({ id: 1 });
+     * ```
      */
     async deleteReview(
         variables: DeleteReviewVariables,

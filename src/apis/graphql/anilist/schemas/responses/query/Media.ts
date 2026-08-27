@@ -13,7 +13,7 @@ import { TitleSchema } from "../../Title";
 import { TrailerSchema } from "../../Trailer";
 
 /**
- * `MediaStatsSchema` is a string representing the GraphQL selection set for a media's aggregate statistics.
+ * {@link MediaStatsSchema} is a string representing the GraphQL selection set for a media's aggregate statistics.
  * It interpolates the status and score distribution selections.
  * @see https://docs.anilist.co/reference/object/mediastats
  */
@@ -23,7 +23,7 @@ export const MediaStatsSchema = `
 `;
 
 /**
- * `MediaWithRelationsSchema` is a constant representing the GraphQL schema for a media query with relations.
+ * {@link MediaWithRelationsSchema} is a constant representing the GraphQL schema for a media query with relations.
  * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, relations, characters, staff, studios, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
  * @see https://docs.anilist.co/reference/object/media
  */
@@ -166,7 +166,7 @@ export const MediaWithRelationsSchema = `
 `;
 
 /**
- * `MediaSchema` is a constant representing the GraphQL schema for a media query.
+ * {@link MediaSchema} is a constant representing the GraphQL schema for a media query.
  * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
  * @see https://docs.anilist.co/reference/object/media
  */

@@ -7,9 +7,13 @@ import { MediaTypeMappings } from "../../types/Type";
 import { StaffSchema } from "../../schemas/responses/query/Staff";
 
 /**
- * `StaffsVariables` is an interface representing the variables for the `StaffsQuery`.
- * It includes optional page, per page, id, is birthday, search, id not, id in, id not in, sort, as html, staff media sort, staff media type, staff media on list, staff media page, staff media per page, characters sort, characters page, characters per page, character media sort, character media on list, character media page, and character media per page.
- * @see https://docs.anilist.co/reference/query
+ * {@link StaffsVariables} contains variables for the {@link StaffsQuery} operation.
+ *
+ * See {@link StaffsQuery} and {@link StaffsPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/staff
  */
 export interface StaffsVariables {
     /**
@@ -124,7 +128,7 @@ export interface StaffsVariables {
 }
 
 /**
- * The variable type mappings for the `staffs` operation.
+ * Validation metadata maps variables to runtime types for the `staffs` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -155,18 +159,22 @@ const StaffsMappings = {
 };
 
 /**
- * `StaffsQuery` is a class representing a query for staffs.
- * It includes a method to get staffs.
+ * {@link StaffsQuery} executes the paginated AniList staff query through {@link AniListOperation}.
+ * Its public operation is {@link StaffsQuery.staffs}.
  * @see https://docs.anilist.co/reference/object/staff
  */
 export class StaffsQuery extends AniListOperation {
     /**
      * `staffs` is a method that sends a query request to get staffs.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link StaffsVariables} for the query.
+     * @returns The {@link StaffsPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/staff
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new StaffsQuery().staffs({ search: "Hayao Miyazaki", page: 1 });
+     * ```
      */
     async staffs(
         variables: StaffsVariables,

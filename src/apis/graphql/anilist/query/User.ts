@@ -10,9 +10,13 @@ import {
 import { UserSchema } from "../schemas/responses/query/User";
 
 /**
- * `UserVariables` is an interface representing the variables for the `UserQuery`.
- * It includes optional parameters for querying user data.
- * @see https://docs.anilist.co/reference/query
+ * {@link UserVariables} contains variables for the {@link UserQuery} operation.
+ *
+ * See {@link UserQuery} and {@link UserResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface UserVariables {
     /**
@@ -67,7 +71,7 @@ export interface UserVariables {
 }
 
 /**
- * The variable type mappings for the `user` operation.
+ * Validation metadata maps variables to runtime types for the {@link UserQuery.user} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -86,18 +90,22 @@ const UserMappings = {
 };
 
 /**
- * `UserQuery` is a class representing a query for user data.
- * It includes a method to send the user query and receive the response.
+ * {@link UserQuery} executes the AniList user query through {@link AniListOperation}.
+ * Its public operation is {@link UserQuery.user}.
  * @see https://docs.anilist.co/reference/object/user
  */
 export class UserQuery extends AniListOperation {
     /**
-     * `user` is a method that sends a query request to get user data.
+     * {@link UserQuery.user} sends a query request to get user data.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link UserVariables} for the query.
+     * @returns The {@link UserResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new UserQuery().user({ id: 1 });
+     * ```
      */
     async user(variables: UserVariables, options?: RequestOptions): Promise<UserResponse> {
         const query = `

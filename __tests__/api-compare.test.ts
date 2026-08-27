@@ -144,6 +144,12 @@ describe("compare - union member contracts via inline fragments", () => {
         if (fixtureRoot) rmSync(fixtureRoot, { recursive: true, force: true });
     });
 
+    /**
+     * Creates the temporary package tree used by the union-contract comparison.
+     *
+     * @returns The temporary fixture root, which the suite removes after the tests.
+     * @throws When the operating system cannot create or populate the temporary fixture.
+     */
     function writeFixture(): string {
         const root = mkdtempSync(join(tmpdir(), "anilink-api-compare-"));
         mkdirSync(join(root, "query"), { recursive: true });
@@ -167,6 +173,15 @@ describe("compare - union member contracts via inline fragments", () => {
             "utf8"
         );
 
+        /**
+         * Produces a synthetic operation module for a package-inventory fixture.
+         *
+         * @param className - Exported query class name in the generated module.
+         * @param methodName - Operation method name in the generated module.
+         * @param rootField - GraphQL root field selected by the operation.
+         * @param memberFields - Newline-separated fields selected inside the inline fragment.
+         * @returns TypeScript source containing the requested operation.
+         */
         const operationTemplate = (
             className: string,
             methodName: string,
@@ -259,6 +274,11 @@ describe("compare - union member contracts via inline fragments", () => {
     });
 });
 
+/**
+ * Builds the minimal schema needed to compare the generated union fixture.
+ *
+ * @returns A schema containing the union-like object, its inline-fragment member, and both query fields.
+ */
 function buildFakeSchema(): Schema {
     const objectRef = { kind: "OBJECT", name: "ThingUnion", ofType: null };
     return {

@@ -1,6 +1,12 @@
 import type { MediaListCollectionResponse } from "../interfaces/responses/query/MediaListCollectionResponse";
 
-/** A single entry flattened out of a `MediaListCollection`, with all its list memberships. */
+/**
+ * A media-list entry flattened from {@link MediaListCollectionResponse}, retaining every list group that contains it.
+ *
+ * This local representation makes duplicate membership explicit through `listNames` and the custom-list flags.
+ *
+ * @see https://docs.anilist.co/reference/object/medialistcollection
+ */
 export interface FlattenedMediaListEntry {
     /** The id of the media list entry. */
     id: number;
@@ -31,7 +37,7 @@ export interface FlattenedMediaListEntry {
 }
 
 /**
- * Flatten a `MediaListCollection` response into a single array of entries, deduplicated by id.
+ * Flatten an AniList {@link MediaListCollectionResponse} into a single array of entries, deduplicated by id.
  *
  * AniList groups a user's list into multiple `lists` (one per status, plus any custom lists),
  * each carrying its own `entries` array. A single entry can appear in more than one group —
@@ -41,8 +47,8 @@ export interface FlattenedMediaListEntry {
  * entry per unique id with a `listNames` array recording every group it appeared in. `inCustomList`
  * and `inSplitCompletedList` are `true` when the entry appeared in any group flagged as such.
  *
- * @param response - The `MediaListCollectionResponse` returned by `mediaListCollection`.
- * @returns A flat array of deduplicated entries, each carrying its full list membership.
+ * @param response - The {@link MediaListCollectionResponse} returned by the query.
+ * @returns A flat array of deduplicated {@link FlattenedMediaListEntry} values, each carrying its full list membership.
  * @see https://docs.anilist.co/reference/object/medialistcollection
  * @example
  * ```typescript

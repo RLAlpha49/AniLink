@@ -11,25 +11,39 @@ import { fetchSchema, loadSchema, writeSchema } from "../../lib/api-compare/sche
 import type { ComparisonResult } from "../../lib/api-compare/types";
 import { resolveProvider, type ProviderConfig } from "./providers";
 
+/** Reduced comparison result consumed by the CLI orchestration layer. */
 export interface CliComparisonResult {
+    /** Discrepancies that may affect the command's exit status. */
     discrepancies: Array<{ severity: string; category: string; message: string }>;
+    /** Number of package operations discovered, when the comparison provides it. */
     implementedOperations?: number;
 }
 
+/** Injectable dependencies and command-line arguments for {@link runCli}. */
 export interface CliOptions {
+    /** Command name followed by its flags and values. */
     argv: string[];
+    /** Optional comparison implementation used by tests or alternate runners. */
     compare?: (argv: string[], provider: ProviderConfig) => Promise<CliComparisonResult>;
+    /** Optional schema-update implementation used by tests or alternate runners. */
     updateSchema?: (provider: ProviderConfig) => Promise<void>;
+    /** Logger used for progress and result messages. */
     log?: (message: string) => void;
 }
 
+/** Process result returned by the testable CLI core. */
 export interface CliResult {
+    /** `0` for success, `1` for relevant discrepancies, or `2` for an exception. */
     exitCode: number;
+    /** Human-readable exception text when the command could not complete. */
     error?: string;
 }
 
 /**
  * Runs the comparison command and keeps process termination outside the testable core.
+ *
+ * @param options - Arguments, injectable operations, and output logger.
+ * @returns Exit status and an error message when orchestration failed.
  */
 export async function runCli(options: CliOptions): Promise<CliResult> {
     const log = options.log ?? console.log;
@@ -87,6 +101,14 @@ export async function runCli(options: CliOptions): Promise<CliResult> {
     }
 }
 
+/**
+ * Fetch or load a provider schema, compare it with package contracts, and write reports.
+ *
+ * @param argv - Comparison flags, including optional schema and report paths.
+ * @param provider - Provider configuration selected by the CLI.
+ * @returns The full comparison result used for logging and exit-status decisions.
+ * @throws {Error} When schema loading, source discovery, comparison, or report writes fail.
+ */
 async function runComparison(argv: string[], provider: ProviderConfig): Promise<ComparisonResult> {
     const live = argv.includes("--live");
     const root = process.cwd();
@@ -117,6 +139,13 @@ async function runComparison(argv: string[], provider: ProviderConfig): Promise<
     return result;
 }
 
+/**
+ * Fetch the provider's live GraphQL schema and replace its committed snapshot.
+ *
+ * @param provider - Provider whose endpoint and snapshot path are used.
+ * @returns Nothing; writes the refreshed schema snapshot to disk.
+ * @throws {Error} When the endpoint cannot be fetched or the snapshot cannot be written.
+ */
 async function updateSchema(provider: ProviderConfig): Promise<void> {
     const schema = await fetchSchema(fetch, { url: provider.graphqlUrl });
     await writeSchema(resolve(process.cwd(), provider.schemaPath), schema);
@@ -125,6 +154,9 @@ async function updateSchema(provider: ProviderConfig): Promise<void> {
 /**
  * Warns when an entry in `IGNORED_UNIMPLEMENTED_OPERATIONS` lacks a dated
  * `review: YYYY-Qn` note, so the ignore list cannot grow silently.
+ *
+ * @param log - Destination for CI warning messages.
+ * @returns Nothing; warnings are emitted for each undated ignored operation.
  */
 export async function warnOnUndatedIgnoredOperations(
     log: (message: string) => void = console.warn

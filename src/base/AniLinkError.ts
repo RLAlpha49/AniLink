@@ -1,8 +1,16 @@
 /**
- * Stable error codes returned by the AniLink transport boundary.
+ * {@link AniLinkErrorCodes} is the stable code map returned by the AniLink transport boundary.
  *
- * These codes let consumers classify failures without depending on Axios
- * implementation details or matching human-readable messages.
+ * These codes let consumers classify failures without depending on Axios implementation details or matching human-readable messages. Use {@link AniLinkErrorCode} to type the code and {@link AniLinkError} to branch on it.
+ *
+ * @see {@link AniLinkErrorCode}
+ * @example
+ * ```ts
+ * import { AniLinkErrorCodes } from "./base/AniLinkError";
+ * if (error.code === AniLinkErrorCodes.AUTH) {
+ *   console.error("Missing token");
+ * }
+ * ```
  */
 export const AniLinkErrorCodes = {
     API: "API_ERROR",
@@ -16,12 +24,25 @@ export const AniLinkErrorCodes = {
     UNKNOWN: "UNKNOWN_ERROR",
 } as const;
 
-/** A machine-readable AniLink transport error code. */
+/**
+ * Union of stable error codes exposed by the AniLink transport boundary.
+ *
+ * @see {@link AniLinkErrorCodes}
+ */
 export type AniLinkErrorCode = (typeof AniLinkErrorCodes)[keyof typeof AniLinkErrorCodes];
 
-/** A base error with a stable AniLink error code. */
+/**
+ * Base error for failures normalized by AniLink.
+ *
+ * Consumers can branch on {@link AniLinkError.code} without depending on the
+ * underlying Axios error or a provider's human-readable message.
+ *
+ * @see {@link AniLinkErrorCodes}
+ */
 export class AniLinkError extends Error {
+    /** Stable code used to classify the failure. */
     public code: AniLinkErrorCode;
+    /** Original Axios or transport error when raw diagnostics were enabled. */
     declare public readonly rawAxiosError?: unknown;
 
     /**
@@ -48,6 +69,8 @@ export class AniLinkError extends Error {
  * Populated from the `x-ratelimit-*` header family (AniList) or the
  * `X-RateLimit-*` / `Retry-After` family used by REST providers such as
  * MyAnimeList, whenever the upstream includes the required headers.
+ *
+ * @see {@link AniLinkApiError.rateLimit}
  */
 export interface RateLimitInfo {
     /** The maximum number of requests allowed in the current window. */
@@ -67,7 +90,9 @@ export interface RateLimitInfo {
  * through it directly.
  */
 export class AniLinkApiError extends AniLinkError {
+    /** HTTP status returned by the upstream API. */
     public readonly status: number;
+    /** Response body returned by the upstream API, preserved verbatim. */
     public readonly data: unknown;
 
     /**
@@ -112,6 +137,8 @@ export class AniLinkApiError extends AniLinkError {
  * includes them. Any additional upstream fields are preserved verbatim via the
  * index signature so consumers never need to string-match messages to
  * classify a failure.
+ *
+ * @see {@link AniLinkGraphQLError.graphqlErrors}
  */
 export interface GraphQLUpstreamError {
     /** The human-readable error message returned by AniList. */
@@ -126,7 +153,11 @@ export interface GraphQLUpstreamError {
     [key: string]: unknown;
 }
 
-/** A GraphQL-level failure returned inside an HTTP 200 envelope. */
+/**
+ * GraphQL-level failure returned inside an HTTP 200 envelope.
+ *
+ * @see {@link GraphQLUpstreamError}
+ */
 export class AniLinkGraphQLError extends AniLinkApiError {
     /**
      * The upstream GraphQL `errors` array carried by the envelope, preserved
@@ -170,7 +201,11 @@ export class AniLinkGraphQLError extends AniLinkApiError {
     }
 }
 
-/** A failure caused by a missing authentication token. */
+/**
+ * Failure caused by a missing authentication token on a protected operation.
+ *
+ * @see {@link AniLinkErrorCodes.AUTH}
+ */
 export class AniLinkAuthError extends AniLinkError {
     /**
      * Creates an authentication error for a token-required operation.
@@ -188,9 +223,13 @@ export class AniLinkAuthError extends AniLinkError {
     }
 }
 
-/** A failure caused by operation variables that fail validation. */
+/**
+ * Failure caused by operation variables that fail validation.
+ *
+ * @see {@link AniLinkErrorCodes.VALIDATION}
+ */
 export class AniLinkValidationError extends AniLinkError {
-    /** The individual validation problems, one per line. */
+    /** Individual validation problems, one per entry. */
     public readonly details: readonly string[];
 
     /**
@@ -216,16 +255,27 @@ export class AniLinkValidationError extends AniLinkError {
  * consumers a stable type to branch on without inspecting status codes. It
  * carries no additional fields beyond {@link AniLinkApiError}; its value is
  * the named type itself.
+ *
+ * @see {@link AniLinkApiError}
  */
 export class AniLinkRestError extends AniLinkApiError {}
 
-/** Additional metadata attached to a transport failure. */
+/**
+ * Additional metadata attached to a transport failure.
+ *
+ * @see {@link AniLinkNetworkError.timeoutMs}
+ */
 export interface AniLinkNetworkErrorOptions {
     /** The effective per-attempt timeout in milliseconds, when a timeout was configured and enforced. */
     timeoutMs?: number;
 }
 
-/** A network, timeout, cancellation, or circuit-breaker failure. */
+/**
+ * Network, timeout, cancellation, or circuit-breaker failure.
+ *
+ * @see {@link AniLinkErrorCodes.NETWORK}
+ * @see {@link AniLinkErrorCodes.TIMEOUT}
+ */
 export class AniLinkNetworkError extends AniLinkError {
     /**
      * The effective timeout duration in milliseconds when this failure was a

@@ -4,9 +4,13 @@ import { type ThreadCommentResponse } from "../interfaces/responses/query/Thread
 import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
 
 /**
- * `SaveThreadCommentVariables` is an interface that contains the variables that are passed to the `SaveThreadComment` mutation.
- * It contains the ID of the thread, the ID of the parent comment, the comment to be saved, and a boolean to determine if the response is in HTML format.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link SaveThreadCommentVariables} contains variables for the {@link SaveThreadCommentMutation} operation.
+ *
+ * See the {@link SaveThreadCommentMutation} operation and {@link ThreadCommentResponse} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export interface SaveThreadCommentVariables {
     /**
@@ -41,7 +45,8 @@ export interface SaveThreadCommentVariables {
 }
 
 /**
- * The variable type mappings for the `saveThreadComment` operation.
+ * Validation metadata maps {@link SaveThreadCommentVariables} to runtime types for the
+ * `saveThreadComment` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -56,19 +61,24 @@ const SaveThreadCommentMappings = {
 };
 
 /**
- * `SaveThreadCommentMutation` is a class representing a mutation to save a thread comment.
- * It includes a method to save a thread
+ * {@link SaveThreadCommentMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link SaveThreadCommentMutation.saveThreadComment}; variables use
+ * {@link SaveThreadCommentVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export class SaveThreadCommentMutation extends AniListOperation {
     /**
-     * `saveThreadComment` is a method that sends a mutation request to save a thread comment.
+     * {@link SaveThreadCommentMutation.saveThreadComment} sends a mutation request to save a thread comment.
      *
-     * @param variables - An object of type `SaveThreadCommentVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/object/threadcomment
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link SaveThreadCommentVariables} for the mutation.
+     * @returns The {@link ThreadCommentResponse} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` or `threadId` is missing, a variable has an invalid type, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/object/threadcomment
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new SaveThreadCommentMutation("your-token").saveThreadComment({ id: 1, threadId: 1, parentCommentId: 0, comment: "Hello, world!", locked: false, asHtml: true });
+     * ```
      */
     async saveThreadComment(
         variables: SaveThreadCommentVariables,

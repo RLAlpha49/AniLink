@@ -118,6 +118,7 @@ declare global {
  * {@link getAxiosStub}. This works identically under every Vitest pool.
  *
  * @param stub - The stub created inside the mock factory.
+ * @returns Nothing; stores the stub for later retrieval by the suite.
  */
 export const stashAxiosStub = (stub: AxiosStub): void => {
     globalThis.__anilinkAxiosStub = stub;

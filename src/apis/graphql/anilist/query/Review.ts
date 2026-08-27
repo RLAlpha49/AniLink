@@ -6,9 +6,13 @@ import { type ReviewSort, ReviewSortMappings } from "../types/Sort";
 import { ReviewSchema } from "../schemas/responses/query/Review";
 
 /**
- * `ReviewVariables` is an interface representing the variables for the `ReviewQuery`.
- * It includes optional parameters for querying review data.
- * @see https://docs.anilist.co/reference/query
+ * {@link ReviewVariables} contains variables for the {@link ReviewQuery} operation.
+ *
+ * See {@link ReviewQuery} and {@link ReviewResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/review
  */
 export interface ReviewVariables {
     /**
@@ -43,7 +47,7 @@ export interface ReviewVariables {
 }
 
 /**
- * The variable type mappings for the `review` operation.
+ * Validation metadata maps variables to runtime types for the {@link ReviewQuery.review} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -58,18 +62,22 @@ const ReviewMappings = {
 };
 
 /**
- * `ReviewQuery` is a class representing a query for review data.
- * It includes a method to send the review query and receive the response.
+ * {@link ReviewQuery} executes the AniList review query through {@link AniListOperation}.
+ * Its public operation is {@link ReviewQuery.review}.
  * @see https://docs.anilist.co/reference/object/review
  */
 export class ReviewQuery extends AniListOperation {
     /**
-     * `review` is a method that sends a query request to get review data.
+     * {@link ReviewQuery.review} sends a query request to get review data.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link ReviewVariables} for the query.
+     * @returns The {@link ReviewResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/review
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ReviewQuery().review({ mediaId: 1 });
+     * ```
      */
     async review(variables: ReviewVariables, options?: RequestOptions): Promise<ReviewResponse> {
         const query = `

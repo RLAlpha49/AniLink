@@ -10,9 +10,13 @@ import {
 import { UserSchema } from "../schemas/responses/query/User";
 
 /**
- * `FollowerVariables` is an interface representing the variables for the `FollowerQuery`.
- * It includes optional userId, sort, asHtml, animeStatLimit, mangaStatLimit, animeStatSort, and mangaStatSort.
- * @see https://docs.anilist.co/reference/query
+ * {@link FollowerVariables} contains variables for the {@link FollowerQuery} operation.
+ *
+ * See {@link FollowerQuery} and {@link UserResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface FollowerVariables {
     /**
@@ -52,7 +56,7 @@ export interface FollowerVariables {
 }
 
 /**
- * The variable type mappings for the `follower` operation.
+ * The variable type mappings for the {@link FollowerQuery.follower} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -68,18 +72,22 @@ const FollowerMappings = {
 };
 
 /**
- * `FollowerQuery` is a class representing a query for followers.
- * It includes a method to get followers.
+ * {@link FollowerQuery} executes the AniList follower query through {@link AniListOperation}.
+ * Its public operation is {@link FollowerQuery.follower}.
  * @see https://docs.anilist.co/reference/object/user
  */
 export class FollowerQuery extends AniListOperation {
     /**
-     * `follower` is a method that sends a query request to get followers.
+     * {@link FollowerQuery.follower} sends a query request to get followers.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link FollowerVariables} for the query.
+     * @returns The {@link UserResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new FollowerQuery().follower({ userId: 1 });
+     * ```
      */
     async follower(variables: FollowerVariables, options?: RequestOptions): Promise<UserResponse> {
         const query = `

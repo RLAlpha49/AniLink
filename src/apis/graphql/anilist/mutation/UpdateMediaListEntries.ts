@@ -7,13 +7,15 @@ import { type MediaListResponse } from "../interfaces/responses/query/MediaList"
 import { FuzzyDateSchema } from "../schemas/FuzzyDate";
 
 /**
- * `UpdateMediaListEntriesVariables` is an interface representing the variables for the `UpdateMediaListEntriesMutation`.
- * It includes optional status, score, raw score, progress, progress volumes, repeat, priority, private status, notes, hidden from status lists status, advanced scores, started at date, completed at date, and a required array of ids.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link UpdateMediaListEntriesVariables} contains variables for the {@link UpdateMediaListEntriesMutation} operation.
+ *
+ * See {@link UpdateMediaListEntriesMutation} and {@link MediaListResponse} for the operation and response shape.
+ *
+ * @see https://docs.anilist.co/reference/object/medialist
  */
 export interface UpdateMediaListEntriesVariables {
     /**
-     * `status` is a `MediaListStatus` representing the status of the media list entries.
+     * `status` is a {@link MediaListStatus} representing the status of the media list entries.
      */
     status?: MediaListStatus;
 
@@ -84,7 +86,8 @@ export interface UpdateMediaListEntriesVariables {
 }
 
 /**
- * The variable type mappings for the `updateMediaListEntries` operation.
+ * Validation metadata maps {@link UpdateMediaListEntriesVariables} to runtime types for the
+ * `updateMediaListEntries` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -107,19 +110,24 @@ const UpdateMediaListEntriesMappings = {
 };
 
 /**
- * `UpdateMediaListEntriesMutation` is a class representing a mutation to update media list entries.
- * It includes a method to update media list entries.
+ * {@link UpdateMediaListEntriesMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link UpdateMediaListEntriesMutation.updateMediaListEntries}; variables use
+ * {@link UpdateMediaListEntriesVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/medialist
  */
 export class UpdateMediaListEntriesMutation extends AniListOperation {
     /**
-     * `updateMediaListEntries` is a method that sends a mutation request to update media list entries.
+     * {@link UpdateMediaListEntriesMutation.updateMediaListEntries} sends a mutation request to update media list entries.
      *
-     * @param variables - An object of type `UpdateMediaListEntriesVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/object/medialist
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link UpdateMediaListEntriesVariables} for the mutation.
+     * @returns The updated {@link MediaListResponse} entries returned by the mutation.
+     * @throws Throws if no authentication token is configured, `ids` is missing or invalid, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/object/medialist
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new UpdateMediaListEntriesMutation("your-token").updateMediaListEntries({ ids: [1], status: "CURRENT", progress: 1 });
+     * ```
      */
     async updateMediaListEntries(
         variables: UpdateMediaListEntriesVariables,

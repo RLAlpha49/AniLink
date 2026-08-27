@@ -3,6 +3,12 @@ import plugin from '@typescript-eslint/eslint-plugin';
 import security from 'eslint-plugin-security';
 import prettierConfig from 'eslint-config-prettier';
 
+/**
+ * Shared flat ESLint configuration for source, test, script, and explorer files.
+ *
+ * Type-aware rules are limited to source TypeScript files; tests and scripts use
+ * syntax-only parsing so fixtures do not require the source project service.
+ */
 export default [
   ...plugin.configs['flat/recommended'],
   {

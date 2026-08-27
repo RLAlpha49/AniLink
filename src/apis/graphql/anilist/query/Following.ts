@@ -10,9 +10,13 @@ import {
 import { UserSchema } from "../schemas/responses/query/User";
 
 /**
- * `FollowingVariables` is an interface representing the variables for the `FollowingQuery`.
- * It includes optional userId, sort, asHtml, animeStatLimit, mangaStatLimit, animeStatSort, and mangaStatSort.
- * @see https://docs.anilist.co/reference/query
+ * {@link FollowingVariables} contains variables for the {@link FollowingQuery} operation.
+ *
+ * See {@link FollowingQuery} and {@link UserResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface FollowingVariables {
     /**
@@ -52,7 +56,7 @@ export interface FollowingVariables {
 }
 
 /**
- * The variable type mappings for the `following` operation.
+ * The variable type mappings for the {@link FollowingQuery.following} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -68,18 +72,22 @@ const FollowingMappings = {
 };
 
 /**
- * `FollowingQuery` is a class representing a query for following users.
- * It includes a method to get following users.
+ * {@link FollowingQuery} executes the AniList following-users query through {@link AniListOperation}.
+ * Its public operation is {@link FollowingQuery.following}.
  * @see https://docs.anilist.co/reference/object/user
  */
 export class FollowingQuery extends AniListOperation {
     /**
-     * `following` is a method that sends a query request to get following users.
+     * {@link FollowingQuery.following} sends a query request to get following users.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link FollowingVariables} for the query.
+     * @returns The {@link UserResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new FollowingQuery().following({ userId: 1 });
+     * ```
      */
     async following(
         variables: FollowingVariables,

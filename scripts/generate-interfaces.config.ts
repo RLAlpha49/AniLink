@@ -23,15 +23,16 @@
  * - `Staff.ts` / `Studio.ts` — shared sub-shapes referenced by the supersets
  *   above and by generated responses; they correspond to no single fragment.
  *
- * Operation-derived outputs (`responses/page/*`, `AniChartUserResponse`,
- * `ExternalLinkSourceCollectionResponse`, `MediaTagCollectionResponse`,
- * `DeleteMediaListEntryResponse`, and the `Thread` aliases) are generated from
+ * Operation-derived outputs (`responses/page/*`, {@link AniChartUserResponse},
+ * {@link ExternalLinkSourceCollectionResponse}, {@link MediaTagCollectionResponse},
+ * {@link DeleteMediaListEntryResponse}, and the {@link Thread} aliases) are generated from
  * the operation files' inline documents, so they always mirror what the client
  * actually sends.
  */
 import type { OutputSpec } from "../lib/interfaces-codegen/run";
 import { ANILIST_PROVIDER_CONFIG, type ProviderGenerationConfig } from "./provider-config";
 
+/** Inputs and output declarations consumed by the interface generator. */
 export interface GeneratorConfig {
     /** Provider ownership for this generator configuration. */
     provider: ProviderGenerationConfig;
@@ -39,11 +40,13 @@ export interface GeneratorConfig {
     schemaSnapshotPath: string;
     /** Directory holding the handwritten selection-set constants. */
     schemasDir: string;
+    /** Generated interface specifications, including their source fragments. */
     outputs: OutputSpec[];
     /** Generated-referenced alias types that live outside the interfaces tree. */
     aliasImports: Record<string, string>;
 }
 
+/** Verified AniList reference URLs used by generated interface JSDoc. */
 const SEE = {
     activityReply: "https://docs.anilist.co/reference/object/activityreply",
     textActivity: "https://docs.anilist.co/reference/object/textactivity",
@@ -93,12 +96,17 @@ const SEE = {
 } as const;
 
 /**
- * Builds a paginated Page response output derived from the operation file's
- * inline document. The element type resolves automatically from the operation's
- * interpolated schema fragment; only `pageInfo` is pinned to the generated
- * PageInfo interface. Wrappers whose element fragment backs a union alias
- * (Activities, Notifications) pin the element reference explicitly because
- * union sources claim no constant mapping.
+ * Build a generator specification for a paginated response interface.
+ *
+ * The element reference is explicit for union-backed connections because
+ * those selections do not have a single fragment constant to infer it from.
+ *
+ * @param name - Response and operation stem used in generated paths and names.
+ * @param elementField - Connection field selected by the page operation.
+ * @param elementSee - Verified upstream API reference for the element type.
+ * @param summary - Description emitted for the generated response interface.
+ * @param extraFieldTypes - Explicit type overrides for union-backed fields.
+ * @returns A generator specification for the paginated response interface.
  */
 function pageWrapper(
     name: string,
@@ -130,6 +138,12 @@ function pageWrapper(
     };
 }
 
+/**
+ * Complete generation manifest for the AniList response-interface tree.
+ *
+ * The generator reads this declaration to map schema fragments and operation
+ * documents to output files; it does not itself perform generation or I/O.
+ */
 export const generatorConfig: GeneratorConfig = {
     provider: ANILIST_PROVIDER_CONFIG,
     schemaSnapshotPath: `scripts/anilist-api-compare/anilist-schema.json`,

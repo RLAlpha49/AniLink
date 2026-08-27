@@ -2,7 +2,7 @@ import { NameSchema } from "./Name";
 import { TagSchema } from "./Tag";
 
 /**
- * `UserAnimeStatsSchema` is a string representing the GraphQL schema for a user's anime statistics.
+ * {@link UserAnimeStatsSchema} is a string representing the GraphQL schema for a user's anime statistics.
  * It includes the count, meanScore, minutesWatched, and mediaIds.
  * @see https://docs.anilist.co/reference/object/userstats
  */
@@ -14,7 +14,7 @@ export const UserAnimeStatsSchema = `
 `;
 
 /**
- * `UserMangaStatsSchema` is a string representing the GraphQL schema for a user's manga statistics.
+ * {@link UserMangaStatsSchema} is a string representing the GraphQL schema for a user's manga statistics.
  * It includes the count, meanScore, chaptersRead, and mediaIds.
  * @see https://docs.anilist.co/reference/object/userstats
  */
@@ -26,7 +26,7 @@ export const UserMangaStatsSchema = `
 `;
 
 /**
- * `UserStatsSectionSchema` is a string representing the GraphQL selection set for a user's aggregate stats.
+ * {@link UserStatsSectionSchema} is a string representing the GraphQL selection set for a user's aggregate stats.
  * It includes watchedTime, chaptersRead, activityHistory, status and score distributions, list scores,
  * and the favoured genres, tags, actors, staff, studios, years, and formats overviews.
  * @see https://docs.anilist.co/reference/object/userstats

@@ -6,9 +6,13 @@ import { ThreadSortMappings } from "../../types/Sort";
 import { ThreadCommentSchema } from "../../schemas/responses/query/ThreadComment";
 
 /**
- * `ThreadCommentsVariables` is an interface representing the variables for the `ThreadCommentsQuery`.
- * The AniList API requires a `threadId` or a `userId`; the remaining parameters are optional.
- * @see https://docs.anilist.co/reference/query
+ * {@link ThreadCommentsVariables} contains variables for the {@link ThreadCommentsQuery} operation.
+ *
+ * See {@link ThreadCommentsQuery} and {@link ThreadCommentsPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export interface ThreadCommentsVariables {
     /**
@@ -48,7 +52,7 @@ export interface ThreadCommentsVariables {
 }
 
 /**
- * The variable type mappings for the `threadComments` operation.
+ * Validation metadata maps variables to runtime types for the `threadComments` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -64,18 +68,22 @@ const ThreadCommentsMappings = {
 };
 
 /**
- * `ThreadCommentsQuery` is a class representing a query for thread comments.
- * It includes a method to get thread comments.
+ * {@link ThreadCommentsQuery} executes the paginated AniList thread-comments query through {@link AniListOperation}.
+ * Its public operation is {@link ThreadCommentsQuery.threadComments}.
  * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export class ThreadCommentsQuery extends AniListOperation {
     /**
      * `threadComments` is a method that sends a query request to get thread comments.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link ThreadCommentsVariables} for the query.
+     * @returns The {@link ThreadCommentsPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/threadcomment
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ThreadCommentsQuery().threadComments({ threadId: 1, page: 1 });
+     * ```
      */
     async threadComments(
         variables: ThreadCommentsVariables,

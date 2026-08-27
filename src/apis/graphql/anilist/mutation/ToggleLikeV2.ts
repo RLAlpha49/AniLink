@@ -5,9 +5,13 @@ import { type Likeable } from "../interfaces/Likeable";
 import { ActivitySchemaV2 } from "../schemas/Activity";
 
 /**
- * `ToggleLikeV2Mutation` is an interface representing the variables to toggle a like.
- * It includes the id of the likeable object and the type of the likeable object.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link ToggleLikeV2Variables} contains variables for the {@link ToggleLikeV2Mutation} operation.
+ *
+ * See {@link ToggleLikeV2Mutation} and {@link Likeable} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/union/likeableunion
  */
 export interface ToggleLikeV2Variables {
     /**
@@ -27,7 +31,8 @@ export interface ToggleLikeV2Variables {
 }
 
 /**
- * The variable type mappings for the `toggleLikeV2` operation.
+ * Validation metadata maps {@link ToggleLikeV2Variables} to runtime types for the
+ * `toggleLikeV2` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -39,20 +44,24 @@ const ToggleLikeV2Mappings = {
 };
 
 /**
- * `ToggleLikeV2Mutation` is a class representing a mutation to toggle a like.
- * It includes a method to delete an activity
+ * {@link ToggleLikeV2Mutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link ToggleLikeV2Mutation.toggleLikeV2}; variables use
+ * {@link ToggleLikeV2Variables} and validation uses `ToggleLikeV2Mappings`.
  * @see https://docs.anilist.co/reference/union/likeableunion
  */
 export class ToggleLikeV2Mutation extends AniListOperation {
     /**
-     * `ToggleLikeV2` is a method that sends a mutation request to toggle a like.
+     * {@link ToggleLikeV2Mutation.toggleLikeV2} sends a mutation request to toggle a like.
      *
-     * @param variables - An object of type `ToggleLikeV2Variables` representing the variables for the mutation.
-     * @returns A Promise that resolves to a `Likeable` — one of an activity, activity reply, thread,
-     * or thread comment, depending on which likeable entity the mutation toggled.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/union/likeableunion
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link ToggleLikeV2Variables} for the mutation.
+     * @returns The {@link Likeable} returned by the mutation: an activity, activity reply, thread, or thread comment.
+     * @throws Throws if no authentication token is configured, `id` or `type` is missing or invalid, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/union/likeableunion
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ToggleLikeV2Mutation("your-token").toggleLikeV2({ id: 1, type: "ACTIVITY" });
+     * ```
      */
     async toggleLikeV2(
         variables: ToggleLikeV2Variables,

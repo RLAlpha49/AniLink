@@ -13,6 +13,8 @@ type PrimitiveTypeName = "string" | "number" | "boolean";
  * - An array type name such as `"number[]"` or `"string[]"`.
  * - An allowlist of accepted string values (for example an enum mapping).
  * - A nested object mapping for input objects such as `FuzzyDateInput`.
+ *
+ * @see {@link VariableTypeMappings}
  */
 export type VariableTypeMapping =
     PrimitiveTypeName | `${string}[]` | readonly string[] | { readonly [key: string]: unknown };
@@ -22,6 +24,8 @@ export type VariableTypeMapping =
  *
  * Values are intentionally `unknown` so that plain object literals (whose
  * string values widen to `string`) remain assignable without `as const`.
+ *
+ * @see {@link VariableTypeMapping}
  */
 export type VariableTypeMappings = Readonly<Record<string, unknown>>;
 
@@ -139,8 +143,10 @@ const validateObject = (
  * @param options - Optional validation behaviour flags. Set
  * `rejectUnknownKeys` to `false` to ignore unknown variable keys and unknown
  * object properties instead of rejecting them.
+ * @returns Nothing when every supplied value matches its mapping.
  * @throws An {@link AniLinkValidationError} when a variable does not match its
  * expected type or when a variable or property key is unknown.
+ * @see {@link VariableTypeMappings}
  */
 export function validateVariables(
     variables: object,
@@ -186,7 +192,9 @@ export function validateVariables(
  * @param variables - The variables the caller passed to the operation.
  * @param requirements - The requirement description for the operation.
  * @param message - The error message describing what the operation needs.
+ * @returns Nothing when the requirement is satisfied.
  * @throws An {@link AniLinkValidationError} when the requirements are not met.
+ * @see {@link validateVariables}
  */
 export function requireVariables(
     variables: object,

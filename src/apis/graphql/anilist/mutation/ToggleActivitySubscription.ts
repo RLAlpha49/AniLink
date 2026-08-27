@@ -4,9 +4,13 @@ import { type Activity } from "../interfaces/Activity";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
 
 /**
- * `ToggleActivitySubscriptionMutation` is an interface representing the variables to pin an activity.
- * It includes activityId and subscribe.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link ToggleActivitySubscriptionVariables} contains variables for the {@link ToggleActivitySubscriptionMutation} operation.
+ *
+ * See the {@link ToggleActivitySubscriptionMutation} operation and {@link Activity} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export interface ToggleActivitySubscriptionVariables {
     /**
@@ -26,7 +30,8 @@ export interface ToggleActivitySubscriptionVariables {
 }
 
 /**
- * The variable type mappings for the `toggleActivitySubscription` operation.
+ * Validation metadata maps {@link ToggleActivitySubscriptionVariables} to runtime types for the
+ * `toggleActivitySubscription` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -38,19 +43,24 @@ const ToggleActivitySubscriptionMappings = {
 };
 
 /**
- * `ToggleActivitySubscriptionMutation` is a class representing a mutation to subscribe to an activity.
- * It includes a method to subscribe to an activity
+ * {@link ToggleActivitySubscriptionMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link ToggleActivitySubscriptionMutation.toggleActivitySubscription}; variables use
+ * {@link ToggleActivitySubscriptionVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
 export class ToggleActivitySubscriptionMutation extends AniListOperation {
     /**
-     * `toggleActivitySubscription` is a method that sends a mutation request to subscribe to an activity.
+     * {@link ToggleActivitySubscriptionMutation.toggleActivitySubscription} sends a mutation request to subscribe to an activity.
      *
-     * @param variables - An object of type `ToggleActivitySubscriptionVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/union/activityunion
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link ToggleActivitySubscriptionVariables} for the mutation.
+     * @returns The {@link Activity} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `activityId` or `subscribe` is missing or invalid, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/union/activityunion
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ToggleActivitySubscriptionMutation("your-token").toggleActivitySubscription({ activityId: 1, subscribe: true });
+     * ```
      */
     async toggleActivitySubscription(
         variables: ToggleActivitySubscriptionVariables,

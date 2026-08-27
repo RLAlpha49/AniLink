@@ -6,9 +6,15 @@
  * and GitHub Releases.
  */
 
-/** @type {import('semantic-release').GlobalConfig} */
+/**
+ * Whether semantic-release is running in dry-run mode.
+ *
+ * Dry runs keep the release analysis and notes flow active while disabling
+ * npm publication in the exported configuration.
+ */
 const isDryRun = process.argv.includes("--dry-run");
 
+/** @type {import('semantic-release').GlobalConfig} */
 export default {
   branches: ["master"],
   plugins: [

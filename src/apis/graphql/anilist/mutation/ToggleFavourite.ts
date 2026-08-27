@@ -4,9 +4,13 @@ import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
 
 /**
- * `ToggleFavouriteVariables` is an interface that contains the variables that are required to toggle a favourite.
- * It includes the id of what to toggle as a favourite.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link ToggleFavouriteVariables} contains variables for the {@link ToggleFavouriteMutation} operation.
+ *
+ * See the {@link ToggleFavouriteMutation} operation and {@link Favourites} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/favourites
  */
 export interface ToggleFavouriteVariables {
     /**
@@ -36,7 +40,8 @@ export interface ToggleFavouriteVariables {
 }
 
 /**
- * The variable type mappings for the `toggleFavourite` operation.
+ * Validation metadata maps {@link ToggleFavouriteVariables} to runtime types for the
+ * `toggleFavourite` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -50,19 +55,24 @@ const ToggleFavouriteMappings = {
 };
 
 /**
- * `ToggleFavouriteMutation` is a class that contains the method to toggle a favourite.
- * It includes a method to toggle a favourite.
+ * {@link ToggleFavouriteMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link ToggleFavouriteMutation.toggleFavourite}; variables use
+ * {@link ToggleFavouriteVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/favourites
  */
 export class ToggleFavouriteMutation extends AniListOperation {
     /**
-     * `toggleFavourite` is a method that sends a mutation request to toggle a favourite.
+     * {@link ToggleFavouriteMutation.toggleFavourite} sends a mutation request to toggle a favourite.
      *
-     * @param variables - An object of type `ToggleFavouriteVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link ToggleFavouriteVariables} for the mutation.
+     * @returns The {@link Favourites} returned by the mutation.
+     * @throws Throws if no authentication token is configured, at least one favourite ID is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/favourites
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ToggleFavouriteMutation("your-token").toggleFavourite({ animeId: 1, mangaId: 1, characterId: 1, staffId: 1, studioId: 1 });
+     * ```
      */
     async toggleFavourite(
         variables: ToggleFavouriteVariables,

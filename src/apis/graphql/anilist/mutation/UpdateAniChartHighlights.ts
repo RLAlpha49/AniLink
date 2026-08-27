@@ -2,8 +2,11 @@ import { AniListOperation } from "../AniListOperation";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 
 /**
- * `UpdateAniChartHighlightsVariables` is an interface that contains the variables that are required to update the AniChart highlights.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link UpdateAniChartHighlightsVariables} contains variables for the {@link UpdateAniChartHighlightsMutation} operation.
+ *
+ * See {@link UpdateAniChartHighlightsMutation} for the operation. The mutation returns the updated AniChart highlights string.
+ *
+ * @see https://docs.anilist.co/reference/object/anichartuser
  */
 export interface UpdateAniChartHighlightsVariables {
     /**
@@ -23,7 +26,8 @@ export interface UpdateAniChartHighlightsVariables {
 }
 
 /**
- * The variable type mappings for the `updateAniChartHighlights` operation.
+ * Validation metadata maps {@link UpdateAniChartHighlightsVariables} to runtime types for the
+ * `updateAniChartHighlights` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -36,18 +40,24 @@ const UpdateAniChartHighlightsMappings = {
 };
 
 /**
- * `UpdateAniChartHighlightsMutation` is a class that represents a mutation to update the AniChart highlights.
+ * {@link UpdateAniChartHighlightsMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link UpdateAniChartHighlightsMutation.updateAniChartHighlights}; variables use
+ * {@link UpdateAniChartHighlightsVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/anichartuser
  */
 export class UpdateAniChartHighlightsMutation extends AniListOperation {
     /**
-     * `updateAniChartHighlights` is a method that sends a mutation request to update the AniChart highlights.
+     * {@link UpdateAniChartHighlightsMutation.updateAniChartHighlights} sends a mutation request to update the AniChart highlights.
      *
-     * @param variables - An object of type `UpdateAniChartHighlightsVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the updated AniChart highlights string.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link UpdateAniChartHighlightsVariables} for the mutation.
+     * @returns The updated AniChart highlights string returned by the mutation.
+     * @throws Throws if no authentication token is configured, `highlights` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/anichartuser
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new UpdateAniChartHighlightsMutation("your-token").updateAniChartHighlights({ highlights: { mediaId: 1, highlight: true } });
+     * ```
      */
     async updateAniChartHighlights(
         variables: UpdateAniChartHighlightsVariables,

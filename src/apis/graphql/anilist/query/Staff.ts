@@ -13,9 +13,13 @@ import { type MediaType, MediaTypeMappings } from "../types/Type";
 import { StaffSchema } from "../schemas/responses/query/Staff";
 
 /**
- * `StaffVariables` is an interface representing the variables for the `StaffQuery`.
- * It includes optional parameters for querying staff data.
- * @see https://docs.anilist.co/reference/query
+ * {@link StaffVariables} contains variables for the {@link StaffQuery} operation.
+ *
+ * See {@link StaffQuery} and {@link StaffResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/staff
  */
 export interface StaffVariables {
     /**
@@ -120,7 +124,7 @@ export interface StaffVariables {
 }
 
 /**
- * The variable type mappings for the `staff` operation.
+ * Validation metadata maps variables to runtime types for the {@link StaffQuery.staff} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -149,18 +153,22 @@ const StaffMappings = {
 };
 
 /**
- * `StaffQuery` is a class representing a query for staff data.
- * It includes a method to send the staff query and receive the response.
+ * {@link StaffQuery} executes the AniList staff query through {@link AniListOperation}.
+ * Its public operation is {@link StaffQuery.staff}.
  * @see https://docs.anilist.co/reference/object/staff
  */
 export class StaffQuery extends AniListOperation {
     /**
-     * `staff` is a method that sends a query request to get staff data.
+     * {@link StaffQuery.staff} sends a query request to get staff data.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link StaffVariables} for the query.
+     * @returns The {@link StaffResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/staff
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new StaffQuery().staff({ id: 1 });
+     * ```
      */
     async staff(variables: StaffVariables, options?: RequestOptions): Promise<StaffResponse> {
         const query = `

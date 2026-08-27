@@ -18,11 +18,13 @@ let referencePages: Set<string> | undefined;
  */
 let operationReferences: Map<string, string> | undefined;
 
+/** JSON shape of the checked-in AniList reference-page allowlist. */
 interface ReferencePagesFile {
     pages: string[];
     operationReferences?: Record<string, string>;
 }
 
+/** Load and cache the reference-page allowlist used by every link check. */
 async function loadReferencePages(): Promise<Set<string>> {
     if (referencePages) return referencePages;
 
@@ -34,16 +36,13 @@ async function loadReferencePages(): Promise<Set<string>> {
     return referencePages;
 }
 
-/**
- * Resolves the specific reference page mapped to an operation, if any.
- * Returns `undefined` for operations with no entry in the mapping (they are
- * allowed to link to the generic query/mutation index).
- */
+/** Return an operation-specific reference path when the allowlist defines one. */
 async function expectedOperationReference(operation: string): Promise<string | undefined> {
     await loadReferencePages();
     return operationReferences!.get(operation);
 }
 
+/** Normalize an AniList reference URL to an allowlist path, ignoring query and hash suffixes. */
 function normalizeReferencePath(reference: string): string | undefined {
     if (!reference.startsWith(ANILIST_API_REFERENCE_PREFIX)) {
         return undefined;
@@ -76,6 +75,7 @@ function normalizeReferencePath(reference: string): string | undefined {
     return `/reference/${suffix}`;
 }
 
+/** Check whether a JSDoc link names a real page in the checked-in allowlist. */
 async function isActualAniListApiReference(reference: string): Promise<boolean> {
     const suffix = normalizeReferencePath(reference);
     if (!suffix) return false;
@@ -84,10 +84,15 @@ async function isActualAniListApiReference(reference: string): Promise<boolean> 
     return pages.has(suffix);
 }
 
+/** One diagnostic emitted by the repository JSDoc validator. */
 export interface JsdocIssue {
+    /** Repository-relative file containing the problem. */
     file: string;
+    /** One-based source line for the problem. */
     line: number;
+    /** Missing or invalid documentation tag. */
     tag: string;
+    /** Human-readable explanation of the violated documentation contract. */
     message: string;
 }
 
@@ -100,6 +105,13 @@ interface SourceLine {
     start: number;
 }
 
+/**
+ * Validate AniLink facade operation properties and their required API links.
+ *
+ * @param source - Source text of an AniLink facade module.
+ * @param file - Repository-relative file name used in diagnostics.
+ * @returns All missing-tag and invalid-link diagnostics found in the source.
+ */
 export async function checkAniLinkSource(source: string, file: string): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
     const lines = getSourceLines(source);
@@ -172,6 +184,13 @@ export async function checkAniLinkSource(source: string, file: string): Promise<
     return issues;
 }
 
+/**
+ * Validate exported operation classes and methods in a query or mutation module.
+ *
+ * @param source - Source text of the operation module.
+ * @param file - Repository-relative file name used in diagnostics.
+ * @returns All documentation diagnostics found in the source.
+ */
 export async function checkOperationSource(source: string, file: string): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
     await checkOperationDeclarations(source, file, issues);
@@ -179,6 +198,7 @@ export async function checkOperationSource(source: string, file: string): Promis
     return issues;
 }
 
+/** Check exported operation declarations before validating their members. */
 async function checkOperationDeclarations(
     source: string,
     file: string,
@@ -208,6 +228,7 @@ async function checkOperationDeclarations(
     }
 }
 
+/** Check auth fields, constructors, and async operation methods in one module. */
 async function checkOperationMembers(
     source: string,
     file: string,
@@ -228,6 +249,7 @@ async function checkOperationMembers(
     }
 }
 
+/** Require the private auth token field to explain its role in the client. */
 function checkAuthTokenDocumentation(
     source: string,
     file: string,
@@ -247,6 +269,7 @@ function checkAuthTokenDocumentation(
     );
 }
 
+/** Require a constructor to document the token it receives. */
 function checkConstructorDocumentation(
     source: string,
     file: string,
@@ -274,6 +297,7 @@ function checkConstructorDocumentation(
     );
 }
 
+/** Validate the documentation contract shared by query and mutation methods. */
 async function checkMethodDocumentation(
     source: string,
     file: string,
@@ -327,6 +351,13 @@ async function checkMethodDocumentation(
     }
 }
 
+/**
+ * Validate exported type aliases and constants under the AniList types tree.
+ *
+ * @param source - Source text of a types module.
+ * @param file - Repository-relative file name used in diagnostics.
+ * @returns All missing-documentation and invalid-link diagnostics found.
+ */
 export async function checkTypeSource(source: string, file: string): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
 
@@ -355,6 +386,13 @@ export async function checkTypeSource(source: string, file: string): Promise<Jsd
     return issues;
 }
 
+/**
+ * Run the complete AniLink JSDoc audit against a repository root.
+ *
+ * @param projectRoot - Repository root containing `src/` and `scripts/`.
+ * @returns All documentation diagnostics across the configured AniList source tree.
+ * @throws {Error} When a configured source directory or allowlist cannot be read.
+ */
 export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssue[]> {
     const issues: JsdocIssue[] = [];
     const sourceRoot = resolve(projectRoot, "src");
@@ -388,6 +426,7 @@ export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssu
     return issues;
 }
 
+/** Recursively collect TypeScript files in deterministic name order. */
 async function collectTypeScriptFiles(directory: string): Promise<string[]> {
     const files: string[] = [];
     const entries = (await readdir(directory, { withFileTypes: true })).sort((left, right) =>
@@ -406,6 +445,7 @@ async function collectTypeScriptFiles(directory: string): Promise<string[]> {
     return files;
 }
 
+/** Split source into lines while retaining each line's character offset. */
 function getSourceLines(source: string): SourceLine[] {
     const lines: SourceLine[] = [];
     let start = 0;
@@ -426,6 +466,7 @@ function getSourceLines(source: string): SourceLine[] {
     return lines;
 }
 
+/** Join a possibly multiline facade property until its return arrow appears. */
 function getPropertySignature(lines: SourceLine[], lineIndex: number): string {
     let signature = lines[lineIndex].text;
 
@@ -437,6 +478,7 @@ function getPropertySignature(lines: SourceLine[], lineIndex: number): string {
     return signature;
 }
 
+/** Find the nearest preceding JSDoc block for a source position. */
 function findDocumentation(source: string, index: number): DocumentationBlock | undefined {
     const prefix = source.slice(0, index);
     const closeIndex = prefix.lastIndexOf("*/");
@@ -448,6 +490,7 @@ function findDocumentation(source: string, index: number): DocumentationBlock | 
     return { text: prefix.slice(openIndex, closeIndex + 2) };
 }
 
+/** Record a missing documentation block and return the block when present. */
 function requireDocumentation(
     issues: JsdocIssue[],
     source: string,
@@ -462,6 +505,7 @@ function requireDocumentation(
     return documentation;
 }
 
+/** Record a missing tag in a documentation block. */
 function requireTag(
     issues: JsdocIssue[],
     source: string,
@@ -476,6 +520,7 @@ function requireTag(
     }
 }
 
+/** Require any valid AniList API reference link in a documentation block. */
 async function requireApiReference(
     issues: JsdocIssue[],
     source: string,
@@ -551,6 +596,7 @@ async function requireSpecificApiReference(
     }
 }
 
+/** Create a source-positioned diagnostic for the command-line report. */
 function createIssue(
     source: string,
     file: string,

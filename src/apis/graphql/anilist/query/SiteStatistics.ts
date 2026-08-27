@@ -5,9 +5,13 @@ import { type SiteTrendSort, SiteTrendSortMappings } from "../types/Sort";
 import { SiteStatisticsSchema } from "../schemas/responses/query/SiteStatistics";
 
 /**
- * `SiteStatisticsVariables` is an interface representing the variables for the `SiteStatisticsQuery`.
- * It includes optional parameters for querying site statistics data.
- * @see https://docs.anilist.co/reference/query
+ * {@link SiteStatisticsVariables} contains variables for the {@link SiteStatisticsQuery} operation.
+ *
+ * See {@link SiteStatisticsQuery} and {@link SiteStatisticsResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/sitestatistics
  */
 export interface SiteStatisticsVariables {
     /**
@@ -117,7 +121,7 @@ export interface SiteStatisticsVariables {
 }
 
 /**
- * The variable type mappings for the `siteStatistics` operation.
+ * Validation metadata maps variables to runtime types for the {@link SiteStatisticsQuery.siteStatistics} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -147,18 +151,22 @@ const SiteStatisticsMappings = {
 };
 
 /**
- * `SiteStatisticsQuery` is a class representing a query for site statistics data.
- * It includes a method to send the site statistics query and receive the response.
+ * {@link SiteStatisticsQuery} executes the AniList site-statistics query through {@link AniListOperation}.
+ * Its public operation is {@link SiteStatisticsQuery.siteStatistics}.
  * @see https://docs.anilist.co/reference/object/sitestatistics
  */
 export class SiteStatisticsQuery extends AniListOperation {
     /**
-     * `siteStatistics` is a method that sends a query request to get site statistics data.
+     * {@link SiteStatisticsQuery.siteStatistics} sends a query request to get site statistics data.
      *
-     * @param variables - The variables for the query. If not provided, an empty object will be used.
-     * @returns The response from the query request.
+     * @param variables - Optional values from {@link SiteStatisticsVariables}; defaults to an empty object.
+     * @returns The {@link SiteStatisticsResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/sitestatistics
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new SiteStatisticsQuery().siteStatistics({});
+     * ```
      */
     async siteStatistics(
         variables: SiteStatisticsVariables = {},

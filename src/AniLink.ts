@@ -66,23 +66,29 @@ export { buildMyAnimeListApi } from "./apis/rest/mal/wiring";
 export type { MyAnimeListApi } from "./apis/rest/mal/facade";
 
 /**
- * `AniLink` is a class for interacting with the APIs.
- * It provides methods for querying and mutating data.
+ * {@link AniLink} is the public entry point for interacting with the AniList GraphQL
+ * and MyAnimeList REST APIs. A single instance composes an {@link AniListApi}
+ * (under `anilist`) and a {@link MyAnimeListApi} (under `mal`), each keeping its
+ * own credentials and transport settings.
  */
 export class AniLink {
     /**
-     * Anilist API methods.
+     * The AniList GraphQL API surface, a {@link AniListApi} composed from the
+     * query, mutation, custom, and helper groups.
      * @public
      */
     public anilist: AniListApi;
 
-    /** MyAnimeList REST API methods, exposed under the `mal` namespace. */
+    /** The MyAnimeList REST API methods, a {@link MyAnimeListApi} exposed under the `mal` namespace. */
     public mal: MyAnimeListApi;
 
     /**
-     * Creates a new AniLink instance. The `authToken` parameter is optional and only required for authenticated queries and mutations. If no `authToken` is provided, only public queries will be available. You are able to create multiple AniLink instances with different `authToken`s.
+     * Creates a new {@link AniLink} instance. The `authToken` parameter is optional and only
+     * required for authenticated queries and mutations; without it only public queries are
+     * available. Multiple instances can hold different `authToken`s, each exposing an
+     * {@link AniListApi} under `anilist` and a {@link MyAnimeListApi} under `mal`.
      *
-     * Alternatively, pass a per-provider credentials object: each provider
+     * Alternatively, pass a per-provider {@link AniLinkCredentials} object: each provider
      * owns its own credentials shape, and credentials given under one key are
      * never applied to another provider's requests.
      * @param {string | AniLinkCredentials} [authToken] - The authentication token to use for AniList API requests, or a per-provider credentials object (`{ anilist?: …, mal?: … }`).

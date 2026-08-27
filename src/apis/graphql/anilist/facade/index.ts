@@ -3,7 +3,7 @@
  *
  * Adding an operation touches four sites: the operation class under `query/`
  * or `mutation/`, its declaration on one of the group types under `facade/`
- * (composed into `AniListApi` below), and its instance wiring in
+ * (composed into {@link AniListApi} below), and its instance wiring in
  * `wiring.ts`.
  */
 import type { AniListCustom } from "./custom-group";
@@ -26,7 +26,7 @@ export {
 export type { AniLinkErrorCode, RateLimitInfo } from "../../../../base/AniLinkError";
 
 /**
- * Transport settings accepted by an `AniLink` client: `timeout`, `signal`,
+ * Transport settings accepted by an {@link AniLink} client: `timeout`, `signal`,
  * automatic retries under the default policy (`retry: false` opts out), opt-in
  * `paceWithRateLimit` pacing and `circuitBreaker` fast-fail, lifecycle hooks,
  * and `exposeRawAxiosError`.
@@ -52,11 +52,11 @@ export type { AniLinkErrorCode, RateLimitInfo } from "../../../../base/AniLinkEr
 export type AniLinkOptions = RequestOptions;
 
 /**
- * Builds the AniList facade from the operation classes.
+ * Builds the {@link AniListApi} facade from the operation classes.
  *
  * @param authToken - The authentication token shared by every operation instance.
- * @param options - Timeout, cancellation, and debugging settings for API requests.
- * @returns The composed AniList API surface.
+ * @param options - Timeout, cancellation, and debugging settings; an {@link AniLinkOptions} merged over the defaults.
+ * @returns The composed {@link AniListApi}.
  */
 export function buildAniListApi(authToken?: string, options?: AniLinkOptions): AniListApi {
     return buildAniListWiring(authToken, options);
@@ -64,6 +64,7 @@ export function buildAniListApi(authToken?: string, options?: AniLinkOptions): A
 
 /**
  * The AniList API surface exposed at `aniLink.anilist`, composed from the
- * group types under `facade/`.
+ * {@link AniListCustom}, {@link AniListQueries}, {@link AniListMutations}, and
+ * {@link AniListHelpers} group types under `facade/`.
  */
 export type AniListApi = AniListCustom & AniListQueries & AniListMutations & AniListHelpers;

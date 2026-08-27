@@ -6,9 +6,13 @@ import { ActivitySortMappings } from "../../types/Sort";
 import { ActivityWithRepliesSchema } from "../../schemas/Activity";
 
 /**
- * `ActivitiesVariables` is an interface representing the variables for the `ActivitiesQuery`.
- * It includes optional page, per page, id, user id, messenger id, media id, type, is following, has replies, has replies or type text, created at, id not, id in, id not in, user id not, user id in, user id not in, messenger id not, messenger id in, messenger id not in, media id not, media id in, media id not in, type not, type in, type not in, created at greater, sort, and as html.
- * @see https://docs.anilist.co/reference/query
+ * {@link ActivitiesVariables} contains variables for the {@link ActivitiesQuery} operation.
+ *
+ * See {@link ActivitiesQuery} and {@link ActivitiesPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export interface ActivitiesVariables {
     /**
@@ -158,7 +162,7 @@ export interface ActivitiesVariables {
 }
 
 /**
- * The variable type mappings for the `activities` operation.
+ * Validation metadata maps variables to runtime types for the `activities` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -196,18 +200,22 @@ const ActivitiesMappings = {
 };
 
 /**
- * `ActivitiesQuery` is a class representing a query for activities.
- * It includes a method to get activities.
+ * {@link ActivitiesQuery} executes the paginated AniList activities query through {@link AniListOperation}.
+ * Its public operation is {@link ActivitiesQuery.activities}.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
 export class ActivitiesQuery extends AniListOperation {
     /**
      * `activities` is a method that sends a query request to get activities.
      *
-     * @param variables - The variables for the query.
-     * @returns The activities for the requested page with pagination metadata.
+     * @param variables - Values from {@link ActivitiesVariables} for the query.
+     * @returns The {@link ActivitiesPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/union/activityunion
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ActivitiesQuery().activities({ page: 1, perPage: 10 });
+     * ```
      */
     async activities(
         variables: ActivitiesVariables,

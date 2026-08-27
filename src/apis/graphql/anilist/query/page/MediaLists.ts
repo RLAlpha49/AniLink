@@ -10,9 +10,13 @@ import { ScoreFormatMapping } from "../../types/Format";
 import { MediaListSchema } from "../../schemas/responses/query/MediaList";
 
 /**
- * `MediaListsVariables` is an interface representing the variables for the `MediaListsQuery`.
- * It includes optional page, per page, id, user id, user name, type, status, media id, is following, notes, started at, completed at, compare with auth list, user id in, status in, status not in, status not, media id in, media id not in, notes like, started at greater, started at lesser, started at like, completed at greater, completed at lesser, completed at like, sort, score format, as array, and as html.
- * @see https://docs.anilist.co/reference/query
+ * {@link MediaListsVariables} contains variables for the {@link MediaListsQuery} operation.
+ *
+ * See {@link MediaListsQuery} and {@link MediaListsPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/medialist
  */
 export interface MediaListsVariables {
     /**
@@ -167,7 +171,7 @@ export interface MediaListsVariables {
 }
 
 /**
- * The variable type mappings for the `mediaLists` operation.
+ * Validation metadata maps variables to runtime types for the `mediaLists` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -206,18 +210,22 @@ const MediaListsMappings = {
 };
 
 /**
- * `MediaListsQuery` is a class representing a query for media lists.
- * It includes a method to get media lists.
+ * {@link MediaListsQuery} executes the paginated AniList media-lists query through {@link AniListOperation}.
+ * Its public operation is {@link MediaListsQuery.mediaLists}.
  * @see https://docs.anilist.co/reference/object/medialist
  */
 export class MediaListsQuery extends AniListOperation {
     /**
      * `mediaLists` is a method that sends a query request to get media lists.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link MediaListsVariables} for the query.
+     * @returns The {@link MediaListsPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/medialist
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new MediaListsQuery().mediaLists({ userId: 1, page: 1, perPage: 10 });
+     * ```
      */
     async mediaLists(
         variables: MediaListsVariables,

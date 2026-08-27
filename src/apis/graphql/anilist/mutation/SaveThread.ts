@@ -4,9 +4,13 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
 /**
- * `SaveThreadVariables` is an interface that contains the variables that are passed to the `SaveThread` mutation.
- * It includes the ID, title, body, categories, mediaCategories, sticky, locked, and asHtml variables.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link SaveThreadVariables} contains variables for the {@link SaveThreadMutation} operation.
+ *
+ * See the {@link SaveThreadMutation} operation and {@link ThreadResponse} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/thread
  */
 export interface SaveThreadVariables {
     /**
@@ -51,7 +55,8 @@ export interface SaveThreadVariables {
 }
 
 /**
- * The variable type mappings for the `saveThread` operation.
+ * Validation metadata maps {@link SaveThreadVariables} to runtime types for the
+ * `saveThread` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -68,19 +73,24 @@ const SaveThreadMappings = {
 };
 
 /**
- * `SaveThreadMutation` is a class representing a mutation to save a thread.
- * It includes a method to save a thread
+ * {@link SaveThreadMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link SaveThreadMutation.saveThread}; variables use
+ * {@link SaveThreadVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/thread
  */
 export class SaveThreadMutation extends AniListOperation {
     /**
-     * `SaveThread` is a method that sends a mutation request to save a thread.
+     * {@link SaveThreadMutation.saveThread} sends a mutation request to save a thread.
      *
-     * @param variables - An object of type `SaveThreadVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/object/thread
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link SaveThreadVariables} for the mutation.
+     * @returns The {@link ThreadResponse} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` or `title` is missing, a variable has an invalid type, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/object/thread
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new SaveThreadMutation("your-token").saveThread({ id: 1, title: "Example thread", body: "Hello, world!", categories: [], mediaCategories: [], sticky: false, locked: false, asHtml: true });
+     * ```
      */
     async saveThread(
         variables: SaveThreadVariables,

@@ -11,9 +11,13 @@ import { type MediaSort, MediaSortMappings } from "../types/Sort";
 import { MediaWithRelationsSchema } from "../schemas/responses/query/Media";
 
 /**
- * `MediaVariables` is an interface representing the variables for the `MediaQuery`.
- * It includes optional parameters for querying media data.
- * @see https://docs.anilist.co/reference/query
+ * {@link MediaVariables} contains variables for the {@link MediaQuery} operation.
+ *
+ * See {@link MediaQuery} and {@link MediaResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/media
  */
 export interface MediaVariables {
     /**
@@ -368,7 +372,7 @@ export interface MediaVariables {
 }
 
 /**
- * The variable type mappings for the `media` operation.
+ * Validation metadata maps variables to runtime types for the {@link MediaQuery.media} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -447,18 +451,22 @@ const MediaMappings = {
 };
 
 /**
- * `MediaQuery` is a class representing a query for media data.
- * It includes a method to send the media query and receive the response.
+ * {@link MediaQuery} executes the AniList media query through {@link AniListOperation}.
+ * Its public operation is {@link MediaQuery.media}.
  * @see https://docs.anilist.co/reference/object/media
  */
 export class MediaQuery extends AniListOperation {
     /**
-     * `media` is a method that sends a query request to get media data.
+     * {@link MediaQuery.media} sends a query request to get media data.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link MediaVariables} for the query.
+     * @returns The {@link MediaResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/media
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new MediaQuery().media({ id: 1 });
+     * ```
      */
     async media(variables: MediaVariables, options?: RequestOptions): Promise<MediaResponse> {
         const query = `

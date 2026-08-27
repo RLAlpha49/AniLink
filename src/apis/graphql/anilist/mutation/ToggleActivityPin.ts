@@ -4,9 +4,13 @@ import { type Activity } from "../interfaces/Activity";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
 
 /**
- * `ToggleActivityPinMutation` is an interface representing the variables to pin an activity.
- * It includes id and pinned.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link ToggleActivityPinVariables} contains variables for the {@link ToggleActivityPinMutation} operation.
+ *
+ * See the {@link ToggleActivityPinMutation} operation and {@link Activity} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export interface ToggleActivityPinVariables {
     /**
@@ -26,7 +30,8 @@ export interface ToggleActivityPinVariables {
 }
 
 /**
- * The variable type mappings for the `toggleActivityPin` operation.
+ * Validation metadata maps {@link ToggleActivityPinVariables} to runtime types for the
+ * `toggleActivityPin` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -38,19 +43,24 @@ const ToggleActivityPinMappings = {
 };
 
 /**
- * `ToggleActivityPinMutation` is a class representing a mutation to pin an activity.
- * It includes a method to pin an activity
+ * {@link ToggleActivityPinMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link ToggleActivityPinMutation.toggleActivityPin}; variables use
+ * {@link ToggleActivityPinVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
 export class ToggleActivityPinMutation extends AniListOperation {
     /**
-     * `toggleActivityPin` is a method that sends a mutation request to pin an activity.
+     * {@link ToggleActivityPinMutation.toggleActivityPin} sends a mutation request to pin an activity.
      *
-     * @param variables - An object of type `ToggleActivityPinVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/union/activityunion
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link ToggleActivityPinVariables} for the mutation.
+     * @returns The {@link Activity} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` or `pinned` is missing or invalid, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/union/activityunion
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ToggleActivityPinMutation("your-token").toggleActivityPin({ id: 1, pinned: true });
+     * ```
      */
     async toggleActivityPin(
         variables: ToggleActivityPinVariables,

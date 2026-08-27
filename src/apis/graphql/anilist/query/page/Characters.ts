@@ -6,9 +6,13 @@ import { CharacterSortMappings, MediaSortMappings } from "../../types/Sort";
 import { CharacterSchema } from "../../schemas/responses/query/Character";
 
 /**
- * `CharactersVariables` is an interface representing the variables for the `CharactersQuery`.
- * It includes optional page, per page, id, is birthday, search, id not, id in, id not in, sort, as html, media sort, media on list, media page, and media per page.
- * @see https://docs.anilist.co/reference/query
+ * {@link CharactersVariables} contains variables for the {@link CharactersQuery} operation.
+ *
+ * See {@link CharactersQuery} and {@link CharactersPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/character
  */
 export interface CharactersVariables {
     /**
@@ -83,7 +87,7 @@ export interface CharactersVariables {
 }
 
 /**
- * The variable type mappings for the `characters` operation.
+ * Validation metadata maps variables to runtime types for the `characters` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -106,18 +110,22 @@ const CharactersMappings = {
 };
 
 /**
- * `CharactersQuery` is a class representing a query for characters.
- * It includes a method to get characters.
+ * {@link CharactersQuery} executes the paginated AniList characters query through {@link AniListOperation}.
+ * Its public operation is {@link CharactersQuery.characters}.
  * @see https://docs.anilist.co/reference/object/character
  */
 export class CharactersQuery extends AniListOperation {
     /**
      * `characters` is a method that sends a query request to get characters.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link CharactersVariables} for the query.
+     * @returns The {@link CharactersPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/character
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new CharactersQuery().characters({ page: 1, perPage: 10 });
+     * ```
      */
     async characters(
         variables: CharactersVariables,

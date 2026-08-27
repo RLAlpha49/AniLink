@@ -3,9 +3,13 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 
 /**
- * `DeleteThreadVariables` is an interface representing the variables to delete a thread.
- * It includes the thread id.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link DeleteThreadVariables} contains variables for the {@link DeleteThreadMutation} operation.
+ *
+ * See the {@link DeleteThreadMutation} operation and {@link DeleteResult} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/deleted
  */
 export interface DeleteThreadVariables {
     /**
@@ -15,7 +19,8 @@ export interface DeleteThreadVariables {
 }
 
 /**
- * The variable type mappings for the `deleteThread` operation.
+ * Validation metadata maps {@link DeleteThreadVariables} to runtime types for the
+ * `deleteThread` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -25,24 +30,29 @@ const DeleteThreadMappings = {
 };
 
 /**
- * `DeleteThreadMutation` is a class representing a mutation to delete a thread.
- * It includes a method to delete a thread
+ * {@link DeleteThreadMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link DeleteThreadMutation.deleteThread}; variables use
+ * {@link DeleteThreadVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/deleted
  */
 export class DeleteThreadMutation extends AniListOperation {
     /**
-     * `deleteThread` is a method that sends a mutation request to delete a thread.
+     * {@link DeleteThreadMutation.deleteThread} sends a mutation request to delete a thread.
      *
      * The response is `{ deleted: boolean }`. A `true` value means the thread was deleted by this
      * call; a `false` value means the thread was not present (already deleted or never existed).
      * The mutation is therefore safe to retry after a partial failure: a `false` result confirms
      * the target is gone rather than reporting an error.
      *
-     * @param variables - An object of type `DeleteThreadVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to `{ deleted }`, where `deleted` is `true` when the thread was deleted by this call and `false` when it was already absent.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link DeleteThreadVariables} for the mutation.
+     * @returns The {@link DeleteResult} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/deleted
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new DeleteThreadMutation("your-token").deleteThread({ id: 1 });
+     * ```
      */
     async deleteThread(
         variables: DeleteThreadVariables,

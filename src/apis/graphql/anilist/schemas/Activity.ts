@@ -2,7 +2,7 @@ import { TitleSchema } from "./Title";
 import { BasicUserSchema } from "./Basic";
 
 /**
- * `ActivityReplySchema` is a constant representing the GraphQL schema for an activity reply query.
+ * {@link ActivityReplySchema} is a constant representing the GraphQL schema for an activity reply query.
  * It includes the id of the reply, the user id, the activity id, the text of the reply, the like count, the like status, the creation date, the user details, and the likes details.
  * @see https://docs.anilist.co/reference/object/activityreply
  */
@@ -23,7 +23,7 @@ export const ActivityReplySchema = `
 `;
 
 /**
- * `ActivitySchema` is a constant representing the GraphQL schema for an activity query.
+ * {@link ActivitySchema} is a constant representing the GraphQL schema for an activity query.
  * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
@@ -84,7 +84,7 @@ export const ActivitySchema = `
 `;
 
 /**
- * `ActivityWithRepliesSchema` is a constant representing the GraphQL schema for an activity query with replies.
+ * {@link ActivityWithRepliesSchema} is a constant representing the GraphQL schema for an activity query with replies.
  * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties and replies.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
@@ -202,7 +202,7 @@ export const TextActivitySchema = `
 `;
 
 /**
- * `ListActivitySchema` is an object representing a list activity.
+ * {@link ListActivitySchema} is an object representing a list activity.
  * It includes the id, user id, type, reply count, status, progress, lock status, subscription status, like count, like status, pin status, site url, creation date, media details, user details, replies, and likes.
  * @see https://docs.anilist.co/reference/object/listactivity
  */
@@ -239,7 +239,7 @@ export const ListActivitySchema = `
 `;
 
 /**
- * `MessageActivitySchema` is an object representing a message activity.
+ * {@link MessageActivitySchema} is an object representing a message activity.
  * It includes the id, recipient id, messenger id, type, reply count, message, lock status, subscription status, like count, like status, privacy status, site url, creation date, recipient details, messenger details, replies, and likes.
  * @see https://docs.anilist.co/reference/object/messageactivity
  */
@@ -272,7 +272,7 @@ export const MessageActivitySchema = `
 `;
 
 /**
- * `ActivityNotificationSchema` is a constant representing the GraphQL schema for an activity notification query.
+ * {@link ActivityNotificationSchema} is a constant representing the GraphQL schema for an activity notification query.
  * It includes the id of the notification, the user id, the type of the notification, the activity id, the context, the creation date, the activity details, and the user details.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
@@ -290,8 +290,12 @@ export const ActivityNotificationSchema = `
 `;
 
 /**
- * Union selection set for the V2 activity like payload.
- * @see https://docs.anilist.co/reference/object/activity
+ * Union selection set for the V2 activity-like payload.
+ *
+ * It covers activity variants and related replies, threads, and thread comments,
+ * reusing {@link ActivityReplySchema}, {@link BasicUserSchema}, and {@link TitleSchema} for nested selections.
+ *
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export const ActivitySchemaV2 = `
   ... on TextActivity {

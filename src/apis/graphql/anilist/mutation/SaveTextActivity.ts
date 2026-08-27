@@ -4,9 +4,13 @@ import { type Activity } from "../interfaces/Activity";
 import { TextActivitySchema } from "../schemas/Activity";
 
 /**
- * `SaveTextActivityMutation` is an interface representing the variables to save a text activity.
- * It includes the activity id, text, locked status, and HTML output flag.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link SaveTextActivityVariables} contains variables for the {@link SaveTextActivityMutation} operation.
+ *
+ * See the {@link SaveTextActivityMutation} operation and {@link Activity} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export interface SaveTextActivityVariables {
     /**
@@ -31,7 +35,8 @@ export interface SaveTextActivityVariables {
 }
 
 /**
- * The variable type mappings for the `saveTextActivity` operation.
+ * Validation metadata maps {@link SaveTextActivityVariables} to runtime types for the
+ * `saveTextActivity` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -44,19 +49,24 @@ const SaveTextActivityMappings = {
 };
 
 /**
- * `SaveTextActivityMutation` is a class representing a mutation to save a text activity.
- * It includes a method to save a text activity
+ * {@link SaveTextActivityMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link SaveTextActivityMutation.saveTextActivity}; variables use
+ * {@link SaveTextActivityVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
 export class SaveTextActivityMutation extends AniListOperation {
     /**
-     * `saveTextActivity` is a method that sends a mutation request to save a text activity.
+     * {@link SaveTextActivityMutation.saveTextActivity} sends a mutation request to save a text activity.
      *
-     * @param variables - An object of type `SaveTextActivityVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/union/activityunion
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link SaveTextActivityVariables} for the mutation.
+     * @returns The {@link Activity} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` or `text` is missing or invalid, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/union/activityunion
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new SaveTextActivityMutation("your-token").saveTextActivity({ id: 1, text: "Hello, world!" });
+     * ```
      */
     async saveTextActivity(
         variables: SaveTextActivityVariables,

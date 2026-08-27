@@ -16,7 +16,7 @@ import { getAxiosStub, makeAxiosResponseError } from "./helpers/axiosStub";
  * Unlike the facade suites (which replace `sendRequest` wholesale through
  * `helpers/mockRequestHandler`) and the transport suites (which call
  * `sendRequest` directly), this file drives the real composition —
- * `AniLink` → operation classes → `sendRequest` → the shared Axios instance —
+ * {@link AniLink} → operation classes → `sendRequest` → the shared Axios instance —
  * with only axios itself doubled. Header construction, envelope unwrapping,
  * and error normalization are therefore exercised exactly as production wires
  * them, without needing a live token.

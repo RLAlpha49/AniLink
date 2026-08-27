@@ -4,13 +4,16 @@ import { MalUserOperation } from "./operations/UserOperation";
 import type { MyAnimeListApi } from "./facade";
 
 /**
- * Builds the MyAnimeList REST facade from provider-owned credentials.
+ * {@link buildMyAnimeListApi} is the wiring helper that builds the {@link MyAnimeListApi} from provider-owned {@link MalCredentials}.
  *
- * @param credentials - MAL access and OAuth credentials plus transport settings.
- * @returns The composed MyAnimeList API surface.
+ * It resolves credentials through {@link resolveMalCredentials} and composes {@link MalAnimeOperation} and {@link MalUserOperation} into the {@link MyAnimeListApi} facade exposed as `aniLink.mal`. Transport settings from {@link MalCredentials} flow to `MalRequestOptions` without leaking between providers.
+ *
+ * @param credentials - MAL access and OAuth credentials plus transport settings; a {@link MalCredentials} slot.
+ * @returns The composed {@link MyAnimeListApi} surface.
  * @example
  * ```typescript
  * const api = buildMyAnimeListApi({ accessToken: "mal-token" });
+ * const anime = await api.anime.get(21);
  * ```
  * @see https://myanimelist.net/apiconfig/references/api/v2
  */

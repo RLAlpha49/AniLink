@@ -2,9 +2,11 @@ import { AniListOperation } from "../AniListOperation";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 
 /**
- * `MarkdownVariables` is an interface representing the variables for the `MarkdownQuery`.
- * It includes an optional markdown string.
- * @see https://docs.anilist.co/reference/query
+ * {@link MarkdownVariables} contains variables for the {@link MarkdownQuery} operation.
+ *
+ * See {@link MarkdownQuery}; it returns the converted HTML string.
+ *
+ * @see https://docs.anilist.co/reference/object/parsedmarkdown
  */
 export interface MarkdownVariables {
     /**
@@ -14,18 +16,22 @@ export interface MarkdownVariables {
 }
 
 /**
- * `MarkdownQuery` is a class representing a query for converting Markdown text to HTML.
- * It includes a method to send the Markdown text and receive the converted HTML.
+ * {@link MarkdownQuery} converts Markdown text to HTML through AniList.
+ * It extends {@link AniListOperation} and exposes {@link MarkdownQuery.markdown}.
  * @see https://docs.anilist.co/reference/object/parsedmarkdown
  */
 export class MarkdownQuery extends AniListOperation {
     /**
-     * `markdown` is a method that sends a query request to convert Markdown text to HTML.
+     * {@link MarkdownQuery.markdown} sends a query request to convert Markdown text to HTML.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link MarkdownVariables} for the query.
+     * @returns The converted HTML string returned by AniList.
      * @see https://docs.anilist.co/reference/object/parsedmarkdown
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const html = await new MarkdownQuery().markdown({ markdown: "# AniList" });
+     * ```
      */
     async markdown(variables: MarkdownVariables, options?: RequestOptions): Promise<string> {
         const query = `

@@ -5,9 +5,13 @@ import { type ReviewRating, ReviewRatingMappings } from "../types/ReviewRating";
 import { ReviewSchema } from "../schemas/responses/query/Review";
 
 /**
- * `RateReviewVariables` is an interface representing the variables for the `RateReviewMutation`.
- * It includes the review id and rating to apply to the review.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link RateReviewVariables} contains variables for the {@link RateReviewMutation} operation.
+ *
+ * See the {@link RateReviewMutation} operation and {@link ReviewResponse} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/review
  */
 export interface RateReviewVariables {
     /**
@@ -16,13 +20,14 @@ export interface RateReviewVariables {
     reviewId: number;
 
     /**
-     * `rating` is a `ReviewRating` representing the vote to apply to the review.
+     * `rating` is a {@link ReviewRating} representing the vote to apply to the review.
      */
     rating: ReviewRating;
 }
 
 /**
- * The variable type mappings for the `rateReview` operation.
+ * Validation metadata maps {@link RateReviewVariables} to runtime types for the
+ * `rateReview` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -33,19 +38,24 @@ const RateReviewMappings = {
 };
 
 /**
- * `RateReviewMutation` is a class representing a mutation to rate a review.
- * It includes a method to send the rate review mutation and receive the response.
+ * {@link RateReviewMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link RateReviewMutation.rateReview}; variables use
+ * {@link RateReviewVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/review
  */
 export class RateReviewMutation extends AniListOperation {
     /**
-     * `rateReview` is a method that sends a mutation request to rate a review.
+     * {@link RateReviewMutation.rateReview} sends a mutation request to rate a review.
      *
-     * @param variables - An object of type `RateReviewVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if authentication is missing, validation fails, or the mutation request fails.
+     * @param variables - Values from {@link RateReviewVariables} for the mutation.
+     * @returns The {@link ReviewResponse} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `reviewId` or `rating` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/review
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new RateReviewMutation("your-token").rateReview({ reviewId: 1, rating: "UP_VOTE" });
+     * ```
      */
     async rateReview(
         variables: RateReviewVariables,

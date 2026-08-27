@@ -1,5 +1,5 @@
 /**
- * `NotificationOptions` is a type representing the notification options for a user.
+ * {@link NotificationOptions} is a type representing the notification options for a user.
  * It includes a `type` field which is a string representing the type of notification,
  * and an `enabled` field which is a boolean indicating whether the notification is enabled or not.
  * @see https://docs.anilist.co/reference/object/notificationoption
@@ -34,7 +34,7 @@ export type NotificationOptions = {
 };
 
 /**
- * `NotificationOptionsMapping` is a constant that maps the `NotificationOptions` fields to their expected types.
+ * {@link NotificationOptionsMapping} is a constant that maps the {@link NotificationOptions} fields to their expected types.
  * The `type` field is mapped to an array of possible values, and the `enabled` field is mapped to 'boolean'.
  * @see https://docs.anilist.co/reference/object/notificationoption
  */

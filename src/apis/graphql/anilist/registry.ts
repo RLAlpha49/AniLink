@@ -3,7 +3,7 @@
  *
  * Every operation is one entry in {@link ANILIST_OPERATION_REGISTRY}: the
  * facade key it is exposed under, its category, the operation class that
- * implements it, and the method to bind. `buildAniListWiring` instantiates and
+ * implements it, and the method to bind. {@link buildAniListWiring} instantiates and
  * binds every entry, so adding an operation touches exactly two sites: this
  * registry and the matching declaration on the group type under `facade/`.
  */
@@ -101,7 +101,7 @@ export interface OperationEntry<TOperation extends new (...args: never[]) => unk
     readonly name: string;
 
     /**
-     * The operation class. Constructed once per `AniLink` instance with the
+     * The operation class. Constructed once per {@link AniLink} instance with the
      * shared auth token and transport options.
      */
     readonly operationClass: TOperation;
@@ -130,7 +130,7 @@ function op<TOperation extends new (...args: never[]) => unknown>(
 
 /**
  * Convenience constructor for a registry entry whose bound method differs
- * from the facade key (e.g. `following` exposed via `FollowingsQuery.followings`).
+ * from the facade key (e.g. `following` exposed via {@link FollowingsQuery.followings}).
  *
  * @param name - The facade key the bound method is exposed under.
  * @param operationClass - The operation class implementing this entry.

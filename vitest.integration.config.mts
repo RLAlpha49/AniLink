@@ -1,3 +1,9 @@
+/**
+ * Vitest configuration for the integration suite.
+ *
+ * Loads mode-specific environment variables before running only integration
+ * tests, which may take longer than the unit suite's default timeout.
+ */
 import { defineConfig } from "vitest/config";
 import { loadEnv } from "vite";
 

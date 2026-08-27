@@ -5,9 +5,13 @@ import { type UserStatisticSort, UserStatisticSortMappings } from "../types/Sort
 import { UserSchema } from "../schemas/responses/query/User";
 
 /**
- * `ViewerVariables` is an interface representing the variables for the `ViewerQuery`.
- * It includes optional parameters for querying viewer data.
- * @see https://docs.anilist.co/reference/query
+ * {@link ViewerVariables} contains variables for the {@link ViewerQuery} operation.
+ *
+ * See {@link ViewerQuery} and {@link UserResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/user
  */
 export interface ViewerVariables {
     /**
@@ -37,7 +41,7 @@ export interface ViewerVariables {
 }
 
 /**
- * The variable type mappings for the `viewer` operation.
+ * Validation metadata maps variables to runtime types for the {@link ViewerQuery.viewer} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -51,18 +55,22 @@ const ViewerMappings = {
 };
 
 /**
- * `ViewerQuery` is a class representing a query for viewer data.
- * It includes a method to send the viewer query and receive the response.
+ * {@link ViewerQuery} executes the authenticated AniList viewer query through {@link AniListOperation}.
+ * Its public operation is {@link ViewerQuery.viewer}.
  * @see https://docs.anilist.co/reference/object/user
  */
 export class ViewerQuery extends AniListOperation {
     /**
-     * `viewer` is a method that sends a query request to get viewer data.
+     * {@link ViewerQuery.viewer} sends a query request to get viewer data.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Optional values from {@link ViewerVariables}; defaults to an empty object.
+     * @returns The {@link UserResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ViewerQuery("authToken").viewer({});
+     * ```
      */
     async viewer(variables: ViewerVariables = {}, options?: RequestOptions): Promise<UserResponse> {
         const query = `

@@ -10,7 +10,7 @@ import {
 } from "../../UserStats";
 
 /**
- * `StatisticsAnimeSchema` is a string representing the GraphQL selection set for a user's anime statistics.
+ * {@link StatisticsAnimeSchema} is a string representing the GraphQL selection set for a user's anime statistics.
  * It includes the count, meanScore, standardDeviation, minutesWatched, episodesWatched, formats, statuses, scores, lengths, releaseYears, startYears, genres, tags, countries, voiceActors, staff, and studios.
  * @see https://docs.anilist.co/reference/object/userstatistics
  */
@@ -85,7 +85,7 @@ export const StatisticsAnimeSchema = `
 `;
 
 /**
- * `StatisticsMangaSchema` is a string representing the GraphQL selection set for a user's manga statistics.
+ * {@link StatisticsMangaSchema} is a string representing the GraphQL selection set for a user's manga statistics.
  * It includes the count, meanScore, standardDeviation, chaptersRead, volumesRead, formats, statuses, scores, lengths, releaseYears, startYears, genres, tags, countries, staff, and studios.
  * @see https://docs.anilist.co/reference/object/userstatistics
  */
@@ -152,7 +152,7 @@ export const StatisticsMangaSchema = `
 `;
 
 /**
- * `StatisticsSchema` is a string representing the wrapped statistics selection used to derive
+ * {@link StatisticsSchema} is a string representing the wrapped statistics selection used to derive
  * the `Statistics` response interface. It interpolates the anime and manga statistic blocks.
  * @see https://docs.anilist.co/reference/object/userstatistictypes
  */
@@ -164,7 +164,7 @@ export const StatisticsSchema = `
 `;
 
 /**
- * `UserSchema` is a constant representing the GraphQL schema for a user query.
+ * {@link UserSchema} is a constant representing the GraphQL schema for a user query.
  * It includes the user's id, name, about, avatar, bannerImage, isFollowing status, isFollower status, isBlocked status, bans, options, mediaListOptions, favourites, statistics, stats, unreadNotificationCount, siteUrl, donatorTier, donatorBadge, moderatorRoles, createdAt, updatedAt, and previousNames.
  * @see https://docs.anilist.co/reference/object/user
  */

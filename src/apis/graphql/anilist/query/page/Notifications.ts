@@ -6,9 +6,13 @@ import { NotificationTypeMappings } from "../../types/Type";
 import { NotificationSchema } from "../../schemas/responses/query/Notification";
 
 /**
- * `NotificationsVariables` is an interface representing the variables for the `NotificationsQuery`.
- * It includes optional page, per page, type, reset notification count, type in, and as html.
- * @see https://docs.anilist.co/reference/query
+ * {@link NotificationsVariables} contains variables for the {@link NotificationsQuery} operation.
+ *
+ * See {@link NotificationsQuery} and {@link NotificationsPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export interface NotificationsVariables {
     /**
@@ -43,7 +47,7 @@ export interface NotificationsVariables {
 }
 
 /**
- * The variable type mappings for the `notifications` operation.
+ * Validation metadata maps variables to runtime types for the `notifications` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -58,18 +62,22 @@ const NotificationsMappings = {
 };
 
 /**
- * `NotificationsQuery` is a class representing a query for notifications.
- * It includes a method to get notifications.
+ * {@link NotificationsQuery} executes the paginated AniList notifications query through {@link AniListOperation}.
+ * Its public operation is {@link NotificationsQuery.notifications}.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export class NotificationsQuery extends AniListOperation {
     /**
      * `notifications` is a method that sends a query request to get notifications.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link NotificationsVariables} for the query.
+     * @returns The {@link NotificationsPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/union/notificationunion
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new NotificationsQuery().notifications({ page: 1, perPage: 10 });
+     * ```
      */
     async notifications(
         variables: NotificationsVariables,

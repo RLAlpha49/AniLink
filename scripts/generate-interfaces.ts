@@ -22,6 +22,12 @@ import { generatorConfig } from "./generate-interfaces.config";
 
 const REPO_ROOT = process.cwd();
 
+/**
+ * Collect exported GraphQL schema-template constants from the configured schema tree.
+ *
+ * @returns A name-to-template map used to resolve generated selections.
+ * @throws {Error} When the configured schema directory cannot be traversed.
+ */
 function collectSchemaConstants(): Record<string, string> {
     const schemas: Record<string, string> = {};
     const walk = (directory: string): void => {
@@ -52,6 +58,13 @@ function collectOperationDocument(file: string): string {
     return match[1];
 }
 
+/**
+ * Index the authoritative output and existing interface locations for generated references.
+ *
+ * @param outputs - Output specifications that claim generated type names.
+ * @returns A type-name-to-module-path map used by the code generator.
+ * @throws {Error} When the existing interfaces tree cannot be traversed.
+ */
 function collectTypeLocations(
     outputs: Array<{ path: string; exports: Array<{ exportedName: string }> }>
 ): Map<string, string> {
@@ -82,11 +95,21 @@ function collectTypeLocations(
     return locations;
 }
 
+/** Format generated content with the repository's Prettier configuration. */
 async function formatWithPrettier(content: string, outputPath: string): Promise<string> {
     const config = await resolveConfig(join(REPO_ROOT, outputPath));
     return format(content, { ...(config ?? {}), filepath: join(REPO_ROOT, outputPath) });
 }
 
+/**
+ * Generate or check every interface declared by {@link generatorConfig}.
+ *
+ * In normal mode this writes changed generated files. With `--check`, it only
+ * reports stale outputs and returns a non-zero status for CI.
+ *
+ * @returns Process-style status code: `0` when current, `1` when stale in check mode.
+ * @throws {Error} When schema, source, or formatting inputs cannot be read.
+ */
 async function main(): Promise<number> {
     const check = process.argv.includes("--check");
     const schemas = collectSchemaConstants();

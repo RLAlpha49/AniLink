@@ -1,5 +1,5 @@
 /**
- * Per-provider credential shapes accepted by the `AniLink` constructor.
+ * Per-provider credential shapes accepted by the {@link AniLink} constructor.
  *
  * Every provider owns its own credentials: AniList authenticates with a
  * bearer token, while REST providers such as MyAnimeList carry their own
@@ -13,6 +13,8 @@ import { type RequestAuthInput, type RequestOptions } from "./RequestHandler";
  * {@link AniLinkCredentials} object. Provider-specific credential types
  * extend this with their own authentication fields; the settings always
  * apply to that provider's operations only.
+ *
+ * @see {@link AniLinkCredentials}
  */
 export interface ProviderCredentials extends RequestOptions {
     /** Provider-specific credentials are defined by the provider implementation. */
@@ -22,6 +24,8 @@ export interface ProviderCredentials extends RequestOptions {
 /**
  * AniList-specific credentials. Currently a bearer token plus transport
  * settings; OAuth helper functions live in `apis/graphql/anilist/auth`.
+ *
+ * @see {@link resolveAniListCredentials}
  */
 export interface AniListCredentials extends ProviderCredentials {
     /** The bearer token sent on authenticated AniList requests. */
@@ -35,6 +39,8 @@ export interface AniListCredentials extends ProviderCredentials {
  * flow; `accessToken` and `clientId` are translated into the provider-neutral
  * request-auth value without leaking either field into other providers'
  * requests.
+ *
+ * @see {@link resolveMalCredentials}
  */
 export interface MalCredentials extends ProviderCredentials {
     /** The MAL OAuth2 access token, kept in this provider's credential slot. */
@@ -48,11 +54,13 @@ export interface MalCredentials extends ProviderCredentials {
 }
 
 /**
- * The per-provider credentials object accepted by the `AniLink` constructor.
+ * The per-provider credentials object accepted by the {@link AniLink} constructor.
  *
  * Each key targets exactly one provider namespace (`aniLink.anilist`,
  * `aniLink.mal`, …); credentials given under one key are never applied to
  * another provider's requests.
+ *
+ * @see {@link ProviderCredentials}
  */
 export interface AniLinkCredentials {
     /** Credentials for the AniList provider surface. */
@@ -62,16 +70,13 @@ export interface AniLinkCredentials {
 }
 
 /**
- * Normalizes a provider credentials slot into the transport options that
- * provider's wiring consumes.
+ * Normalized authentication and transport settings for one provider slot.
  *
- * The returned object carries both the transport settings and the provider
- * authToken field (when set), so a single object flows through the existing
- * (authToken, options) operation-constructor seam without any provider
- * learning another provider's credential fields.
+ * Credential resolvers use this shape to keep provider-specific fields out of
+ * the shared operation-constructor seam while preserving provider-only auth.
  *
- * @param credentials - The credentials given under one provider key.
- * @returns The merged options for that provider, or undefined when no credentials were given.
+ * @see {@link resolveAniListCredentials}
+ * @see {@link resolveMalCredentials}
  */
 export interface ResolvedProviderCredentials {
     /** Authentication material for the provider's request operations. */
@@ -95,6 +100,8 @@ const resolveTransportOptions = (
  *
  * @param credentials - The AniList credential slot.
  * @returns Provider authentication and transport settings, or empty values when omitted.
+ *
+ * @see {@link AniListCredentials}
  */
 export function resolveAniListCredentials(
     credentials: AniListCredentials | undefined
@@ -111,6 +118,8 @@ export function resolveAniListCredentials(
  *
  * @param credentials - The MAL credential slot.
  * @returns Provider authentication and transport settings, or empty values when omitted.
+ *
+ * @see {@link MalCredentials}
  */
 export function resolveMalCredentials(
     credentials: MalCredentials | undefined
@@ -139,6 +148,8 @@ export function resolveMalCredentials(
  *
  * @param credentials - The AniList credential slot.
  * @returns A shallow copy of the slot, or undefined.
+ *
+ * @see {@link AniListCredentials}
  */
 export function resolveProviderCredentials(
     credentials: AniListCredentials | undefined

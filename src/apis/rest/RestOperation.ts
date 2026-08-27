@@ -3,7 +3,7 @@ import { type HttpMethod, type RequestOptions } from "../../base/RequestHandler"
 
 /**
  * The declarative contract a REST operation passes to
- * {@link RestOperation.execute}.
+ * `RestOperation.execute`.
  *
  * Every field except the path is optional: an operation declares only the
  * variation points it needs, and `execute` applies them in a fixed order so
@@ -71,11 +71,11 @@ export const buildQueryString = (params: Record<string, unknown>): string => {
  * `RestOperation` is the REST protocol layer shared by every REST-style
  * provider.
  *
- * It is the REST counterpart of the shared {@link GraphQLOperation} base:
+ * It is the REST counterpart of the shared `GraphQLOperation` base:
  * both extend the {@link BaseOperation} transport plumbing, but this class
  * shapes plain HTTP requests instead of GraphQL documents — path-based URLs
  * with query strings, JSON bodies, and verbatim response bodies (no envelope
- * unwrapping). Failures surface as {@link AniLinkRestError} via the shared
+ * unwrapping). Failures surface as `AniLinkRestError` via the shared
  * pipeline's error normalization.
  *
  * Concrete operations declare their endpoint path, parameter interface, and a
@@ -102,7 +102,7 @@ export abstract class RestOperation extends BaseOperation {
      * @param body - The JSON request body (POST/PUT), when provided.
      * @param pathParams - Values substituted into `{placeholder}` segments of `path`. Defaults to an empty map so paths without placeholders need none.
      * @returns The parsed response body as-is.
-     * @throws An `AniLinkAuthError` when `requiresAuth` is true and no token is set, or a normalized `AniLinkError` (typically `AniLinkRestError`) when the request fails.
+     * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, or a normalized {@link AniLinkError} (typically `AniLinkRestError`) when the request fails.
      */
     protected async execute<T = unknown>(
         path: string,

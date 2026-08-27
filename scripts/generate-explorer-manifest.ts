@@ -27,7 +27,9 @@ import {
 
 /** A single variable field on an operation's `*Variables` interface. */
 export interface Field {
+    /** Property name exposed by the variables interface. */
     name: string;
+    /** Explorer control type inferred from the TypeScript and mapping sources. */
     type:
         | "number"
         | "string"
@@ -38,9 +40,13 @@ export interface Field {
         | "string[]"
         | "object"
         | "object[]";
+    /** Whether the source interface requires this field. */
     required: boolean;
+    /** Human-readable field description extracted from JSDoc. */
     description: string;
+    /** Allowed values when the field maps to an enum. */
     enumValues?: string[];
+    /** Nested fields when the field maps to an input object. */
     nestedFields?: Field[];
 }
 
@@ -52,35 +58,44 @@ export interface Field {
  * example with `method` and `path` fields) rather than reuse them.
  */
 export interface Operation {
+    /** Operation group shown by the explorer. */
     category: "query" | "mutation" | "page" | "custom";
+    /** Public AniLink operation name. */
     name: string;
+    /** Description extracted from the facade operation JSDoc. */
     description: string;
+    /** Variables interface name used by the operation, when applicable. */
     variablesType: string;
+    /** Response type name exposed by the operation. */
     responseType: string;
+    /** Whether the operation is a mutation and therefore requires auth. */
     requiresAuth: boolean;
+    /** Input fields rendered by the explorer. */
     fields: Field[];
+    /** Extracted GraphQL document, with imported schema fragments expanded. */
     graphql: string;
+    /** Example AniLink call generated for the configured provider. */
     anilinkCall: string;
 }
 
 /** The full manifest written to `operations.json`. */
 export interface Manifest {
+    /** ISO timestamp for the generation run. */
     generatedAt: string;
+    /** Provider identifier from the generation configuration. */
     provider: string;
+    /** Wire protocol used by the configured provider. */
     protocol: ProviderProtocol;
+    /** Configured provider endpoint. */
     endpoint: string;
+    /** AniList endpoint retained for explorer compatibility. */
     anilistEndpoint: string;
+    /** Operations discovered from the provider source tree. */
     operations: Operation[];
 }
 
 const ROOT = resolve(import.meta.dirname, "..");
 const SRC = join(ROOT, "src");
-/**
- * Provider-specific constants. The manifest generator handles AniList and the
- * initial MyAnimeList adapter through provider-specific configuration rather
- * than mixing both providers' operations into one flat list; adding another
- * provider means parameterizing these paths and the manifest shape per provider.
- */
 /** Read a file as UTF-8 text, returning "" if missing. */
 function readFileText(p: string): string {
     try {
@@ -940,7 +955,14 @@ function buildProviderCall(op: RawOp, provider: ProviderGenerationConfig): strin
 // Public API.
 // ---------------------------------------------------------------------------
 
-/** Generate the full explorer manifest by parsing the source tree. Pure (no I/O). */
+/**
+ * Generate the full explorer manifest by reading the configured provider source tree.
+ * This function performs read-only filesystem parsing; use {@link writeManifest}
+ * when the result must be persisted.
+ *
+ * @param provider - Provider configuration whose source and endpoint are emitted.
+ * @returns The in-memory manifest for the configured provider.
+ */
 export function generateManifest(
     provider: ProviderGenerationConfig = ANILIST_PROVIDER_CONFIG
 ): Manifest {
@@ -997,7 +1019,12 @@ export function generateManifest(
     };
 }
 
-/** Write the manifest to `outPath` as minified JSON to cut transfer size. */
+/**
+ * Write the generated manifest to `outPath` as minified JSON to cut transfer size.
+ *
+ * @param outPath - Destination path for the manifest; parent directories are created.
+ * @returns Nothing; writes the generated JSON to disk.
+ */
 export function writeManifest(outPath: string): void {
     const manifest = generateManifest();
     mkdirSync(dirname(outPath), { recursive: true });

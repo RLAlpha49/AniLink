@@ -1,15 +1,20 @@
-/**
- * The `custom` member of the `AniListApi` type.
- */
 import type { RequestOptions } from "../../../../base/RequestHandler";
 
+/**
+ * The `custom` member group of the `AniListApi` type.
+ *
+ * @see https://docs.anilist.co/reference/query
+ */
 export type AniListCustom = {
     /**
-     * Custom query or mutation.
-     * @param query - The query for the request.
-     * @param variables - The variables for the request. This parameter is optional.
-     * @returns {Promise<any>} A promise that resolves to the response from the request.
-     *
+     * {@link AniListCustom.custom} runs an arbitrary GraphQL query or mutation against AniList, returning the
+     * raw response. Use it as an escape hatch when no typed operation fits: the `query`
+     * string is sent verbatim and the `variables` argument is forwarded as-is.
+     * @param query - The GraphQL query or mutation string to send verbatim.
+     * @param variables - The variables to forward with the request. Optional.
+     * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+     * @returns {Promise<T>} A promise that resolves to the raw response, typed as `T` (defaults to `unknown`).
+     * @see https://docs.anilist.co/reference/query
      * @example
      * ```typescript
      * const viewer = await aniLink.anilist.custom('query {Viewer {id}}');

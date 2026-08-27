@@ -43,48 +43,55 @@ import { type UpdateAniChartSettingsVariables } from "../mutation/UpdateAniChart
 import { type UpdateAniChartHighlightsVariables } from "../mutation/UpdateAniChartHighlights";
 import { type DeleteResult } from "../types/DeleteResult";
 
+/**
+ * Typed AniList mutation operations exposed by `AniListApi`.
+ *
+ * @see https://docs.anilist.co/reference/mutation
+ */
 export type AniListMutations = {
     /**
-     * Mutation methods for updating data on the Anilist API.
+     * Mutation methods for updating data on the AniList API.
      * @public
      * @type {Object}
-     * @property {Function} updateUser - Updates a user on the Anilist API.
-     * @property {Function} saveMediaListEntry - Saves a media list entry on the Anilist API.
-     * @property {Function} updateMediaListEntries - Updates media list entries on the Anilist API.
-     * @property {Function} deleteMediaListEntry - Deletes a media list entry on the Anilist API.
-     * @property {Function} deleteCustomList - Deletes a custom list on the Anilist API.
-     * @property {Function} saveTextActivity - Saves a text activity on the Anilist API.
-     * @property {Function} saveMessageActivity - Saves a message activity on the Anilist API.
-     * @property {Function} saveListActivity - Saves a list activity on the Anilist API.
-     * @property {Function} deleteActivity - Deletes an activity on the Anilist API.
-     * @property {Function} toggleActivityPin - Toggles an activity's pin status on the Anilist API.
-     * @property {Function} toggleActivitySubscription - Toggles an activity's subscription status on the Anilist API.
-     * @property {Function} saveActivityReply - Saves an activity reply on the Anilist API.
-     * @property {Function} deleteActivityReply - Deletes an activity reply on the Anilist API.
-     * @property {Function} toggleLike - Toggles a like on the Anilist API.
-     * @property {Function} toggleLikeV2 - Toggles a like on the Anilist API.
-     * @property {Function} toggleFollow - Toggles a follow on the Anilist API.
-     * @property {Function} toggleFavourite - Toggles a favorite on the Anilist API.
-     * @property {Function} updateFavouriteOrder - Updates a favorite order on the Anilist API.
-     * @property {Function} saveReview - Saves a review on the Anilist API.
-     * @property {Function} rateReview - Rates a review on the Anilist API.
-     * @property {Function} deleteReview - Deletes a review on the Anilist API.
-     * @property {Function} saveRecommendation - Saves a recommendation on the Anilist API.
-     * @property {Function} saveThread - Saves a thread on the Anilist API.
-     * @property {Function} deleteThread - Deletes a thread on the Anilist API.
-     * @property {Function} toggleThreadSubscription - Toggles a thread's subscription status on the Anilist API.
-     * @property {Function} saveThreadComment - Saves a thread comment on the Anilist API.
-     * @property {Function} deleteThreadComment - Deletes a thread comment on the Anilist API.
-     * @property {Function} updateAniChartSettings - Updates aniChart settings on the Anilist API.
-     * @property {Function} updateAniChartHighlights - Updates aniChart highlights on the Anilist API.
+     * @property {Function} updateUser - Updates a user on the AniList API.
+     * @property {Function} saveMediaListEntry - Saves a media list entry on the AniList API.
+     * @property {Function} updateMediaListEntries - Updates media list entries on the AniList API.
+     * @property {Function} deleteMediaListEntry - Deletes a media list entry on the AniList API.
+     * @property {Function} deleteCustomList - Deletes a custom list on the AniList API.
+     * @property {Function} saveTextActivity - Saves a text activity on the AniList API.
+     * @property {Function} saveMessageActivity - Saves a message activity on the AniList API.
+     * @property {Function} saveListActivity - Saves a list activity on the AniList API.
+     * @property {Function} deleteActivity - Deletes an activity on the AniList API.
+     * @property {Function} toggleActivityPin - Toggles an activity's pin status on the AniList API.
+     * @property {Function} toggleActivitySubscription - Toggles an activity's subscription status on the AniList API.
+     * @property {Function} saveActivityReply - Saves an activity reply on the AniList API.
+     * @property {Function} deleteActivityReply - Deletes an activity reply on the AniList API.
+     * @property {Function} toggleLike - Toggles a like on the AniList API.
+     * @property {Function} toggleLikeV2 - Toggles a like on the AniList API.
+     * @property {Function} toggleFollow - Toggles a follow on the AniList API.
+     * @property {Function} toggleFavourite - Toggles a favourite on the AniList API.
+     * @property {Function} updateFavouriteOrder - Updates a favourite order on the AniList API.
+     * @property {Function} saveReview - Saves a review on the AniList API.
+     * @property {Function} rateReview - Rates a review on the AniList API.
+     * @property {Function} deleteReview - Deletes a review on the AniList API.
+     * @property {Function} saveRecommendation - Saves a recommendation on the AniList API.
+     * @property {Function} saveThread - Saves a thread on the AniList API.
+     * @property {Function} deleteThread - Deletes a thread on the AniList API.
+     * @property {Function} toggleThreadSubscription - Toggles a thread's subscription status on the AniList API.
+     * @property {Function} saveThreadComment - Saves a thread comment on the AniList API.
+     * @property {Function} deleteThreadComment - Deletes a thread comment on the AniList API.
+     * @property {Function} updateAniChartSettings - Updates AniChart settings on the AniList API.
+     * @property {Function} updateAniChartHighlights - Updates AniChart highlights on the AniList API.
      *
      * Must be authenticated for all mutations.
      */
     mutation: {
         /**
-         * Updates a user on the Anilist API.
-         * @param {UpdateUserVariables} variables - The variables for the mutation.
-         * @returns {Promise<UpdateUserResponse>} A promise that resolves when the mutation is complete.
+         * `UpdateUserMutation` updates a user on the AniList API.
+         * @param {UpdateUserVariables} variables - The {@link UpdateUserVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<UpdateUserResponse>} A promise that resolves to the {@link UpdateUserResponse} data.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
@@ -108,7 +115,6 @@ export type AniListMutations = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/user
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         updateUser: (
             variables: UpdateUserVariables,
@@ -116,16 +122,17 @@ export type AniListMutations = {
         ) => Promise<UpdateUserResponse>;
 
         /**
-         * Saves a media list entry on the Anilist API.
-         * @param {SaveMediaListEntryVariables} variables - The variables for the mutation.
-         * @returns {Promise<MediaListResponse>} A promise that resolves when the mutation is complete.
+         * `SaveMediaListEntryMutation` saves a media list entry on the AniList API.
+         * @param {SaveMediaListEntryVariables} variables - The {@link SaveMediaListEntryVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<MediaListResponse>} A promise that resolves to the {@link MediaListResponse} data.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.saveMediaListEntry({mediaId: 1, status: 'COMPLETED'});
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveMediaListEntry: (
             variables: SaveMediaListEntryVariables,
@@ -133,9 +140,11 @@ export type AniListMutations = {
         ) => Promise<MediaListResponse>;
 
         /**
-         * Updates media list entries on the Anilist API.
-         * @param {UpdateMediaListEntriesVariables} variables - The variables for the mutation.
-         * @returns {Promise<MediaListResponse[]>} A promise that resolves when the mutation is complete.
+         * `UpdateMediaListEntriesMutation` updates media list entries on the AniList API.
+         * @param {UpdateMediaListEntriesVariables} variables - The {@link UpdateMediaListEntriesVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<MediaListResponse[]>} A promise that resolves to the {@link MediaListResponse} entries.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
@@ -147,7 +156,6 @@ export type AniListMutations = {
          * });
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         updateMediaListEntries: (
             variables: UpdateMediaListEntriesVariables,
@@ -155,9 +163,11 @@ export type AniListMutations = {
         ) => Promise<MediaListResponse[]>;
 
         /**
-         * Deletes a media list entry on the Anilist API.
-         * @param {DeleteMediaListEntryVariables} variables - The variables for the mutation.
-         * @returns {Promise<DeleteMediaListEntryResponse>} A promise that resolves when the mutation is complete.
+         * `DeleteMediaListEntryMutation` deletes a media list entry on the AniList API.
+         * @param {DeleteMediaListEntryVariables} variables - The {@link DeleteMediaListEntryVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<DeleteMediaListEntryResponse>} A promise that resolves to the {@link DeleteMediaListEntryResponse} result.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * You cannot delete a media list entry without first fetching the entry's id. The entry's id is not the same as the mediaId. It is specific to each user and media.
@@ -165,7 +175,6 @@ export type AniListMutations = {
          * await aniLink.anilist.mutation.deleteMediaListEntry({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         deleteMediaListEntry: (
             variables: DeleteMediaListEntryVariables,
@@ -173,16 +182,17 @@ export type AniListMutations = {
         ) => Promise<DeleteMediaListEntryResponse>;
 
         /**
-         * Deletes a custom list on the Anilist API. There is no mutation specifically for creating a custom list. You can create a custom list through the `updateUser` mutation under the `animeListOptions` or `mangaListOptions` variables.
-         * @param {DeleteCustomListVariables} variables - The variables for the mutation.
-         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the  custom list was deleted by this call and `false` when it was already absent.
+         * `DeleteCustomListMutation` deletes a custom list on the AniList API. There is no mutation specifically for creating a custom list; create one through `UpdateUserMutation` under the `animeListOptions` or `mangaListOptions` variables.
+         * @param {DeleteCustomListVariables} variables - The {@link DeleteCustomListVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the custom list was deleted by this call and `false` when it was already absent.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.deleteCustomLists({customList: 'test'});
+         * await aniLink.anilist.mutation.deleteCustomList({customList: 'test', type: 'ANIME'});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         deleteCustomList: (
             variables: DeleteCustomListVariables,
@@ -190,16 +200,17 @@ export type AniListMutations = {
         ) => Promise<DeleteResult>;
 
         /**
-         * Saves a text activity on the Anilist API. If no `id` is provided, a new activity will be created. If an `id` is provided, the activity with that `id` will be updated.
-         * @param {SaveTextActivityVariables} variables - The variables for the mutation.
-         * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
+         * `SaveTextActivityMutation` saves a text activity on the AniList API.
+         * @param {SaveTextActivityVariables} variables - The {@link SaveTextActivityVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<Activity>} A promise that resolves to the saved {@link Activity}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.saveTextActivity({text: 'Hello, world!'});
+         * await aniLink.anilist.mutation.saveTextActivity({id: 1, text: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveTextActivity: (
             variables: SaveTextActivityVariables,
@@ -207,16 +218,17 @@ export type AniListMutations = {
         ) => Promise<Activity>;
 
         /**
-         * Saves a message activity on the Anilist API. If no `id` is provided, a new activity will be created. If an `id` is provided, the activity with that `id` will be updated.
-         * @param {SaveMessageActivityVariables} variables - The variables for the mutation.
-         * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
+         * `SaveMessageActivityMutation` saves a message activity on the AniList API.
+         * @param {SaveMessageActivityVariables} variables - The {@link SaveMessageActivityVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<Activity>} A promise that resolves to the saved {@link Activity}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.saveMessageActivity({text: 'Hello, world!'});
+         * await aniLink.anilist.mutation.saveMessageActivity({id: 1, message: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveMessageActivity: (
             variables: SaveMessageActivityVariables,
@@ -224,17 +236,18 @@ export type AniListMutations = {
         ) => Promise<Activity>;
 
         /**
-         * Saves a list activity on the Anilist API.
+         * `SaveListActivityMutation` saves a list activity on the AniList API.
          * Mod Only
-         * @param {SaveListActivityVariables} variables - The variables for the mutation.
-         * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
+         * @param {SaveListActivityVariables} variables - The {@link SaveListActivityVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<Activity>} A promise that resolves to the saved {@link Activity}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.saveListActivity({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveListActivity: (
             variables: SaveListActivityVariables,
@@ -242,17 +255,18 @@ export type AniListMutations = {
         ) => Promise<Activity>;
 
         /**
-         * Deletes an activity on the Anilist API.
+         * `DeleteActivityMutation` deletes an activity on the AniList API.
          * Mod Only
-         * @param {DeleteActivityVariables} variables - The variables for the mutation.
-         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the          activity was deleted by this call and `false` when it was already absent.
+         * @param {DeleteActivityVariables} variables - The {@link DeleteActivityVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the activity was deleted by this call and `false` when it was already absent.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.deleteActivity({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         deleteActivity: (
             variables: DeleteActivityVariables,
@@ -260,17 +274,18 @@ export type AniListMutations = {
         ) => Promise<DeleteResult>;
 
         /**
-         * Toggles the pin status of an activity on the Anilist API.
+         * `ToggleActivityPinMutation` toggles the pin status of an activity on the AniList API.
          *
-         * @param {ToggleActivityPinVariables} variables - The variables for the mutation.
-         * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
+         * @param {ToggleActivityPinVariables} variables - The {@link ToggleActivityPinVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<Activity>} A promise that resolves to the updated {@link Activity}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.toggleActivityPin({id: 1, pinned: true});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         toggleActivityPin: (
             variables: ToggleActivityPinVariables,
@@ -278,17 +293,18 @@ export type AniListMutations = {
         ) => Promise<Activity>;
 
         /**
-         * Toggles the subscription status of an activity on the Anilist API.
+         * `ToggleActivitySubscriptionMutation` toggles the subscription status of an activity on the AniList API.
          *
-         * @param {ToggleActivitySubscriptionVariables} variables - The variables for the mutation.
-         * @returns {Promise<Activity>} A promise that resolves when the mutation is complete.
+         * @param {ToggleActivitySubscriptionVariables} variables - The {@link ToggleActivitySubscriptionVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<Activity>} A promise that resolves to the updated {@link Activity}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.toggleActivitySubscription({activityId: 1, subscribe: true});
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         toggleActivitySubscription: (
             variables: ToggleActivitySubscriptionVariables,
@@ -296,16 +312,17 @@ export type AniListMutations = {
         ) => Promise<Activity>;
 
         /**
-         * Saves an activity reply on the Anilist API. If no `id` is provided, a new activity reply will be created. If an `id` is provided, the activity reply with that `id` will be updated.
-         * @param {SaveActivityReplyVariables} variables - The variables for the mutation.
-         * @returns {Promise<ActivityReply>} A promise that resolves when the mutation is complete.
+         * `SaveActivityReplyMutation` saves an activity reply on the AniList API.
+         * @param {SaveActivityReplyVariables} variables - The {@link SaveActivityReplyVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ActivityReply>} A promise that resolves to the saved {@link ActivityReply}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.saveActivityReply({activityId: 1, text: 'Hello, world!'});
+         * await aniLink.anilist.mutation.saveActivityReply({id: 1, activityId: 2, text: 'Hello, world!'});
          * ```
          * @see https://docs.anilist.co/reference/object/activityreply
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveActivityReply: (
             variables: SaveActivityReplyVariables,
@@ -313,16 +330,17 @@ export type AniListMutations = {
         ) => Promise<ActivityReply>;
 
         /**
-         * Deletes an activity reply on the Anilist API.
-         * @param {DeleteActivityReplyVariables} variables - The variables for the mutation.
+         * `DeleteActivityReplyMutation` deletes an activity reply on the AniList API.
+         * @param {DeleteActivityReplyVariables} variables - The {@link DeleteActivityReplyVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the reply was deleted by this call and `false` when it was already absent.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.deleteActivityReply({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         deleteActivityReply: (
             variables: DeleteActivityReplyVariables,
@@ -330,16 +348,17 @@ export type AniListMutations = {
         ) => Promise<DeleteResult>;
 
         /**
-         * Toggles a like on the Anilist API.
-         * @param {ToggleLikeVariables} variables - The variables for the mutation.
-         * @returns {Promise<BasicUser>} A promise that resolves to the user who performed the like toggle.
+         * `ToggleLikeMutation` toggles a like on the AniList API.
+         * @param {ToggleLikeVariables} variables - The {@link ToggleLikeVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<BasicUser>} A promise that resolves to the {@link BasicUser} who performed the like toggle.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.toggleLike({id: 1, type: 'ACTIVITY'});
          * ```
          * @see https://docs.anilist.co/reference/object/user
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         toggleLike: (
             variables: ToggleLikeVariables,
@@ -347,18 +366,19 @@ export type AniListMutations = {
         ) => Promise<BasicUser>;
 
         /**
-         * Toggles a like on the Anilist API.
+         * `ToggleLikeV2Mutation` toggles a like on the AniList API.
          * Returns a different response than the `toggleLike` mutation.
-         * @param {ToggleLikeVariables} variables - The variables for the mutation.
-         * @returns {Promise<Likeable>} A promise that resolves to the liked entity: an activity,
+         * @param {ToggleLikeVariables} variables - The {@link ToggleLikeVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<Likeable>} A promise that resolves to the liked {@link Likeable} entity: an activity,
          * activity reply, thread, or thread comment depending on the likeable type.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.toggleLikeV2({id: 1, type: 'ACTIVITY'});
          * ```
          * @see https://docs.anilist.co/reference/union/likeableunion
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         toggleLikeV2: (
             variables: ToggleLikeVariables,
@@ -366,16 +386,17 @@ export type AniListMutations = {
         ) => Promise<Likeable>;
 
         /**
-         * Toggles a follow on the Anilist API.
-         * @param {ToggleFollowVariables} variables - The variables for the mutation.
-         * @returns {Promise<UserResponse>} A promise that resolves when the mutation is complete.
+         * `ToggleFollowMutation` toggles a follow on the AniList API.
+         * @param {ToggleFollowVariables} variables - The {@link ToggleFollowVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<UserResponse>} A promise that resolves to the updated {@link UserResponse}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.toggleFollow({userId: 542244});
          * ```
          * @see https://docs.anilist.co/reference/object/user
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         toggleFollow: (
             variables: ToggleFollowVariables,
@@ -383,16 +404,17 @@ export type AniListMutations = {
         ) => Promise<UserResponse>;
 
         /**
-         * Toggles a favorite on the Anilist API.
-         * @param {ToggleFavouriteVariables} variables - The variables for the mutation.
-         * @returns {Promise<Favourites>} A promise that resolves when the mutation is complete.
+         * `ToggleFavouriteMutation` toggles a favourite on the AniList API.
+         * @param {ToggleFavouriteVariables} variables - The {@link ToggleFavouriteVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<Favourites>} A promise that resolves to the updated {@link Favourites}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.toggleFavorite({studioId: 561});
+         * await aniLink.anilist.mutation.toggleFavourite({studioId: 561});
          * ```
          * @see https://docs.anilist.co/reference/object/favourites
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         toggleFavourite: (
             variables: ToggleFavouriteVariables,
@@ -400,16 +422,28 @@ export type AniListMutations = {
         ) => Promise<Favourites>;
 
         /**
-         * Updates the order of favourites on the Anilist API.
-         * @param {UpdateFavouriteOrderVariables} variables - The variables for the mutation.
-         * @returns {Promise<Favourites>} A promise that resolves when the mutation is complete.
+         * `UpdateFavouriteOrderMutation` updates the order of favourites on the AniList API.
+         * @param {UpdateFavouriteOrderVariables} variables - The {@link UpdateFavouriteOrderVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<Favourites>} A promise that resolves to the updated {@link Favourites}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.updateFavouriteOrder({ids: [1, 2, 3]});
+         * await aniLink.anilist.mutation.updateFavouriteOrder({
+         *   animeIds: [1],
+         *   mangaIds: [],
+         *   characterIds: [],
+         *   staffIds: [],
+         *   studioIds: [],
+         *   animeOrder: [1],
+         *   mangaOrder: [],
+         *   characterOrder: [],
+         *   staffOrder: [],
+         *   studioOrder: [],
+         * });
          * ```
          * @see https://docs.anilist.co/reference/object/favourites
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         updateFavouriteOrder: (
             variables: UpdateFavouriteOrderVariables,
@@ -417,16 +451,17 @@ export type AniListMutations = {
         ) => Promise<Favourites>;
 
         /**
-         * Saves a review on the Anilist API. If no `id` is provided, a new review will be created. If an `id` is provided, the review with that `id` will be updated.
-         * @param {SaveReviewVariables} variables - The variables for the mutation.
-         * @returns {Promise<ReviewResponse>} A promise that resolves when the mutation is complete.
+         * `SaveReviewMutation` saves a review on the AniList API.
+         * @param {SaveReviewVariables} variables - The {@link SaveReviewVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ReviewResponse>} A promise that resolves to the saved {@link ReviewResponse}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.saveReview({mediaId: 1, body: 'testing', summary: 'testing', score: 8, private: true});
+         * await aniLink.anilist.mutation.saveReview({id: 1, mediaId: 1, body: 'testing', summary: 'testing', score: 8, private: true});
          * ```
          * @see https://docs.anilist.co/reference/object/review
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveReview: (
             variables: SaveReviewVariables,
@@ -434,16 +469,17 @@ export type AniListMutations = {
         ) => Promise<ReviewResponse>;
 
         /**
-         * Rates a review on the Anilist API.
-         * @param {RateReviewVariables} variables - The variables for the mutation.
-         * @returns {Promise<ReviewResponse>} A promise that resolves to the rated review.
+         * `RateReviewMutation` rates a review on the AniList API.
+         * @param {RateReviewVariables} variables - The {@link RateReviewVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ReviewResponse>} A promise that resolves to the rated {@link ReviewResponse}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.rateReview({reviewId: 8008, rating: 'UP_VOTE'});
          * ```
          * @see https://docs.anilist.co/reference/object/review
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         rateReview: (
             variables: RateReviewVariables,
@@ -451,16 +487,17 @@ export type AniListMutations = {
         ) => Promise<ReviewResponse>;
 
         /**
-         * Deletes a review on the Anilist API.
-         * @param {DeleteReviewVariables} variables - The variables for the mutation.
+         * `DeleteReviewMutation` deletes a review on the AniList API.
+         * @param {DeleteReviewVariables} variables - The {@link DeleteReviewVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the review was deleted by this call and `false` when it was already absent.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.deleteReview({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         deleteReview: (
             variables: DeleteReviewVariables,
@@ -468,16 +505,17 @@ export type AniListMutations = {
         ) => Promise<DeleteResult>;
 
         /**
-         * Saves a recommendation on the Anilist API.
-         * @param {SaveRecommendationVariables} variables - The variables for the mutation.
-         * @returns {Promise<RecommendationResponse>} A promise that resolves when the mutation is complete.
+         * `SaveRecommendationMutation` saves a recommendation on the AniList API.
+         * @param {SaveRecommendationVariables} variables - The {@link SaveRecommendationVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<RecommendationResponse>} A promise that resolves to the saved {@link RecommendationResponse}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.saveRecommendation({mediaId: 1, mediaRecommendationId: 2, rating: 8});
+         * await aniLink.anilist.mutation.saveRecommendation({mediaId: 1, mediaRecommendationId: 2, rating: 'RATE_UP'});
          * ```
          * @see https://docs.anilist.co/reference/object/recommendation
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveRecommendation: (
             variables: SaveRecommendationVariables,
@@ -485,16 +523,26 @@ export type AniListMutations = {
         ) => Promise<RecommendationResponse>;
 
         /**
-         * Saves a thread on the Anilist API. If no `id` is provided, a new thread will be created. If an `id` is provided, the thread with that `id` will be updated.
-         * @param {SaveThreadVariables} variables - The variables for the mutation.
-         * @returns {Promise<ThreadResponse>} A promise that resolves when the mutation is complete.
+         * `SaveThreadMutation` saves a thread on the AniList API.
+         * @param {SaveThreadVariables} variables - The {@link SaveThreadVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ThreadResponse>} A promise that resolves to the saved {@link ThreadResponse}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.saveThread({title: 'Hello, world!', body: 'Hello, world!'});
+         * await aniLink.anilist.mutation.saveThread({
+         *   id: 1,
+         *   title: 'Hello, world!',
+         *   body: 'Hello, world!',
+         *   categories: [],
+         *   mediaCategories: [],
+         *   sticky: false,
+         *   locked: false,
+         *   asHtml: true,
+         * });
          * ```
          * @see https://docs.anilist.co/reference/object/thread
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveThread: (
             variables: SaveThreadVariables,
@@ -502,16 +550,17 @@ export type AniListMutations = {
         ) => Promise<ThreadResponse>;
 
         /**
-         * Deletes a thread on the Anilist API.
-         * @param {DeleteThreadVariables} variables - The variables for the mutation.
+         * `DeleteThreadMutation` deletes a thread on the AniList API.
+         * @param {DeleteThreadVariables} variables - The {@link DeleteThreadVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the thread was deleted by this call and `false` when it was already absent.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.deleteThread({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         deleteThread: (
             variables: DeleteThreadVariables,
@@ -519,16 +568,17 @@ export type AniListMutations = {
         ) => Promise<DeleteResult>;
 
         /**
-         * Toggles a thread subscription on the Anilist API.
-         * @param {ToggleThreadSubscriptionVariables} variables - The variables for the mutation.
-         * @returns {Promise<ThreadResponse>} A promise that resolves when the mutation is complete.
+         * `ToggleThreadSubscriptionMutation` toggles a thread subscription on the AniList API.
+         * @param {ToggleThreadSubscriptionVariables} variables - The {@link ToggleThreadSubscriptionVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ThreadResponse>} A promise that resolves to the updated {@link ThreadResponse}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.toggleThreadSubscription({threadId: 1, subscribe: true});
          * ```
          * @see https://docs.anilist.co/reference/object/thread
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         toggleThreadSubscription: (
             variables: ToggleThreadSubscriptionVariables,
@@ -536,16 +586,24 @@ export type AniListMutations = {
         ) => Promise<ThreadResponse>;
 
         /**
-         * Saves a thread comment on the Anilist API. If no `id` is provided, a new thread comment will be created. If an `id` is provided, the thread comment with that `id` will be updated.
-         * @param {SaveThreadCommentVariables} variables - The variables for the mutation.
-         * @returns {Promise<ThreadCommentResponse>} A promise that resolves when the mutation is complete.
+         * `SaveThreadCommentMutation` saves a thread comment on the AniList API.
+         * @param {SaveThreadCommentVariables} variables - The {@link SaveThreadCommentVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+         * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the saved {@link ThreadCommentResponse}.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.saveThreadComment({threadId: 1, comment: 'Hello, world!'});
+         * await aniLink.anilist.mutation.saveThreadComment({
+         *   id: 1,
+         *   threadId: 1,
+         *   parentCommentId: 0,
+         *   comment: 'Hello, world!',
+         *   locked: false,
+         *   asHtml: true,
+         * });
          * ```
          * @see https://docs.anilist.co/reference/object/threadcomment
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         saveThreadComment: (
             variables: SaveThreadCommentVariables,
@@ -553,16 +611,17 @@ export type AniListMutations = {
         ) => Promise<ThreadCommentResponse>;
 
         /**
-         * Deletes a thread comment on the Anilist API.
-         * @param {DeleteThreadCommentVariables} variables - The variables for the mutation.
+         * `DeleteThreadCommentMutation` deletes a thread comment on the AniList API.
+         * @param {DeleteThreadCommentVariables} variables - The {@link DeleteThreadCommentVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the comment was deleted by this call and `false` when it was already absent.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.mutation.deleteThreadComment({id: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         deleteThreadComment: (
             variables: DeleteThreadCommentVariables,
@@ -570,16 +629,22 @@ export type AniListMutations = {
         ) => Promise<DeleteResult>;
 
         /**
-         * Updates the AniChart settings for a user on the Anilist API.
-         * @param {UpdateAniChartSettingsVariables} variables - The variables for the mutation.
+         * `UpdateAniChartSettingsMutation` updates the AniChart settings for a user on the AniList API.
+         * @param {UpdateAniChartSettingsVariables} variables - The {@link UpdateAniChartSettingsVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<string>} A promise that resolves to the updated AniChart settings string.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.updateAniChartSettings({titleLanguage: 'romaji', theme: 'dark'});
+         * await aniLink.anilist.mutation.updateAniChartSettings({
+         *   titleLanguage: 'romaji',
+         *   outgoingLinkProvider: 'ANILIST',
+         *   theme: 'dark',
+         *   sort: 'POPULARITY',
+         * });
          * ```
          * @see https://docs.anilist.co/reference/object/anichartuser
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         updateAniChartSettings: (
             variables: UpdateAniChartSettingsVariables,
@@ -587,16 +652,19 @@ export type AniListMutations = {
         ) => Promise<string>;
 
         /**
-         * Updates the AniChart highlights for a user on the Anilist API.
-         * @param {UpdateAniChartHighlightsVariables} variables - The variables for the mutation.
+         * `UpdateAniChartHighlightsMutation` updates the AniChart highlights for a user on the AniList API.
+         * @param {UpdateAniChartHighlightsVariables} variables - The {@link UpdateAniChartHighlightsVariables} for the mutation.
+         * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<string>} A promise that resolves to the updated AniChart highlights string.
+         * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.mutation.updateAniChartHighlights({highlights: [{mediaId: 1, highlight: 'test'}]});
+         * await aniLink.anilist.mutation.updateAniChartHighlights({
+         *   highlights: {mediaId: 1, highlight: true},
+         * });
          * ```
          * @see https://docs.anilist.co/reference/object/anichartuser
-         * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
          */
         updateAniChartHighlights: (
             variables: UpdateAniChartHighlightsVariables,

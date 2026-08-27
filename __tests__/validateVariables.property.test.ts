@@ -1,11 +1,11 @@
 /**
- * Property-based tests for `validateVariables` invariants.
+ * Property-based tests for {@link validateVariables} invariants.
  *
  * These suites complement the example-based tests in `validateVariables.test.ts`
  * by exercising whole input classes with `fast-check`: primitive/array/allowlist/
  * nested-object dispatch, unknown-key rejection, and error aggregation. They
  * prove the validator throws precisely when a value violates its mapping and
- * collects every offending path into `AniLinkValidationError.details`.
+ * collects every offending path into {@link AniLinkValidationError.details}.
  */
 import { describe, expect, test } from "vitest";
 import fc from "fast-check";

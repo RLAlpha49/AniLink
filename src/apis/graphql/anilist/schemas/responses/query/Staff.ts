@@ -4,7 +4,7 @@ import { NameSchema } from "../../Name";
 import { TitleSchema } from "../../Title";
 
 /**
- * `StaffSchema` is a constant representing the GraphQL schema for a staff query.
+ * {@link StaffSchema} is a constant representing the GraphQL schema for a staff query.
  * It includes the staff's id, name, language, image, description, primary occupations, gender, date of birth, date of death, age, years active, hometown, blood type, favourite status, favourite blocked status, site url, staff media, characters, character media, staff, submitter, submission status, submission notes, favourites, and mod notes.
  * @see https://docs.anilist.co/reference/object/staff
  */

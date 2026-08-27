@@ -1,5 +1,5 @@
 /**
- * `FuzzyDateInput` is a type representing a fuzzy date input.
+ * {@link FuzzyDateInput} is a type representing a fuzzy date input.
  * It includes the year, month, and day each having their own optional properties.
  * @see https://docs.anilist.co/reference/input/fuzzydateinput
  */
@@ -21,7 +21,7 @@ export type FuzzyDateInput = {
 };
 
 /**
- * `FuzzyDateMappings` is a constant that maps the `FuzzyDateInput` fields to their expected types.
+ * {@link FuzzyDateMappings} is a constant that maps the {@link FuzzyDateInput} fields to their expected types.
  * The `year`, `month`, and `day` fields are mapped to 'number'.
  * @see https://docs.anilist.co/reference/input/fuzzydateinput
  */

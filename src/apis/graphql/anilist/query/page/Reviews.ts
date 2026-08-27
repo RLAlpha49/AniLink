@@ -6,9 +6,13 @@ import { ReviewSortMappings } from "../../types/Sort";
 import { ReviewSchema } from "../../schemas/responses/query/Review";
 
 /**
- * `ReviewsVariables` is an interface representing the variables for the `ReviewsQuery`.
- * It includes optional page, per page, id, media id, user id, media type, sort, and as html.
- * @see https://docs.anilist.co/reference/query
+ * {@link ReviewsVariables} contains variables for the {@link ReviewsQuery} operation.
+ *
+ * See {@link ReviewsQuery} and {@link ReviewsPageResponse} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/review
  */
 export interface ReviewsVariables {
     /**
@@ -53,7 +57,7 @@ export interface ReviewsVariables {
 }
 
 /**
- * The variable type mappings for the `reviews` operation.
+ * Validation metadata maps variables to runtime types for the `reviews` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -70,18 +74,22 @@ const ReviewsMappings = {
 };
 
 /**
- * `ReviewsQuery` is a class representing a query for reviews.
- * It includes a method to get reviews.
+ * {@link ReviewsQuery} executes the paginated AniList reviews query through {@link AniListOperation}.
+ * Its public operation is {@link ReviewsQuery.reviews}.
  * @see https://docs.anilist.co/reference/object/review
  */
 export class ReviewsQuery extends AniListOperation {
     /**
      * `reviews` is a method that sends a query request to get reviews.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link ReviewsVariables} for the query.
+     * @returns The {@link ReviewsPageResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/review
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ReviewsQuery().reviews({ mediaId: 1, page: 1 });
+     * ```
      */
     async reviews(
         variables: ReviewsVariables,

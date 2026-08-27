@@ -4,9 +4,13 @@ import { type Activity } from "../interfaces/Activity";
 import { MessageActivitySchema } from "../schemas/Activity";
 
 /**
- * `SaveMessageActivityMutation` is an interface representing the variables to save a message activity.
- * It includes the activity id, message, recipient id, private, locked, asMod, and asHtml.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link SaveMessageActivityVariables} contains variables for the {@link SaveMessageActivityMutation} operation.
+ *
+ * See the {@link SaveMessageActivityMutation} operation and {@link Activity} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/union/activityunion
  */
 export interface SaveMessageActivityVariables {
     /**
@@ -46,7 +50,8 @@ export interface SaveMessageActivityVariables {
 }
 
 /**
- * The variable type mappings for the `saveMessageActivity` operation.
+ * Validation metadata maps {@link SaveMessageActivityVariables} to runtime types for the
+ * `saveMessageActivity` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -62,19 +67,24 @@ const SaveMessageActivityMappings = {
 };
 
 /**
- * `SaveMessageActivityMutation` is a class representing a mutation to save a message activity.
- * It includes a method to save a message activity
+ * {@link SaveMessageActivityMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link SaveMessageActivityMutation.saveMessageActivity}; variables use
+ * {@link SaveMessageActivityVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
 export class SaveMessageActivityMutation extends AniListOperation {
     /**
-     * `saveMessageActivity` is a method that sends a mutation request to save a message activity.
+     * {@link SaveMessageActivityMutation.saveMessageActivity} sends a mutation request to save a message activity.
      *
-     * @param variables - An object of type `SaveMessageActivityVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
-     *   * @see https://docs.anilist.co/reference/union/activityunion
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param variables - Values from {@link SaveMessageActivityVariables} for the mutation.
+     * @returns The {@link Activity} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` or `message` is missing or invalid, or the mutation request fails.
+     * @see https://docs.anilist.co/reference/union/activityunion
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new SaveMessageActivityMutation("your-token").saveMessageActivity({ id: 1, message: "Hello, world!" });
+     * ```
      */
     async saveMessageActivity(
         variables: SaveMessageActivityVariables,

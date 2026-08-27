@@ -8,9 +8,13 @@ import {
 import { RecommendationSchema } from "../schemas/responses/query/Recommendation";
 
 /**
- * `SaveRecommendationVariables` is an interface that contains the variables that are required to save a recommendation.
- * It includes the media ID, media recommendation ID, and rating.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link SaveRecommendationVariables} contains variables for the {@link SaveRecommendationMutation} operation.
+ *
+ * See the {@link SaveRecommendationMutation} operation and {@link RecommendationResponse} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/recommendation
  */
 export interface SaveRecommendationVariables {
     /**
@@ -35,7 +39,8 @@ export interface SaveRecommendationVariables {
 }
 
 /**
- * The variable type mappings for the `saveRecommendation` operation.
+ * Validation metadata maps {@link SaveRecommendationVariables} to runtime types for the
+ * `saveRecommendation` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -48,19 +53,24 @@ const SaveRecommendationMappings = {
 };
 
 /**
- * `SaveRecommendationMutation` is a class representing a mutation to save a recommendation.
- * It includes a method to save a recommendation.
+ * {@link SaveRecommendationMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link SaveRecommendationMutation.saveRecommendation}; variables use
+ * {@link SaveRecommendationVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/recommendation
  */
 export class SaveRecommendationMutation extends AniListOperation {
     /**
-     * `saveReview` is a method that sends a mutation request to save a recommendation.
+     * {@link SaveRecommendationMutation.saveRecommendation} sends a mutation request to save a recommendation.
      *
-     * @param variables - An object of type `SaveRecommendationVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link SaveRecommendationVariables} for the mutation.
+     * @returns The {@link RecommendationResponse} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `mediaId`, `mediaRecommendationId`, or `rating` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/recommendation
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new SaveRecommendationMutation("your-token").saveRecommendation({ mediaId: 1, mediaRecommendationId: 2, rating: "RATE_UP" });
+     * ```
      */
     async saveRecommendation(
         variables: SaveRecommendationVariables,

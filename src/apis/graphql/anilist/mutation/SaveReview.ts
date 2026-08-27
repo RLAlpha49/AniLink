@@ -4,9 +4,13 @@ import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { ReviewSchema } from "../schemas/responses/query/Review";
 
 /**
- * `SaveReviewVariables` is an interface that contains the variables that are required to save a review.
- * It includes the review ID, media ID, body, summary, score, and private status.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link SaveReviewVariables} contains variables for the {@link SaveReviewMutation} operation.
+ *
+ * See the {@link SaveReviewMutation} operation and {@link ReviewResponse} for the response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/review
  */
 export interface SaveReviewVariables {
     /**
@@ -46,7 +50,8 @@ export interface SaveReviewVariables {
 }
 
 /**
- * The variable type mappings for the `saveReview` operation.
+ * Validation metadata maps {@link SaveReviewVariables} to runtime types for the
+ * `saveReview` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -62,19 +67,24 @@ const SaveReviewMappings = {
 };
 
 /**
- * `SaveReviewMutation` is a class representing a mutation to save a review.
- * It includes a method to save a review.
+ * {@link SaveReviewMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link SaveReviewMutation.saveReview}; variables use
+ * {@link SaveReviewVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/review
  */
 export class SaveReviewMutation extends AniListOperation {
     /**
-     * `saveReview` is a method that sends a mutation request to save a review.
+     * {@link SaveReviewMutation.saveReview} sends a mutation request to save a review.
      *
-     * @param variables - An object of type `SaveReviewVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the response from the mutation request.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link SaveReviewVariables} for the mutation.
+     * @returns The {@link ReviewResponse} returned by the mutation.
+     * @throws Throws if no authentication token is configured, `id` or `mediaId` is missing, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/review
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new SaveReviewMutation("your-token").saveReview({ id: 1, mediaId: 1, body: "Example review", summary: "Example", score: 8, private: false });
+     * ```
      */
     async saveReview(
         variables: SaveReviewVariables,

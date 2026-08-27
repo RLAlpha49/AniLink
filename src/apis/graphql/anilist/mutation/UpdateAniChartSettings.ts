@@ -2,8 +2,11 @@ import { AniListOperation } from "../AniListOperation";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 
 /**
- * `UpdateAniChartSettingsVariables` is an interface that contains the variables that are required to update the AniChart settings.
- * @see https://docs.anilist.co/reference/mutation
+ * {@link UpdateAniChartSettingsVariables} contains variables for the {@link UpdateAniChartSettingsMutation} operation.
+ *
+ * See {@link UpdateAniChartSettingsMutation} for the operation. The mutation returns the updated AniChart settings string.
+ *
+ * @see https://docs.anilist.co/reference/object/anichartuser
  */
 export interface UpdateAniChartSettingsVariables {
     /**
@@ -28,7 +31,8 @@ export interface UpdateAniChartSettingsVariables {
 }
 
 /**
- * The variable type mappings for the `updateAniChartSettings` operation.
+ * Validation metadata maps {@link UpdateAniChartSettingsVariables} to runtime types for the
+ * `updateAniChartSettings` operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -41,18 +45,24 @@ const UpdateAniChartSettingsMappings = {
 };
 
 /**
- * `UpdateAniChartSettingsMutation` is a class that represents a mutation to update the AniChart settings.
+ * {@link UpdateAniChartSettingsMutation} executes the AniList mutation through {@link AniListOperation}.
+ * Its public operation is {@link UpdateAniChartSettingsMutation.updateAniChartSettings}; variables use
+ * {@link UpdateAniChartSettingsVariables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/object/anichartuser
  */
 export class UpdateAniChartSettingsMutation extends AniListOperation {
     /**
-     * `updateAniChartSettings` is a method that sends a mutation request to update the AniChart settings.
+     * {@link UpdateAniChartSettingsMutation.updateAniChartSettings} sends a mutation request to update the AniChart settings.
      *
-     * @param variables - An object of type `UpdateAniChartSettingsVariables` representing the variables for the mutation.
-     * @returns A Promise that resolves to the updated AniChart settings string.
-     * @throws Will throw an error if the mutation request fails or if the provided variables do not pass the validation checks.
+     * @param variables - Values from {@link UpdateAniChartSettingsVariables} for the mutation.
+     * @returns The updated AniChart settings string returned by the mutation.
+     * @throws Throws if no authentication token is configured, a setting has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/anichartuser
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new UpdateAniChartSettingsMutation("your-token").updateAniChartSettings({ titleLanguage: "romaji", outgoingLinkProvider: "ANILIST", theme: "dark", sort: "POPULARITY" });
+     * ```
      */
     async updateAniChartSettings(
         variables: UpdateAniChartSettingsVariables,

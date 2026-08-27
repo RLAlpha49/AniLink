@@ -4,9 +4,13 @@ import { type ActivityReply } from "../interfaces/Activity";
 import { ActivityReplySchema } from "../schemas/Activity";
 
 /**
- * `ActivityReplyVariables` is an interface representing the variables for the `ActivityReplyQuery`.
- * At least one of `id` or `activityId` is required by the AniList API; `asHtml` is optional.
- * @see https://docs.anilist.co/reference/query
+ * {@link ActivityReplyVariables} contains variables for the {@link ActivityReplyQuery} operation.
+ *
+ * See {@link ActivityReplyQuery} and {@link ActivityReply} for the operation and response shape.
+ *
+ * Values are validated before dispatch.
+ *
+ * @see https://docs.anilist.co/reference/object/activityreply
  */
 export interface ActivityReplyVariables {
     /**
@@ -26,7 +30,7 @@ export interface ActivityReplyVariables {
 }
 
 /**
- * The variable type mappings for the `activityReply` operation.
+ * The variable type mappings for the {@link ActivityReplyQuery.activityReply} operation.
  *
  * Hoisted to module scope so repeated calls do not rebuild the same
  * validation metadata on every request.
@@ -38,18 +42,22 @@ const ActivityReplyMappings = {
 };
 
 /**
- * `ActivityReplyQuery` is a class representing a query for activity replies.
- * It includes a method to get activity replies.
+ * {@link ActivityReplyQuery} executes the AniList activity-reply query through {@link AniListOperation}.
+ * Its public operation is {@link ActivityReplyQuery.activityReply}.
  * @see https://docs.anilist.co/reference/object/activityreply
  */
 export class ActivityReplyQuery extends AniListOperation {
     /**
-     * `activityReply` is a method that sends a query request to get activity replies.
+     * {@link ActivityReplyQuery.activityReply} sends a query request to get activity replies.
      *
-     * @param variables - The variables for the query.
-     * @returns The response from the query request.
+     * @param variables - Values from {@link ActivityReplyVariables} for the query.
+     * @returns The {@link ActivityReply} returned by the query.
      * @see https://docs.anilist.co/reference/object/activityreply
-     * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @example
+     * ```typescript
+     * const result = await new ActivityReplyQuery().activityReply({ activityId: 1 });
+     * ```
      */
     async activityReply(
         variables: ActivityReplyVariables,
