@@ -1,60 +1,79 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - master
-  workflow_dispatch:
-    inputs:
-      dry_run:
-        description: Run semantic-release in dry-run mode without publishing
-        required: false
-        default: false
-        type: boolean
+    workflow_run:
+        workflows:
+            - CI
+        types:
+            - completed
+        branches:
+            - master
+    workflow_dispatch:
+        inputs:
+            dry_run:
+                description: Run semantic-release in dry-run mode without publishing
+                required: false
+                default: true
+                type: boolean
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-  id-token: write
+    contents: write
+    issues: write
+    pull-requests: write
+    id-token: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ inputs.dry_run && 'dry-run' || 'publish' }}
+    cancel-in-progress: false
 
 jobs:
-  release:
-    if: ${{ !contains(github.event.head_commit.message || '', '[skip ci]') && !contains(github.event.head_commit.message || '', '[ci skip]') && !contains(github.event.head_commit.message || '', 'chore(release)') }}
-    name: semantic-release
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # Live publishes wait for approval; dry runs use an unprotected environment.
-    environment: ${{ inputs.dry_run && 'release-dry-run' || 'npm' }}
-    env:
-      ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
+    release:
+        if: >-
+            ${{
+              (github.event_name == 'workflow_run' &&
+                github.event.workflow_run.conclusion == 'success' &&
+                github.event.workflow_run.event == 'push' &&
+                github.event.workflow_run.head_branch == 'master' &&
+                !contains(github.event.workflow_run.head_commit.message || '', '[skip ci]') &&
+                !contains(github.event.workflow_run.head_commit.message || '', '[ci skip]') &&
+                !contains(github.event.workflow_run.head_commit.message || '', 'chore(release)')) ||
+              (github.event_name == 'workflow_dispatch' && inputs.dry_run)
+            }}
+        name: semantic-release
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        # Live publishes wait for approval; dry runs use an unprotected environment.
+        environment: ${{ inputs.dry_run && 'release-dry-run' || 'npm' }}
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0
+                  ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
+            - name: Verify master has not advanced since CI
+              if: ${{ github.event_name == 'workflow_run' }}
+              shell: bash
+              run: |
+                  git fetch origin master --quiet
+                  current_sha="$(git rev-parse origin/master)"
+                  tested_sha="${{ github.event.workflow_run.head_sha }}"
+                  if [ "$current_sha" != "$tested_sha" ]; then
+                    echo "::error::master advanced after CI completed; refusing to publish stale commit $tested_sha"
+                    exit 1
+                  fi
 
-      - name: Install dependencies
-        run: npm ci
+            - name: Set up Node.js
+              uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: npm
 
-      - name: Run quality gates
-        run: npm run check
+            - name: Install dependencies
+              run: npm ci
 
-      - name: Run live AniList integration tests
-        run: npm run test:integration
-
-      - name: Run semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: ${{ inputs.dry_run && 'npm run release:dry' || 'npm run release' }}
+            - name: Run semantic-release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: ${{ inputs.dry_run && 'npm run release:dry' || 'npm run release' }}
