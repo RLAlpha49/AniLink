@@ -9,8 +9,45 @@ const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
     version?: unknown;
 };
 
+const SITE_URL = "https://anilink.alpha49.com";
+const DEFAULT_SITE_DESCRIPTION =
+    "AniLink is the TypeScript docs and reference for AniList and MyAnimeList integrations, including authentication, paging, GraphQL queries, and API patterns.";
+
 if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
     throw new Error(`Missing valid version in ${packageJsonPath}`);
+}
+
+function routeFromRelativePath(relativePath: string | undefined): string {
+    if (!relativePath) return "/";
+    const normalized = relativePath.replaceAll("\\", "/");
+    if (normalized === "index.md") return "/";
+    const withoutExt = normalized.replace(/\.md$/, "");
+    const withoutIndex = withoutExt.replace(/\/index$/, "");
+    return `/${withoutIndex}`;
+}
+
+function describeRouteContext(route: string): string {
+    if (route.includes("/guides/anilist") || route.includes("/operations/anilist")) {
+        return "AniList";
+    }
+    if (route.includes("/guides/mal") || route.includes("/operations/mal")) {
+        return "MyAnimeList";
+    }
+    if (route.includes("/guides")) {
+        return "integration guide";
+    }
+    if (route.includes("/operations")) {
+        return "operation reference";
+    }
+    return "documentation";
+}
+
+function pageDescriptionFor(title: string | undefined, relativePath: string | undefined): string {
+    const route = routeFromRelativePath(relativePath);
+    const baseTitle = title?.trim() || "AniLink documentation";
+    const context = describeRouteContext(route);
+
+    return `${baseTitle} — AniLink ${context} for TypeScript. Learn the patterns, client setup, and API usage needed to integrate AniList and MyAnimeList reliably.`;
 }
 
 /**
@@ -163,13 +200,15 @@ function serveSearchIndex(): Plugin {
 export default defineConfig({
     lang: "en-US",
     title: "AniLink",
-    description:
-        "Typed AniList GraphQL and MyAnimeList REST client for TypeScript — guides, operation reference, and API docs.",
+    description: DEFAULT_SITE_DESCRIPTION,
     base: "/",
     srcDir: ".",
     outDir: "../docs",
     cleanUrls: true,
-    ignoreDeadLinks: true,
+    sitemap: {
+        hostname: SITE_URL,
+    },
+    ignoreDeadLinks: [/^\/typedoc\//],
     srcExclude: ["**/README.md", ".vitepress/**", "lib/**"],
     markdown: {
         headers: true,
@@ -192,6 +231,10 @@ export default defineConfig({
         },
     },
     head: [
+        ["meta", { name: "theme-color", content: "#0b1220" }],
+        ["meta", { name: "robots", content: "index,follow" }],
+        ["meta", { property: "og:site_name", content: "AniLink" }],
+        ["meta", { name: "twitter:site", content: "@AniLinkAPI" }],
         ["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
         [
             "script",
@@ -207,4 +250,46 @@ export default defineConfig({
              })();`,
         ],
     ],
+    transformHead: ({ pageData, title }) => {
+        const route = pageData.relativePath ? routeFromRelativePath(pageData.relativePath) : "/";
+        const canonicalUrl = `${SITE_URL}${route === "/" ? "/" : route}`;
+        const pageTitle = title ? `${title} | AniLink` : "AniLink";
+        const description =
+            (pageData.frontmatter.description as string | undefined) ||
+            pageDescriptionFor(title, pageData.relativePath);
+        const jsonLd = {
+            "@context": "https://schema.org",
+            "@type": route === "/" ? "WebSite" : "WebPage",
+            name: pageTitle,
+            description,
+            url: canonicalUrl,
+            inLanguage: "en-US",
+            isPartOf: {
+                "@type": "WebSite",
+                name: "AniLink",
+                url: SITE_URL,
+            },
+            publisher: {
+                "@type": "Organization",
+                name: "AniLink",
+                url: SITE_URL,
+                logo: `${SITE_URL}/logo.png`,
+            },
+        };
+
+        return [
+            ["meta", { name: "description", content: description }],
+            ["meta", { property: "og:title", content: pageTitle }],
+            ["meta", { property: "og:description", content: description }],
+            ["meta", { property: "og:type", content: "website" }],
+            ["meta", { property: "og:url", content: canonicalUrl }],
+            ["meta", { property: "og:image", content: `${SITE_URL}/logo.png` }],
+            ["meta", { name: "twitter:card", content: "summary_large_image" }],
+            ["meta", { name: "twitter:title", content: pageTitle }],
+            ["meta", { name: "twitter:description", content: description }],
+            ["meta", { name: "twitter:image", content: `${SITE_URL}/logo.png` }],
+            ["script", { type: "application/ld+json" }, JSON.stringify(jsonLd)],
+            ["link", { rel: "canonical", href: canonicalUrl }],
+        ];
+    },
 });
