@@ -1,7 +1,7 @@
 /**
  * Protocols supported by provider-specific build-time tooling.
  *
- * Each value selects a code path in the explorer manifest generator and the
+ * Each value selects a code path in the operation-reference generator and the
  * interface generator; a future wire format adds a member here rather than a
  * new branch in those scripts.
  */
@@ -12,7 +12,7 @@ export type ProviderProtocol = "graphql" | "rest";
  *
  * A future provider adds a configuration value instead of adding another
  * provider-specific branch to the AniList generator. Consumed by
- * {@link generateManifest} and {@link generatorConfig} to locate each
+ * the generators to locate each
  * provider's source tree and endpoint.
  */
 export interface ProviderGenerationConfig {

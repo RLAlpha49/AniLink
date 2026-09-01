@@ -52,17 +52,20 @@
         "anilist:api:update-schema": "tsx scripts/anilist-api-compare/cli.ts update-schema",
         "jsdoc:check": "tsx scripts/check-jsdoc.ts",
         "interfaces:generate": "tsx scripts/generate-interfaces.ts",
-        "lint": "eslint \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/ build.config.ts \"explorer-src/**/*.js\"",
-        "lint:fix": "eslint --fix \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/ build.config.ts \"explorer-src/**/*.js\"",
-        "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\" \"Examples/**/*.md\" scripts/ build.config.ts \"explorer-src/**/*.{js,css,html}\"",
-        "format:check": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\" \"Examples/**/*.md\" scripts/ build.config.ts \"explorer-src/**/*.{js,css,html}\"",
-        "docs:explorer": "tsx scripts/generate-explorer-manifest.ts",
-        "docs:generate": "typedoc && npm run docs:explorer",
+        "lint": "eslint \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/ build.config.ts \"docs-src/**/*.{ts,vue}\"",
+        "lint:fix": "eslint --fix \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/ build.config.ts \"docs-src/**/*.{ts,vue}\"",
+        "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/ build.config.ts \"docs-src/**/*.{ts,vue,css}\"",
+        "format:check": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/ build.config.ts \"docs-src/**/*.{ts,vue,css}\"",
+        "docs:generate": "npm run docs:operations && npm run docs:site && typedoc && npm run docs:search-index",
         "docs:serve": "npm run docs:generate && npx serve docs",
         "release": "semantic-release",
         "release:dry": "semantic-release --dry-run --no-ci",
         "prepublishOnly": "npm run build",
-        "check": "npm run typecheck && npm run lint && npm run test:coverage && npm run format:check && npm run jsdoc:check && npm run interfaces:generate -- --check && npm run anilist:api:compare -- --strict --ignore-unimplemented && npm run build"
+        "check": "npm run typecheck && npm run lint && npm run test:coverage && npm run format:check && npm run jsdoc:check && npm run interfaces:generate -- --check && npm run anilist:api:compare -- --strict --ignore-unimplemented && npm run build",
+        "docs:operations": "tsx scripts/generate-operation-reference.ts",
+        "docs:site": "vitepress build docs-src",
+        "docs:search-index": "tsx scripts/generate-search-index.ts",
+        "docs:dev": "vitepress dev docs-src"
     },
     "keywords": [
         "anilist",
@@ -78,7 +81,8 @@
     "author": "RLAlpha49",
     "license": "MIT",
     "devDependencies": {
-        "@boneskull/typedoc-plugin-mermaid": "^0.2.1",
+        "@huggingface/transformers": "^4.2.0",
+        "@lucide/vue": "^1.37.0",
         "@semantic-release/changelog": "^7.0.0",
         "@semantic-release/commit-analyzer": "^13.0.1",
         "@semantic-release/git": "^11.0.1",
@@ -101,14 +105,15 @@
         "semantic-release": "^25.0.9",
         "tsx": "^4.23.12",
         "typedoc": "^0.28.20",
-        "typedoc-github-theme": "^0.4.0",
         "typedoc-plugin-ga": "^1.1.1",
         "typedoc-plugin-llms-txt": "^0.1.2",
         "typedoc-plugin-mdn-links": "^5.1.1",
         "typedoc-plugin-missing-exports": "^4.1.4",
         "typescript": "^6.0.3",
         "unbuild": "^3.6.1",
-        "vitest": "^4.1.11"
+        "vitepress": "^1.6.4",
+        "vitest": "^4.1.11",
+        "vue": "^3.5.42"
     },
     "dependencies": {
         "axios": "^1.19.0"

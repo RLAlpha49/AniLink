@@ -1,17 +1,29 @@
 {
     "compilerOptions": {
-        "target": "ES2024",
+        "target": "ES2022",
         "module": "esnext",
         "moduleResolution": "bundler",
         "outDir": "./dist",
         "rootDir": "./src",
-        "lib": ["ES2024"],
+        "lib": [
+            "ES2022",
+            "DOM"
+        ],
         "strict": true,
         "esModuleInterop": true,
-        "types": ["node"],
+        "types": [
+            "node"
+        ],
         "declaration": true,
         "declarationMap": true
     },
-    "include": ["src/**/*.ts", "./src"],
-    "exclude": ["node_modules", "__tests__", "docs"]
+    "include": [
+        "src/**/*.ts",
+        "./src"
+    ],
+    "exclude": [
+        "node_modules",
+        "__tests__",
+        "docs"
+    ]
 }

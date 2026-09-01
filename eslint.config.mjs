@@ -4,7 +4,7 @@ import security from 'eslint-plugin-security';
 import prettierConfig from 'eslint-config-prettier';
 
 /**
- * Shared flat ESLint configuration for source, test, script, and explorer files.
+ * Shared flat ESLint configuration for source, test, script, and docs-site files.
  *
  * Type-aware rules are limited to source TypeScript files; tests and scripts use
  * syntax-only parsing so fixtures do not require the source project service.
@@ -53,39 +53,6 @@ export default [
       ...security.configs.recommended.rules,
       'security/detect-object-injection': 'off',
     },
-  },
-  {
-    files: ['explorer-src/**/*.js'],
-    languageOptions: {
-      sourceType: 'script',
-      globals: {
-        window: 'readonly',
-        document: 'readonly',
-        navigator: 'readonly',
-        localStorage: 'readonly',
-        sessionStorage: 'readonly',
-        performance: 'readonly',
-        fetch: 'readonly',
-        setTimeout: 'readonly',
-        self: 'readonly',
-        globalThis: 'readonly',
-        module: 'readonly',
-        console: 'readonly',
-      },
-    },
-    rules: {
-      // The explorer keeps ES5-style var declarations on purpose.
-      'no-var': 'off',
-      'prefer-const': 'off',
-      'no-unused-vars': [
-        'warn',
-        {
-          args: 'none',
-          caughtErrors: 'none',
-        },
-      ],
-    },
-    ...prettierConfig,
   },
   {
     ignores: [

@@ -15,7 +15,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**'],
-      exclude: ['explorer-src/**', 'node_modules/**', 'dist/**'],
+      exclude: ['node_modules/**', 'dist/**', 'docs-src/**'],
       reporter: ['text', 'lcov'],
       thresholds: {
         statements: 90,

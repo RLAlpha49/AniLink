@@ -1,0 +1,1017 @@
+/*
+ * AniLink TypeDoc theme override.
+ *
+ * Restyles the TypeDoc output to match the VitePress docs (Sumi/Yoru) design:
+ * warm paper / night backgrounds, vermillion/gold accents, serif display
+ * headings, JetBrains Mono code, and the custom scrollbar.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Zen+Old+Mincho:wght@400;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+/* ============================================================ */
+/* Design tokens                                                 */
+/* ============================================================ */
+
+/* Light (Sumi, 墨) — default, explicit light, and os-unresolved */
+:root,
+:root[data-theme="light"],
+:root[data-theme="os"] {
+    --rd-accent: #c73e2e;
+    --rd-bg: #f6f2e9;
+    --rd-bg-soft: #ece6d8;
+    --rd-code-bg: #efe9dc;
+    --rd-text: #211f1a;
+    --rd-text-soft: #6d675a;
+    --rd-border: #d8d0bd;
+    --rd-anilist: #2f6f6a;
+    --rd-mal: #8a5a2b;
+    --rd-grain: rgba(33, 31, 26, 0.055);
+    --rd-radius: 4px;
+}
+
+/* Dark (Yoru, 夜) — explicit */
+:root[data-theme="dark"] {
+    --rd-accent: #c9a86a;
+    --rd-bg: #0e1018;
+    --rd-bg-soft: #161a26;
+    --rd-code-bg: #141826;
+    --rd-text: #e8e6df;
+    --rd-text-soft: #8b8a85;
+    --rd-border: #262a3a;
+    --rd-anilist: #6ee7d2;
+    --rd-mal: #e0a96d;
+    --rd-grain: rgba(232, 230, 223, 0.05);
+}
+
+/* Dark (Yoru, 夜) — os mode following the system preference */
+@media (prefers-color-scheme: dark) {
+    :root[data-theme="os"] {
+        --rd-accent: #c9a86a;
+        --rd-bg: #0e1018;
+        --rd-bg-soft: #161a26;
+        --rd-code-bg: #141826;
+        --rd-text: #e8e6df;
+        --rd-text-soft: #8b8a85;
+        --rd-border: #262a3a;
+        --rd-anilist: #6ee7d2;
+        --rd-mal: #e0a96d;
+        --rd-grain: rgba(232, 230, 223, 0.05);
+    }
+}
+
+/* Map TypeDoc's --color-* variables onto the AniLink tokens. Declared at the
+   same specificity as typedoc-github-theme's per-theme blocks (and later in
+   the cascade) so the mapping holds for light, dark and os modes. */
+:root,
+:root[data-theme="light"],
+:root[data-theme="os"],
+:root[data-theme="dark"] {
+    --color-background: var(--rd-bg);
+    --color-background-secondary: var(--rd-bg-soft);
+    --color-background-navbar: var(--rd-bg);
+    --color-background-active: color-mix(in srgb, var(--rd-accent) 14%, var(--rd-bg-soft));
+    --color-background-warning: var(--rd-bg-soft);
+    --color-background-code: var(--rd-bg-soft);
+    --color-accent: var(--rd-border);
+    --color-text: var(--rd-text);
+    --color-text-aside: var(--rd-text-soft);
+    --color-contrast-text: var(--rd-bg);
+    --color-link: var(--rd-anilist);
+    --color-focus-outline: var(--rd-accent);
+    --color-icon-background: var(--rd-bg);
+    --color-icon-text: var(--rd-text);
+    --color-comment-tag: var(--rd-bg-soft);
+    --color-comment-tag-text: var(--rd-text);
+    --color-active-menu-item: color-mix(in srgb, var(--rd-accent) 12%, transparent);
+    --color-warning-text: var(--rd-text);
+    --color-warning-border: var(--rd-border);
+    --color-background-overlay: color-mix(in srgb, var(--rd-text) 35%, transparent);
+
+    /* highlight.css code background — point both themes at the AniLink code bg */
+    --light-code-background: var(--rd-code-bg);
+    --dark-code-background: var(--rd-code-bg);
+    --code-background: var(--rd-code-bg);
+
+    /* typedoc-github-theme font stacks → AniLink stacks */
+    --font-family-text: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --font-family-code: "JetBrains Mono", monospace;
+
+    /* Toolbar height drives sticky-header scroll offsets */
+    --rd-header-height: 3.75rem;
+    --dim-toolbar-contents-height: var(--rd-header-height);
+}
+
+/* ============================================================ */
+/* Page background — paper/night gradients + grain               */
+/* ============================================================ */
+
+body {
+    background:
+        radial-gradient(1100px 500px at 85% -5%, rgba(199, 62, 46, 0.05), transparent 60%),
+        radial-gradient(900px 600px at -10% 105%, rgba(33, 31, 26, 0.05), transparent 55%),
+        var(--rd-bg);
+    color: var(--rd-text);
+    font-family: var(--font-family-text);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+:root[data-theme="dark"] body {
+    background:
+        radial-gradient(900px 520px at 82% -8%, rgba(201, 168, 106, 0.1), transparent 60%),
+        radial-gradient(820px 600px at -8% 108%, rgba(110, 231, 210, 0.06), transparent 55%),
+        var(--rd-bg);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root[data-theme="os"] body {
+        background:
+            radial-gradient(900px 520px at 82% -8%, rgba(201, 168, 106, 0.1), transparent 60%),
+            radial-gradient(820px 600px at -8% 108%, rgba(110, 231, 210, 0.06), transparent 55%),
+            var(--rd-bg);
+    }
+}
+
+/* Subtle paper/night grain overlay. Content is lifted above it below. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.45;
+    background-image: radial-gradient(var(--rd-grain) 1px, transparent 1px);
+    background-size: 5px 5px;
+    z-index: 0;
+}
+
+.tsd-page-toolbar,
+.container.container-main,
+footer {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================================ */
+/* Toolbar (top bar)                                             */
+/* ============================================================ */
+
+.tsd-page-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--rd-bg) 88%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--rd-border);
+    min-height: var(--rd-header-height);
+}
+
+.tsd-toolbar-contents {
+    box-sizing: border-box;
+    height: var(--rd-header-height);
+    min-height: var(--rd-header-height);
+    padding: 0.8rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.tsd-toolbar-contents a.title {
+    font-family: "Zen Old Mincho", "Shippori Mincho", serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+    color: var(--rd-text);
+    text-decoration: none;
+}
+
+.tsd-toolbar-contents a.title:hover {
+    color: var(--rd-accent);
+}
+
+.tsd-widget {
+    color: var(--rd-text-soft);
+    transition: color 0.15s ease;
+}
+
+.tsd-widget:hover {
+    color: var(--rd-accent);
+}
+
+#tsd-toolbar-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+    font-size: 0.8rem;
+}
+
+#tsd-toolbar-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2em;
+    color: var(--rd-text-soft);
+    text-decoration: none;
+}
+
+#tsd-toolbar-links a:hover {
+    color: var(--rd-accent);
+}
+
+#tsd-search-trigger,
+#anilink-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--rd-border);
+    border-radius: 4px;
+    background: none;
+    color: var(--rd-text-soft);
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+#tsd-search-trigger:hover,
+#anilink-theme-toggle:hover {
+    color: var(--rd-accent);
+    border-color: var(--rd-accent);
+}
+
+#anilink-theme-toggle span {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* ============================================================ */
+/* Typography — headings, links, prose                           */
+/* ============================================================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    line-height: 1.25;
+}
+
+/* Page title + document headings use the serif display face with the
+   vermillion/gold accent underline bar, matching .docs-doc h1. */
+.tsd-page-title h1,
+.tsd-panel.tsd-typography h1 {
+    font-family: "Zen Old Mincho", "Shippori Mincho", serif;
+    font-size: 2.3rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin: 0 0 1.25rem;
+    padding-bottom: 0.9rem;
+    border-bottom: none;
+    position: relative;
+}
+
+.tsd-page-title h1::after,
+.tsd-panel.tsd-typography h1::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 88px;
+    height: 5px;
+    background: var(--rd-accent);
+    border-radius: 999px 999px 999px 2px;
+    transform: rotate(-0.6deg);
+}
+
+:root[data-theme="dark"] .tsd-page-title h1::after,
+:root[data-theme="dark"] .tsd-panel.tsd-typography h1::after {
+    box-shadow: 0 0 12px rgba(201, 168, 106, 0.5);
+}
+
+/* The index page renders the README as a .tsd-panel.tsd-typography block whose
+   first child is the README's "# AniLink" heading. That duplicates the
+   .tsd-page-title h1 ("AniLink - v2.0.0") directly above it, so hide the
+   README copy. Scoped to the first child so JSDoc prose h1s elsewhere are
+   unaffected (and only the index page has this panel anyway). */
+.tsd-panel.tsd-typography > h1:first-child {
+    display: none;
+}
+
+.tsd-panel.tsd-typography h2 {
+    font-family: "Zen Old Mincho", "Shippori Mincho", serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 2.6rem 0 0.8rem;
+    padding-top: 1.1rem;
+    padding-bottom: 0;
+    border-bottom: none;
+    border-top: 1px solid var(--rd-border);
+}
+
+.tsd-panel.tsd-typography h3 {
+    font-size: 1.12rem;
+    font-weight: 600;
+    margin: 1.8rem 0 0.5rem;
+}
+
+.tsd-panel.tsd-typography h4 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Section headings inside panels (e.g. "Constructors", "Properties") */
+.tsd-panel:not(.tsd-typography) > h2,
+.tsd-panel:not(.tsd-typography) > h3,
+.tsd-accordion-summary h2 {
+    font-family: "Zen Old Mincho", "Shippori Mincho", serif;
+}
+
+/* Sidebar / on-this-page section labels — small caps tracking, like .docs-nav-title */
+.tsd-page-navigation .tsd-accordion-summary h3,
+.site-menu .tsd-accordion-summary h3 {
+    font-family: "Zen Old Mincho", "Shippori Mincho", serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--rd-text-soft);
+}
+
+/* Links — anilist teal with a soft underline; hover lifts to the accent */
+a {
+    color: var(--rd-anilist);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--rd-anilist) 40%, transparent);
+    text-underline-offset: 3px;
+}
+
+a:hover {
+    color: var(--rd-accent);
+    text-decoration-color: var(--rd-accent);
+}
+
+/* Breadcrumbs stay muted until hovered */
+.tsd-breadcrumb {
+    font-size: 0.8rem;
+    color: var(--rd-text-soft);
+}
+
+.tsd-breadcrumb a,
+.tsd-breadcrumb a:hover {
+    color: var(--rd-text-soft);
+    text-decoration: none;
+}
+
+.tsd-breadcrumb a:hover {
+    color: var(--rd-accent);
+}
+
+.tsd-typography {
+    line-height: 1.7;
+}
+
+.tsd-typography p {
+    margin: 0.7rem 0;
+}
+
+.tsd-typography strong {
+    font-weight: 600;
+}
+
+/* ============================================================ */
+/* Code & signatures                                             */
+/* ============================================================ */
+
+code,
+pre,
+.tsd-signature,
+.tsd-signature > span,
+.tsd-signatures {
+    font-family: var(--font-family-code);
+}
+
+code,
+pre {
+    background: var(--rd-code-bg);
+    border: 1px solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    color: var(--rd-text);
+}
+
+code {
+    font-size: 0.84em;
+    padding: 0.1em 0.35em;
+}
+
+pre {
+    padding: 0.85rem 1.1rem 1rem;
+    margin: 1.25rem 0;
+    overflow-x: auto;
+}
+
+pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+/* Inline code inside signatures keeps a quiet tag look */
+code.tsd-tag {
+    background: var(--rd-bg-soft);
+    border-color: var(--rd-border);
+}
+
+/* Signatures: the default theme gives 1rem 0.5rem; widen the horizontal
+   padding so the code breathes and isn't cramped against the borders. */
+.tsd-signature {
+    background: var(--rd-bg-soft);
+    border: 1px solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    padding: 1rem 1.25rem;
+}
+
+.tsd-signatures .tsd-signature {
+    border-radius: 0;
+}
+
+.tsd-signatures .tsd-signature:first-child {
+    border-radius: var(--rd-radius) var(--rd-radius) 0 0;
+}
+
+.tsd-signatures .tsd-signature:last-child {
+    border-radius: 0 0 var(--rd-radius) var(--rd-radius);
+}
+
+.tsd-signatures .tsd-signature:only-child {
+    border-radius: var(--rd-radius);
+}
+
+/* ============================================================ */
+/* Panels & member groups                                        */
+/* ============================================================ */
+
+/* Bordered panels need inner padding so content isn't flush with
+   the border. The default theme leaves these at padding:0 and relies
+   on child margins; the github theme added 16px, which we restore. */
+.tsd-index-panel,
+.tsd-member-group {
+    background: color-mix(in srgb, var(--rd-bg-soft) 50%, transparent);
+    border: 1px solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    padding: 1rem 1.25rem;
+}
+
+/* The accordion summary (collapsible header) inside a member group sits
+   at the panel's top edge; pull it out to the padding edge. */
+.tsd-member-group > .tsd-accordion-summary {
+    margin: 0 -0.5rem 0.75rem;
+}
+
+/* Member panels (individual properties/methods) get vertical breathing
+   room; the default theme gives 4rem bottom margin. */
+.tsd-panel.tsd-member {
+    margin-bottom: 3rem;
+}
+
+/* Panel section headings: the default theme pulls them out with negative
+   margins to span the panel; with our padding that needs matching insets. */
+.tsd-panel > h1,
+.tsd-panel > h2,
+.tsd-panel > h3 {
+    margin: 1.5rem 0 0.75rem;
+    padding: 0;
+}
+
+.tsd-panel:not(.tsd-typography) > h1,
+.tsd-panel:not(.tsd-typography) > h2,
+.tsd-panel:not(.tsd-typography) > h3 {
+    margin-top: 0;
+}
+
+/* JSDoc comment prose inside a member panel needs left padding so it
+   aligns with the signature rather than the panel edge. */
+.tsd-panel.tsd-comment {
+    padding: 0;
+}
+
+.tsd-description {
+    padding: 0.5rem 0;
+}
+
+/* ============================================================ */
+/* Tables                                                        */
+/* ============================================================ */
+
+.tsd-typography table,
+.tsd-panel table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    overflow: hidden;
+    font-size: 0.9rem;
+    margin: 1rem 0;
+}
+
+.tsd-typography th {
+    background: var(--rd-bg-soft);
+    font-family: "Zen Old Mincho", "Shippori Mincho", serif;
+    font-weight: 700;
+}
+
+.tsd-typography th,
+.tsd-typography td {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--rd-border);
+}
+
+.tsd-typography tr:nth-child(2n) {
+    background: color-mix(in srgb, var(--rd-bg-soft) 40%, transparent);
+}
+
+/* ============================================================ */
+/* Blockquotes, hr, warnings                                     */
+/* ============================================================ */
+
+.tsd-typography blockquote {
+    margin: 1.25rem 0;
+    padding: 0.4rem 1.1rem;
+    border-left: 3px solid var(--rd-accent);
+    color: var(--rd-text-soft);
+    background: linear-gradient(
+        to right,
+        color-mix(in srgb, var(--rd-accent) 6%, transparent),
+        transparent 70%
+    );
+}
+
+.tsd-typography hr {
+    border: none;
+    border-top: 1px solid var(--rd-border);
+}
+
+.warning {
+    border: 1px solid var(--rd-border);
+    border-left: 3px solid var(--rd-accent);
+    border-radius: var(--rd-radius);
+    background: color-mix(in srgb, var(--rd-accent) 5%, var(--rd-bg-soft));
+}
+
+/* ============================================================ */
+/* Sidebar navigation                                            */
+/* ============================================================ */
+
+.col-sidebar {
+    border-left: 1px solid var(--rd-border);
+}
+
+.site-menu,
+.page-menu {
+    padding-top: 1rem;
+}
+
+.tsd-navigation a {
+    color: var(--rd-text-soft);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+    padding: 0.28rem 0.5rem;
+    font-size: 0.86rem;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.tsd-navigation a:hover {
+    color: var(--rd-text);
+    background: color-mix(in srgb, var(--rd-text) 4%, transparent);
+}
+
+.tsd-navigation a.current {
+    color: var(--rd-text);
+    font-weight: 600;
+    border-left-color: var(--rd-accent);
+    background: linear-gradient(
+        to right,
+        color-mix(in srgb, var(--rd-accent) 8%, transparent),
+        transparent 70%
+    );
+}
+
+.tsd-page-navigation a {
+    color: var(--rd-text-soft);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    padding: 0.22rem 0.5rem;
+    font-size: 0.84rem;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tsd-page-navigation a:hover {
+    color: var(--rd-text);
+}
+
+.tsd-page-navigation a.current {
+    color: var(--rd-text);
+    font-weight: 600;
+    border-left-color: var(--rd-accent);
+}
+
+/* ============================================================ */
+/* Form controls — buttons, select, search                       */
+/* ============================================================ */
+
+button {
+    background: var(--rd-bg);
+    color: var(--rd-text);
+    border: 1px solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+button:hover {
+    border-color: var(--rd-accent);
+    color: var(--rd-accent);
+}
+
+/* Copy button inside code blocks stays ghosted until hover */
+pre > button {
+    background: transparent;
+    border: none;
+    color: var(--rd-text-soft);
+}
+
+pre > button:hover {
+    color: var(--rd-accent);
+}
+
+select {
+    background: var(--rd-bg);
+    color: var(--rd-text);
+    border: 1px solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    padding: 0.3rem 0.5rem;
+    font-family: inherit;
+}
+
+#tsd-search-input,
+#tsd-search-input:focus-visible {
+    background: var(--rd-bg);
+    border: 1px solid var(--rd-border);
+    border-radius: var(--rd-radius);
+    color: var(--rd-text);
+}
+
+#tsd-search-results > li:is(:hover, [aria-selected="true"]) {
+    background: color-mix(in srgb, var(--rd-text) 6%, transparent);
+}
+
+#tsd-overlay {
+    background: color-mix(in srgb, var(--rd-text) 35%, transparent);
+}
+
+/* ============================================================ */
+/* Footer                                                        */
+/* ============================================================ */
+
+footer {
+    border-top: 1px solid var(--rd-border);
+    color: var(--rd-text-soft);
+}
+
+footer p {
+    color: var(--rd-text-soft);
+}
+
+/* ============================================================ */
+/* Focus & scroll                                                */
+/* ============================================================ */
+
+*:focus-visible,
+.tsd-accordion-summary:focus-visible svg {
+    outline: 2px solid var(--rd-accent);
+    outline-offset: 2px;
+}
+
+:target {
+    scroll-margin-block: 4rem;
+}
+
+/* Custom scrollbar matching the VitePress docs */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rd-accent) var(--rd-bg-soft);
+}
+
+*::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--rd-bg-soft);
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--rd-accent);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.18);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--rd-accent) 82%, var(--rd-text));
+    background-clip: padding-box;
+}
+
+/* ============================================================ */
+/* Reduced motion                                                */
+/* ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ====================================================================== */
+/* AniLink semantic search modal                                           */
+/* ====================================================================== */
+
+.as-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: color-mix(in srgb, var(--rd-bg) 30%, rgba(0, 0, 0, 0.45));
+    backdrop-filter: blur(8px) saturate(1.1);
+    -webkit-backdrop-filter: blur(8px) saturate(1.1);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 11vh;
+    font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    animation: as-fade 0.18s ease;
+}
+@keyframes as-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.as-modal {
+    width: min(640px, 92vw);
+    max-height: 72vh;
+    overflow: hidden;
+    background: var(--rd-bg);
+    border: 1px solid var(--rd-border);
+    border-radius: 16px;
+    box-shadow:
+        0 1px 0 color-mix(in srgb, var(--rd-bg-soft) 80%, transparent) inset,
+        0 24px 70px -12px rgba(0, 0, 0, 0.4),
+        0 8px 24px -8px rgba(0, 0, 0, 0.25);
+    animation: as-rise 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes as-rise {
+    from { opacity: 0; transform: translateY(-14px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.as-root {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 16px 8px;
+}
+.as-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--rd-border);
+    border-radius: 12px;
+    background: var(--rd-bg-soft);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.as-input-row:focus-within {
+    border-color: var(--rd-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--rd-accent) 18%, transparent);
+}
+.as-icon {
+    color: var(--rd-text-soft);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.as-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: var(--rd-text);
+    font: inherit;
+    font-size: 15px;
+    outline: none;
+}
+.as-input::placeholder {
+    color: var(--rd-text-soft);
+    opacity: 0.7;
+}
+.as-kbd {
+    flex-shrink: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    padding: 4px 6px;
+    border-radius: 5px;
+    border: 1px solid var(--rd-border);
+    background: var(--rd-code-bg);
+    color: var(--rd-text-soft);
+}
+.as-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 4px 2px;
+    font-size: 12px;
+    color: var(--rd-text-soft);
+    min-height: 22px;
+}
+.as-spark {
+    color: var(--rd-anilist);
+    flex-shrink: 0;
+}
+.as-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--rd-accent);
+    flex-shrink: 0;
+    animation: as-pulse 1s ease-in-out infinite;
+}
+@keyframes as-pulse {
+    0%, 100% { opacity: 0.35; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.15); }
+}
+.as-filters {
+    display: flex;
+    gap: 6px;
+    padding: 8px 4px 0;
+    margin: 0;
+    border: none;
+}
+.as-filter {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--rd-border);
+    background: transparent;
+    color: var(--rd-text-soft);
+    cursor: pointer;
+    transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.as-filter.is-on.is-guide {
+    color: var(--rd-anilist);
+    border-color: color-mix(in srgb, var(--rd-anilist) 40%, transparent);
+    background: color-mix(in srgb, var(--rd-anilist) 12%, transparent);
+}
+.as-filter.is-on.is-operation {
+    color: var(--rd-mal);
+    border-color: color-mix(in srgb, var(--rd-mal) 40%, transparent);
+    background: color-mix(in srgb, var(--rd-mal) 12%, transparent);
+}
+.as-filter.is-on.is-typedoc {
+    color: var(--rd-accent);
+    border-color: color-mix(in srgb, var(--rd-accent) 40%, transparent);
+    background: color-mix(in srgb, var(--rd-accent) 12%, transparent);
+}
+.as-filter:not(.is-on) {
+    opacity: 0.5;
+}
+.as-list {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0 0 8px;
+    max-height: calc(72vh - 160px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.as-item {
+    animation: as-item-rise 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--as-i, 0) * 32ms);
+}
+@keyframes as-item-rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.as-result {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    width: 100%;
+    text-align: left;
+    padding: 9px 40px 9px 12px;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    color: inherit;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+.as-result:hover,
+.as-result.is-active {
+    background: color-mix(in srgb, var(--rd-accent) 8%, transparent);
+    border-color: color-mix(in srgb, var(--rd-accent) 22%, transparent);
+}
+.as-badges {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.as-badge {
+    font-size: 9.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--rd-anilist) 14%, transparent);
+    color: var(--rd-anilist);
+}
+.as-badge[data-source="operation"] {
+    background: color-mix(in srgb, var(--rd-mal) 14%, transparent);
+    color: var(--rd-mal);
+}
+.as-badge[data-source="typedoc"] {
+    background: color-mix(in srgb, var(--rd-accent) 16%, transparent);
+    color: var(--rd-accent);
+}
+.as-match {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 5px;
+    color: var(--rd-anilist);
+    background: color-mix(in srgb, var(--rd-anilist) 14%, transparent);
+    line-height: 1;
+}
+.as-match.match-both {
+    color: var(--rd-accent);
+    background: color-mix(in srgb, var(--rd-accent) 14%, transparent);
+}
+.as-title {
+    min-width: 0;
+    max-width: 100%;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--rd-text);
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.as-snippet-wrap {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+.as-snippet {
+    font-size: 12.5px;
+    color: var(--rd-text-soft);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-height: calc(1.45em * 2);
+}
+.as-empty {
+    padding: 18px 14px 14px;
+    text-align: center;
+    color: var(--rd-text);
+    font-size: 14px;
+}
+.as-list::-webkit-scrollbar {
+    width: 8px;
+}
+.as-list::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--rd-text-soft) 30%, transparent);
+    border-radius: 4px;
+}

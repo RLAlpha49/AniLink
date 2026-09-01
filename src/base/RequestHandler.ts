@@ -904,9 +904,6 @@ export const sendRequest = async <T = unknown>(
         headers.Authorization = `Bearer ${resolvedAuth.token}`;
     }
 
-    // The caller's settings object doubles as the circuit-breaker owner key
-    // (stable per `AniLink` instance); the upstream host scopes the breaker so
-    // multi-provider clients isolate one provider's outage from the others.
     const result = await executeWithRetry<unknown>(
         { url, method, data, headers },
         resolveRequestOptions(options),

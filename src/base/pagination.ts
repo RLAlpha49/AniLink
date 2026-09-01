@@ -116,7 +116,6 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
               concurrency: number,
           ]
 ): Promise<LookAheadResult<TEntry>> {
-    // Normalize the two call shapes into one internal configuration.
     let extractNextKey: ((response: TEntry) => TKey) | undefined;
     let firstKey: TKey;
     let numericStart: number | undefined;
@@ -124,9 +123,6 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
     let concurrency: number;
 
     if (rest.length === 4) {
-        // Six-argument shape: (extractNextKey, firstKey, maxEntries, concurrency).
-        // extractNextKey may be undefined here too; firstKey still names the
-        // starting key explicitly.
         [extractNextKey, firstKey, maxEntries, concurrency] = rest as [
             ((response: TEntry) => TKey) | undefined,
             TKey,
@@ -137,22 +133,15 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
             numericStart = firstKey as unknown as number;
         }
     } else {
-        // Five-argument numeric shape: (startNumber, maxEntries, concurrency).
         [numericStart, maxEntries, concurrency] = rest as unknown as [number, number, number];
         firstKey = numericStart as unknown as TKey;
     }
 
     const responses: TEntry[] = [];
-    // Requests indexed by slot. Entries are never removed: awaiting an
-    // already-settled request must remain possible, because several siblings
-    // can settle during the same tick and consumption still happens in order.
     const pending: Promise<void>[] = [];
     let launched = 0;
     let count = 0;
     let truncated = false;
-    // The key each not-yet-launched slot will use. In numeric mode this is
-    // derived from slot arithmetic; in cursor mode it is updated after each
-    // consumed entry.
     let pendingCursorKey: TKey | undefined = extractNextKey === undefined ? undefined : firstKey;
 
     // In cursor mode the next key is carried by the previous response, so
@@ -162,7 +151,6 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
     const effectiveConcurrency = extractNextKey === undefined ? concurrency : 1;
 
     while (count < maxEntries) {
-        // Refill: keep at most `effectiveConcurrency` requests launched but unconsumed.
         while (launched < maxEntries && launched - count < effectiveConcurrency) {
             const slot = launched;
             const key =

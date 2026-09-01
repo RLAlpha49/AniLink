@@ -3,6 +3,7 @@
 /audit
 /coverage
 /docs
+/docs-src/.vitepress/cache
 /dist
 /node_modules
 .env
@@ -10,3 +11,4 @@
 .gitignore
 AGENTS.md
 TODO.md
+lib/operation-reference
