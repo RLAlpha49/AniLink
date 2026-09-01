@@ -19,7 +19,7 @@
     "excludeProtected": true,
     "excludeExternals": true,
     "includeVersion": true,
-    "hostedBaseUrl": "https://rlalpha49.github.io/AniLink/",
+    "hostedBaseUrl": "https://anilink.alpha49.com/",
     "useHostedBaseUrlForAbsoluteLinks": true,
     "gaID": "G-F7DE9Y757W"
 }

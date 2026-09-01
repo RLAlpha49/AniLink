@@ -100,7 +100,7 @@ export interface ReferenceSectionManifest {
 
 const ROOT = resolve(import.meta.dirname, "..");
 const SRC = join(ROOT, "src");
-const TYPEDOC_BASE = "https://rlalpha49.github.io/AniLink/typedoc/";
+const TYPEDOC_BASE = "https://anilink.alpha49.com/typedoc/";
 
 /** Read a file as UTF-8 text, returning "" if missing. */
 function readFileText(p: string): string {
