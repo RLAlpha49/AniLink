@@ -82,7 +82,11 @@ describe("operation reference section manifests", () => {
     }, 30_000);
 
     it("loads only the requested provider/category section", async () => {
-        const grouped = await loadOperations("anilist", "mutation");
+        const outputDir = mkdtempSync(join(tmpdir(), "anilink-operation-reference-"));
+        temporaryDirectories.push(outputDir);
+        writeReferenceManifest(join(outputDir, "lib", "operation-reference", "operations.json"));
+
+        const grouped = await loadOperations("anilist", "mutation", outputDir);
         const operations = Object.values(grouped).flat();
 
         expect(operations.length).toBeGreaterThan(0);
@@ -94,7 +98,11 @@ describe("operation reference section manifests", () => {
     });
 
     it("loads the MAL REST section independently", async () => {
-        const grouped = await loadOperations("mal", "rest");
+        const outputDir = mkdtempSync(join(tmpdir(), "anilink-operation-reference-"));
+        temporaryDirectories.push(outputDir);
+        writeReferenceManifest(join(outputDir, "lib", "operation-reference", "operations.json"));
+
+        const grouped = await loadOperations("mal", "rest", outputDir);
         const operations = Object.values(grouped).flat();
 
         expect(operations).toHaveLength(2);

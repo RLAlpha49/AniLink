@@ -28,15 +28,20 @@ export type OperationSection = ReferenceOperation["category"];
  * fields; highlighting is applied at render time.
  *
  * @param provider Which provider to keep — `"anilist"` or `"mal"`.
+ * @param category Which category shard to load.
+ * @param baseDir Repository root containing `lib/operation-reference`.
+ * Defaults to the current working directory so the docs data loaders
+ * resolve the generated shards without extra configuration.
  */
 export async function loadOperations(
     provider: ReferenceOperation["provider"],
-    category: OperationSection
+    category: OperationSection,
+    baseDir: string = cwd()
 ): Promise<GroupedOperations> {
-    const path = resolve(cwd(), "lib", "operation-reference", provider, `${category}.json`);
+    const path = resolve(baseDir, "lib", "operation-reference", provider, `${category}.json`);
     if (!existsSync(path)) {
         throw new Error(
-            `could not locate lib/operation-reference/${provider}/${category}.json from ${cwd()}; run \`npm run docs:operations\` first`
+            `could not locate lib/operation-reference/${provider}/${category}.json from ${baseDir}; run \`npm run docs:operations\` first`
         );
     }
     const section = JSON.parse(readFileSync(path, "utf8")) as ReferenceSectionManifest;
