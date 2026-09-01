@@ -81,11 +81,7 @@ defineExpose({ openModal });
     <ClientOnly>
         <Teleport to="body">
             <Transition name="ss-overlay">
-                <div
-                    v-if="open"
-                    class="ss-overlay"
-                    @click.self="closeModal"
-                >
+                <div v-if="open" class="ss-overlay" @click.self="closeModal">
                     <Transition name="ss-panel" appear>
                         <div
                             v-if="open"

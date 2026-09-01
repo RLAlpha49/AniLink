@@ -8,6 +8,7 @@
  * grain, and vertical Japanese text motifs. All content is static and SSR-safe.
  */
 import { computed, onMounted, onBeforeUnmount, ref } from "vue";
+import { withBase } from "vitepress";
 import { highlightTypeScript } from "../useShikiHighlighter";
 import {
     Activity,
@@ -221,10 +222,10 @@ onMounted(() => {
                         pacing, and a generated operation reference.
                     </p>
                     <div class="home-hero-actions">
-                        <a class="home-btn home-btn--solid" href="/getting-started">
+                        <a class="home-btn home-btn--solid" :href="withBase('/getting-started')">
                             <BookOpen :size="16" aria-hidden="true" /> Begin reading
                         </a>
-                        <a class="home-btn" href="/operations/index">
+                        <a class="home-btn" :href="withBase('/operations/index')">
                             <Library :size="16" aria-hidden="true" /> Operation reference
                         </a>
                         <a
@@ -390,7 +391,7 @@ onMounted(() => {
                     <h3 class="home-docs-block-title">{{ sec.title }}</h3>
                     <ul class="home-docs-list">
                         <li v-for="p in sec.pages" :key="p.path">
-                            <a :href="p.path" class="home-docs-link">
+                            <a :href="withBase(p.path)" class="home-docs-link">
                                 <span class="home-docs-link-title">{{ p.title }}</span>
                                 <span class="home-docs-link-summary">{{ p.summary }}</span>
                             </a>
@@ -407,7 +408,7 @@ onMounted(() => {
                     <h3 class="home-docs-block-title">AniList guides</h3>
                     <ul class="home-docs-list home-docs-list--inline">
                         <li v-for="p in anilistGuidePages" :key="p.path">
-                            <a :href="p.path" class="home-docs-chip home-docs-chip--anilist">
+                            <a :href="withBase(p.path)" class="home-docs-chip home-docs-chip--anilist">
                                 {{ p.title }}
                             </a>
                         </li>
@@ -421,7 +422,7 @@ onMounted(() => {
                     <h3 class="home-docs-block-title">MAL guides</h3>
                     <ul class="home-docs-list home-docs-list--inline">
                         <li v-for="p in malGuidePages" :key="p.path">
-                            <a :href="p.path" class="home-docs-chip home-docs-chip--mal">
+                            <a :href="withBase(p.path)" class="home-docs-chip home-docs-chip--mal">
                                 {{ p.title }}
                             </a>
                         </li>
@@ -441,11 +442,15 @@ onMounted(() => {
                     Install the package and make your first typed call in under a minute.
                 </p>
                 <div class="home-cta-actions">
-                    <a class="home-btn home-btn--solid" href="/getting-started">
+                    <a class="home-btn home-btn--solid" :href="withBase('/getting-started')">
                         <BookOpen :size="16" aria-hidden="true" /> Get started
                         <ArrowRight :size="15" aria-hidden="true" />
                     </a>
-                    <a class="home-btn" href="/typedoc/classes/AniLink.AniLink.html" target="_self">
+                    <a
+                        class="home-btn"
+                        :href="withBase('/typedoc/classes/AniLink.AniLink.html')"
+                        target="_self"
+                    >
                         <Package :size="16" aria-hidden="true" /> API reference
                         <ArrowUpRight :size="13" aria-hidden="true" />
                     </a>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useData, useRoute } from "vitepress";
+import { useData, useRoute, withBase } from "vitepress";
 import { NAV_GROUPS, flatPages, neighborsOf, type DocPage } from "../../lib/content";
 import { normalizePath } from "../../lib/routes";
 import {
@@ -318,13 +318,13 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                     >
                         <Menu :size="18" aria-hidden="true" />
                     </button>
-                    <a class="docs-brand-mark" href="/" aria-label="AniLink home">墨</a>
-                    <a class="docs-brand-name" href="/">AniLink</a>
+                    <a class="docs-brand-mark" :href="withBase('/')" aria-label="AniLink home">墨</a>
+                    <a class="docs-brand-name" :href="withBase('/')">AniLink</a>
                     <span class="docs-brand-vert" aria-hidden="true">アニリンク文書</span>
                 </div>
                 <div class="docs-top-actions">
                     <div class="docs-top-links">
-                        <a href="/typedoc/" target="_self">
+                        <a :href="withBase('/typedoc/')" target="_self">
                             API <ArrowUpRight :size="13" aria-hidden="true" />
                         </a>
                         <a href="https://github.com/RLAlpha49/AniLink">
@@ -361,7 +361,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                             <ul>
                                 <li v-for="p in group.pages" :key="p.path">
                                     <a
-                                        :href="p.path"
+                                        :href="withBase(p.path)"
                                         class="docs-nav-link"
                                         :class="{
                                             active:
@@ -406,7 +406,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                                     <ul v-if="p.children && p.children.length" class="docs-nav-sub">
                                         <li v-for="child in p.children" :key="child.path">
                                             <a
-                                                :href="child.path"
+                                                :href="withBase(child.path)"
                                                 class="docs-nav-link docs-nav-link--sub"
                                                 :class="{
                                                     active: current?.path === child.path,
@@ -436,7 +436,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                     </nav>
 
                     <div class="docs-rail-foot">
-                        <a href="/typedoc/" target="_self">
+                        <a :href="withBase('/typedoc/')" target="_self">
                             API <ArrowUpRight :size="13" aria-hidden="true" />
                         </a>
                         <a href="https://github.com/RLAlpha49/AniLink">
@@ -457,7 +457,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                     </article>
 
                     <nav v-if="pager.prev || pager.next" class="docs-pager" aria-label="Pager">
-                        <a v-if="pager.prev" class="docs-pager-link" :href="pager.prev.path">
+                        <a v-if="pager.prev" class="docs-pager-link" :href="withBase(pager.prev.path)">
                             <span class="docs-pager-dir">
                                 <ArrowLeft :size="14" aria-hidden="true" /> 前の頁
                             </span>
@@ -467,7 +467,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                         <a
                             v-if="pager.next"
                             class="docs-pager-link docs-pager-link--next"
-                            :href="pager.next.path"
+                            :href="withBase(pager.next.path)"
                         >
                             <span class="docs-pager-dir">
                                 次の頁 <ArrowRight :size="14" aria-hidden="true" />

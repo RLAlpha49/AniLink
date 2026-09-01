@@ -2,6 +2,7 @@
 // Custom 404 view for the AniLink docs. Rendered by DocsLayout for any
 // not-found route (page.isNotFound) and embedded in 404.md for the static
 // 404.html entry point. Theme tokens (--rd-*) are inherited from .docs.
+import { withBase } from "vitepress";
 import { BookOpen, Home, Library, Rocket } from "@lucide/vue";
 </script>
 
@@ -14,16 +15,16 @@ import { BookOpen, Home, Library, Rocket } from "@lucide/vue";
             Use one of the entry points below to get back on track.
         </p>
         <div class="nf-actions">
-            <a class="nf-btn nf-btn--primary" href="/">
+            <a class="nf-btn nf-btn--primary" :href="withBase('/')">
                 <Home :size="16" aria-hidden="true" /> Home
             </a>
-            <a class="nf-btn" href="/introduction">
+            <a class="nf-btn" :href="withBase('/introduction')">
                 <BookOpen :size="16" aria-hidden="true" /> Introduction
             </a>
-            <a class="nf-btn" href="/getting-started">
+            <a class="nf-btn" :href="withBase('/getting-started')">
                 <Rocket :size="16" aria-hidden="true" /> Getting started
             </a>
-            <a class="nf-btn" href="/operations/index">
+            <a class="nf-btn" :href="withBase('/operations/index')">
                 <Library :size="16" aria-hidden="true" /> Operation reference
             </a>
         </div>
