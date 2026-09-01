@@ -27,7 +27,7 @@ console.log(anime.title, anime.main_picture?.large);
 
 **Errors:** `AniLinkApiError` for non-success responses (e.g. `404` unknown ID, `400` invalid fields). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
-**Reference:** [MAL anime details endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
+**Reference:** [MAL anime details endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
 
 ## `mal.user.me(options?)`
 
@@ -50,7 +50,7 @@ console.log(user.name);
 
 **Errors:** `AniLinkAuthError` (no token configured), `AniLinkApiError` (e.g. `401` expired token), `AniLinkNetworkError`.
 
-**Reference:** [MAL user endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListUserApi.html)
+**Reference:** [MAL user endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListUserApi.html)
 
 ## `fields` selection
 

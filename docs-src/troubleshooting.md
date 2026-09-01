@@ -44,4 +44,4 @@ MAL returns `400` when `fields` contains a name the API does not recognize. Fiel
 
 **Does AniLink normalize AniList and MAL data?** No. Cross-provider mapping is your code's job.
 
-**Where are exact types documented?** The [TypeDoc API reference](/typedoc/classes/AniLink.AniLink.html). The [operation reference](/operations/index) links each operation to its TypeDoc page.
+**Where are exact types documented?** The [TypeDoc API reference](/typedoc/AniLink.html). The [operation reference](/operations/index) links each operation to its TypeDoc page.

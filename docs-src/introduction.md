@@ -41,4 +41,4 @@ Calling AniList or MAL directly means hand-rolling HTTP, GraphQL documents, OAut
 
 - <Icon name="ArrowRight" :size="14" /> [Getting started](/getting-started) — install and make your first calls.
 - <Icon name="ArrowRight" :size="14" /> [Operation reference](/operations/index) — look up any operation's full request/response anatomy.
-- <Icon name="ArrowRight" :size="14" /> [API reference](/typedoc/classes/AniLink.AniLink.html) — exact TypeDoc signatures.
+- <Icon name="ArrowRight" :size="14" /> [API reference](/typedoc/AniLink.html) — exact TypeDoc signatures.
