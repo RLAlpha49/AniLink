@@ -155,6 +155,7 @@ export default defineConfig({
     title: "AniLink",
     description:
         "Typed AniList GraphQL and MyAnimeList REST client for TypeScript — guides, operation reference, and API docs.",
+    base: "/",
     srcDir: ".",
     outDir: "../docs",
     cleanUrls: true,
