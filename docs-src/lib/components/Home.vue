@@ -408,7 +408,10 @@ onMounted(() => {
                     <h3 class="home-docs-block-title">AniList guides</h3>
                     <ul class="home-docs-list home-docs-list--inline">
                         <li v-for="p in anilistGuidePages" :key="p.path">
-                            <a :href="withBase(p.path)" class="home-docs-chip home-docs-chip--anilist">
+                            <a
+                                :href="withBase(p.path)"
+                                class="home-docs-chip home-docs-chip--anilist"
+                            >
                                 {{ p.title }}
                             </a>
                         </li>
