@@ -13,7 +13,6 @@
  * on Escape, backdrop click, or its close button.
  */
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useData } from "vitepress";
 import { escapeHtml } from "../search-rank";
 
 const props = defineProps<{
@@ -25,7 +24,11 @@ const container = ref<HTMLDivElement | null>(null);
 const svg = ref("");
 let observer: MutationObserver | null = null;
 
-const { isDark } = useData();
+// The docs use a custom theme system (appearance: false in config.mts)
+function isDark(): boolean {
+    if (typeof document === "undefined") return false;
+    return document.documentElement.classList.contains("dark");
+}
 
 async function render(): Promise<void> {
     if (typeof window === "undefined" || !container.value) return;
@@ -34,7 +37,7 @@ async function render(): Promise<void> {
     try {
         mermaid.initialize({
             startOnLoad: false,
-            theme: isDark.value ? "dark" : "neutral",
+            theme: isDark() ? "dark" : "neutral",
             securityLevel: "loose",
             fontFamily: '"JetBrains Mono", monospace',
         });

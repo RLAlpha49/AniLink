@@ -6,18 +6,11 @@
  * `openModal()` (called from the navbar button) or the global `Cmd/Ctrl+K`
  * and `/` keyboard shortcuts. Closes on Escape or backdrop click. On select,
  * performs a full navigation to the result URL.
- *
- * Because the modal is teleported to `<body>` (outside the `.docs.theme-*`
- * scope), it re-applies the active theme class on its own root so the
- * `--rd-*` design tokens resolve correctly in both light and dark mode.
- * All DOM/window access is guarded for SSR safety under VitePress.
  */
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import SemanticSearch from "./SemanticSearch.vue";
-import { useSearchTheme } from "../useSearchTheme";
 
 const open = ref(false);
-const theme = useSearchTheme();
 
 function openModal(): void {
     open.value = true;
@@ -91,7 +84,6 @@ defineExpose({ openModal });
                 <div
                     v-if="open"
                     class="ss-overlay"
-                    :class="`theme-${theme}`"
                     @click.self="closeModal"
                 >
                     <Transition name="ss-panel" appear>
@@ -111,38 +103,6 @@ defineExpose({ openModal });
 </template>
 
 <style scoped>
-/* The overlay carries the theme class so --rd-* tokens resolve even though
-   the modal is teleported to <body>, outside the .docs.theme-* scope. */
-.ss-overlay.theme-light {
-    --rd-accent: #c73e2e;
-    --rd-anilist: #2f6f6a;
-    --rd-anilist-soft: rgba(47, 111, 106, 0.12);
-    --rd-mal: #8a5a2b;
-    --rd-mal-soft: rgba(138, 90, 43, 0.12);
-    --rd-bg: #f6f2e9;
-    --rd-bg-soft: #ece6d8;
-    --rd-code-bg: #efe9dc;
-    --rd-text: #211f1a;
-    --rd-text-soft: #6d675a;
-    --rd-border: #d8d0bd;
-    --rd-grain: rgba(33, 31, 26, 0.055);
-}
-
-.ss-overlay.theme-dark {
-    --rd-accent: #c9a86a;
-    --rd-anilist: #6ee7d2;
-    --rd-anilist-soft: rgba(110, 231, 210, 0.14);
-    --rd-mal: #e0a96d;
-    --rd-mal-soft: rgba(224, 169, 109, 0.14);
-    --rd-bg: #0e1018;
-    --rd-bg-soft: #161a26;
-    --rd-code-bg: #141826;
-    --rd-text: #e8e6df;
-    --rd-text-soft: #8b8a85;
-    --rd-border: #262a3a;
-    --rd-grain: rgba(232, 230, 223, 0.05);
-}
-
 .ss-overlay {
     position: fixed;
     inset: 0;

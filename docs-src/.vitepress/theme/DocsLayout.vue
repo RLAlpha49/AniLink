@@ -98,7 +98,14 @@ function scrollToHeading(id: string, event?: MouseEvent): void {
 type Theme = "light" | "dark";
 const STORAGE_KEY = "anilink-docs-theme";
 
-const theme = ref<Theme>("light");
+function readInitialTheme(): Theme {
+    if (typeof document !== "undefined" && document.documentElement.classList.contains("dark")) {
+        return "dark";
+    }
+    return "light";
+}
+
+const theme = ref<Theme>(readInitialTheme());
 
 function applyTheme(t: Theme): void {
     if (typeof document === "undefined") return;
@@ -118,20 +125,6 @@ watch(theme, (t) => {
             /* storage may be unavailable; ignore */
         }
     }
-});
-
-onMounted(() => {
-    let initial: Theme = "light";
-    if (typeof localStorage !== "undefined") {
-        const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-        if (stored === "light" || stored === "dark") {
-            initial = stored;
-        } else if (typeof window !== "undefined" && window.matchMedia) {
-            initial = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        }
-    }
-    theme.value = initial;
-    applyTheme(initial);
 });
 
 /* ---------------- page model ---------------- */
@@ -311,7 +304,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
 </script>
 
 <template>
-    <div class="docs" :class="`theme-${theme}`">
+    <div class="docs">
         <a class="docs-skip" href="#docs-content">Skip to content</a>
 
         <div class="docs-body">
@@ -539,9 +532,13 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
     flex-direction: column;
     color: var(--rd-text);
     font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    background:
+        radial-gradient(1100px 500px at 85% -5%, rgba(199, 62, 46, 0.05), transparent 60%),
+        radial-gradient(900px 600px at -10% 105%, rgba(33, 31, 26, 0.05), transparent 55%),
+        var(--rd-bg);
 }
 
-.docs.theme-light {
+:root {
     --rd-accent: #c73e2e;
     --rd-bg: #f6f2e9;
     --rd-bg-soft: #ece6d8;
@@ -550,13 +547,9 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
     --rd-text-soft: #6d675a;
     --rd-border: #d8d0bd;
     --rd-grain: rgba(33, 31, 26, 0.055);
-    background:
-        radial-gradient(1100px 500px at 85% -5%, rgba(199, 62, 46, 0.05), transparent 60%),
-        radial-gradient(900px 600px at -10% 105%, rgba(33, 31, 26, 0.05), transparent 55%),
-        var(--rd-bg);
 }
 
-.docs.theme-dark {
+html.dark {
     --rd-accent: #c9a86a;
     --rd-anilist: #6ee7d2;
     --rd-anilist-soft: rgba(110, 231, 210, 0.14);
@@ -569,6 +562,9 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
     --rd-text-soft: #8b8a85;
     --rd-border: #262a3a;
     --rd-grain: rgba(232, 230, 223, 0.05);
+}
+
+html.dark .docs {
     background:
         radial-gradient(900px 520px at 82% -8%, rgba(201, 168, 106, 0.1), transparent 60%),
         radial-gradient(820px 600px at -8% 108%, rgba(110, 231, 210, 0.06), transparent 55%),
@@ -624,7 +620,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
     gap: 1.25rem;
 }
 
-.docs.theme-dark .docs-rail {
+html.dark .docs .docs-rail {
     background: linear-gradient(180deg, rgba(22, 26, 38, 0.5), transparent 40%);
 }
 
@@ -650,7 +646,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
     background: var(--rd-bg);
 }
 
-.docs.theme-dark .docs-brand-mark {
+html.dark .docs .docs-brand-mark {
     border-color: var(--rd-accent);
     color: var(--rd-accent);
     box-shadow: 0 0 14px rgba(201, 168, 106, 0.25);
@@ -963,7 +959,7 @@ li .docs-nav-sub {
     line-height: 1;
 }
 
-.docs.theme-dark .docs-hero-title {
+html.dark .docs .docs-hero-title {
     font-weight: 800;
     text-shadow: 0 0 40px rgba(201, 168, 106, 0.2);
 }
@@ -1008,17 +1004,17 @@ li .docs-nav-sub {
     color: var(--rd-bg);
 }
 
-.docs.theme-light .docs-btn--solid:hover {
+.docs .docs-btn--solid:hover {
     background: #000;
 }
 
-.docs.theme-dark .docs-btn--solid {
+html.dark .docs .docs-btn--solid {
     background: var(--rd-accent);
     color: var(--rd-bg);
     border-color: var(--rd-accent);
 }
 
-.docs.theme-dark .docs-btn--solid:hover {
+html.dark .docs .docs-btn--solid:hover {
     background: #e0bd84;
     border-color: #e0bd84;
 }
@@ -1039,7 +1035,7 @@ li .docs-nav-sub {
     position: relative;
 }
 
-.docs.theme-dark .docs-doc :deep(h1) {
+html.dark .docs .docs-doc :deep(h1) {
     font-weight: 800;
 }
 
@@ -1055,7 +1051,7 @@ li .docs-nav-sub {
     transform: rotate(-0.6deg);
 }
 
-.docs.theme-dark .docs-doc :deep(h1)::after {
+html.dark .docs .docs-doc :deep(h1)::after {
     box-shadow: 0 0 12px rgba(201, 168, 106, 0.5);
 }
 
@@ -1233,7 +1229,7 @@ li .docs-nav-sub {
     color: #fff;
 }
 
-.docs.theme-dark :deep(.provider-tabs .tab-btn--anilist.active) {
+html.dark .docs :deep(.provider-tabs .tab-btn--anilist.active) {
     color: var(--rd-bg);
 }
 
@@ -1242,7 +1238,7 @@ li .docs-nav-sub {
     color: #fff;
 }
 
-.docs.theme-dark :deep(.provider-tabs .tab-btn--mal.active) {
+html.dark .docs :deep(.provider-tabs .tab-btn--mal.active) {
     color: var(--rd-bg);
 }
 
@@ -1489,7 +1485,7 @@ li .docs-nav-sub {
             box-shadow 0.22s ease;
     }
 
-    .docs.theme-dark .docs-rail {
+    html.dark .docs .docs-rail {
         background: var(--rd-bg);
     }
 

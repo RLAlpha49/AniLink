@@ -788,17 +788,17 @@ onMounted(() => {
     color: var(--rd-text);
 }
 
-.theme-light .home .home-btn--solid:hover {
+.home .home-btn--solid:hover {
     background: #000;
 }
 
-.theme-dark .home .home-btn--solid {
+html.dark .home .home-btn--solid {
     background: var(--rd-accent);
     color: var(--rd-bg);
     border-color: var(--rd-accent);
 }
 
-.theme-dark .home .home-btn--solid:hover {
+html.dark .home .home-btn--solid:hover {
     background: #e0bd84;
     border-color: #e0bd84;
 }

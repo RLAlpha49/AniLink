@@ -1,12 +1,12 @@
 /**
- * Reactive docs theme for components teleported outside the `.docs.theme-*`
- * scope (e.g. the search modal, which teleports to `<body>`).
+ * Reactive docs theme for components that need to know the active light/dark
+ * state (e.g. to re-render theme-baked SVGs).
  *
- * The `--rd-*` design tokens are defined on `.docs.theme-light` /
- * `.docs.theme-dark` in `DocsLayout.vue`. A teleported component escapes that
- * scope, so the variables do not cascade and the UI falls back to hardcoded
- * defaults (which are dark-leaning and unreadable in light mode). This
- * composable reads the active theme from the same source `DocsLayout` uses
+ * The `--rd-*` design tokens are defined globally on `:root` / `html.dark`
+ * (set before first paint by the inline head script in config.mts), so they
+ * cascade everywhere — including teleported content — without this composable.
+ * This is only for code that needs the theme as a *value* (not just the CSS
+ * tokens). It reads the active theme from the same source `DocsLayout` uses
  * (`localStorage["anilink-docs-theme"]`, falling back to the OS preference)
  * and keeps a reactive `theme` ref in sync, including live updates when the
  * user toggles the theme elsewhere on the page.

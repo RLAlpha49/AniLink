@@ -164,6 +164,7 @@ export default defineConfig({
     markdown: {
         headers: true,
     },
+    appearance: false,
     vite: {
         plugins: [serveTypedoc(), serveSearchIndex()],
     },
@@ -177,5 +178,20 @@ export default defineConfig({
             },
         },
     },
-    head: [["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }]],
+    head: [
+        ["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
+        [
+            "script",
+            { id: "anilink-restore-theme" },
+            `(() => {
+               try {
+                 const stored = localStorage.getItem('anilink-docs-theme');
+                 const dark = stored
+                   ? stored === 'dark'
+                   : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                 if (dark) document.documentElement.classList.add('dark');
+               } catch (e) {}
+             })();`,
+        ],
+    ],
 });
