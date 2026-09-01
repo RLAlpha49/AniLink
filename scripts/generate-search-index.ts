@@ -53,6 +53,24 @@ function truncate(text: string, max = 500): string {
     return clean.slice(0, clean.lastIndexOf(" ", max)) + "…";
 }
 
+/** Remove HTML tags, including an incomplete tag at the end of the input. */
+function stripHtmlTags(s: string): string {
+    let text = "";
+    let inTag = false;
+    for (const char of s) {
+        if (char === "<") {
+            inTag = true;
+            text += " ";
+        } else if (char === ">" && inTag) {
+            inTag = false;
+            text += " ";
+        } else if (!inTag) {
+            text += char;
+        }
+    }
+    return text;
+}
+
 /**
  * Guide section titles that are pure navigation/boilerplate and carry no
  * searchable content. These are excluded from the index so they don't dilute
@@ -164,22 +182,14 @@ export function chunkTypedoc(html: string, url: string): SearchDoc[] {
     // becomes "Class Foo Abstract".
     const titleMatch = /<div class="tsd-page-title">[\s\S]*?<h1>([\s\S]*?)<\/h1>/.exec(html);
     const rawTitle = titleMatch ? titleMatch[1].trim() : "";
-    const title = rawTitle
-        ? rawTitle
-              .replaceAll(/<[^<>]*>/g, " ")
-              .replaceAll(/\s+/g, " ")
-              .trim()
-        : "";
+    const title = rawTitle ? stripHtmlTags(rawTitle).replaceAll(/\s+/g, " ").trim() : "";
     // Skip pages where the title is just the HTML filename (extraction failed).
     if (!title || title.endsWith(".html")) return [];
     const commentMatch = /<div class="tsd-comment tsd-typography">([\s\S]*?)<\/div>/.exec(html);
     if (!commentMatch) return [];
     const firstP = /<p>([\s\S]*?)<\/p>/.exec(commentMatch[1]);
     if (!firstP) return [];
-    const text = firstP[1]
-        .replaceAll(/<[^<>]*>/g, "")
-        .replaceAll(/\s+/g, " ")
-        .trim();
+    const text = stripHtmlTags(firstP[1]).replaceAll(/\s+/g, " ").trim();
     if (!text || text.length < 10) return [];
     return [{ id: "", url, title, text: truncate(text), source: "typedoc" }];
 }

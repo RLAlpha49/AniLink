@@ -16,6 +16,7 @@ import {
     type ScoredResult,
 } from "../scripts/generate-search-index";
 import type { ReferenceManifest } from "../scripts/generate-operation-reference";
+import { escapeHtml } from "../docs-src/lib/search-rank";
 
 describe("chunkMarkdown", () => {
     it("splits a doc into one chunk per H2/H3 heading with its body", () => {
@@ -141,6 +142,14 @@ Useful text here.
     });
 });
 
+describe("escapeHtml", () => {
+    it("encodes markup characters without double-encoding ampersands", () => {
+        expect(escapeHtml('& <script>alert("x")</script>')).toBe(
+            '&amp; &lt;script&gt;alert("x")&lt;/script&gt;'
+        );
+    });
+});
+
 describe("chunkOperations", () => {
     it("builds one chunk per operation from the manifest", () => {
         const manifest: ReferenceManifest = {
@@ -207,6 +216,15 @@ describe("chunkTypedoc", () => {
         const html = `<html><body><div class="tsd-page-title">no h1 here</div>
 <section class="tsd-panel tsd-comment"><div class="tsd-comment tsd-typography"><p>Some content.</p></div></section></body></html>`;
         expect(chunkTypedoc(html, "/typedoc/classes/foo.bar.html")).toEqual([]);
+    });
+
+    it("removes incomplete opening tags from comment text", () => {
+        const html = `<html><body><div class="tsd-page-title"><h1>Class Safe</h1></div>
+<section class="tsd-panel tsd-comment"><div class="tsd-comment tsd-typography"><p>Visible text <script</p></div></section></body></html>`;
+        const chunks = chunkTypedoc(html, "/typedoc/classes/Safe.html");
+        expect(chunks).toHaveLength(1);
+        expect(chunks[0].text).toBe("Visible text");
+        expect(chunks[0].text).not.toContain("<script");
     });
 });
 

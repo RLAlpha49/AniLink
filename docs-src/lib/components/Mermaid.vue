@@ -14,6 +14,7 @@
  */
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useData } from "vitepress";
+import { escapeHtml } from "../search-rank";
 
 const props = defineProps<{
     /** Mermaid diagram source (the fenced code body). */
@@ -98,10 +99,6 @@ function parseRgb(color: string): { r: number; g: number; b: number } | null {
 }
 
 let renderCounter = 0;
-
-function escapeHtml(s: string): string {
-    return s.replaceAll("&", "&").replaceAll("<", "<").replaceAll(">", ">");
-}
 
 onMounted(() => {
     render();

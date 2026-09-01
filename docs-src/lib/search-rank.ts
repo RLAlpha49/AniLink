@@ -48,6 +48,19 @@ export interface ScoredResult {
     matchedBy: "semantic" | "keyword" | "both";
 }
 
+/**
+ * Escape characters that could be interpreted as HTML markup in text content.
+ *
+ * Ampersands are encoded first so the entities added for angle brackets are
+ * not encoded a second time.
+ *
+ * @param s Text to escape.
+ * @returns Text safe to insert as HTML text content.
+ */
+export function escapeHtml(s: string): string {
+    return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
 /** Cosine similarity between two equal-length vectors. */
 export function cosineSimilarity(a: number[], b: number[]): number {
     let dot = 0;
