@@ -28,12 +28,32 @@ html {
     --rd-accent: #c73e2e;
     --rd-text: #211f1a;
     --rd-scrollbar-track: #ece6d8;
+    --rd-bg: #f6f2e9;
+    --rd-bg-soft: #ece6d8;
+    --rd-code-bg: #efe9dc;
+    --rd-text-soft: #6d675a;
+    --rd-border: #d8d0bd;
+    --rd-grain: rgba(33, 31, 26, 0.055);
+    --rd-anilist: #2f6f6a;
+    --rd-anilist-soft: rgba(47, 111, 106, 0.12);
+    --rd-mal: #8a5a2b;
+    --rd-mal-soft: rgba(138, 90, 43, 0.12);
 }
 
 .dark {
     --rd-accent: #c9a86a;
     --rd-text: #e8e6df;
     --rd-scrollbar-track: #161a26;
+    --rd-bg: #0e1018;
+    --rd-bg-soft: #161a26;
+    --rd-code-bg: #141826;
+    --rd-text-soft: #8b8a85;
+    --rd-border: #262a3a;
+    --rd-grain: rgba(232, 230, 223, 0.05);
+    --rd-anilist: #6ee7d2;
+    --rd-anilist-soft: rgba(110, 231, 210, 0.14);
+    --rd-mal: #e0a96d;
+    --rd-mal-soft: rgba(224, 169, 109, 0.14);
 }
 
 * {

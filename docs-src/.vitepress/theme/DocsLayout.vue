@@ -318,7 +318,9 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                     >
                         <Menu :size="18" aria-hidden="true" />
                     </button>
-                    <a class="docs-brand-mark" :href="withBase('/')" aria-label="AniLink home">墨</a>
+                    <a class="docs-brand-mark" :href="withBase('/')" aria-label="AniLink home">
+                        墨
+                    </a>
                     <a class="docs-brand-name" :href="withBase('/')">AniLink</a>
                     <span class="docs-brand-vert" aria-hidden="true">アニリンク文書</span>
                 </div>
@@ -457,7 +459,11 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                     </article>
 
                     <nav v-if="pager.prev || pager.next" class="docs-pager" aria-label="Pager">
-                        <a v-if="pager.prev" class="docs-pager-link" :href="withBase(pager.prev.path)">
+                        <a
+                            v-if="pager.prev"
+                            class="docs-pager-link"
+                            :href="withBase(pager.prev.path)"
+                        >
                             <span class="docs-pager-dir">
                                 <ArrowLeft :size="14" aria-hidden="true" /> 前の頁
                             </span>
@@ -518,10 +524,6 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
 /* ------------------------------------------------------------------ */
 
 .docs {
-    --rd-anilist: #2f6f6a;
-    --rd-anilist-soft: rgba(47, 111, 106, 0.12);
-    --rd-mal: #8a5a2b;
-    --rd-mal-soft: rgba(138, 90, 43, 0.12);
     --docs-top-height: 3.75rem;
 
     height: 100vh;
@@ -536,32 +538,6 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
         radial-gradient(1100px 500px at 85% -5%, rgba(199, 62, 46, 0.05), transparent 60%),
         radial-gradient(900px 600px at -10% 105%, rgba(33, 31, 26, 0.05), transparent 55%),
         var(--rd-bg);
-}
-
-:root {
-    --rd-accent: #c73e2e;
-    --rd-bg: #f6f2e9;
-    --rd-bg-soft: #ece6d8;
-    --rd-code-bg: #efe9dc;
-    --rd-text: #211f1a;
-    --rd-text-soft: #6d675a;
-    --rd-border: #d8d0bd;
-    --rd-grain: rgba(33, 31, 26, 0.055);
-}
-
-html.dark {
-    --rd-accent: #c9a86a;
-    --rd-anilist: #6ee7d2;
-    --rd-anilist-soft: rgba(110, 231, 210, 0.14);
-    --rd-mal: #e0a96d;
-    --rd-mal-soft: rgba(224, 169, 109, 0.14);
-    --rd-bg: #0e1018;
-    --rd-bg-soft: #161a26;
-    --rd-code-bg: #141826;
-    --rd-text: #e8e6df;
-    --rd-text-soft: #8b8a85;
-    --rd-border: #262a3a;
-    --rd-grain: rgba(232, 230, 223, 0.05);
 }
 
 html.dark .docs {
