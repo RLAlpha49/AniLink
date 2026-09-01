@@ -28,6 +28,9 @@ import {
 } from "@lucide/vue";
 import { PAGES, type DocPage } from "../content";
 
+declare const __ANILINK_VERSION__: string;
+const anilinkVersion = __ANILINK_VERSION__;
+
 /* ------------------------------------------------------------------ */
 /* Section model — derived from the single source of truth in content */
 /* ------------------------------------------------------------------ */
@@ -235,7 +238,7 @@ onMounted(() => {
 
                 <aside class="home-hero-card" aria-label="At a glance">
                     <div class="home-hero-card-head">
-                        <span class="home-hero-card-tag">v2.0.0</span>
+                        <span class="home-hero-card-tag">v{{ anilinkVersion }}</span>
                         <span class="home-hero-card-vert" aria-hidden="true">型安全</span>
                     </div>
                     <dl class="home-hero-stats">

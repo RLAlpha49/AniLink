@@ -293,7 +293,7 @@ h6 {
 
 /* The index page renders the README as a .tsd-panel.tsd-typography block whose
    first child is the README's "# AniLink" heading. That duplicates the
-   .tsd-page-title h1 ("AniLink - v2.0.0") directly above it, so hide the
+   .tsd-page-title h1 directly above it, so hide the
    README copy. Scoped to the first child so JSDoc prose h1s elsewhere are
    unaffected (and only the index page has this panel anyway). */
 .tsd-panel.tsd-typography > h1:first-child {

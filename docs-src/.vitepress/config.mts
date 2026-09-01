@@ -3,6 +3,16 @@ import { dirname, extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vitepress";
 
+const docsConfigDir = dirname(fileURLToPath(import.meta.url));
+const packageJsonPath = normalize(join(docsConfigDir, "..", "..", "package.json"));
+const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
+    version?: unknown;
+};
+
+if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
+    throw new Error(`Missing valid version in ${packageJsonPath}`);
+}
+
 /**
  * Vite plugin that serves the TypeDoc output (`../docs/typedoc`) from the
  * VitePress dev server under `/typedoc/...`.
@@ -166,6 +176,9 @@ export default defineConfig({
     },
     appearance: false,
     vite: {
+        define: {
+            __ANILINK_VERSION__: JSON.stringify(packageJson.version),
+        },
         plugins: [serveTypedoc(), serveSearchIndex()],
     },
     themeConfig: {
