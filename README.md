@@ -50,8 +50,6 @@ Both surfaces share one transport layer (timeouts, retries, pacing, circuit brea
 | **Operation reference** | [Overview](https://rlalpha49.github.io/AniLink/operations/) · [AniList catalog](https://rlalpha49.github.io/AniLink/operations/anilist) · [MAL catalog](https://rlalpha49.github.io/AniLink/operations/mal) |
 | **API reference (TypeDoc)** | [AniLink](https://rlalpha49.github.io/AniLink/classes/AniLink.AniLink.html) — full generated reference at the [docs root](https://rlalpha49.github.io/AniLink/) |
 
-Upstream compatibility — which AniList operations AniLink wraps and any detected drift — is rendered into [`artifacts/anilist-api-compare/report.md`](artifacts/anilist-api-compare/report.md) by every CI run.
-
 ## Development
 
 ```bash
