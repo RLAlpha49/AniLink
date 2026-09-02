@@ -1,12 +1,18 @@
 /**
  * Font loading helper shared by the redesign layouts.
- *
- * Injects a Google Fonts stylesheet link once per href, SSR-safe.
  */
 import { onMounted } from "vue";
 
-/** Ensure a Google Fonts stylesheet is present on the document. */
-export function useFonts(href: string): void {
+/**
+ * Ensure a Google Fonts stylesheet is present on the document.
+ *
+ * No-op without an `href`; the configured `<head>` stylesheet covers
+ * production.
+ *
+ * @param href - Optional stylesheet URL to inject as a fallback.
+ */
+export function useFonts(href?: string): void {
+    if (!href) return;
     onMounted(() => {
         if (typeof document === "undefined") return;
         if (document.querySelector(`link[href="${href}"]`)) return;

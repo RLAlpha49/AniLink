@@ -8,7 +8,6 @@ import {
     useHeadingScrollSpy,
     type PageHeading,
 } from "../../lib/useHeadingScrollSpy";
-import { useFonts } from "../../lib/useFonts";
 import {
     ArrowLeft,
     ArrowRight,
@@ -27,10 +26,6 @@ import SearchModal from "../../lib/components/SearchModal.vue";
 import NotFound from "./NotFound.vue";
 
 const searchModal = ref<InstanceType<typeof SearchModal> | null>(null);
-
-useFonts([
-    "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Zen+Old+Mincho:wght@400;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
-]);
 
 const route = useRoute();
 const { page } = useData();

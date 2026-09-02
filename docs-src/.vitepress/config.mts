@@ -92,11 +92,7 @@ function serveTypedoc(): Plugin {
     /** Resolve a `/typedoc/...` URL to a file under `typedocRoot`, or null. */
     function resolveFile(urlPath: string): string | null {
         const decoded = decodeURIComponent(urlPath);
-        // `/typedoc` and `/typedoc/` both map to the typedoc index page.
-        const relative =
-            decoded === "/typedoc" || decoded === "/typedoc/"
-                ? ""
-                : decoded.replace(/^\/typedoc\//, "");
+        const relative = decoded === "/typedoc/" ? "" : decoded.replace(/^\/typedoc\//, "");
         if (relative.startsWith("..") || relative.includes("\0")) return null;
 
         const candidate = normalize(join(typedocRoot, relative));
@@ -141,6 +137,14 @@ function serveTypedoc(): Plugin {
                 const path = url.split("?", 1)[0].split("#", 1)[0];
                 if (!path.startsWith("/typedoc/") && path !== "/typedoc") {
                     return next();
+                }
+
+                if (path === "/typedoc") {
+                    const searchAndHash = url.slice(path.length);
+                    res.statusCode = 301;
+                    res.setHeader("Location", `/typedoc/${searchAndHash}`);
+                    res.end();
+                    return;
                 }
 
                 const file = resolveFile(path);
@@ -220,17 +224,16 @@ export default defineConfig({
         },
         plugins: [serveTypedoc(), serveSearchIndex()],
     },
-    themeConfig: {
-        search: {
-            provider: "local",
-            options: {
-                translations: {
-                    button: { buttonText: "Search docs" },
-                },
-            },
-        },
-    },
     head: [
+        ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
+        ["link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }],
+        [
+            "link",
+            {
+                rel: "stylesheet",
+                href: "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Zen+Old+Mincho:wght@400;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
+            },
+        ],
         ["meta", { name: "theme-color", content: "#0b1220" }],
         ["meta", { name: "robots", content: "index,follow" }],
         ["meta", { property: "og:site_name", content: "AniLink" }],
