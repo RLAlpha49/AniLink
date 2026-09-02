@@ -11,8 +11,20 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import SemanticSearch from "./SemanticSearch.vue";
 
 const open = ref(false);
+/** Panel element — the focus-trap boundary. */
+const panelRef = ref<HTMLElement | null>(null);
+/** Element to restore focus to when the modal closes. */
+let lastFocused: HTMLElement | null = null;
+
+/** Selector matching focusable elements inside the panel. */
+const FOCUSABLE =
+    'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
 
 function openModal(): void {
+    if (open.value) return;
+    if (typeof document !== "undefined") {
+        lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
     open.value = true;
     nextTick(() => {
         if (typeof document === "undefined") return;
@@ -22,7 +34,11 @@ function openModal(): void {
 }
 
 function closeModal(): void {
+    if (!open.value) return;
     open.value = false;
+    // Hand focus back to the trigger so keyboard users stay where they were.
+    lastFocused?.focus();
+    lastFocused = null;
 }
 
 function onSelect(url: string): void {
@@ -41,6 +57,34 @@ function isTyping(e: KeyboardEvent): boolean {
         t.tagName === "SELECT" ||
         t.isContentEditable === true
     );
+}
+
+/**
+ * Keep Tab focus inside the dialog (WCAG 2.1.2 / 2.4.3). Attached to the
+ * overlay so the handler fires for every keydown that bubbles out of the
+ * panel while the modal is open.
+ */
+function trapFocus(e: KeyboardEvent): void {
+    if (e.key !== "Tab") return;
+    const root = panelRef.value;
+    if (!root) return;
+    const focusables = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement
+    );
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    if (e.shiftKey) {
+        if (!active || active === first || !root.contains(active)) {
+            e.preventDefault();
+            last.focus();
+        }
+    } else if (!active || active === last || !root.contains(active)) {
+        e.preventDefault();
+        first.focus();
+    }
 }
 
 function onKeydown(e: KeyboardEvent): void {
@@ -81,11 +125,13 @@ defineExpose({ openModal });
     <ClientOnly>
         <Teleport to="body">
             <Transition name="ss-overlay">
-                <div v-if="open" class="ss-overlay" @click.self="closeModal">
+                <div v-if="open" class="ss-overlay" @click.self="closeModal" @keydown="trapFocus">
                     <Transition name="ss-panel" appear>
                         <div
                             v-if="open"
+                            ref="panelRef"
                             class="ss-modal"
+                            role="dialog"
                             aria-modal="true"
                             aria-label="Search docs"
                         >

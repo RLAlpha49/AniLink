@@ -12,7 +12,7 @@
  * user can zoom (wheel or buttons) and pan (drag) freely. The overlay closes
  * on Escape, backdrop click, or its close button.
  */
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { escapeHtml } from "../search-rank";
 
 const props = defineProps<{
@@ -128,6 +128,10 @@ watch(() => props.code, render);
 // --- Zoom / pan overlay -------------------------------------------------
 
 const overlayOpen = ref(false);
+/** Overlay element — focus-trap boundary for the dialog. */
+const overlayRef = ref<HTMLElement | null>(null);
+/** Element to restore focus to when the overlay closes. */
+let lastFocused: HTMLElement | null = null;
 const zoom = ref(1);
 const panX = ref(0);
 const panY = ref(0);
@@ -135,7 +139,15 @@ let dragging = false;
 let lastX = 0;
 let lastY = 0;
 
+/** Selector matching focusable elements inside the overlay toolbar. */
+const FOCUSABLE =
+    'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+
 function openOverlay(): void {
+    if (overlayOpen.value) return;
+    if (typeof document !== "undefined") {
+        lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
     overlayOpen.value = true;
     zoom.value = 1;
     panX.value = 0;
@@ -143,17 +155,58 @@ function openOverlay(): void {
     if (typeof window !== "undefined") {
         window.addEventListener("keydown", onOverlayKeydown);
     }
+    // Move focus into the dialog so screen-reader and keyboard users land on
+    // the overlay controls instead of staying on the trigger (FE-004).
+    nextTick(() => {
+        if (typeof document === "undefined") return;
+        const first = overlayRef.value?.querySelector<HTMLElement>(FOCUSABLE);
+        first?.focus();
+    });
 }
 
 function closeOverlay(): void {
+    if (!overlayOpen.value) return;
     overlayOpen.value = false;
     if (typeof window !== "undefined") {
         window.removeEventListener("keydown", onOverlayKeydown);
     }
+    // Hand focus back to the Expand trigger.
+    lastFocused?.focus();
+    lastFocused = null;
 }
 
 function onOverlayKeydown(e: KeyboardEvent): void {
-    if (e.key === "Escape") closeOverlay();
+    if (e.key === "Escape") {
+        closeOverlay();
+        return;
+    }
+    if (e.key === "Tab") trapOverlayFocus(e);
+}
+
+/**
+ * Keep Tab focus inside the overlay dialog (WCAG 2.1.2 / 2.4.3). The only
+ * tabbable controls live in the toolbar, so the cycle wraps within it.
+ */
+function trapOverlayFocus(e: KeyboardEvent): void {
+    const root = overlayRef.value;
+    if (!root) return;
+    const focusables = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => el.offsetWidth > 0 || el.offsetHeight > 0
+    );
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    if (e.shiftKey) {
+        if (!active || active === first || !root.contains(active)) {
+            e.preventDefault();
+            last.focus();
+        }
+    } else if (!active || active === last || !root.contains(active)) {
+        e.preventDefault();
+        first.focus();
+    }
 }
 
 function onWheel(e: WheelEvent): void {
@@ -232,7 +285,15 @@ function resetView(): void {
     </div>
 
     <Teleport to="body">
-        <div v-if="overlayOpen" class="docs-mermaid-overlay" @click.self="closeOverlay">
+        <div
+            v-if="overlayOpen"
+            ref="overlayRef"
+            class="docs-mermaid-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Zoomable diagram view"
+            @click.self="closeOverlay"
+        >
             <div class="docs-mermaid-overlay-bar">
                 <div class="docs-mermaid-overlay-controls">
                     <button type="button" title="Zoom out" @click="zoomBy(1 / 1.25)">−</button>
