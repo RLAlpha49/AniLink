@@ -55,18 +55,27 @@ When a request exhausts its retries, the last error is thrown — catch it as sh
 
 ## Rate-limit pacing
 
-Off by default. With `paceWithRateLimit: true`, the transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits until the window resets instead of discovering the limit via a `429`.
+On by default. The transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits until the window resets instead of discovering the limit via a `429`. With pacing disabled, every `429` costs a wasted request plus a retry wait; enabling pacing avoids both by tracking the window from the response headers.
 
 ```typescript
+// Default behavior — pacing is active with rateLimitFloor: 1.
 const paced = new AniLink("token", {
-    paceWithRateLimit: true,
     rateLimitFloor: 5, // start waiting while 5 requests remain
 });
+
+// Opt out — discover the limit reactively via 429s.
+const unpaced = new AniLink("token", { paceWithRateLimit: false });
 ```
 
 ## Circuit breaker
 
-Off by default. With `circuitBreaker: { threshold, cooldownMs }`, after `threshold` consecutive failed attempts further requests fail fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has elapsed since the last failure. After that, the next request is allowed through as a probe.
+Off by default to keep the zero-accounting fast path free of cross-request state. With `circuitBreaker: { threshold, cooldownMs }`, after `threshold` consecutive failed attempts further requests fail fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has elapsed since the last failure. After that, the next request is allowed through as a probe.
+
+<Callout kind="tip">
+
+For production workloads the circuit breaker is a recommended-on setting: it is the only mechanism that fast-fails a sustained upstream outage, preventing runaway retry volume (and cost) while the provider is down.
+
+</Callout>
 
 ```typescript
 const guarded = new AniLink("token", {

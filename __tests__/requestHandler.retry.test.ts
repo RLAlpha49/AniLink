@@ -666,16 +666,30 @@ describe("rate-limit pacing", () => {
         },
     });
 
-    test("is inactive by default even when the reported quota is exhausted", async () => {
+    test("is inactive when explicitly disabled even when the reported quota is exhausted", async () => {
         mocks.request.mockResolvedValue(pacedResponse(0, 60));
 
-        configureRequestOptions({});
+        configureRequestOptions({ paceWithRateLimit: false });
 
         await callSendRequest(url, "POST", { query: "query" });
         await callSendRequest(url, "POST", { query: "query" });
 
         expect(mocks.request).toHaveBeenCalledTimes(2);
         expect(Date.now() - startedAt).toBeLessThan(1_000);
+    });
+
+    test("paces by default once the reported quota is exhausted", async () => {
+        mocks.request.mockResolvedValue(pacedResponse(0, 5));
+
+        configureRequestOptions({});
+
+        const first = callSendRequest(url, "POST", { query: "query" });
+        first.catch(() => {});
+        await vi.advanceTimersByTimeAsync(4_999);
+        expect(mocks.request).toHaveBeenCalledTimes(1); // still waiting for the reset
+
+        await vi.advanceTimersByTimeAsync(1);
+        await expect(first).resolves.toEqual({ id: 1 });
     });
 
     test("delays the next request until the window resets once remaining drops below the floor", async () => {
