@@ -344,8 +344,16 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                         title="Toggle color theme"
                         @click="toggleTheme"
                     >
-                        <Moon class="docs-theme-icon docs-theme-icon--light" :size="17" aria-hidden="true" />
-                        <Sun class="docs-theme-icon docs-theme-icon--dark" :size="17" aria-hidden="true" />
+                        <Moon
+                            class="docs-theme-icon docs-theme-icon--light"
+                            :size="17"
+                            aria-hidden="true"
+                        />
+                        <Sun
+                            class="docs-theme-icon docs-theme-icon--dark"
+                            :size="17"
+                            aria-hidden="true"
+                        />
                     </button>
                 </div>
             </header>
