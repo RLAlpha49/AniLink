@@ -98,7 +98,7 @@ describe("MyAnimeList OAuth2 PKCE helpers", () => {
             (error: unknown) => error
         );
 
-        expect(outcome).toMatchObject({ name: "AniLinkApiError", status: 400 });
+        expect(outcome).toMatchObject({ name: "AniLinkRestError", status: 400 });
         expect((outcome as { rawAxiosError?: unknown }).rawAxiosError).toBeUndefined();
     });
 

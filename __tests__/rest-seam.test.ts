@@ -144,6 +144,6 @@ describe("REST transport seam", () => {
 
         expect(outcome).toBeInstanceOf(Error);
         expect((outcome as { status?: number }).status).toBe(404);
-        expect((outcome as { name?: string }).name).toBe("AniLinkApiError");
+        expect((outcome as { name?: string }).name).toBe("AniLinkRestError");
     });
 });

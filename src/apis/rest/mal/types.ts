@@ -28,7 +28,25 @@ export interface MalAnime {
     title: string;
     /** Optional image variants requested through the `fields` query parameter. */
     main_picture?: MalPicture;
-    /** Additional fields requested by a caller remain available without narrowing. */
+    /** The synopsis, when requested via the `fields` query parameter. */
+    synopsis?: string;
+    /** The publication/airing status, when requested (one of MAL's status values such as `finished_airing`). */
+    status?: string;
+    /** The average score out of 10, when requested via the `fields` query parameter. */
+    mean?: number;
+    /** The total number of episodes, when requested via the `fields` query parameter. */
+    num_episodes?: number;
+    /** The media type, when requested (for example `tv`, `movie`, or `ova`). */
+    media_type?: string;
+    /** The first air/start date in ISO 8601 format, when requested via the `fields` query parameter. */
+    start_date?: string;
+    /** The broadcast schedule, when requested via the `fields` query parameter. */
+    broadcast?: string;
+    /** The 24-hour broadcast start time (JST) in `HHMM` form, when requested via the `fields` query parameter. */
+    start_time?: string;
+    /** The average episode duration in seconds, when requested via the `fields` query parameter. */
+    average_episode_duration?: number;
+    /** Any additional fields requested by a caller remain available without narrowing. */
     [field: string]: unknown;
 }
 
@@ -48,7 +66,13 @@ export interface MalUser {
     location?: string;
     /** Optional account creation timestamp. */
     joined_at?: string;
-    /** Additional fields requested by a caller remain available without narrowing. */
+    /** The user's profile picture variants, when requested via the `fields` query parameter. */
+    picture?: MalPicture;
+    /** The user's gender, when requested via the `fields` query parameter. */
+    gender?: string;
+    /** The user's birthday in ISO 8601 format, when requested via the `fields` query parameter. */
+    birthday?: string;
+    /** Any additional fields requested by a caller remain available without narrowing. */
     [field: string]: unknown;
 }
 

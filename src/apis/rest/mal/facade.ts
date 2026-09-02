@@ -16,7 +16,7 @@ export interface MyAnimeListAnimeApi {
      * @param id - The MyAnimeList anime ID.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The requested {@link MalAnime}.
-     * @throws `AniLinkApiError` for a non-success MyAnimeList response.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
      * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
      * @example
      * ```typescript
@@ -44,7 +44,7 @@ export interface MyAnimeListUserApi {
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The authenticated {@link MalUser}.
      * @throws `AniLinkAuthError` when no MAL access token is configured.
-     * @throws `AniLinkApiError` for a non-success MyAnimeList response.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
      * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
      * @example
      * ```typescript

@@ -9,6 +9,7 @@ import {
     AniLinkErrorCodes,
     AniLinkGraphQLError,
     AniLinkNetworkError,
+    AniLinkRestError,
     type AniLinkErrorCode,
     type GraphQLUpstreamError,
     type RateLimitInfo,
@@ -24,8 +25,8 @@ export const DEFAULT_REQUEST_TIMEOUT = 30_000;
 /** The maximum time a `Retry-After` header may delay a retry. */
 const MAX_RETRY_AFTER_MS = 60_000;
 
-/** Socket bounds for the shared keep-alive agents (see `MAX_SOCKETS`). */
-const MAX_FREE_SOCKETS = 5;
+/** Socket bounds for the shared keep-alive agents (see {@link MAX_SOCKETS}). */
+export const MAX_FREE_SOCKETS = 5;
 
 /**
  * Upper bound on concurrent sockets per shared keep-alive agent.
@@ -38,7 +39,26 @@ const MAX_FREE_SOCKETS = 5;
  * {@link MAX_FREE_SOCKETS} with LIFO scheduling so the warmest connection is
  * reused first.
  */
-const MAX_SOCKETS = 20;
+export const MAX_SOCKETS = 20;
+
+/**
+ * Per-window cap on retries across requests sharing the same transport
+ * settings object.
+ *
+ * The per-request `maxRetries` bounds retries for one call, but a workload
+ * issuing thousands of requests during a sustained upstream outage would
+ * still multiply API call volume by up to `maxRetries + 1` indefinitely.
+ * This budget bounds the *total* retry spend per rolling window; when it is
+ * exhausted, failures surface without retries until the window elapses.
+ *
+ * @see {@link RequestOptions.retryBudget}
+ */
+export interface RetryBudget {
+    /** The maximum number of retries allowed across the window. */
+    maxRetriesPerWindow: number;
+    /** The rolling window length in milliseconds. */
+    windowMs: number;
+}
 
 /**
  * Retry policy for transient transport failures.
@@ -185,7 +205,9 @@ export interface RequestOptions {
      * Opt into proactive request pacing driven by the `x-ratelimit-*` headers
      * of every successful response: when the reported remaining quota drops
      * below `rateLimitFloor` (default 1), the next attempt waits until the
-     * window resets instead of discovering the limit via a `429`. Off by default.
+     * window resets instead of discovering the limit via a `429`. On by
+     * default; pass `false` to disable it and discover the limit reactively
+     * (each `429` then costs a wasted request plus a retry wait).
      */
     paceWithRateLimit?: boolean;
     /**
@@ -202,7 +224,30 @@ export interface RequestOptions {
      * happens across requests.
      */
     circuitBreaker?: { threshold: number; cooldownMs: number };
-    /** Invoked when an attempt fails, and once more when retries are exhausted. */
+    /**
+     * Optional per-window cap on total retry attempts, complementing the
+     * per-request `maxRetries` and the opt-in `circuitBreaker`: the retry
+     * policy bounds one request's retries, the breaker handles sustained
+     * outages after consecutive failures, and this budget bounds the total
+     * retry spend across many requests in a rolling window (which handles
+     * chronic intermittent failures even when the breaker never trips).
+     * When the budget for the current window is exhausted, failures surface
+     * without retries until the window elapses. Off by default.
+     */
+    retryBudget?: RetryBudget;
+    /**
+     * Upper bound on concurrent keep-alive sockets for this request.
+     * Defaults to {@link MAX_SOCKETS} (20). Supplying this or
+     * `maxFreeSockets` constructs dedicated per-request agents instead of
+     * reusing the shared module-level pool, isolating this caller's socket
+     * pressure from other {@link AniLink} instances and providers.
+     */
+    maxSockets?: number;
+    /**
+     * Upper bound on retained idle keep-alive sockets for this request.
+     * Defaults to {@link MAX_FREE_SOCKETS} (5); see {@link RequestOptions.maxSockets}.
+     */
+    maxFreeSockets?: number;
     onError?: OnErrorHandler;
     /** Invoked before each retry wait with the scheduled delay in `nextDelayMs`. Falls back to per-attempt `onError` calls when unset. */
     onRetry?: OnErrorHandler;
@@ -221,20 +266,23 @@ const DEFAULT_RETRY_POLICY: Required<Pick<RetryPolicy, "jitter">> & RetryPolicy 
     jitter: true,
 };
 
+const defaultHttpAgent = new http.Agent({
+    keepAlive: true,
+    maxSockets: MAX_SOCKETS,
+    maxFreeSockets: MAX_FREE_SOCKETS,
+    scheduling: "lifo",
+});
+const defaultHttpsAgent = new https.Agent({
+    keepAlive: true,
+    maxSockets: MAX_SOCKETS,
+    maxFreeSockets: MAX_FREE_SOCKETS,
+    scheduling: "lifo",
+});
+
 const axiosClient = axios.create({
     timeout: DEFAULT_REQUEST_TIMEOUT,
-    httpAgent: new http.Agent({
-        keepAlive: true,
-        maxSockets: MAX_SOCKETS,
-        maxFreeSockets: MAX_FREE_SOCKETS,
-        scheduling: "lifo",
-    }),
-    httpsAgent: new https.Agent({
-        keepAlive: true,
-        maxSockets: MAX_SOCKETS,
-        maxFreeSockets: MAX_FREE_SOCKETS,
-        scheduling: "lifo",
-    }),
+    httpAgent: defaultHttpAgent,
+    httpsAgent: defaultHttpsAgent,
 });
 
 interface ResolvedRequestOptions {
@@ -245,6 +293,9 @@ interface ResolvedRequestOptions {
     paceWithRateLimit: boolean;
     rateLimitFloor: number;
     circuitBreaker?: { threshold: number; cooldownMs: number };
+    retryBudget?: RetryBudget;
+    httpAgent: http.Agent;
+    httpsAgent: https.Agent;
     onError?: OnErrorHandler;
     onRetry?: OnErrorHandler;
     onRequestStart?: OnRequestStartHandler;
@@ -261,6 +312,41 @@ const resolveRetryPolicy = (
         return { ...DEFAULT_RETRY_POLICY };
     }
     return { ...DEFAULT_RETRY_POLICY, ...retry };
+};
+
+/**
+ * Builds the keep-alive agents for one request's socket bounds.
+ *
+ * When the caller leaves `maxSockets`/`maxFreeSockets` unset the shared
+ * module-level agents are reused, so the default path allocates nothing and
+ * every instance keeps competing for the same warm pool. Supplying either
+ * bound constructs dedicated per-request agents, letting high-throughput or
+ * multi-provider callers isolate their socket pressure without affecting
+ * other clients.
+ *
+ * @param maxSockets - Upper bound on concurrent sockets, when customized.
+ * @param maxFreeSockets - Upper bound on retained idle sockets, when customized.
+ * @returns The agents to send the request with.
+ */
+const resolveAgents = (
+    maxSockets: number | undefined,
+    maxFreeSockets: number | undefined
+): { httpAgent: http.Agent; httpsAgent: https.Agent } => {
+    if (maxSockets === undefined && maxFreeSockets === undefined) {
+        return { httpAgent: defaultHttpAgent, httpsAgent: defaultHttpsAgent };
+    }
+    const sockets = Math.max(1, maxSockets ?? MAX_SOCKETS);
+    const freeSockets = Math.max(0, maxFreeSockets ?? MAX_FREE_SOCKETS);
+    const agentOptions = {
+        keepAlive: true,
+        maxSockets: sockets,
+        maxFreeSockets: freeSockets,
+        scheduling: "lifo" as const,
+    };
+    return {
+        httpAgent: new http.Agent(agentOptions),
+        httpsAgent: new https.Agent(agentOptions),
+    };
 };
 
 /**
@@ -281,14 +367,19 @@ const resolveRequestOptions = (options: RequestOptions = {}): ResolvedRequestOpt
         throw new TypeError("timeout must be a finite number greater than or equal to 0");
     }
 
+    const agents = resolveAgents(options.maxSockets, options.maxFreeSockets);
+
     return {
         timeout,
         signal: options.signal,
         exposeRawAxiosError: options.exposeRawAxiosError ?? false,
         retry: resolveRetryPolicy(options.retry),
-        paceWithRateLimit: options.paceWithRateLimit ?? false,
+        paceWithRateLimit: options.paceWithRateLimit ?? true,
         rateLimitFloor: Math.max(1, options.rateLimitFloor ?? 1),
         circuitBreaker: options.circuitBreaker,
+        retryBudget: options.retryBudget,
+        httpAgent: agents.httpAgent,
+        httpsAgent: agents.httpsAgent,
         onError: options.onError,
         onRetry: options.onRetry,
         onRequestStart: options.onRequestStart,
@@ -390,7 +481,11 @@ const getRateLimitInfo = (
     return { limit, remaining, reset };
 };
 
-const normalizeAxiosError = (resolved: ResolvedRequestOptions, error: AxiosError): AniLinkError => {
+const normalizeAxiosError = (
+    resolved: ResolvedRequestOptions,
+    error: AxiosError,
+    isRestCall = false
+): AniLinkError => {
     if (axios.isCancel(error)) {
         return new AniLinkNetworkError(
             AniLinkErrorCodes.ABORTED,
@@ -400,12 +495,13 @@ const normalizeAxiosError = (resolved: ResolvedRequestOptions, error: AxiosError
     }
 
     if (error.response?.status !== undefined) {
-        return new AniLinkApiError(
-            error.response.status,
-            error.response.data,
-            getRawAxiosError(resolved, error),
-            { rateLimit: getRateLimitInfo(error.response.headers) }
-        );
+        const status = error.response.status;
+        const data = error.response.data;
+        const rawAxiosError = getRawAxiosError(resolved, error);
+        const options = { rateLimit: getRateLimitInfo(error.response.headers) };
+        return isRestCall
+            ? new AniLinkRestError(status, data, rawAxiosError, options)
+            : new AniLinkApiError(status, data, rawAxiosError, options);
     }
 
     if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
@@ -424,13 +520,17 @@ const normalizeAxiosError = (resolved: ResolvedRequestOptions, error: AxiosError
     );
 };
 
-const normalizeRequestError = (resolved: ResolvedRequestOptions, error: unknown): AniLinkError => {
+const normalizeRequestError = (
+    resolved: ResolvedRequestOptions,
+    error: unknown,
+    isRestCall = false
+): AniLinkError => {
     if (error instanceof AniLinkError) {
         return error;
     }
 
     if (axios.isAxiosError(error)) {
-        return normalizeAxiosError(resolved, error);
+        return normalizeAxiosError(resolved, error, isRestCall);
     }
 
     return new AniLinkError(
@@ -600,6 +700,49 @@ interface CircuitState {
     consecutiveFailures: number;
     openedAt: number | null;
 }
+
+/**
+ * Shared retry-budget state, keyed on the caller's transport-settings object
+ * like {@link circuitStates}. Only populated when a request opts in via
+ * `retryBudget`.
+ *
+ * @see {@link RetryBudget}
+ */
+interface RetryBudgetState {
+    /** Retries spent in the current window. */
+    retriesUsed: number;
+    /** Epoch milliseconds at which the current window ends and resets. */
+    windowEndsAt: number;
+}
+
+const retryBudgetStates = new WeakMap<object, RetryBudgetState>();
+
+/**
+ * Returns the live retry-budget window for the caller, rolling it forward to
+ * a fresh window when the previous one has elapsed.
+ *
+ * @param owner - The caller's transport-settings object.
+ * @param budget - The configured budget, when enabled.
+ * @returns The mutable budget state, or `undefined` when the budget is disabled.
+ */
+const getRetryBudgetState = (
+    owner: object | undefined,
+    budget: RetryBudget | undefined
+): RetryBudgetState | undefined => {
+    if (owner === undefined || budget === undefined) {
+        return undefined;
+    }
+    let state = retryBudgetStates.get(owner);
+    if (state === undefined) {
+        state = { retriesUsed: 0, windowEndsAt: 0 };
+        retryBudgetStates.set(owner, state);
+    }
+    if (Date.now() >= state.windowEndsAt) {
+        state.retriesUsed = 0;
+        state.windowEndsAt = Date.now() + budget.windowMs;
+    }
+    return state;
+};
 
 /**
  * Extracts the upstream identity for breaker scoping from a request URL.
@@ -789,6 +932,7 @@ const executeWithRetry = async <T>(
         resolved.circuitBreaker !== undefined && stateKey !== undefined
             ? getCircuitState(stateKey, circuitScopeOf(url))
             : undefined;
+    const budgetState = getRetryBudgetState(stateKey, resolved.retryBudget);
     let attempt = 0;
 
     for (;;) {
@@ -805,6 +949,8 @@ const executeWithRetry = async <T>(
                 headers,
                 timeout: resolved.timeout,
                 signal: resolved.signal,
+                httpAgent: resolved.httpAgent,
+                httpsAgent: resolved.httpsAgent,
             });
             safeInvoke(resolved.onResponse, "onResponse", {
                 ...hookContext,
@@ -822,10 +968,19 @@ const executeWithRetry = async <T>(
                 ...hookContext,
                 durationMs: Date.now() - startedAt,
             });
-            const normalized = normalizeRequestError(resolved, error);
+            const normalized = normalizeRequestError(resolved, error, rawPassthrough);
             recordCircuitFailure(circuit, resolved.circuitBreaker);
             const delay =
-                policy === null ? null : getRetryDelay(normalized, error, attempt, policy);
+                policy === null || budgetState === undefined
+                    ? policy === null
+                        ? null
+                        : getRetryDelay(normalized, error, attempt, policy)
+                    : budgetState.retriesUsed >= resolved.retryBudget!.maxRetriesPerWindow
+                      ? null // budget exhausted: surface the failure without retrying
+                      : getRetryDelay(normalized, error, attempt, policy);
+            if (delay !== null && budgetState !== undefined) {
+                budgetState.retriesUsed += 1;
+            }
             reportFailure(url, method, attempt + 1, normalized, resolved, delay ?? undefined);
             if (delay === null) {
                 throw normalized;
@@ -842,17 +997,17 @@ const executeWithRetry = async <T>(
  * This is the provider-agnostic transport entry point. GraphQL callers get
  * envelope unwrapping by leaving `contentType` unset; REST callers pass an
  * explicit `contentType` (for example `application/json`) and receive the
- * parsed body verbatim.
+ * parsed body verbatim. HTTP failures on REST calls surface as
+ * {@link AniLinkRestError}; GraphQL calls surface as {@link AniLinkApiError}.
  *
  * @param url - The URL to send the request to.
  * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
  * @param data - The data to send with the request.
  * @param auth - The authentication material to include in the request headers. A string is treated as a bearer token for backwards compatibility.
- * @param url - The URL to send the request to.
- * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
- * @param data - The data to send with the request.
- * @param auth - The authentication material to include in the request headers. A string is treated as a bearer token for backwards compatibility.
- * @param requestOptions - Optional positional transport arguments: `requiresAuth` (whether the operation requires an authentication token), `options` (per-request {@link RequestOptions}; when omitted, library defaults apply — 30 second timeout, automatic retries under the default policy, no hooks), `operation` (optional operation name included in missing-token auth errors), and `contentType` (optional `Content-Type` override for non-GraphQL endpoints — for example form-urlencoded OAuth token requests, or `application/json` for REST calls — which also returns the parsed body verbatim instead of unwrapping a GraphQL envelope).
+ * @param requiresAuth - Whether the operation requires an authentication token.
+ * @param options - Per-request {@link RequestOptions}; when omitted, library defaults apply (30 second timeout, automatic retries under the default policy, proactive rate-limit pacing, no hooks).
+ * @param operation - Optional operation name included in missing-token auth errors.
+ * @param contentType - Optional `Content-Type` override for non-GraphQL endpoints — for example form-urlencoded OAuth token requests, or `application/json` for REST calls — which also returns the parsed body verbatim instead of unwrapping a GraphQL envelope and classifies HTTP failures as {@link AniLinkRestError}.
  * @returns The unwrapped response data. For documents with a single root
  * field this is the bare field value; multi-root-field (or zero-root-field)
  * documents are returned as the full `{ data }` envelope unchanged. Use

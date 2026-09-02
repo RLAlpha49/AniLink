@@ -90,7 +90,7 @@ export interface RateLimitInfo {
  * through it directly.
  */
 export class AniLinkApiError extends AniLinkError {
-    /** HTTP status returned by the upstream API. */
+    /** HTTP status returned by the upstream API. For GraphQL failures this is the upstream GraphQL error status when available, and the HTTP envelope status (`200`) otherwise. */
     public readonly status: number;
     /** Response body returned by the upstream API, preserved verbatim. */
     public readonly data: unknown;
@@ -154,7 +154,36 @@ export interface GraphQLUpstreamError {
 }
 
 /**
+ * Extracts the first finite numeric `status` carried by an upstream GraphQL
+ * error entry.
+ *
+ * AniList error entries usually carry a numeric `status` (for example `404`
+ * for "Not Found" versus `500` for an internal server error); entries without
+ * one (or with a non-numeric placeholder) are skipped so the envelope default
+ * applies.
+ *
+ * @param errors - The upstream GraphQL errors carried by the envelope.
+ * @returns The first finite numeric upstream status, or `undefined` when no entry carries one.
+ */
+const extractUpstreamStatus = (errors: ReadonlyArray<GraphQLUpstreamError>): number | undefined => {
+    for (const entry of errors) {
+        const status = entry.status;
+        if (typeof status === "number" && Number.isFinite(status)) {
+            return status;
+        }
+    }
+    return undefined;
+};
+
+/**
  * GraphQL-level failure returned inside an HTTP 200 envelope.
+ *
+ * The inherited {@link AniLinkApiError.status} reflects the upstream GraphQL
+ * error status when an entry in {@link AniLinkGraphQLError.graphqlErrors}
+ * carries one (for example `404` or `429`), and the HTTP `200` envelope status
+ * otherwise. This makes `status` a meaningful classification field for
+ * GraphQL failures and lets status-based branching and retry policies treat a
+ * GraphQL-level `429`/`5xx` like its HTTP-level counterpart.
  *
  * @see {@link GraphQLUpstreamError}
  */
@@ -188,7 +217,7 @@ export class AniLinkGraphQLError extends AniLinkApiError {
         data?: unknown,
         rawAxiosError?: unknown
     ) {
-        super(200, data, rawAxiosError);
+        super(extractUpstreamStatus(errors) ?? 200, data, rawAxiosError);
         this.name = "AniLinkGraphQLError";
         this.code = AniLinkErrorCodes.GRAPHQL;
         this.message = `The request failed with GraphQL errors: ${errors
@@ -258,7 +287,25 @@ export class AniLinkValidationError extends AniLinkError {
  *
  * @see {@link AniLinkApiError}
  */
-export class AniLinkRestError extends AniLinkApiError {}
+export class AniLinkRestError extends AniLinkApiError {
+    /**
+     * Creates a REST error carrying the upstream HTTP status and body.
+     *
+     * @param status - The HTTP status returned by the upstream REST API.
+     * @param data - The response body returned by the upstream REST API.
+     * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
+     * @param options - Additional error metadata such as rate-limit headers.
+     */
+    constructor(
+        status: number,
+        data: unknown,
+        rawAxiosError?: unknown,
+        options?: { rateLimit?: RateLimitInfo }
+    ) {
+        super(status, data, rawAxiosError, options);
+        this.name = "AniLinkRestError";
+    }
+}
 
 /**
  * Additional metadata attached to a transport failure.
