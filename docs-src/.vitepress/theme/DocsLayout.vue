@@ -340,12 +340,12 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                     <button
                         type="button"
                         class="docs-theme-toggle"
-                        :aria-label="`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`"
-                        :title="`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`"
+                        aria-label="Toggle color theme"
+                        title="Toggle color theme"
                         @click="toggleTheme"
                     >
-                        <Moon v-if="theme === 'light'" :size="17" aria-hidden="true" />
-                        <Sun v-else :size="17" aria-hidden="true" />
+                        <Moon class="docs-theme-icon docs-theme-icon--light" :size="17" aria-hidden="true" />
+                        <Sun class="docs-theme-icon docs-theme-icon--dark" :size="17" aria-hidden="true" />
                     </button>
                 </div>
             </header>
@@ -873,6 +873,18 @@ li .docs-nav-sub {
     transition:
         color 0.15s ease,
         border-color 0.15s ease;
+}
+
+.docs-theme-toggle .docs-theme-icon--dark {
+    display: none;
+}
+
+html.dark .docs-theme-toggle .docs-theme-icon--dark {
+    display: block;
+}
+
+html.dark .docs-theme-toggle .docs-theme-icon--light {
+    display: none;
 }
 
 .docs-theme-toggle:hover {
