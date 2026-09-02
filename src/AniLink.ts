@@ -114,10 +114,7 @@ export class AniLink {
      * });
      * ```
      */
-    constructor(
-        authToken?: string | AniLinkCredentials,
-        options?: AniLinkOptions & Partial<Record<never, never>>
-    ) {
+    constructor(authToken?: string | AniLinkCredentials, options?: AniLinkOptions) {
         let clients;
         if (typeof authToken === "string") {
             clients = buildProviderClients({ anilist: { authToken } }, options);

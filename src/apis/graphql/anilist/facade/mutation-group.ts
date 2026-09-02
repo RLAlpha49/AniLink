@@ -353,6 +353,7 @@ export type AniListMutations = {
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<BasicUser>} A promise that resolves to the {@link BasicUser} who performed the like toggle.
          * @throws If the client is unauthenticated, variables fail validation, or the request fails.
+         * @deprecated Use `toggleLikeV2` instead, which returns the richer {@link Likeable} union (activity, activity reply, thread, or thread comment) instead of a bare user.
          *
          * @example
          * ```typescript

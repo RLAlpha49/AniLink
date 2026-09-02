@@ -42,7 +42,7 @@ export class CustomRequest extends AniListOperation {
      * @param options - Optional per-request transport settings merged over the instance-level ones for this call only.
      * @returns A promise that resolves to the unwrapped response data for single-root-field documents, or the full `{ data }` envelope otherwise.
      * @throws An {@link AniLinkValidationError} when the query is empty or does not declare a `query` or `mutation` operation.
-     * @throws An `AniLinkError` when the request fails.
+     * @throws An `AniLinkError` when the request fails. When AniList returns partial success (some fields resolve while others fail inside an HTTP 200 envelope), the thrown {@link AniLinkGraphQLError} exposes the resolved portion via its `partialData` field, so the fields that did resolve remain recoverable from the error.
      * @see https://docs.anilist.co/reference/query
      * @see https://docs.anilist.co/reference/mutation
      */

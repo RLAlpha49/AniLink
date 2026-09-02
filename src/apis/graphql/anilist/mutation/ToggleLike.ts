@@ -47,6 +47,7 @@ export class ToggleLikeMutation extends AniListOperation {
     /**
      * {@link ToggleLikeMutation.toggleLike} sends a mutation request to toggle a like.
      *
+     * @deprecated Prefer {@link ToggleLikeV2Mutation.toggleLikeV2}, which returns the richer {@link Likeable} union (activity, activity reply, thread, or thread comment) instead of a bare user.
      * @param variables - Values from {@link ToggleLikeVariables} for the mutation.
      * @returns The {@link BasicUser} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `type` is missing or invalid, or the mutation request fails.

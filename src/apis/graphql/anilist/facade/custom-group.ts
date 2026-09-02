@@ -14,6 +14,7 @@ export type AniListCustom = {
      * @param variables - The variables to forward with the request. Optional.
      * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
      * @returns {Promise<T>} A promise that resolves to the raw response, typed as `T` (defaults to `unknown`).
+     * @throws {AniLinkError} When the request fails. When AniList returns partial success (some fields resolve while others fail inside an HTTP 200 envelope), the thrown `AniLinkGraphQLError` exposes the resolved portion via its `partialData` field, so the fields that did resolve remain recoverable from the error.
      * @see https://docs.anilist.co/reference/query
      * @example
      * ```typescript
