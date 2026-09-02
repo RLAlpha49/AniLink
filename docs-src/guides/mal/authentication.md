@@ -13,13 +13,30 @@ MAL uses OAuth2 with PKCE. Register an application at the [MAL API panel](https:
 
 ## 1. Build the authorization URL
 
+The library provides `buildMalAuthorizationUrl` but no PKCE generator — you
+create the verifier and challenge yourself. In Node.js, `node:crypto` produces
+both values; the S256 challenge is the SHA-256 hash of the verifier, base64url
+encoded:
+
 ```typescript
+import { createHash, randomBytes } from "node:crypto";
 import { buildMalAuthorizationUrl } from "anilink-api-wrapper";
 
-const codeVerifier = createPkceVerifier(); // your PKCE verifier (43-128 chars)
+// Random 32 bytes -> 43-char base64url string (MAL allows 43-128 chars).
+const codeVerifier = randomBytes(32).toString("base64url");
+
+// S256 challenge: SHA-256 of the verifier, base64url encoded.
+const codeChallenge = createHash("sha256").update(codeVerifier).digest("base64url");
+
 const authorizeUrl = buildMalAuthorizationUrl("mal-client-id", codeChallenge, "csrf-state");
 // Redirect the user to `authorizeUrl`.
 ```
+
+Keep the `codeVerifier` for step 2 — only the challenge is sent to MAL in the
+authorization URL. The verifier itself is sent later, when exchanging the code
+for a token. In a browser environment, use the Web Crypto API instead:
+`crypto.getRandomValues` for the verifier bytes and `crypto.subtle.digest`
+for the SHA-256 step (then base64url-encode the digest yourself).
 
 `buildMalAuthorizationUrl(clientId, codeChallenge, state?)` takes the S256 code challenge derived from your verifier. The optional `state` is CSRF protection — validate it on the redirect before exchanging the code.
 

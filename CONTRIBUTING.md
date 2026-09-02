@@ -33,7 +33,13 @@ The `graphql` devDependency is used by the API-drift tooling (`lib/api-compare/`
 
 ## JSDoc Contract
 
-`scripts/check-jsdoc.ts` enforces documentation rules on the public API surface. Every public operation, exported interface, class, type, and constant in `src/` needs a JSDoc block with `@param`, `@returns`, `@throws`, `@example`, and a `@see` link to the AniList API reference. Run `npm run jsdoc:check` after you touch public API code. The validator is the source of truth for the exact rules.
+`scripts/check-jsdoc.ts` enforces documentation rules on a narrow slice of the public API surface — not every exported symbol in `src/`. What the validator checks:
+
+- **Public operations in `src/AniLink.ts`:** each operation property needs a JSDoc block with a `@param` tag for every parameter in its signature, plus `@returns`, a concrete `@example`, and a valid `@see` link to a page in `scripts/reference-pages.json`.
+- **Exported interfaces and classes in `src/apis/graphql/anilist/query` and `src/apis/graphql/anilist/mutation`:** need JSDoc and a valid `@see` tag. Mutation methods additionally need `@throws`. A `variables` parameter needs `@param variables`; async methods need `@returns`.
+- **Exported types and consts in `src/apis/graphql/anilist/types`:** need JSDoc and a valid `@see` tag.
+
+Anything else — query-method `@throws`, non-exported helpers, exports outside these trees — is accepted but not enforced. Run `npm run jsdoc:check` after you touch public API code; the validator is the source of truth for the exact rules.
 
 ## Commit Messages
 
