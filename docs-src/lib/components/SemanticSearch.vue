@@ -15,8 +15,12 @@
  *
  * Everything browser-only (fetch, dynamic import of the transformers lib,
  * localStorage) is guarded so the component is SSR-safe under VitePress.
- * The model preloads when the search modal opens (warming up in parallel
- * with the user's first keystroke) and is browser-cached after.
+ *
+ * The multi-megabyte transformers bundle and model weights load lazily on
+ * the first submitted query, not on mount. Opening the modal costs
+ * only the small index fetch; visitors who never search never download the
+ * model. The keyword phase still runs first so results appear while the
+ * model warms up, and the model is browser-cached after the first load.
  */
 import { onMounted, ref, computed } from "vue";
 import { CornerDownLeft, Search, Sparkles } from "@lucide/vue";
@@ -207,17 +211,13 @@ onMounted(() => {
     } catch {
         /* ignore */
     }
-    // Preload the search index and the model the moment the modal opens. The
-    // parent mounts this component via `v-if="open"`, so onMounted fires when
-    // the modal appears. The index is small and needed for every search
-    // (keyword results appear instantly), so it loads first; the model warms
-    // up only after the index is ready, so its large download can't starve
-    // the index fetch on a slow connection and leave the input unable to show
-    // keyword results. The model is browser-cached after first load.
-    void (async () => {
-        await loadIndex();
-        void loadModel();
-    })();
+    // Load only the small JSON index on mount. It is needed for the keyword
+    // phase of every search, so pre-fetching it keeps first results instant
+    // when the user submits a query. The multi-megabyte transformers bundle
+    // and model weights are NOT touched here: `loadModel()` runs lazily from
+    // `runSearch()` on the first submitted query, so visitors who
+    // never search never pay for the model download.
+    void loadIndex();
 });
 
 // Keep `props.open` referenced so Vue doesn't tree-shake the prop; the modal
