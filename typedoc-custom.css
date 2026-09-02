@@ -4,9 +4,13 @@
  * Restyles the TypeDoc output to match the VitePress docs (Sumi/Yoru) design:
  * warm paper / night backgrounds, vermillion/gold accents, serif display
  * headings, JetBrains Mono code, and the custom scrollbar.
+ *
+ * Font files load through scripts/typedoc-plugin-head.mjs, which emits
+ * `<link rel="preconnect">` + `<link rel="stylesheet">` tags into every
+ * page's `<head>`. Do not reintroduce an `@import url(...)` here - an
+ * `@import` serializes the font fetch behind the custom CSS download and
+ * delays first paint.
  */
-
-@import url("https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Zen+Old+Mincho:wght@400;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 
 /* ============================================================ */
 /* Design tokens                                                 */
