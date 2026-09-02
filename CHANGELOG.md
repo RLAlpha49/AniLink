@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.1.0](https://github.com/RLAlpha49/AniLink/compare/v2.0.0...v2.1.0) (2026-09-02)
+
+### ✨ Features
+
+* **api:** add MyAnimeList provider support ([41f438f](https://github.com/RLAlpha49/AniLink/commit/41f438f87c035c78eed769185b7aa240e558abe9))
+* **transport:** classify REST failures as AniLinkRestError and surface upstream status on GraphQL errors ([3dc884c](https://github.com/RLAlpha49/AniLink/commit/3dc884ce0c679b3323a8b6f29ea360295c6ce7e1))
+* **transport:** enable rate-limit pacing by default ([4480d8a](https://github.com/RLAlpha49/AniLink/commit/4480d8a7ae34d2f4ac3ffac6fd628e68fc445430))
+
+### 🐛 Bug Fixes
+
+* **docs:** add keyboard focus trap and ARIA to modal overlays ([48386f3](https://github.com/RLAlpha49/AniLink/commit/48386f39783073bb2e73a71dd5e8a30b055dc3dd))
+* **docs:** correct TypeDoc reference URLs to match current output paths ([ee3df03](https://github.com/RLAlpha49/AniLink/commit/ee3df036a81a72bd796f9aefb32335d4ceba5e86))
+* **docs:** harden search HTML escaping and extraction ([66dd98f](https://github.com/RLAlpha49/AniLink/commit/66dd98f56a671b9a20105304a809f47aa7125944))
+* **docs:** honor configured base URL for navigation ([f59ccd9](https://github.com/RLAlpha49/AniLink/commit/f59ccd93814c1252fdf7aca922810363d964f4fd))
+* **docs:** prevent theme flash during initial render ([bdbc866](https://github.com/RLAlpha49/AniLink/commit/bdbc866350e74f7c50006ed8334256fabe90d0a6))
+* **docs:** read homepage version from package metadata ([d3d7ad6](https://github.com/RLAlpha49/AniLink/commit/d3d7ad642181d2770057698fc6d96e4220a2974b))
+* **docs:** use CSS-driven theme toggle icons to prevent hydration mismatch ([e26eb38](https://github.com/RLAlpha49/AniLink/commit/e26eb38a39e3d735c37173b2bcb47359997d3ac1))
+
+### ⚡ Performance
+
+* **docs:** defer semantic search model download to first query ([3d1512f](https://github.com/RLAlpha49/AniLink/commit/3d1512ff21b55bdf2be7138a33369bc80727249b))
+* **docs:** replace TypeDoc [@import](https://github.com/import) with <link> for parallel font loading ([bd2bf1c](https://github.com/RLAlpha49/AniLink/commit/bd2bf1cf4357c7640c987dfada5fca9130fdcffe))
+
+### ♻️ Refactoring
+
+* **docs:** make operation loader base directory configurable ([acfc1a0](https://github.com/RLAlpha49/AniLink/commit/acfc1a0de76dd4fb5678b87777aa000033dc51f8))
+* **docs:** move theme tokens from scoped layout to global CSS layer ([3792e0b](https://github.com/RLAlpha49/AniLink/commit/3792e0b0543ac6fa302640404887d6e085f3b00c))
+* **docs:** replace VitePress useFonts() with <head> font links ([d06ab25](https://github.com/RLAlpha49/AniLink/commit/d06ab253de69a3071edd73fc44908425103f04db))
+
+### 📚 Documentation
+
+* add per-page SEO metadata, sitemap, and robots.txt ([8c23fcd](https://github.com/RLAlpha49/AniLink/commit/8c23fcd41013a068407b1c3dc7a2fa3d19412c2e))
+* add social preview terminal command ([bd6f8fe](https://github.com/RLAlpha49/AniLink/commit/bd6f8fe8777bfc91d192ebc5bc059772ef6af89a))
+* audit and enrich JSDoc across public surface ([c10e33b](https://github.com/RLAlpha49/AniLink/commit/c10e33b314d512a81c185adea5210c8c89ec4b07))
+* **changelog:** remove stale refactoring entries ([4a18a26](https://github.com/RLAlpha49/AniLink/commit/4a18a26355618cfc8a8e070995f5e7e05db60cdf))
+* expand PKCE example and document JSDoc contract ([4d3b719](https://github.com/RLAlpha49/AniLink/commit/4d3b719d988e14accc289586fb5a9ec2c517bab4))
+* migrate explorer to VitePress documentation site ([0f3a00b](https://github.com/RLAlpha49/AniLink/commit/0f3a00bc1a7dd971f4599723b2aa5de10b6c9c8b))
+* refine partial-success JSDoc and toggleLike deprecation hints ([c2e984d](https://github.com/RLAlpha49/AniLink/commit/c2e984dd503c6c81a0a7df37fd65eb3d7b59e4f6))
+* remove upstream compatibility reference ([c5f24d2](https://github.com/RLAlpha49/AniLink/commit/c5f24d2c22b712818fb2f7345f34ff65cbb23c48))
+* set VitePress base URL and custom domain ([3049690](https://github.com/RLAlpha49/AniLink/commit/30496904f4fc474c4d4cf7655fb6634ed70e10ef))
+* update docs URLs to custom domain ([32b25f7](https://github.com/RLAlpha49/AniLink/commit/32b25f7ff275cd6dd417fd92cfc00b810c7216dc))
+
 ## [2.0.0](https://github.com/RLAlpha49/AniLink/compare/v1.29.2...v2.0.0) (2026-08-27)
 
 ### ⚠ BREAKING CHANGES
