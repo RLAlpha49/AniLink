@@ -1,4 +1,4 @@
-import { AniLink } from "../../src/AniLink";
+import { AniLink, AniLinkApiError } from "../../src/AniLink";
 import { beforeEach, describe, expect, test } from "vitest";
 import { preflightCredentials } from "./preflight";
 /**
