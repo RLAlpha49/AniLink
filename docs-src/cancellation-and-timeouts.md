@@ -43,6 +43,20 @@ try {
 
 Cancellation is honored while a retry backoff is pending. Aborting the signal during a wait stops the retry loop. The request rejects promptly with `ABORTED_ERROR` instead of waiting out the delay.
 
+## Abort during rate-limit pacing
+
+With `paceWithRateLimit` enabled, a successful response may be followed by a pacing wait until the rate-limit window resets. Aborting during that wait also rejects with `ABORTED_ERROR`, but the error carries `abortedDuringPacing: true` — the upstream request itself already succeeded, so you can tell "my data was delivered, only the post-success wait was cancelled" apart from a cancelled in-flight request:
+
+```typescript
+try {
+    await aniLink.anilist.query.page.medias({ page: 1, perPage: 50 });
+} catch (error) {
+    if (error instanceof AniLinkNetworkError && error.abortedDuringPacing) {
+        // The upstream call succeeded; the pacing wait was cancelled.
+    }
+}
+```
+
 ## Token-request defaults
 
 OAuth token requests (both providers) use their own default timeout of **10 seconds**, independent of instance transport settings. Pass `options.timeout` on the token-request helpers to override it.

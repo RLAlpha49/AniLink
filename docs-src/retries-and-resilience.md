@@ -55,7 +55,7 @@ When a request exhausts its retries, the last error is thrown — catch it as sh
 
 ## Rate-limit pacing
 
-On by default. The transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits until the window resets instead of discovering the limit via a `429`. With pacing disabled, every `429` costs a wasted request plus a retry wait; enabling pacing avoids both by tracking the window from the response headers.
+On by default. The transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits until the window resets instead of discovering the limit via a `429`. With pacing disabled, every `429` costs a wasted request plus a retry wait; enabling pacing avoids both by tracking the window from the response headers. The optional `onPace` hook fires just before each pacing wait with the wait length, so an intentional rate-limit wait is distinguishable from a hung request — see [Observability](/observability).
 
 ```typescript
 // Default behavior — pacing is active with rateLimitFloor: 1.
