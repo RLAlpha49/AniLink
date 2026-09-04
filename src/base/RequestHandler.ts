@@ -593,7 +593,7 @@ const normalizeRequestError = (
     );
 };
 
-const parseRetryAfter = (header: string | undefined, now: number): number | null => {
+export const parseRetryAfter = (header: string | undefined, now: number): number | null => {
     if (header === undefined || header === null || header === "") {
         return null;
     }
@@ -628,7 +628,7 @@ const getRetryAfterDelay = (error: unknown): number | null => {
  * @param policy - The active retry policy.
  * @returns The un-jittered delay cap in milliseconds.
  */
-const getBackoffDelay = (attempt: number, policy: RetryPolicy): number =>
+export const getBackoffDelay = (attempt: number, policy: RetryPolicy): number =>
     Math.min(policy.baseDelayMs * 2 ** attempt, policy.maxDelayMs);
 
 /**
@@ -640,7 +640,7 @@ const getBackoffDelay = (attempt: number, policy: RetryPolicy): number =>
  * @param policy - The active retry policy.
  * @returns The delay to wait before the next retry, in milliseconds.
  */
-const applyJitter = (cap: number, policy: RetryPolicy): number =>
+export const applyJitter = (cap: number, policy: RetryPolicy): number =>
     policy.jitter === false ? cap : randomInt(0, cap + 1);
 
 /**
