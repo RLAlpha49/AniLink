@@ -224,3 +224,67 @@ describe("page operations return paginated envelopes", () => {
         expect(result.likes.map((user) => user.name)).toEqual(["liker"]);
     });
 });
+
+/**
+ * Direct response-unwrapping tests for every page operation.
+ *
+ * The `pageCases` table above verifies the variable contract and that the
+ * query string contains `Page`. These tests go one step further: each page
+ * operation must unwrap the `Page` root field and return the `{ pageInfo,
+ * <items> }` envelope directly, not only when driven through `paginate`.
+ * A regression in a single page operation's root-field selection fails a
+ * test that names the broken operation.
+ */
+describe("page operations unwrap the Page root field directly", () => {
+    // Each entry: [name, method, itemsKey, validVariables]. The variables
+    // mirror the `pageCases` table so each operation's validator passes.
+    const unwrapCases: Array<[string, PageMethod, string, object]> = [
+        ["users", "users", "users", { asHtml: true }],
+        ["medias", "medias", "media", { id: 1, type: "ANIME" }],
+        ["characters", "characters", "characters", { id: 1, asHtml: true }],
+        ["staffs", "staffs", "staff", { id: 132186, asHtml: true }],
+        ["studios", "studios", "studios", { asHtml: true }],
+        ["mediaLists", "mediaLists", "mediaList", { userId: 542244 }],
+        ["airingSchedules", "airingSchedules", "airingSchedules", { id: 1 }],
+        ["mediaTrends", "mediaTrends", "mediaTrends", { mediaId: 1 }],
+        ["notifications", "notifications", "notifications", { asHtml: true }],
+        ["followers", "followers", "followers", { userId: 542244, asHtml: true }],
+        ["following", "following", "following", { userId: 542244, asHtml: true }],
+        ["activities", "activities", "activities", { id: 723235883, asHtml: true }],
+        ["activityReplies", "activityReplies", "activityReplies", { id: 12191046, asHtml: true }],
+        ["threads", "threads", "threads", { id: 71881, asHtml: true }],
+        ["threadComments", "threadComments", "threadComments", { threadId: 71881, asHtml: true }],
+        ["reviews", "reviews", "reviews", { id: 8008, asHtml: true }],
+        [
+            "recommendations",
+            "recommendations",
+            "recommendations",
+            { mediaId: 156822, asHtml: true },
+        ],
+        ["likes", "likes", "likes", { likeableId: 723422275, type: "ACTIVITY" }],
+    ];
+
+    test.each(unwrapCases)(
+        "%s unwraps the Page envelope and returns the items array",
+        async (_name, method, itemsKey, variables) => {
+            const client = createTestClient("unwrap-token");
+            const mockPageInfo = {
+                total: 1,
+                perPage: 50,
+                currentPage: 1,
+                lastPage: 1,
+                hasNextPage: false,
+            };
+            const mockItems = [{ id: 42, __typename: "MockItem" }];
+            setMockResponse({ pageInfo: mockPageInfo, [itemsKey]: mockItems });
+
+            const call = client.anilist.query.page[method] as (
+                variables: object
+            ) => Promise<Record<string, unknown>>;
+            const result = await call(variables);
+
+            expect(result.pageInfo).toEqual(mockPageInfo);
+            expect(result[itemsKey]).toEqual(mockItems);
+        }
+    );
+});
