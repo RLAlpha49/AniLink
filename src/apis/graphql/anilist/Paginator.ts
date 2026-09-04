@@ -75,7 +75,7 @@ export interface PaginateOptions {
      * results. Pages are always returned in order regardless of completion
      * order, scheduling stops as soon as a fetched page reports
      * `hasNextPage: false`, and every existing guard (`maxPages`, `perPage`
-     * clamping) still applies. Defaults to {@link DEFAULT_CONCURRENCY | 3}
+     * clamping) still applies. Defaults to `3`
      * (a small look-ahead window); pass `1` for strictly sequential fetches.
      * Values above 8 are clamped down to 8.
      */
@@ -105,7 +105,7 @@ export interface ChunkPaginateOptions {
      * results. Chunks are always returned in order regardless of completion
      * order, scheduling stops as soon as a fetched chunk reports
      * `hasNextChunk: false`, and every existing guard (`maxChunks`, `perChunk`
-     * clamping) still applies. Defaults to {@link DEFAULT_CONCURRENCY | 3}
+     * clamping) still applies. Defaults to `3`
      * (a small look-ahead window); pass `1` for strictly sequential fetches.
      * Values above 8 are clamped down to 8.
      */
