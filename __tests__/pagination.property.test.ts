@@ -108,7 +108,13 @@ describe("paginate (property-based)", () => {
                         };
                     });
 
-                    const result = await paginate(fetchPage, "media", options);
+                    const result = await paginate(fetchPage, "media", {
+                        ...options,
+                        // Exact fetch-count invariants only hold sequentially;
+                        // concurrent look-ahead intentionally over-fetches past
+                        // a terminal page and drains the stragglers.
+                        concurrency: 1,
+                    });
 
                     expect(result.pageCount).toBeLessThanOrEqual(maxPages);
                     expect(fetchPage).toHaveBeenCalledTimes(result.pageCount);
@@ -243,7 +249,10 @@ describe("paginatePages (property-based)", () => {
                     });
 
                     const yielded: TestPage[] = [];
-                    for await (const page of paginatePages(fetchPage, { maxPages })) {
+                    for await (const page of paginatePages(fetchPage, {
+                        maxPages,
+                        concurrency: 1,
+                    })) {
                         yielded.push(page);
                     }
 
@@ -300,7 +309,13 @@ describe("paginateChunks (property-based)", () => {
                         };
                     });
 
-                    const result = await paginateChunks(fetchChunk, "lists", options);
+                    const result = await paginateChunks(fetchChunk, "lists", {
+                        ...options,
+                        // Exact fetch-count invariants only hold sequentially;
+                        // concurrent look-ahead intentionally over-fetches past
+                        // a terminal chunk and drains the stragglers.
+                        concurrency: 1,
+                    });
 
                     expect(result.chunkCount).toBeLessThanOrEqual(maxChunks);
                     expect(fetchChunk).toHaveBeenCalledTimes(result.chunkCount);

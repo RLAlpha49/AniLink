@@ -26,6 +26,15 @@ const MAX_PER_CHUNK = DEFAULT_PER_CHUNK;
 const DEFAULT_MAX_CHUNKS = 100;
 
 /**
+ * Default look-ahead `concurrency` for the pagination helpers. A small window
+ * overlaps round-trip latency by default so the common traversal does not pay
+ * full stacked latency, while the {@link MAX_CONCURRENCY} clamp and the
+ * `maxPages`/`maxChunks` guards still bound the blast radius. Pass
+ * `concurrency: 1` for strictly sequential fetches.
+ */
+const DEFAULT_CONCURRENCY = 3;
+
+/**
  * Upper bound on caller-supplied look-ahead `concurrency`. Values above this are
  * clamped down so a typo like `concurrency: 1000` cannot hammer AniList.
  */
@@ -54,7 +63,11 @@ export interface PaginateOptions {
     /** 1-based page number to start from. Defaults to 1. */
     startPage?: number;
 
-    /** Hard cap on pages fetched, guarding against unbounded loops. Defaults to 100. */
+    /**
+     * Hard cap on pages fetched, guarding against unbounded loops. Defaults
+     * to 100, which means up to 100 round-trips (up to 5,000 items at the
+     * default `perPage`); set an explicit value for cost-sensitive workloads.
+     */
     maxPages?: number;
 
     /**
@@ -62,8 +75,9 @@ export interface PaginateOptions {
      * results. Pages are always returned in order regardless of completion
      * order, scheduling stops as soon as a fetched page reports
      * `hasNextPage: false`, and every existing guard (`maxPages`, `perPage`
-     * clamping) still applies. Defaults to `1` (strictly sequential fetches,
-     * matching previous behavior). Values above 8 are clamped down to 8.
+     * clamping) still applies. Defaults to {@link DEFAULT_CONCURRENCY | 3}
+     * (a small look-ahead window); pass `1` for strictly sequential fetches.
+     * Values above 8 are clamped down to 8.
      */
     concurrency?: number;
 }
@@ -79,7 +93,11 @@ export interface ChunkPaginateOptions {
     /** 1-based chunk number to start from. Defaults to 1. */
     startChunk?: number;
 
-    /** Hard cap on chunks fetched, guarding against unbounded loops. Defaults to 100. */
+    /**
+     * Hard cap on chunks fetched, guarding against unbounded loops. Defaults
+     * to 100, which means up to 100 round-trips and up to 50,000 items at the
+     * default `perChunk`; set an explicit value for cost-sensitive workloads.
+     */
     maxChunks?: number;
 
     /**
@@ -87,8 +105,9 @@ export interface ChunkPaginateOptions {
      * results. Chunks are always returned in order regardless of completion
      * order, scheduling stops as soon as a fetched chunk reports
      * `hasNextChunk: false`, and every existing guard (`maxChunks`, `perChunk`
-     * clamping) still applies. Defaults to `1` (strictly sequential fetches,
-     * matching previous behavior). Values above 8 are clamped down to 8.
+     * clamping) still applies. Defaults to {@link DEFAULT_CONCURRENCY | 3}
+     * (a small look-ahead window); pass `1` for strictly sequential fetches.
+     * Values above 8 are clamped down to 8.
      */
     concurrency?: number;
 }
@@ -149,7 +168,9 @@ function extractHasMore(response: unknown): boolean {
  * array at `itemsKey`, and stops when AniList reports no further pages or when the
  * `maxPages` guard fires. The guard prevents accidental unbounded fetch loops.
  * Pass `concurrency` to keep multiple page requests in flight at once; results
- * are still collected strictly in page order.
+ * are still collected strictly in page order. The default `maxPages` of 100
+ * means an unconstrained traversal can issue up to 100 round-trips; set an
+ * explicit `maxPages` for cost-sensitive workloads.
  *
  * @typeParam TPage - The page response shape (must include `pageInfo`).
  * @typeParam K - The key of the items array on `TPage`.
@@ -179,7 +200,11 @@ export async function paginate<
     const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE);
     const startPage = resolvePositiveInt(options?.startPage, 1);
     const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES);
-    const concurrency = resolveCappedInt(options?.concurrency, MAX_CONCURRENCY, 1);
+    const concurrency = resolveCappedInt(
+        options?.concurrency,
+        MAX_CONCURRENCY,
+        DEFAULT_CONCURRENCY
+    );
 
     const { responses, count, truncated } = await fetchWithLookAhead(
         (number) => fetchPage(number, perPage),
@@ -205,12 +230,21 @@ export async function paginate<
  * `hasNextPage` is false or `maxPages` is reached.
  *
  * Use this for streaming or early-exit workflows where collecting every item
- * into memory is unnecessary. The `maxPages` guard still prevents unbounded loops.
+ * into memory is unnecessary. The `maxPages` guard still prevents unbounded
+ * loops. Unlike the sequential implementations it replaces, this generator
+ * keeps a small look-ahead window of `concurrency` in-flight page requests so
+ * round-trip latency overlaps while pages are still yielded strictly in page
+ * order; on early exit (`break`/`return` by the consumer), a terminal page,
+ * or the `maxPages` guard, already-launched stragglers are drained and their
+ * payloads discarded.
+ *
+ * The default `maxPages` of 100 means an unconstrained traversal can issue up
+ * to 100 round-trips; set an explicit `maxPages` for cost-sensitive workloads.
  *
  * @typeParam TPage - The page response shape (must include `pageInfo`).
  * @param fetchPage - Callback that fetches a single page given its 1-based number and `perPage`.
- * @param options - Optional `perPage`, `startPage`, and `maxPages` controls.
- * @yields Each raw page response in turn.
+ * @param options - Optional `perPage`, `startPage`, `maxPages`, and `concurrency` controls. `concurrency` defaults to a small look-ahead window; pass `1` for strictly sequential fetches.
+ * @yields Each raw page response in turn, in page order.
  * @see https://docs.anilist.co/reference/object/pageinfo
  * @example
  * ```typescript
@@ -229,18 +263,55 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
     const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE);
     const startPage = resolvePositiveInt(options?.startPage, 1);
     const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES);
+    const concurrency = resolveCappedInt(
+        options?.concurrency,
+        MAX_CONCURRENCY,
+        DEFAULT_CONCURRENCY
+    );
 
-    let page = startPage;
-    let pageCount = 0;
+    const pending = new Map<number, Promise<TPage>>();
+    let nextToLaunch = startPage;
+    let nextToYield = startPage;
+    let terminal = false;
 
-    while (pageCount < maxPages) {
-        const response = await fetchPage(page, perPage);
-        pageCount += 1;
-        yield response;
-        if (!response.pageInfo.hasNextPage || pageCount >= maxPages) {
-            break;
+    const launchWindow = (): void => {
+        while (!terminal && nextToLaunch - startPage < maxPages && pending.size < concurrency) {
+            const page = nextToLaunch;
+            nextToLaunch += 1;
+            const request = fetchPage(page, perPage);
+            pending.set(page, request);
+            // A sibling may reject before this request is ever awaited; mark
+            // that secondary rejection handled so Node does not report it as
+            // unhandled. The original rejection still propagates when this
+            // slot is consumed.
+            void request.catch(() => {});
         }
-        page += 1;
+    };
+
+    try {
+        while (nextToYield - startPage < maxPages) {
+            launchWindow();
+            const page = nextToYield;
+            const request = pending.get(page);
+            if (request === undefined) {
+                break;
+            }
+            const response = await request;
+            pending.delete(page);
+            nextToYield += 1;
+            yield response;
+            if (!response.pageInfo.hasNextPage) {
+                // Terminal page: never schedule past it; drain the already-
+                // launched stragglers so nothing dangles, discarding their
+                // payloads, and stop. A failure in a drained straggler must
+                // not fail the traversal.
+                terminal = true;
+                await Promise.allSettled([...pending.values()]);
+                break;
+            }
+        }
+    } finally {
+        pending.clear();
     }
 }
 
@@ -252,7 +323,10 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
  * extracts the items array at `itemsKey` (typically `"lists"`), and stops when AniList
  * reports no further chunks or when the `maxChunks` guard fires. Pass
  * `concurrency` to keep multiple chunk requests in flight at once; results are
- * still collected strictly in chunk order.
+ * still collected strictly in chunk order. The default `maxChunks` of 100
+ * means an unconstrained traversal can issue up to 100 round-trips (up to
+ * 50,000 items at the default `perChunk`); set an explicit `maxChunks` for
+ * cost-sensitive workloads.
  *
  * @typeParam TChunk - The chunk response shape (must include `hasNextChunk`).
  * @typeParam K - The key of the items array on `TChunk`.
@@ -284,7 +358,11 @@ export async function paginateChunks<
     const perChunk = resolveCappedInt(options?.perChunk, MAX_PER_CHUNK, DEFAULT_PER_CHUNK);
     const startChunk = resolvePositiveInt(options?.startChunk, 1);
     const maxChunks = resolvePositiveInt(options?.maxChunks, DEFAULT_MAX_CHUNKS);
-    const concurrency = resolveCappedInt(options?.concurrency, MAX_CONCURRENCY, 1);
+    const concurrency = resolveCappedInt(
+        options?.concurrency,
+        MAX_CONCURRENCY,
+        DEFAULT_CONCURRENCY
+    );
 
     const { responses, count, truncated } = await fetchWithLookAhead(
         (number) => fetchChunk(number, perChunk),

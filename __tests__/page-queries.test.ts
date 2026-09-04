@@ -86,7 +86,7 @@ test("paginate helper iterates pages through the facade with a maxPages guard", 
         (page, perPage) =>
             client.anilist.query.page.medias({ page, perPage, type: "ANIME" } as never),
         "media",
-        { maxPages: 5 }
+        { maxPages: 5, concurrency: 1 }
     );
 
     expect(mockSendRequest).toHaveBeenCalledTimes(2);
