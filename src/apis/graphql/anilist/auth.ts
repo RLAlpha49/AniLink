@@ -143,17 +143,11 @@ const requestToken = async (
     signal?: AbortSignal
 ): Promise<AniListTokenResponse> => {
     const options: RequestOptions = {
-        // Token exchanges block the login flow, so they fail faster than
-        // GraphQL operations unless the caller tunes the timeout explicitly.
         timeout: AUTH_TOKEN_TIMEOUT_MS,
         signal,
+        exposeRawAxiosError: false,
     };
     try {
-        // Routed through the shared pipeline so token requests get the same
-        // retry policy, lifecycle hooks, and abort handling as every other
-        // request. `sendRequest` is used in raw-passthrough mode: no auth
-        // guard, form-urlencoded content type, and no GraphQL envelope
-        // unwrapping.
         const body = new URLSearchParams(params).toString() as unknown as object;
         return await sendRequest<AniListTokenResponse>(ANILIST_TOKEN_URL, "POST", body, undefined, {
             requiresAuth: false,
@@ -161,9 +155,6 @@ const requestToken = async (
             contentType: "application/x-www-form-urlencoded",
         });
     } catch (error) {
-        // Final normalization: the pipeline's normalized errors are safe, but
-        // any unexpected raw failure (which can embed the Axios config with
-        // client secrets) is reduced to a sanitized error here.
         throw normalizeTokenRequestError(error);
     }
 };
