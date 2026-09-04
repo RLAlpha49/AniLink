@@ -154,16 +154,12 @@ const requestToken = async (
         // request. `sendRequest` is used in raw-passthrough mode: no auth
         // guard, form-urlencoded content type, and no GraphQL envelope
         // unwrapping.
-        return await sendRequest<AniListTokenResponse>(
-            ANILIST_TOKEN_URL,
-            "POST",
-            new URLSearchParams(params).toString() as unknown as object,
-            undefined,
-            false,
+        const body = new URLSearchParams(params).toString() as unknown as object;
+        return await sendRequest<AniListTokenResponse>(ANILIST_TOKEN_URL, "POST", body, undefined, {
+            requiresAuth: false,
             options,
-            undefined,
-            "application/x-www-form-urlencoded"
-        );
+            contentType: "application/x-www-form-urlencoded",
+        });
     } catch (error) {
         // Final normalization: the pipeline's normalized errors are safe, but
         // any unexpected raw failure (which can embed the Axios config with

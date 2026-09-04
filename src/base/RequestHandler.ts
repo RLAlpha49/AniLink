@@ -1,6 +1,6 @@
 import http from "node:http";
 import https from "node:https";
-import { randomInt } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import axios, { type AxiosError, type AxiosResponse } from "axios";
 import {
     AniLinkApiError,
@@ -121,6 +121,13 @@ export type RequestAuthInput = string | RequestAuth;
  * @see {@link OnErrorHandler}
  */
 export interface RequestErrorContext {
+    /**
+     * Library-generated correlation ID identifying one logical request across
+     * all of its attempts. Use it to join `onRequestStart`, `onResponse`,
+     * `onError`, and `onRetry` events for the same request in a metrics or
+     * logging backend.
+     */
+    requestId: string;
     /** The URL the request was sent to. */
     url: string;
     /** The HTTP method of the request. */
@@ -133,6 +140,11 @@ export interface RequestErrorContext {
     status?: number;
     /** The delay before the next retry, when the failure will be retried. */
     nextDelayMs?: number;
+    /**
+     * Rate-limit accounting parsed from the failure response's
+     * `x-ratelimit-*` headers, when the upstream included them.
+     */
+    rateLimit?: RateLimitInfo;
 }
 
 /**
@@ -149,6 +161,11 @@ export type OnErrorHandler = (error: AniLinkError, context: RequestErrorContext)
  * @see {@link OnRequestStartHandler}
  */
 export interface RequestContext {
+    /**
+     * Library-generated correlation ID identifying one logical request across
+     * all of its attempts; see {@link RequestErrorContext.requestId}.
+     */
+    requestId: string;
     /** The URL the request is being sent to. */
     url: string;
     /** The HTTP method of the request. */
@@ -166,13 +183,32 @@ export interface RequestContext {
 export type OnRequestStartHandler = (context: RequestContext) => void;
 
 /**
- * A callback invoked after each attempt completes, whether it succeeded or
- * failed. The elapsed wall-clock time of the attempt is reported as
- * `durationMs`, making this the natural point for latency metrics.
+ * A callback invoked after each attempt completes with the elapsed
+ * `durationMs` and parsed `rateLimit` headers when present.
  *
  * @see {@link RequestOptions.onResponse}
  */
-export type OnResponseHandler = (context: RequestContext & { durationMs: number }) => void;
+export type OnResponseHandler = (
+    context: RequestContext & { durationMs: number; rateLimit?: RateLimitInfo }
+) => void;
+
+/**
+ * A callback invoked when proactive rate-limit pacing delays the next request
+ * after a successful attempt, with the pacing wait in `delayMs`.
+ *
+ * @see {@link RequestOptions.onPace}
+ */
+export type OnPaceHandler = (context: RequestContext & { delayMs: number }) => void;
+
+/**
+ * A callback invoked when a user-supplied lifecycle hook throws. Throwing
+ * hooks never affect the request pipeline; this callback only observes the
+ * failure so it can be routed to a logger or metrics backend. When unset,
+ * hook failures fall back to a `console.warn`.
+ *
+ * @see {@link RequestOptions.onHookError}
+ */
+export type OnHookErrorHandler = (hookName: string, error: unknown) => void;
 
 /**
  * Transport settings shared by the AniLink request operations.
@@ -253,8 +289,21 @@ export interface RequestOptions {
     onRetry?: OnErrorHandler;
     /** Invoked just before each attempt is sent. */
     onRequestStart?: OnRequestStartHandler;
-    /** Invoked after each attempt completes with the elapsed `durationMs`. */
+    /** Invoked after each attempt completes with the elapsed `durationMs` and the parsed `rateLimit` headers when present. */
     onResponse?: OnResponseHandler;
+    /**
+     * Invoked when proactive rate-limit pacing ({@link RequestOptions.paceWithRateLimit})
+     * delays the next request after a successful attempt, with the pacing
+     * wait in `delayMs`.
+     */
+    onPace?: OnPaceHandler;
+    /**
+     * Invoked when a user-supplied lifecycle hook throws. Throwing hooks are
+     * always isolated from the request pipeline; this callback observes the
+     * failure so it can be routed to a logger or metrics backend. When unset,
+     * hook failures are reported via `console.warn`.
+     */
+    onHookError?: OnHookErrorHandler;
 }
 
 const DEFAULT_RETRY_POLICY: Required<Pick<RetryPolicy, "jitter">> & RetryPolicy = {
@@ -300,6 +349,8 @@ interface ResolvedRequestOptions {
     onRetry?: OnErrorHandler;
     onRequestStart?: OnRequestStartHandler;
     onResponse?: OnResponseHandler;
+    onPace?: OnPaceHandler;
+    onHookError?: OnHookErrorHandler;
 }
 
 const resolveRetryPolicy = (
@@ -384,6 +435,8 @@ const resolveRequestOptions = (options: RequestOptions = {}): ResolvedRequestOpt
         onRetry: options.onRetry,
         onRequestStart: options.onRequestStart,
         onResponse: options.onResponse,
+        onPace: options.onPace,
+        onHookError: options.onHookError,
     };
 };
 
@@ -660,17 +713,20 @@ interface ExecuteOptions {
 
 /**
  * Invokes a user-supplied lifecycle hook without letting its exceptions
- * escape into the request pipeline. A throwing hook is reported as a console
- * warning and otherwise ignored: it must not crash the request, be counted as
- * an attempt, or distort retry and error classification.
+ * escape into the request pipeline. A throwing hook is reported through the
+ * configured `onHookError` callback (falling back to a console warning) and
+ * otherwise ignored: it must not crash the request, be counted as an attempt,
+ * or distort retry and error classification.
  *
  * @param hook - The hook callback, if configured.
- * @param name - The hook's option name, used in the warning.
+ * @param name - The hook's option name, used in the report.
+ * @param onHookError - Consumer callback observing hook failures, when configured.
  * @param args - Arguments forwarded verbatim to the hook.
  */
 const safeInvoke = (
     hook: ((...args: never[]) => void) | undefined,
     name: string,
+    onHookError: OnHookErrorHandler | undefined,
     ...args: unknown[]
 ): void => {
     if (hook === undefined) {
@@ -679,6 +735,14 @@ const safeInvoke = (
     try {
         (hook as (...hookArgs: unknown[]) => void)(...args);
     } catch (hookError: unknown) {
+        if (onHookError !== undefined) {
+            try {
+                onHookError(name, hookError);
+            } catch {
+                // A failing observer must never break the request pipeline.
+            }
+            return;
+        }
         console.warn(
             `[AniLink] ${name} hook threw and was ignored:`,
             hookError instanceof Error ? hookError.message : hookError
@@ -687,23 +751,27 @@ const safeInvoke = (
 };
 
 /**
- * Shared circuit-breaker state, keyed first by the caller's transport-settings
- * object (so concurrent {@link AniLink} clients never trip each other's breaker)
- * and then by the upstream host (so one provider's outage cannot fast-fail
- * another provider's requests on a multi-API client). Only populated when a
- * request opts in via `circuitBreaker`; disabled configurations allocate
- * nothing.
+ * Shared circuit-breaker state, keyed first by a stable per-client owner —
+ * the {@link SendRequestOptions.stateOwner} object when supplied (for
+ * example the operation instance a request dispatches through) and otherwise
+ * the `circuitBreaker` configuration object itself, which stays identical
+ * across requests when the caller reuses one transport-settings object (the
+ * instance-level pattern) — and then by the upstream host (so one provider's
+ * outage cannot fast-fail another provider's requests on a multi-API client).
+ * Only populated when a request opts in via `circuitBreaker`; disabled
+ * configurations allocate nothing.
  */
 const circuitStates = new WeakMap<object, Map<string, CircuitState>>();
 
 interface CircuitState {
     consecutiveFailures: number;
     openedAt: number | null;
+    probeInFlight: boolean;
 }
 
 /**
- * Shared retry-budget state, keyed on the caller's transport-settings object
- * like {@link circuitStates}. Only populated when a request opts in via
+ * Shared retry-budget state, keyed on a stable per-client owner like
+ * {@link circuitStates}. Only populated when a request opts in via
  * `retryBudget`.
  *
  * @see {@link RetryBudget}
@@ -716,6 +784,95 @@ interface RetryBudgetState {
 }
 
 const retryBudgetStates = new WeakMap<object, RetryBudgetState>();
+
+/**
+ * Shared rate-limit pacing deadlines, keyed like {@link circuitStates} by a
+ * stable per-client owner and then by upstream host. When a successful
+ * response reports the remaining quota below {@link ResolvedRequestOptions.rateLimitFloor},
+ * the reset deadline is recorded here so independently dispatched requests
+ * to the same host wait for the window to reset *before* they are sent
+ * rather than only pacing the response that observed the low quota. This
+ * gates concurrent/sequential requests that do not share one
+ * {@link executeWithRetry} call, which the post-response pacing wait alone
+ * cannot reach.
+ */
+const paceDeadlines = new WeakMap<object, Map<string, number>>();
+
+/**
+ * Records the rate-limit reset deadline for the caller's owner and host so
+ * the next dispatch through {@link awaitPaceDeadline} waits for it. A later
+ * (smaller) deadline replaces an earlier one; a deadline at or before now is
+ * cleared so a healthy window does not stall subsequent requests.
+ *
+ * @param owner - The caller's stable transport-settings object.
+ * @param host - The upstream host the deadline applies to.
+ * @param deadlineMs - The epoch millisecond at which the window resets.
+ */
+const recordPaceDeadline = (owner: object, host: string, deadlineMs: number): void => {
+    let scopes = paceDeadlines.get(owner);
+    if (scopes === undefined) {
+        scopes = new Map();
+        paceDeadlines.set(owner, scopes);
+    }
+    if (deadlineMs <= Date.now()) {
+        scopes.delete(host);
+        return;
+    }
+    scopes.set(host, deadlineMs);
+};
+
+/**
+ * Awaits the recorded rate-limit reset deadline for the caller's owner and
+ * host, when one is still in the future, before the caller dispatches its
+ * request. Emits `onPace` once for the wait so an intentional rate-limit wait
+ * stays distinguishable from a hung request in hook-based metrics. An abort
+ * during the wait surfaces as a pacing abort (matching the post-success
+ * pacing behavior) so it neither counts as an attempt failure nor re-fires
+ * `onResponse`.
+ *
+ * @param owner - The caller's stable transport-settings object, when known.
+ * @param host - The upstream host the request is dispatched to.
+ * @param resolved - The resolved request options carrying the pacing flag and hooks.
+ * @param hookContext - The attempt's request context, reused for the `onPace` emission.
+ */
+const awaitPaceDeadline = async (
+    owner: object | undefined,
+    host: string,
+    resolved: ResolvedRequestOptions,
+    hookContext: RequestContext
+): Promise<void> => {
+    if (owner === undefined || !resolved.paceWithRateLimit) {
+        return;
+    }
+    const deadlineMs = paceDeadlines.get(owner)?.get(host);
+    if (deadlineMs === undefined) {
+        return;
+    }
+    const delayMs = deadlineMs - Date.now();
+    if (delayMs <= 0) {
+        // The window already reset; clear the stale deadline and dispatch.
+        paceDeadlines.get(owner)?.delete(host);
+        return;
+    }
+    safeInvoke(resolved.onPace, "onPace", resolved.onHookError, { ...hookContext, delayMs });
+    try {
+        await sleep(delayMs, resolved.signal);
+    } catch (error: unknown) {
+        if (
+            error instanceof AniLinkNetworkError &&
+            error.code === AniLinkErrorCodes.ABORTED &&
+            !axios.isCancel(error)
+        ) {
+            throw new AniLinkNetworkError(
+                AniLinkErrorCodes.ABORTED,
+                "The request was cancelled while waiting for the rate-limit window to reset.",
+                undefined,
+                { abortedDuringPacing: true }
+            );
+        }
+        throw error;
+    }
+};
 
 /**
  * Returns the live retry-budget window for the caller, rolling it forward to
@@ -765,53 +922,80 @@ const getCircuitState = (owner: object, scope: string): CircuitState => {
     }
     let state = scopes.get(scope);
     if (state === undefined) {
-        state = { consecutiveFailures: 0, openedAt: null };
+        state = { consecutiveFailures: 0, openedAt: null, probeInFlight: false };
         scopes.set(scope, state);
     }
     return state;
 };
 
 /**
- * Fast-fails while the circuit is open and clears the open state once the
- * cooldown has elapsed so the next attempt can probe the upstream again.
+ * Fast-fails while the circuit is open. Once the cooldown has elapsed,
+ * reserves the single post-cooldown probe by switching to a half-open state
+ * (`probeInFlight`) and lets that one request through; concurrent requests
+ * while the probe is pending fast-fail so only the probe reaches the
+ * upstream. The probe's own success or failure clears the half-open state
+ * (closing or re-opening the breaker) via {@link recordCircuitSuccess} /
+ * {@link recordCircuitFailure}.
  *
  * @param circuit - The caller's breaker state, when the breaker is enabled.
  * @param breaker - The breaker configuration, when enabled.
- * @throws An `AniLinkNetworkError` with code `CIRCUIT_OPEN_ERROR` while the cooldown is still running.
+ * @returns The fast-fail error while the cooldown is still running or a probe is pending, or `undefined` when the attempt may proceed.
  */
-const throwIfCircuitOpen = (
+const checkCircuitOpen = (
     circuit: CircuitState | undefined,
     breaker: { threshold: number; cooldownMs: number } | undefined
-): void => {
-    if (circuit === undefined || breaker === undefined || circuit.openedAt === null) {
-        return;
+): AniLinkNetworkError | undefined => {
+    if (circuit === undefined || breaker === undefined) {
+        return undefined;
+    }
+    if (circuit.probeInFlight) {
+        return new AniLinkNetworkError(
+            AniLinkErrorCodes.CIRCUIT,
+            `The request failed fast: the circuit breaker is probing the upstream after ${breaker.threshold} consecutive failures. Retrying is possible once the probe settles.`
+        );
+    }
+    if (circuit.openedAt === null) {
+        return undefined;
     }
     if (Date.now() - circuit.openedAt < breaker.cooldownMs) {
-        throw new AniLinkNetworkError(
+        return new AniLinkNetworkError(
             AniLinkErrorCodes.CIRCUIT,
             `The request failed fast: the circuit breaker is open after ${breaker.threshold} consecutive failures. Retrying is possible after the cooldown elapses.`
         );
     }
-    // Cooldown elapsed: allow the next attempt through as the probe.
     circuit.openedAt = null;
+    circuit.probeInFlight = true;
+    return undefined;
 };
 
-/** Resets the failure streak after a successful attempt. */
+/**
+ * Resets the failure streak after a successful attempt. When the success is
+ * the reserved post-cooldown probe, clears the half-open state and closes
+ * the breaker.
+ */
 const recordCircuitSuccess = (circuit: CircuitState | undefined): void => {
     if (circuit !== undefined) {
+        circuit.probeInFlight = false;
         circuit.consecutiveFailures = 0;
     }
 };
 
 /**
  * Counts a failed attempt and opens the circuit once the consecutive-failure
- * budget is exhausted.
+ * budget is exhausted. When the failure is the reserved post-cooldown probe,
+ * clears the half-open state and re-opens the breaker immediately so the next
+ * request fast-fails until the cooldown elapses again.
  */
 const recordCircuitFailure = (
     circuit: CircuitState | undefined,
     breaker: { threshold: number; cooldownMs: number } | undefined
 ): void => {
     if (circuit === undefined || breaker === undefined) {
+        return;
+    }
+    if (circuit.probeInFlight) {
+        circuit.probeInFlight = false;
+        circuit.openedAt = Date.now();
         return;
     }
     circuit.consecutiveFailures += 1;
@@ -821,8 +1005,9 @@ const recordCircuitFailure = (
 };
 
 /**
- * Builds the context object handed to the request lifecycle hooks.
+ * Builds the context object handed to the error lifecycle hooks.
  *
+ * @param requestId - The correlation ID of the logical request.
  * @param url - The URL the request was sent to.
  * @param method - The HTTP method of the request.
  * @param attempt - The 1-based attempt number.
@@ -831,35 +1016,76 @@ const recordCircuitFailure = (
  * @returns The populated hook context.
  */
 const buildErrorContext = (
+    requestId: string,
     url: string,
     method: HttpMethod,
     attempt: number,
     normalized: AniLinkError,
     nextDelayMs?: number
 ): RequestErrorContext => ({
+    requestId,
     url,
     method,
     attempt,
     code: normalized.code,
     ...(normalized instanceof AniLinkApiError ? { status: normalized.status } : {}),
+    ...(normalized instanceof AniLinkApiError && normalized.rateLimit !== undefined
+        ? { rateLimit: normalized.rateLimit }
+        : {}),
     ...(nextDelayMs === undefined ? {} : { nextDelayMs }),
 });
 
 /**
  * Applies opt-in rate-limit pacing after a successful response: when the
- * reported remaining quota drops below the configured floor, waits until the
- * window resets before the caller proceeds.
+ * reported remaining quota drops below the configured floor, records the
+ * reset deadline (so independently dispatched requests to the same host wait
+ * for it before they are sent via {@link awaitPaceDeadline}), emits the
+ * `onPace` signal, waits until the window resets before the caller proceeds,
+ * and classifies an abort during that wait as a post-success pacing abort.
+ *
+ * @param response - The successful response carrying the rate-limit headers.
+ * @param resolved - The resolved request options.
+ * @param hookContext - The attempt's request context, reused for the `onPace` emission.
+ * @param rateLimit - The rate-limit info already parsed from the response headers, when present.
+ * @param owner - The caller's stable transport-settings object, when known, used to key the shared deadline.
+ * @param host - The upstream host the deadline is recorded for.
  */
 const paceAfterSuccess = async (
     response: AxiosResponse,
-    resolved: ResolvedRequestOptions
+    resolved: ResolvedRequestOptions,
+    hookContext: RequestContext,
+    rateLimit: RateLimitInfo | undefined,
+    owner?: object,
+    host?: string
 ): Promise<void> => {
     if (!resolved.paceWithRateLimit) {
         return;
     }
-    const info = getRateLimitInfo(response.headers as Record<string, unknown>);
+    const info = rateLimit ?? getRateLimitInfo(response.headers as Record<string, unknown>);
     if (info !== undefined && info.remaining < resolved.rateLimitFloor) {
-        await sleep(Math.max(0, info.reset * 1000 - Date.now()), resolved.signal);
+        const deadlineMs = info.reset * 1000;
+        const delayMs = Math.max(0, deadlineMs - Date.now());
+        if (owner !== undefined && host !== undefined) {
+            recordPaceDeadline(owner, host, deadlineMs);
+        }
+        safeInvoke(resolved.onPace, "onPace", resolved.onHookError, { ...hookContext, delayMs });
+        try {
+            await sleep(delayMs, resolved.signal);
+        } catch (error: unknown) {
+            if (
+                error instanceof AniLinkNetworkError &&
+                error.code === AniLinkErrorCodes.ABORTED &&
+                !axios.isCancel(error)
+            ) {
+                throw new AniLinkNetworkError(
+                    AniLinkErrorCodes.ABORTED,
+                    "The request was cancelled while waiting for the rate-limit window to reset.",
+                    undefined,
+                    { abortedDuringPacing: true }
+                );
+            }
+            throw error;
+        }
     }
 };
 
@@ -869,6 +1095,7 @@ const paceAfterSuccess = async (
  * terminal failure goes to `onError` only.
  */
 const reportFailure = (
+    requestId: string,
     url: string,
     method: HttpMethod,
     attempt: number,
@@ -876,17 +1103,18 @@ const reportFailure = (
     resolved: ResolvedRequestOptions,
     nextDelayMs?: number
 ): void => {
-    const context = buildErrorContext(url, method, attempt, normalized, nextDelayMs);
+    const context = buildErrorContext(requestId, url, method, attempt, normalized, nextDelayMs);
     if (nextDelayMs !== undefined) {
         safeInvoke(
             resolved.onRetry ?? resolved.onError,
             resolved.onRetry === undefined ? "onError" : "onRetry",
+            resolved.onHookError,
             normalized,
             context
         );
         return;
     }
-    safeInvoke(resolved.onError, "onError", normalized, context);
+    safeInvoke(resolved.onError, "onError", resolved.onHookError, normalized, context);
 };
 
 /**
@@ -923,24 +1151,71 @@ const rethrowIfPacingAbort = (resolved: ResolvedRequestOptions, error: unknown):
 const executeWithRetry = async <T>(
     options: ExecuteOptions,
     resolved: ResolvedRequestOptions,
-    stateKey?: object,
+    stateOwner?: object,
     rawPassthrough = false
 ): Promise<T> => {
     const { url, method, data, headers } = options;
     const policy = resolved.retry;
+    const host = circuitScopeOf(url);
     const circuit =
-        resolved.circuitBreaker !== undefined && stateKey !== undefined
-            ? getCircuitState(stateKey, circuitScopeOf(url))
+        resolved.circuitBreaker !== undefined && stateOwner !== undefined
+            ? getCircuitState(stateOwner, host)
             : undefined;
-    const budgetState = getRetryBudgetState(stateKey, resolved.retryBudget);
+    const budgetState = getRetryBudgetState(stateOwner, resolved.retryBudget);
+    // Correlation ID joining every lifecycle hook emission for this logical
+    // request (including across retries) in a metrics or logging backend.
+    const requestId = randomUUID();
     let attempt = 0;
 
     for (;;) {
-        throwIfCircuitOpen(circuit, resolved.circuitBreaker);
-
         const startedAt = Date.now();
-        const hookContext = { url, method, attempt: attempt + 1 };
-        safeInvoke(resolved.onRequestStart, "onRequestStart", hookContext);
+        const hookContext = { requestId, url, method, attempt: attempt + 1 };
+        const circuitError = checkCircuitOpen(circuit, resolved.circuitBreaker);
+        if (circuitError !== undefined) {
+            // A fast-failed request still emits the start/error hook pair so
+            // request-volume counters and error-rate dashboards do not
+            // undercount while the breaker is open. The failure is not an
+            // attempt outcome, so it bypasses failure accounting and retry.
+            safeInvoke(
+                resolved.onRequestStart,
+                "onRequestStart",
+                resolved.onHookError,
+                hookContext
+            );
+            safeInvoke(
+                resolved.onError,
+                "onError",
+                resolved.onHookError,
+                circuitError,
+                buildErrorContext(requestId, url, method, attempt + 1, circuitError)
+            );
+            throw circuitError;
+        }
+        // Gate the dispatch on any shared rate-limit reset deadline recorded
+        // by a prior successful response to this host, so independently
+        // dispatched requests wait for the window to reset *before* they are
+        // sent rather than only pacing the response that observed the low
+        // quota. A pacing abort here propagates before any attempt is sent,
+        // so it neither fires `onResponse` nor counts as a circuit failure.
+        // If a post-cooldown probe was reserved by `checkCircuitOpen`, the
+        // abort releases it (re-opening the breaker) so the half-open state
+        // is not left dangling.
+        try {
+            await awaitPaceDeadline(stateOwner, host, resolved, hookContext);
+        } catch (paceError) {
+            if (circuit !== undefined && circuit.probeInFlight) {
+                circuit.probeInFlight = false;
+                circuit.openedAt = Date.now();
+            }
+            throw paceError;
+        }
+        safeInvoke(resolved.onRequestStart, "onRequestStart", resolved.onHookError, hookContext);
+        // Tracks whether onResponse has already fired for this attempt so a
+        // failure surfaced after the success-path emission (for example an
+        // AniLinkGraphQLError thrown while unwrapping a 200 envelope, or a
+        // pacing-wait abort) does not emit onResponse a second time. Each
+        // attempt emits onResponse at most once.
+        let responseReported = false;
         try {
             const response: AxiosResponse = await axiosClient({
                 url,
@@ -952,22 +1227,31 @@ const executeWithRetry = async <T>(
                 httpAgent: resolved.httpAgent,
                 httpsAgent: resolved.httpsAgent,
             });
-            safeInvoke(resolved.onResponse, "onResponse", {
+            const rateLimit = getRateLimitInfo(response.headers as Record<string, unknown>);
+            safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
                 ...hookContext,
                 durationMs: Date.now() - startedAt,
+                ...(rateLimit !== undefined ? { rateLimit } : {}),
             });
+            responseReported = true;
             recordCircuitSuccess(circuit);
-            await paceAfterSuccess(response, resolved);
+            await paceAfterSuccess(response, resolved, hookContext, rateLimit, stateOwner, host);
             return rawPassthrough ? (response.data as T) : unwrapGraphQLResponse<T>(response.data);
         } catch (error: unknown) {
             // A pacing-wait abort is not an attempt outcome: it must neither
             // re-fire onResponse for the finished attempt nor count as a
             // circuit failure, so it bypasses the failure accounting below.
             rethrowIfPacingAbort(resolved, error);
-            safeInvoke(resolved.onResponse, "onResponse", {
-                ...hookContext,
-                durationMs: Date.now() - startedAt,
-            });
+            // Emit onResponse only when the success path did not already fire
+            // it (a transport failure). A failure surfaced after the success
+            // emission — an AniLinkGraphQLError from envelope unwrapping, or a
+            // pacing-wait abort rethrown above — must not emit a second time.
+            if (!responseReported) {
+                safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
+                    ...hookContext,
+                    durationMs: Date.now() - startedAt,
+                });
+            }
             const normalized = normalizeRequestError(resolved, error, rawPassthrough);
             recordCircuitFailure(circuit, resolved.circuitBreaker);
             const delay =
@@ -981,7 +1265,15 @@ const executeWithRetry = async <T>(
             if (delay !== null && budgetState !== undefined) {
                 budgetState.retriesUsed += 1;
             }
-            reportFailure(url, method, attempt + 1, normalized, resolved, delay ?? undefined);
+            reportFailure(
+                requestId,
+                url,
+                method,
+                attempt + 1,
+                normalized,
+                resolved,
+                delay ?? undefined
+            );
             if (delay === null) {
                 throw normalized;
             }
@@ -992,6 +1284,39 @@ const executeWithRetry = async <T>(
 };
 
 /**
+ * Trailing options for {@link sendRequest}, replacing the former positional
+ * rest tuple so call sites name their arguments and new options can be added
+ * without reordering.
+ *
+ * @see {@link sendRequest}
+ */
+export interface SendRequestOptions {
+    /** Whether the operation requires an authentication token; the request fails fast with an {@link AniLinkAuthError} when set and no auth material is configured. */
+    requiresAuth?: boolean;
+    /** Per-request {@link RequestOptions}; when omitted, library defaults apply (30 second timeout, automatic retries under the default policy, proactive rate-limit pacing, no hooks). */
+    options?: RequestOptions;
+    /** Optional operation name included in missing-token auth errors. */
+    operation?: string;
+    /**
+     * Optional `Content-Type` override for non-GraphQL endpoints — for example
+     * form-urlencoded OAuth token requests, or `application/json` for REST
+     * calls — which also returns the parsed body verbatim instead of
+     * unwrapping a GraphQL envelope and classifies HTTP failures as
+     * {@link AniLinkRestError}.
+     */
+    contentType?: string;
+    /**
+     * Stable per-client object used to key cross-request transport state (the
+     * circuit breaker and retry budget). Operation dispatch passes the
+     * operation instance; direct callers that reuse one transport-settings
+     * object can omit this, in which case the `circuitBreaker`/
+     * `retryBudget` configuration object itself keys the state. Passing a
+     * fresh object per request prevents breaker state from ever accumulating.
+     */
+    stateOwner?: object;
+}
+
+/**
  * Sends a request to the specified URL.
  *
  * This is the provider-agnostic transport entry point. GraphQL callers get
@@ -1000,14 +1325,12 @@ const executeWithRetry = async <T>(
  * parsed body verbatim. HTTP failures on REST calls surface as
  * {@link AniLinkRestError}; GraphQL calls surface as {@link AniLinkApiError}.
  *
+ * @typeParam T - The expected response payload type.
  * @param url - The URL to send the request to.
  * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
  * @param data - The data to send with the request.
  * @param auth - The authentication material to include in the request headers. A string is treated as a bearer token for backwards compatibility.
- * @param requiresAuth - Whether the operation requires an authentication token.
- * @param options - Per-request {@link RequestOptions}; when omitted, library defaults apply (30 second timeout, automatic retries under the default policy, proactive rate-limit pacing, no hooks).
- * @param operation - Optional operation name included in missing-token auth errors.
- * @param contentType - Optional `Content-Type` override for non-GraphQL endpoints — for example form-urlencoded OAuth token requests, or `application/json` for REST calls — which also returns the parsed body verbatim instead of unwrapping a GraphQL envelope and classifies HTTP failures as {@link AniLinkRestError}.
+ * @param sendOptions - Named trailing options; see {@link SendRequestOptions}.
  * @returns The unwrapped response data. For documents with a single root
  * field this is the bare field value; multi-root-field (or zero-root-field)
  * documents are returned as the full `{ data }` envelope unchanged. Use
@@ -1020,20 +1343,16 @@ const executeWithRetry = async <T>(
  * @throws `AniLinkGraphQLError` for GraphQL errors in an HTTP 200 envelope.
  * @throws `AniLinkNetworkError` for network, timeout, cancellation, or circuit-breaker failures.
  * @see {@link RequestOptions}
+ * @see {@link SendRequestOptions}
  */
 export const sendRequest = async <T = unknown>(
     url: string,
     method: HttpMethod,
     data?: object,
     auth?: RequestAuthInput,
-    ...requestOptions: [
-        requiresAuth?: boolean,
-        options?: RequestOptions,
-        operation?: string,
-        contentType?: string,
-    ]
+    sendOptions?: SendRequestOptions
 ): Promise<T> => {
-    const [requiresAuth = false, options, operation, contentType] = requestOptions;
+    const { requiresAuth = false, options, operation, contentType, stateOwner } = sendOptions ?? {};
     const resolvedAuth: RequestAuth | undefined = typeof auth === "string" ? { token: auth } : auth;
     const hasBearerToken = resolvedAuth?.token !== undefined && resolvedAuth.token !== "";
     const hasAuthorizationHeader = Object.entries(resolvedAuth?.headers ?? {}).some(
@@ -1062,7 +1381,7 @@ export const sendRequest = async <T = unknown>(
     const result = await executeWithRetry<unknown>(
         { url, method, data, headers },
         resolveRequestOptions(options),
-        options,
+        stateOwner ?? options,
         contentType !== undefined
     );
     return result as T;

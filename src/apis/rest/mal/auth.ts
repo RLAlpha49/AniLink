@@ -163,20 +163,16 @@ const requestMalToken = async (
     options?: RequestOptions
 ): Promise<MalTokenResponse> => {
     try {
-        return await sendRequest<MalTokenResponse>(
-            MAL_TOKEN_URL,
-            "POST",
-            new URLSearchParams(params).toString() as unknown as object,
-            undefined,
-            false,
-            {
+        const body = new URLSearchParams(params).toString() as unknown as object;
+        return await sendRequest<MalTokenResponse>(MAL_TOKEN_URL, "POST", body, undefined, {
+            requiresAuth: false,
+            options: {
                 ...options,
                 timeout: options?.timeout ?? MAL_AUTH_TIMEOUT_MS,
                 exposeRawAxiosError: false,
             },
-            undefined,
-            "application/x-www-form-urlencoded"
-        );
+            contentType: "application/x-www-form-urlencoded",
+        });
     } catch (error) {
         throw normalizeMalTokenError(error);
     }

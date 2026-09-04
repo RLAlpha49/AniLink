@@ -9,10 +9,11 @@
 import type { AniLink as AniLinkClient, AniLinkOptions } from "../../src/AniLink";
 import { beforeEach, vi } from "vitest";
 import { AniLink } from "../../src/AniLink";
+import type { SendRequestOptions } from "../../src/base/RequestHandler";
 
 /**
  * The request arguments captured by {@link mockSendRequest}, mirroring the
- * positional parameters of {@link sendRequest}.
+ * parameters of {@link sendRequest}.
  */
 export interface RecordedRequest {
     /** The absolute endpoint URL passed to the transport. */
@@ -25,6 +26,8 @@ export interface RecordedRequest {
     token?: string;
     /** Whether the operation required an authenticated token. */
     requiresAuth?: boolean;
+    /** The named trailing options object forwarded by the caller. */
+    sendOptions?: SendRequestOptions;
 }
 
 const requestMock = vi.hoisted(() =>
@@ -60,8 +63,15 @@ export const setMockResponse = (
 ): void => {
     if (typeof response === "function") {
         const factory = response as (request: RecordedRequest) => unknown;
-        mockSendRequest.mockImplementation(async (url, method, data, token, requiresAuth) =>
-            factory({ url, method, data, token, requiresAuth })
+        mockSendRequest.mockImplementation(async (url, method, data, token, sendOptions) =>
+            factory({
+                url,
+                method,
+                data,
+                token,
+                requiresAuth: sendOptions?.requiresAuth,
+                sendOptions,
+            })
         );
         return;
     }
@@ -103,11 +113,18 @@ export const createTestClientWithoutToken = (): AniLinkClient => new AniLink();
  */
 export const getLastRequest = (): RecordedRequest | undefined => {
     const lastCall = mockSendRequest.mock.calls.at(-1) as
-        [string, "GET" | "POST", object?, string?, boolean?] | undefined;
-    const [url, method, data, token, requiresAuth] = lastCall ?? [];
+        [string, "GET" | "POST", object?, string?, SendRequestOptions?] | undefined;
+    const [url, method, data, token, sendOptions] = lastCall ?? [];
     return url === undefined || method === undefined
         ? undefined
-        : { url, method, data, token, requiresAuth };
+        : {
+              url,
+              method,
+              data,
+              token,
+              requiresAuth: sendOptions?.requiresAuth,
+              sendOptions,
+          };
 };
 
 beforeEach(() => {

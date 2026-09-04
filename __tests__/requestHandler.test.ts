@@ -37,8 +37,11 @@ test("uses the default timeout with the shared Axios instance", async () => {
 });
 
 test("forwards a configured timeout to Axios", async () => {
-    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, false, {
-        timeout: 5_000,
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+        requiresAuth: false,
+        options: {
+            timeout: 5_000,
+        },
     });
 
     expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({ timeout: 5_000 }));
@@ -47,8 +50,11 @@ test("forwards a configured timeout to Axios", async () => {
 test("forwards an AbortSignal to Axios", async () => {
     const controller = new AbortController();
 
-    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, false, {
-        signal: controller.signal,
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+        requiresAuth: false,
+        options: {
+            signal: controller.signal,
+        },
     });
 
     expect(mocks.request).toHaveBeenCalledWith(
@@ -60,36 +66,31 @@ test.each([-1, Number.NaN, Number.POSITIVE_INFINITY])(
     "rejects invalid timeout %s",
     async (timeout) => {
         await expect(
-            sendRequest(
-                "https://graphql.anilist.co",
-                "POST",
-                { query: "query" },
-                undefined,
-                false,
-                {
+            sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+                requiresAuth: false,
+                options: {
                     timeout,
-                }
-            )
+                },
+            })
         ).rejects.toThrow(TypeError);
     }
 );
 
 test("allows zero to disable the Axios timeout", async () => {
     await expect(
-        sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, false, {
-            timeout: 0,
+        sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: {
+                timeout: 0,
+            },
         })
     ).resolves.toBeDefined();
 });
 
 test("throws AniLinkAuthError when a token is required but missing", async () => {
-    const error = await sendRequest(
-        "https://graphql.anilist.co",
-        "POST",
-        {},
-        undefined,
-        true
-    ).catch((requestError: unknown) => requestError);
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+        requiresAuth: true,
+    }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkAuthError);
     expect(error).toMatchObject({ name: "AniLinkAuthError", code: "AUTH_ERROR" });
@@ -97,9 +98,9 @@ test("throws AniLinkAuthError when a token is required but missing", async () =>
 });
 
 test("throws AniLinkAuthError for an empty-string token when auth is required", async () => {
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, "", true).catch(
-        (requestError: unknown) => requestError
-    );
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, "", {
+        requiresAuth: true,
+    }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkAuthError);
     expect(error).toMatchObject({ name: "AniLinkAuthError", code: "AUTH_ERROR" });
@@ -107,7 +108,9 @@ test("throws AniLinkAuthError for an empty-string token when auth is required", 
 });
 
 test("does not require a token when requiresAuth is false", async () => {
-    await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false);
+    await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+        requiresAuth: false,
+    });
 
     expect(mocks.request).toHaveBeenCalledTimes(1);
 });
@@ -124,8 +127,11 @@ test("normalizes an HTTP failure without exposing the Axios response", async () 
         request: { headers: { Authorization: "Bearer secret-token" } },
     });
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
-        retry: false,
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+        requiresAuth: false,
+        options: {
+            retry: false,
+        },
     }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkApiError);
@@ -168,8 +174,11 @@ test("does not expose the raw Axios error by default", async () => {
     };
     mocks.request.mockRejectedValueOnce(axiosError);
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
-        retry: false,
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+        requiresAuth: false,
+        options: {
+            retry: false,
+        },
     }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkApiError);
@@ -184,9 +193,12 @@ test("exposes the original Axios error when explicitly enabled", async () => {
     };
     mocks.request.mockRejectedValueOnce(axiosError);
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
-        exposeRawAxiosError: true,
-        retry: false,
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+        requiresAuth: false,
+        options: {
+            exposeRawAxiosError: true,
+            retry: false,
+        },
     }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkApiError);
@@ -201,8 +213,11 @@ test("normalizes a network failure with a stable code", async () => {
         request: { headers: { Authorization: "Bearer secret-token" } },
     });
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
-        retry: false,
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+        requiresAuth: false,
+        options: {
+            retry: false,
+        },
     }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkNetworkError);
@@ -218,8 +233,11 @@ test("classifies Axios timeout failures separately from other network failures",
         message: "timeout for secret-token",
     });
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
-        retry: false,
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+        requiresAuth: false,
+        options: {
+            retry: false,
+        },
     }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkNetworkError);
@@ -265,8 +283,11 @@ test("preserves the original throwable in UNKNOWN failures when exposeRawAxiosEr
     const original = new Error("secret-token leaked by adapter");
     mocks.request.mockRejectedValueOnce(original);
 
-    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, false, {
-        exposeRawAxiosError: true,
+    const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+        requiresAuth: false,
+        options: {
+            exposeRawAxiosError: true,
+        },
     }).catch((requestError: unknown) => requestError);
 
     expect(error).toBeInstanceOf(AniLinkError);
@@ -303,7 +324,9 @@ test("attaches a Bearer Authorization header when a token is given", async () =>
 });
 
 test("omits the Authorization header for an empty-string token when auth is not required", async () => {
-    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, "", false);
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, "", {
+        requiresAuth: false,
+    });
 
     const call = mocks.request.mock.calls[0]?.[0] as { headers: Record<string, string> };
     expect(call.headers).not.toHaveProperty("Authorization");
@@ -423,22 +446,14 @@ describe("per-call options", () => {
     test("applies the same options to every request that passes them", async () => {
         const options = { timeout: 5_000 };
 
-        await sendRequest(
-            "https://graphql.anilist.co",
-            "POST",
-            { query: "query" },
-            undefined,
-            false,
-            options
-        );
-        await sendRequest(
-            "https://graphql.anilist.co",
-            "POST",
-            { query: "query" },
-            undefined,
-            false,
-            options
-        );
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: options,
+        });
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: options,
+        });
 
         expect(mocks.request).toHaveBeenCalledTimes(2);
         const timeouts = mocks.request.mock.calls.map(
@@ -514,6 +529,32 @@ describe("GraphQL errors in HTTP 200 responses", () => {
         expect((error as Error).message).toContain("first problem");
         expect((error as Error).message).toContain("second problem");
     });
+
+    test("emits onResponse exactly once when a 200 envelope carries GraphQL errors", async () => {
+        // The success path fires onResponse for the HTTP 200 attempt, then
+        // envelope unwrapping throws AniLinkGraphQLError. The catch path must
+        // not re-emit onResponse for the same attempt.
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "Not authenticated." }], data: null },
+        });
+
+        const onResponse = vi.fn();
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            {
+                query: "query",
+            },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false, onResponse },
+            }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+        expect(onResponse).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe("request lifecycle hooks", () => {
@@ -526,20 +567,17 @@ describe("request lifecycle hooks", () => {
             events.push("response");
         });
 
-        await sendRequest(
-            "https://graphql.anilist.co",
-            "POST",
-            { query: "query" },
-            undefined,
-            false,
-            {
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: {
                 onRequestStart,
                 onResponse,
-            }
-        );
+            },
+        });
 
         expect(events).toEqual(["start", "response"]);
         expect(onRequestStart).toHaveBeenCalledWith({
+            requestId: expect.any(String),
             url: "https://graphql.anilist.co",
             method: "POST",
             attempt: 1,
@@ -573,14 +611,10 @@ describe("rate limit info", () => {
             },
         });
 
-        const error = await sendRequest(
-            "https://graphql.anilist.co",
-            "POST",
-            {},
-            undefined,
-            false,
-            { retry: false }
-        ).catch((requestError: unknown) => requestError);
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: false,
+            options: { retry: false },
+        }).catch((requestError: unknown) => requestError);
 
         expect(error).toBeInstanceOf(AniLinkApiError);
         expect((error as AniLinkApiError).rateLimit).toEqual({
@@ -609,14 +643,10 @@ describe("rate limit info", () => {
                 headers: { "x-ratelimit-limit": "90" },
             },
         });
-        const incomplete = await sendRequest(
-            "https://graphql.anilist.co",
-            "POST",
-            {},
-            undefined,
-            false,
-            { retry: false }
-        ).catch((requestError: unknown) => requestError);
+        const incomplete = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: false,
+            options: { retry: false },
+        }).catch((requestError: unknown) => requestError);
         expect((incomplete as AniLinkApiError).rateLimit).toBeUndefined();
     });
 });
@@ -626,19 +656,15 @@ describe("hook exception isolation", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
         await expect(
-            sendRequest(
-                "https://graphql.anilist.co",
-                "POST",
-                { query: "query" },
-                undefined,
-                false,
-                {
+            sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+                requiresAuth: false,
+                options: {
                     retry: false,
                     onRequestStart: () => {
                         throw new Error("telemetry exploded");
                     },
-                }
-            )
+                },
+            })
         ).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(1);
         expect(warn).toHaveBeenCalledWith(
@@ -652,19 +678,15 @@ describe("hook exception isolation", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
         await expect(
-            sendRequest(
-                "https://graphql.anilist.co",
-                "POST",
-                { query: "query" },
-                undefined,
-                false,
-                {
+            sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+                requiresAuth: false,
+                options: {
                     retry: true,
                     onResponse: () => {
                         throw new Error("metrics down");
                     },
-                }
-            )
+                },
+            })
         ).resolves.toEqual({ id: 1 });
         // The hook failure must not be counted as a transport failure.
         expect(mocks.request).toHaveBeenCalledTimes(1);
@@ -682,19 +704,15 @@ describe("hook exception isolation", () => {
             response: { status: 404, data: {} },
         });
 
-        const error = await sendRequest(
-            "https://graphql.anilist.co",
-            "POST",
-            {},
-            undefined,
-            false,
-            {
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: false,
+            options: {
                 retry: false,
                 onResponse: () => {
                     throw new Error("boom");
                 },
-            }
-        ).catch((requestError: unknown) => requestError);
+            },
+        }).catch((requestError: unknown) => requestError);
 
         // The original 404 classification survives; the hook failure is not
         // normalized as the request failure.
@@ -724,8 +742,10 @@ describe("GraphQL error metadata preservation", () => {
             "POST",
             { query: "query" },
             undefined,
-            false,
-            { retry: false }
+            {
+                requiresAuth: false,
+                options: { retry: false },
+            }
         ).catch((requestError: unknown) => requestError);
 
         expect(error).toBeInstanceOf(AniLinkGraphQLError);
@@ -750,8 +770,10 @@ describe("GraphQL error metadata preservation", () => {
             "POST",
             { query: "query" },
             undefined,
-            false,
-            { retry: false }
+            {
+                requiresAuth: false,
+                options: { retry: false },
+            }
         ).catch((requestError: unknown) => requestError);
 
         expect(error).toBeInstanceOf(AniLinkGraphQLError);
@@ -769,8 +791,10 @@ describe("GraphQL error metadata preservation", () => {
             "POST",
             { query: "query" },
             undefined,
-            false,
-            { retry: false }
+            {
+                requiresAuth: false,
+                options: { retry: false },
+            }
         ).catch((requestError: unknown) => requestError);
 
         expect(error).toBeInstanceOf(AniLinkGraphQLError);
@@ -780,15 +804,11 @@ describe("GraphQL error metadata preservation", () => {
 
 describe("missing-token auth error context", () => {
     test("includes the operation name in the auth error message", async () => {
-        const error = await sendRequest(
-            "https://graphql.anilist.co",
-            "POST",
-            {},
-            undefined,
-            true,
-            undefined,
-            "SaveMediaListEntryMutation"
-        ).catch((requestError: unknown) => requestError);
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: true,
+            options: undefined,
+            operation: "SaveMediaListEntryMutation",
+        }).catch((requestError: unknown) => requestError);
 
         expect(error).toBeInstanceOf(AniLinkAuthError);
         expect(error).toMatchObject({ code: "AUTH_ERROR" });
@@ -796,13 +816,9 @@ describe("missing-token auth error context", () => {
     });
 
     test("keeps the generic message when no operation label is provided", async () => {
-        const error = await sendRequest(
-            "https://graphql.anilist.co",
-            "POST",
-            {},
-            undefined,
-            true
-        ).catch((requestError: unknown) => requestError);
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: true,
+        }).catch((requestError: unknown) => requestError);
 
         expect(error).toBeInstanceOf(AniLinkAuthError);
         expect((error as Error).message).not.toContain("(operation:");

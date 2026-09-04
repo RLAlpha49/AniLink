@@ -56,6 +56,14 @@ export const resolveOperationLabel = (operation: object): string | undefined => 
  */
 export abstract class BaseOperation {
     /**
+     * Stable per-instance object keying cross-request transport state (the
+     * circuit breaker and retry budget). One per instance so failure streaks
+     * accumulate across every request this operation dispatches, regardless
+     * of per-request option objects.
+     */
+    private readonly stateOwner: object = {};
+
+    /**
      * The authentication token shared by all operations of an instance.
      */
     private readonly requestAuth?: RequestAuthInput;
@@ -131,15 +139,15 @@ export abstract class BaseOperation {
         transportOptions?: RequestOptions,
         contentType?: string
     ): Promise<T> {
-        return await sendRequest<T>(
-            url,
-            method,
-            data,
-            this.requestAuth,
-            requiresAuth || undefined,
-            mergeOptions(this.resolvedOptions, transportOptions),
-            operation ?? resolveOperationLabel(this),
-            contentType
-        );
+        return await sendRequest<T>(url, method, data, this.requestAuth, {
+            requiresAuth: requiresAuth || undefined,
+            options: mergeOptions(this.resolvedOptions, transportOptions),
+            operation: operation ?? resolveOperationLabel(this),
+            contentType,
+            // The instance keys cross-request transport state (circuit
+            // breaker, retry budget) so failure streaks accumulate across
+            // requests even when each call carries fresh per-request options.
+            stateOwner: this.stateOwner,
+        });
     }
 }

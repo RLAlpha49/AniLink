@@ -315,6 +315,14 @@ export class AniLinkRestError extends AniLinkApiError {
 export interface AniLinkNetworkErrorOptions {
     /** The effective per-attempt timeout in milliseconds, when a timeout was configured and enforced. */
     timeoutMs?: number;
+    /**
+     * `true` when the abort happened during the post-success rate-limit
+     * pacing wait rather than while the request was in flight. The upstream
+     * request itself succeeded in that case, so consumers can distinguish
+     * "data was received but the caller's wait was cancelled" from a cancelled
+     * request. Absent for every other abort.
+     */
+    abortedDuringPacing?: boolean;
 }
 
 /**
@@ -331,6 +339,13 @@ export class AniLinkNetworkError extends AniLinkError {
      * timeout is disabled (`0`) or the failure is not a timeout.
      */
     declare public readonly timeoutMs?: number;
+
+    /**
+     * `true` when this abort happened during the post-success rate-limit
+     * pacing wait (see {@link AniLinkNetworkErrorOptions.abortedDuringPacing}).
+     * The upstream attempt already succeeded when this is set.
+     */
+    declare public readonly abortedDuringPacing?: boolean;
 
     /**
      * Creates a sanitized transport error.
@@ -354,6 +369,9 @@ export class AniLinkNetworkError extends AniLinkError {
         this.name = "AniLinkNetworkError";
         if (options?.timeoutMs !== undefined) {
             this.timeoutMs = options.timeoutMs;
+        }
+        if (options?.abortedDuringPacing !== undefined) {
+            this.abortedDuringPacing = options.abortedDuringPacing;
         }
     }
 }

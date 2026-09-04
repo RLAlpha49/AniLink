@@ -24,7 +24,12 @@ const callSendRequest = (
     data?: object,
     contentType?: string
 ): Promise<unknown> =>
-    sendRequest(url, method, data, undefined, false, pendingOptions, undefined, contentType);
+    sendRequest(url, method, data, undefined, {
+        requiresAuth: false,
+        options: pendingOptions,
+        operation: undefined,
+        contentType: contentType,
+    });
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -182,14 +187,10 @@ describe("Configurable socket pool", () => {
     });
 
     test("forwards dedicated agents on the axios call when socket bounds are customized", async () => {
-        await sendRequest(
-            "https://graphql.anilist.co",
-            "POST",
-            { query: "query" },
-            undefined,
-            false,
-            { maxSockets: 44, maxFreeSockets: 7 }
-        );
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: { maxSockets: 44, maxFreeSockets: 7 },
+        });
 
         const config = mocks.request.mock.calls.at(-1)?.[0] as {
             httpAgent?: unknown;

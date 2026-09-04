@@ -22,16 +22,12 @@ describe("provider-neutral request authentication", () => {
             headers: { "X-Provider-Key": "provider-key" },
         };
 
-        await sendRequest(
-            "https://api.example.test/resource",
-            "GET",
-            undefined,
-            auth,
-            true,
-            {},
-            undefined,
-            "application/json"
-        );
+        await sendRequest("https://api.example.test/resource", "GET", undefined, auth, {
+            requiresAuth: true,
+            options: {},
+            operation: undefined,
+            contentType: "application/json",
+        });
 
         const config = mocks.request.mock.calls[0][0] as { headers: Record<string, string> };
         expect(config.headers.Authorization).toBe("Bearer provider-token");
@@ -41,16 +37,12 @@ describe("provider-neutral request authentication", () => {
     test("allows a provider to supply a non-bearer authorization header", async () => {
         const auth: RequestAuth = { headers: { Authorization: "Basic provider-credentials" } };
 
-        await sendRequest(
-            "https://api.example.test/resource",
-            "GET",
-            undefined,
-            auth,
-            true,
-            {},
-            undefined,
-            "application/json"
-        );
+        await sendRequest("https://api.example.test/resource", "GET", undefined, auth, {
+            requiresAuth: true,
+            options: {},
+            operation: undefined,
+            contentType: "application/json",
+        });
 
         const config = mocks.request.mock.calls[0][0] as { headers: Record<string, string> };
         expect(config.headers.Authorization).toBe("Basic provider-credentials");

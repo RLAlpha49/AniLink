@@ -15,9 +15,11 @@ test("forwards transport options from the AniLink constructor into sendRequest",
 
     await client.anilist.query.media({ id: 1, type: "ANIME" });
 
-    // Options now travel per instance as the sixth sendRequest argument.
+    // Options now travel inside the named trailing options object.
     const call = mockSendRequest.mock.calls.at(-1) as unknown[] | undefined;
-    expect(call?.[5]).toEqual({ timeout: 1_000, signal });
+    const sendOptions = call?.[4] as
+        { options?: { timeout: number; signal: AbortSignal } } | undefined;
+    expect(sendOptions?.options).toEqual({ timeout: 1_000, signal });
 });
 
 test("keeps no-token construction valid", () => {
