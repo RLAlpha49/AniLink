@@ -320,7 +320,7 @@ export type AniListQueries = {
          * Must be authenticated.
          * @see https://docs.anilist.co/reference/object/user
          */
-        viewer: (variables: UserVariables, options?: RequestOptions) => Promise<UserResponse>;
+        viewer: (variables?: UserVariables, options?: RequestOptions) => Promise<UserResponse>;
 
         /**
          * `NotificationQuery` fetches a single notification by `id`. Returns a {@link NotificationResponse}. Must be authenticated.
