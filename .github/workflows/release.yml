@@ -63,6 +63,24 @@ jobs:
                     exit 1
                   fi
 
+            - name: Verify CI is green for dry-run release
+              if: ${{ github.event_name == 'workflow_dispatch' }}
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  latest_conclusion="$(gh run list \
+                      --workflow CI \
+                      --branch master \
+                      --limit 1 \
+                      --json conclusion \
+                      --jq '.[0].conclusion')"
+                  if [ "$latest_conclusion" != "success" ]; then
+                    echo "::error::Latest CI run on master concluded with '$latest_conclusion'; refusing to generate a dry-run release preview from an unvalidated commit"
+                    exit 1
+                  fi
+                  echo "Latest CI run on master is green; proceeding with dry-run release preview."
+
             - name: Set up Node.js
               uses: actions/setup-node@v7
               with:

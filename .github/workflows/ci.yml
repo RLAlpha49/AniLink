@@ -134,13 +134,23 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
+      - name: Warn when ANILIST_TOKEN is unavailable to a fork pull request
+        if: ${{ env.ANILIST_TOKEN == '' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+        run: echo "::warning::ANILIST_TOKEN secret is not available to fork pull requests; packaged smoke test is skipped"
+
+      - name: Fail when ANILIST_TOKEN is missing outside fork pull requests
+        if: ${{ env.ANILIST_TOKEN == '' && !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) }}
+        run: echo "::error::ANILIST_TOKEN secret is not set; packaged smoke test is not running" && exit 1
+
       - name: Set up Node.js
+        if: ${{ env.ANILIST_TOKEN != '' }}
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
+        if: ${{ env.ANILIST_TOKEN != '' }}
         run: npm ci
 
       # The tarball is installed into an isolated consumer project and driven
@@ -148,4 +158,5 @@ jobs:
       # regressions (exports map, missing files, broken ESM output) that the
       # workspace-level suites cannot see. Queries only — never mutations.
       - name: Pack, install locally, and run live query smoke test
+        if: ${{ env.ANILIST_TOKEN != '' }}
         run: npm run test:package

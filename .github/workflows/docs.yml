@@ -8,6 +8,8 @@ on:
       - "src/**"
       - "docs-src/**"
       - "scripts/generate-operation-reference.ts"
+      - "scripts/generate-search-index.ts"
+      - "scripts/generate-interfaces.ts"
       - "typedoc.json"
       - "README.md"
       - ".github/workflows/docs.yml"
