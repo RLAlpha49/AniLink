@@ -29,18 +29,7 @@ onResponse: ({ requestId, durationMs }) => metrics.observe("latency", durationMs
 ## Firing order
 
 <Mermaid
-code="flowchart TD
-A[onRequestStart attempt 1] --> B{attempt result}
-B -- success --> C[onResponse]
-B -- failure --> D[onError]
-D --> E{retrying}
-E -- yes --> F[onRetry then wait] --> G[onRequestStart attempt 2]
-G --> B
-E -- no / exhausted --> H[onError final]
-A -. circuit open .-> FF[onRequestStart + onError CIRCUIT_OPEN_ERROR]:::err
-
-    classDef err stroke:#b85450;"
-
+    :code="`flowchart TD\nA[onRequestStart attempt 1] --> B{attempt result}\nB -- success --> C[onResponse]\nB -- failure --> D[onError]\nD --> E{retrying}\nE -- yes --> F[onRetry then wait] --> G[onRequestStart attempt 2]\nG --> B\nE -- no / exhausted --> H[onError final]\nA -. circuit open .-> FF[onRequestStart + onError CIRCUIT_OPEN_ERROR]:::err\n\n    classDef err stroke:#b85450;`"
 />
 
 For a retryable failure, `onRetry` fires (when configured) in place of `onError` for that attempt; when `onRetry` is not configured, `onError` covers the retryable failure instead. `onError` always fires for terminal failures (retries exhausted) and circuit-open fast-fails. When the circuit breaker is open, the request fast-fails before any network call but still emits the `onRequestStart`/`onError` pair (with code `CIRCUIT_OPEN_ERROR`) so request-volume counters and error-rate dashboards do not undercount while the breaker is open.
