@@ -1,7 +1,8 @@
 import http from "node:http";
 import https from "node:https";
-import { randomInt, randomUUID } from "node:crypto";
+import { createHash, randomInt, randomUUID } from "node:crypto";
 import axios, { type AxiosError, type AxiosResponse } from "axios";
+import { ResponseCache } from "./responseCache";
 import {
     AniLinkApiError,
     AniLinkAuthError,
@@ -10,6 +11,7 @@ import {
     AniLinkGraphQLError,
     AniLinkNetworkError,
     AniLinkRestError,
+    AniLinkValidationError,
     type AniLinkErrorCode,
     type GraphQLUpstreamError,
     type RateLimitInfo,
@@ -184,12 +186,14 @@ export type OnRequestStartHandler = (context: RequestContext) => void;
 
 /**
  * A callback invoked after each attempt completes with the elapsed
- * `durationMs` and parsed `rateLimit` headers when present.
+ * `durationMs` and parsed `rateLimit` headers when present. When the response
+ * was served from the opt-in response cache, `cacheHit` is `true` and
+ * `durationMs` is `0`.
  *
  * @see {@link RequestOptions.onResponse}
  */
 export type OnResponseHandler = (
-    context: RequestContext & { durationMs: number; rateLimit?: RateLimitInfo }
+    context: RequestContext & { durationMs: number; rateLimit?: RateLimitInfo; cacheHit?: boolean }
 ) => void;
 
 /**
@@ -209,6 +213,36 @@ export type OnPaceHandler = (context: RequestContext & { delayMs: number }) => v
  * @see {@link RequestOptions.onHookError}
  */
 export type OnHookErrorHandler = (hookName: string, error: unknown) => void;
+
+/**
+ * Context passed to the `onCircuitOpen` hook when the circuit breaker trips.
+ *
+ * @see {@link OnCircuitOpenHandler}
+ */
+export interface CircuitOpenContext extends RequestContext {
+    /** The upstream host scope the breaker tripped for. */
+    host: string;
+    /** The consecutive-failure count that reached the threshold. */
+    failures: number;
+}
+
+/**
+ * A callback invoked when the circuit breaker opens (trips) after the
+ * consecutive-failure threshold is reached, so dashboards can plot trip
+ * frequency and time-to-half-open without scraping `CIRCUIT_OPEN_ERROR` codes.
+ *
+ * @see {@link RequestOptions.onCircuitOpen}
+ */
+export type OnCircuitOpenHandler = (context: CircuitOpenContext) => void;
+
+/**
+ * A callback invoked when the circuit breaker closes (returns to healthy)
+ * after a successful post-cooldown probe, so dashboards can plot open
+ * duration and recovery without inferring it from error-code absence.
+ *
+ * @see {@link RequestOptions.onCircuitClose}
+ */
+export type OnCircuitCloseHandler = (context: RequestContext & { host: string }) => void;
 
 /**
  * Transport settings shared by the AniLink request operations.
@@ -304,6 +338,52 @@ export interface RequestOptions {
      * hook failures are reported via `console.warn`.
      */
     onHookError?: OnHookErrorHandler;
+    /**
+     * Invoked when the circuit breaker opens (trips) after the
+     * consecutive-failure threshold is reached. Carries the host scope and
+     * the failure count so consumers can plot trip frequency and alert on
+     * sustained outages without parsing `CIRCUIT_OPEN_ERROR` codes.
+     *
+     * @see {@link OnCircuitOpenHandler}
+     */
+    onCircuitOpen?: OnCircuitOpenHandler;
+    /**
+     * Invoked when the circuit breaker closes (returns to healthy) after a
+     * successful post-cooldown probe, so consumers can plot open duration and
+     * recovery without inferring it from error-code absence.
+     *
+     * @see {@link OnCircuitCloseHandler}
+     */
+    onCircuitClose?: OnCircuitCloseHandler;
+    /**
+     * Bypass the shared rate-limit pacing deadline recorded by a prior
+     * successful response to the same host, so an urgent single request
+     * (for example a user-facing lookup during a rate-limited window) is not
+     * held hostage by a deadline recorded from an earlier bulk request on
+     * the same client. Defaults to `false`; the per-request `signal` is still
+     * honored.
+     *
+     * @see {@link RequestOptions.paceWithRateLimit}
+     */
+    ignorePaceDeadline?: boolean;
+    /**
+     * Opt-in in-memory TTL response cache for read-heavy traversals. When
+     * set, `GET` responses are cached by `(method, url, serialized body)`
+     * for the cache's TTL window so repeated identical reads skip the network
+     * round-trip entirely. Mutations (`POST`/`PUT`/`DELETE`) are never cached.
+     * Off by default; pass a `ResponseCache` instance to enable.
+     *
+     * **Privacy:** the cache retains the full response body of every cached
+     * `GET` in plaintext for the TTL window, including authenticated
+     * user-scoped responses. Entries are scoped by a hash of the bearer
+     * token so they never cross identities, but within one identity
+     * sensitive payloads are retained. Do not enable for clients that fetch
+     * private user data unless the TTL is short and the cache instance is
+     * not shared across trust boundaries.
+     *
+     * @see {@link ResponseCache}
+     */
+    responseCache?: ResponseCache;
 }
 
 const DEFAULT_RETRY_POLICY: Required<Pick<RetryPolicy, "jitter">> & RetryPolicy = {
@@ -351,6 +431,10 @@ interface ResolvedRequestOptions {
     onResponse?: OnResponseHandler;
     onPace?: OnPaceHandler;
     onHookError?: OnHookErrorHandler;
+    onCircuitOpen?: OnCircuitOpenHandler;
+    onCircuitClose?: OnCircuitCloseHandler;
+    ignorePaceDeadline: boolean;
+    responseCache?: ResponseCache;
 }
 
 const resolveRetryPolicy = (
@@ -366,14 +450,84 @@ const resolveRetryPolicy = (
 };
 
 /**
- * Builds the keep-alive agents for one request's socket bounds.
+ * Upper bound on the number of distinct custom agent pairs kept alive in the
+ * cache. Each entry holds two keep-alive agents (http + https) plus their
+ * idle sockets, so the cache is bounded to stop unbounded socket/handle growth
+ * when callers pass many distinct `maxSockets`/`maxFreeSockets` combinations
+ * through one long-lived process. Least-recently-used entries are evicted and
+ * their agents `.destroy()`-ed when the cap is reached.
+ */
+const MAX_CACHED_AGENT_PAIRS = 8;
+
+interface CachedAgentPair {
+    httpAgent: http.Agent;
+    httpsAgent: https.Agent;
+    /** LRU recency stamp; the entry with the smallest value is evicted. */
+    lastUsed: number;
+}
+
+const cachedAgentPairs = new Map<string, CachedAgentPair>();
+
+const buildAgentCacheKey = (maxSockets: number, maxFreeSockets: number): string =>
+    `${maxSockets}:${maxFreeSockets}`;
+
+/**
+ * Evicts the least-recently-used cached agent pair when the cache is full,
+ * calling `.destroy()` on both agents so their idle sockets and pending
+ * timers release immediately instead of waiting for GC finalizers.
+ */
+const evictLruAgentPair = (): void => {
+    let oldestKey: string | undefined;
+    let oldestStamp = Infinity;
+    for (const [key, pair] of cachedAgentPairs) {
+        if (pair.lastUsed < oldestStamp) {
+            oldestStamp = pair.lastUsed;
+            oldestKey = key;
+        }
+    }
+    if (oldestKey !== undefined) {
+        const evicted = cachedAgentPairs.get(oldestKey);
+        if (evicted !== undefined) {
+            evicted.httpAgent.destroy();
+            evicted.httpsAgent.destroy();
+            cachedAgentPairs.delete(oldestKey);
+        }
+    }
+};
+
+/**
+ * Destroys every cached custom agent pair and clears the cache. Intended for
+ * tests and explicit teardown so long-lived processes can release the
+ * keep-alive sockets held by customized agents on demand.
+ *
+ * **Must not be called while requests using cached agents are in-flight.**
+ * The cached agents are shared across every request with identical
+ * `maxSockets`/`maxFreeSockets` bounds, so destroying them closes the
+ * underlying sockets and can fail concurrent requests that are still
+ * draining over those sockets. Call this only after all in-flight requests
+ * have settled (for example in a shutdown hook that has awaited the final
+ * request, or in test teardown after the test's assertions). Calling it
+ * twice is safe (the second call iterates an empty cache).
+ */
+export const destroyCachedAgents = (): void => {
+    for (const pair of cachedAgentPairs.values()) {
+        pair.httpAgent.destroy();
+        pair.httpsAgent.destroy();
+    }
+    cachedAgentPairs.clear();
+};
+
+/**
+ * Builds (or reuses) the keep-alive agents for one request's socket bounds.
  *
  * When the caller leaves `maxSockets`/`maxFreeSockets` unset the shared
  * module-level agents are reused, so the default path allocates nothing and
  * every instance keeps competing for the same warm pool. Supplying either
- * bound constructs dedicated per-request agents, letting high-throughput or
- * multi-provider callers isolate their socket pressure without affecting
- * other clients.
+ * bound constructs dedicated agents, but identical configurations now share
+ * one cached agent pair (bounded by {@link MAX_CACHED_AGENT_PAIRS}) so
+ * repeated requests with the same socket settings reuse warm sockets instead
+ * of leaking a fresh agent pair per request. LRU entries are evicted and
+ * `.destroy()`-ed when the cap is reached.
  *
  * @param maxSockets - Upper bound on concurrent sockets, when customized.
  * @param maxFreeSockets - Upper bound on retained idle sockets, when customized.
@@ -388,16 +542,28 @@ const resolveAgents = (
     }
     const sockets = Math.max(1, maxSockets ?? MAX_SOCKETS);
     const freeSockets = Math.max(0, maxFreeSockets ?? MAX_FREE_SOCKETS);
+    const key = buildAgentCacheKey(sockets, freeSockets);
+    const cached = cachedAgentPairs.get(key);
+    if (cached !== undefined) {
+        cached.lastUsed = Date.now();
+        return { httpAgent: cached.httpAgent, httpsAgent: cached.httpsAgent };
+    }
+    if (cachedAgentPairs.size >= MAX_CACHED_AGENT_PAIRS) {
+        evictLruAgentPair();
+    }
     const agentOptions = {
         keepAlive: true,
         maxSockets: sockets,
         maxFreeSockets: freeSockets,
         scheduling: "lifo" as const,
     };
-    return {
+    const pair: CachedAgentPair = {
         httpAgent: new http.Agent(agentOptions),
         httpsAgent: new https.Agent(agentOptions),
+        lastUsed: Date.now(),
     };
+    cachedAgentPairs.set(key, pair);
+    return { httpAgent: pair.httpAgent, httpsAgent: pair.httpsAgent };
 };
 
 /**
@@ -437,6 +603,10 @@ const resolveRequestOptions = (options: RequestOptions = {}): ResolvedRequestOpt
         onResponse: options.onResponse,
         onPace: options.onPace,
         onHookError: options.onHookError,
+        onCircuitOpen: options.onCircuitOpen,
+        onCircuitClose: options.onCircuitClose,
+        ignorePaceDeadline: options.ignorePaceDeadline ?? false,
+        responseCache: options.responseCache,
     };
 };
 
@@ -499,22 +669,76 @@ export const unwrapSingleRootField = <T>(response: unknown): T | undefined => {
  * failure) throws an `AniLinkGraphQLError` instead of returning data.
  *
  * @param response - The full GraphQL response envelope.
+ * @param headers - The response headers, when available, so rate-limit and
+ * content-type metadata from the HTTP 200 envelope are preserved on the
+ * thrown {@link AniLinkGraphQLError} (AniList returns `x-ratelimit-*` headers
+ * even on envelopes carrying GraphQL-level errors).
  * @returns The unwrapped single-root-field value, or the envelope as-is.
  * @throws An `AniLinkGraphQLError` when the envelope carries GraphQL errors.
  * @see {@link GraphQLResponseEnvelope}
  */
-export const unwrapGraphQLResponse = <T>(response: unknown): T => {
+export const unwrapGraphQLResponse = <T>(
+    response: unknown,
+    headers?: Record<string, unknown>
+): T => {
     const envelope = response as GraphQLResponseEnvelope | null | undefined;
 
     if (Array.isArray(envelope?.errors) && envelope.errors.length > 0) {
-        throw new AniLinkGraphQLError(envelope.errors, envelope?.data);
+        throw new AniLinkGraphQLError(envelope.errors, envelope?.data, undefined, {
+            rateLimit: getRateLimitInfo(headers),
+            contentType: getResponseContentType(headers ?? {}),
+        });
     }
 
     return unwrapSingleRootField<T>(response) ?? (response as T);
 };
 
+const SENSITIVE_HEADER_KEYS = /^(authorization|cookie|set-cookie|proxy-authorization)$/i;
+
+/**
+ * Returns a shallow-cloned copy of an Axios error with sensitive request
+ * headers redacted, so opting into {@link RequestOptions.exposeRawAxiosError}
+ * for diagnostics cannot leak the bearer token or cookies the request was
+ * sent with. Only the `config.headers` (and nested `common`/per-method) maps
+ * are scrubbed; the rest of the error is preserved verbatim so the diagnostic
+ * value callers opted in for stays intact.
+ */
+const redactAxiosError = (error: AxiosError): AxiosError => {
+    const config = error.config as Record<string, unknown> | undefined;
+    if (config === undefined || config.headers === undefined) {
+        return error;
+    }
+    const redactHeaders = (headers: Record<string, unknown>): Record<string, unknown> => {
+        const scrubbed: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(headers)) {
+            if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+                // Nested per-method header map (`{ common, get, post, … }`):
+                // recurse so a bearer token inside `common.authorization` or
+                // `get.authorization` is redacted, not just top-level keys.
+                scrubbed[key] = redactHeaders(value as Record<string, unknown>);
+            } else {
+                scrubbed[key] = SENSITIVE_HEADER_KEYS.test(key) ? "[REDACTED]" : value;
+            }
+        }
+        return scrubbed;
+    };
+    const cloned = { ...error, config: { ...config } } as unknown as AxiosError;
+    const clonedConfig = cloned.config as unknown as Record<string, unknown>;
+    const headers = config.headers as Record<string, unknown>;
+    if (headers !== null && typeof headers === "object" && !Array.isArray(headers)) {
+        // Axios stores headers either as a flat map or as a per-method map
+        // (`{ common, get, post, … }`). Redact both shapes.
+        clonedConfig.headers = redactHeaders(headers);
+    }
+    return cloned;
+};
+
 const getRawAxiosError = (resolved: ResolvedRequestOptions, error: unknown): unknown =>
-    resolved.exposeRawAxiosError ? error : undefined;
+    resolved.exposeRawAxiosError
+        ? axios.isAxiosError(error)
+            ? redactAxiosError(error)
+            : error
+        : undefined;
 
 const getRateLimitInfo = (
     headers: Record<string, unknown> | undefined
@@ -534,16 +758,26 @@ const getRateLimitInfo = (
     return { limit, remaining, reset };
 };
 
+const getResponseContentType = (
+    headers: Record<string, unknown> | undefined
+): string | undefined => {
+    if (!headers) return undefined;
+    const raw = headers["content-type"] ?? headers["Content-Type"];
+    return typeof raw === "string" ? raw : undefined;
+};
+
 const normalizeAxiosError = (
     resolved: ResolvedRequestOptions,
     error: AxiosError,
-    isRestCall = false
+    isRestCall = false,
+    requestId?: string
 ): AniLinkError => {
     if (axios.isCancel(error)) {
         return new AniLinkNetworkError(
             AniLinkErrorCodes.ABORTED,
             "The request was cancelled.",
-            getRawAxiosError(resolved, error)
+            getRawAxiosError(resolved, error),
+            { requestId }
         );
     }
 
@@ -551,7 +785,11 @@ const normalizeAxiosError = (
         const status = error.response.status;
         const data = error.response.data;
         const rawAxiosError = getRawAxiosError(resolved, error);
-        const options = { rateLimit: getRateLimitInfo(error.response.headers) };
+        const options = {
+            rateLimit: getRateLimitInfo(error.response.headers),
+            contentType: getResponseContentType(error.response.headers as Record<string, unknown>),
+            requestId,
+        };
         return isRestCall
             ? new AniLinkRestError(status, data, rawAxiosError, options)
             : new AniLinkApiError(status, data, rawAxiosError, options);
@@ -562,34 +800,60 @@ const normalizeAxiosError = (
             AniLinkErrorCodes.TIMEOUT,
             "The request timed out.",
             getRawAxiosError(resolved, error),
-            resolved.timeout > 0 ? { timeoutMs: resolved.timeout } : undefined
+            { timeoutMs: resolved.timeout > 0 ? resolved.timeout : undefined, requestId }
         );
     }
 
     return new AniLinkNetworkError(
         AniLinkErrorCodes.NETWORK,
         "The request failed due to a network error.",
-        getRawAxiosError(resolved, error)
+        getRawAxiosError(resolved, error),
+        { requestId }
     );
+};
+
+/**
+ * Stamps an immutable, enumerable `requestId` correlation property onto an
+ * {@link AniLinkError} that was constructed before the retry loop had an ID
+ * (for example an `AniLinkGraphQLError` thrown by envelope unwrapping, or a
+ * circuit-breaker fast-fail error). Errors that already carry a `requestId`
+ * are left untouched so an existing correlation is never overwritten.
+ *
+ * @param error - The error to stamp.
+ * @param requestId - The correlation ID, when available.
+ */
+const stampRequestId = (error: AniLinkError, requestId: string | undefined): void => {
+    if (requestId === undefined || error.requestId !== undefined) {
+        return;
+    }
+    Object.defineProperty(error, "requestId", {
+        value: requestId,
+        writable: false,
+        enumerable: true,
+        configurable: false,
+    });
 };
 
 const normalizeRequestError = (
     resolved: ResolvedRequestOptions,
     error: unknown,
-    isRestCall = false
+    isRestCall = false,
+    requestId?: string
 ): AniLinkError => {
     if (error instanceof AniLinkError) {
+        stampRequestId(error, requestId);
         return error;
     }
 
     if (axios.isAxiosError(error)) {
-        return normalizeAxiosError(resolved, error, isRestCall);
+        return normalizeAxiosError(resolved, error, isRestCall, requestId);
     }
 
     return new AniLinkError(
         "The request failed.",
         AniLinkErrorCodes.UNKNOWN,
-        getRawAxiosError(resolved, error)
+        getRawAxiosError(resolved, error),
+        { requestId }
     );
 };
 
@@ -647,6 +911,19 @@ export const applyJitter = (cap: number, policy: RetryPolicy): number =>
  * Computes the delay before the next retry, or `null` when the request should
  * not be retried. `Retry-After` delays are returned un-jittered because the
  * server dictates them.
+ *
+ * The retry matrix is explicit per error class:
+ * - `AniLinkGraphQLError` (a subclass of `AniLinkApiError` thrown from a 200
+ *   envelope) retries only when its upstream status is retryable (429 or a
+ *   `retryOnStatus` code extracted from the GraphQL error entry). A GraphQL
+ *   error with no upstream status (envelope default 200) is not retried,
+ *   because it represents a permanent query/validation failure, not a
+ *   transient transport condition.
+ * - `AniLinkApiError` (HTTP-level) retries on 429 (honoring `Retry-After`)
+ *   and on any `retryOnStatus` code.
+ * - `AniLinkNetworkError` retries on network/timeout failures when
+ *   `retryOnNetworkError` is set, but never on `ABORTED`.
+ * - `AniLinkAuthError` and `AniLinkValidationError` are never retried.
  */
 const getRetryDelay = (
     error: AniLinkError,
@@ -655,6 +932,21 @@ const getRetryDelay = (
     policy: RetryPolicy
 ): number | null => {
     if (attempt >= policy.maxRetries) {
+        return null;
+    }
+
+    if (error instanceof AniLinkGraphQLError) {
+        if (error.status === 429) {
+            return (
+                getRetryAfterDelay(rawError) ??
+                applyJitter(getBackoffDelay(attempt, policy), policy)
+            );
+        }
+        if (policy.retryOnStatus.includes(error.status)) {
+            return applyJitter(getBackoffDelay(attempt, policy), policy);
+        }
+        // No upstream status (envelope 200): a permanent GraphQL failure,
+        // not a transient transport condition.
         return null;
     }
 
@@ -683,18 +975,22 @@ const getRetryDelay = (
     return null;
 };
 
-const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
+const sleep = (ms: number, signal?: AbortSignal, requestId?: string): Promise<void> =>
     new Promise((resolve, reject) => {
         const timeout: NodeJS.Timeout = setTimeout(() => {
             signal?.removeEventListener("abort", abort);
             resolve();
         }, ms);
+        timeout.unref();
 
         const abort = (): void => {
             clearTimeout(timeout);
-            reject(
-                new AniLinkNetworkError(AniLinkErrorCodes.ABORTED, "The request was cancelled.")
+            const error = new AniLinkNetworkError(
+                AniLinkErrorCodes.ABORTED,
+                "The request was cancelled."
             );
+            stampRequestId(error, requestId);
+            reject(error);
         };
 
         if (signal?.aborted) {
@@ -743,8 +1039,17 @@ const safeInvoke = (
             }
             return;
         }
+        const firstArg = args[0];
+        const requestId =
+            firstArg !== null &&
+            typeof firstArg === "object" &&
+            "requestId" in firstArg &&
+            typeof (firstArg as { requestId?: unknown }).requestId === "string"
+                ? (firstArg as { requestId: string }).requestId
+                : undefined;
+        const correlation = requestId === undefined ? "" : ` (requestId: ${requestId})`;
         console.warn(
-            `[AniLink] ${name} hook threw and was ignored:`,
+            `[AniLink] ${name} hook threw and was ignored${correlation}:`,
             hookError instanceof Error ? hookError.message : hookError
         );
     }
@@ -767,6 +1072,8 @@ interface CircuitState {
     consecutiveFailures: number;
     openedAt: number | null;
     probeInFlight: boolean;
+    /** LRU recency stamp for the per-owner scope eviction cap. */
+    lastUsed: number;
 }
 
 /**
@@ -841,7 +1148,7 @@ const awaitPaceDeadline = async (
     resolved: ResolvedRequestOptions,
     hookContext: RequestContext
 ): Promise<void> => {
-    if (owner === undefined || !resolved.paceWithRateLimit) {
+    if (owner === undefined || !resolved.paceWithRateLimit || resolved.ignorePaceDeadline) {
         return;
     }
     const deadlineMs = paceDeadlines.get(owner)?.get(host);
@@ -856,19 +1163,21 @@ const awaitPaceDeadline = async (
     }
     safeInvoke(resolved.onPace, "onPace", resolved.onHookError, { ...hookContext, delayMs });
     try {
-        await sleep(delayMs, resolved.signal);
+        await sleep(delayMs, resolved.signal, hookContext.requestId);
     } catch (error: unknown) {
         if (
             error instanceof AniLinkNetworkError &&
             error.code === AniLinkErrorCodes.ABORTED &&
             !axios.isCancel(error)
         ) {
-            throw new AniLinkNetworkError(
+            const pacingError = new AniLinkNetworkError(
                 AniLinkErrorCodes.ABORTED,
                 "The request was cancelled while waiting for the rate-limit window to reset.",
                 undefined,
                 { abortedDuringPacing: true }
             );
+            stampRequestId(pacingError, hookContext.requestId);
+            throw pacingError;
         }
         throw error;
     }
@@ -902,15 +1211,32 @@ const getRetryBudgetState = (
 };
 
 /**
- * Extracts the upstream identity for breaker scoping from a request URL.
- * Falls back to the empty string when the URL cannot be parsed, which keeps
- * such requests sharing one bucket without failing the call.
+ * Upper bound on distinct host scopes tracked per owner. Public transport
+ * callers that send to many hosts through one client accumulate a breaker
+ * state entry per host; this cap evicts the least-recently-used scope so
+ * memory stays bounded. The shipped two-provider host set is tiny, so this
+ * only matters for `sendRequest`/`custom()` consumers with dynamic URLs.
  */
-const circuitScopeOf = (url: string): string => {
+const MAX_CIRCUIT_SCOPES_PER_OWNER = 64;
+
+/**
+ * Extracts the upstream identity for breaker scoping from a request URL.
+ * Throws an {@link AniLinkValidationError} when the URL cannot be parsed so a
+ * request with an unparseable URL fails fast at dispatch instead of silently
+ * sharing one breaker bucket with all other malformed-URL traffic (which
+ * would let cross-provider or cross-endpoint failures contaminate each
+ * other). The error is a normalized `AniLinkError` subclass so consumers
+ * catching `AniLinkError` still handle it consistently.
+ */
+const circuitScopeOf = (url: string, requestId?: string): string => {
     try {
         return new URL(url).host;
     } catch {
-        return "";
+        // Generic message: the raw URL may carry credentials or sensitive
+        // query parameters and must not be echoed into the error details.
+        const error = new AniLinkValidationError(["Unparseable request URL"]);
+        stampRequestId(error, requestId);
+        throw error;
     }
 };
 
@@ -921,10 +1247,32 @@ const getCircuitState = (owner: object, scope: string): CircuitState => {
         circuitStates.set(owner, scopes);
     }
     let state = scopes.get(scope);
-    if (state === undefined) {
-        state = { consecutiveFailures: 0, openedAt: null, probeInFlight: false };
-        scopes.set(scope, state);
+    if (state !== undefined) {
+        state.lastUsed = Date.now();
+        return state;
     }
+    // Cap the per-owner scope map so dynamic-URL callers cannot grow it
+    // without bound. Evict the least-recently-used scope entry.
+    if (scopes.size >= MAX_CIRCUIT_SCOPES_PER_OWNER) {
+        let oldestScope: string | undefined;
+        let oldestStamp = Infinity;
+        for (const [s, st] of scopes) {
+            if (st.lastUsed < oldestStamp) {
+                oldestStamp = st.lastUsed;
+                oldestScope = s;
+            }
+        }
+        if (oldestScope !== undefined) {
+            scopes.delete(oldestScope);
+        }
+    }
+    state = {
+        consecutiveFailures: 0,
+        openedAt: null,
+        probeInFlight: false,
+        lastUsed: Date.now(),
+    };
+    scopes.set(scope, state);
     return state;
 };
 
@@ -971,12 +1319,26 @@ const checkCircuitOpen = (
 /**
  * Resets the failure streak after a successful attempt. When the success is
  * the reserved post-cooldown probe, clears the half-open state and closes
- * the breaker.
+ * the breaker, emitting `onCircuitClose` so dashboards can plot recovery.
  */
-const recordCircuitSuccess = (circuit: CircuitState | undefined): void => {
-    if (circuit !== undefined) {
-        circuit.probeInFlight = false;
-        circuit.consecutiveFailures = 0;
+const recordCircuitSuccess = (
+    circuit: CircuitState | undefined,
+    resolved: ResolvedRequestOptions,
+    hookContext: RequestContext,
+    host: string
+): void => {
+    if (circuit === undefined) {
+        return;
+    }
+    const wasOpen = circuit.openedAt !== null || circuit.probeInFlight;
+    circuit.probeInFlight = false;
+    circuit.consecutiveFailures = 0;
+    circuit.openedAt = null;
+    if (wasOpen && resolved.onCircuitClose !== undefined) {
+        safeInvoke(resolved.onCircuitClose, "onCircuitClose", resolved.onHookError, {
+            ...hookContext,
+            host,
+        });
     }
 };
 
@@ -984,11 +1346,16 @@ const recordCircuitSuccess = (circuit: CircuitState | undefined): void => {
  * Counts a failed attempt and opens the circuit once the consecutive-failure
  * budget is exhausted. When the failure is the reserved post-cooldown probe,
  * clears the half-open state and re-opens the breaker immediately so the next
- * request fast-fails until the cooldown elapses again.
+ * request fast-fails until the cooldown elapses again. Emits `onCircuitOpen`
+ * on the first trip into open (not on re-opens from a failed probe, which are
+ * a continuation of the same open period).
  */
 const recordCircuitFailure = (
     circuit: CircuitState | undefined,
-    breaker: { threshold: number; cooldownMs: number } | undefined
+    breaker: { threshold: number; cooldownMs: number } | undefined,
+    resolved: ResolvedRequestOptions,
+    hookContext: RequestContext,
+    host: string
 ): void => {
     if (circuit === undefined || breaker === undefined) {
         return;
@@ -999,8 +1366,15 @@ const recordCircuitFailure = (
         return;
     }
     circuit.consecutiveFailures += 1;
-    if (circuit.consecutiveFailures >= breaker.threshold) {
+    if (circuit.consecutiveFailures >= breaker.threshold && circuit.openedAt === null) {
         circuit.openedAt = Date.now();
+        if (resolved.onCircuitOpen !== undefined) {
+            safeInvoke(resolved.onCircuitOpen, "onCircuitOpen", resolved.onHookError, {
+                ...hookContext,
+                host,
+                failures: circuit.consecutiveFailures,
+            });
+        }
     }
 };
 
@@ -1070,19 +1444,21 @@ const paceAfterSuccess = async (
         }
         safeInvoke(resolved.onPace, "onPace", resolved.onHookError, { ...hookContext, delayMs });
         try {
-            await sleep(delayMs, resolved.signal);
+            await sleep(delayMs, resolved.signal, hookContext.requestId);
         } catch (error: unknown) {
             if (
                 error instanceof AniLinkNetworkError &&
                 error.code === AniLinkErrorCodes.ABORTED &&
                 !axios.isCancel(error)
             ) {
-                throw new AniLinkNetworkError(
+                const pacingError = new AniLinkNetworkError(
                     AniLinkErrorCodes.ABORTED,
                     "The request was cancelled while waiting for the rate-limit window to reset.",
                     undefined,
                     { abortedDuringPacing: true }
                 );
+                stampRequestId(pacingError, hookContext.requestId);
+                throw pacingError;
             }
             throw error;
         }
@@ -1156,15 +1532,17 @@ const executeWithRetry = async <T>(
 ): Promise<T> => {
     const { url, method, data, headers } = options;
     const policy = resolved.retry;
-    const host = circuitScopeOf(url);
+    // Correlation ID joining every lifecycle hook emission for this logical
+    // request (including across retries) in a metrics or logging backend.
+    // Generated before `circuitScopeOf` so an unparseable-URL validation
+    // error thrown from that call can still be correlated to this request.
+    const requestId = randomUUID();
+    const host = circuitScopeOf(url, requestId);
     const circuit =
         resolved.circuitBreaker !== undefined && stateOwner !== undefined
             ? getCircuitState(stateOwner, host)
             : undefined;
     const budgetState = getRetryBudgetState(stateOwner, resolved.retryBudget);
-    // Correlation ID joining every lifecycle hook emission for this logical
-    // request (including across retries) in a metrics or logging backend.
-    const requestId = randomUUID();
     let attempt = 0;
 
     for (;;) {
@@ -1172,16 +1550,13 @@ const executeWithRetry = async <T>(
         const hookContext = { requestId, url, method, attempt: attempt + 1 };
         const circuitError = checkCircuitOpen(circuit, resolved.circuitBreaker);
         if (circuitError !== undefined) {
-            // A fast-failed request still emits the start/error hook pair so
-            // request-volume counters and error-rate dashboards do not
-            // undercount while the breaker is open. The failure is not an
-            // attempt outcome, so it bypasses failure accounting and retry.
             safeInvoke(
                 resolved.onRequestStart,
                 "onRequestStart",
                 resolved.onHookError,
                 hookContext
             );
+            stampRequestId(circuitError, requestId);
             safeInvoke(
                 resolved.onError,
                 "onError",
@@ -1191,15 +1566,6 @@ const executeWithRetry = async <T>(
             );
             throw circuitError;
         }
-        // Gate the dispatch on any shared rate-limit reset deadline recorded
-        // by a prior successful response to this host, so independently
-        // dispatched requests wait for the window to reset *before* they are
-        // sent rather than only pacing the response that observed the low
-        // quota. A pacing abort here propagates before any attempt is sent,
-        // so it neither fires `onResponse` nor counts as a circuit failure.
-        // If a post-cooldown probe was reserved by `checkCircuitOpen`, the
-        // abort releases it (re-opening the breaker) so the half-open state
-        // is not left dangling.
         try {
             await awaitPaceDeadline(stateOwner, host, resolved, hookContext);
         } catch (paceError) {
@@ -1210,11 +1576,6 @@ const executeWithRetry = async <T>(
             throw paceError;
         }
         safeInvoke(resolved.onRequestStart, "onRequestStart", resolved.onHookError, hookContext);
-        // Tracks whether onResponse has already fired for this attempt so a
-        // failure surfaced after the success-path emission (for example an
-        // AniLinkGraphQLError thrown while unwrapping a 200 envelope, or a
-        // pacing-wait abort) does not emit onResponse a second time. Each
-        // attempt emits onResponse at most once.
         let responseReported = false;
         try {
             const response: AxiosResponse = await axiosClient({
@@ -1234,29 +1595,29 @@ const executeWithRetry = async <T>(
                 ...(rateLimit !== undefined ? { rateLimit } : {}),
             });
             responseReported = true;
-            recordCircuitSuccess(circuit);
+            const result = rawPassthrough
+                ? (response.data as T)
+                : unwrapGraphQLResponse<T>(
+                      response.data,
+                      response.headers as Record<string, unknown>
+                  );
+            recordCircuitSuccess(circuit, resolved, hookContext, host);
             await paceAfterSuccess(response, resolved, hookContext, rateLimit, stateOwner, host);
-            return rawPassthrough ? (response.data as T) : unwrapGraphQLResponse<T>(response.data);
+            return result;
         } catch (error: unknown) {
-            // A pacing-wait abort is not an attempt outcome: it must neither
-            // re-fire onResponse for the finished attempt nor count as a
-            // circuit failure, so it bypasses the failure accounting below.
             rethrowIfPacingAbort(resolved, error);
-            // Emit onResponse only when the success path did not already fire
-            // it (a transport failure). A failure surfaced after the success
-            // emission — an AniLinkGraphQLError from envelope unwrapping, or a
-            // pacing-wait abort rethrown above — must not emit a second time.
             if (!responseReported) {
                 safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
                     ...hookContext,
                     durationMs: Date.now() - startedAt,
                 });
             }
-            const normalized = normalizeRequestError(resolved, error, rawPassthrough);
-            recordCircuitFailure(circuit, resolved.circuitBreaker);
+            const normalized = normalizeRequestError(resolved, error, rawPassthrough, requestId);
+            const wasProbe = circuit?.probeInFlight === true;
+            recordCircuitFailure(circuit, resolved.circuitBreaker, resolved, hookContext, host);
             const delay =
-                policy === null || budgetState === undefined
-                    ? policy === null
+                wasProbe || policy === null || budgetState === undefined
+                    ? wasProbe || policy === null
                         ? null
                         : getRetryDelay(normalized, error, attempt, policy)
                     : budgetState.retriesUsed >= resolved.retryBudget!.maxRetriesPerWindow
@@ -1278,7 +1639,7 @@ const executeWithRetry = async <T>(
                 throw normalized;
             }
             attempt += 1;
-            await sleep(delay, resolved.signal);
+            await sleep(delay, resolved.signal, requestId);
         }
     }
 };
@@ -1298,11 +1659,21 @@ export interface SendRequestOptions {
     /** Optional operation name included in missing-token auth errors. */
     operation?: string;
     /**
-     * Optional `Content-Type` override for non-GraphQL endpoints — for example
-     * form-urlencoded OAuth token requests, or `application/json` for REST
-     * calls — which also returns the parsed body verbatim instead of
-     * unwrapping a GraphQL envelope and classifies HTTP failures as
-     * {@link AniLinkRestError}.
+     * The wire protocol of the request, which selects response interpretation
+     * and error classification explicitly instead of inferring it from
+     * `contentType`. `"graphql"` (the default) unwraps the GraphQL response
+     * envelope and classifies HTTP failures as {@link AniLinkApiError};
+     * `"rest"` returns the parsed body verbatim and classifies HTTP failures
+     * as {@link AniLinkRestError}. When omitted, the protocol is inferred from
+     * `contentType` for backwards compatibility: a set `contentType` implies
+     * `"rest"`, an unset one implies `"graphql"`.
+     */
+    protocol?: "graphql" | "rest";
+    /**
+     * Optional `Content-Type` header override for non-GraphQL endpoints — for
+     * example form-urlencoded OAuth token requests, or `application/json` for
+     * REST calls. This is purely a header concern; response interpretation
+     * and error classification are controlled by `protocol`.
      */
     contentType?: string;
     /**
@@ -1320,9 +1691,9 @@ export interface SendRequestOptions {
  * Sends a request to the specified URL.
  *
  * This is the provider-agnostic transport entry point. GraphQL callers get
- * envelope unwrapping by leaving `contentType` unset; REST callers pass an
- * explicit `contentType` (for example `application/json`) and receive the
- * parsed body verbatim. HTTP failures on REST calls surface as
+ * envelope unwrapping by leaving `protocol` unset (or `"graphql"`); REST
+ * callers pass `protocol: "rest"` (and typically a `contentType`) and
+ * receive the parsed body verbatim. HTTP failures on REST calls surface as
  * {@link AniLinkRestError}; GraphQL calls surface as {@link AniLinkApiError}.
  *
  * @typeParam T - The expected response payload type.
@@ -1336,8 +1707,8 @@ export interface SendRequestOptions {
  * documents are returned as the full `{ data }` envelope unchanged. Use
  * {@link unwrapGraphQLResponse} for the tolerant rule or
  * {@link unwrapSingleRootField} when a caller needs the strict single-root-field
- * result (`undefined` signals the document did not match). With a `contentType`
- * override, the parsed response body is returned as-is.
+ * result (`undefined` signals the document did not match). With
+ * `protocol: "rest"`, the parsed response body is returned as-is.
  * @throws `AniLinkAuthError` when authentication is required but no auth material is configured.
  * @throws `AniLinkApiError` for an upstream HTTP failure.
  * @throws `AniLinkGraphQLError` for GraphQL errors in an HTTP 200 envelope.
@@ -1345,6 +1716,63 @@ export interface SendRequestOptions {
  * @see {@link RequestOptions}
  * @see {@link SendRequestOptions}
  */
+
+/**
+ * Builds an authentication-safe cache key fragment from a bearer token.
+ *
+ * The token is SHA-256 hashed (truncated to 16 hex chars) so the raw
+ * credential is never stored in the cache key, which lives in memory for up
+ * to the cache's TTL. The hash is deterministic, so the same token always
+ * maps to the same cache entry, while a different token gets a different
+ * entry. When no bearer token is present, the literal `"none"` is used so
+ * unauthenticated requests share one cache namespace.
+ *
+ * @param token - The bearer token, when present.
+ * @returns The auth-scoping cache key fragment.
+ */
+const buildAuthCacheKey = (token: string | undefined): string =>
+    token === undefined
+        ? "none"
+        : `bearer:${createHash("sha256").update(token).digest("hex").slice(0, 16)}`;
+
+/**
+ * Computes the auth-scoping key fragment for a cached response, or `undefined`
+ * to signal that the request must not be cached.
+ *
+ * The cache is only safe when every identity that could produce a different
+ * response gets a different cache namespace. Bearer tokens are scoped by a
+ * SHA-256 hash of the token. When auth material is present through explicit
+ * `RequestAuth.headers` (for example a custom `Authorization` header, Basic
+ * auth, or a provider API key sent via `X-API-Key`), the header values are
+ * not captured by the key, so two different identities would collapse to the
+ * same `"none"` namespace and cross-contaminate. In that case the cache is
+ * skipped (fail-closed) instead of risking a cross-identity disclosure. This
+ * also ensures an unused `auth.token` is never hashed when a custom
+ * `Authorization` header takes precedence over the bearer token.
+ *
+ * @param hasBearerToken - Whether a bearer token was supplied via `auth.token`.
+ * @param hasCredentialHeaders - Whether any non-empty explicit `auth.headers` entry is present.
+ * @param token - The bearer token, when present.
+ * @returns The auth-scoping cache key fragment, or `undefined` to skip caching.
+ */
+const buildCacheAuthKey = (
+    hasBearerToken: boolean,
+    hasCredentialHeaders: boolean,
+    token: string | undefined
+): string | undefined => {
+    // Effective credential headers are present but not captured by the key:
+    // fail closed instead of collapsing distinct identities to "none". This
+    // also avoids hashing an unused bearer token when a custom Authorization
+    // header overrides it.
+    if (hasCredentialHeaders) {
+        return undefined;
+    }
+    if (hasBearerToken) {
+        return buildAuthCacheKey(token);
+    }
+    return buildAuthCacheKey(undefined);
+};
+
 export const sendRequest = async <T = unknown>(
     url: string,
     method: HttpMethod,
@@ -1352,11 +1780,24 @@ export const sendRequest = async <T = unknown>(
     auth?: RequestAuthInput,
     sendOptions?: SendRequestOptions
 ): Promise<T> => {
-    const { requiresAuth = false, options, operation, contentType, stateOwner } = sendOptions ?? {};
+    const {
+        requiresAuth = false,
+        options,
+        operation,
+        protocol,
+        contentType,
+        stateOwner,
+    } = sendOptions ?? {};
+    const isRestCall = protocol === "rest" || (protocol === undefined && contentType !== undefined);
     const resolvedAuth: RequestAuth | undefined = typeof auth === "string" ? { token: auth } : auth;
     const hasBearerToken = resolvedAuth?.token !== undefined && resolvedAuth.token !== "";
     const hasAuthorizationHeader = Object.entries(resolvedAuth?.headers ?? {}).some(
         ([key, value]) => key.toLowerCase() === "authorization" && value !== ""
+    );
+    // Any non-empty explicit auth header (custom Authorization, X-API-Key,
+    // Basic, etc.) is credential material the cache key does not capture.
+    const hasCredentialHeaders = Object.entries(resolvedAuth?.headers ?? {}).some(
+        ([, value]) => value !== ""
     );
     const hasAuthMaterial = hasBearerToken || hasAuthorizationHeader;
 
@@ -1378,11 +1819,48 @@ export const sendRequest = async <T = unknown>(
         headers.Authorization = `Bearer ${resolvedAuth.token}`;
     }
 
+    const resolved = resolveRequestOptions(options);
+
+    const cacheEnabled = resolved.responseCache !== undefined && method === "GET";
+    const cacheAuthKey = cacheEnabled
+        ? buildCacheAuthKey(hasBearerToken, hasCredentialHeaders, resolvedAuth?.token)
+        : undefined;
+    // When effective credential headers are present but not captured by the
+    // cache key (for example a custom `Authorization` or `X-API-Key` header),
+    // `buildCacheAuthKey` returns `undefined` to fail closed: skip the cache
+    // entirely instead of risking a cross-identity disclosure.
+    const cacheActive = cacheEnabled && cacheAuthKey !== undefined;
+
+    if (cacheActive) {
+        const cached = resolved.responseCache!.get<T>(method, url, data, cacheAuthKey);
+        if (cached !== undefined) {
+            const requestId = randomUUID();
+            const hookContext = { requestId, url, method, attempt: 1 };
+            safeInvoke(
+                resolved.onRequestStart,
+                "onRequestStart",
+                resolved.onHookError,
+                hookContext
+            );
+            safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
+                ...hookContext,
+                durationMs: 0,
+                cacheHit: true,
+            });
+            return cached;
+        }
+    }
+
     const result = await executeWithRetry<unknown>(
         { url, method, data, headers },
-        resolveRequestOptions(options),
+        resolved,
         stateOwner ?? options,
-        contentType !== undefined
+        isRestCall
     );
+
+    if (cacheActive) {
+        resolved.responseCache!.set(method, url, data, cacheAuthKey, result);
+    }
+
     return result as T;
 };

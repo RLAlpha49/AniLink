@@ -133,7 +133,8 @@ export abstract class RestOperation extends BaseOperation {
             requiresAuth,
             undefined,
             transportOptions,
-            effectiveContentType
+            effectiveContentType,
+            "rest"
         );
     }
 }

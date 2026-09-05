@@ -85,6 +85,40 @@ const guarded = new AniLink("token", {
 
 When unset, no failure accounting happens across requests.
 
+### GraphQL envelope failures
+
+AniList reports many failures as HTTP 200 with a GraphQL `errors` array rather than as an HTTP error status. The breaker counts these as failures: a sustained run of GraphQL-level 429 or 5xx envelopes trips the breaker just like HTTP-level failures, so the common AniList overload signature is covered.
+
+### Breaker lifecycle events
+
+The breaker emits `onCircuitOpen` and `onCircuitClose` hooks at state transitions so dashboards can plot trip frequency, open duration, and recovery without scraping `CIRCUIT_OPEN_ERROR` codes. See [Observability](/observability) for the event payloads.
+
+```typescript
+const aniLink = new AniLink("token", {
+    circuitBreaker: { threshold: 5, cooldownMs: 30_000 },
+    onCircuitOpen: ({ host, failures }) => {
+        metrics.increment("circuit.open", { host, failures });
+    },
+    onCircuitClose: ({ host }) => {
+        metrics.increment("circuit.close", { host });
+    },
+});
+```
+
+### Bypassing the pacing deadline
+
+When `paceWithRateLimit` is enabled, a successful response records a rate-limit reset deadline that subsequent requests to the same host wait for. Pass `ignorePaceDeadline: true` on a per-request basis to bypass that shared deadline for an urgent call (for example a user-facing lookup during a rate-limited window):
+
+```typescript
+const aniLink = new AniLink("token", { paceWithRateLimit: true });
+
+// This request bypasses the shared pacing deadline.
+const media = await aniLink.anilist.query.media(
+    { id: 1, type: "ANIME" },
+    { ignorePaceDeadline: true }
+);
+```
+
 ## Provider scoping
 
 Each mechanism is configured per provider slot:
@@ -99,4 +133,5 @@ const aniLink = new AniLink({
 ## Next steps
 
 - <Icon name="ArrowRight" :size="14" /> [Cancellation & timeouts](/cancellation-and-timeouts) — aborting requests, including during retry waits.
-- <Icon name="ArrowRight" :size="14" /> [Observability](/observability) — hooking retries and failures.
+- <Icon name="ArrowRight" :size="14" /> [Observability](/observability) — hooking retries, failures, and circuit breaker events.
+- <Icon name="ArrowRight" :size="14" /> [Response cache](/response-cache) — skipping network round-trips for repeated reads.

@@ -42,7 +42,22 @@ export type {
     ProviderCredentials,
     ResolvedProviderCredentials,
 } from "./base/credentials";
-export type { RequestAuth, RequestAuthInput } from "./base/RequestHandler";
+export type {
+    CircuitOpenContext,
+    OnCircuitCloseHandler,
+    OnCircuitOpenHandler,
+    OnHookErrorHandler,
+    OnPaceHandler,
+    OnResponseHandler,
+    RequestAuth,
+    RequestAuthInput,
+    RequestContext,
+    RequestErrorContext,
+    RequestOptions,
+} from "./base/RequestHandler";
+export { destroyCachedAgents } from "./base/RequestHandler";
+export { ResponseCache } from "./base/responseCache";
+export type { ResponseCacheOptions } from "./base/responseCache";
 export { buildProviderClients } from "./providers/registry";
 export type { ProviderClients, ProviderFactory, ProviderId } from "./providers/registry";
 export {

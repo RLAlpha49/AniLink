@@ -15,10 +15,10 @@ AniLink normalizes every transport failure into an `AniLinkError` subclass with 
 
 | Class | Code | When it is thrown |
 | --- | --- | --- |
-| `AniLinkError` | varies | Base class for all normalized failures |
-| `AniLinkApiError` | `API_ERROR` | Non-success HTTP response. Exposes `status`, `data`, `rateLimit` |
+| `AniLinkError` | varies | Base class for all normalized failures. Carries `requestId` |
+| `AniLinkApiError` | `API_ERROR` | Non-success HTTP response. Exposes `status`, `data`, `rateLimit`, `contentType` |
 | `AniLinkGraphQLError` | `GRAPHQL_ERROR` | AniList returned HTTP 200 with GraphQL errors. Exposes `graphqlErrors` and any partial `data` |
-| `AniLinkRestError` | `API_ERROR` | REST-specific API failure (MAL surface) |
+| `AniLinkRestError` | `API_ERROR` | REST-specific API failure (MAL surface). Exposes `contentType` |
 | `AniLinkNetworkError` | `NETWORK_ERROR`, `TIMEOUT_ERROR`, `ABORTED_ERROR`, `CIRCUIT_OPEN_ERROR` | Transport failures. Timeout errors carry `timeoutMs` |
 | `AniLinkAuthError` | `AUTH_ERROR` | Calling an authenticated operation without a token, or the provider rejecting the token |
 | `AniLinkValidationError` | `VALIDATION_ERROR` | Invalid variables or options before a request is sent |
@@ -69,13 +69,47 @@ try {
 
 Common AniList statuses: `400` (invalid query/variables), `401` (invalid token), `403` (forbidden), `429` (rate limited), `500`/`502`/`503`/`504` (server-side). Common MAL statuses: `400` (invalid fields), `401` (expired/invalid token), `404` (unknown ID), `429` (rate limited).
 
+## Correlation ID
+
+Every error thrown by the transport pipeline carries a `requestId` string that matches the `requestId` emitted to the lifecycle hooks for the same request. Use it to join a caught failure to its full event stream (attempts, retries, pacing, rate-limit state) in your logging or metrics backend:
+
+```typescript
+try {
+    await aniLink.anilist.query.media({ id: 1 });
+} catch (error) {
+    logger.error({ requestId: error.requestId, code: error.code }, "request failed");
+}
+```
+
+Errors raised before any request is sent (for example `AniLinkValidationError` or `AniLinkAuthError` from a missing token) do not carry a `requestId`.
+
+## Response Content-Type
+
+`AniLinkApiError` and `AniLinkRestError` expose `contentType` — the `Content-Type` header of the failing response. REST providers such as MyAnimeList return HTML or plain-text bodies on rate-limit and gateway error paths; this field lets you distinguish a structured JSON failure payload (where `data.message` is meaningful) from a non-JSON one without guessing:
+
+```typescript
+if (error instanceof AniLinkRestError) {
+    if (error.contentType?.includes("application/json")) {
+        console.error(error.data?.message);
+    } else {
+        console.error("Non-JSON error body:", error.data);
+    }
+}
+```
+
 ## Raw error debugging
 
 Pass `exposeRawAxiosError: true` to attach the original Axios error as `rawAxiosError` (and `cause`) on thrown errors.
 
+<Callout kind="tip">
+
+Sensitive request headers (`Authorization`, `Cookie`, `Proxy-Authorization`) are automatically redacted to `[REDACTED]` in the attached raw error, so opting in for diagnostics does not leak bearer tokens or cookies into your logs.
+
+</Callout>
+
 <Callout kind="caution">
 
-Raw Axios errors contain request configuration including bearer-token headers. Enable this only for local debugging. Never log `rawAxiosError` in production.
+Raw Axios errors still contain request URLs, headers, and response bodies. Enable this only for local debugging. Never log `rawAxiosError` in production.
 
 </Callout>
 

@@ -111,6 +111,8 @@ const aniLink = new AniLink({
         authToken: process.env.ANILIST_TOKEN,
         paceWithRateLimit: true,
         circuitBreaker: { threshold: 5, cooldownMs: 30_000 },
+        onCircuitOpen: ({ host, failures }) => metrics.increment("circuit.open", { host, failures }),
+        onCircuitClose: ({ host }) => metrics.increment("circuit.close", { host }),
         onResponse: ({ durationMs }) => metrics.record("anilist", durationMs),
     },
     mal: {

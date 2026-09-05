@@ -90,6 +90,13 @@ export const PAGES: DocPage[] = [
         section: "core",
     },
     {
+        path: "/response-cache",
+        title: "Response cache",
+        summary: "Opt-in TTL caching for read-heavy traversals.",
+        provider: "shared",
+        section: "core",
+    },
+    {
         path: "/recipes",
         title: "Recipes",
         summary: "Copy-paste solutions for common tasks.",

@@ -12,6 +12,7 @@ import {
     unwrapGraphQLResponse,
     unwrapSingleRootField,
 } from "../src/base/RequestHandler";
+import { ResponseCache } from "../src/base/responseCache";
 import { AniLink } from "../src/AniLink";
 import { getAxiosStub } from "./helpers/axiosStub";
 
@@ -668,7 +669,9 @@ describe("hook exception isolation", () => {
         ).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(1);
         expect(warn).toHaveBeenCalledWith(
-            "[AniLink] onRequestStart hook threw and was ignored:",
+            expect.stringMatching(
+                /^\[AniLink\] onRequestStart hook threw and was ignored \(requestId: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\):$/
+            ),
             "telemetry exploded"
         );
         warn.mockRestore();
@@ -691,7 +694,9 @@ describe("hook exception isolation", () => {
         // The hook failure must not be counted as a transport failure.
         expect(mocks.request).toHaveBeenCalledTimes(1);
         expect(warn).toHaveBeenCalledWith(
-            "[AniLink] onResponse hook threw and was ignored:",
+            expect.stringMatching(
+                /^\[AniLink\] onResponse hook threw and was ignored \(requestId: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\):$/
+            ),
             "metrics down"
         );
         warn.mockRestore();
@@ -822,5 +827,162 @@ describe("missing-token auth error context", () => {
 
         expect(error).toBeInstanceOf(AniLinkAuthError);
         expect((error as Error).message).not.toContain("(operation:");
+    });
+});
+
+describe("response cache integration", () => {
+    test("serves a cached GET response on the second call", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            options,
+        });
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            options,
+        });
+
+        // The second call is a cache hit: only one network request.
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+
+    test("caches per bearer-token identity so different tokens do not cross-contaminate", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, "token-a", {
+            options,
+        });
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, "token-b", {
+            options,
+        });
+
+        // Different tokens: both go to the network.
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("does not store the raw bearer token in the cache key", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const secret = "super-secret-token-value-123456";
+        const options = { responseCache: cache };
+
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, secret, {
+            options,
+        });
+
+        // Inspect the cache's internal entries to confirm the raw token is
+        // not a substring of any stored key. The key must use a hash instead.
+        const entries = (
+            cache as unknown as {
+                entries: Map<string, unknown>;
+            }
+        ).entries;
+        for (const key of entries.keys()) {
+            expect(key).not.toContain(secret);
+        }
+    });
+
+    test("fires onRequestStart and onResponse with cacheHit on a cache hit", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const onRequestStart = vi.fn();
+        const onResponse = vi.fn();
+        const options = { responseCache: cache, onRequestStart, onResponse };
+
+        // First call: network round-trip, populates the cache.
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            options,
+        });
+        // Second call: cache hit — no network, but both hooks must fire.
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            options,
+        });
+
+        // The second call is a cache hit: only one network request.
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        // Both hooks fire once for the network attempt and once for the hit.
+        expect(onRequestStart).toHaveBeenCalledTimes(2);
+        expect(onResponse).toHaveBeenCalledTimes(2);
+
+        // The hit's onResponse context carries cacheHit: true and durationMs: 0.
+        const hitContext = onResponse.mock.calls[1][0];
+        expect(hitContext).toMatchObject({ cacheHit: true, durationMs: 0 });
+        // The network attempt's context must NOT carry cacheHit.
+        const networkContext = onResponse.mock.calls[0][0];
+        expect(networkContext).not.toHaveProperty("cacheHit");
+
+        // The hit's onRequestStart context carries a fresh requestId.
+        expect(hitContext.requestId).toEqual(expect.any(String));
+        expect(hitContext.requestId).toBe(onRequestStart.mock.calls[1][0].requestId);
+    });
+
+    test("skips the cache when auth is supplied via a custom Authorization header", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+
+        // Two different identities authenticating via custom Authorization
+        // headers (not the bearer-token field). The cache must fail closed
+        // instead of collapsing both to the "none" namespace.
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "GET",
+            undefined,
+            {
+                headers: { Authorization: "Basic user-a-credentials" },
+            } as never,
+            { options }
+        );
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "GET",
+            undefined,
+            {
+                headers: { Authorization: "Basic user-b-credentials" },
+            } as never,
+            { options }
+        );
+
+        // Both go to the network: the cache is skipped for header auth.
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+        // Nothing is cached.
+        const entries = (cache as unknown as { entries: Map<string, unknown> }).entries;
+        expect(entries.size).toBe(0);
+    });
+});
+
+describe("raw error redaction", () => {
+    test("redacts sensitive request headers when exposeRawAxiosError is enabled", async () => {
+        const secret = "Bearer super-secret-token-value";
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 500, data: { message: "server error" } },
+            config: {
+                headers: {
+                    Authorization: secret,
+                    Cookie: "session=private-session-id",
+                    "Content-Type": "application/json",
+                },
+            },
+        });
+
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: false,
+            options: {
+                exposeRawAxiosError: true,
+                retry: false,
+            },
+        }).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        const raw = (error as AniLinkApiError).rawAxiosError as {
+            config: { headers: Record<string, string> };
+        };
+        expect(raw.config.headers.Authorization).toBe("[REDACTED]");
+        expect(raw.config.headers.Cookie).toBe("[REDACTED]");
+        // Non-sensitive headers are preserved.
+        expect(raw.config.headers["Content-Type"]).toBe("application/json");
+        // The secret value does not survive anywhere in the serialized raw error.
+        expect(JSON.stringify(raw)).not.toContain("super-secret-token-value");
+        expect(JSON.stringify(raw)).not.toContain("private-session-id");
     });
 });

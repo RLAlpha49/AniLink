@@ -44,6 +44,15 @@ export class AniLinkError extends Error {
     public code: AniLinkErrorCode;
     /** Original Axios or transport error when raw diagnostics were enabled. */
     declare public readonly rawAxiosError?: unknown;
+    /**
+     * Library-generated correlation ID joining this failure to the
+     * `onRequestStart`/`onResponse`/`onRetry`/`onError` hook events it
+     * produced, so a caught error can be matched to its lifecycle stream in a
+     * metrics or logging backend. Absent on errors raised outside the
+     * request pipeline (for example validation errors thrown before any
+     * request is sent).
+     */
+    declare public readonly requestId?: string;
 
     /**
      * Creates a sanitized AniLink error.
@@ -51,13 +60,22 @@ export class AniLinkError extends Error {
      * @param message - A safe message intended for application logs.
      * @param code - The stable code used to classify the failure.
      * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
+     * @param options - Additional error metadata such as the request correlation ID.
      */
-    constructor(message: string, code: AniLinkErrorCode, rawAxiosError?: unknown) {
+    constructor(
+        message: string,
+        code: AniLinkErrorCode,
+        rawAxiosError?: unknown,
+        options?: { requestId?: string }
+    ) {
         super(message, rawAxiosError instanceof Error ? { cause: rawAxiosError } : undefined);
         this.name = "AniLinkError";
         this.code = code;
         if (rawAxiosError !== undefined) {
             this.rawAxiosError = rawAxiosError;
+        }
+        if (options?.requestId !== undefined) {
+            this.requestId = options.requestId;
         }
         Object.setPrototypeOf(this, new.target.prototype);
     }
@@ -105,25 +123,40 @@ export class AniLinkApiError extends AniLinkError {
     declare public readonly rateLimit?: RateLimitInfo;
 
     /**
+     * The `Content-Type` of the failing response, parsed from the upstream
+     * response headers. REST providers such as MyAnimeList return HTML or
+     * plain-text bodies on rate-limit and gateway error paths; this field lets
+     * consumers distinguish a structured JSON failure payload (where
+     * `data.message` is meaningful) from a non-JSON one without guessing.
+     * Absent when the response carried no `Content-Type` header.
+     */
+    declare public readonly contentType?: string;
+
+    /**
      * Creates an API error while preserving the upstream response body.
      *
      * @param status - The HTTP status returned by AniList.
      * @param data - The response body returned by AniList.
      * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
-     * @param options - Additional error metadata such as rate-limit headers.
+     * @param options - Additional error metadata such as rate-limit headers and the response content type.
      */
     constructor(
         status: number,
         data: unknown,
         rawAxiosError?: unknown,
-        options?: { rateLimit?: RateLimitInfo }
+        options?: { rateLimit?: RateLimitInfo; contentType?: string; requestId?: string }
     ) {
-        super(`API request failed with status ${status}.`, AniLinkErrorCodes.API, rawAxiosError);
+        super(`API request failed with status ${status}.`, AniLinkErrorCodes.API, rawAxiosError, {
+            requestId: options?.requestId,
+        });
         this.name = "AniLinkApiError";
         this.status = status;
         this.data = data;
         if (options?.rateLimit !== undefined) {
             this.rateLimit = options.rateLimit;
+        }
+        if (options?.contentType !== undefined) {
+            this.contentType = options.contentType;
         }
     }
 }
@@ -211,13 +244,15 @@ export class AniLinkGraphQLError extends AniLinkApiError {
      * @param errors - The upstream GraphQL errors; each entry should carry a `message`.
      * @param data - The partial `data` object returned alongside the errors, when any. Exposed as {@link AniLinkGraphQLError.partialData}.
      * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
+     * @param options - Additional error metadata such as rate-limit headers and the response content type. AniList returns rate-limit headers even on HTTP 200 envelopes carrying GraphQL errors (for example a GraphQL-level `429`), so threading them here keeps {@link AniLinkGraphQLError.rateLimit} consistent with the HTTP-failure path.
      */
     constructor(
         errors: ReadonlyArray<GraphQLUpstreamError>,
         data?: unknown,
-        rawAxiosError?: unknown
+        rawAxiosError?: unknown,
+        options?: { rateLimit?: RateLimitInfo; contentType?: string; requestId?: string }
     ) {
-        super(extractUpstreamStatus(errors) ?? 200, data, rawAxiosError);
+        super(extractUpstreamStatus(errors) ?? 200, data, rawAxiosError, options);
         this.name = "AniLinkGraphQLError";
         this.code = AniLinkErrorCodes.GRAPHQL;
         this.message = `The request failed with GraphQL errors: ${errors
@@ -294,13 +329,13 @@ export class AniLinkRestError extends AniLinkApiError {
      * @param status - The HTTP status returned by the upstream REST API.
      * @param data - The response body returned by the upstream REST API.
      * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
-     * @param options - Additional error metadata such as rate-limit headers.
+     * @param options - Additional error metadata such as rate-limit headers, the response content type, and the request correlation ID.
      */
     constructor(
         status: number,
         data: unknown,
         rawAxiosError?: unknown,
-        options?: { rateLimit?: RateLimitInfo }
+        options?: { rateLimit?: RateLimitInfo; contentType?: string; requestId?: string }
     ) {
         super(status, data, rawAxiosError, options);
         this.name = "AniLinkRestError";
@@ -353,7 +388,7 @@ export class AniLinkNetworkError extends AniLinkError {
      * @param code - The stable code for the transport failure.
      * @param message - A safe message intended for application logs.
      * @param rawAxiosError - The original Axios error when raw diagnostics are enabled.
-     * @param options - Additional transport metadata such as the effective timeout duration.
+     * @param options - Additional transport metadata such as the effective timeout duration and the request correlation ID.
      */
     constructor(
         code:
@@ -363,9 +398,9 @@ export class AniLinkNetworkError extends AniLinkError {
             | typeof AniLinkErrorCodes.CIRCUIT,
         message: string,
         rawAxiosError?: unknown,
-        options?: AniLinkNetworkErrorOptions
+        options?: AniLinkNetworkErrorOptions & { requestId?: string }
     ) {
-        super(message, code, rawAxiosError);
+        super(message, code, rawAxiosError, { requestId: options?.requestId });
         this.name = "AniLinkNetworkError";
         if (options?.timeoutMs !== undefined) {
             this.timeoutMs = options.timeoutMs;

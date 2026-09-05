@@ -137,13 +137,15 @@ export abstract class BaseOperation {
         requiresAuth = false,
         operation?: string,
         transportOptions?: RequestOptions,
-        contentType?: string
+        contentType?: string,
+        protocol?: "graphql" | "rest"
     ): Promise<T> {
         return await sendRequest<T>(url, method, data, this.requestAuth, {
             requiresAuth: requiresAuth || undefined,
             options: mergeOptions(this.resolvedOptions, transportOptions),
             operation: operation ?? resolveOperationLabel(this),
             contentType,
+            protocol,
             // The instance keys cross-request transport state (circuit
             // breaker, retry budget) so failure streaks accumulate across
             // requests even when each call carries fresh per-request options.

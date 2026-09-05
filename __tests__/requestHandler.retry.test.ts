@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { AniLinkApiError, AniLinkNetworkError } from "../src/base/AniLinkError";
+import {
+    AniLinkApiError,
+    AniLinkAuthError,
+    AniLinkGraphQLError,
+    AniLinkNetworkError,
+    AniLinkValidationError,
+} from "../src/base/AniLinkError";
 import { type RequestOptions, sendRequest } from "../src/base/RequestHandler";
 import { getAxiosStub, makeAxiosResponseError as apiError } from "./helpers/axiosStub";
 
@@ -309,7 +315,9 @@ describe("retry hooks", () => {
         await expect(promise).resolves.toEqual({ id: 9 });
         expect(mocks.request).toHaveBeenCalledTimes(2);
         expect(warn).toHaveBeenCalledWith(
-            "[AniLink] onRetry hook threw and was ignored:",
+            expect.stringMatching(
+                /^\[AniLink\] onRetry hook threw and was ignored \(requestId: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\):$/
+            ),
             "retry sink failed"
         );
         warn.mockRestore();
@@ -498,6 +506,155 @@ describe("Retry-After handling", () => {
     });
 });
 
+describe("requestId correlation", () => {
+    const url = "https://graphql.anilist.co";
+
+    test("stamps the thrown error with the same requestId as the lifecycle hooks", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+        let capturedRequestId: string | undefined;
+        configureRequestOptions({
+            retry: false,
+            onRequestStart: (context) => {
+                capturedRequestId = context.requestId;
+            },
+        });
+
+        const error = await callSendRequest(url, "POST", { query: "query" }).catch((e) => e);
+
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        expect(capturedRequestId).toEqual(expect.any(String));
+        expect((error as AniLinkApiError).requestId).toBe(capturedRequestId);
+    });
+
+    test("stamps the circuit-open fast-fail error with a requestId", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+        const breaker = { threshold: 1, cooldownMs: 1_000 };
+        let capturedRequestId: string | undefined;
+        configureRequestOptions({
+            retry: false,
+            circuitBreaker: breaker,
+            onRequestStart: (context) => {
+                capturedRequestId = context.requestId;
+            },
+        });
+
+        // First request trips the breaker (threshold 1).
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+
+        // Second request fast-fails with CIRCUIT_OPEN_ERROR; it still gets a
+        // requestId stamped so it can be correlated to its own hook stream.
+        capturedRequestId = undefined;
+        const error = await callSendRequest(url, "POST", { query: "query" }).catch((e) => e);
+
+        expect(error).toBeInstanceOf(AniLinkNetworkError);
+        expect((error as AniLinkNetworkError).code).toBe("CIRCUIT_OPEN_ERROR");
+        expect(capturedRequestId).toEqual(expect.any(String));
+        expect((error as AniLinkNetworkError).requestId).toBe(capturedRequestId);
+    });
+});
+
+describe("contentType error propagation", () => {
+    const url = "https://api.myanimelist.net/v2/anime";
+
+    test("propagates the response Content-Type onto AniLinkApiError", async () => {
+        mocks.request.mockRejectedValueOnce(apiError(429, { "content-type": "text/html" }));
+
+        configureRequestOptions({ retry: false });
+
+        const error = await callSendRequest(url, "GET").catch((e) => e);
+
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        expect((error as AniLinkApiError).contentType).toBe("text/html");
+    });
+
+    test("propagates a capitalized Content-Type header", async () => {
+        mocks.request.mockRejectedValueOnce(apiError(429, { "Content-Type": "application/json" }));
+
+        configureRequestOptions({ retry: false });
+
+        const error = await callSendRequest(url, "GET").catch((e) => e);
+
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        expect((error as AniLinkApiError).contentType).toBe("application/json");
+    });
+
+    test("leaves contentType undefined when the response has no Content-Type", async () => {
+        mocks.request.mockRejectedValueOnce(apiError(500, {}));
+
+        configureRequestOptions({ retry: false });
+
+        const error = await callSendRequest(url, "GET").catch((e) => e);
+
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        expect((error as AniLinkApiError).contentType).toBeUndefined();
+    });
+});
+
+describe("retry matrix per error class", () => {
+    const url = "https://graphql.anilist.co";
+
+    test("does not retry a GraphQL error with no upstream status (envelope 200)", async () => {
+        // A 200 envelope carrying a GraphQL error with no `status` field is a
+        // permanent query/validation failure, not a transient transport condition.
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "validation failed" }] },
+        });
+
+        configureRequestOptions({ retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 } });
+
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkGraphQLError
+        );
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+
+    test("retries a GraphQL error whose upstream status is 429", async () => {
+        mocks.request
+            .mockResolvedValueOnce({
+                data: { errors: [{ message: "rate limited", status: 429 }] },
+            })
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+
+        configureRequestOptions({ retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 } });
+
+        const promise = callSendRequest(url, "POST", { query: "query" });
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(promise).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("does not retry an AniLinkAuthError", async () => {
+        // An auth error is thrown pre-request when requiresAuth is set and no
+        // token is supplied; it must never reach the retry loop.
+        configureRequestOptions({ retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 } });
+
+        await expect(
+            sendRequest(url, "POST", { query: "query" }, undefined, {
+                requiresAuth: true,
+                options: pendingOptions,
+            })
+        ).rejects.toBeInstanceOf(AniLinkAuthError);
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("does not retry an aborted network error", async () => {
+        mocks.request.mockRejectedValue({
+            isAxiosError: true,
+            isCanceled: true,
+            code: "ERR_CANCELED",
+        });
+
+        configureRequestOptions({ retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 } });
+
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkNetworkError
+        );
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+});
+
 describe("circuit breaker", () => {
     const breaker = { threshold: 2, cooldownMs: 1_000 };
     const url = "https://graphql.anilist.co";
@@ -515,13 +672,18 @@ describe("circuit breaker", () => {
         expect(mocks.request).toHaveBeenCalledTimes(5);
     });
 
-    test("uses a shared fallback scope when the circuit URL is invalid", async () => {
+    test("throws a normalized AniLinkValidationError for an unparseable URL instead of sharing a fallback breaker scope", async () => {
         configureRequestOptions({ retry: false, circuitBreaker: breaker });
 
+        // An unparseable URL fails fast at dispatch instead of silently sharing
+        // one breaker bucket with all other malformed-URL traffic, which
+        // would let cross-endpoint failures contaminate each other. The error
+        // is a normalized AniLinkValidationError (an AniLinkError subclass) so
+        // consumers catching AniLinkError still handle it.
         await expect(
             callSendRequest("not a valid URL", "POST", { query: "query" })
-        ).resolves.toEqual({ id: 1 });
-        expect(mocks.request).toHaveBeenCalledTimes(1);
+        ).rejects.toBeInstanceOf(AniLinkValidationError);
+        expect(mocks.request).not.toHaveBeenCalled();
     });
 
     test("opens after the failure budget and fast-fails with CIRCUIT_OPEN_ERROR", async () => {
@@ -735,6 +897,105 @@ describe("circuit breaker", () => {
         ).rejects.toMatchObject({ code: "API_ERROR" });
         expect(mocks.request).toHaveBeenCalledTimes(3);
     });
+
+    test("fires onCircuitOpen once on trip with the host and failure count", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+        const onCircuitOpen = vi.fn();
+        configureRequestOptions({
+            retry: false,
+            circuitBreaker: breaker,
+            onCircuitOpen,
+        });
+
+        // Two failures reach the threshold and trip the breaker.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+
+        // onCircuitOpen fires exactly once, with the host and the threshold
+        // failure count.
+        expect(onCircuitOpen).toHaveBeenCalledTimes(1);
+        const context = onCircuitOpen.mock.calls[0][0];
+        expect(context.host).toBe("graphql.anilist.co");
+        expect(context.failures).toBe(breaker.threshold);
+    });
+
+    test("does not fire onCircuitOpen before the threshold is reached", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+        const onCircuitOpen = vi.fn();
+        configureRequestOptions({
+            retry: false,
+            circuitBreaker: { threshold: 5, cooldownMs: 1_000 },
+            onCircuitOpen,
+        });
+
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+
+        expect(onCircuitOpen).not.toHaveBeenCalled();
+    });
+
+    test("does not fire onCircuitOpen on a re-open from a failed probe", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+        const onCircuitOpen = vi.fn();
+        configureRequestOptions({
+            retry: false,
+            circuitBreaker: breaker,
+            onCircuitOpen,
+        });
+
+        // Trip the breaker.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        expect(onCircuitOpen).toHaveBeenCalledTimes(1);
+
+        // Cooldown elapses; the probe fails and re-opens the breaker.
+        await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+
+        // A re-open from a failed probe is a continuation of the same open
+        // period, so onCircuitOpen must not fire again.
+        expect(onCircuitOpen).toHaveBeenCalledTimes(1);
+    });
+
+    test("fires onCircuitClose when the post-cooldown probe succeeds", async () => {
+        mocks.request.mockRejectedValue(apiError(500));
+        const onCircuitClose = vi.fn();
+        configureRequestOptions({
+            retry: false,
+            circuitBreaker: breaker,
+            onCircuitClose,
+        });
+
+        // Trip the breaker.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+
+        // Cooldown elapses; the probe succeeds and closes the breaker.
+        await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
+        mocks.request.mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        await expect(callSendRequest(url, "POST", { query: "query" })).resolves.toEqual({ id: 1 });
+
+        expect(onCircuitClose).toHaveBeenCalledTimes(1);
+        expect(onCircuitClose.mock.calls[0][0].host).toBe("graphql.anilist.co");
+    });
 });
 
 describe("rate-limit pacing", () => {
@@ -897,5 +1158,37 @@ describe("rate-limit pacing", () => {
         await expect(first).resolves.toEqual({ id: 1 });
         await expect(second).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("ignorePaceDeadline bypasses a recorded rate-limit deadline", async () => {
+        mocks.request
+            .mockResolvedValueOnce({
+                data: { data: { Media: { id: 1 } } },
+                headers: {
+                    "x-ratelimit-limit": "90",
+                    "x-ratelimit-remaining": "0",
+                    "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 60),
+                },
+            })
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+
+        configureRequestOptions({ paceWithRateLimit: true });
+
+        // First call: dispatches immediately, then records the 60s deadline.
+        const first = callSendRequest(url, "POST", { query: "query" });
+        first.catch(() => {});
+        await vi.advanceTimersByTimeAsync(1);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        // Second call with ignorePaceDeadline bypasses the recorded deadline
+        // and dispatches immediately, well inside the 60s window.
+        const second = sendRequest(url, "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: { ...pendingOptions, ignorePaceDeadline: true },
+        });
+        second.catch(() => {});
+        await vi.advanceTimersByTimeAsync(1);
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+        await expect(second).resolves.toEqual({ id: 1 });
     });
 });
