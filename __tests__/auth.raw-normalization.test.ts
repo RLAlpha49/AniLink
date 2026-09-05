@@ -21,10 +21,14 @@ vi.mock("axios", () => ({
     }),
 }));
 
-vi.mock("../src/base/RequestHandler", () => ({
-    __esModule: true,
-    sendRequest: mocks.sendRequest,
-}));
+vi.mock("../src/base/RequestHandler", async () => {
+    const { TRANSPORT_OPTION_KEYS } = await import("../src/base/transportOptionKeys");
+    return {
+        __esModule: true,
+        sendRequest: mocks.sendRequest,
+        TRANSPORT_OPTION_KEYS,
+    };
+});
 
 import { getAccessToken, refreshAccessToken } from "../src/apis/graphql/anilist/auth";
 import { AniLinkError } from "../src/base/AniLinkError";

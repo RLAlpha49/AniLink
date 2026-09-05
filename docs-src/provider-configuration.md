@@ -48,6 +48,14 @@ Credentials given under one key are never applied to another provider's requests
 
 </Callout>
 
+### Credential key validation
+
+Unknown credential keys fail fast with a `TypeError` at client construction. A typo such as `accesstoken` (instead of `accessToken`) or an obsolete field produces an actionable error listing the valid transport and auth fields, instead of being silently ignored and surfacing later as an `AniLinkAuthError` or surprising default behavior.
+
+### Client-level `onHookError`
+
+The per-provider credentials form accepts a top-level `onHookError` that applies to every provider slot that does not define its own. See [Observability](/observability) for details.
+
 ## `buildProviderClients()`
 
 The constructor delegates to `buildProviderClients`, which is exported for advanced composition:
@@ -82,3 +90,4 @@ Here AniList requests time out after 5 s with no retries. MAL requests time out 
 
 - <Icon name="ArrowRight" :size="14" /> [AniList client configuration](/guides/anilist/configuration) — the full options table.
 - <Icon name="ArrowRight" :size="14" /> [MAL client configuration](/guides/mal/configuration) — MAL credentials in detail.
+- <Icon name="ArrowRight" :size="14" /> [Observability](/observability) — client-level `onHookError` and lifecycle hooks.

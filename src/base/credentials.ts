@@ -7,6 +7,7 @@
  * so transport settings stay uniform across providers.
  */
 import { type RequestAuthInput, type RequestOptions } from "./RequestHandler";
+import { TRANSPORT_OPTION_KEYS } from "./transportOptionKeys";
 
 /**
  * Transport settings shared by every provider's slot in an
@@ -58,7 +59,10 @@ export interface MalCredentials extends ProviderCredentials {
  *
  * Each key targets exactly one provider namespace (`aniLink.anilist`,
  * `aniLink.mal`, …); credentials given under one key are never applied to
- * another provider's requests.
+ * another provider's requests. The optional top-level `onHookError` is a
+ * client-level default applied to every provider slot that does not define
+ * its own, so a single hook-error logger can be wired once instead of
+ * repeated per slot.
  *
  * @see {@link ProviderCredentials}
  */
@@ -67,6 +71,14 @@ export interface AniLinkCredentials {
     anilist?: AniListCredentials;
     /** Credentials for the MyAnimeList provider surface. */
     mal?: MalCredentials;
+    /**
+     * Client-level default for the `onHookError` lifecycle hook, applied to
+     * every provider slot that does not define its own `onHookError`. Lets
+     * consumers route hook failures to a real logger once per client instead
+     * of repeating the wiring on every call or accepting uncorrelated
+     * `console.warn` noise.
+     */
+    onHookError?: import("./RequestHandler").OnHookErrorHandler;
 }
 
 /**
@@ -89,10 +101,20 @@ const resolveTransportOptions = (
     credentials: ProviderCredentials,
     providerFields: readonly string[]
 ): RequestOptions | undefined => {
-    const options = Object.fromEntries(
-        Object.entries(credentials).filter(([key]) => !providerFields.includes(key))
-    ) as RequestOptions;
-    return Object.keys(options).length === 0 ? undefined : options;
+    const allowedKeys = new Set<string>([...TRANSPORT_OPTION_KEYS, ...providerFields]);
+    const options: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(credentials)) {
+        if (providerFields.includes(key)) continue;
+        if (!allowedKeys.has(key)) {
+            throw new TypeError(
+                `Unknown credential key "${key}". Valid transport options are: ${TRANSPORT_OPTION_KEYS.join(
+                    ", "
+                )}. Provider auth fields are: ${providerFields.join(", ")}.`
+            );
+        }
+        options[key] = value;
+    }
+    return Object.keys(options).length === 0 ? undefined : (options as RequestOptions);
 };
 
 /**

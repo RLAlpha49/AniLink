@@ -123,6 +123,18 @@ const aniLink = new AniLink("token", {
 });
 ```
 
+### Client-level `onHookError`
+
+When using the per-provider credentials form, set `onHookError` at the top level of the credentials object to apply it to every provider slot that does not define its own. This lets you wire a single hook-error logger once per client instead of repeating it in each slot:
+
+```typescript
+const aniLink = new AniLink({
+    onHookError: (hookName, error) => logger.error(`hook ${hookName} threw`, error),
+    anilist: { authToken: "t", onResponse: ({ durationMs }) => metrics.record(durationMs) },
+    mal: { accessToken: "m" }, // inherits the client-level onHookError
+});
+```
+
 ## Next steps
 
 - <Icon name="ArrowRight" :size="14" /> [Retries & resilience](/retries-and-resilience) — the retry loop these hooks observe.

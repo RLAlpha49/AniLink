@@ -36,9 +36,13 @@ const requestMock = vi.hoisted(() =>
     }))
 );
 
-vi.mock("../../src/base/RequestHandler", () => ({
-    sendRequest: requestMock,
-}));
+vi.mock("../../src/base/RequestHandler", async () => {
+    const { TRANSPORT_OPTION_KEYS } = await import("../../src/base/transportOptionKeys");
+    return {
+        sendRequest: requestMock,
+        TRANSPORT_OPTION_KEYS,
+    };
+});
 
 /**
  * The mocked {@link sendRequest} transport. Inspect {@link mockSendRequest.mock.calls}

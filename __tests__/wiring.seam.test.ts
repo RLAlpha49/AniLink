@@ -148,3 +148,63 @@ describe("facade-to-Axios seam", () => {
         expect(mocks.request).not.toHaveBeenCalled();
     });
 });
+
+describe("client-level onHookError wiring", () => {
+    test("applies the client-level onHookError to the AniList slot when none is set", async () => {
+        const clientHookError = vi.fn();
+        const client = new AniLink({
+            onHookError: clientHookError,
+            anilist: {
+                authToken: "anilist-token",
+                // A throwing onResponse triggers the hook-error path.
+                onResponse: () => {
+                    throw new Error("onResponse blew up");
+                },
+            },
+        });
+
+        await client.anilist.query.media({ id: 1 }, { retry: false });
+
+        expect(clientHookError).toHaveBeenCalledTimes(1);
+        expect(clientHookError.mock.calls[0][0]).toBe("onResponse");
+    });
+
+    test("applies the client-level onHookError to the MAL slot when none is set", async () => {
+        const clientHookError = vi.fn();
+        const client = new AniLink({
+            onHookError: clientHookError,
+            mal: {
+                accessToken: "mal-token",
+                onResponse: () => {
+                    throw new Error("onResponse blew up");
+                },
+            },
+        });
+
+        await client.mal.anime.get(21, { retry: false });
+
+        expect(clientHookError).toHaveBeenCalledTimes(1);
+        expect(clientHookError.mock.calls[0][0]).toBe("onResponse");
+    });
+
+    test("a slot-level onHookError overrides the client-level default", async () => {
+        const clientHookError = vi.fn();
+        const slotHookError = vi.fn();
+        const client = new AniLink({
+            onHookError: clientHookError,
+            anilist: {
+                authToken: "anilist-token",
+                onHookError: slotHookError,
+                onResponse: () => {
+                    throw new Error("onResponse blew up");
+                },
+            },
+        });
+
+        await client.anilist.query.media({ id: 1 }, { retry: false });
+
+        // The slot-level handler wins; the client-level default is not called.
+        expect(slotHookError).toHaveBeenCalledTimes(1);
+        expect(clientHookError).not.toHaveBeenCalled();
+    });
+});

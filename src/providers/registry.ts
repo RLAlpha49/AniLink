@@ -103,8 +103,17 @@ export function buildProviderClients(
     credentials: AniLinkCredentials = {},
     legacyOptions?: AniLinkOptions
 ): ProviderClients {
+    const clientHookError = credentials.onHookError;
+    const anilistSlot =
+        clientHookError !== undefined && credentials.anilist?.onHookError === undefined
+            ? { ...credentials.anilist, onHookError: clientHookError }
+            : credentials.anilist;
+    const malSlot =
+        clientHookError !== undefined && credentials.mal?.onHookError === undefined
+            ? { ...credentials.mal, onHookError: clientHookError }
+            : credentials.mal;
     return {
-        anilist: PROVIDER_FACTORIES.anilist(credentials.anilist, legacyOptions),
-        mal: PROVIDER_FACTORIES.mal(credentials.mal),
+        anilist: PROVIDER_FACTORIES.anilist(anilistSlot, legacyOptions),
+        mal: PROVIDER_FACTORIES.mal(malSlot),
     };
 }

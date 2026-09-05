@@ -112,3 +112,53 @@ describe("per-provider credential isolation", () => {
         expect(client.mal).toBeDefined();
     });
 });
+
+describe("strict credential-key validation", () => {
+    test("throws a TypeError naming an unknown credential key", () => {
+        expect(() =>
+            resolveAniListCredentials({
+                authToken: "t",
+                // @ts-expect-error -- intentional typo to exercise the guard
+                bogusKey: 1,
+            })
+        ).toThrow(TypeError);
+        expect(() =>
+            resolveAniListCredentials({
+                authToken: "t",
+                // @ts-expect-error -- intentional typo to exercise the guard
+                bogusKey: 1,
+            })
+        ).toThrow(/bogusKey/);
+    });
+
+    test("the TypeError message lists the valid transport and auth fields", () => {
+        expect(() =>
+            resolveAniListCredentials({
+                authToken: "t",
+                // @ts-expect-error -- intentional typo to exercise the guard
+                accesstoken: "lowercase-typo",
+            })
+        ).toThrow(/Unknown credential key "accesstoken"/);
+    });
+
+    test("accepts a valid transport option without throwing", () => {
+        expect(() => resolveAniListCredentials({ authToken: "t", timeout: 5_000 })).not.toThrow();
+    });
+
+    test("accepts a valid provider auth field without throwing", () => {
+        expect(() => resolveMalCredentials({ accessToken: "t", clientId: "c" })).not.toThrow();
+    });
+
+    test("rejects an unknown key at client construction", () => {
+        expect(
+            () =>
+                new AniLink({
+                    anilist: {
+                        authToken: "t",
+                        // @ts-expect-error -- intentional unknown key
+                        customThing: true,
+                    },
+                })
+        ).toThrow(TypeError);
+    });
+});
