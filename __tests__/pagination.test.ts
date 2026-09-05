@@ -52,8 +52,8 @@ describe("paginate", () => {
         const result = await paginate(fetchPage, "media", { perPage: 50, concurrency: 1 });
 
         expect(fetchPage).toHaveBeenCalledTimes(2);
-        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50);
-        expect(fetchPage).toHaveBeenNthCalledWith(2, 2, 50);
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50, expect.any(AbortSignal));
+        expect(fetchPage).toHaveBeenNthCalledWith(2, 2, 50, expect.any(AbortSignal));
         expect(result.items).toEqual([{ id: 1 }, { id: 101 }, { id: 2 }, { id: 102 }]);
         expect(result.pageCount).toBe(2);
         expect(result.truncated).toBe(false);
@@ -87,7 +87,7 @@ describe("paginate", () => {
             perPage: 25,
         });
 
-        expect(fetchPage).toHaveBeenNthCalledWith(1, 5, 25);
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 5, 25, expect.any(AbortSignal));
         expect(result.pageCount).toBe(1);
         expect(result.truncated).toBe(false);
     });
@@ -118,7 +118,7 @@ describe("paginate", () => {
             maxPages: NaN,
         } as PaginateOptions);
 
-        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50);
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50, expect.any(AbortSignal));
         expect(result.pageCount).toBe(1);
     });
 
@@ -143,7 +143,7 @@ describe("paginate", () => {
 
         const result = await paginate(fetchPage, "media", { perPage: 100 });
 
-        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50);
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50, expect.any(AbortSignal));
         expect(result.pageCount).toBe(1);
     });
 
@@ -155,8 +155,176 @@ describe("paginate", () => {
 
         const result = await paginate(fetchPage, "media", { perPage: 50 });
 
-        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50);
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50, expect.any(AbortSignal));
         expect(result.pageCount).toBe(1);
+    });
+
+    test("returns partial results when the signal aborts mid-request", async () => {
+        const controller = new AbortController();
+        const fetchPage = vi.fn(
+            async (page: number, _perPage: number, signal?: AbortSignal): Promise<TestPage> => {
+                // Page 1 resolves; page 2 hangs until aborted.
+                if (page === 2) {
+                    return new Promise<TestPage>((_resolve, reject) => {
+                        signal?.addEventListener("abort", () => {
+                            reject(new DOMException("aborted", "AbortError"));
+                        });
+                    });
+                }
+                return {
+                    pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+                    media: [{ id: page }],
+                };
+            }
+        );
+
+        // Abort after page 1 has resolved and page 2 is in flight.
+        const promise = paginate(fetchPage, "media", {
+            perPage: 50,
+            concurrency: 2,
+            signal: controller.signal,
+        });
+        // Give page 1 time to resolve and page 2 to launch and hang.
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        controller.abort();
+
+        const result = await promise;
+
+        // Page 1's items survive as a partial result; no throw.
+        expect(result.pageCount).toBe(1);
+        expect(result.items).toEqual([{ id: 1 }]);
+        expect(result.truncated).toBe(false);
+    });
+
+    test("removes its abort listener from the external signal on completion", async () => {
+        const controller = new AbortController();
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 2 }),
+            media: [{ id: page }],
+        }));
+
+        const addSpy = vi.spyOn(controller.signal, "addEventListener");
+        const removeSpy = vi.spyOn(controller.signal, "removeEventListener");
+
+        await paginate(fetchPage, "media", {
+            perPage: 50,
+            concurrency: 1,
+            signal: controller.signal,
+        });
+
+        // Every abort listener added must be removed on completion so a
+        // long-lived controller does not accumulate a listener per call.
+        const abortAdds = addSpy.mock.calls.filter((c) => c[0] === "abort").length;
+        const abortRemoves = removeSpy.mock.calls.filter((c) => c[0] === "abort").length;
+        expect(abortAdds).toBe(abortRemoves);
+        expect(abortAdds).toBeGreaterThan(0);
+    });
+
+    test("cancels in-flight look-ahead requests when the signal aborts", async () => {
+        const controller = new AbortController();
+        const inFlightSignals: AbortSignal[] = [];
+        const fetchPage = vi.fn(
+            async (page: number, _perPage: number, signal?: AbortSignal): Promise<TestPage> => {
+                inFlightSignals.push(signal ?? new AbortController().signal);
+                // Page 1 resolves; page 2 hangs until the signal aborts.
+                if (page >= 2) {
+                    return new Promise<TestPage>((_resolve, reject) => {
+                        signal?.addEventListener("abort", () => {
+                            reject(new DOMException("aborted", "AbortError"));
+                        });
+                    });
+                }
+                return {
+                    pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+                    media: [{ id: page }],
+                };
+            }
+        );
+
+        const promise = paginate(fetchPage, "media", {
+            perPage: 50,
+            concurrency: 2,
+            signal: controller.signal,
+        });
+        // Let page 1 resolve and page 2 launch and hang.
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        controller.abort();
+
+        await promise;
+
+        // The look-ahead page 2 was launched with the traversal-owned signal,
+        // so aborting the external signal must have forwarded to it.
+        expect(inFlightSignals.length).toBeGreaterThanOrEqual(2);
+        const lookAheadSignal = inFlightSignals[1];
+        expect(lookAheadSignal.aborted).toBe(true);
+    });
+
+    test("cancels in-flight look-ahead when the consumer breaks early from paginatePages", async () => {
+        const controller = new AbortController();
+        const inFlightSignals: AbortSignal[] = [];
+        const fetchPage = vi.fn(
+            async (page: number, _perPage: number, signal?: AbortSignal): Promise<TestPage> => {
+                inFlightSignals.push(signal ?? new AbortController().signal);
+                return {
+                    pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+                    media: [{ id: page }],
+                };
+            }
+        );
+
+        // The consumer breaks after the first page; the look-ahead page 2
+        // (launched by the concurrency window) must be cancelled by dispose.
+        for await (const page of paginatePages(fetchPage, {
+            perPage: 50,
+            concurrency: 2,
+            signal: controller.signal,
+        })) {
+            expect(page.media).toEqual([{ id: 1 }]);
+            break;
+        }
+
+        // The look-ahead page 2 was launched with the traversal-owned signal;
+        // dispose (run in the generator's finally) must have aborted it.
+        expect(inFlightSignals.length).toBeGreaterThanOrEqual(2);
+        expect(inFlightSignals[1].aborted).toBe(true);
+    });
+
+    test("paginatePages returns cleanly on abort instead of throwing", async () => {
+        const controller = new AbortController();
+        const fetchPage = vi.fn(
+            async (page: number, _perPage: number, signal?: AbortSignal): Promise<TestPage> => {
+                if (page >= 2) {
+                    return new Promise<TestPage>((_resolve, reject) => {
+                        signal?.addEventListener("abort", () => {
+                            reject(new DOMException("aborted", "AbortError"));
+                        });
+                    });
+                }
+                return {
+                    pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+                    media: [{ id: page }],
+                };
+            }
+        );
+
+        const collected: TestPage[] = [];
+        const promise = (async () => {
+            for await (const page of paginatePages(fetchPage, {
+                perPage: 50,
+                concurrency: 2,
+                signal: controller.signal,
+            })) {
+                collected.push(page);
+            }
+        })();
+
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        controller.abort();
+
+        // The generator must terminate cleanly (no rejection) and yield the
+        // pages resolved before the abort, consistent with paginate/paginateChunks.
+        await expect(promise).resolves.toBeUndefined();
+        expect(collected).toHaveLength(1);
     });
 });
 
@@ -385,7 +553,7 @@ describe("paginatePages", () => {
             void _page;
         }
 
-        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50);
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50, expect.any(AbortSignal));
     });
 });
 
@@ -402,8 +570,8 @@ describe("paginateChunks", () => {
         const result = await paginateChunks(fetchChunk, "lists", { perChunk: 500, concurrency: 1 });
 
         expect(fetchChunk).toHaveBeenCalledTimes(2);
-        expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500);
-        expect(fetchChunk).toHaveBeenNthCalledWith(2, 2, 500);
+        expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500, expect.any(AbortSignal));
+        expect(fetchChunk).toHaveBeenNthCalledWith(2, 2, 500, expect.any(AbortSignal));
         expect(result.items).toEqual([{ name: "list-1" }, { name: "list-2" }]);
         expect(result.chunkCount).toBe(2);
         expect(result.truncated).toBe(false);
@@ -436,7 +604,7 @@ describe("paginateChunks", () => {
             perChunk: 250,
         });
 
-        expect(fetchChunk).toHaveBeenNthCalledWith(1, 4, 250);
+        expect(fetchChunk).toHaveBeenNthCalledWith(1, 4, 250, expect.any(AbortSignal));
         expect(result.chunkCount).toBe(1);
     });
 
@@ -452,7 +620,7 @@ describe("paginateChunks", () => {
             maxChunks: Infinity,
         } as ChunkPaginateOptions);
 
-        expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500);
+        expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500, expect.any(AbortSignal));
         expect(result.chunkCount).toBe(1);
     });
 
@@ -464,7 +632,7 @@ describe("paginateChunks", () => {
 
         const result = await paginateChunks(fetchChunk, "lists", { perChunk: 1000 });
 
-        expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500);
+        expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500, expect.any(AbortSignal));
         expect(result.chunkCount).toBe(1);
     });
 });

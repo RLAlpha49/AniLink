@@ -57,6 +57,27 @@ try {
 }
 ```
 
+## Cancelling pagination look-ahead
+
+The pagination helpers (`paginatePages`, `paginate`, `paginateChunks`) accept an optional `signal` in their options. When aborted, all in-flight look-ahead page requests are cancelled immediately so they stop consuming rate-limit budget and bandwidth for payloads that will be discarded:
+
+```typescript
+const controller = new AbortController();
+
+for await (const page of aniLink.anilist.paginatePages(
+    (page, perPage, signal) =>
+        aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" }, { signal }),
+    { signal: controller.signal }
+)) {
+    if (page.media[0]?.id === 1) {
+        controller.abort(); // cancel in-flight look-ahead, then break
+        break;
+    }
+}
+```
+
+When a consumer breaks out of a `paginatePages` loop early (without passing a `signal`), the generator's `finally` block automatically aborts in-flight look-ahead requests so they do not continue consuming rate-limit budget. See [Pagination](/guides/anilist/pagination) for the full options.
+
 ## Token-request defaults
 
 OAuth token requests (both providers) use their own default timeout of **10 seconds**, independent of instance transport settings. Pass `options.timeout` on the token-request helpers to override it.

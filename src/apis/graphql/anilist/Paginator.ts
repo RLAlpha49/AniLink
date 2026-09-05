@@ -1,5 +1,10 @@
 import type { PageInfo } from "./interfaces/responses/page/PageInfo";
-import { fetchWithLookAhead, resolveCappedInt, resolvePositiveInt } from "../../../base/pagination";
+import {
+    bridgeAbortSignal,
+    fetchWithLookAhead,
+    resolveCappedInt,
+    resolvePositiveInt,
+} from "../../../base/pagination";
 
 /**
  * Default items requested per page. AniList caps `perPage` at 50; caller-supplied
@@ -24,6 +29,32 @@ const MAX_PER_CHUNK = DEFAULT_PER_CHUNK;
 
 /** Default hard cap on chunks fetched, guarding against unbounded loops. */
 const DEFAULT_MAX_CHUNKS = 100;
+
+/**
+ * Invokes a traversal callback (`onPage`/`onChunk`) and swallows any error it
+ * throws so a failing observer cannot abort a traversal after all responses
+ * have already been collected. The error is reported via `console.warn`
+ * (matching the transport layer's default `onHookError` fallback) so a
+ * broken callback is still visible without discarding the collected items.
+ *
+ * @param callback - The user-supplied callback, when provided.
+ * @param name - The callback name, for the warn message.
+ * @param payload - The argument to hand to the callback.
+ */
+const safeCallback = <T>(
+    callback: ((payload: T) => void) | undefined,
+    name: string,
+    payload: T
+): void => {
+    if (callback === undefined) {
+        return;
+    }
+    try {
+        callback(payload);
+    } catch (callbackError) {
+        console.warn(`AniLink ${name} callback failed:`, callbackError);
+    }
+};
 
 /**
  * Default look-ahead `concurrency` for the pagination helpers. A small window
@@ -80,6 +111,32 @@ export interface PaginateOptions {
      * Values above 8 are clamped down to 8.
      */
     concurrency?: number;
+
+    /**
+     * Optional `AbortSignal` to cancel the traversal. When aborted, all
+     * in-flight look-ahead page requests are cancelled immediately so they
+     * stop consuming rate-limit budget and bandwidth for payloads that will
+     * be discarded. The signal is also forwarded to `fetchPage` calls so the
+     * transport layer can abort the underlying HTTP request.
+     */
+    signal?: AbortSignal;
+
+    /**
+     * Optional per-page callback invoked once per page **after all responses
+     * have been collected**, as the results are gathered into the returned
+     * `PaginateResult`. This is a post-collection notification, not a
+     * streaming hook: because the eager helpers collect every response before
+     * returning, this callback does **not** reduce peak memory or release
+     * collected items incrementally. For true streaming, early-exit, or
+     * memory-bounded workflows, use {@link paginatePages} instead — it yields
+     * each page as it arrives and lets the consumer `break` or `return` to
+     * stop the traversal. The callback receives the page's `pageInfo` and
+     * items array; the full `PaginateResult` is still returned for callers
+     * that need the collected items. Errors thrown by the callback are
+     * caught, reported via `console.warn`, and swallowed, so a failing
+     * observer cannot fail {@link paginate} or stop the traversal.
+     */
+    onPage?: (page: { pageInfo: PageInfo; items: unknown[] }) => void;
 }
 
 /** Options controlling a {@link paginateChunks} traversal over `hasNextChunk`-based chunks. */
@@ -110,6 +167,32 @@ export interface ChunkPaginateOptions {
      * Values above 8 are clamped down to 8.
      */
     concurrency?: number;
+
+    /**
+     * Optional `AbortSignal` to cancel the traversal. When aborted, all
+     * in-flight look-ahead chunk requests are cancelled immediately so they
+     * stop consuming rate-limit budget and bandwidth for payloads that will
+     * be discarded.
+     */
+    signal?: AbortSignal;
+
+    /**
+     * Optional per-chunk callback invoked once per chunk **after all responses
+     * have been collected**, as the results are gathered into the returned
+     * `ChunkPaginateResult`. This is a post-collection notification, not a
+     * streaming hook: because the eager helpers collect every response before
+     * returning, this callback does **not** reduce peak memory or release
+     * collected items incrementally. For true streaming, early-exit, or
+     * memory-bounded workflows, use {@link paginatePages} instead — it yields
+     * each page as it arrives and lets the consumer `break` or `return` to
+     * stop the traversal. The callback receives the chunk's `hasNextChunk`
+     * flag and items array; the full `ChunkPaginateResult` is still returned
+     * for callers that need the collected items. Errors thrown by the
+     * callback are caught, reported via `console.warn`, and swallowed, so a
+     * failing observer cannot fail {@link paginateChunks} or stop the
+     * traversal.
+     */
+    onChunk?: (chunk: { hasNextChunk: boolean; items: unknown[] }) => void;
 }
 
 /** The outcome of a {@link paginate} traversal. */
@@ -174,15 +257,15 @@ function extractHasMore(response: unknown): boolean {
  *
  * @typeParam TPage - The page response shape (must include `pageInfo`).
  * @typeParam K - The key of the items array on `TPage`.
- * @param fetchPage - Callback that fetches a single page given its 1-based number and `perPage`.
+ * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and an optional `AbortSignal` forwarded from the traversal.
  * @param itemsKey - The key of the items array on the page response (e.g. `"media"`, `"users"`).
- * @param options - Optional `perPage`, `startPage`, `maxPages`, and `concurrency` controls.
+ * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, and `onPage` controls.
  * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run.
  * @see https://docs.anilist.co/reference/object/pageinfo
  * @example
  * ```typescript
  * const result = await paginate(
- *   (page, perPage) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" }),
+ *   (page, perPage, signal) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" }, { signal }),
  *   "media",
  *   { perPage: 50, maxPages: 10, concurrency: 4 }
  * );
@@ -193,7 +276,7 @@ export async function paginate<
     TPage extends { pageInfo: PageInfo },
     K extends ArrayKeys<TPage> & keyof TPage,
 >(
-    fetchPage: (page: number, perPage: number) => Promise<TPage>,
+    fetchPage: (page: number, perPage: number, signal?: AbortSignal) => Promise<TPage>,
     itemsKey: K,
     options?: PaginateOptions
 ): Promise<PaginateResult<ArrayElement<TPage, K>>> {
@@ -206,23 +289,34 @@ export async function paginate<
         DEFAULT_CONCURRENCY
     );
 
-    const { responses, count, truncated } = await fetchWithLookAhead(
-        (number) => fetchPage(number, perPage),
-        extractHasMore,
-        startPage,
-        maxPages,
-        concurrency
-    );
+    const { signal, dispose } = bridgeAbortSignal(options?.signal);
 
-    const items: ArrayElement<TPage, K>[] = [];
-    const pages: Array<{ pageInfo: PageInfo; items: ArrayElement<TPage, K>[] }> = [];
-    for (const response of responses) {
-        const pageItems = response[itemsKey] as unknown as ArrayElement<TPage, K>[];
-        pages.push({ pageInfo: response.pageInfo, items: pageItems });
-        items.push(...pageItems);
+    try {
+        const { responses, count, truncated } = await fetchWithLookAhead(
+            (number) => fetchPage(number, perPage, signal),
+            extractHasMore,
+            startPage,
+            maxPages,
+            concurrency,
+            signal
+        );
+
+        const items: ArrayElement<TPage, K>[] = [];
+        const pages: Array<{ pageInfo: PageInfo; items: ArrayElement<TPage, K>[] }> = [];
+        for (const response of responses) {
+            const pageItems = response[itemsKey] as unknown as ArrayElement<TPage, K>[];
+            pages.push({ pageInfo: response.pageInfo, items: pageItems });
+            items.push(...pageItems);
+            safeCallback(options?.onPage, "onPage", {
+                pageInfo: response.pageInfo,
+                items: pageItems,
+            });
+        }
+
+        return { items, pages, pageCount: count, truncated };
+    } finally {
+        dispose();
     }
-
-    return { items, pages, pageCount: count, truncated };
 }
 
 /**
@@ -242,14 +336,14 @@ export async function paginate<
  * to 100 round-trips; set an explicit `maxPages` for cost-sensitive workloads.
  *
  * @typeParam TPage - The page response shape (must include `pageInfo`).
- * @param fetchPage - Callback that fetches a single page given its 1-based number and `perPage`.
- * @param options - Optional `perPage`, `startPage`, `maxPages`, and `concurrency` controls. `concurrency` defaults to a small look-ahead window; pass `1` for strictly sequential fetches.
+ * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and an optional `AbortSignal` forwarded from the traversal.
+ * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, and `signal` controls. `concurrency` defaults to a small look-ahead window; pass `1` for strictly sequential fetches.
  * @yields Each raw page response in turn, in page order.
  * @see https://docs.anilist.co/reference/object/pageinfo
  * @example
  * ```typescript
  * for await (const page of paginatePages(
- *   (page, perPage) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" })
+ *   (page, perPage, signal) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" }, { signal })
  * )) {
  *   console.log(page.pageInfo.currentPage, page.media.length);
  *   if (page.media.length > 0 && page.media[0].id === 1) break;
@@ -257,7 +351,7 @@ export async function paginate<
  * ```
  */
 export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
-    fetchPage: (page: number, perPage: number) => Promise<TPage>,
+    fetchPage: (page: number, perPage: number, signal?: AbortSignal) => Promise<TPage>,
     options?: PaginateOptions
 ): AsyncGenerator<TPage> {
     const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE);
@@ -269,6 +363,13 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
         DEFAULT_CONCURRENCY
     );
 
+    const { signal, dispose } = bridgeAbortSignal(options?.signal);
+
+    if (signal.aborted) {
+        dispose();
+        return;
+    }
+
     const pending = new Map<number, Promise<TPage>>();
     let nextToLaunch = startPage;
     let nextToYield = startPage;
@@ -278,12 +379,8 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
         while (!terminal && nextToLaunch - startPage < maxPages && pending.size < concurrency) {
             const page = nextToLaunch;
             nextToLaunch += 1;
-            const request = fetchPage(page, perPage);
+            const request = fetchPage(page, perPage, signal);
             pending.set(page, request);
-            // A sibling may reject before this request is ever awaited; mark
-            // that secondary rejection handled so Node does not report it as
-            // unhandled. The original rejection still propagates when this
-            // slot is consumed.
             void request.catch(() => {});
         }
     };
@@ -296,21 +393,26 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
             if (request === undefined) {
                 break;
             }
-            const response = await request;
+            let response: TPage;
+            try {
+                response = await request;
+            } catch (err) {
+                if (signal.aborted) {
+                    break;
+                }
+                throw err;
+            }
             pending.delete(page);
             nextToYield += 1;
             yield response;
             if (!response.pageInfo.hasNextPage) {
-                // Terminal page: never schedule past it; drain the already-
-                // launched stragglers so nothing dangles, discarding their
-                // payloads, and stop. A failure in a drained straggler must
-                // not fail the traversal.
                 terminal = true;
                 await Promise.allSettled([...pending.values()]);
                 break;
             }
         }
     } finally {
+        dispose();
         pending.clear();
     }
 }
@@ -330,16 +432,16 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
  *
  * @typeParam TChunk - The chunk response shape (must include `hasNextChunk`).
  * @typeParam K - The key of the items array on `TChunk`.
- * @param fetchChunk - Callback that fetches a single chunk given its 1-based number and `perChunk`.
+ * @param fetchChunk - Callback that fetches a single chunk given its 1-based number, `perChunk`, and an optional `AbortSignal` forwarded from the traversal.
  * @param itemsKey - The key of the items array on the chunk response (e.g. `"lists"`).
- * @param options - Optional `perChunk`, `startChunk`, `maxChunks`, and `concurrency` controls.
+ * @param options - Optional `perChunk`, `startChunk`, `maxChunks`, `concurrency`, `signal`, and `onChunk` controls.
  * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run.
  * @see https://docs.anilist.co/reference/object/medialistcollection
  * @example
  * ```typescript
  * const result = await paginateChunks(
- *   (chunk, perChunk) => aniLink.anilist.query.mediaListCollection(
- *     { userId: 542244, type: "ANIME", chunk, perChunk }
+ *   (chunk, perChunk, signal) => aniLink.anilist.query.mediaListCollection(
+ *     { userId: 542244, type: "ANIME", chunk, perChunk }, { signal }
  *   ),
  *   "lists",
  *   { perChunk: 500, maxChunks: 20, concurrency: 3 }
@@ -351,7 +453,7 @@ export async function paginateChunks<
     TChunk extends { hasNextChunk: boolean },
     K extends ArrayKeys<TChunk> & keyof TChunk,
 >(
-    fetchChunk: (chunk: number, perChunk: number) => Promise<TChunk>,
+    fetchChunk: (chunk: number, perChunk: number, signal?: AbortSignal) => Promise<TChunk>,
     itemsKey: K,
     options?: ChunkPaginateOptions
 ): Promise<ChunkPaginateResult<ArrayElement<TChunk, K>>> {
@@ -364,21 +466,32 @@ export async function paginateChunks<
         DEFAULT_CONCURRENCY
     );
 
-    const { responses, count, truncated } = await fetchWithLookAhead(
-        (number) => fetchChunk(number, perChunk),
-        extractHasMore,
-        startChunk,
-        maxChunks,
-        concurrency
-    );
+    const { signal, dispose } = bridgeAbortSignal(options?.signal);
 
-    const items: ArrayElement<TChunk, K>[] = [];
-    const chunks: Array<{ hasNextChunk: boolean; items: ArrayElement<TChunk, K>[] }> = [];
-    for (const response of responses) {
-        const chunkItems = response[itemsKey] as unknown as ArrayElement<TChunk, K>[];
-        chunks.push({ hasNextChunk: response.hasNextChunk, items: chunkItems });
-        items.push(...chunkItems);
+    try {
+        const { responses, count, truncated } = await fetchWithLookAhead(
+            (number) => fetchChunk(number, perChunk, signal),
+            extractHasMore,
+            startChunk,
+            maxChunks,
+            concurrency,
+            signal
+        );
+
+        const items: ArrayElement<TChunk, K>[] = [];
+        const chunks: Array<{ hasNextChunk: boolean; items: ArrayElement<TChunk, K>[] }> = [];
+        for (const response of responses) {
+            const chunkItems = response[itemsKey] as unknown as ArrayElement<TChunk, K>[];
+            chunks.push({ hasNextChunk: response.hasNextChunk, items: chunkItems });
+            items.push(...chunkItems);
+            safeCallback(options?.onChunk, "onChunk", {
+                hasNextChunk: response.hasNextChunk,
+                items: chunkItems,
+            });
+        }
+
+        return { items, chunks, chunkCount: count, truncated };
+    } finally {
+        dispose();
     }
-
-    return { items, chunks, chunkCount: count, truncated };
 }

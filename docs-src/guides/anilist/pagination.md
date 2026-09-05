@@ -65,6 +65,9 @@ console.log(chunked.items.length, chunked.chunkCount, chunked.truncated);
 | `startPage` / `startChunk` | all                         | `1`     | —     | 1-based position to start from                                                                                                                                                                                                                                                                                                                                |
 | `maxPages` / `maxChunks`   | all                         | `100`   | —     | Hard cap guarding unbounded loops                                                                                                                                                                                                                                                                                                                             |
 | `concurrency`              | all                         | `3`     | ≤ 8   | Look-ahead requests kept in flight. A small window overlaps round-trip latency by default; pass `1` for strictly sequential fetches. Because the window runs ahead of consumption, look-ahead may issue up to `concurrency - 1` requests after the terminal page before it is known to be terminal; those stragglers are drained and their payloads discarded |
+| `signal`                   | all                         | —       | —     | `AbortSignal` to cancel the traversal. When aborted, in-flight look-ahead requests are cancelled immediately                                                                                                                                                                                                                                                                                              |
+| `onPage`                   | `paginate`                  | —       | —     | Per-page callback invoked as each page is fetched, for incremental consumption without retaining every raw page response in memory                                                                                                                                                                                                                                                                       |
+| `onChunk`                  | `paginateChunks`            | —       | —     | Per-chunk callback invoked as each chunk is fetched, for incremental consumption without retaining every raw chunk response in memory                                                                                                                                                                                                                                                                     |
 
 ## Ordering and truncation guarantees
 
@@ -72,6 +75,39 @@ console.log(chunked.items.length, chunked.chunkCount, chunked.truncated);
 - Scheduling stops only after the terminal result is processed (consumed in order), not when it settles: a fetched page reporting `hasNextPage: false` (or a chunk reporting `hasNextChunk: false`) halts further scheduling once it has been consumed, and any already-launched stragglers are drained and discarded.
 - `truncated` is `true` when the traversal stopped at `maxPages`/`maxChunks` before the source ran out.
 - `hasNextChunk` semantics: `paginateChunks` continues while the fetched chunk reports more chunks ahead, up to `maxChunks`.
+
+## Cancelling look-ahead
+
+Pass a `signal` to cancel the traversal and abort in-flight look-ahead requests immediately. When a consumer breaks out of a `paginatePages` loop early (without passing a `signal`), the generator's `finally` block automatically aborts in-flight look-ahead requests so they do not continue consuming rate-limit budget for discarded payloads:
+
+```typescript
+const controller = new AbortController();
+
+for await (const page of aniLink.anilist.paginatePages(
+    (page, perPage, signal) =>
+        aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" }, { signal }),
+    { signal: controller.signal, concurrency: 4 }
+)) {
+    if (page.media[0]?.id === 1) {
+        controller.abort(); // cancel in-flight look-ahead, then break
+        break;
+    }
+}
+```
+
+## Incremental consumption
+
+The eager variants (`paginate`, `paginateChunks`) collect every response before returning, so `onPage` and `onChunk` fire after all responses are gathered — they do not reduce peak memory or release collected items incrementally. For true streaming and early-exit workflows, use `paginatePages` instead:
+
+```typescript
+for await (const page of aniLink.anilist.paginatePages(
+    (page, perPage) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" })
+)) {
+    for (const item of page.media) store.upsert(item);
+}
+```
+
+The `onPage` and `onChunk` callbacks are still useful for side-effects (logging, metrics) on each page/chunk after the traversal completes.
 
 ## Next steps
 

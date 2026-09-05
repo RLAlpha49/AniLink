@@ -178,7 +178,7 @@ describe("paginate (property-based)", () => {
                 await paginate(fetchPage, "media", { perPage });
 
                 const expected = resolveCappedInt(perPage, MAX_PER_PAGE, MAX_PER_PAGE);
-                expect(fetchPage).toHaveBeenNthCalledWith(1, 1, expected);
+                expect(fetchPage).toHaveBeenNthCalledWith(1, 1, expected, expect.any(AbortSignal));
             }),
             { numRuns: 200 }
         );
@@ -195,7 +195,12 @@ describe("paginate (property-based)", () => {
                 await paginate(fetchPage, "media", { startPage });
 
                 const expected = resolvePositiveInt(startPage, 1);
-                expect(fetchPage).toHaveBeenNthCalledWith(1, expected, MAX_PER_PAGE);
+                expect(fetchPage).toHaveBeenNthCalledWith(
+                    1,
+                    expected,
+                    MAX_PER_PAGE,
+                    expect.any(AbortSignal)
+                );
             }),
             { numRuns: 200 }
         );
@@ -281,7 +286,7 @@ describe("paginatePages (property-based)", () => {
                 }
 
                 const expected = resolveCappedInt(perPage, MAX_PER_PAGE, MAX_PER_PAGE);
-                expect(fetchPage).toHaveBeenNthCalledWith(1, 1, expected);
+                expect(fetchPage).toHaveBeenNthCalledWith(1, 1, expected, expect.any(AbortSignal));
             }),
             { numRuns: 200 }
         );
@@ -377,7 +382,7 @@ describe("paginateChunks (property-based)", () => {
                 await paginateChunks(fetchChunk, "lists", { perChunk });
 
                 const expected = resolveCappedInt(perChunk, MAX_PER_CHUNK, MAX_PER_CHUNK);
-                expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, expected);
+                expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, expected, expect.any(AbortSignal));
             }),
             { numRuns: 200 }
         );
@@ -394,7 +399,12 @@ describe("paginateChunks (property-based)", () => {
                 await paginateChunks(fetchChunk, "lists", { startChunk });
 
                 const expected = resolvePositiveInt(startChunk, 1);
-                expect(fetchChunk).toHaveBeenNthCalledWith(1, expected, MAX_PER_CHUNK);
+                expect(fetchChunk).toHaveBeenNthCalledWith(
+                    1,
+                    expected,
+                    MAX_PER_CHUNK,
+                    expect.any(AbortSignal)
+                );
             }),
             { numRuns: 200 }
         );

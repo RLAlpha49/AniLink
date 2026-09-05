@@ -66,6 +66,65 @@ export function resolveCappedInt(value: number | undefined, max: number, fallbac
 }
 
 /**
+ * The result of bridging an external abort signal into a traversal-owned
+ * controller. Call {@link AbortBridge.dispose} in a `finally` block so the
+ * listener attached to the external signal is removed when the traversal
+ * ends, preventing leaks on long-lived controllers. `dispose` also aborts
+ * the traversal-owned controller so any still-in-flight look-ahead requests
+ * launched but never consumed (consumer `break`, a mid-traversal rejection,
+ * or normal completion with stragglers) are cancelled immediately instead
+ * of running to completion and consuming rate-limit budget for payloads
+ * that will be discarded.
+ */
+export interface AbortBridge {
+    /** The traversal-owned signal to forward to `fetch` callbacks. */
+    signal: AbortSignal;
+    /**
+     * Aborts the traversal-owned controller (cancelling in-flight look-ahead
+     * requests that have not been consumed) and removes the abort listener
+     * from the external signal. Safe to call when no listener was attached
+     * and idempotent under repeated calls.
+     */
+    dispose: () => void;
+}
+
+/**
+ * Bridges an optional external `AbortSignal` into a traversal-owned
+ * `AbortController` so a single caller-supplied signal can cancel many
+ * in-flight requests. The returned `dispose` function aborts the
+ * traversal-owned controller and removes the listener from the external
+ * signal; it must be called in a `finally` block so a long-lived external
+ * controller does not accumulate one listener per traversal and so
+ * already-launched look-ahead requests are cancelled when the traversal
+ * ends early.
+ *
+ * When `external` is `undefined`, a fresh un-aborted controller is created
+ * and `dispose` only aborts that controller (no external listener to remove).
+ *
+ * @param external - The caller-supplied signal, when provided.
+ * @returns The bridge holding the traversal signal and its cleanup function.
+ */
+export function bridgeAbortSignal(external: AbortSignal | undefined): AbortBridge {
+    const controller = new AbortController();
+    if (external === undefined) {
+        return { signal: controller.signal, dispose: () => controller.abort() };
+    }
+    if (external.aborted) {
+        controller.abort();
+        return { signal: controller.signal, dispose: () => {} };
+    }
+    const onAbort = (): void => controller.abort();
+    external.addEventListener("abort", onAbort, { once: true });
+    return {
+        signal: controller.signal,
+        dispose: () => {
+            controller.abort();
+            external.removeEventListener("abort", onAbort);
+        },
+    };
+}
+
+/**
  * Shared look-ahead driver for paged traversals.
  *
  * Fetches entries through a sliding window of at most `concurrency` launched-
@@ -80,60 +139,121 @@ export function resolveCappedInt(value: number | undefined, max: number, fallbac
  * are drained and discarded so the collected prefix matches what a strictly
  * sequential traversal would have returned.
  *
- * Two call shapes are supported:
+ * When the optional `signal` is aborted, any in-flight requests are settled
+ * (their payloads discarded) and the entries collected so far are returned as
+ * a partial result with `truncated: false` — the abort is not propagated as a
+ * rejection.
  *
- * 1. Numeric paging (AniList pages and chunks):
- *    `fetchWithLookAhead(fetch, extractHasMore, undefined, startNumber, maxEntries, concurrency)`
- *    or the shorthand five-argument form
- *    `fetchWithLookAhead(fetch, extractHasMore, startNumber, maxEntries, concurrency)`.
- *    Keys advance by slot arithmetic (`startNumber + slot`).
- *
- * 2. Cursor paging (MyAnimeList and any provider whose next key is carried by
- *    the previous response): pass an `extractNextKey` callback as the third
- *    argument. Each consumed entry supplies the key for its successor; the
- *    first key is `firstKey`. Cursor mode never schedules past a terminal
- *    entry even if that entry still carries a stale next key.
+ * Two call shapes are supported via explicit overloads: numeric paging (this
+ * signature) and cursor paging (the companion overload below).
  *
  * @typeParam TEntry - The raw response shape of a single page or chunk.
- * @typeParam TKey - The paging key type: a page number in numeric mode, or an opaque cursor value in cursor mode.
- * @param fetch - Callback that fetches a single entry given its paging key.
+ * @param fetch - Callback that fetches a single entry given its numeric page key.
  * @param extractHasMore - Reads the "more data available" flag from a fetched entry. Return `false` for malformed responses so a broken payload ends the traversal instead of looping forever.
- * @param rest - Positional paging arguments in one of two shapes: numeric paging `[startNumber, maxEntries, concurrency]`, or cursor paging `[extractNextKey, firstKey, maxEntries, concurrency]` where `extractNextKey` reads the next paging key from a fetched entry (`undefined` selects numeric paging). Keys, caps, and the concurrency window are already resolved and validated when this driver is invoked.
+ * @param startNumber - The 1-based page number to start from.
+ * @param maxEntries - Hard cap on entries fetched, guarding against unbounded loops.
+ * @param concurrency - Maximum number of requests kept in flight at once.
+ * @param signal - Optional `AbortSignal` to cancel the traversal.
  * @returns The responses in entry order, how many were fetched, and whether
  *          the guard truncated the run.
- * @throws The rejection from the next unconsumed `fetch` call in entry order.
+ * @throws The rejection from the next unconsumed `fetch` call in entry order,
+ *         unless the `signal` aborted (in which case a partial result is returned).
  * @see {@link LookAheadResult}
+ */
+export async function fetchWithLookAhead<TEntry>(
+    fetch: (key: number) => Promise<TEntry>,
+    extractHasMore: (response: TEntry) => boolean,
+    startNumber: number,
+    maxEntries: number,
+    concurrency: number,
+    signal?: AbortSignal
+): Promise<LookAheadResult<TEntry>>;
+/**
+ * Shared look-ahead driver for paged traversals — cursor paging overload.
+ *
+ * Cursor paging is for providers whose next key is carried by the previous
+ * response (for example MyAnimeList). Each consumed entry supplies the key
+ * for its successor via `extractNextKey`; the first key is `firstKey`. Cursor
+ * mode never schedules past a terminal entry even if that entry still carries
+ * a stale next key. Because the next key depends on the previous response,
+ * requests form a dependency chain and the look-ahead window is effectively 1
+ * regardless of the supplied `concurrency`.
+ *
+ * See the numeric paging overload above for the shared abort, drain, and
+ * `truncated` semantics.
+ *
+ * @typeParam TEntry - The raw response shape of a single page or chunk.
+ * @typeParam TKey - The paging key type: an opaque cursor value.
+ * @param fetch - Callback that fetches a single entry given its paging key.
+ * @param extractHasMore - Reads the "more data available" flag from a fetched entry. Return `false` for malformed responses so a broken payload ends the traversal instead of looping forever.
+ * @param extractNextKey - Reads the next paging key from a fetched entry. Pass `undefined` to select numeric paging (use the numeric overload instead in that case).
+ * @param firstKey - The paging key to start from.
+ * @param maxEntries - Hard cap on entries fetched, guarding against unbounded loops.
+ * @param concurrency - Maximum number of requests kept in flight at once (effectively 1 in cursor mode).
+ * @param signal - Optional `AbortSignal` to cancel the traversal.
+ * @returns The responses in entry order, how many were fetched, and whether
+ *          the guard truncated the run.
+ * @throws The rejection from the next unconsumed `fetch` call in entry order,
+ *         unless the `signal` aborted (in which case a partial result is returned).
+ * @see {@link LookAheadResult}
+ */
+export async function fetchWithLookAhead<TEntry, TKey>(
+    fetch: (key: TKey) => Promise<TEntry>,
+    extractHasMore: (response: TEntry) => boolean,
+    extractNextKey: ((response: TEntry) => TKey) | undefined,
+    firstKey: TKey,
+    maxEntries: number,
+    concurrency: number,
+    signal?: AbortSignal
+): Promise<LookAheadResult<TEntry>>;
+/**
+ * Implementation signature for {@link fetchWithLookAhead}. Not directly
+ * callable — callers resolve to one of the two public overloads above. The
+ * third argument dispatches the mode: a function (or `undefined`) selects
+ * cursor paging; a number selects numeric paging. Because the two overloads
+ * have different arities (6 vs 7 params), the numeric overload's optional
+ * `signal` lands in the sixth implementation slot.
  */
 export async function fetchWithLookAhead<TEntry, TKey = number>(
     fetch: (key: TKey) => Promise<TEntry>,
     extractHasMore: (response: TEntry) => boolean,
-    ...rest:
-        | [startNumber: number, maxEntries: number, concurrency: number]
-        | [
-              extractNextKey: ((response: TEntry) => TKey) | undefined,
-              firstKey: TKey,
-              maxEntries: number,
-              concurrency: number,
-          ]
+    extractNextKeyOrStartNumber: ((response: TEntry) => TKey) | undefined | number,
+    firstKeyOrMaxEntries: TKey | number,
+    maxEntriesOrConcurrency: number,
+    concurrencyOrSignal: number | AbortSignal | undefined,
+    maybeSignal?: AbortSignal
 ): Promise<LookAheadResult<TEntry>> {
     let extractNextKey: ((response: TEntry) => TKey) | undefined;
     let firstKey: TKey;
     let numericStart: number | undefined;
     let maxEntries: number;
     let concurrency: number;
+    let signal: AbortSignal | undefined;
 
-    if (rest.length === 4) {
-        [extractNextKey, firstKey, maxEntries, concurrency] = rest as [
-            ((response: TEntry) => TKey) | undefined,
-            TKey,
-            number,
-            number,
-        ];
+    if (
+        typeof extractNextKeyOrStartNumber === "function" ||
+        extractNextKeyOrStartNumber === undefined
+    ) {
+        // Cursor mode: (fetch, extractHasMore, extractNextKey, firstKey, maxEntries, concurrency, signal?)
+        extractNextKey = extractNextKeyOrStartNumber as ((response: TEntry) => TKey) | undefined;
+        firstKey = firstKeyOrMaxEntries as TKey;
+        maxEntries = maxEntriesOrConcurrency;
+        concurrency = concurrencyOrSignal as number;
+        signal = maybeSignal;
         if (extractNextKey === undefined) {
             numericStart = firstKey as unknown as number;
         }
     } else {
-        [numericStart, maxEntries, concurrency] = rest as unknown as [number, number, number];
+        // Numeric mode: (fetch, extractHasMore, startNumber, maxEntries, concurrency, signal?)
+        // The numeric overload has 6 params; the implementation has 7, so:
+        //   p3 = startNumber, p4 = maxEntries, p5 = concurrency, p6 = signal.
+        numericStart = extractNextKeyOrStartNumber as number;
+        maxEntries = firstKeyOrMaxEntries as unknown as number;
+        concurrency = maxEntriesOrConcurrency;
+        signal =
+            typeof concurrencyOrSignal === "number"
+                ? undefined
+                : (concurrencyOrSignal as AbortSignal | undefined);
         firstKey = numericStart as unknown as TKey;
     }
 
@@ -151,6 +271,11 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
     const effectiveConcurrency = extractNextKey === undefined ? concurrency : 1;
 
     while (count < maxEntries) {
+        if (signal?.aborted) {
+            await Promise.allSettled(pending.slice(count));
+            responses.length = count;
+            return { responses, count, truncated: false };
+        }
         while (launched < maxEntries && launched - count < effectiveConcurrency) {
             const slot = launched;
             const key =
@@ -173,8 +298,20 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
 
         // Wait for the next unconsumed entry in order. Awaiting an
         // already-settled request is safe: `responses[slot]` is assigned before
-        // the corresponding promise resolves.
-        await pending[count];
+        // the corresponding promise resolves. An abort that fires while this
+        // await is pending rejects the in-flight `fetch`; treat that as a
+        // partial-result termination (consistent with the top-of-loop abort
+        // check) instead of letting the rejection propagate.
+        try {
+            await pending[count];
+        } catch (err) {
+            if (signal?.aborted) {
+                await Promise.allSettled(pending.slice(count + 1));
+                responses.length = count;
+                return { responses, count, truncated: false };
+            }
+            throw err;
+        }
         count += 1;
 
         const consumed = responses[count - 1];
