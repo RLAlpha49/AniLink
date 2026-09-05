@@ -1,11 +1,6 @@
-import axios from "axios";
-import {
-    AniLinkApiError,
-    AniLinkError,
-    AniLinkErrorCodes,
-    AniLinkNetworkError,
-} from "../../../base/AniLinkError";
+import { AniLinkError } from "../../../base/AniLinkError";
 import { type RequestOptions, sendRequest } from "../../../base/RequestHandler";
+import { sanitizeTokenError } from "../../../base/tokenError";
 import { MAL_AUTHORIZE_URL, MAL_TOKEN_URL } from "./constants";
 
 /** The explicit timeout applied to MAL OAuth token requests by default. */
@@ -112,37 +107,8 @@ export const buildMalAuthorizationUrl = (
  * @param error - The value thrown by the token request transport.
  * @returns A sanitized error that is safe to surface in application logs.
  */
-const normalizeMalTokenError = (error: unknown): AniLinkError => {
-    if (error instanceof AniLinkApiError) {
-        error.message = `MAL token request failed with status ${error.status}.`;
-        return error;
-    }
-    if (error instanceof AniLinkError) return error;
-    if (axios.isCancel(error)) {
-        return new AniLinkNetworkError(
-            AniLinkErrorCodes.ABORTED,
-            "The MAL token request was cancelled."
-        );
-    }
-    if (axios.isAxiosError(error)) {
-        if (error.response?.status !== undefined) {
-            const apiError = new AniLinkApiError(error.response.status, error.response.data);
-            apiError.message = `MAL token request failed with status ${error.response.status}.`;
-            return apiError;
-        }
-        if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
-            return new AniLinkNetworkError(
-                AniLinkErrorCodes.TIMEOUT,
-                "The MAL token request timed out."
-            );
-        }
-        return new AniLinkNetworkError(
-            AniLinkErrorCodes.NETWORK,
-            "The MAL token request failed due to a network error."
-        );
-    }
-    return new AniLinkError("The MAL token request failed.", AniLinkErrorCodes.UNKNOWN);
-};
+const normalizeMalTokenError = (error: unknown): AniLinkError =>
+    sanitizeTokenError(error, "MAL token request");
 
 /**
  * Sends one MyAnimeList OAuth2 token request through the shared transport.

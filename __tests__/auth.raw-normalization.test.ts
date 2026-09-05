@@ -61,7 +61,7 @@ describe("token request normalization of raw transport failures", () => {
         const apiError = error as AniLinkApiError;
         expect(apiError.status).toBe(403);
         expect(apiError.data).toEqual({ error: "forbidden" });
-        expect(apiError.message).toContain("Token request failed with status 403");
+        expect(apiError.message).toContain("AniList token request failed with status 403");
         expect(apiError.rawAxiosError).toBeUndefined();
     });
 
@@ -106,7 +106,7 @@ describe("token request normalization of raw transport failures", () => {
         expect(error).not.toBeInstanceOf(AniLinkApiError);
         expect(error).not.toBeInstanceOf(AniLinkNetworkError);
         expect((error as AniLinkError).code).toBe(AniLinkErrorCodes.UNKNOWN);
-        expect((error as AniLinkError).message).toContain("token request failed");
+        expect((error as AniLinkError).message).toContain("AniList token request failed");
         expect((error as AniLinkError).rawAxiosError).toBeUndefined();
     });
 });

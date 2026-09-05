@@ -1,11 +1,6 @@
-import axios from "axios";
-import {
-    AniLinkApiError,
-    AniLinkError,
-    AniLinkErrorCodes,
-    AniLinkNetworkError,
-} from "../../../base/AniLinkError";
+import { AniLinkError } from "../../../base/AniLinkError";
 import { type RequestOptions, sendRequest } from "../../../base/RequestHandler";
+import { sanitizeTokenError } from "../../../base/tokenError";
 
 /**
  * The explicit timeout applied to OAuth token requests when the caller does
@@ -85,50 +80,8 @@ export const buildAuthorizationUrl = (
  * @param error - The value thrown by the token request transport.
  * @returns A sanitized error that is safe to surface in application logs.
  */
-const normalizeTokenRequestError = (error: unknown): AniLinkError => {
-    // Errors already normalized by the shared pipeline carry only safe fields
-    // (message, stable code, upstream response body), so they pass through
-    // with their specific classification intact; API failures are relabeled
-    // so logs still identify the failing token exchange.
-    if (error instanceof AniLinkApiError) {
-        error.message = `Token request failed with status ${error.status}.`;
-        return error;
-    }
-
-    if (error instanceof AniLinkError) {
-        return error;
-    }
-
-    if (axios.isCancel(error)) {
-        return new AniLinkNetworkError(
-            AniLinkErrorCodes.ABORTED,
-            "The token request was cancelled."
-        );
-    }
-
-    if (axios.isAxiosError(error)) {
-        if (error.response?.status !== undefined) {
-            const status = error.response.status;
-            const apiError = new AniLinkApiError(status, error.response.data);
-            apiError.message = `Token request failed with status ${status}.`;
-            return apiError;
-        }
-
-        if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
-            return new AniLinkNetworkError(
-                AniLinkErrorCodes.TIMEOUT,
-                "The token request timed out."
-            );
-        }
-
-        return new AniLinkNetworkError(
-            AniLinkErrorCodes.NETWORK,
-            "The token request failed due to a network error."
-        );
-    }
-
-    return new AniLinkError("The token request failed.", AniLinkErrorCodes.UNKNOWN);
-};
+const normalizeTokenRequestError = (error: unknown): AniLinkError =>
+    sanitizeTokenError(error, "AniList token request");
 
 /**
  * Sends one AniList OAuth2 token request through the shared transport.
