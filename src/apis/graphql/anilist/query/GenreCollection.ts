@@ -15,7 +15,7 @@ export class GenreCollectionQuery extends AniListOperation {
     /**
      * {@link GenreCollectionQuery.genreCollection} sends a query request to get genre collections.
      *
-     * @returns The genre strings returned by AniList.
+     * @returns The list of genre strings returned by AniList.
      * @see https://docs.anilist.co/reference/query
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
      * @example
@@ -23,13 +23,13 @@ export class GenreCollectionQuery extends AniListOperation {
      * const genres = await new GenreCollectionQuery().genreCollection();
      * ```
      */
-    async genreCollection(options?: RequestOptions): Promise<string> {
+    async genreCollection(options?: RequestOptions): Promise<string[]> {
         const query = `
       query {
         GenreCollection
       }
     `;
 
-        return await this.execute<string>(query, undefined, { transportOptions: options });
+        return await this.execute<string[]>(query, undefined, { transportOptions: options });
     }
 }

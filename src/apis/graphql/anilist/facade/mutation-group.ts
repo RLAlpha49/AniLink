@@ -42,6 +42,21 @@ import { type DeleteThreadCommentVariables } from "../mutation/DeleteThreadComme
 import { type UpdateAniChartSettingsVariables } from "../mutation/UpdateAniChartSettings";
 import { type UpdateAniChartHighlightsVariables } from "../mutation/UpdateAniChartHighlights";
 import { type DeleteResult } from "../types/DeleteResult";
+import { type RegistryMutationKeys } from "../registry";
+
+/**
+ * Compile-time exhaustiveness check between this facade group and the
+ * operation registry. The bidirectional type assertion ensures that
+ * `RegistryMutationKeys` and `keyof AniListMutations["mutation"]` are the
+ * same set: a key added or removed in either place produces a type error. The
+ * registry is the source of truth; this asserts the typed surface keeps pace.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
+const _assertMutationParity: RegistryMutationKeys =
+    null as unknown as keyof AniListMutations["mutation"];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
+const _assertMutationParityReverse: keyof AniListMutations["mutation"] =
+    null as unknown as RegistryMutationKeys;
 
 /**
  * Typed AniList mutation operations exposed by `AniListApi`.

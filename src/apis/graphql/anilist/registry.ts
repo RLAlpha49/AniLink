@@ -92,13 +92,25 @@ export type OperationCategory = "query" | "page" | "mutation";
 /**
  * One declarative wiring entry.
  *
+ * The bound method name is always present on the entry: {@link op} copies the
+ * facade key (the common case where the method shares the key's name) and
+ * {@link opAs} carries an explicit override. Wiring therefore never falls
+ * back to a stringly-typed `name` default — it reads the resolved
+ * {@link OperationEntry.methodName} constant directly.
+ *
  * @typeParam TOperation - The operation class implementing this entry.
+ * @typeParam TName - The literal facade key this entry is exposed under.
  */
-export interface OperationEntry<TOperation extends new (...args: never[]) => unknown> {
+export interface OperationEntry<
+    TOperation extends new (...args: never[]) => unknown,
+    TName extends string = string,
+> {
     /**
      * The facade key the bound method is exposed under (e.g. `"media"`).
+     * Carried as a literal so the registry can derive exhaustive key unions
+     * for compile-time parity checks against the facade group types.
      */
-    readonly name: string;
+    readonly name: TName;
 
     /**
      * The operation class. Constructed once per {@link AniLink} instance with the
@@ -108,9 +120,10 @@ export interface OperationEntry<TOperation extends new (...args: never[]) => unk
 
     /**
      * The async method on {@link OperationEntry.operationClass} that is bound
-     * and exposed on the facade. Defaults to {@link OperationEntry.name}.
+     * and exposed on the facade. Always set: {@link op} defaults it to the
+     * facade key, {@link opAs} carries an explicit override.
      */
-    readonly methodName?: string;
+    readonly methodName: string;
 }
 
 /**
@@ -119,13 +132,13 @@ export interface OperationEntry<TOperation extends new (...args: never[]) => unk
  *
  * @param name - The facade key the bound method is exposed under.
  * @param operationClass - The operation class implementing this entry.
- * @returns The registry entry.
+ * @returns The registry entry with `methodName` defaulted to `name`.
  */
-function op<TOperation extends new (...args: never[]) => unknown>(
-    name: string,
+function op<TName extends string, TOperation extends new (...args: never[]) => unknown>(
+    name: TName,
     operationClass: TOperation
-): OperationEntry<TOperation> {
-    return { name, operationClass };
+): OperationEntry<TOperation, TName> {
+    return { name, operationClass, methodName: name };
 }
 
 /**
@@ -137,11 +150,11 @@ function op<TOperation extends new (...args: never[]) => unknown>(
  * @param methodName - The async method on `operationClass` to bind.
  * @returns The registry entry.
  */
-function opAs<TOperation extends new (...args: never[]) => unknown>(
-    name: string,
+function opAs<TName extends string, TOperation extends new (...args: never[]) => unknown>(
+    name: TName,
     operationClass: TOperation,
     methodName: string
-): OperationEntry<TOperation> {
+): OperationEntry<TOperation, TName> {
     return { name, operationClass, methodName };
 }
 
@@ -150,9 +163,9 @@ function opAs<TOperation extends new (...args: never[]) => unknown>(
  * operation entries.
  */
 type RegistryGroups = {
-    query: readonly OperationEntry<new (...args: never[]) => unknown>[];
-    page: readonly OperationEntry<new (...args: never[]) => unknown>[];
-    mutation: readonly OperationEntry<new (...args: never[]) => unknown>[];
+    query: readonly OperationEntry<new (...args: never[]) => unknown, string>[];
+    page: readonly OperationEntry<new (...args: never[]) => unknown, string>[];
+    mutation: readonly OperationEntry<new (...args: never[]) => unknown, string>[];
 };
 
 /**
@@ -240,3 +253,17 @@ export const ANILIST_OPERATION_REGISTRY = {
         op("updateAniChartHighlights", UpdateAniChartHighlightsMutation),
     ],
 } as const satisfies RegistryGroups;
+
+/**
+ * The literal facade keys each registry group exposes, derived from
+ * {@link ANILIST_OPERATION_REGISTRY} so the registry stays the single source
+ * of truth for which operations exist.
+ *
+ * The facade group types under `facade/` declare the matching typed surface;
+ * each group module asserts parity with a `Record<RegistryXxxKeys, true>`
+ * constant so a key present in one but not the other fails `tsc` at compile
+ * time, rather than only surfacing at test time.
+ */
+export type RegistryQueryKeys = (typeof ANILIST_OPERATION_REGISTRY)["query"][number]["name"];
+export type RegistryPageKeys = (typeof ANILIST_OPERATION_REGISTRY)["page"][number]["name"];
+export type RegistryMutationKeys = (typeof ANILIST_OPERATION_REGISTRY)["mutation"][number]["name"];

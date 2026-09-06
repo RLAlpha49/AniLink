@@ -79,6 +79,31 @@ import { type UserVariables } from "../query/User";
 import { type UserResponse } from "../interfaces/responses/query/User";
 import { type UsersVariables } from "../query/page/Users";
 import { type UsersPageResponse } from "../interfaces/responses/page/Users";
+import { type RegistryPageKeys, type RegistryQueryKeys } from "../registry";
+
+/**
+ * Compile-time exhaustiveness check between this facade group and the
+ * operation registry. The bidirectional type assertions ensure that
+ * `RegistryQueryKeys` and `Exclude<keyof AniListQueries["query"], "page">`
+ * are the same set, and that `RegistryPageKeys` and
+ * `keyof AniListQueries["query"]["page"]` are the same set. A key added or
+ * removed in either place produces a type error. The registry is the source
+ * of truth; this asserts the typed surface keeps pace.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
+const _assertQueryParity: RegistryQueryKeys = null as unknown as Exclude<
+    keyof AniListQueries["query"],
+    "page"
+>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
+const _assertQueryParityReverse: Exclude<keyof AniListQueries["query"], "page"> =
+    null as unknown as RegistryQueryKeys;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
+const _assertPageParity: RegistryPageKeys =
+    null as unknown as keyof AniListQueries["query"]["page"];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
+const _assertPageParityReverse: keyof AniListQueries["query"]["page"] =
+    null as unknown as RegistryPageKeys;
 
 /**
  * Typed AniList query operations exposed by `AniListApi`.
@@ -280,7 +305,7 @@ export type AniListQueries = {
         /**
          * `GenreCollectionQuery` returns the list of all genres recognized by AniList. No variables are required.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
-         * @returns {Promise<string>} A promise that resolves to the genre collection data.
+         * @returns {Promise<string[]>} A promise that resolves to the genre collection data (a list of genre strings).
          *
          * @example
          * ```typescript
@@ -288,7 +313,7 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/query
          */
-        genreCollection: (options?: RequestOptions) => Promise<string>;
+        genreCollection: (options?: RequestOptions) => Promise<string[]>;
 
         /**
          * `MediaTagCollectionQuery` returns all media tags recognized by AniList, optionally filtered by `variables`. Returns a {@link MediaTagCollectionResponse}.

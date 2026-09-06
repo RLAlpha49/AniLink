@@ -59,19 +59,21 @@ describe("ANILIST_OPERATION_REGISTRY", () => {
 
     test("entries with an explicit methodName need it (method differs from key)", () => {
         // Every opAs() case binds a differently-named method; assert the known set.
+        // methodName is always present (op() defaults it to name, opAs() overrides),
+        // so an entry "needs" the override iff it differs from its facade key.
         const renamed = new Set(
             (["query", "page", "mutation"] as const).flatMap((category) =>
                 ANILIST_OPERATION_REGISTRY[category]
-                    .filter((entry) => entry.methodName !== undefined)
+                    .filter((entry) => entry.methodName !== entry.name)
                     .map((entry) => facadePath(category, entry.name))
             )
         );
-        expect([...renamed].sort()).toEqual([
-            "query.page.activityReplies",
-            "query.page.following",
-            "query.page.recommendations",
-            "query.page.threadComments",
-        ]);
+        // Only `following` genuinely needs the override: its facade key is
+        // `following` but the bound method is `FollowingsQuery.followings`.
+        // The other three page entries (activityReplies, threadComments,
+        // recommendations) are wired with opAs() passing a methodName equal to
+        // the key, so methodName === name and they do not "need" a rename.
+        expect([...renamed].sort()).toEqual(["query.page.following"]);
     });
 });
 
@@ -130,6 +132,12 @@ describe("buildAniListWiring", () => {
         ).toEqual({ id: 2, type: "MANGA" });
     });
 
+    test("the lazy getter caches the bound method so the same instance is reused", () => {
+        expect(wiring.query.media).toBe(wiring.query.media);
+        expect(wiring.mutation.deleteMediaListEntry).toBe(wiring.mutation.deleteMediaListEntry);
+        expect(wiring.query.page.following).toBe(wiring.query.page.following);
+    });
+
     test("helpers are shared module functions, not per-instance copies", () => {
         expect(typeof wiring.paginate).toBe("function");
         expect(typeof wiring.paginatePages).toBe("function");
@@ -146,7 +154,13 @@ describe("buildAniListWiring", () => {
         };
         class MissingMethodOperation {}
         const queryEntries = ANILIST_OPERATION_REGISTRY.query as unknown as MutableRegistryEntry[];
-        queryEntries.push({ name: "brokenOperation", operationClass: MissingMethodOperation });
+        // methodName is always present on a real entry (op() defaults it to name);
+        // simulate an op()-style entry so the error reports the facade key, not "undefined".
+        queryEntries.push({
+            name: "brokenOperation",
+            operationClass: MissingMethodOperation,
+            methodName: "brokenOperation",
+        });
 
         try {
             expect(() => buildAniListWiring()).toThrow(
