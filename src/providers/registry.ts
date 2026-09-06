@@ -61,7 +61,7 @@ const buildAniListClient: ProviderFactory<AniListCredentials, AniListApi> = (
     legacyOptions
 ) => {
     const resolved = resolveAniListCredentials(credentials);
-    return buildAniListApi(resolved.auth as string | undefined, resolved.options ?? legacyOptions);
+    return buildAniListApi(resolved.auth, resolved.options ?? legacyOptions);
 };
 
 const buildMalClient: ProviderFactory<MalCredentials, MyAnimeListApi> = (credentials) =>
