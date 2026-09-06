@@ -56,6 +56,6 @@ export class CustomRequest extends AniListOperation {
                 "custom() requires a GraphQL document declaring a query or mutation operation",
             ]);
         }
-        return await this.request<T>(query, variables, false, undefined, options);
+        return await this.request<T>(query, variables, { transportOptions: options });
     }
 }

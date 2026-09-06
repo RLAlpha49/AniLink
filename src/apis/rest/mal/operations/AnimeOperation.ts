@@ -31,14 +31,13 @@ export class MalAnimeOperation extends RestOperation {
      */
     public async get(id: number, options: MalRequestOptions = {}): Promise<MalAnime> {
         const { fields, ...transportOptions } = options;
-        return await this.execute<MalAnime>(
-            "/anime/{id}",
-            { transportOptions },
-            fields === undefined
-                ? undefined
-                : { fields: Array.isArray(fields) ? fields.join(",") : fields },
-            undefined,
-            { id }
-        );
+        return await this.execute<MalAnime>("/anime/{id}", {
+            transportOptions,
+            query:
+                fields === undefined
+                    ? undefined
+                    : { fields: Array.isArray(fields) ? fields.join(",") : fields },
+            pathParams: { id },
+        });
     }
 }

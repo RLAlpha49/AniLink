@@ -33,17 +33,16 @@ class TestAnimeOperation extends RestOperation {
     }
 
     async searchAnime(params: Record<string, unknown>): Promise<unknown> {
-        return await this.execute("/anime", { method: "GET" }, params);
+        return await this.execute("/anime", { method: "GET", query: params });
     }
 
     async updateListing(id: number, body: object): Promise<unknown> {
-        return await this.execute(
-            "/anime/{id}/my_list_status",
-            { method: "PUT", requiresAuth: true },
-            undefined,
+        return await this.execute("/anime/{id}/my_list_status", {
+            method: "PUT",
+            requiresAuth: true,
             body,
-            { id }
-        );
+            pathParams: { id },
+        });
     }
 }
 

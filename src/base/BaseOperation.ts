@@ -28,6 +28,27 @@ export const mergeOptions = (
 };
 
 /**
+ * Named trailing options for {@link BaseOperation.dispatch}, replacing the
+ * former positional tail so call sites name their arguments and new options
+ * can be added without reordering. Mirrors the {@link SendRequestOptions}
+ * pattern already used by {@link sendRequest}.
+ *
+ * @see {@link BaseOperation.dispatch}
+ */
+export interface DispatchOptions {
+    /** Whether the operation requires an authentication token; the request fails fast with an {@link AniLinkAuthError} when set and no auth material is configured. Defaults to `false`. */
+    requiresAuth?: boolean;
+    /** Human-readable operation name included in missing-token auth errors. Defaults to the concrete subclass name. */
+    operation?: string;
+    /** Per-request {@link RequestOptions} merged over the instance-level ones. A field set here wins; unset fields keep the instance value. */
+    transportOptions?: RequestOptions;
+    /** Optional `Content-Type` header override for non-GraphQL endpoints. This is purely a header concern; response interpretation is controlled by `protocol`. When `protocol` is omitted, a set `contentType` implies the `"rest"` protocol. */
+    contentType?: string;
+    /** The wire protocol of the request, selecting response interpretation and error classification. `"graphql"` unwraps the envelope; `"rest"` returns the body verbatim. When omitted, the protocol is inferred from `contentType`. */
+    protocol?: "graphql" | "rest";
+}
+
+/**
  * Resolves the label identifying which operation required authentication.
  *
  * Operations know their own identity, so the concrete subclass name is used
@@ -123,10 +144,7 @@ export abstract class BaseOperation {
      * @param url - The absolute endpoint URL to call.
      * @param method - The HTTP method for the call.
      * @param data - The request body payload, when the call carries one.
-     * @param requiresAuth - Whether the operation requires an authentication token.
-     * @param operation - Human-readable operation name included in missing-token auth errors. Defaults to the concrete subclass name.
-     * @param transportOptions - Optional per-request transport settings merged over the instance-level ones. A field set here wins; unset fields keep the instance value.
-     * @param contentType - Optional `Content-Type` override. When provided, the response body is returned verbatim instead of being unwrapped as a GraphQL envelope.
+     * @param options - Named trailing options; see {@link DispatchOptions}.
      * @returns Whatever the shared pipeline resolves for the call.
      * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, or a normalized {@link AniLinkError} when the request fails.
      */
@@ -134,12 +152,9 @@ export abstract class BaseOperation {
         url: string,
         method: HttpMethod,
         data?: object,
-        requiresAuth = false,
-        operation?: string,
-        transportOptions?: RequestOptions,
-        contentType?: string,
-        protocol?: "graphql" | "rest"
+        options: DispatchOptions = {}
     ): Promise<T> {
+        const { requiresAuth, operation, transportOptions, contentType, protocol } = options;
         return await sendRequest<T>(url, method, data, this.requestAuth, {
             requiresAuth: requiresAuth || undefined,
             options: mergeOptions(this.resolvedOptions, transportOptions),

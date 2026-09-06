@@ -7,6 +7,23 @@ import {
 } from "../../base/ValidateVariables";
 
 /**
+ * Named trailing options for {@link GraphQLOperation.request}, replacing the
+ * former positional tail so call sites name their arguments and new options
+ * can be added without reordering. Mirrors the {@link DispatchOptions} pattern
+ * used by {@link BaseOperation.dispatch}.
+ *
+ * @see {@link GraphQLOperation.request}
+ */
+export interface GraphQLRequestOptions {
+    /** Whether the operation requires an authentication token. Defaults to `false` (public queries). */
+    requiresAuth?: boolean;
+    /** Optional human-readable operation name included in missing-token auth errors. Defaults to the concrete operation class name. */
+    operation?: string;
+    /** Per-request transport settings merged over the instance-level ones. A field set here wins; unset fields keep the instance value. */
+    transportOptions?: RequestOptions;
+}
+
+/**
  * A single variable-presence requirement declared by an operation.
  *
  * Mirrors the requirement shapes accepted by {@link requireVariables}, with
@@ -81,28 +98,22 @@ export abstract class GraphQLOperation extends BaseOperation {
      *
      * @param query - The GraphQL document to execute.
      * @param variables - The variables for the document. When omitted the request body contains only the query.
-     * @param requiresAuth - Whether the operation requires an authentication token.
-     * @param operation - Optional human-readable operation name included in missing-token auth errors. Defaults to the concrete operation class name.
-     * @param transportOptions - Optional per-request transport settings merged over the instance-level ones. A field set here wins; unset fields keep the instance value.
+     * @param options - Named trailing options; see {@link GraphQLRequestOptions}.
      * @returns The unwrapped response data. For documents with a single root field this is the bare field value; otherwise it is the full `{ data }` envelope.
      * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, or a normalized {@link AniLinkError} when the request fails.
      */
     protected async request<T = unknown>(
         query: string,
         variables?: unknown,
-        requiresAuth = false,
-        operation?: string,
-        transportOptions?: RequestOptions
+        options: GraphQLRequestOptions = {}
     ): Promise<T> {
+        const { requiresAuth, operation, transportOptions } = options;
         const data = variables === undefined ? { query } : { query, variables };
-        return await this.dispatch<T>(
-            this.graphqlUrl,
-            "POST",
-            data,
+        return await this.dispatch<T>(this.graphqlUrl, "POST", data, {
             requiresAuth,
             operation,
-            transportOptions
-        );
+            transportOptions,
+        });
     }
 
     /**
@@ -138,6 +149,6 @@ export abstract class GraphQLOperation extends BaseOperation {
             validateVariables(variables, mappings);
         }
 
-        return await this.request<T>(query, variables, requiresAuth, undefined, transportOptions);
+        return await this.request<T>(query, variables, { requiresAuth, transportOptions });
     }
 }

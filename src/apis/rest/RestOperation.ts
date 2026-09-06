@@ -29,6 +29,22 @@ export interface RestExecuteOptions {
     readonly contentType?: string;
 
     /**
+     * Query parameters appended to the URL (GET/DELETE), when provided.
+     */
+    readonly query?: Record<string, unknown>;
+
+    /**
+     * The JSON request body (POST/PUT), when provided.
+     */
+    readonly body?: object;
+
+    /**
+     * Values substituted into `{placeholder}` segments of `path`. Defaults to
+     * an empty map so paths without placeholders need none.
+     */
+    readonly pathParams?: Readonly<Record<string, string | number>>;
+
+    /**
      * Per-request transport settings (`timeout`, `signal`, retry policy,
      * lifecycle hooks, pacing, circuit breaker) merged over the instance-level
      * options for this single call. A field set here wins; unset fields keep
@@ -97,21 +113,23 @@ export abstract class RestOperation extends BaseOperation {
      *
      * @typeParam T - The expected parsed response body.
      * @param path - The endpoint path beginning with `/` (for example `/anime/{id}`); placeholders are substituted from `pathParams` before interpolation into the URL.
-     * @param options - The declarative request contract: method, auth requirement, content type, and per-request transport settings.
-     * @param query - Query parameters appended to the URL (GET/DELETE), when provided.
-     * @param body - The JSON request body (POST/PUT), when provided.
-     * @param pathParams - Values substituted into `{placeholder}` segments of `path`. Defaults to an empty map so paths without placeholders need none.
+     * @param options - The declarative request contract: method, auth requirement, content type, query/body/pathParams, and per-request transport settings.
      * @returns The parsed response body as-is.
      * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, or a normalized {@link AniLinkError} (typically `AniLinkRestError`) when the request fails.
      */
     protected async execute<T = unknown>(
         path: string,
-        options: RestExecuteOptions = {},
-        query?: Record<string, unknown>,
-        body?: object,
-        pathParams: Readonly<Record<string, string | number>> = {}
+        options: RestExecuteOptions = {}
     ): Promise<T> {
-        const { method = "GET", requiresAuth = false, contentType, transportOptions } = options;
+        const {
+            method = "GET",
+            requiresAuth = false,
+            contentType,
+            query,
+            body,
+            pathParams = {},
+            transportOptions,
+        } = options;
 
         const interpolatedPath = path.replace(/\{(\w+)\}/g, (match, name: string) => {
             const value = pathParams[name];
@@ -126,15 +144,11 @@ export abstract class RestOperation extends BaseOperation {
         // body-less GET/DELETE requests.
         const effectiveContentType = contentType ?? "application/json";
 
-        return await this.dispatch<T>(
-            url,
-            method,
-            carriesBody ? body : undefined,
+        return await this.dispatch<T>(url, method, carriesBody ? body : undefined, {
             requiresAuth,
-            undefined,
             transportOptions,
-            effectiveContentType,
-            "rest"
-        );
+            contentType: effectiveContentType,
+            protocol: "rest",
+        });
     }
 }

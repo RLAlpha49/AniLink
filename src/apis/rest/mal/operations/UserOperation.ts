@@ -30,12 +30,13 @@ export class MalUserOperation extends RestOperation {
      */
     public async me(options: MalRequestOptions = {}): Promise<MalUser> {
         const { fields, ...transportOptions } = options;
-        return await this.execute<MalUser>(
-            "/users/@me",
-            { requiresAuth: true, transportOptions },
-            fields === undefined
-                ? undefined
-                : { fields: Array.isArray(fields) ? fields.join(",") : fields }
-        );
+        return await this.execute<MalUser>("/users/@me", {
+            requiresAuth: true,
+            transportOptions,
+            query:
+                fields === undefined
+                    ? undefined
+                    : { fields: Array.isArray(fields) ? fields.join(",") : fields },
+        });
     }
 }
