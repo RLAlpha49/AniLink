@@ -73,6 +73,23 @@ test("unwraps a single-root-field response to the bare object", () => {
     expect(result).not.toHaveProperty("data");
 });
 
+test("returns null when the single root field is null (not-found entity)", () => {
+    // A single-root-field query for a nonexistent entity returns
+    // `{ data: { Media: null } }`. The unwrapper must surface `null`, not
+    // collapse back into the envelope.
+    const envelope = { data: { Media: null } };
+
+    const result = unwrapGraphQLResponse(envelope);
+
+    expect(result).toBeNull();
+});
+
+test("returns other falsy single-root-field values (0, false, empty string)", () => {
+    expect(unwrapGraphQLResponse({ data: { count: 0 } })).toBe(0);
+    expect(unwrapGraphQLResponse({ data: { ok: false } })).toBe(false);
+    expect(unwrapGraphQLResponse({ data: { name: "" } })).toBe("");
+});
+
 test("keeps the full envelope when the response has multiple root fields", () => {
     const envelope = {
         data: {
