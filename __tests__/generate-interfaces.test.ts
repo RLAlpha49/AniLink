@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
     parseSelectionSet,
     spliceBareInterpolations,
@@ -11,6 +11,29 @@ import {
 } from "../lib/interfaces-codegen/model";
 import { applyGeneratedRegion, renderTypeDeclaration } from "../lib/interfaces-codegen/emit";
 import { buildGeneratedFiles } from "../lib/interfaces-codegen/run";
+import {
+    collectOperationDocument,
+    hasTopLevelTemplateLiteralBinding,
+} from "../scripts/generate-interfaces";
+
+const { stubbedFiles } = vi.hoisted(() => ({ stubbedFiles: new Map<string, string>() }));
+
+vi.mock("node:fs", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("node:fs")>();
+    return {
+        ...actual,
+        readFileSync: ((path: NodeJS.ArrayBufferView | string, options?: unknown) => {
+            // Normalize to forward slashes so stub keys match on both Windows
+            // (backslash) and POSIX (forward slash) path joins.
+            const key = String(path).replace(/\\/g, "/");
+            for (const [relPath, content] of stubbedFiles) {
+                if (key.endsWith(relPath)) return content;
+            }
+            // Delegate to the real implementation for non-stubbed paths.
+            return actual.readFileSync(path as never, options as never);
+        }) as typeof actual.readFileSync,
+    };
+});
 
 describe("parseSelectionSet", () => {
     it("parses a flat field list and strips arguments", () => {
@@ -723,5 +746,94 @@ describe("buildGeneratedFiles", () => {
         expect(content).toContain("@generated-end");
         expect(content).toContain("export interface FuzzyDate {");
         expect(content).toContain("year: number;");
+    });
+});
+
+describe("hasTopLevelTemplateLiteralBinding", () => {
+    it("returns true for a real top-level const query template literal", () => {
+        const source = "const query = `query { id }`;\n";
+        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
+        expect(match).not.toBeNull();
+        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(true);
+    });
+
+    it("returns false when the match is inside a line comment", () => {
+        const source = "// const query = `query { id }`;\nconst other = 1;\n";
+        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
+        expect(match).not.toBeNull();
+        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(false);
+    });
+
+    it("returns false when the match is inside a block comment", () => {
+        const source = "/* const query = `query { id }` */\nconst other = 1;\n";
+        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
+        expect(match).not.toBeNull();
+        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(false);
+    });
+
+    it("returns false when the match is inside a string literal", () => {
+        const source = 'const x = "const query = `query { id }`";\nconst other = 1;\n';
+        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
+        expect(match).not.toBeNull();
+        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(false);
+    });
+
+    it("returns true for a const query template literal nested inside a method body", () => {
+        const source = [
+            "export class Foo {",
+            "  async bar() {",
+            "    const query = `query { id }`;",
+            "    return query;",
+            "  }",
+            "}",
+            "",
+        ].join("\n");
+        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
+        expect(match).not.toBeNull();
+        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(true);
+    });
+});
+
+describe("collectOperationDocument", () => {
+    afterEach(() => {
+        stubbedFiles.clear();
+    });
+
+    it("returns the inline document for a real top-level template literal", () => {
+        stubbedFiles.set("fake/operation.ts", "const query = `query { id }`;\n");
+        expect(collectOperationDocument("fake/operation.ts")).toBe("query { id }");
+    });
+
+    it("throws a named-file error when the document is bound to an imported constant", () => {
+        stubbedFiles.set(
+            "fake/imported.ts",
+            'import { SomeFragment } from "./frag";\nconst query = SomeFragment;\n'
+        );
+        expect(() => collectOperationDocument("fake/imported.ts")).toThrow(
+            /generate-interfaces: fake\/imported\.ts binds the document to an imported constant \(const query = SomeFragment\)/
+        );
+    });
+
+    it("throws a named-file error when no query/mutation binding exists", () => {
+        stubbedFiles.set("fake/missing.ts", "export class Foo {}\n");
+        expect(() => collectOperationDocument("fake/missing.ts")).toThrow(
+            /generate-interfaces: fake\/missing\.ts has no inline query\/mutation template literal/
+        );
+    });
+
+    it("returns the inline document when the binding is nested in a method body", () => {
+        stubbedFiles.set(
+            "fake/in-method.ts",
+            [
+                "export class Foo {",
+                "  async bar() {",
+                "    const query = `query { id }`;",
+                "    return query;",
+                "  }",
+                "}",
+                "",
+            ].join("\n")
+        );
+        expect(collectOperationDocument("fake/in-method.ts")).toBe("query { id }");
     });
 });
