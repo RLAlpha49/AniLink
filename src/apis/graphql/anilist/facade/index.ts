@@ -1,17 +1,20 @@
 /**
  * AniList provider facade.
  *
- * Adding an operation touches four sites: the operation class under `query/`
- * or `mutation/`, its declaration on one of the group types under `facade/`
- * (composed into {@link AniListApi} below), and its instance wiring in
- * `wiring.ts`.
+ * Adding an operation touches three sites: the operation class under `query/`
+ * or `mutation/`, its entry in the declarative registry in `registry.ts`, and
+ * its declaration on one of the group types under `facade/` (composed into
+ * {@link AniListApi} below). Instance wiring in `wiring.ts` is automatic from
+ * the registry, and the group modules carry a compile-time
+ * `Record<RegistryXxxKeys, true>` parity constant so the registry
+ * and the typed surface cannot drift without failing `tsc`.
  */
 import type { AniListCustom } from "./custom-group";
 import type { AniListQueries } from "./query-group";
 import type { AniListMutations } from "./mutation-group";
 import type { AniListHelpers } from "./helpers-group";
 import { buildAniListWiring } from "../wiring";
-import type { RequestOptions } from "../../../../base/RequestHandler";
+import type { RequestAuthInput, RequestOptions } from "../../../../base/RequestHandler";
 
 export {
     AniLinkApiError,
@@ -22,8 +25,8 @@ export {
     AniLinkNetworkError,
     AniLinkRestError,
     AniLinkValidationError,
-} from "../../../../base/AniLinkError";
-export type { AniLinkErrorCode, RateLimitInfo } from "../../../../base/AniLinkError";
+} from "../../../../errors";
+export type { AniLinkErrorCode, RateLimitInfo } from "../../../../errors";
 
 /**
  * Transport settings accepted by an {@link AniLink} client: `timeout`, `signal`,
@@ -54,11 +57,14 @@ export type AniLinkOptions = RequestOptions;
 /**
  * Builds the {@link AniListApi} facade from the operation classes.
  *
- * @param authToken - The authentication token shared by every operation instance.
+ * @param authToken - The authentication material shared by every operation instance. A plain string is treated as a bearer token; a structured {@link RequestAuthInput} carries explicit headers for schemes such as Basic auth or a provider API key.
  * @param options - Timeout, cancellation, and debugging settings; an {@link AniLinkOptions} merged over the defaults.
  * @returns The composed {@link AniListApi}.
  */
-export function buildAniListApi(authToken?: string, options?: AniLinkOptions): AniListApi {
+export function buildAniListApi(
+    authToken?: RequestAuthInput,
+    options?: AniLinkOptions
+): AniListApi {
     return buildAniListWiring(authToken, options);
 }
 

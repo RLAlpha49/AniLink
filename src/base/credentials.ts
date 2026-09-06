@@ -164,17 +164,3 @@ export function resolveMalCredentials(
         ]),
     };
 }
-
-/**
- * Copies an AniList credential slot for legacy callers.
- *
- * @param credentials - The AniList credential slot.
- * @returns A shallow copy of the slot, or undefined.
- *
- * @see {@link AniListCredentials}
- */
-export function resolveProviderCredentials(
-    credentials: AniListCredentials | undefined
-): AniListCredentials | undefined {
-    return credentials === undefined ? undefined : { ...credentials };
-}

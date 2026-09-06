@@ -24,8 +24,8 @@ export {
     AniLinkNetworkError,
     AniLinkRestError,
     AniLinkValidationError,
-} from "./base/AniLinkError";
-export type { AniLinkErrorCode, RateLimitInfo } from "./base/AniLinkError";
+} from "./errors";
+export type { AniLinkErrorCode, RateLimitInfo } from "./errors";
 
 export { paginate, paginateChunks, paginatePages } from "./apis/graphql/anilist/Paginator";
 export type {

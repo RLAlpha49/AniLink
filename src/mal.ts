@@ -30,4 +30,16 @@ export type {
 } from "./apis/rest/mal/facade";
 export type { MalAnime, MalPicture, MalRequestOptions, MalUser } from "./apis/rest/mal/types";
 export type { AniLinkCredentials, MalCredentials, ProviderCredentials } from "./base/credentials";
-export type { RequestAuth, RequestAuthInput, RequestOptions } from "./base/RequestHandler";
+
+export {
+    AniLinkApiError,
+    AniLinkAuthError,
+    AniLinkError,
+    AniLinkErrorCodes,
+    AniLinkGraphQLError,
+    AniLinkNetworkError,
+    AniLinkRestError,
+    AniLinkValidationError,
+} from "./errors";
+export type { AniLinkErrorCode, RateLimitInfo } from "./errors";
+export type { RequestAuth, RequestAuthInput, RequestOptions } from "./errors";
