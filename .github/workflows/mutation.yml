@@ -1,0 +1,89 @@
+name: Mutation testing
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  mutation:
+    name: StrykerJS mutation score
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Skip when nothing changed since the last successful run
+        id: changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Find the SHA of the most recent successful mutation run on master.
+          PREV_SHA=$(gh run list \
+            --workflow mutation.yml \
+            --branch master \
+            --status success \
+            --limit 1 \
+            --json headSha,conclusion \
+            --jq '.[0].headSha' 2>/dev/null || true)
+
+          if [ -n "$PREV_SHA" ] && [ "$PREV_SHA" = "$(git rev-parse origin/master)" ]; then
+            echo "No changes on master since the last successful mutation run ($PREV_SHA)."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Changes detected (previous: ${PREV_SHA:-none}, current: $(git rev-parse origin/master))."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        if: steps.changed.outputs.skip != 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.changed.outputs.skip != 'true'
+        run: npm ci
+
+      - name: Run mutation tests
+        if: steps.changed.outputs.skip != 'true'
+        run: npm run mutation:test
+
+      - name: Note skipped run in job summary
+        if: steps.changed.outputs.skip == 'true'
+        run: echo "## StrykerJS mutation score
+
+          Skipped — no changes on master since the last successful run." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Surface mutation score in job summary
+        if: always() && steps.changed.outputs.skip != 'true'
+        run: |
+          if [ -f .stryker-tmp/mutation.json ]; then
+            node -e "
+              const fs = require('fs');
+              const report = JSON.parse(fs.readFileSync('.stryker-tmp/mutation.json', 'utf8'));
+              const score = report.mutationScore ?? 0;
+              const killed = report.killed ?? 0;
+              const total = report.totalDetected + report.totalUndetected;
+              const table = [
+                '| Metric | Value |',
+                '| --- | --- |',
+                '| Mutation score | ' + score.toFixed(2) + '% |',
+                '| Mutants killed | ' + killed + ' |',
+                '| Total mutants | ' + total + ' |'
+              ].join('\n');
+              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '## StrykerJS mutation score\n\n' + table + '\n');
+            "
+          else
+            echo "## StrykerJS mutation score
+
+            Mutation report not found — the run may have failed before producing it." >> "$GITHUB_STEP_SUMMARY"
+          fi

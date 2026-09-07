@@ -17,7 +17,7 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**'],
       exclude: ['node_modules/**', 'dist/**', 'docs-src/**'],
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'lcov', 'json-summary'],
       thresholds: {
         statements: 90,
         branches: 90,
