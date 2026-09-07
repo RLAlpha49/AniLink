@@ -12,6 +12,7 @@ export default defineConfig({
     exclude: ['__tests__/integration/**'],
     setupFiles: ['./__tests__/setup.ts'],
     testTimeout: 5000,
+    fsModuleCache: true,
     coverage: {
       provider: 'v8',
       include: ['src/**'],
