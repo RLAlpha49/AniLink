@@ -557,6 +557,206 @@ describe("paginatePages", () => {
     });
 });
 
+describe("extractHasMore malformed-response branches", () => {
+    // extractHasMore is private to Paginator.ts; it is exercised through the
+    // public paginate/paginatePages entry points. A malformed pageInfo (present
+    // but not a non-null object) must end the traversal instead of looping.
+
+    test("paginate ends the traversal when pageInfo is null", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+            // Page 1 carries a null pageInfo; extractHasMore must read it as
+            // "no more data" so the traversal stops after one page.
+            return {
+                pageInfo: null as unknown as PageInfo,
+                media: [{ id: page }],
+            };
+        });
+
+        const result = await paginate(fetchPage, "media", { concurrency: 1 });
+
+        expect(fetchPage).toHaveBeenCalledTimes(1);
+        expect(result.pageCount).toBe(1);
+        expect(result.truncated).toBe(false);
+    });
+
+    test("paginate ends the traversal when pageInfo is a non-object", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+            return {
+                pageInfo: "not-an-object" as unknown as PageInfo,
+                media: [{ id: page }],
+            };
+        });
+
+        const result = await paginate(fetchPage, "media", { concurrency: 1 });
+
+        expect(fetchPage).toHaveBeenCalledTimes(1);
+        expect(result.pageCount).toBe(1);
+        expect(result.truncated).toBe(false);
+    });
+});
+
+describe("safeCallback error swallowing", () => {
+    // The onPage/onChunk callbacks are wrapped by safeCallback, which catches
+    // a throwing observer and reports it via console.warn so a broken callback
+    // cannot abort a traversal after all responses have been collected.
+
+    test("paginate swallows a throwing onPage callback and warns", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 2 }),
+            media: [{ id: page }],
+        }));
+        const onPage = vi.fn(() => {
+            throw new Error("observer failed");
+        });
+
+        const result = await paginate(fetchPage, "media", { concurrency: 1, onPage });
+
+        // The traversal completes despite the throwing callback.
+        expect(result.pageCount).toBe(2);
+        expect(onPage).toHaveBeenCalledTimes(2);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("onPage"), expect.any(Error));
+        warn.mockRestore();
+    });
+
+    test("paginateChunks swallows a throwing onChunk callback and warns", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
+            hasNextChunk: chunk < 2,
+            lists: [{ name: `list-${chunk}` }],
+        }));
+        const onChunk = vi.fn(() => {
+            throw new Error("chunk observer failed");
+        });
+
+        const result = await paginateChunks(fetchChunk, "lists", {
+            concurrency: 1,
+            onChunk,
+        });
+
+        expect(result.chunkCount).toBe(2);
+        expect(onChunk).toHaveBeenCalledTimes(2);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("onChunk"), expect.any(Error));
+        warn.mockRestore();
+    });
+});
+
+describe("paginatePages abort branches", () => {
+    test("returns cleanly when the signal is already aborted before the first fetch", async () => {
+        const controller = new AbortController();
+        controller.abort();
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+            media: [{ id: page }],
+        }));
+
+        const yielded: TestPage[] = [];
+        for await (const page of paginatePages(fetchPage, { signal: controller.signal })) {
+            yielded.push(page);
+        }
+
+        // The pre-abort guard exits before any fetch is launched.
+        expect(fetchPage).not.toHaveBeenCalled();
+        expect(yielded).toHaveLength(0);
+    });
+
+    test("breaks without rethrowing when a fetch rejects and the signal is already aborted", async () => {
+        // Covers the `if (signal.aborted) { break; }` branch in the catch
+        // block: a fetch rejects because the signal aborted mid-flight, and
+        // the generator must terminate cleanly instead of rethrowing.
+        const controller = new AbortController();
+        let fetchHanging: () => void = () => {};
+        const fetchHangingPromise = new Promise<void>((resolve) => {
+            fetchHanging = resolve;
+        });
+        const fetchPage = vi.fn(
+            async (page: number, _perPage: number, signal?: AbortSignal): Promise<TestPage> => {
+                if (page >= 2) {
+                    return new Promise<TestPage>((_resolve, reject) => {
+                        fetchHanging();
+                        signal?.addEventListener("abort", () => {
+                            reject(new DOMException("aborted", "AbortError"));
+                        });
+                    });
+                }
+                return {
+                    pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+                    media: [{ id: page }],
+                };
+            }
+        );
+
+        const collected: TestPage[] = [];
+        const promise = (async () => {
+            for await (const page of paginatePages(fetchPage, {
+                perPage: 50,
+                concurrency: 2,
+                signal: controller.signal,
+            })) {
+                collected.push(page);
+            }
+        })();
+
+        // Wait for the look-ahead page 2 to launch and register its abort
+        // listener before aborting. Aborting rejects page 2; the catch block
+        // sees the aborted signal and breaks instead of rethrowing.
+        await fetchHangingPromise;
+        controller.abort();
+
+        await expect(promise).resolves.toBeUndefined();
+        expect(collected).toHaveLength(1);
+    });
+
+    test("breaks without rethrowing when the signal aborts during a consumed rejection", async () => {
+        // A consumed page rejects with a non-abort error while the signal is
+        // already aborted: the `if (signal.aborted) { break; }` branch must
+        // swallow the error and terminate the generator cleanly.
+        const controller = new AbortController();
+        let fetchHanging: () => void = () => {};
+        const fetchHangingPromise = new Promise<void>((resolve) => {
+            fetchHanging = resolve;
+        });
+        const fetchPage = vi.fn(
+            async (page: number, _perPage: number, signal?: AbortSignal): Promise<TestPage> => {
+                if (page === 1) {
+                    // Page 1 hangs until the signal aborts, then rejects with a
+                    // generic error (not an AbortError) so the catch block's
+                    // signal.aborted check is the only thing preventing a rethrow.
+                    return new Promise<TestPage>((_resolve, reject) => {
+                        fetchHanging();
+                        signal?.addEventListener("abort", () => {
+                            reject(new Error("fetch failed"));
+                        });
+                    });
+                }
+                return {
+                    pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
+                    media: [{ id: page }],
+                };
+            }
+        );
+
+        const collected: TestPage[] = [];
+        const promise = (async () => {
+            for await (const page of paginatePages(fetchPage, {
+                perPage: 50,
+                concurrency: 1,
+                signal: controller.signal,
+            })) {
+                collected.push(page);
+            }
+        })();
+
+        // Wait for page 1 to launch and register its abort listener before
+        // aborting so the catch branch reliably observes the aborted signal.
+        await fetchHangingPromise;
+        controller.abort();
+
+        await expect(promise).resolves.toBeUndefined();
+        expect(collected).toHaveLength(0);
+    });
+});
+
 describe("paginateChunks", () => {
     test("collects items across chunks until hasNextChunk is false", async () => {
         const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => {
