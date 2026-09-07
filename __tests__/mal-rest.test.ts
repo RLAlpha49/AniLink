@@ -208,4 +208,161 @@ describe("MyAnimeList REST list-status writes", () => {
     });
 });
 
+describe("MyAnimeList REST manga namespace", () => {
+    test("gets manga details with encoded fields and returns the REST body verbatim", async () => {
+        const api = buildMyAnimeListApi();
+
+        await expect(api.manga.get(1, { fields: ["id", "title"] })).resolves.toEqual({
+            id: 21,
+            title: "Fullmetal Alchemist",
+        });
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/manga/1?fields=id%2Ctitle");
+        expect(lastConfig().method).toBe("GET");
+        expect(lastConfig().headers.Authorization).toBeUndefined();
+    });
+
+    test("manga.updateMyListStatus sends a form-urlencoded PATCH with the bearer token to the manga list-status URL", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+        const payload = {
+            status: "reading" as const,
+            num_chapters_read: 10,
+            score: 9,
+        };
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                status: "reading",
+                num_chapters_read: 10,
+                num_volumes_read: 0,
+                score: 9,
+                is_rereading: false,
+                num_times_reread: 0,
+                reread_value: 0,
+                priority: 0,
+                tags: "",
+            },
+        });
+
+        const status = await api.manga.updateMyListStatus(1, payload);
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/manga/1/my_list_status");
+        expect(lastConfig().method).toBe("PATCH");
+        expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
+        expect(lastConfig().headers["Content-Type"]).toBe("application/x-www-form-urlencoded");
+        expect(lastConfig().data).toBe("status=reading&num_chapters_read=10&score=9");
+        expect(status).toEqual({
+            status: "reading",
+            num_chapters_read: 10,
+            num_volumes_read: 0,
+            score: 9,
+            is_rereading: false,
+            num_times_reread: 0,
+            reread_value: 0,
+            priority: 0,
+            tags: "",
+        });
+    });
+
+    test("manga.updateMyListStatus joins array tags into a comma-separated form field", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+        mocks.request.mockResolvedValueOnce({ data: { status: "reading" } });
+
+        await api.manga.updateMyListStatus(1, {
+            status: "reading",
+            tags: ["reread", "favorite"],
+        });
+
+        expect(lastConfig().data).toBe("status=reading&tags=reread%2Cfavorite");
+    });
+
+    test("manga.updateMyListStatus sends fields as a query parameter when provided", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+        mocks.request.mockResolvedValueOnce({ data: { status: "reading" } });
+
+        await api.manga.updateMyListStatus(
+            1,
+            { status: "reading" },
+            { fields: ["status", "score"] }
+        );
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/manga/1/my_list_status?fields=status%2Cscore"
+        );
+        expect(lastConfig().method).toBe("PATCH");
+    });
+
+    test("manga.updateMyListStatus accepts a pre-joined fields string", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+        mocks.request.mockResolvedValueOnce({ data: { status: "reading" } });
+
+        await api.manga.updateMyListStatus(1, { status: "reading" }, { fields: "status,score" });
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/manga/1/my_list_status?fields=status%2Cscore"
+        );
+    });
+
+    test("manga.updateMyListStatus rejects without a MAL access token", async () => {
+        const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
+
+        await expect(api.manga.updateMyListStatus(1, { status: "reading" })).rejects.toBeInstanceOf(
+            AniLinkAuthError
+        );
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("manga.updateMyListStatus normalizes MAL HTTP failures through the shared error surface", async () => {
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(400));
+
+        await expect(
+            buildMyAnimeListApi({ accessToken: "mal-access-token" }).manga.updateMyListStatus(
+                1,
+                { score: 11 },
+                { retry: false }
+            )
+        ).rejects.toSatisfy(
+            (error: unknown) => error instanceof AniLinkApiError && error.status === 400
+        );
+    });
+
+    test("manga.deleteFromList sends a DELETE with the bearer token to the manga list-status URL", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+        mocks.request.mockResolvedValueOnce({ data: null });
+
+        await expect(api.manga.deleteFromList(1)).resolves.toBeUndefined();
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/manga/1/my_list_status");
+        expect(lastConfig().method).toBe("DELETE");
+        expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
+        expect(lastConfig().data).toBeUndefined();
+    });
+
+    test("manga.deleteFromList rejects without a MAL access token", async () => {
+        const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
+
+        await expect(api.manga.deleteFromList(1)).rejects.toBeInstanceOf(AniLinkAuthError);
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("manga.deleteFromList normalizes MAL HTTP failures through the shared error surface", async () => {
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
+
+        await expect(
+            buildMyAnimeListApi({ accessToken: "mal-access-token" }).manga.deleteFromList(1, {
+                retry: false,
+            })
+        ).rejects.toSatisfy(
+            (error: unknown) => error instanceof AniLinkApiError && error.status === 404
+        );
+    });
+
+    test("manga.get normalizes MAL HTTP failures through the shared error surface", async () => {
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
+
+        await expect(buildMyAnimeListApi().manga.get(999_999, { retry: false })).rejects.toSatisfy(
+            (error: unknown) => error instanceof AniLinkApiError && error.status === 404
+        );
+    });
+});
+
 const apiForTest = () => buildMyAnimeListApi();

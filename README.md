@@ -33,10 +33,10 @@ const malAnime = await client.mal.anime.get(21, { fields: ["id", "title", "main_
 
 ## What you can do
 
-| Provider        | Namespace         | Capabilities                                                                                                                             |
-| --------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **AniList**     | `aniLink.anilist` | Queries, page queries, mutations, pagination helpers, `custom()`, data helpers                                                           |
-| **MyAnimeList** | `aniLink.mal`     | `anime.get` and `user.me` REST reads with field selection, plus `anime.updateMyListStatus` and `anime.deleteFromList` list-status writes |
+| Provider        | Namespace         | Capabilities                                                                                                                                                              |
+| --------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AniList**     | `aniLink.anilist` | Queries, page queries, mutations, pagination helpers, `custom()`, data helpers                                                                                            |
+| **MyAnimeList** | `aniLink.mal`     | `anime.get`, `manga.get`, and `user.me` REST reads with field selection, plus `anime`/`manga` `updateMyListStatus` and `deleteFromList` list-status writes                |
 
 Both surfaces share one transport layer (timeouts, retries, pacing, circuit breaker, hooks) while keeping credentials and transport settings isolated per provider slot.
 

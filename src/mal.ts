@@ -26,6 +26,7 @@ export { buildMyAnimeListApi } from "./apis/rest/mal/wiring";
 export type {
     MyAnimeListAnimeApi,
     MyAnimeListApi,
+    MyAnimeListMangaApi,
     MyAnimeListUserApi,
 } from "./apis/rest/mal/facade";
 export type {
@@ -33,6 +34,10 @@ export type {
     MalAnimeListStatus,
     MalAnimeListStatusUpdate,
     MalAnimeListStatusValue,
+    MalManga,
+    MalMangaListStatus,
+    MalMangaListStatusUpdate,
+    MalMangaListStatusValue,
     MalPicture,
     MalRequestOptions,
     MalUser,
