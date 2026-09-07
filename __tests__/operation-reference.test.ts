@@ -114,7 +114,7 @@ describe("operation reference section manifests", () => {
         const grouped = await loadOperations("mal", "rest", outputDir);
         const operations = Object.values(grouped).flat();
 
-        expect(operations).toHaveLength(4);
+        expect(operations).toHaveLength(7);
         expect(operations.every((operation) => operation.provider === "mal")).toBe(true);
         expect(operations.every((operation) => operation.category === "rest")).toBe(true);
     });
