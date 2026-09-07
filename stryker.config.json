@@ -15,7 +15,8 @@
         "!src/**/index.ts"
     ],
     "vitest": {
-        "configFile": "vitest.config.mts"
+        "configFile": "vitest.config.mts",
+        "related": false
     },
     "thresholds": {
         "high": 80,
