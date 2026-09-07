@@ -749,6 +749,9 @@ function anilistAuth(op: RawOp): string {
 // MAL REST operation discovery
 // ---------------------------------------------------------------------------
 
+/** The MAL facade methods that map to public operations. */
+const MAL_FACADE_METHODS = new Set(["get", "me", "updateMyListStatus", "deleteFromList"]);
+
 /** Discover MAL REST operations from the facade source. */
 function discoverMalOperations(): ReferenceOperation[] {
     const facadePath = join(SRC, "apis/rest/mal/facade.ts");
@@ -756,10 +759,24 @@ function discoverMalOperations(): ReferenceOperation[] {
     const lines = content.split("\n");
     const ops: ReferenceOperation[] = [];
 
-    for (let i = 0; i < lines.length; i++) {
-        const sig = /^\s{4}(get|me):\s*\(([^)]*)\)\s*=>\s*Promise<(\w+)>;/.exec(lines[i]);
-        if (!sig) continue;
-        ops.push(buildMalOperation(sig[1], sig[2], sig[3], findJsdocAbove(lines, i)));
+    // Facade signatures are either single-line (`get`, `me`,
+    // `deleteFromList`) or multi-line (`updateMyListStatus`); `[^)]*` spans
+    // newlines so both shapes share one regex, and the `m` flag anchors each
+    // match at a property line.
+    const sigRe = /^ {4}(\w+):\s*\(([^)]*)\)\s*=>\s*Promise<(\w+)>;/gm;
+    let sig: RegExpExecArray | null;
+    while ((sig = sigRe.exec(content)) !== null) {
+        const methodName = sig[1];
+        if (!MAL_FACADE_METHODS.has(methodName)) continue;
+        const lineIndex = content.slice(0, sig.index).split("\n").length - 1;
+        ops.push(
+            buildMalOperation(
+                methodName,
+                sig[2].replace(/\s+/g, " ").trim(),
+                sig[3],
+                findJsdocAbove(lines, lineIndex)
+            )
+        );
     }
     return ops;
 }
@@ -789,6 +806,10 @@ function buildMalOperation(
     if (optionsParam) {
         optionsParam.nestedFields = malOptionFields();
     }
+    const payloadParam = request.find((r) => r.name === "payload");
+    if (payloadParam) {
+        payloadParam.nestedFields = malListStatusUpdateFields();
+    }
 
     const errors: ThrowsEntry[] = isAnime
         ? [
@@ -817,30 +838,59 @@ function buildMalOperation(
               "});",
               "console.log(anime.title);",
           ].join("\n")
-        : [
-              'import { AniLink } from "anilink-api-wrapper";',
-              "",
-              'const aniLink = new AniLink({ mal: { accessToken: "mal-token" } });',
-              "const user = await aniLink.mal.user.me({",
-              '    fields: ["id", "name", "location", "joined_at"],',
-              "});",
-              "console.log(user.name);",
-          ].join("\n");
+        : methodName === "me"
+          ? [
+                'import { AniLink } from "anilink-api-wrapper";',
+                "",
+                'const aniLink = new AniLink({ mal: { accessToken: "mal-token" } });',
+                "const user = await aniLink.mal.user.me({",
+                '    fields: ["id", "name", "location", "joined_at"],',
+                "});",
+                "console.log(user.name);",
+            ].join("\n")
+          : methodName === "updateMyListStatus"
+            ? [
+                  'import { AniLink } from "anilink-api-wrapper";',
+                  "",
+                  'const aniLink = new AniLink({ mal: { accessToken: "mal-token" } });',
+                  "const status = await aniLink.mal.anime.updateMyListStatus(21, {",
+                  '    status: "watching",',
+                  "    num_watched_episodes: 10,",
+                  "    score: 9,",
+                  "});",
+                  "console.log(status.num_episodes_watched);",
+              ].join("\n")
+            : [
+                  'import { AniLink } from "anilink-api-wrapper";',
+                  "",
+                  'const aniLink = new AniLink({ mal: { accessToken: "mal-token" } });',
+                  "await aniLink.mal.anime.deleteFromList(21);",
+              ].join("\n");
 
     const upstream = isAnime
         ? "https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get"
-        : "https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get";
+        : methodName === "me"
+          ? "https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get"
+          : methodName === "updateMyListStatus"
+            ? "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put"
+            : "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete";
+
+    const signature = isAnime
+        ? "get(id: number, options?: MalRequestOptions): Promise<MalAnime>"
+        : methodName === "me"
+          ? "me(options?: MalRequestOptions): Promise<MalUser>"
+          : methodName === "updateMyListStatus"
+            ? "updateMyListStatus(id: number, payload: MalAnimeListStatusUpdate, options?: MalRequestOptions): Promise<MalAnimeListStatus>"
+            : "deleteFromList(id: number, options?: MalRequestOptions): Promise<void>";
 
     return {
         provider: "mal",
         protocol: "rest",
-        domain: isAnime ? "Anime" : "User",
-        namespace: isAnime ? "mal.anime.get" : "mal.user.me",
-        name: isAnime ? "anime.get" : "user.me",
+        domain: methodName === "me" ? "User" : "Anime",
+        namespace: `mal.${methodName === "me" ? "user" : "anime"}.${methodName}`,
+        name: `${methodName === "me" ? "user.me" : "anime." + methodName}`,
         category: "rest",
-        signature: isAnime
-            ? "get(id: number, options?: MalRequestOptions): Promise<MalAnime>"
-            : "me(options?: MalRequestOptions): Promise<MalUser>",
+        signature,
         purpose:
             jsdocMainText(jsdoc) ||
             (isAnime
@@ -858,7 +908,7 @@ function buildMalOperation(
             {
                 label: "TypeDoc",
                 url: `${TYPEDOC_BASE}interfaces/${
-                    isAnime ? "MyAnimeListAnimeApi" : "MyAnimeListUserApi"
+                    methodName === "me" ? "MyAnimeListUserApi" : "MyAnimeListAnimeApi"
                 }.html`,
             },
             { label: "MAL API reference", url: upstream },
@@ -869,6 +919,9 @@ function buildMalOperation(
 /** Human-readable description for a MAL facade parameter. */
 function malParamDescription(name: string): string {
     if (name === "id") return "The MyAnimeList anime ID.";
+    if (name === "payload") {
+        return "The list-status fields to update; only the fields to change, form-encoded for MAL.";
+    }
     if (name === "options") {
         return "Optional field selection and transport settings; merged over the instance defaults.";
     }
@@ -896,6 +949,81 @@ function malOptionFields(): ParamField[] {
             type: "AbortSignal",
             required: false,
             description: "Signal used to cancel the in-flight request.",
+        },
+    ];
+}
+
+/** The `MalAnimeListStatusUpdate` fields documented on the update operation. */
+function malListStatusUpdateFields(): ParamField[] {
+    return [
+        {
+            name: "status",
+            type: "MalAnimeListStatusValue",
+            required: false,
+            description:
+                "The watch status to set (watching, completed, on_hold, dropped, plan_to_watch).",
+        },
+        {
+            name: "num_watched_episodes",
+            type: "number",
+            required: false,
+            description: "The number of episodes the user has watched.",
+        },
+        {
+            name: "score",
+            type: "number",
+            required: false,
+            description: "The user's score out of 10.",
+        },
+        {
+            name: "start_date",
+            type: "string",
+            required: false,
+            description:
+                "The date the user started watching; partial dates (YYYY-MM, YYYY) accepted.",
+        },
+        {
+            name: "finish_date",
+            type: "string",
+            required: false,
+            description:
+                "The date the user finished watching; partial dates (YYYY-MM, YYYY) accepted.",
+        },
+        {
+            name: "comments",
+            type: "string",
+            required: false,
+            description: "Free-form notes attached to the entry.",
+        },
+        {
+            name: "is_rewatching",
+            type: "boolean",
+            required: false,
+            description: "Whether the user is currently rewatching the anime.",
+        },
+        {
+            name: "num_times_rewatched",
+            type: "number",
+            required: false,
+            description: "The number of times the user has rewatched the anime.",
+        },
+        {
+            name: "rewatch_value",
+            type: "number",
+            required: false,
+            description: "The rewatch value rating (0-5).",
+        },
+        {
+            name: "priority",
+            type: "number",
+            required: false,
+            description: "The priority rating (0-2).",
+        },
+        {
+            name: "tags",
+            type: "readonly string[]",
+            required: false,
+            description: "User-defined tags; sent as a comma-separated string.",
         },
     ];
 }
