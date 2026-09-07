@@ -56,13 +56,16 @@ jobs:
         run: npm run build
 
   test:
-    name: Test (${{ matrix.os }})
+    name: Test (${{ matrix.os }}, Node ${{ matrix.node }})
     strategy:
       fail-fast: false
       matrix:
         os:
           - ubuntu-latest
           - windows-latest
+        node:
+          - 22
+          - 24
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     steps:
@@ -72,7 +75,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: ${{ matrix.node }}
           cache: npm
 
       - name: Install dependencies
@@ -82,7 +85,7 @@ jobs:
         run: npm run test:coverage
 
       - name: Upload coverage report
-        if: always() && matrix.os == 'ubuntu-latest'
+        if: always() && matrix.os == 'ubuntu-latest' && matrix.node == 22
         uses: actions/upload-artifact@v7
         with:
           name: coverage-report
@@ -94,34 +97,40 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
+      HAS_ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN != '' }}
+      HAS_MAL_TOKEN: ${{ secrets.MAL_TOKEN != '' }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      # Token availability is decided before anything expensive runs so fork
-      # pull requests and misconfigured runs finish in seconds.
       - name: Warn when ANILIST_TOKEN is unavailable to a fork pull request
-        if: ${{ env.ANILIST_TOKEN == '' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+        if: ${{ env.HAS_ANILIST_TOKEN != 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
         run: echo "::warning::ANILIST_TOKEN secret is not available to fork pull requests; live integration tests are skipped"
 
       - name: Fail when ANILIST_TOKEN is missing outside fork pull requests
-        if: ${{ env.ANILIST_TOKEN == '' && !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) }}
+        if: ${{ env.HAS_ANILIST_TOKEN != 'true' && !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) }}
         run: echo "::error::ANILIST_TOKEN secret is not set; live integration coverage is not running" && exit 1
 
+      - name: Warn when MAL_TOKEN is unavailable to a fork pull request
+        if: ${{ env.HAS_MAL_TOKEN != 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+        run: echo "::warning::MAL_TOKEN secret is not available to fork pull requests; live MyAnimeList integration tests are skipped"
+
       - name: Set up Node.js
-        if: ${{ env.ANILIST_TOKEN != '' }}
+        if: ${{ env.HAS_ANILIST_TOKEN == 'true' }}
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
-        if: ${{ env.ANILIST_TOKEN != '' }}
+        if: ${{ env.HAS_ANILIST_TOKEN == 'true' }}
         run: npm ci
 
       - name: Run live AniList integration test
-        if: ${{ env.ANILIST_TOKEN != '' }}
+        if: ${{ env.HAS_ANILIST_TOKEN == 'true' }}
+        env:
+          ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
+          MAL_TOKEN: ${{ secrets.MAL_TOKEN }}
         run: npm run test:integration
 
   package-smoke:
