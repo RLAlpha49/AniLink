@@ -88,8 +88,8 @@ function resolveCappedInt(value: number | undefined, max: number, fallback: numb
 }
 
 describe("paginate (property-based)", () => {
-    test("never fetches more pages than maxPages and reports truncation only when hasNextPage remains", () => {
-        fc.assert(
+    test("never fetches more pages than maxPages and reports truncation only when hasNextPage remains", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.array(fc.boolean(), { maxLength: 20 }),
                 paginateOptionsArb,
@@ -133,8 +133,8 @@ describe("paginate (property-based)", () => {
         );
     });
 
-    test("preserves item order across pages regardless of hasNextPage sequence", () => {
-        fc.assert(
+    test("preserves item order across pages regardless of hasNextPage sequence", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.array(fc.boolean(), { maxLength: 15 }),
                 fc.integer({ min: 1, max: 50 }),
@@ -167,8 +167,8 @@ describe("paginate (property-based)", () => {
         );
     });
 
-    test("clamps perPage to the documented cap of 50 and floors to an integer", () => {
-        fc.assert(
+    test("clamps perPage to the documented cap of 50 and floors to an integer", async () => {
+        await fc.assert(
             fc.asyncProperty(numericOption, async (perPage) => {
                 const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
                     pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
@@ -184,8 +184,8 @@ describe("paginate (property-based)", () => {
         );
     });
 
-    test("starts from startPage when it is a positive finite integer, else from 1", () => {
-        fc.assert(
+    test("starts from startPage when it is a positive finite integer, else from 1", async () => {
+        await fc.assert(
             fc.asyncProperty(numericOption, async (startPage) => {
                 const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
                     pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
@@ -206,8 +206,8 @@ describe("paginate (property-based)", () => {
         );
     });
 
-    test("stops as soon as hasNextPage is false even when maxPages is larger", () => {
-        fc.assert(
+    test("stops as soon as hasNextPage is false even when maxPages is larger", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.integer({ min: 1, max: 30 }),
                 fc.integer({ min: 1, max: 30 }),
@@ -234,8 +234,8 @@ describe("paginate (property-based)", () => {
 });
 
 describe("paginatePages (property-based)", () => {
-    test("yields at most maxPages pages and stops when hasNextPage is false", () => {
-        fc.assert(
+    test("yields at most maxPages pages and stops when hasNextPage is false", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.array(fc.boolean(), { maxLength: 20 }),
                 fc.integer({ min: 1, max: 50 }),
@@ -273,8 +273,8 @@ describe("paginatePages (property-based)", () => {
         );
     });
 
-    test("clamps perPage to the documented cap of 50", () => {
-        fc.assert(
+    test("clamps perPage to the documented cap of 50", async () => {
+        await fc.assert(
             fc.asyncProperty(numericOption, async (perPage) => {
                 const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
                     pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
@@ -294,8 +294,8 @@ describe("paginatePages (property-based)", () => {
 });
 
 describe("paginateChunks (property-based)", () => {
-    test("never fetches more chunks than maxChunks and reports truncation only when hasNextChunk remains", () => {
-        fc.assert(
+    test("never fetches more chunks than maxChunks and reports truncation only when hasNextChunk remains", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.array(fc.boolean(), { maxLength: 20 }),
                 chunkOptionsArb,
@@ -338,8 +338,8 @@ describe("paginateChunks (property-based)", () => {
         );
     });
 
-    test("preserves item order across chunks regardless of hasNextChunk sequence", () => {
-        fc.assert(
+    test("preserves item order across chunks regardless of hasNextChunk sequence", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.array(fc.boolean(), { maxLength: 15 }),
                 fc.integer({ min: 1, max: 50 }),
@@ -371,8 +371,8 @@ describe("paginateChunks (property-based)", () => {
         );
     });
 
-    test("clamps perChunk to the documented cap of 500 and floors to an integer", () => {
-        fc.assert(
+    test("clamps perChunk to the documented cap of 500 and floors to an integer", async () => {
+        await fc.assert(
             fc.asyncProperty(numericOption, async (perChunk) => {
                 const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
                     hasNextChunk: false,
@@ -388,8 +388,8 @@ describe("paginateChunks (property-based)", () => {
         );
     });
 
-    test("starts from startChunk when it is a positive finite integer, else from 1", () => {
-        fc.assert(
+    test("starts from startChunk when it is a positive finite integer, else from 1", async () => {
+        await fc.assert(
             fc.asyncProperty(numericOption, async (startChunk) => {
                 const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
                     hasNextChunk: false,
@@ -410,8 +410,8 @@ describe("paginateChunks (property-based)", () => {
         );
     });
 
-    test("stops as soon as hasNextChunk is false even when maxChunks is larger", () => {
-        fc.assert(
+    test("stops as soon as hasNextChunk is false even when maxChunks is larger", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.integer({ min: 1, max: 30 }),
                 fc.integer({ min: 1, max: 30 }),
@@ -455,8 +455,8 @@ describe("look-ahead concurrency (property-based)", () => {
         };
     }
 
-    test("never exceeds the configured in-flight window regardless of settle order", () => {
-        fc.assert(
+    test("never exceeds the configured in-flight window regardless of settle order", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.integer({ min: 2, max: 8 }), // concurrency
                 fc.integer({ min: 2, max: 12 }), // pageCount
@@ -484,8 +484,8 @@ describe("look-ahead concurrency (property-based)", () => {
         );
     });
 
-    test("collects items strictly in page order even when pages settle out of order", () => {
-        fc.assert(
+    test("collects items strictly in page order even when pages settle out of order", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.integer({ min: 2, max: 8 }), // concurrency
                 fc.integer({ min: 2, max: 15 }), // pageCount
@@ -520,8 +520,8 @@ describe("look-ahead concurrency (property-based)", () => {
         );
     });
 
-    test("matches sequential results for any stop point and concurrency", () => {
-        fc.assert(
+    test("matches sequential results for any stop point and concurrency", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.integer({ min: 1, max: 20 }), // stopAfter
                 fc.integer({ min: 1, max: 6 }), // concurrency
@@ -554,8 +554,8 @@ describe("look-ahead concurrency (property-based)", () => {
         );
     });
 
-    test("paginateChunks preserves chunk order and count under arbitrary settle order", () => {
-        fc.assert(
+    test("paginateChunks preserves chunk order and count under arbitrary settle order", async () => {
+        await fc.assert(
             fc.asyncProperty(
                 fc.integer({ min: 2, max: 6 }), // concurrency
                 fc.integer({ min: 2, max: 10 }), // chunkCount
