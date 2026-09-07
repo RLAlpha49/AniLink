@@ -28,7 +28,15 @@ export type {
     MyAnimeListApi,
     MyAnimeListUserApi,
 } from "./apis/rest/mal/facade";
-export type { MalAnime, MalPicture, MalRequestOptions, MalUser } from "./apis/rest/mal/types";
+export type {
+    MalAnime,
+    MalAnimeListStatus,
+    MalAnimeListStatusUpdate,
+    MalAnimeListStatusValue,
+    MalPicture,
+    MalRequestOptions,
+    MalUser,
+} from "./apis/rest/mal/types";
 export type { AniLinkCredentials, MalCredentials, ProviderCredentials } from "./base/credentials";
 
 export {

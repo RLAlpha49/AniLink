@@ -1,11 +1,19 @@
-import type { MalAnime, MalRequestOptions, MalUser } from "./types";
+import type {
+    MalAnime,
+    MalAnimeListStatus,
+    MalAnimeListStatusUpdate,
+    MalRequestOptions,
+    MalUser,
+} from "./types";
 
 /**
  * {@link MyAnimeListAnimeApi} is the anime group exposed by {@link MyAnimeListApi} under `aniLink.mal.anime`.
  *
- * It is the facade boundary for MyAnimeList anime reads; the single `MalAnimeOperation.get | get` method delegates to `MalAnimeOperation` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}.
+ * It is the facade boundary for MyAnimeList anime reads and list-status writes; the `MalAnimeOperation.get | get` method delegates to `MalAnimeOperation` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}, while `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /anime/{id}/my_list_status` endpoints.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete
  */
 export interface MyAnimeListAnimeApi {
     /**
@@ -26,6 +34,55 @@ export interface MyAnimeListAnimeApi {
      * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
      */
     get: (id: number, options?: MalRequestOptions) => Promise<MalAnime>;
+
+    /**
+     * {@link MyAnimeListAnimeApi.updateMyListStatus} updates the authenticated user's anime list status through `MalAnimeOperation.updateMyListStatus`.
+     *
+     * It is the public facade for `PATCH /anime/{id}/my_list_status` and requires a MAL access token from `MalCredentials.accessToken` via `buildMyAnimeListApi`; send only the {@link MalAnimeListStatusUpdate} fields you want to change, form-encoded as MAL requires.
+     *
+     * @param id - The MyAnimeList anime ID.
+     * @param payload - The list-status fields to update; a {@link MalAnimeListStatusUpdate} of only the fields to change.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The updated {@link MalAnimeListStatus}.
+     * @throws `AniLinkAuthError` when no MAL access token is configured.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const status = await api.anime.updateMyListStatus(21, {
+     *   status: "watching",
+     *   num_watched_episodes: 10,
+     *   score: 9,
+     * });
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put
+     */
+    updateMyListStatus: (
+        id: number,
+        payload: MalAnimeListStatusUpdate,
+        options?: MalRequestOptions
+    ) => Promise<MalAnimeListStatus>;
+
+    /**
+     * {@link MyAnimeListAnimeApi.deleteFromList} removes an anime from the authenticated user's list through `MalAnimeOperation.deleteFromList`.
+     *
+     * It is the public facade for `DELETE /anime/{id}/my_list_status` and requires a MAL access token from `MalCredentials.accessToken` via `buildMyAnimeListApi`.
+     *
+     * @param id - The MyAnimeList anime ID.
+     * @param options - Optional transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns Resolves once the entry is deleted; the response carries no body.
+     * @throws `AniLinkAuthError` when no MAL access token is configured.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * await api.anime.deleteFromList(21);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete
+     */
+    deleteFromList: (id: number, options?: MalRequestOptions) => Promise<void>;
 }
 
 /**
@@ -59,7 +116,7 @@ export interface MyAnimeListUserApi {
 /**
  * {@link MyAnimeListApi} is the typed MyAnimeList REST surface exposed by `aniLink.mal`.
  *
- * It composes {@link MyAnimeListAnimeApi} and {@link MyAnimeListUserApi} from `MalAnimeOperation` and `MalUserOperation` via `buildMyAnimeListApi`. Every method accepts {@link MalRequestOptions} and returns {@link MalAnime} or {@link MalUser}; OAuth helpers `buildMalAuthorizationUrl`, `getMalAccessToken`, and `refreshMalAccessToken` supply the token for `MalCredentials`.
+ * It composes {@link MyAnimeListAnimeApi} and {@link MyAnimeListUserApi} from `MalAnimeOperation` and `MalUserOperation` via `buildMyAnimeListApi`. Read methods accept {@link MalRequestOptions} and return {@link MalAnime} or {@link MalUser}; the anime group additionally exposes `updateMyListStatus` and `deleteFromList` for the authenticated list-status write/delete endpoints. OAuth helpers `buildMalAuthorizationUrl`, `getMalAccessToken`, and `refreshMalAccessToken` supply the token for `MalCredentials`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2
  */

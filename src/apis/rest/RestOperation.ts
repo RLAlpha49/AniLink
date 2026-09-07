@@ -34,7 +34,7 @@ export interface RestExecuteOptions {
     readonly query?: Record<string, unknown>;
 
     /**
-     * The JSON request body (POST/PUT), when provided.
+     * The JSON request body (POST/PUT/PATCH), when provided.
      */
     readonly body?: object;
 
@@ -107,9 +107,10 @@ export abstract class RestOperation extends BaseOperation {
     /**
      * Sends one REST call through the shared transport pipeline.
      *
-     * GET and DELETE calls pass their parameters as a query string; POST and
-     * PUT calls send them as a JSON body. Responses are returned verbatim —
-     * REST providers have no GraphQL-style envelope, so no unwrapping happens.
+     * GET and DELETE calls pass their parameters as a query string; POST, PUT,
+     * and PATCH calls send them as a JSON body. Responses are returned verbatim
+     * — REST providers have no GraphQL-style envelope, so no unwrapping
+     * happens.
      *
      * @typeParam T - The expected parsed response body.
      * @param path - The endpoint path beginning with `/` (for example `/anime/{id}`); placeholders are substituted from `pathParams` before interpolation into the URL.
@@ -138,7 +139,7 @@ export abstract class RestOperation extends BaseOperation {
 
         const url = `${this.baseUrl}${interpolatedPath}${buildQueryString(query ?? {})}`;
 
-        const carriesBody = method === "POST" || method === "PUT";
+        const carriesBody = method === "POST" || method === "PUT" || method === "PATCH";
         // An explicit content type opts every REST call out of GraphQL
         // envelope unwrapping in the shared pipeline, so it is set even for
         // body-less GET/DELETE requests.

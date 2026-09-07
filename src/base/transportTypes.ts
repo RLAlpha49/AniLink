@@ -83,12 +83,12 @@ export interface RetryPolicy {
  * HTTP methods the shared transport accepts.
  *
  * GraphQL providers use `POST` only; REST providers additionally use `GET`,
- * `PUT`, and `DELETE`. The union is shared so hooks and error contexts stay
- * provider-agnostic.
+ * `PUT`, `PATCH`, and `DELETE`. The union is shared so hooks and error
+ * contexts stay provider-agnostic.
  *
  * @see {@link sendRequest}
  */
-export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 /**
  * Authentication material a provider can apply to an HTTP request.

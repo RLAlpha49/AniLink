@@ -23,7 +23,11 @@ export function buildMyAnimeListApi(credentials?: MalCredentials): MyAnimeListAp
     const user = new MalUserOperation(auth, options);
 
     return {
-        anime: { get: anime.get.bind(anime) },
+        anime: {
+            get: anime.get.bind(anime),
+            updateMyListStatus: anime.updateMyListStatus.bind(anime),
+            deleteFromList: anime.deleteFromList.bind(anime),
+        },
         user: { me: user.me.bind(user) },
     };
 }
