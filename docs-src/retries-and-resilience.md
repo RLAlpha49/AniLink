@@ -5,11 +5,11 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Retries & resilience
 
-AniLink's shared transport layer provides three resilience mechanisms. All are configured per provider slot and behave identically on AniList and MAL.
+AniLink's shared transport layer carries three resilience mechanisms. All are configured per provider slot, and all behave identically on AniList and MAL.
 
 ## Default retry policy
 
-Retries for transient failures are automatic. The default policy:
+Transient failures retry themselves — no code from you. The default policy:
 
 | Knob | Default | Meaning |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ Retries for transient failures are automatic. The default policy:
 | `retryOnNetworkError` | `true` | Network and timeout failures retry |
 | `jitter` | `true` | Randomize each wait within `[0, computed delay]` |
 
-Backoff uses **full jitter**: each wait is a random value between `0` and the computed exponential cap, so concurrent clients do not synchronize retries. Server-dictated `Retry-After` waits are never jittered.
+Backoff uses **full jitter**: every wait is a random value between `0` and the computed exponential cap, so a herd of concurrent clients never synchronizes its retries into a stampede. Server-dictated `Retry-After` waits are never jittered.
 
 <Mermaid
     :code="`flowchart TD\n    A([Send request]) --> B{Response}\n    B -- success --> C([Return result]):::ok\n    B -- failure --> D{Retryable?\nstatus in retryOnStatus\nor network error}\n    D -- no --> E([Throw last error]):::err\n    D -- yes --> F{Attempts left?\nattempt <= maxRetries}\n    F -- no --> E\n    F -- yes --> G{Circuit open?}\n    G -- yes --> H([Throw CIRCUIT_OPEN_ERROR]):::err\n    G -- no --> I[Compute backoff\nfull jitter]\n    I --> J{AbortSignal\naborted?}\n    J -- yes --> K([Throw ABORTED_ERROR]):::err\n    J -- no --> L[Wait nextDelayMs]\n    L --> A\n\n    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;\n    classDef err fill:#f8cecc,stroke:#b85450,color:#5c1a1a;`"
@@ -28,7 +28,7 @@ Backoff uses **full jitter**: each wait is a random value between `0` and the co
 
 <Callout kind="caution">
 
-Mutations are **never retried** by the default policy unless you opt in. Retrying a non-idempotent write can duplicate effects.
+Mutations are **never retried** by the default policy unless you opt in. Retrying a non-idempotent write can duplicate its effects — a like toggled twice is a like removed.
 
 </Callout>
 
@@ -51,11 +51,11 @@ const tuned = new AniLink("token", {
 });
 ```
 
-When a request exhausts its retries, the last error is thrown — catch it as shown in [Error handling](/error-handling).
+When a request runs out of retries, the last error is thrown — catch it as shown in [Error handling](/error-handling).
 
 ## Rate-limit pacing
 
-On by default. The transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits until the window resets instead of discovering the limit via a `429`. With pacing disabled, every `429` costs a wasted request plus a retry wait; enabling pacing avoids both by tracking the window from the response headers. The optional `onPace` hook fires just before each pacing wait with the wait length, so an intentional rate-limit wait is distinguishable from a hung request — see [Observability](/observability).
+On by default. The transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits for the window to reset instead of discovering the limit the hard way, via a `429`. And that hard way is expensive: with pacing off, every `429` costs a wasted request plus a retry wait. Pacing avoids both by tracking the window from the response headers. The optional `onPace` hook fires just before each pacing wait with the wait length, so an intentional rate-limit wait never gets mistaken for a hung request — see [Observability](/observability).
 
 ```typescript
 // Default behavior — pacing is active with rateLimitFloor: 1.
@@ -69,11 +69,11 @@ const unpaced = new AniLink("token", { paceWithRateLimit: false });
 
 ## Circuit breaker
 
-Off by default to keep the zero-accounting fast path free of cross-request state. With `circuitBreaker: { threshold, cooldownMs }`, after `threshold` consecutive failed attempts further requests fail fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has elapsed since the last failure. After that, the next request is allowed through as a probe.
+Off by default, to keep the zero-accounting fast path free of cross-request state. With `circuitBreaker: { threshold, cooldownMs }`, after `threshold` consecutive failed attempts further requests fail fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has passed since the last failure. Then the next request is let through as a probe.
 
 <Callout kind="tip">
 
-For production workloads the circuit breaker is a recommended-on setting: it is the only mechanism that fast-fails a sustained upstream outage, preventing runaway retry volume (and cost) while the provider is down.
+For production workloads, switch the circuit breaker on: it is the only mechanism that fast-fails a sustained upstream outage, stopping runaway retry volume (and cost) while the provider is down.
 
 </Callout>
 
@@ -87,7 +87,7 @@ When unset, no failure accounting happens across requests.
 
 ### GraphQL envelope failures
 
-AniList reports many failures as HTTP 200 with a GraphQL `errors` array rather than as an HTTP error status. The breaker counts these as failures: a sustained run of GraphQL-level 429 or 5xx envelopes trips the breaker just like HTTP-level failures, so the common AniList overload signature is covered.
+AniList has a habit of reporting failures as HTTP 200 with a GraphQL `errors` array rather than as an HTTP error status. The breaker counts these as failures: a sustained run of GraphQL-level 429 or 5xx envelopes trips it just like HTTP-level failures, so the common AniList overload signature is covered.
 
 ### Breaker lifecycle events
 
@@ -107,7 +107,7 @@ const aniLink = new AniLink("token", {
 
 ### Bypassing the pacing deadline
 
-When `paceWithRateLimit` is enabled, a successful response records a rate-limit reset deadline that subsequent requests to the same host wait for. Pass `ignorePaceDeadline: true` on a per-request basis to bypass that shared deadline for an urgent call (for example a user-facing lookup during a rate-limited window):
+When `paceWithRateLimit` is enabled, a successful response records a rate-limit reset deadline that subsequent requests to the same host wait for. Pass `ignorePaceDeadline: true` on a per-request basis to bypass that shared deadline for an urgent call — a user-facing lookup during a rate-limited window, say:
 
 ```typescript
 const aniLink = new AniLink("token", { paceWithRateLimit: true });

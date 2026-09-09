@@ -5,7 +5,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Custom queries
 
-`anilist.custom()` sends a GraphQL document you write. Use it when a field combination is not exposed by the typed operations.
+`anilist.custom()` sends a GraphQL document you write yourself. Reach for it when a field combination is not exposed by the typed operations — the escape hatch that keeps you from ever being stuck.
 
 ```typescript
 const result = await aniLink.anilist.custom<{ Media: { id: number; title: { romaji: string } } }>(
@@ -17,7 +17,7 @@ console.log(result.Media.title.romaji);
 
 ## Generic typing
 
-`custom<T>` types the **unwrapped** result. Declare `T` as the shape of what the document returns after unwrapping (see the rule below).
+`custom<T>` types the **unwrapped** result. Declare `T` as the shape of what the document returns after unwrapping — the rule below explains what that means.
 
 ## Envelope-unwrapping rule
 
@@ -46,7 +46,7 @@ both.data.Media.id;
 
 ## Errors
 
-`custom()` throws the same normalized errors as typed operations: `AniLinkGraphQLError` for GraphQL-level failures (with partial `data` when present), `AniLinkApiError` for HTTP failures, `AniLinkNetworkError` for transport failures.
+`custom()` throws the same normalized errors as the typed operations: `AniLinkGraphQLError` for GraphQL-level failures (with partial `data` when present), `AniLinkApiError` for HTTP failures, `AniLinkNetworkError` for transport failures. No special-casing required.
 
 ## Next steps
 

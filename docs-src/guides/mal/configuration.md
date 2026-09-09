@@ -14,7 +14,7 @@ layout: .vitepress/theme/DocsLayout.vue
 | `clientId` | `string` | The MAL application client ID used by OAuth helpers |
 | `clientSecret` | `string` | Optional. Only for applications that require one |
 
-Any shared transport option (`timeout`, `retry`, `signal`, hooks, pacing, circuit breaker) may be set in the same slot. It is scoped to MAL.
+Any shared transport option (`timeout`, `retry`, `signal`, hooks, pacing, circuit breaker) may be set in the same slot. It is scoped to MAL — and stays there.
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -31,7 +31,7 @@ const aniLink = new AniLink({
 
 ## `buildMyAnimeListApi(credentials?)`
 
-The standalone facade builder, exported for use without the composed client:
+The standalone facade builder, exported for when you want MAL without the composed client:
 
 ```typescript
 import { buildMyAnimeListApi } from "anilink-api-wrapper";
@@ -40,7 +40,7 @@ const api = buildMyAnimeListApi({ accessToken: "mal-token" });
 const anime = await api.anime.get(21);
 ```
 
-`buildMyAnimeListApi` resolves credentials and composes the same `MyAnimeListApi` surface the `AniLink` client exposes under `mal`.
+`buildMyAnimeListApi` resolves credentials and composes the same `MyAnimeListApi` surface the `AniLink` client exposes under `mal` — identical behavior, smaller footprint.
 
 ## Two ways to construct
 
@@ -52,7 +52,7 @@ new AniLink({ mal: { accessToken: "mal-token" } });
 buildMyAnimeListApi({ accessToken: "mal-token" });
 ```
 
-Both produce identical MAL behavior. The composed client also carries the AniList surface.
+Both produce identical MAL behavior. The difference? The composed client also carries the AniList surface.
 
 ## Next steps
 

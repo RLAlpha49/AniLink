@@ -5,7 +5,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Error handling
 
-AniLink normalizes every transport failure into an `AniLinkError` subclass with a stable `code`. You classify failures by `instanceof` or by `code` — never by parsing messages.
+Every transport failure comes out of AniLink as an `AniLinkError` subclass with a stable `code`. Classify failures by `instanceof` or by `code` — never by parsing messages. Messages change; codes do not.
 
 ## Error hierarchy
 
@@ -67,11 +67,11 @@ try {
 
 </Callout>
 
-Common AniList statuses: `400` (invalid query/variables), `401` (invalid token), `403` (forbidden), `429` (rate limited), `500`/`502`/`503`/`504` (server-side). Common MAL statuses: `400` (invalid fields), `401` (expired/invalid token), `404` (unknown ID), `429` (rate limited).
+The statuses you will actually meet: AniList answers `400` (invalid query or variables), `401` (invalid token), `403` (forbidden), `429` (rate limited), and `500`/`502`/`503`/`504` (server-side). MAL answers `400` (invalid fields), `401` (expired or invalid token), `404` (unknown ID), and `429` (rate limited).
 
 ## Correlation ID
 
-Every error thrown by the transport pipeline carries a `requestId` string that matches the `requestId` emitted to the lifecycle hooks for the same request. Use it to join a caught failure to its full event stream (attempts, retries, pacing, rate-limit state) in your logging or metrics backend:
+Every error thrown by the transport pipeline carries a `requestId` string — the same one the lifecycle hooks saw for that request. Use it to join a caught failure to its full event stream (attempts, retries, pacing, rate-limit state) in your logging or metrics backend:
 
 ```typescript
 try {
@@ -81,11 +81,11 @@ try {
 }
 ```
 
-Errors raised before any request is sent (for example `AniLinkValidationError` or `AniLinkAuthError` from a missing token) do not carry a `requestId`.
+Errors raised before any request leaves the door (say, `AniLinkValidationError`, or `AniLinkAuthError` from a missing token) carry no `requestId`.
 
 ## Response Content-Type
 
-`AniLinkApiError` and `AniLinkRestError` expose `contentType` — the `Content-Type` header of the failing response. REST providers such as MyAnimeList return HTML or plain-text bodies on rate-limit and gateway error paths; this field lets you distinguish a structured JSON failure payload (where `data.message` is meaningful) from a non-JSON one without guessing:
+`AniLinkApiError` and `AniLinkRestError` expose `contentType` — the `Content-Type` header of the failing response. Why care? REST providers such as MyAnimeList answer rate limits and gateway errors with HTML or plain text, not JSON. This field tells a structured JSON failure payload (where `data.message` is meaningful) from a non-JSON one, no guessing required:
 
 ```typescript
 if (error instanceof AniLinkRestError) {
@@ -99,17 +99,17 @@ if (error instanceof AniLinkRestError) {
 
 ## Raw error debugging
 
-Pass `exposeRawAxiosError: true` to attach the original Axios error as `rawAxiosError` (and `cause`) on thrown errors.
+Pass `exposeRawAxiosError: true` and the original Axios error rides along as `rawAxiosError` (and `cause`) on thrown errors.
 
 <Callout kind="tip">
 
-Sensitive request headers (`Authorization`, `Cookie`, `Proxy-Authorization`) are automatically redacted to `[REDACTED]` in the attached raw error, so opting in for diagnostics does not leak bearer tokens or cookies into your logs.
+Sensitive request headers (`Authorization`, `Cookie`, `Proxy-Authorization`) are redacted to `[REDACTED]` in the attached raw error before it reaches you, so opting in for diagnostics does not leak bearer tokens or cookies into your logs.
 
 </Callout>
 
 <Callout kind="caution">
 
-Raw Axios errors still contain request URLs, headers, and response bodies. Enable this only for local debugging. Never log `rawAxiosError` in production.
+Raw Axios errors still carry request URLs, headers, and response bodies. Keep this switch for local debugging only — never log `rawAxiosError` in production.
 
 </Callout>
 

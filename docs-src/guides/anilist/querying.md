@@ -5,7 +5,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Querying data
 
-The query surface is grouped by domain. Every method takes a typed variables object and an optional trailing `RequestOptions`.
+The query surface is grouped by domain. Every method takes a typed variables object and an optional trailing `RequestOptions` — same shape everywhere, so muscle memory transfers.
 
 ## Media
 
@@ -48,7 +48,7 @@ const anime = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
 | [`query.mediaList`](/operations/anilist/query#lists) | One list entry for a user and media |
 | [`query.mediaListCollection`](/operations/anilist/query#lists) | A user's whole list collection, chunked |
 
-`mediaListCollection` returns lists nested by status and custom list. Flatten it with [`flattenMediaListCollection`](/guides/anilist/helpers) and walk large collections with [`paginateChunks`](/guides/anilist/pagination).
+`mediaListCollection` returns lists nested by status and custom list. Flatten it with [`flattenMediaListCollection`](/guides/anilist/helpers), and walk large collections with [`paginateChunks`](/guides/anilist/pagination).
 
 ## Taxonomy
 

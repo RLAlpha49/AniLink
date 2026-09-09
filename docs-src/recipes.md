@@ -5,11 +5,11 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Recipes
 
-Complete, copy-pasteable workflows. Each recipe states its provider scope.
+Complete, copy-pasteable workflows — grab what you need and go. Each recipe states its provider scope up front.
 
 ## AniList: paginated list sync
 
-**Provider: AniList.** Collect a user's anime list across all pages and upsert into a local store.
+**Provider: AniList.** Walk a user's anime list across every page and upsert it into a local store.
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -32,11 +32,11 @@ console.log(`synced ${result.items.length} items across ${result.pageCount} page
 if (result.truncated) console.warn("stopped at maxPages before the source ran out");
 ```
 
-`paginate` keeps results in page order even with `concurrency > 1`. See [Pagination](/guides/anilist/pagination).
+`paginate` keeps results in page order even with `concurrency > 1` — no shuffling, no surprises. See [Pagination](/guides/anilist/pagination).
 
 ## MAL: anime lookup with selected fields
 
-**Provider: MAL.** Fetch only the fields you need.
+**Provider: MAL.** Fetch only the fields you need — nothing more, nothing wasted.
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -50,11 +50,11 @@ const anime = await aniLink.mal.anime.get(21, {
 console.log(anime.title, anime.main_picture?.medium);
 ```
 
-`id` and `title` are always present. Other fields appear when requested. See [MAL operations](/guides/mal/operations).
+`id` and `title` are always present; other fields appear when requested. See [MAL operations](/guides/mal/operations).
 
 ## Cross-provider title comparison
 
-**Providers: both.** Compare how the two databases title the same show. AniLink does **not** normalize data across providers — you map between them yourself.
+**Providers: both.** Compare how the two databases title the same show. A word of warning first: AniLink does **not** normalize data across providers — the mapping between them is yours to write.
 
 <Mermaid
     :code="`flowchart LR\n    A[AniLink instance\nboth providers configured]:::c\n    A -->|query.media id=21| AL[AniList\nmedia.title.romaji]:::al\n    A -->|mal.anime.get 21| MAL[MAL\nanime.title]:::mal\n    AL --> M[Your mapping logic\ncompare titles]:::out\n    MAL --> M\n\n    classDef c fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c;\n    classDef al fill:#d5e8d4,stroke:#82b366,color:#2d5016;\n    classDef mal fill:#e1d5e7,stroke:#9673a6,color:#3b3a45;\n    classDef out fill:#fff2cc,stroke:#d6b656,color:#5c4a00;`"
@@ -79,7 +79,7 @@ console.log("MAL:", malAnime.title);
 
 ## Background token-refresh loop
 
-**Provider: MAL.** Refresh before expiry. Keep the stored refresh token when MAL does not rotate it.
+**Provider: MAL.** Refresh before expiry, not after the `401`. Keep the stored refresh token when MAL does not rotate it.
 
 ```typescript
 import { getMalTokenExpiry, refreshMalAccessToken, type MalTokenResponse } from "anilink-api-wrapper";
@@ -97,11 +97,11 @@ async function ensureFreshToken(): Promise<MalTokenResponse> {
 }
 ```
 
-The AniList equivalent uses `getTokenExpiry` and `refreshAccessToken` with the same proactive pattern. See [MAL authentication](/guides/mal/authentication) and [AniList authentication](/guides/anilist/authentication).
+The AniList equivalent — `getTokenExpiry` and `refreshAccessToken` — follows the same proactive pattern. See [MAL authentication](/guides/mal/authentication) and [AniList authentication](/guides/anilist/authentication).
 
 ## Resilient scheduler
 
-**Providers: both.** Pace requests, fail fast during outages, and observe latency.
+**Providers: both.** Pace requests, fail fast during outages, and keep an eye on latency — the production-ready setup.
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";

@@ -11,7 +11,7 @@ layout: .vitepress/theme/DocsLayout.vue
 npm install anilink-api-wrapper
 ```
 
-Requires Node.js >= 22. The package is ESM-only.
+You will need Node.js 22 or newer. The package is ESM-only.
 
 ## Your first AniList query
 
@@ -24,7 +24,7 @@ const anime = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
 console.log(anime.media?.title?.romaji);
 ```
 
-No token is needed for public data. The `anilist` namespace exposes queries, page queries, mutations, pagination helpers, and `custom()`.
+No token needed — public data is right there for the taking. The `anilist` namespace exposes queries, page queries, mutations, pagination helpers, and `custom()`.
 
 ## Your first MAL lookup
 
@@ -39,11 +39,11 @@ const anime = await aniLink.mal.anime.get(21, {
 console.log(anime.title);
 ```
 
-The `mal` namespace exposes the REST operations. `anime.get` works without a token for public fields. `user.me` requires one.
+The `mal` namespace holds the REST operations. `anime.get` works without a token for public fields, and `user.me` wants one.
 
 ## Instance basics
 
-One `AniLink` instance holds both provider surfaces:
+One `AniLink` instance carries both provider surfaces:
 
 ```typescript
 const aniLink = new AniLink({
@@ -58,7 +58,7 @@ await aniLink.anilist.query.viewer();
 await aniLink.mal.user.me();
 ```
 
-Each provider keeps its own credentials and transport settings. See [Provider configuration](/provider-configuration) for the full rules.
+Each provider keeps its own credentials and its own transport settings — nothing leaks between them. [Provider configuration](/provider-configuration) has the full rules.
 
 ## Next steps
 

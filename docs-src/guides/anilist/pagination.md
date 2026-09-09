@@ -5,7 +5,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Pagination
 
-Three helpers cover the three traversal styles:
+Three helpers, three traversal styles — pick the one that matches how you want to consume the data:
 
 <Mermaid
     :code="`flowchart LR\n    subgraph pg[paginate]\n        direction TB\n        p1[Page 1] --> p2[Page 2] --> p3[Page 3]\n    end\n    p3 --> buf1([All items buffered\nPaginateResult]):::out\n\n    subgraph pp[paginatePages]\n        direction TB\n        q1[Page 1] --> q2[Page 2] --> q3[Page 3]\n    end\n    q1 --> gen1([yield page 1]):::out\n    q2 --> gen2([yield page 2]):::out\n    q3 --> gen3([yield page 3]):::out\n    gen1 -.->|early exit| stop([break]):::out\n\n    subgraph pc[paginateChunks]\n        direction TB\n        c1[Chunk 1] --> c2[Chunk 2] --> c3[Chunk 3]\n    end\n    c3 --> buf2([All items buffered\nChunkPaginateResult]):::out\n\n    classDef out fill:#d5e8d4,stroke:#82b366,color:#2d5016;`"
@@ -71,14 +71,14 @@ console.log(chunked.items.length, chunked.chunkCount, chunked.truncated);
 
 ## Ordering and truncation guarantees
 
-- Results are always **in page/chunk order**, regardless of completion order.
+- Results are always **in page/chunk order**, regardless of completion order — concurrency never shuffles your data.
 - Scheduling stops only after the terminal result is processed (consumed in order), not when it settles: a fetched page reporting `hasNextPage: false` (or a chunk reporting `hasNextChunk: false`) halts further scheduling once it has been consumed, and any already-launched stragglers are drained and discarded.
 - `truncated` is `true` when the traversal stopped at `maxPages`/`maxChunks` before the source ran out.
 - `hasNextChunk` semantics: `paginateChunks` continues while the fetched chunk reports more chunks ahead, up to `maxChunks`.
 
 ## Cancelling look-ahead
 
-Pass a `signal` to cancel the traversal and abort in-flight look-ahead requests immediately. When a consumer breaks out of a `paginatePages` loop early (without passing a `signal`), the generator's `finally` block automatically aborts in-flight look-ahead requests so they do not continue consuming rate-limit budget for discarded payloads:
+Pass a `signal` to cancel the traversal and abort in-flight look-ahead requests immediately. Break out of a `paginatePages` loop early without passing a `signal`, and the generator's `finally` block aborts in-flight look-ahead requests on its own — no rate-limit budget burned on discarded payloads:
 
 ```typescript
 const controller = new AbortController();
@@ -97,7 +97,7 @@ for await (const page of aniLink.anilist.paginatePages(
 
 ## Incremental consumption
 
-The eager variants (`paginate`, `paginateChunks`) collect every response before returning, so `onPage` and `onChunk` fire after all responses are gathered — they do not reduce peak memory or release collected items incrementally. For true streaming and early-exit workflows, use `paginatePages` instead:
+The eager variants (`paginate`, `paginateChunks`) collect every response before returning, so `onPage` and `onChunk` fire after all responses are gathered — they do not reduce peak memory or release collected items incrementally. For true streaming and early-exit workflows, `paginatePages` is the one to reach for:
 
 ```typescript
 for await (const page of aniLink.anilist.paginatePages(
@@ -107,7 +107,7 @@ for await (const page of aniLink.anilist.paginatePages(
 }
 ```
 
-The `onPage` and `onChunk` callbacks are still useful for side-effects (logging, metrics) on each page/chunk after the traversal completes.
+The `onPage` and `onChunk` callbacks still earn their keep for side-effects (logging, metrics) on each page or chunk after the traversal completes.
 
 ## Next steps
 

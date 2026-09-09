@@ -7,7 +7,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 ## Provider-aware inferred types
 
-Operation variables and responses are fully typed. Hover any call to see the inferred shapes:
+Operation variables and responses are fully typed. Hover any call and the inferred shapes appear — no type archaeology required:
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -44,11 +44,11 @@ try {
 }
 ```
 
-`AniLinkErrorCodes` is a const object. `AniLinkErrorCode` is its union type. Branch on `instanceof` first for class-specific fields (`status`, `rateLimit`, `graphqlErrors`, `timeoutMs`), then on `code` for exhaustive handling.
+`AniLinkErrorCodes` is a const object; `AniLinkErrorCode` is its union type. Branch on `instanceof` first for class-specific fields (`status`, `rateLimit`, `graphqlErrors`, `timeoutMs`), then on `code` for exhaustive handling.
 
 ## Key type exports
 
-The library exports the types behind these patterns. Import them for your own signatures:
+The library exports the types behind these patterns. Import them for your own signatures — they are yours to build on:
 
 | Type                                                  | Purpose                                                                                                        |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -85,7 +85,7 @@ new AniLink({
 });
 ```
 
-Passing a MAL field into the `anilist` slot (or vice versa) is a compile error — the slots are distinct types.
+Pass a MAL field into the `anilist` slot (or vice versa) and the compiler catches it — the slots are distinct types.
 
 ## Generic `custom()` typing
 

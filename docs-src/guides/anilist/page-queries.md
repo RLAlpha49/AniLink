@@ -5,7 +5,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Page queries
 
-`aniLink.anilist.query.page.*` fetches **one known page** of a collection. Each method mirrors a top-level query but adds `page` and `perPage` controls and returns a `pageInfo` object alongside the items.
+`aniLink.anilist.query.page.*` fetches **one known page** of a collection. Each method mirrors a top-level query but adds `page` and `perPage` controls, and returns a `pageInfo` object alongside the items.
 
 ## When to fetch a single known page
 
@@ -13,7 +13,7 @@ layout: .vitepress/theme/DocsLayout.vue
 - You want exactly one slice of results (e.g. "top 10 trending").
 - You are building your own pagination loop.
 
-For collecting everything, use the [pagination helpers](/guides/anilist/pagination) instead.
+Collecting everything instead? Use the [pagination helpers](/guides/anilist/pagination) — that is their whole job.
 
 ## Available page queries
 

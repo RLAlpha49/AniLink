@@ -5,7 +5,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Per-request options
 
-Every operation accepts a trailing options argument that overrides the instance defaults for that single call.
+Every operation accepts a trailing options argument that overrides the instance defaults for that single call — no new client required.
 
 ## AniList operations
 
@@ -61,11 +61,11 @@ const anime = await aniLink.mal.anime.get(21, {
 
 ## Merge behavior
 
-Per-request options are merged **shallowly** over the instance defaults. A partial override replaces the whole nested value for that key. For example, passing `retry: { maxRetries: 1 }` replaces the entire retry policy for that call. The other policy knobs fall back to the built-in defaults, not to your instance-level policy.
+Per-request options are merged **shallowly** over the instance defaults. A partial override replaces the whole nested value for that key. Pass `retry: { maxRetries: 1 }`, for example, and the entire retry policy for that call is replaced — the other policy knobs fall back to the built-in defaults, not to your instance-level policy. Worth knowing before it surprises you.
 
 ## Provider scoping
 
-Options never cross providers. A per-request `timeout` on an AniList call does not affect MAL calls, and `fields` exists only on MAL operations.
+Options never cross providers. A per-request `timeout` on an AniList call leaves MAL calls untouched, and `fields` exists only on MAL operations.
 
 ## Next steps
 

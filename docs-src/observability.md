@@ -5,7 +5,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Observability
 
-Four hooks report request lifecycle events. They are configured per provider slot and never leak between providers.
+Four hooks report request lifecycle events. Configure them per provider slot — they never leak between providers.
 
 ## Hook contracts
 
@@ -19,9 +19,9 @@ Four hooks report request lifecycle events. They are configured per provider slo
 | `onCircuitOpen`  | When the circuit breaker trips (consecutive failures reach the threshold)                                                                                  | `{ requestId, url, method, attempt, host, failures }`                                                                          |
 | `onCircuitClose` | When the circuit breaker closes after a successful post-cooldown probe                                                                                    | `{ requestId, url, method, attempt, host }`                                                                                    |
 
-`attempt` is 1-based. `durationMs` is the elapsed wall-clock time of the attempt, making `onResponse` the natural point for latency metrics. `rateLimit` carries the parsed `x-ratelimit-limit`/`-remaining`/`-reset` headers whenever the upstream includes them — use it in `onResponse` to build proactive quota dashboards instead of waiting for a `429`.
+`attempt` is 1-based. `durationMs` is the elapsed wall-clock time of the attempt, which makes `onResponse` the natural home for latency metrics. `rateLimit` carries the parsed `x-ratelimit-limit`/`-remaining`/`-reset` headers whenever the upstream includes them — use it in `onResponse` to build proactive quota dashboards instead of waiting for a `429` to spoil the mood.
 
-`requestId` is a library-generated opaque correlation ID that is identical across every hook emission for one logical request, including across all of its retry attempts. Use it to join the events of a single request in a metrics or logging backend even when several requests to the same URL are in flight. The same `requestId` is also stamped on the thrown `AniLinkError` (as `error.requestId`), so a caught failure can be matched to its full lifecycle event stream:
+`requestId` is a library-generated opaque correlation ID, identical across every hook emission for one logical request — retries included. Use it to join the events of a single request in a metrics or logging backend, even when several requests to the same URL are in flight at once. The same `requestId` is stamped on the thrown `AniLinkError` (as `error.requestId`), so a caught failure can be matched to its full lifecycle event stream:
 
 ```typescript
 onRequestStart: ({ requestId, attempt, url }) => log.info({ requestId, attempt, url }, "start"),
@@ -45,7 +45,7 @@ try {
     :code="`flowchart TD\nA[onRequestStart attempt 1] --> B{attempt result}\nB -- success --> C[onResponse]\nB -- failure --> D[onError]\nD --> E{retrying}\nE -- yes --> F[onRetry then wait] --> G[onRequestStart attempt 2]\nG --> B\nE -- no / exhausted --> H[onError final]\nA -. circuit open .-> FF[onRequestStart + onError CIRCUIT_OPEN_ERROR]:::err\n\n    classDef err stroke:#b85450;`"
 />
 
-For a retryable failure, `onRetry` fires (when configured) in place of `onError` for that attempt; when `onRetry` is not configured, `onError` covers the retryable failure instead. `onError` always fires for terminal failures (retries exhausted) and circuit-open fast-fails. When the circuit breaker is open, the request fast-fails before any network call but still emits the `onRequestStart`/`onError` pair (with code `CIRCUIT_OPEN_ERROR`) so request-volume counters and error-rate dashboards do not undercount while the breaker is open.
+For a retryable failure, `onRetry` fires (when configured) in place of `onError` for that attempt; when `onRetry` is not configured, `onError` covers the retryable failure instead. `onError` always fires for terminal failures (retries exhausted) and circuit-open fast-fails. And when the breaker is open, the request fast-fails before any network call but still emits the `onRequestStart`/`onError` pair (with code `CIRCUIT_OPEN_ERROR`) — request-volume counters and error-rate dashboards keep counting honestly while the breaker is open.
 
 ## Usage
 
@@ -76,11 +76,11 @@ const aniLink = new AniLink("token", {
 
 ## Pacing signal
 
-When `paceWithRateLimit` is enabled and a successful response reports the quota below `rateLimitFloor`, the next request waits for the window to reset. The `onPace` hook fires with the wait length (`delayMs`) just before the wait starts, so a deliberate rate-limit wait is distinguishable from a hung request in hook-based metrics. See [Retries & resilience](/retries-and-resilience) for the pacing configuration.
+When `paceWithRateLimit` is enabled and a successful response reports the quota below `rateLimitFloor`, the next request waits for the window to reset. The `onPace` hook fires with the wait length (`delayMs`) just before the wait starts, so a deliberate rate-limit wait never gets mistaken for a hung request in hook-based metrics. See [Retries & resilience](/retries-and-resilience) for the pacing configuration.
 
 ## Circuit breaker events
 
-When the circuit breaker is enabled, it emits lifecycle events at state transitions so dashboards can plot trip frequency, open duration, and recovery without scraping `CIRCUIT_OPEN_ERROR` codes:
+When the circuit breaker is enabled, it emits lifecycle events at state transitions, so dashboards can plot trip frequency, open duration, and recovery without scraping `CIRCUIT_OPEN_ERROR` codes:
 
 | Hook             | Fires                                                               | Payload                                                |
 | ---------------- | ------------------------------------------------------------------- | ------------------------------------------------------ |
@@ -101,7 +101,7 @@ const aniLink = new AniLink("token", {
 
 ## Hook isolation
 
-Hooks belong to the provider slot where they are declared. A hook registered for AniList never observes MAL traffic and vice versa:
+Hooks belong to the provider slot where they are declared. A hook registered for AniList never sees MAL traffic, and vice versa:
 
 ```typescript
 const aniLink = new AniLink({
@@ -112,7 +112,7 @@ const aniLink = new AniLink({
 
 ### Throwing hooks
 
-A throwing hook never affects the request pipeline: the exception is caught and reported without crashing the request, being counted as an attempt, or distorting retry/error classification. By default the report is a `console.warn` that includes the `requestId` for correlation; set `onHookError` to route hook failures to your own logger or metrics instead:
+A throwing hook never takes the request pipeline down with it: the exception is caught and reported without crashing the request, being counted as an attempt, or distorting retry/error classification. By default the report is a `console.warn` that includes the `requestId` for correlation; set `onHookError` to route hook failures to your own logger or metrics instead:
 
 ```typescript
 const aniLink = new AniLink("token", {
@@ -125,7 +125,7 @@ const aniLink = new AniLink("token", {
 
 ### Client-level `onHookError`
 
-When using the per-provider credentials form, set `onHookError` at the top level of the credentials object to apply it to every provider slot that does not define its own. This lets you wire a single hook-error logger once per client instead of repeating it in each slot:
+When using the per-provider credentials form, set `onHookError` at the top level of the credentials object and it applies to every provider slot that does not define its own. One hook-error logger, wired once per client — no repetition in each slot:
 
 ```typescript
 const aniLink = new AniLink({

@@ -29,7 +29,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 <Callout kind="tip">
 
-`exposeRawAxiosError: true` redacts sensitive headers (`Authorization`, `Cookie`, `Proxy-Authorization`) to `[REDACTED]` in the attached raw error, so opting in for diagnostics does not leak bearer tokens into your logs.
+`exposeRawAxiosError: true` redacts sensitive headers (`Authorization`, `Cookie`, `Proxy-Authorization`) to `[REDACTED]` in the attached raw error, so opting in for diagnostics does not leak bearer tokens into your logs. Debug with confidence.
 
 </Callout>
 
@@ -46,7 +46,7 @@ const aniLink = new AniLink("anilist-token", {
 });
 ```
 
-Details per mechanism: [Retries & resilience](/retries-and-resilience), [Observability](/observability), [Cancellation & timeouts](/cancellation-and-timeouts), [Response cache](/response-cache).
+Each mechanism gets its own page: [Retries & resilience](/retries-and-resilience), [Observability](/observability), [Cancellation & timeouts](/cancellation-and-timeouts), [Response cache](/response-cache).
 
 ## Next steps
 

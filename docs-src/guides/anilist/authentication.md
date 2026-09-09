@@ -7,7 +7,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 ## Constructor token
 
-Pass the token positionally or in the `anilist` credential slot:
+Pass the token positionally or in the `anilist` credential slot — whichever reads better in your code:
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -17,7 +17,7 @@ const aniLink = new AniLink("anilist-token");
 const aniLink2 = new AniLink({ anilist: { authToken: "anilist-token" } });
 ```
 
-Multiple instances can hold different tokens — each exposes its own `anilist` surface.
+Multiple instances can hold different tokens, and each exposes its own `anilist` surface. One per user, one per bot — your call.
 
 ## Public versus authenticated operations
 
@@ -28,11 +28,11 @@ const aniLink = new AniLink();
 const anime = await aniLink.anilist.query.media({ id: 1, type: "ANIME" });
 ```
 
-Mutations and viewer-scoped queries (`viewer`, `notification`, list mutations) require a token. Calling them without one throws `AniLinkAuthError`.
+Mutations and viewer-scoped queries (`viewer`, `notification`, list mutations) want a token. Call them without one and `AniLinkAuthError` is thrown.
 
 ## OAuth2 authorization-code flow
 
-AniLink ships helpers for the full flow. Register an application on the [AniList developer settings](https://anilist.co/settings/developer) to get a client ID and secret.
+AniLink ships helpers for the full flow. First, register an application on the [AniList developer settings](https://anilist.co/settings/developer) page to get a client ID and secret.
 
 <Mermaid
     :code="`sequenceDiagram\n    autonumber\n    participant U as User\n    participant A as Your App\n    participant AL as AniList auth server\n    participant API as AniList API\n\n    U->>A: Start login\n    A->>A: buildAuthorizationUrl(clientId, redirect, state)\n    A->>U: Redirect to AniList authorize URL\n    U->>AL: Authorize app\n    AL->>U: Redirect to callback?code=...&state=...\n    U->>A: Arrive at callback\n    A->>A: Validate state matches\n    A->>AL: getAccessToken(clientId, secret, code, redirect)\n    AL->>A: access_token + refresh_token\n    A->>API: new AniLink(access_token)\n    API->>A: Authenticated data\n\n    Note over A,AL: Token expires (expires_in seconds)\n    A->>A: getTokenExpiry(token) < now - 60s?\n    A->>AL: refreshAccessToken(clientId, secret, refresh_token)\n    AL->>A: New access_token (+ optional refresh_token)\n    A->>API: Continue with fresh token`"
@@ -52,7 +52,7 @@ const authorizeUrl = buildAuthorizationUrl(
 // Redirect the user to `authorizeUrl`.
 ```
 
-The third `state` parameter is optional but strongly recommended as CSRF protection. Bind it to the user's session. Validate that the `state` on the redirect matches before exchanging the code.
+The third `state` parameter is optional but strongly recommended — it is your CSRF protection. Bind it to the user's session, and validate that the `state` on the redirect matches before exchanging the code.
 
 ### 2. Exchange the code for a token
 
@@ -71,7 +71,7 @@ const aniLink = new AniLink(access_token);
 
 ### 3. Refresh when the token expires
 
-The refresh response may not include a new `refresh_token`, in which case keep using the one you stored:
+The refresh response may not include a new `refresh_token`. When it does not, keep using the one you stored:
 
 ```typescript
 import { refreshAccessToken } from "anilink-api-wrapper";
@@ -87,7 +87,7 @@ const nextRefreshToken = rotated ?? refresh_token;
 
 ### 4. Refresh proactively
 
-AniList reports the token lifetime as `expires_in` seconds. Use `getTokenExpiry` to refresh before expiry instead of waiting for a `401`:
+AniList reports the token lifetime as `expires_in` seconds. Use `getTokenExpiry` to refresh before expiry — no need to wait for a `401` to learn the token is dead:
 
 ```typescript
 import { getTokenExpiry, refreshAccessToken } from "anilink-api-wrapper";
@@ -103,7 +103,7 @@ if (Date.now() >= getTokenExpiry(tokenResponse).getTime() - 60_000) {
 
 ## Constants and types
 
-`ANILIST_AUTHORIZE_URL` and `ANILIST_TOKEN_URL` expose the OAuth endpoints. `AniListTokenResponse` types the token payload (`access_token`, `token_type`, `expires_in`, `refresh_token`).
+`ANILIST_AUTHORIZE_URL` and `ANILIST_TOKEN_URL` expose the OAuth endpoints. `AniListTokenResponse` types the token payload (`access_token`, `token_type`, `expires_in`, `refresh_token`) — handy for your own storage layer.
 
 ## Next steps
 
