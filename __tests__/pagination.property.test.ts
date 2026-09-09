@@ -438,23 +438,6 @@ describe("paginateChunks (property-based)", () => {
 });
 
 describe("look-ahead concurrency (property-based)", () => {
-    /**
-     * Build a page fetcher whose per-page artificial delays come from the
-     * property, so pages settle in an arbitrary (often non-sequential) order.
-     * Records the maximum number of requests observed in flight.
-     */
-    function makeDelayedFetcher(maxInFlight: { value: number }) {
-        return async (page: number, delayMs: number): Promise<TestPage> => {
-            maxInFlight.value += 1;
-            if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
-            maxInFlight.value -= 1;
-            return {
-                pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
-                media: [{ id: page }],
-            };
-        };
-    }
-
     test("never exceeds the configured in-flight window regardless of settle order", async () => {
         await fc.assert(
             fc.asyncProperty(
@@ -462,11 +445,22 @@ describe("look-ahead concurrency (property-based)", () => {
                 fc.integer({ min: 2, max: 12 }), // pageCount
                 fc.array(fc.integer({ min: 0, max: 10 }), { minLength: 12, maxLength: 12 }), // delays
                 async (concurrency, pageCount, delays) => {
-                    const maxInFlight = { value: 0 };
+                    let inFlight = 0;
+                    let peakInFlight = 0;
                     let launched = 0;
                     const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
                         launched += 1;
-                        return makeDelayedFetcher(maxInFlight)(page, delays[page - 1] ?? 0);
+                        inFlight += 1;
+                        peakInFlight = Math.max(peakInFlight, inFlight);
+                        const delayMs = delays[page - 1] ?? 0;
+                        if (delayMs > 0) {
+                            await new Promise((resolve) => setTimeout(resolve, delayMs));
+                        }
+                        inFlight -= 1;
+                        return {
+                            pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
+                            media: [{ id: page }],
+                        };
                     });
 
                     const result = await paginate(fetchPage, "media", {
@@ -476,8 +470,9 @@ describe("look-ahead concurrency (property-based)", () => {
 
                     expect(result.pageCount).toBeLessThanOrEqual(pageCount);
                     expect(launched).toBeLessThanOrEqual(pageCount + concurrency - 1);
-                    expect(maxInFlight.value).toBe(0);
-                    expect(maxInFlight.value).toBeLessThanOrEqual(concurrency);
+                    // The peak, not the post-completion count, must respect the window.
+                    expect(peakInFlight).toBeLessThanOrEqual(concurrency);
+                    expect(peakInFlight).toBeGreaterThan(0);
                 }
             ),
             { numRuns: 100 }

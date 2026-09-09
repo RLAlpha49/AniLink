@@ -33,11 +33,7 @@ describe("preflightCredentials", () => {
             .mockRejectedValue(new AniLinkApiError(401, { error: "unauthorized" }));
         const client = stubClient(viewer) as never;
 
-        const outcome = preflightCredentials(client).then(
-            () => null,
-            (error: unknown) => error
-        );
-        const error = await outcome;
+        const error = await preflightCredentials(client).catch((caught: unknown) => caught);
 
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message).toContain("[integration] ANILIST_TOKEN was rejected");

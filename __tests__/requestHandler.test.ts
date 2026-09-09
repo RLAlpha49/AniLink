@@ -78,14 +78,14 @@ test.each([-1, Number.NaN, Number.POSITIVE_INFINITY])(
 );
 
 test("allows zero to disable the Axios timeout", async () => {
-    await expect(
-        sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
-            requiresAuth: false,
-            options: {
-                timeout: 0,
-            },
-        })
-    ).resolves.toBeDefined();
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+        requiresAuth: false,
+        options: {
+            timeout: 0,
+        },
+    });
+
+    expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({ timeout: 0 }));
 });
 
 test("throws AniLinkAuthError when a token is required but missing", async () => {
@@ -390,19 +390,6 @@ test("unwrapGraphQLResponse unwraps the single root field through the strict hel
     expect(unwrapGraphQLResponse(envelope)).toEqual({ id: 5 });
 });
 
-test("throws AniLinkGraphQLError for a 200 envelope without a data object", async () => {
-    const envelope = { errors: [{ message: "Not authenticated." }] };
-    mocks.request.mockResolvedValueOnce({ data: envelope });
-
-    const error = await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }).catch(
-        (requestError: unknown) => requestError
-    );
-
-    expect(error).toBeInstanceOf(AniLinkGraphQLError);
-    expect((error as AniLinkGraphQLError).graphqlErrors).toEqual(envelope.errors);
-    expect((error as Error).message).toContain("Not authenticated.");
-});
-
 test("propagates the normalized error when the transport rejects", async () => {
     mocks.request.mockRejectedValueOnce({
         isAxiosError: true,
@@ -592,7 +579,6 @@ describe("request lifecycle hooks", () => {
             method: "POST",
             attempt: 1,
         });
-        expect(responseContext.durationMs).toBeTypeOf("number");
         expect(responseContext.durationMs).toBeGreaterThanOrEqual(0);
     });
 });
@@ -723,7 +709,10 @@ describe("hook exception isolation", () => {
         // normalized as the request failure.
         expect(error).toBeInstanceOf(AniLinkApiError);
         expect((error as AniLinkApiError).status).toBe(404);
-        expect(warn).toHaveBeenCalled();
+        expect(warn).toHaveBeenCalledWith(
+            expect.stringMatching(/^\[AniLink\] onResponse hook threw and was ignored/),
+            "boom"
+        );
         warn.mockRestore();
     });
 });

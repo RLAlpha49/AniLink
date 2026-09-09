@@ -151,7 +151,7 @@ describe("MAL token request normalization of raw transport failures", () => {
     });
 });
 
-describe("MAL token request never exposes the raw Axios error (SEC-001/TEST-005)", () => {
+describe("MAL token request never exposes the raw Axios error", () => {
     test("forces exposeRawAxiosError: false even when the caller enables it", async () => {
         mocks.sendRequest.mockRejectedValueOnce(new Error("boom"));
 

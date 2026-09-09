@@ -70,6 +70,15 @@ describe("requireVariables helper", () => {
         expect(() =>
             requireVariables({ id: 1 }, { kind: "notOnly", names: ["asHtml"] }, "needs a filter")
         ).not.toThrow();
+        // The branch that distinguishes notOnly from any: when only an
+        // excluded variable is set, the guard must reject.
+        expect(() =>
+            requireVariables(
+                { asHtml: true },
+                { kind: "notOnly", names: ["asHtml"] },
+                "needs a filter"
+            )
+        ).toThrow(AniLinkValidationError);
     });
 });
 

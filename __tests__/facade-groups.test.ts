@@ -40,7 +40,7 @@ describe("facade group composition", () => {
 
         expect(queryKeys.sort()).toEqual([...registryQueryNames].sort());
         for (const name of registryQueryNames) {
-            expect(typeof (api.query as Record<string, unknown>)[name]).toBe("function");
+            expect((api.query as Record<string, unknown>)[name]).toBeInstanceOf(Function);
         }
     });
 
@@ -50,7 +50,7 @@ describe("facade group composition", () => {
 
         expect(pageKeys.sort()).toEqual([...registryPageNames].sort());
         for (const name of registryPageNames) {
-            expect(typeof (api.query.page as Record<string, unknown>)[name]).toBe("function");
+            expect((api.query.page as Record<string, unknown>)[name]).toBeInstanceOf(Function);
         }
     });
 
@@ -60,7 +60,7 @@ describe("facade group composition", () => {
 
         expect(mutationKeys.sort()).toEqual([...registryMutationNames].sort());
         for (const name of registryMutationNames) {
-            expect(typeof (api.mutation as Record<string, unknown>)[name]).toBe("function");
+            expect((api.mutation as Record<string, unknown>)[name]).toBeInstanceOf(Function);
         }
     });
 
@@ -68,40 +68,10 @@ describe("facade group composition", () => {
         const api = buildAniListApi("token") as unknown as AniListApi;
 
         for (const name of CUSTOM_MEMBERS) {
-            expect(typeof (api as Record<string, unknown>)[name]).toBe("function");
+            expect((api as Record<string, unknown>)[name]).toBeInstanceOf(Function);
         }
         for (const name of HELPER_MEMBERS) {
-            expect(typeof (api as Record<string, unknown>)[name]).toBe("function");
+            expect((api as Record<string, unknown>)[name]).toBeInstanceOf(Function);
         }
-    });
-
-    test("the registry has no duplicate query names within a category", () => {
-        const checkUnique = (names: string[], category: string) => {
-            const seen = new Set<string>();
-            for (const name of names) {
-                expect(seen.has(name), `duplicate ${category} name: ${name}`).toBe(false);
-                seen.add(name);
-            }
-        };
-        checkUnique(registryQueryNames, "query");
-        checkUnique(registryPageNames, "page");
-        checkUnique(registryMutationNames, "mutation");
-    });
-
-    test("every registry entry binds to a callable method on its operation class", () => {
-        // If a registry entry's methodName/name does not match a real method
-        // on the operation class, buildAniListApi throws during binding.
-        // Constructing the facade exercises every binding; reaching this
-        // assertion means no entry is mis-wired.
-        expect(() => buildAniListApi("token")).not.toThrow();
-    });
-
-    test("the query group type and registry agree on operation count", () => {
-        // The registry is the source of truth; the facade type declares the
-        // same operations. This guards against a new operation being added to
-        // the registry without a matching type declaration (or vice versa).
-        expect(registryQueryNames.length).toBe(ANILIST_OPERATION_REGISTRY.query.length);
-        expect(registryPageNames.length).toBe(ANILIST_OPERATION_REGISTRY.page.length);
-        expect(registryMutationNames.length).toBe(ANILIST_OPERATION_REGISTRY.mutation.length);
     });
 });

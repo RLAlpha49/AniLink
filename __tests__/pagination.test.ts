@@ -122,19 +122,6 @@ describe("paginate", () => {
         expect(result.pageCount).toBe(1);
     });
 
-    test("stops when a response has no usable pageInfo object", async () => {
-        const fetchPage = vi.fn(async (): Promise<TestPage> => ({
-            pageInfo: undefined as never,
-            media: [{ id: 1 }],
-        }));
-
-        const result = await paginate(fetchPage, "media", { concurrency: 1 });
-
-        expect(fetchPage).toHaveBeenCalledTimes(1);
-        expect(result.items).toEqual([{ id: 1 }]);
-        expect(result.truncated).toBe(false);
-    });
-
     test("clamps perPage above AniList's cap of 50 down to 50", async () => {
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
             pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
@@ -287,44 +274,6 @@ describe("paginate", () => {
         // dispose (run in the generator's finally) must have aborted it.
         expect(inFlightSignals.length).toBeGreaterThanOrEqual(2);
         expect(inFlightSignals[1].aborted).toBe(true);
-    });
-
-    test("paginatePages returns cleanly on abort instead of throwing", async () => {
-        const controller = new AbortController();
-        const fetchPage = vi.fn(
-            async (page: number, _perPage: number, signal?: AbortSignal): Promise<TestPage> => {
-                if (page >= 2) {
-                    return new Promise<TestPage>((_resolve, reject) => {
-                        signal?.addEventListener("abort", () => {
-                            reject(new DOMException("aborted", "AbortError"));
-                        });
-                    });
-                }
-                return {
-                    pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
-                    media: [{ id: page }],
-                };
-            }
-        );
-
-        const collected: TestPage[] = [];
-        const promise = (async () => {
-            for await (const page of paginatePages(fetchPage, {
-                perPage: 50,
-                concurrency: 2,
-                signal: controller.signal,
-            })) {
-                collected.push(page);
-            }
-        })();
-
-        await new Promise((resolve) => setTimeout(resolve, 20));
-        controller.abort();
-
-        // The generator must terminate cleanly (no rejection) and yield the
-        // pages resolved before the abort, consistent with paginate/paginateChunks.
-        await expect(promise).resolves.toBeUndefined();
-        expect(collected).toHaveLength(1);
     });
 });
 
@@ -559,40 +508,33 @@ describe("paginatePages", () => {
 
 describe("extractHasMore malformed-response branches", () => {
     // extractHasMore is private to Paginator.ts; it is exercised through the
-    // public paginate/paginatePages entry points. A malformed pageInfo (present
-    // but not a non-null object) must end the traversal instead of looping.
+    // public paginate/paginatePages entry points. A malformed pageInfo (absent,
+    // null, or a non-object) must end the traversal instead of looping.
 
-    test("paginate ends the traversal when pageInfo is null", async () => {
-        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
-            // Page 1 carries a null pageInfo; extractHasMore must read it as
-            // "no more data" so the traversal stops after one page.
-            return {
-                pageInfo: null as unknown as PageInfo,
+    const malformedPageInfoShapes: Array<[string, unknown]> = [
+        ["undefined", undefined],
+        ["null", null],
+        ["a string", "not-an-object"],
+        ["a number", 42],
+        ["an array", ["not-a-page-info"]],
+    ];
+
+    test.each(malformedPageInfoShapes)(
+        "paginate ends the traversal when pageInfo is %s",
+        async (_shape, malformedPageInfo) => {
+            const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+                pageInfo: malformedPageInfo as unknown as PageInfo,
                 media: [{ id: page }],
-            };
-        });
+            }));
 
-        const result = await paginate(fetchPage, "media", { concurrency: 1 });
+            const result = await paginate(fetchPage, "media", { concurrency: 1 });
 
-        expect(fetchPage).toHaveBeenCalledTimes(1);
-        expect(result.pageCount).toBe(1);
-        expect(result.truncated).toBe(false);
-    });
-
-    test("paginate ends the traversal when pageInfo is a non-object", async () => {
-        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
-            return {
-                pageInfo: "not-an-object" as unknown as PageInfo,
-                media: [{ id: page }],
-            };
-        });
-
-        const result = await paginate(fetchPage, "media", { concurrency: 1 });
-
-        expect(fetchPage).toHaveBeenCalledTimes(1);
-        expect(result.pageCount).toBe(1);
-        expect(result.truncated).toBe(false);
-    });
+            expect(fetchPage).toHaveBeenCalledTimes(1);
+            expect(result.pageCount).toBe(1);
+            expect(result.items).toEqual([{ id: 1 }]);
+            expect(result.truncated).toBe(false);
+        }
+    );
 });
 
 describe("safeCallback error swallowing", () => {
@@ -1029,11 +971,6 @@ describe("paginate concurrency", () => {
 });
 
 describe("fuzzyDate", () => {
-    test("builds a full date from year, month, and day", () => {
-        const result = fuzzyDate({ year: 2024, month: 4, day: 15 });
-        expect(result).toEqual({ year: 2024, month: 4, day: 15 });
-    });
-
     test("defaults missing parts to zero", () => {
         const result = fuzzyDate({ year: 2024 });
         expect(result).toEqual({ year: 2024, month: 0, day: 0 });

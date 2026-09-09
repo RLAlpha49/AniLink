@@ -14,9 +14,9 @@ describe("shared axios stub contract", () => {
     test("exposes every axios member the request pipeline consumes", () => {
         const stub = createAxiosStub();
 
-        expect(typeof stub.module.default.create).toBe("function");
-        expect(typeof stub.module.default.isAxiosError).toBe("function");
-        expect(typeof stub.module.default.isCancel).toBe("function");
+        expect(stub.module.default.create).toBeInstanceOf(Function);
+        expect(stub.module.default.isAxiosError).toBeInstanceOf(Function);
+        expect(stub.module.default.isCancel).toBeInstanceOf(Function);
 
         expect(stub.module.default.isAxiosError(makeAxiosResponseError(500))).toBe(true);
         expect(stub.module.default.isAxiosError(new Error("plain"))).toBe(false);

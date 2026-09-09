@@ -45,10 +45,17 @@ describe("ResponseCache", () => {
 
     test("distinguishes entries by method, url, and body", () => {
         const cache = new ResponseCache({ ttlMs: 10_000 });
-        cache.set("GET", "https://example.com/a", undefined, undefined, 1);
-        cache.set("GET", "https://example.com/b", undefined, undefined, 2);
-        expect(cache.get("GET", "https://example.com/a")).toBe(1);
-        expect(cache.get("GET", "https://example.com/b")).toBe(2);
+        // Same URL and body, different method: separate entries.
+        cache.set("GET", "https://example.com/api", undefined, undefined, 1);
+        cache.set("POST", "https://example.com/api", undefined, undefined, 2);
+        // Same URL and method, different body: separate entries.
+        cache.set("GET", "https://example.com/api", { page: 1 }, undefined, 3);
+        cache.set("GET", "https://example.com/api", { page: 2 }, undefined, 4);
+
+        expect(cache.get("GET", "https://example.com/api")).toBe(1);
+        expect(cache.get("POST", "https://example.com/api")).toBeUndefined();
+        expect(cache.get("GET", "https://example.com/api", { page: 1 })).toBe(3);
+        expect(cache.get("GET", "https://example.com/api", { page: 2 })).toBe(4);
     });
 
     test("clear removes all entries", () => {

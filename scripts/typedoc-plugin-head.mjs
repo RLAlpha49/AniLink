@@ -1,7 +1,7 @@
 /**
  * TypeDoc plugin that loads the Google Fonts stylesheet for the TypeDoc HTML
  * output the same way the VitePress docs do: a `<link rel="stylesheet">` in
- * the server-rendered `<head>` plus `preconnect` hints (see FE-001).
+ * the server-rendered `<head>` plus `preconnect` hints.
  *
  * Why a plugin instead of `@import url(...)` in `typedoc-custom.css`:
  * `@import` starts the font download only after the browser has downloaded

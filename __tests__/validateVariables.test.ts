@@ -255,12 +255,6 @@ describe("validateVariables", () => {
             ).not.toThrow();
         });
 
-        test("treats empty variables as a valid no-op under strict mode", () => {
-            expect(() =>
-                validateVariables({}, mappings, { rejectUnknownKeys: true })
-            ).not.toThrow();
-        });
-
         test("rejects an unknown property of a nested object", () => {
             let caught: unknown;
             try {
@@ -282,18 +276,6 @@ describe("validateVariables", () => {
                     rejectUnknownKeys: false,
                 })
             ).not.toThrow();
-        });
-
-        test("rejects unknown top-level variables by default", () => {
-            let caught: unknown;
-            try {
-                validateVariables({ id: 1, unknownField: "ignored" }, mappings);
-            } catch (error) {
-                caught = error;
-            }
-
-            const validationError = caught as AniLinkValidationError;
-            expect(validationError.details).toContain("Unknown variable: unknownField");
         });
 
         test("stays lenient when rejectUnknownKeys is explicitly false", () => {

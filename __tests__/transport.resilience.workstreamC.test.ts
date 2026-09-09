@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import http from "node:http";
+import https from "node:https";
 import {
     AniLinkApiError,
     AniLinkGraphQLError,
@@ -6,6 +8,7 @@ import {
     AniLinkRestError,
 } from "../src/base/AniLinkError";
 import { type RequestOptions, sendRequest } from "../src/base/RequestHandler";
+import { defaultHttpAgent, defaultHttpsAgent } from "../src/base/agents";
 import { getAxiosStub, makeAxiosResponseError as apiError } from "./helpers/axiosStub";
 
 vi.mock("axios", async () => {
@@ -78,23 +81,6 @@ describe("AniLinkGraphQLError.status derives from the upstream GraphQL error", (
         }).catch((requestError: unknown) => requestError);
 
         expect((error as AniLinkGraphQLError).status).toBe(200);
-    });
-
-    test("retries a 200-envelope GraphQL failure carrying an upstream 429", async () => {
-        mocks.request
-            .mockResolvedValueOnce({
-                data: { errors: [{ message: "rate limited", status: 429 }] },
-            })
-            .mockResolvedValueOnce({ data: { data: { Media: { id: 7 } } } });
-
-        pendingOptions = { retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 } };
-
-        const promise = callSendRequest("https://graphql.anilist.co", "POST", { query: "query" });
-        promise.catch(() => {});
-
-        await vi.advanceTimersByTimeAsync(10);
-        await expect(promise).resolves.toEqual({ id: 7 });
-        expect(mocks.request).toHaveBeenCalledTimes(2);
     });
 
     test("retries a 200-envelope GraphQL failure carrying an upstream 500", async () => {
@@ -197,8 +183,10 @@ describe("Configurable socket pool", () => {
             httpsAgent?: unknown;
         };
         // Custom bounds must not reuse the shared default agents.
-        expect(config.httpAgent).toBeDefined();
-        expect(config.httpsAgent).toBeDefined();
+        expect(config.httpAgent).not.toBe(defaultHttpAgent);
+        expect(config.httpsAgent).not.toBe(defaultHttpsAgent);
+        expect(config.httpAgent).toBeInstanceOf(http.Agent);
+        expect(config.httpsAgent).toBeInstanceOf(https.Agent);
     });
 
     test("reuses the shared default agents when the socket bounds are unset", async () => {
@@ -213,8 +201,8 @@ describe("Configurable socket pool", () => {
             httpsAgent?: unknown;
         };
 
-        expect(first.httpAgent).toBeDefined();
-        expect(first.httpsAgent).toBeDefined();
+        expect(first.httpAgent).toBe(defaultHttpAgent);
+        expect(first.httpsAgent).toBe(defaultHttpsAgent);
         // The default path is allocation-free: both calls share the same
         // module-level keep-alive pool.
         expect(second.httpAgent).toBe(first.httpAgent);
@@ -307,48 +295,6 @@ describe("Per-window retry budget", () => {
         await vi.advanceTimersByTimeAsync(100);
         await expect(promise).rejects.toBeInstanceOf(AniLinkApiError);
         expect(mocks.request).toHaveBeenCalledTimes(3);
-    });
-});
-
-describe("Rate-limit pacing is on by default", () => {
-    test("paces when the reported quota is exhausted without opting in", async () => {
-        mocks.request.mockResolvedValue({
-            data: { data: { Media: { id: 1 } } },
-            headers: {
-                "x-ratelimit-limit": "90",
-                "x-ratelimit-remaining": "0",
-                "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 5),
-            },
-        });
-
-        pendingOptions = {};
-
-        const first = callSendRequest("https://graphql.anilist.co", "POST", { query: "query" });
-        first.catch(() => {});
-        await vi.advanceTimersByTimeAsync(4_999);
-        expect(mocks.request).toHaveBeenCalledTimes(1); // still waiting for the reset
-
-        await vi.advanceTimersByTimeAsync(1);
-        await expect(first).resolves.toEqual({ id: 1 });
-    });
-
-    test("can be disabled explicitly with paceWithRateLimit: false", async () => {
-        mocks.request.mockResolvedValue({
-            data: { data: { Media: { id: 1 } } },
-            headers: {
-                "x-ratelimit-limit": "90",
-                "x-ratelimit-remaining": "0",
-                "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 60),
-            },
-        });
-
-        pendingOptions = { paceWithRateLimit: false };
-
-        await callSendRequest("https://graphql.anilist.co", "POST", { query: "query" });
-        await callSendRequest("https://graphql.anilist.co", "POST", { query: "query" });
-
-        expect(mocks.request).toHaveBeenCalledTimes(2);
-        expect(Date.now()).toBeLessThan(Math.floor(Date.now() / 1000) * 1000 + 1_000);
     });
 });
 

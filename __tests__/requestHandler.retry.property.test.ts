@@ -108,7 +108,7 @@ describe("Retry-After header precedence (property-based)", () => {
 
                     const promise = callSendRequest();
                     await vi.advanceTimersByTimeAsync(120_000);
-                    await expect(promise).resolves.toBeDefined();
+                    await expect(promise).resolves.toEqual({ id: 1 });
 
                     // Each reported nextDelayMs must be at least the header
                     // value (in ms) the server dictated for that attempt.

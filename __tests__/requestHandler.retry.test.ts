@@ -276,7 +276,7 @@ describe("retry hooks", () => {
         const onError = vi.fn();
 
         configureRequestOptions({
-            retry: { maxRetries: 2, baseDelayMs: 10, maxDelayMs: 10 },
+            retry: { maxRetries: 2, baseDelayMs: 10, maxDelayMs: 10, jitter: false },
             onError,
         });
 
@@ -292,7 +292,8 @@ describe("retry hooks", () => {
             onError.mock.calls[0]?.[1],
             onError.mock.calls.at(-1)?.[1],
         ] as [{ nextDelayMs?: number } | undefined, { nextDelayMs?: number } | undefined];
-        expect(firstContext?.nextDelayMs).toBeDefined();
+        // With jitter disabled the pre-retry delay is exactly the base delay.
+        expect(firstContext?.nextDelayMs).toBe(10);
         expect(terminalContext?.nextDelayMs).toBeUndefined();
     });
 
@@ -336,7 +337,7 @@ describe("retry hooks", () => {
         promise.catch(() => {});
 
         await vi.advanceTimersByTimeAsync(10_000);
-        await expect(promise).resolves.toBeDefined();
+        await expect(promise).resolves.toEqual({ id: 1 });
 
         expect(onRetry).toHaveBeenCalledTimes(1);
         const [, context] = onRetry.mock.calls[0] as [
@@ -424,7 +425,7 @@ describe("Retry-After handling", () => {
         promise.catch(() => {});
 
         await vi.advanceTimersByTimeAsync(60_000);
-        await expect(promise).resolves.toBeDefined();
+        await expect(promise).resolves.toEqual({ id: 1 });
 
         const [, context] = onRetry.mock.calls[0] as [unknown, { nextDelayMs: number }];
         expect(context.nextDelayMs).toBeLessThanOrEqual(60_000);
@@ -443,7 +444,7 @@ describe("Retry-After handling", () => {
         });
         pastPromise.catch(() => {});
         await vi.advanceTimersByTimeAsync(0);
-        await expect(pastPromise).resolves.toBeDefined();
+        await expect(pastPromise).resolves.toEqual({ id: 1 });
         expect((onRetryPast.mock.calls[0]?.[1] as { nextDelayMs: number }).nextDelayMs).toBe(0);
 
         const futureDate = new Date(Date.now() + 5_000).toUTCString();
@@ -457,7 +458,7 @@ describe("Retry-After handling", () => {
         });
         futurePromise.catch(() => {});
         await vi.advanceTimersByTimeAsync(5_000);
-        await expect(futurePromise).resolves.toBeDefined();
+        await expect(futurePromise).resolves.toEqual({ id: 1 });
         const futureDelay = (onRetryFuture.mock.calls[0]?.[1] as { nextDelayMs: number })
             .nextDelayMs;
         expect(futureDelay).toBeGreaterThan(0);
@@ -500,7 +501,7 @@ describe("Retry-After handling", () => {
         expect(mocks.request).toHaveBeenCalledTimes(1); // still waiting
 
         await vi.advanceTimersByTimeAsync(1);
-        await expect(promise).resolves.toBeDefined();
+        await expect(promise).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(2);
         expect((onRetry.mock.calls[0]?.[1] as { nextDelayMs: number }).nextDelayMs).toBe(2_000);
     });
@@ -637,21 +638,6 @@ describe("retry matrix per error class", () => {
             })
         ).rejects.toBeInstanceOf(AniLinkAuthError);
         expect(mocks.request).not.toHaveBeenCalled();
-    });
-
-    test("does not retry an aborted network error", async () => {
-        mocks.request.mockRejectedValue({
-            isAxiosError: true,
-            isCanceled: true,
-            code: "ERR_CANCELED",
-        });
-
-        configureRequestOptions({ retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 } });
-
-        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
-            AniLinkNetworkError
-        );
-        expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 });
 

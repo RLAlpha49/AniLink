@@ -7,6 +7,7 @@ import {
     AniLinkNetworkError,
 } from "../src/base/AniLinkError";
 import { ANILIST_GRAPHQL_URL } from "../src/apis/graphql/anilist/AniListOperation";
+import { DEFAULT_REQUEST_TIMEOUT } from "../src/base/transportTypes";
 import { AniLink } from "../src/AniLink";
 import { getAxiosStub, makeAxiosResponseError } from "./helpers/axiosStub";
 
@@ -75,7 +76,7 @@ describe("facade-to-Axios seam", () => {
         expect(config.headers.Authorization).toBeUndefined();
         expect(sentBody?.query).toContain("query");
         expect(sentBody?.variables).toEqual({ id: 1, type: "ANIME" });
-        expect(typeof config.timeout).toBe("number");
+        expect(config.timeout).toBe(DEFAULT_REQUEST_TIMEOUT);
     });
 
     test("an authenticated mutation forwards the bearer token and typed variables", async () => {

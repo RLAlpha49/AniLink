@@ -86,11 +86,10 @@ describe("package-inventory response contract resolution", () => {
         expect(operations[0].responseTypeName).toBe("Activity");
     });
 
-    it("keeps repeated parsing stable (resolution cache)", () => {
+    it("is deterministic across repeated calls", () => {
         const first = parseOperationSource("src/query/Activity.ts", sourceWithPromiseFallback);
         const second = parseOperationSource("src/query/Activity.ts", sourceWithPromiseFallback);
-        expect(second[0]?.responseTypeName).toBe(first[0]?.responseTypeName);
-        expect(second[0]?.responseTypeName).toBe("Activity");
+        expect(second).toEqual(first);
     });
 
     it("prefers the *Response import over the declared Promise type", () => {

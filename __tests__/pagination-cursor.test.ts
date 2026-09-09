@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import {
     fetchWithLookAhead,
     type LookAheadEntry,
-    type LookAheadResult,
 } from "../src/base/pagination";
 
 /**
@@ -40,6 +39,9 @@ describe("fetchWithLookAhead cursor keys", () => {
         expect(result.responses.map((r) => r.items)).toEqual([["a"], ["b"], ["c"]]);
         expect(result.count).toBe(3);
         expect(result.truncated).toBe(false);
+        // The public result carries exactly these members — no extra keys
+        // leak onto the shape consumers destructure.
+        expect(Object.keys(result).sort()).toEqual(["count", "responses", "truncated"]);
     });
 
     test("numeric keys keep the existing page-number behavior", async () => {
@@ -103,23 +105,5 @@ describe("fetchWithLookAhead legacy numeric contract", () => {
 
         expect(requestedKeys).toEqual([1, 2, 3, 4]);
         expect((result.responses as Array<{ n: number }>).map((r) => r.n)).toEqual([1, 2, 3]);
-    });
-});
-
-describe("fetchWithLookAhead result shape", () => {
-    test("returns LookAheadResult with responses, count, truncated", async () => {
-        const result: LookAheadResult<LookAheadEntry> = await fetchWithLookAhead<
-            LookAheadEntry,
-            number
-        >(
-            async (key) => ({ items: [key], hasMore: false }),
-            (response) => response.hasMore,
-            undefined,
-            0,
-            5,
-            2
-        );
-
-        expect(Object.keys(result).sort()).toEqual(["count", "responses", "truncated"]);
     });
 });

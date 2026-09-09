@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { AniLink } from "../src/AniLink";
+import { AniLinkAuthError } from "../src/base/AniLinkError";
 import { resolveAniListCredentials, resolveMalCredentials } from "../src/base/credentials";
 import { getAxiosStub } from "./helpers/axiosStub";
 
@@ -105,11 +106,17 @@ describe("per-provider credential isolation", () => {
         expect(config.headers.Authorization).toBe("Bearer mal-token");
     });
 
-    test("anilist-only credentials still construct a public MAL provider surface", () => {
+    test("anilist-only credentials still construct a public MAL provider surface", async () => {
         const client = new AniLink({ anilist: { authToken: "only-anilist" } });
 
-        expect(client.anilist).toBeDefined();
-        expect(client.mal).toBeDefined();
+        // The AniList token must drive real requests on the anilist slot...
+        await client.anilist.query.media({ id: 1, type: "ANIME" });
+        expect(lastConfig().headers.Authorization).toBe("Bearer only-anilist");
+
+        // ...while the MAL surface stays usable: its authenticated calls fail
+        // fast with an auth error instead of leaking the AniList token.
+        await expect(client.mal.user.me()).rejects.toBeInstanceOf(AniLinkAuthError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -139,14 +146,6 @@ describe("strict credential-key validation", () => {
                 accesstoken: "lowercase-typo",
             })
         ).toThrow(/Unknown credential key "accesstoken"/);
-    });
-
-    test("accepts a valid transport option without throwing", () => {
-        expect(() => resolveAniListCredentials({ authToken: "t", timeout: 5_000 })).not.toThrow();
-    });
-
-    test("accepts a valid provider auth field without throwing", () => {
-        expect(() => resolveMalCredentials({ accessToken: "t", clientId: "c" })).not.toThrow();
     });
 
     test("rejects an unknown key at client construction", () => {

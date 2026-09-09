@@ -750,32 +750,40 @@ describe("buildGeneratedFiles", () => {
 });
 
 describe("hasTopLevelTemplateLiteralBinding", () => {
+    /**
+     * Runs the same binding regex the generator uses and returns the first
+     * match, so each case only asserts the predicate under test.
+     */
+    const findBindingMatch = (source: string): RegExpExecArray => {
+        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
+        if (match === null) {
+            throw new Error(`fixture must contain a query/mutation binding: ${source}`);
+        }
+        return match;
+    };
+
     it("returns true for a real top-level const query template literal", () => {
         const source = "const query = `query { id }`;\n";
-        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
-        expect(match).not.toBeNull();
-        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(true);
+        const match = findBindingMatch(source);
+        expect(hasTopLevelTemplateLiteralBinding(source, match.index)).toBe(true);
     });
 
     it("returns false when the match is inside a line comment", () => {
         const source = "// const query = `query { id }`;\nconst other = 1;\n";
-        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
-        expect(match).not.toBeNull();
-        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(false);
+        const match = findBindingMatch(source);
+        expect(hasTopLevelTemplateLiteralBinding(source, match.index)).toBe(false);
     });
 
     it("returns false when the match is inside a block comment", () => {
         const source = "/* const query = `query { id }` */\nconst other = 1;\n";
-        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
-        expect(match).not.toBeNull();
-        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(false);
+        const match = findBindingMatch(source);
+        expect(hasTopLevelTemplateLiteralBinding(source, match.index)).toBe(false);
     });
 
     it("returns false when the match is inside a string literal", () => {
         const source = 'const x = "const query = `query { id }`";\nconst other = 1;\n';
-        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
-        expect(match).not.toBeNull();
-        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(false);
+        const match = findBindingMatch(source);
+        expect(hasTopLevelTemplateLiteralBinding(source, match.index)).toBe(false);
     });
 
     it("returns true for a const query template literal nested inside a method body", () => {
@@ -788,9 +796,8 @@ describe("hasTopLevelTemplateLiteralBinding", () => {
             "}",
             "",
         ].join("\n");
-        const match = /const\s+(?:query|mutation)\s*=\s*`([\s\S]*?)`/.exec(source);
-        expect(match).not.toBeNull();
-        expect(hasTopLevelTemplateLiteralBinding(source, match!.index)).toBe(true);
+        const match = findBindingMatch(source);
+        expect(hasTopLevelTemplateLiteralBinding(source, match.index)).toBe(true);
     });
 });
 

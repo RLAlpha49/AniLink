@@ -184,9 +184,8 @@ describe("parseRetryAfter property tests", () => {
         fc.assert(
             fc.property(fc.integer({ min: 0, max: 1_000_000 }), (seconds) => {
                 const delay = parseRetryAfter(String(seconds), Date.now());
-                expect(delay).not.toBeNull();
                 expect(delay).toBeGreaterThanOrEqual(0);
-                expect(delay!).toBeLessThanOrEqual(MAX_RETRY_AFTER_MS);
+                expect(delay).toBeLessThanOrEqual(MAX_RETRY_AFTER_MS);
                 expect(delay).toBe(Math.min(seconds * 1000, MAX_RETRY_AFTER_MS));
             })
         );
@@ -207,9 +206,8 @@ describe("parseRetryAfter property tests", () => {
                 const now = Date.now();
                 const date = new Date(now + offsetMs).toUTCString();
                 const delay = parseRetryAfter(date, now);
-                expect(delay).not.toBeNull();
                 expect(delay).toBeGreaterThanOrEqual(0);
-                expect(delay!).toBeLessThanOrEqual(MAX_RETRY_AFTER_MS);
+                expect(delay).toBeLessThanOrEqual(MAX_RETRY_AFTER_MS);
             })
         );
     });

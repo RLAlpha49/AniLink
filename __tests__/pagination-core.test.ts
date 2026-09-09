@@ -95,8 +95,32 @@ describe("fetchWithLookAhead", () => {
         await expect(fetchWithLearnAheadFailure()).rejects.toThrow("boom");
     });
 
-    test("concurrency cap constant stays conservative", () => {
-        expect(MAX_CONCURRENCY).toBeLessThanOrEqual(8);
+    test("never keeps more than the requested window in flight", async () => {
+        // Behavioral replacement for the old constant pin: prove the driver
+        // itself caps concurrent fetches, including when the caller asks for
+        // a window above MAX_CONCURRENCY.
+        let inFlight = 0;
+        let peakInFlight = 0;
+        const result = await fetchWithLookAhead<number>(
+            (n) =>
+                new Promise<number>((resolve) => {
+                    inFlight += 1;
+                    peakInFlight = Math.max(peakInFlight, inFlight);
+                    // Settle on a macrotask so the window genuinely overlaps.
+                    setTimeout(() => {
+                        inFlight -= 1;
+                        resolve(n);
+                    }, 0);
+                }),
+            () => true,
+            1,
+            6,
+            50 // far above MAX_CONCURRENCY; the driver must clamp to 8
+        );
+
+        expect(result.count).toBe(6);
+        expect(peakInFlight).toBeLessThanOrEqual(MAX_CONCURRENCY);
+        expect(peakInFlight).toBeGreaterThan(1);
     });
 });
 

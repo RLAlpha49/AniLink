@@ -62,14 +62,6 @@ beforeEach(() => {
 });
 
 describe("REST transport seam", () => {
-    test("subclasses can read shared authentication and instance settings", () => {
-        const options = { timeout: 1_234 };
-        const operation = new TestAnimeOperation("rest-token", options);
-
-        expect(operation.readToken()).toBe("rest-token");
-        expect(operation.readInstanceOptions()).toBe(options);
-    });
-
     test("a public GET reaches Axios with the full URL and no auth header", async () => {
         const operation = new TestAnimeOperation();
 
@@ -91,9 +83,13 @@ describe("REST transport seam", () => {
     });
 
     test("path placeholders are substituted and percent-encoded", async () => {
-        await new TestAnimeOperation().getAnime(42);
+        // Drive the library's {placeholder} mechanism with a value that
+        // requires encoding, instead of interpolating the URL in the test.
+        await new TestAnimeOperation().execute("/anime/{id}", {
+            pathParams: { id: "one piece/21" },
+        });
 
-        expect(lastConfig().url).toBe("https://api.example.test/v2/anime/42");
+        expect(lastConfig().url).toBe("https://api.example.test/v2/anime/one%20piece%2F21");
     });
 
     test("PUT sends a JSON body with the substituted path", async () => {

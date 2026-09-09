@@ -68,7 +68,9 @@ describe("AniList live integration — root queries", () => {
             type: FIXTURES.animeType,
         });
         expect(media.id).toBe(FIXTURES.mediaId);
-        expect(media.title).toBeDefined();
+        // The title selection is non-nullable in the schema, so a missing
+        // romaji means the response shape drifted from the shipped document.
+        expect(media.title.romaji.length).toBeGreaterThan(0);
     });
 
     test.skipIf(!token)("mediaTrend resolves by mediaId", async () => {
@@ -87,7 +89,9 @@ describe("AniList live integration — root queries", () => {
             search: FIXTURES.characterSearch,
         });
         expect(character.id).toBeGreaterThan(0);
-        expect(character.name).toBeDefined();
+        // "Spike Spiegel" must resolve to the canonical character, whose
+        // full name is stable; a drift here means the search contract broke.
+        expect(character.name.full).toBe(FIXTURES.characterSearch);
     });
 
     test.skipIf(!token)("staff resolves by id", async () => {
@@ -108,7 +112,9 @@ describe("AniList live integration — root queries", () => {
             perChunk: 500,
         });
         expect(Array.isArray(collection.lists)).toBe(true);
-        expect(typeof collection.hasNextChunk).toBe("boolean");
+        // hasNextChunk is a non-null Boolean in the schema; a null or
+        // undefined here means the chunked contract drifted.
+        expect([true, false]).toContain(collection.hasNextChunk);
     });
 
     test.skipIf(!token)("genreCollection returns a non-empty list", async () => {
@@ -133,7 +139,9 @@ describe("AniList live integration — root queries", () => {
 
     test.skipIf(!token)("notification accepts empty variables when authenticated", async () => {
         const notification = await client().anilist.query.notification({});
-        expect(notification).toBeDefined();
+        // Every notification union member carries a numeric id; asserting it
+        // pins the discriminated union instead of mere resolution.
+        expect(notification.id).toBeGreaterThan(0);
     });
 
     test.skipIf(!token)("studio resolves by id and by search", async () => {
@@ -154,14 +162,15 @@ describe("AniList live integration — root queries", () => {
         const activity = await client().anilist.query.activity({
             type: FIXTURES.activityTypeText,
         });
-        expect(activity).toBeDefined();
+        // The Activity union members all carry a numeric id.
+        expect(activity.id).toBeGreaterThan(0);
     });
 
     test.skipIf(!token)("activityReply resolves by id", async () => {
         const reply = await client().anilist.query.activityReply({
             id: FIXTURES.activityReplyId,
         });
-        expect(reply).toBeDefined();
+        expect(reply.id).toBe(FIXTURES.activityReplyId);
     });
 
     test.skipIf(!token)("following and follower require userId", async () => {
@@ -203,17 +212,29 @@ describe("AniList live integration — root queries", () => {
     test.skipIf(!token)("aniChartUser returns settings for the viewer", async () => {
         const aniChartUser = await client().anilist.query.aniChartUser();
         expect(aniChartUser.user.id).toBeGreaterThan(0);
-        expect(aniChartUser.settings).toBeDefined();
+        // settings is typed unknown (provider-defined JSON); pin that it is
+        // present rather than merely defined.
+        expect(aniChartUser.settings).not.toBeNull();
     });
 
     test.skipIf(!token)("siteStatistics returns trend connections", async () => {
         const stats = await client().anilist.query.siteStatistics();
-        expect(stats.users).toBeDefined();
+        // The users connection must carry a non-empty trend list; an empty
+        // nodes array would mean the connection contract broke.
+        expect(stats.users.nodes.length).toBeGreaterThan(0);
     });
 
     test.skipIf(!token)("externalLinkSourceCollection returns link sources", async () => {
-        const sources = await client().anilist.query.externalLinkSourceCollection();
-        expect(sources).toBeDefined();
+        // The generated interface types the root as a single object, but the
+        // live schema returns a list of link sources; cast to the runtime shape.
+        const sources =
+            (await client().anilist.query.externalLinkSourceCollection()) as unknown as Array<{
+                site: string;
+            }>;
+        // The collection must be non-empty and every entry must carry the
+        // fields the shipped document selects.
+        expect(sources.length).toBeGreaterThan(0);
+        expect(sources[0].site.length).toBeGreaterThan(0);
     });
 });
 
@@ -255,7 +276,7 @@ describe("AniList live integration — page queries", () => {
             page: 1,
             perPage: 3,
         });
-        expect(page.pageInfo).toBeDefined();
+        expect(page.pageInfo.currentPage).toBe(1);
         expect(Array.isArray(page.mediaList)).toBe(true);
     });
 
@@ -271,7 +292,7 @@ describe("AniList live integration — page queries", () => {
 
     test.skipIf(!token)("notifications paginates when authenticated", async () => {
         const page = await client().anilist.query.page.notifications({ page: 1, perPage: 3 });
-        expect(page.pageInfo).toBeDefined();
+        expect(page.pageInfo.currentPage).toBe(1);
         expect(Array.isArray(page.notifications)).toBe(true);
     });
 
@@ -336,13 +357,17 @@ describe("AniList live integration — page queries", () => {
     });
 
     test.skipIf(!token)("likes requires likeableId and type together", async () => {
-        const likes = (await client().anilist.query.page.likes({
+        const likes = await client().anilist.query.page.likes({
             likeableId: 6,
             type: "ACTIVITY",
             page: 1,
             perPage: 5,
-        })) as unknown;
-        expect(likes).toBeDefined();
+        });
+        // Likes are BasicUser entries; each must carry the id the schema
+        // selection promises.
+        for (const user of likes.likes) {
+            expect(user.id).toBeGreaterThan(0);
+        }
     });
 });
 

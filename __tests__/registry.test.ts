@@ -80,40 +80,6 @@ describe("ANILIST_OPERATION_REGISTRY", () => {
 describe("buildAniListWiring", () => {
     const wiring: AniListApi = buildAniListWiring(undefined, { retry: false });
 
-    test("exposes exactly the registered operations on the runtime surface", () => {
-        for (const category of ["query", "page", "mutation"] as const) {
-            const section =
-                category === "mutation"
-                    ? wiring.mutation
-                    : category === "page"
-                      ? wiring.query.page
-                      : wiring.query;
-            // `query` additionally carries the nested `page` namespace.
-            const runtimeKeys = Object.keys(section)
-                .filter((key) => key !== "page")
-                .sort();
-            const registryKeys = ANILIST_OPERATION_REGISTRY[category]
-                .map((entry) => entry.name)
-                .sort();
-            expect(runtimeKeys).toEqual(registryKeys);
-        }
-    });
-
-    test("every exposed member is a function", () => {
-        for (const category of ["query", "page", "mutation"] as const) {
-            const section =
-                category === "mutation"
-                    ? wiring.mutation
-                    : category === "page"
-                      ? wiring.query.page
-                      : wiring.query;
-            for (const [key, value] of Object.entries(section)) {
-                if (key === "page") continue;
-                expect(typeof value, `${key} must be a function`).toBe("function");
-            }
-        }
-    });
-
     test("bound methods keep their instance binding across calls", async () => {
         const { getAxiosStub } = await import("./helpers/axiosStub");
         const mocks = getAxiosStub();
@@ -136,14 +102,6 @@ describe("buildAniListWiring", () => {
         expect(wiring.query.media).toBe(wiring.query.media);
         expect(wiring.mutation.deleteMediaListEntry).toBe(wiring.mutation.deleteMediaListEntry);
         expect(wiring.query.page.following).toBe(wiring.query.page.following);
-    });
-
-    test("helpers are shared module functions, not per-instance copies", () => {
-        expect(typeof wiring.paginate).toBe("function");
-        expect(typeof wiring.paginatePages).toBe("function");
-        expect(typeof wiring.paginateChunks).toBe("function");
-        expect(typeof wiring.fuzzyDate).toBe("function");
-        expect(typeof wiring.flattenMediaListCollection).toBe("function");
     });
 
     test("rejects registry entries whose operation method is missing", () => {
@@ -169,9 +127,5 @@ describe("buildAniListWiring", () => {
         } finally {
             queryEntries.pop();
         }
-    });
-
-    test("custom is bound to its own CustomRequest instance", () => {
-        expect(typeof wiring.custom).toBe("function");
     });
 });

@@ -115,7 +115,7 @@ describe("token request normalization of raw transport failures", () => {
     });
 });
 
-describe("token request never exposes the raw Axios error (SEC-001)", () => {
+describe("token request never exposes the raw Axios error", () => {
     test("forwards exposeRawAxiosError: false to the transport on getAccessToken", async () => {
         mocks.sendRequest.mockRejectedValueOnce(new Error("boom"));
 

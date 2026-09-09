@@ -156,7 +156,7 @@ function openOverlay(): void {
         window.addEventListener("keydown", onOverlayKeydown);
     }
     // Move focus into the dialog so screen-reader and keyboard users land on
-    // the overlay controls instead of staying on the trigger (FE-004).
+    // the overlay controls instead of staying on the trigger.
     nextTick(() => {
         if (typeof document === "undefined") return;
         const first = overlayRef.value?.querySelector<HTMLElement>(FOCUSABLE);

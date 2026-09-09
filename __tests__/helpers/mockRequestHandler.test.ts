@@ -22,8 +22,20 @@ test("forwards transport options from the AniLink constructor into sendRequest",
     expect(sendOptions?.options).toEqual({ timeout: 1_000, signal });
 });
 
-test("keeps no-token construction valid", () => {
-    expect(createTestClientWithoutToken()).toBeDefined();
+test("keeps no-token construction valid", async () => {
+    const client = createTestClientWithoutToken();
+
+    // A public query from the tokenless client must still reach the mocked
+    // transport with no token attached — construction alone proving nothing.
+    await client.anilist.query.media({ id: 1, type: "ANIME" });
+
+    expect(mockSendRequest).toHaveBeenCalledTimes(1);
+    expect(getLastRequest()).toEqual(
+        expect.objectContaining({
+            url: "https://graphql.anilist.co",
+            token: undefined,
+        })
+    );
 });
 
 test("routes AniLink requests through the mocked transport", async () => {
