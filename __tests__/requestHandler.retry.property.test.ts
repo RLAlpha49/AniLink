@@ -32,6 +32,7 @@ const callSendRequest = (): Promise<unknown> =>
     sendRequest(URL, "POST", { query: "query" }, undefined, {
         requiresAuth: false,
         options: pendingOptions,
+        stateOwner: pendingOptions,
     });
 
 /** Number of fast-check runs; low for CI, raisable via env for thorough runs. */

@@ -36,6 +36,7 @@ const callSendRequest = (url: string, method: "GET" | "POST", data?: object): Pr
     sendRequest(url, method, data, undefined, {
         requiresAuth: false,
         options: pendingOptions,
+        stateOwner: pendingOptions,
     });
 
 beforeEach(() => {
@@ -825,12 +826,14 @@ describe("circuit breaker", () => {
             sendRequest(url, "POST", { query: "query" }, undefined, {
                 requiresAuth: false,
                 options: clientAOptions,
+                stateOwner: clientAOptions,
             })
         ).rejects.toBeInstanceOf(AniLinkApiError);
         await expect(
             sendRequest(url, "POST", { query: "query" }, undefined, {
                 requiresAuth: false,
                 options: clientAOptions,
+                stateOwner: clientAOptions,
             })
         ).rejects.toBeInstanceOf(AniLinkApiError);
 
@@ -839,6 +842,7 @@ describe("circuit breaker", () => {
             sendRequest(url, "POST", { query: "query" }, undefined, {
                 requiresAuth: false,
                 options: clientAOptions,
+                stateOwner: clientAOptions,
             })
         ).rejects.toMatchObject({ code: "CIRCUIT_OPEN_ERROR" });
         // ...but client B still reaches the network.
@@ -846,6 +850,7 @@ describe("circuit breaker", () => {
             sendRequest(url, "POST", { query: "query" }, undefined, {
                 requiresAuth: false,
                 options: clientBOptions,
+                stateOwner: clientBOptions,
             })
         ).rejects.toMatchObject({ code: "API_ERROR" });
         expect(mocks.request).toHaveBeenCalledTimes(3);
@@ -863,12 +868,14 @@ describe("circuit breaker", () => {
             sendRequest(anilistUrl, "POST", { query: "query" }, undefined, {
                 requiresAuth: false,
                 options: options,
+                stateOwner: options,
             })
         ).rejects.toBeInstanceOf(AniLinkApiError);
         await expect(
             sendRequest(anilistUrl, "POST", { query: "query" }, undefined, {
                 requiresAuth: false,
                 options: options,
+                stateOwner: options,
             })
         ).rejects.toBeInstanceOf(AniLinkApiError);
 
@@ -877,6 +884,7 @@ describe("circuit breaker", () => {
             sendRequest(anilistUrl, "POST", { query: "query" }, undefined, {
                 requiresAuth: false,
                 options: options,
+                stateOwner: options,
             })
         ).rejects.toMatchObject({ code: "CIRCUIT_OPEN_ERROR" });
         // ...but a second provider on the same client still reaches its host.
@@ -884,6 +892,7 @@ describe("circuit breaker", () => {
             sendRequest(malUrl, "GET", undefined, undefined, {
                 requiresAuth: false,
                 options: options,
+                stateOwner: options,
             })
         ).rejects.toMatchObject({ code: "API_ERROR" });
         expect(mocks.request).toHaveBeenCalledTimes(3);

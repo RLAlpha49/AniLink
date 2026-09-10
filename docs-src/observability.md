@@ -135,6 +135,10 @@ const aniLink = new AniLink({
 });
 ```
 
+### The `stateOwner` diagnostic
+
+`onHookError` also carries one diagnostic that is not a hook failure: when circuit-breaker or retry-budget state would be keyed by a per-request options object (no `stateOwner` was passed), the transport emits a one-time `onHookError("stateOwner", Error)` event — or falls back to `console.warn` when no observer is configured. Callers that build a fresh options object per call silently get a fresh state key per call, so failure streaks never accumulate and the breaker never engages; the warning points at the fix (pass a stable `stateOwner`, or reuse one options object across calls). Consumers switching on `hookName` for metrics should expect the reserved name `"stateOwner"` alongside real hook names.
+
 ## Next steps
 
 - <Icon name="ArrowRight" :size="14" /> [Retries & resilience](/retries-and-resilience) — the retry loop these hooks observe.

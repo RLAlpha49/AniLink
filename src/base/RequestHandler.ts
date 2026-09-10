@@ -17,6 +17,7 @@ import type { AxiosResponse } from "axios";
 import { AniLinkAuthError } from "./AniLinkError";
 import {
     type HttpMethod,
+    type OnHookErrorHandler,
     type RequestAuth,
     type RequestAuthInput,
     type RequestOptions,
@@ -247,36 +248,6 @@ export interface SendRequestOptions {
 }
 
 /**
- * Sends a request to the specified URL.
- *
- * This is the provider-agnostic transport entry point. GraphQL callers get
- * envelope unwrapping by leaving `protocol` unset (or `"graphql"`); REST
- * callers pass `protocol: "rest"` (and typically a `contentType`) and
- * receive the parsed body verbatim. HTTP failures on REST calls surface as
- * {@link AniLinkRestError}; GraphQL calls surface as {@link AniLinkApiError}.
- *
- * @typeParam T - The expected response payload type.
- * @param url - The URL to send the request to.
- * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
- * @param data - The data to send with the request.
- * @param auth - The authentication material to include in the request headers. A string is treated as a bearer token for backwards compatibility.
- * @param sendOptions - Named trailing options; see {@link SendRequestOptions}.
- * @returns The unwrapped response data. For documents with a single root
- * field this is the bare field value; multi-root-field (or zero-root-field)
- * documents are returned as the full `{ data }` envelope unchanged. Use
- * {@link unwrapGraphQLResponse} for the tolerant rule or
- * {@link unwrapSingleRootField} when a caller needs the strict single-root-field
- * result (`undefined` signals the document did not match). With
- * `protocol: "rest"`, the parsed response body is returned as-is.
- * @throws `AniLinkAuthError` when authentication is required but no auth material is configured.
- * @throws `AniLinkApiError` for an upstream HTTP failure.
- * @throws `AniLinkGraphQLError` for GraphQL errors in an HTTP 200 envelope.
- * @throws `AniLinkNetworkError` for network, timeout, cancellation, or circuit-breaker failures.
- * @see {@link RequestOptions}
- * @see {@link SendRequestOptions}
- */
-
-/**
  * Builds an authentication-safe cache key fragment from a bearer token.
  *
  * The token is SHA-256 hashed (truncated to 16 hex chars) so the raw
@@ -332,6 +303,71 @@ const buildCacheAuthKey = (
     return buildAuthCacheKey(undefined);
 };
 
+/** Whether the options-keyed transport-state warning has been emitted. */
+let warnedOptionsKeyedState = false;
+
+/**
+ * Emits a one-time warning when circuit-breaker or retry-budget state would
+ * be keyed by the per-request options object because no `stateOwner` was
+ * passed. Callers that build a fresh options object per call silently get a
+ * fresh state key per call, so failure streaks never accumulate and the
+ * breaker/budget never engage. One warning per process avoids log spam.
+ *
+ * The diagnostic is routed through the caller's `onHookError` observer (the
+ * library's established hook-failure reporting path) so it lands in the
+ * consumer's logger instead of the console; `console.warn` remains the
+ * fallback when no observer is configured, matching {@link safeInvoke}.
+ *
+ * @param onHookError - Consumer callback observing hook failures, when
+ * configured on the triggering request's options.
+ */
+const warnOptionsKeyedState = (onHookError: OnHookErrorHandler | undefined): void => {
+    if (warnedOptionsKeyedState) {
+        return;
+    }
+    warnedOptionsKeyedState = true;
+    const message =
+        "[AniLink] circuit-breaker/retry-budget state is keyed by the per-request options object because no stateOwner was passed. Pass a stable stateOwner (or reuse one options object across calls) so failure streaks accumulate.";
+    if (onHookError !== undefined) {
+        try {
+            onHookError("stateOwner", new Error(message));
+        } catch {
+            // A failing observer must never break the request pipeline.
+        }
+        return;
+    }
+    console.warn(message);
+};
+
+/**
+ * Sends a request to the specified URL.
+ *
+ * This is the provider-agnostic transport entry point. GraphQL callers get
+ * envelope unwrapping by leaving `protocol` unset (or `"graphql"`); REST
+ * callers pass `protocol: "rest"` (and typically a `contentType`) and
+ * receive the parsed body verbatim. HTTP failures on REST calls surface as
+ * {@link AniLinkRestError}; GraphQL calls surface as {@link AniLinkApiError}.
+ *
+ * @typeParam T - The expected response payload type.
+ * @param url - The URL to send the request to.
+ * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
+ * @param data - The data to send with the request.
+ * @param auth - The authentication material to include in the request headers. A string is treated as a bearer token for backwards compatibility.
+ * @param sendOptions - Named trailing options; see {@link SendRequestOptions}.
+ * @returns The unwrapped response data. For documents with a single root
+ * field this is the bare field value; multi-root-field (or zero-root-field)
+ * documents are returned as the full `{ data }` envelope unchanged. Use
+ * {@link unwrapGraphQLResponse} for the tolerant rule or
+ * {@link unwrapSingleRootField} when a caller needs the strict single-root-field
+ * result (`undefined` signals the document did not match). With
+ * `protocol: "rest"`, the parsed response body is returned as-is.
+ * @throws `AniLinkAuthError` when authentication is required but no auth material is configured.
+ * @throws `AniLinkApiError` for an upstream HTTP failure.
+ * @throws `AniLinkGraphQLError` for GraphQL errors in an HTTP 200 envelope.
+ * @throws `AniLinkNetworkError` for network, timeout, cancellation, or circuit-breaker failures.
+ * @see {@link RequestOptions}
+ * @see {@link SendRequestOptions}
+ */
 export const sendRequest = async <T = unknown>(
     url: string,
     method: HttpMethod,
@@ -379,6 +415,14 @@ export const sendRequest = async <T = unknown>(
     }
 
     const resolved = resolveRequestOptions(options);
+
+    if (
+        stateOwner === undefined &&
+        options !== undefined &&
+        (resolved.circuitBreaker !== undefined || resolved.retryBudget !== undefined)
+    ) {
+        warnOptionsKeyedState(resolved.onHookError);
+    }
 
     const cacheEnabled = resolved.responseCache !== undefined && method === "GET";
     const cacheAuthKey = cacheEnabled

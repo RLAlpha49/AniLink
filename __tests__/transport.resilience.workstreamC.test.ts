@@ -32,6 +32,7 @@ const callSendRequest = (
         options: pendingOptions,
         operation: undefined,
         contentType: contentType,
+        stateOwner: pendingOptions,
     });
 
 beforeEach(() => {
