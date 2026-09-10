@@ -7,6 +7,7 @@ import {
     AniLinkValidationError,
 } from "../src/base/AniLinkError";
 import { type RequestOptions, sendRequest } from "../src/base/RequestHandler";
+import { computeNextRetryDelay } from "../src/base/retry";
 import { getAxiosStub, makeAxiosResponseError as apiError } from "./helpers/axiosStub";
 
 vi.mock("axios", async () => {
@@ -1176,5 +1177,118 @@ describe("rate-limit pacing", () => {
         await vi.advanceTimersByTimeAsync(1);
         expect(mocks.request).toHaveBeenCalledTimes(2);
         await expect(second).resolves.toEqual({ id: 1 });
+    });
+});
+
+describe("computeNextRetryDelay", () => {
+    const policy = {
+        maxRetries: 3,
+        baseDelayMs: 1,
+        maxDelayMs: 1,
+        retryOnStatus: [429, 500, 502, 503, 504],
+        retryOnNetworkError: true,
+        jitter: false,
+    };
+    const failure = new AniLinkApiError(500, {});
+    const budget = { maxRetriesPerWindow: 3, windowMs: 60_000 };
+
+    test("returns null for a failed half-open probe", () => {
+        expect(
+            computeNextRetryDelay({
+                normalized: failure,
+                rawError: failure,
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: true,
+            })
+        ).toBeNull();
+    });
+
+    test("returns null when retries are disabled", () => {
+        expect(
+            computeNextRetryDelay({
+                normalized: failure,
+                rawError: failure,
+                attempt: 0,
+                policy: null,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBeNull();
+    });
+
+    test("returns null when the retry budget is exhausted", () => {
+        expect(
+            computeNextRetryDelay({
+                normalized: failure,
+                rawError: failure,
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 3, windowEndsAt: Date.now() + 1_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBeNull();
+    });
+
+    test("defers to getRetryDelay when the budget has room", () => {
+        expect(
+            computeNextRetryDelay({
+                normalized: failure,
+                rawError: failure,
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 1_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBe(1);
+    });
+
+    test("defers to getRetryDelay when no budget is configured", () => {
+        expect(
+            computeNextRetryDelay({
+                normalized: failure,
+                rawError: failure,
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBe(1);
+    });
+
+    test("defers to getRetryDelay when only the budget state is present", () => {
+        // A live window without a configured budget cannot gate retries:
+        // both halves of the guard must be present.
+        expect(
+            computeNextRetryDelay({
+                normalized: failure,
+                rawError: failure,
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 3, windowEndsAt: Date.now() + 1_000 },
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBe(1);
+    });
+
+    test("defers to getRetryDelay when only the budget configuration is present", () => {
+        expect(
+            computeNextRetryDelay({
+                normalized: failure,
+                rawError: failure,
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget,
+                wasProbe: false,
+            })
+        ).toBe(1);
     });
 });

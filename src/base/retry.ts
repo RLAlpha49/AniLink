@@ -169,6 +169,54 @@ export const getRetryDelay = (
 };
 
 /**
+ * The inputs to {@link computeNextRetryDelay}: everything the retry-delay
+ * decision needs, so the retry loop itself stays free of delay branching.
+ */
+export interface RetryDelayInput {
+    /** The normalized failure for the attempt. */
+    normalized: AniLinkError;
+    /** The raw thrown value, used for `Retry-After` extraction. */
+    rawError: unknown;
+    /** The zero-based index of the attempt that just failed. */
+    attempt: number;
+    /** The active retry policy, or `null` when retries are disabled. */
+    policy: RetryPolicy | null;
+    /** The live retry-budget window, when a budget is configured. */
+    budgetState: RetryBudgetState | undefined;
+    /** The configured budget, when one is set. */
+    budget: RetryBudget | undefined;
+    /** Whether the failed attempt was the reserved half-open breaker probe. */
+    wasProbe: boolean;
+}
+
+/**
+ * Computes the delay before the next retry, or `null` when the request must
+ * surface the failure instead. Three gates run before the per-error-class
+ * matrix in {@link getRetryDelay}: a failed half-open probe surfaces
+ * immediately (retrying would fast-fail against the still-open breaker), a
+ * disabled policy never retries, and an exhausted retry budget surfaces the
+ * failure without spending another retry.
+ *
+ * @param input - The decision inputs; see {@link RetryDelayInput}.
+ * @returns The delay in milliseconds, or `null` to stop retrying.
+ */
+export const computeNextRetryDelay = (input: RetryDelayInput): number | null => {
+    const { normalized, rawError, attempt, policy, budgetState, budget, wasProbe } = input;
+    if (wasProbe || policy === null) {
+        return null;
+    }
+    if (
+        budgetState !== undefined &&
+        budget !== undefined &&
+        budgetState.retriesUsed >= budget.maxRetriesPerWindow
+    ) {
+        // Budget exhausted: surface the failure without retrying.
+        return null;
+    }
+    return getRetryDelay(normalized, rawError, attempt, policy);
+};
+
+/**
  * Shared retry-budget state, keyed on a stable per-client owner like
  * {@link circuitStates}. Only populated when a request opts in via
  * `retryBudget`.
