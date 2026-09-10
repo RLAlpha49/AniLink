@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-    fetchWithLookAhead,
-    type LookAheadEntry,
-} from "../src/base/pagination";
+import { fetchCursorChain, fetchWithLookAhead, type LookAheadEntry } from "../src/base/pagination";
 
 /**
  * Cursor-aware look-ahead driver suite.
@@ -105,5 +102,50 @@ describe("fetchWithLookAhead legacy numeric contract", () => {
 
         expect(requestedKeys).toEqual([1, 2, 3, 4]);
         expect((result.responses as Array<{ n: number }>).map((r) => r.n)).toEqual([1, 2, 3]);
+    });
+});
+
+describe("fetchCursorChain (direct)", () => {
+    test("returns the two-page cursor-chain contract for both call shapes", async () => {
+        const pages: Record<string, LookAheadEntry> = {
+            start: { items: ["a"], hasMore: true, nextKey: "cursor-1" },
+            "cursor-1": { items: ["b"], hasMore: false },
+        };
+        const requestedKeys: string[] = [];
+
+        const viaLegacy = await fetchWithLookAhead<LookAheadEntry, string>(
+            async (key) => {
+                requestedKeys.push(key);
+                return pages[String(key)] ?? { items: [], hasMore: false };
+            },
+            (response) => response.hasMore,
+            (response) => response.nextKey,
+            "start",
+            10,
+            2
+        );
+        const viaDirect = await fetchCursorChain(
+            async (key) => pages[String(key)] ?? { items: [], hasMore: false },
+            (response) => response.hasMore,
+            (response) => response.nextKey,
+            "start",
+            10
+        );
+
+        expect(requestedKeys).toEqual(["start", "cursor-1"]);
+        // Both call shapes are asserted against the explicit two-page
+        // contract — the start page, the terminal cursor-1 page, and no
+        // truncation — rather than against each other, so a shared
+        // regression cannot hide behind the comparison.
+        const expected = {
+            responses: [
+                { items: ["a"], hasMore: true, nextKey: "cursor-1" },
+                { items: ["b"], hasMore: false },
+            ],
+            count: 2,
+            truncated: false,
+        };
+        expect(viaLegacy).toEqual(expected);
+        expect(viaDirect).toEqual(expected);
     });
 });

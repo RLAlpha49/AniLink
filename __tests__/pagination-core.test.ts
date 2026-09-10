@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
+    fetchCursorChain,
+    fetchNumericWithLookAhead,
     fetchWithLookAhead,
     MAX_CONCURRENCY,
     resolveCappedInt,
@@ -137,3 +139,191 @@ async function fetchWithLearnAheadFailure(): Promise<unknown> {
         1
     );
 }
+
+describe("fetchNumericWithLookAhead", () => {
+    test("overlaps the window and collects strictly in entry order", async () => {
+        const settleOrder: number[] = [];
+        const result = await fetchNumericWithLookAhead<number>(
+            (n) =>
+                new Promise<number>((resolve) => {
+                    queueMicrotask(() => {
+                        settleOrder.push(n);
+                        resolve(n);
+                    });
+                }),
+            () => true,
+            1,
+            3,
+            3
+        );
+
+        expect(result.responses).toEqual([1, 2, 3]);
+        expect(result.count).toBe(3);
+        expect(result.truncated).toBe(true);
+        expect(settleOrder).toHaveLength(3);
+    });
+
+    test("stops scheduling after a terminal entry and drains stragglers", async () => {
+        const requested: number[] = [];
+        const result = await fetchNumericWithLookAhead<number>(
+            async (n) => {
+                requested.push(n);
+                return n;
+            },
+            (n) => n < 2,
+            1,
+            10,
+            3
+        );
+
+        expect(result.responses).toEqual([1, 2]);
+        expect(result.truncated).toBe(false);
+        // The window launched pages 1–3 up front; eager refill may add at
+        // most one straggler (page 4) before page 2 reports terminal, and
+        // nothing past the window is ever requested.
+        expect(requested.slice(0, 3)).toEqual([1, 2, 3]);
+        expect(requested.length).toBeLessThanOrEqual(4);
+    });
+
+    test("returns a partial result when the signal aborts mid-traversal", async () => {
+        const controller = new AbortController();
+        const result = await fetchNumericWithLookAhead<number>(
+            async (n) => {
+                if (n === 2) {
+                    controller.abort();
+                }
+                return n;
+            },
+            () => true,
+            1,
+            10,
+            2,
+            controller.signal
+        );
+
+        expect(result.count).toBe(1);
+        expect(result.responses).toEqual([1]);
+        expect(result.truncated).toBe(false);
+    });
+});
+
+describe("fetchCursorChain", () => {
+    test("walks the cursor chain serially and stops at the terminal entry", async () => {
+        const requestedKeys: string[] = [];
+        const pages: Record<string, { items: string[]; hasMore: boolean; nextKey?: string }> = {
+            start: { items: ["a"], hasMore: true, nextKey: "c1" },
+            c1: { items: ["b"], hasMore: true, nextKey: "c2" },
+            c2: { items: ["c"], hasMore: false },
+        };
+        const result = await fetchCursorChain(
+            async (key) => {
+                requestedKeys.push(key);
+                return pages[key];
+            },
+            (response) => response.hasMore,
+            (response) => response.nextKey as string,
+            "start",
+            10
+        );
+
+        expect(requestedKeys).toEqual(["start", "c1", "c2"]);
+        expect(result.responses.map((r) => r.items)).toEqual([["a"], ["b"], ["c"]]);
+        expect(result.truncated).toBe(false);
+    });
+
+    test("reports truncated when the guard caps the chain", async () => {
+        const result = await fetchCursorChain(
+            async (key) => ({ key, hasMore: true, nextKey: `${key}-next` }),
+            (response) => response.hasMore,
+            (response) => response.nextKey,
+            "start",
+            3
+        );
+
+        expect(result.count).toBe(3);
+        expect(result.truncated).toBe(true);
+    });
+
+    test("stops cleanly when an entry carries no next key", async () => {
+        const requestedKeys: string[] = [];
+        const result = await fetchCursorChain(
+            async (key) => {
+                requestedKeys.push(key);
+                return { key, hasMore: true };
+            },
+            () => true,
+            (response) => (response as { nextKey?: string }).nextKey as string,
+            "start",
+            10
+        );
+
+        // The first entry reports more data but carries no next key: the
+        // chain ends instead of fetching `undefined`.
+        expect(requestedKeys).toEqual(["start"]);
+        expect(result.count).toBe(1);
+        expect(result.truncated).toBe(false);
+    });
+
+    test("returns a partial result when the signal aborts mid-fetch", async () => {
+        const controller = new AbortController();
+        const result = await fetchCursorChain<string | "boom", string>(
+            async (key) => {
+                if (key === "c1") {
+                    controller.abort();
+                    throw new Error("fetch rejected after abort");
+                }
+                return key;
+            },
+            () => true,
+            (key) => (key === "start" ? "c1" : "c2"),
+            "start",
+            10,
+            controller.signal
+        );
+
+        // The abort during the in-flight fetch settles as a partial result,
+        // not a rejection.
+        expect(result.responses).toEqual(["start"]);
+        expect(result.count).toBe(1);
+        expect(result.truncated).toBe(false);
+    });
+
+    test("reports truncated: false for a zero maxEntries guard, matching the numeric driver", async () => {
+        // Both drivers share one contract: a degenerate zero-entry guard
+        // fetches nothing and reports `truncated: false` (nothing was cut
+        // short — the caller asked for zero entries and got zero).
+        const requestedKeys: string[] = [];
+        const result = await fetchCursorChain(
+            async (key) => {
+                requestedKeys.push(key);
+                return { key, hasMore: true, nextKey: `${key}-next` };
+            },
+            () => true,
+            (response) => response.nextKey,
+            "start",
+            0
+        );
+
+        expect(requestedKeys).toEqual([]);
+        expect(result.count).toBe(0);
+        expect(result.truncated).toBe(false);
+    });
+
+    test("returns an empty result for an undefined first key without fetching", async () => {
+        const requestedKeys: string[] = [];
+        const result = await fetchCursorChain<string | undefined, string | undefined>(
+            async (key) => {
+                requestedKeys.push(key as string);
+                return { key, hasMore: true, nextKey: "next" };
+            },
+            () => true,
+            (response) => (response as { nextKey?: string }).nextKey,
+            undefined,
+            10
+        );
+
+        expect(requestedKeys).toEqual([]);
+        expect(result.count).toBe(0);
+        expect(result.truncated).toBe(false);
+    });
+});

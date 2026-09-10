@@ -212,7 +212,9 @@ export async function fetchWithLookAhead<TEntry, TKey>(
  * third argument dispatches the mode: a function (or `undefined`) selects
  * cursor paging; a number selects numeric paging. Because the two overloads
  * have different arities (6 vs 7 params), the numeric overload's optional
- * `signal` lands in the sixth implementation slot.
+ * `signal` lands in the sixth implementation slot. The body only routes to
+ * {@link fetchNumericWithLookAhead} or {@link fetchCursorChain}; all
+ * scheduling logic lives in those drivers.
  */
 export async function fetchWithLookAhead<TEntry, TKey = number>(
     fetch: (key: TKey) => Promise<TEntry>,
@@ -223,52 +225,80 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
     concurrencyOrSignal: number | AbortSignal | undefined,
     maybeSignal?: AbortSignal
 ): Promise<LookAheadResult<TEntry>> {
-    let extractNextKey: ((response: TEntry) => TKey) | undefined;
-    let firstKey: TKey;
-    let numericStart: number | undefined;
-    let maxEntries: number;
-    let concurrency: number;
-    let signal: AbortSignal | undefined;
-
-    if (
-        typeof extractNextKeyOrStartNumber === "function" ||
-        extractNextKeyOrStartNumber === undefined
-    ) {
-        // Cursor mode: (fetch, extractHasMore, extractNextKey, firstKey, maxEntries, concurrency, signal?)
-        extractNextKey = extractNextKeyOrStartNumber as ((response: TEntry) => TKey) | undefined;
-        firstKey = firstKeyOrMaxEntries as TKey;
-        maxEntries = maxEntriesOrConcurrency;
-        concurrency = concurrencyOrSignal as number;
-        signal = maybeSignal;
-        if (extractNextKey === undefined) {
-            numericStart = firstKey as unknown as number;
-        }
-    } else {
-        // Numeric mode: (fetch, extractHasMore, startNumber, maxEntries, concurrency, signal?)
-        // The numeric overload has 6 params; the implementation has 7, so:
-        //   p3 = startNumber, p4 = maxEntries, p5 = concurrency, p6 = signal.
-        numericStart = extractNextKeyOrStartNumber as number;
-        maxEntries = firstKeyOrMaxEntries as unknown as number;
-        concurrency = maxEntriesOrConcurrency;
-        signal =
-            typeof concurrencyOrSignal === "number"
-                ? undefined
-                : (concurrencyOrSignal as AbortSignal | undefined);
-        firstKey = numericStart as unknown as TKey;
+    if (extractNextKeyOrStartNumber === undefined) {
+        // Legacy numeric call shape:
+        // (fetch, extractHasMore, undefined, startNumber, maxEntries, concurrency)
+        // The legacy shape has no signal slot, so the sixth argument is
+        // always the concurrency.
+        return fetchNumericWithLookAhead(
+            fetch as (page: number) => Promise<TEntry>,
+            extractHasMore,
+            firstKeyOrMaxEntries as number,
+            maxEntriesOrConcurrency,
+            concurrencyOrSignal as number,
+            maybeSignal
+        );
     }
+    if (typeof extractNextKeyOrStartNumber === "function") {
+        // Cursor shape: (fetch, extractHasMore, extractNextKey, firstKey,
+        // maxEntries, concurrency, signal?) — concurrency is structurally
+        // impossible in a dependency chain, so it is dropped here.
+        return fetchCursorChain(
+            fetch,
+            extractHasMore,
+            extractNextKeyOrStartNumber,
+            firstKeyOrMaxEntries as TKey,
+            maxEntriesOrConcurrency,
+            maybeSignal
+        );
+    }
+    // Numeric overload: (fetch, extractHasMore, startNumber, maxEntries,
+    // concurrency, signal?) — the 6-param overload maps positionally onto
+    // the 7-param implementation, so its optional `signal` lands in the
+    // sixth implementation slot and the seventh is unused.
+    return fetchNumericWithLookAhead(
+        fetch as (page: number) => Promise<TEntry>,
+        extractHasMore,
+        extractNextKeyOrStartNumber,
+        firstKeyOrMaxEntries as number,
+        maxEntriesOrConcurrency,
+        typeof concurrencyOrSignal === "number" ? undefined : concurrencyOrSignal
+    );
+}
 
+/**
+ * Numeric-mode look-ahead driver: keys are computable without any response,
+ * so a window of at most `concurrency` launched-but-unconsumed requests
+ * overlaps round-trip latency while results are appended strictly in entry
+ * order. Scheduling stops as soon as an entry reports "no more data" or the
+ * `maxEntries` guard fires; already-launched stragglers are drained and
+ * discarded. An abort settles in-flight requests and returns the collected
+ * prefix as a partial result with `truncated: false`.
+ *
+ * @typeParam TEntry - The raw response shape of a single page or chunk.
+ * @param fetch - Callback that fetches a single entry given its numeric key.
+ * @param extractHasMore - Reads the "more data available" flag from a fetched entry.
+ * @param startNumber - The 1-based page number to start from.
+ * @param maxEntries - Hard cap on entries fetched, guarding against unbounded loops.
+ * @param concurrency - Maximum number of requests kept in flight at once.
+ * @param signal - Optional `AbortSignal` to cancel the traversal.
+ * @returns The responses in entry order, how many were fetched, and whether the guard truncated the run.
+ * @throws The rejection from the next unconsumed `fetch` call in entry order, unless the `signal` aborted.
+ * @see {@link LookAheadResult}
+ */
+export async function fetchNumericWithLookAhead<TEntry>(
+    fetch: (page: number) => Promise<TEntry>,
+    extractHasMore: (response: TEntry) => boolean,
+    startNumber: number,
+    maxEntries: number,
+    concurrency: number,
+    signal?: AbortSignal
+): Promise<LookAheadResult<TEntry>> {
     const responses: TEntry[] = [];
     const pending: Promise<void>[] = [];
     let launched = 0;
     let count = 0;
     let truncated = false;
-    let pendingCursorKey: TKey | undefined = extractNextKey === undefined ? undefined : firstKey;
-
-    // In cursor mode the next key is carried by the previous response, so
-    // requests form a dependency chain: at most one may be in flight, and the
-    // caller-supplied window cannot be honored. Numeric mode keeps the full
-    // look-ahead window because keys are computable without any response.
-    const effectiveConcurrency = extractNextKey === undefined ? concurrency : 1;
 
     while (count < maxEntries) {
         if (signal?.aborted) {
@@ -276,14 +306,10 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
             responses.length = count;
             return { responses, count, truncated: false };
         }
-        while (launched < maxEntries && launched - count < effectiveConcurrency) {
+        while (launched < maxEntries && launched - count < concurrency) {
             const slot = launched;
-            const key =
-                extractNextKey === undefined
-                    ? (numericStart as number) + slot
-                    : (pendingCursorKey as TKey);
             launched += 1;
-            const request = fetch(key as TKey).then((response) => {
+            const request = fetch(startNumber + slot).then((response) => {
                 responses[slot] = response;
             });
             pending[slot] = request;
@@ -296,12 +322,6 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
 
         if (count >= launched) break;
 
-        // Wait for the next unconsumed entry in order. Awaiting an
-        // already-settled request is safe: `responses[slot]` is assigned before
-        // the corresponding promise resolves. An abort that fires while this
-        // await is pending rejects the in-flight `fetch`; treat that as a
-        // partial-result termination (consistent with the top-of-loop abort
-        // check) instead of letting the rejection propagate.
         try {
             await pending[count];
         } catch (err) {
@@ -314,22 +334,12 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
         }
         count += 1;
 
-        const consumed = responses[count - 1];
-        const hasMore = extractHasMore(consumed);
-        if (!hasMore) {
+        if (!extractHasMore(responses[count - 1])) {
             // Terminal entry: drain already-launched stragglers so nothing
-            // dangles, discard their payloads, and stop. Entries past a
-            // terminal response are never newly scheduled, and a failure in a
-            // drained straggler must not fail the traversal.
+            // dangles, discard their payloads, and stop.
             await Promise.allSettled(pending.slice(count));
             responses.length = count;
             return { responses, count, truncated: false };
-        }
-        if (extractNextKey !== undefined) {
-            // Cursor mode: the just-consumed entry decides the next key. The
-            // refill loop launches at most one successor per consumed entry,
-            // so a single pending key is sufficient.
-            pendingCursorKey = extractNextKey(consumed);
         }
         if (count >= maxEntries) {
             await Promise.allSettled(pending.slice(count));
@@ -339,4 +349,66 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
     }
 
     return { responses, count, truncated };
+}
+
+/**
+ * Cursor-mode driver: each key is carried by the previous response, so
+ * requests form a dependency chain and the traversal is strictly serial —
+ * the signature has no `concurrency` parameter because none is possible.
+ * The chain ends at a terminal entry, when an entry carries no next key, at
+ * the `maxEntries` guard, or on abort (returning the collected prefix as a
+ * partial result with `truncated: false`).
+ *
+ * @typeParam TEntry - The raw response shape of a single page or chunk.
+ * @typeParam TKey - The paging key type: an opaque cursor value.
+ * @param fetch - Callback that fetches a single entry given its paging key.
+ * @param extractHasMore - Reads the "more data available" flag from a fetched entry.
+ * @param extractNextKey - Reads the next paging key from a fetched entry.
+ * @param firstKey - The paging key to start from.
+ * @param maxEntries - Hard cap on entries fetched, guarding against unbounded loops.
+ * @param signal - Optional `AbortSignal` to cancel the traversal.
+ * @returns The responses in entry order, how many were fetched, and whether the guard truncated the run.
+ * @throws The rejection from the current `fetch` call, unless the `signal` aborted.
+ * @see {@link LookAheadResult}
+ */
+export async function fetchCursorChain<TEntry, TKey>(
+    fetch: (key: TKey) => Promise<TEntry>,
+    extractHasMore: (response: TEntry) => boolean,
+    extractNextKey: (response: TEntry) => TKey,
+    firstKey: TKey,
+    maxEntries: number,
+    signal?: AbortSignal
+): Promise<LookAheadResult<TEntry>> {
+    const responses: TEntry[] = [];
+    let key: TKey | undefined = firstKey;
+
+    while (responses.length < maxEntries && key !== undefined) {
+        if (signal?.aborted) {
+            return { responses, count: responses.length, truncated: false };
+        }
+        let entry: TEntry;
+        try {
+            entry = await fetch(key);
+        } catch (err) {
+            if (signal?.aborted) {
+                return { responses, count: responses.length, truncated: false };
+            }
+            throw err;
+        }
+        responses.push(entry);
+        if (!extractHasMore(entry)) {
+            return { responses, count: responses.length, truncated: false };
+        }
+        key = extractNextKey(entry);
+    }
+
+    return {
+        responses,
+        count: responses.length,
+        // A degenerate guard (maxEntries <= 0) fetched nothing and cut
+        // nothing short: `truncated` reports whether the guard ended a run
+        // that still had data, matching the numeric driver's `while (count <
+        // maxEntries)` early exit.
+        truncated: responses.length >= maxEntries && maxEntries > 0,
+    };
 }
