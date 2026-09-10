@@ -241,7 +241,8 @@ export const PAGES: DocPage[] = [
     {
         path: "/operations/mal",
         title: "MAL catalog",
-        summary: "mal.anime.get and mal.user.me on the REST surface.",
+        summary:
+            "Anime and manga lookups, discovery reads, list-status writes, and user.me on the REST surface.",
         provider: "mal",
         section: "reference",
     },

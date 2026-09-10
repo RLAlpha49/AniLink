@@ -750,7 +750,18 @@ function anilistAuth(op: RawOp): string {
 // ---------------------------------------------------------------------------
 
 /** The MAL facade methods that map to public operations. */
-const MAL_FACADE_METHODS = new Set(["get", "me", "updateMyListStatus", "deleteFromList"]);
+const MAL_FACADE_METHODS = new Set([
+    "get",
+    "me",
+    "seasonal",
+    "ranking",
+    "suggestions",
+    "updateMyListStatus",
+    "deleteFromList",
+]);
+
+/** The MAL facade methods that read public data without an access token. */
+const MAL_PUBLIC_READ_METHODS = new Set(["get", "seasonal", "ranking"]);
 
 /** The MAL facade interface that owns each namespace. */
 const MAL_FACADE_INTERFACES: Record<
@@ -825,7 +836,7 @@ function buildMalOperation(
     responseType: string,
     jsdoc: string
 ): ReferenceOperation {
-    const isPublicRead = methodName === "get";
+    const isPublicRead = MAL_PUBLIC_READ_METHODS.has(methodName);
     const request: ParamField[] = [];
     const paramRe = /(\w+)(\?)?:\s*([^,)]+)/g;
     let pm = paramRe.exec(params);
@@ -884,11 +895,18 @@ function buildMalOperation(
                 ? namespace === "manga"
                     ? "Gets one manga by its MyAnimeList ID."
                     : "Gets one anime by its MyAnimeList ID."
-                : "Gets the currently authenticated MyAnimeList user."),
-        auth:
-            methodName === "get"
+                : methodName === "seasonal"
+                  ? "Gets the anime of one broadcast season."
+                  : methodName === "ranking"
+                    ? "Gets one of MyAnimeList's anime ranking lists."
+                    : methodName === "suggestions"
+                      ? "Gets MyAnimeList's anime suggestions for the authenticated user."
+                      : "Gets the currently authenticated MyAnimeList user."),
+        auth: isPublicRead
+            ? methodName === "get"
                 ? `Not required for public ${namespace} data; pass an access token for list-related fields.`
-                : "Required — MAL OAuth2 access token (`mal.accessToken` credential slot).",
+                : "Not required — a public read."
+            : "Required — MAL OAuth2 access token (`mal.accessToken` credential slot).",
         request,
         responseType,
         response: extractResponseFields(responseType),
@@ -922,9 +940,15 @@ function malUpstreamReference(namespace: string, methodName: string): string {
     }
     return methodName === "get"
         ? "https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get"
-        : methodName === "updateMyListStatus"
-          ? "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put"
-          : "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete";
+        : methodName === "seasonal"
+          ? "https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get"
+          : methodName === "ranking"
+            ? "https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get"
+            : methodName === "suggestions"
+              ? "https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get"
+              : methodName === "updateMyListStatus"
+                ? "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put"
+                : "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete";
 }
 
 /** The public signature string for one MAL operation. */
@@ -960,6 +984,33 @@ function malExample(namespace: "anime" | "manga" | "user", methodName: string): 
             "console.log(user.name);",
         ].join("\n");
     }
+    if (methodName === "seasonal") {
+        return [
+            ...header,
+            'const season = await aniLink.mal.anime.seasonal(2024, "winter", {',
+            '    fields: ["id", "title", "main_picture"],',
+            "});",
+            "console.log(season.data[0]?.node.title);",
+        ].join("\n");
+    }
+    if (methodName === "ranking") {
+        return [
+            ...header,
+            'const top = await aniLink.mal.anime.ranking("airing", {',
+            '    fields: ["id", "title", "mean"],',
+            "});",
+            "console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);",
+        ].join("\n");
+    }
+    if (methodName === "suggestions") {
+        return [
+            ...header,
+            "const suggestions = await aniLink.mal.anime.suggestions({",
+            '    fields: ["id", "title", "main_picture"],',
+            "});",
+            "console.log(suggestions.data[0]?.node.title);",
+        ].join("\n");
+    }
     if (methodName === "updateMyListStatus") {
         if (namespace === "manga") {
             return [
@@ -991,6 +1042,15 @@ function malExample(namespace: "anime" | "manga" | "user", methodName: string): 
 function malParamDescription(namespace: string, name: string): string {
     if (name === "id") {
         return namespace === "manga" ? "The MyAnimeList manga ID." : "The MyAnimeList anime ID.";
+    }
+    if (name === "year") {
+        return "The season's year.";
+    }
+    if (name === "season") {
+        return "The season's broadcast window (winter, spring, summer, or fall).";
+    }
+    if (name === "rankingType") {
+        return "The ranking list to fetch (all, airing, upcoming, tv, ova, movie, special, bypopularity, or favorite).";
     }
     if (name === "payload") {
         return "The list-status fields to update; only the fields to change, form-encoded for MAL.";

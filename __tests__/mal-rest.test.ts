@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { AniLinkApiError, AniLinkAuthError } from "../src/base/AniLinkError";
+import { AniLinkApiError, AniLinkAuthError, AniLinkRestError } from "../src/base/AniLinkError";
 import { buildMyAnimeListApi } from "../src/apis/rest/mal/wiring";
 import { getAxiosStub, makeAxiosResponseError } from "./helpers/axiosStub";
 
@@ -204,6 +204,148 @@ describe("MyAnimeList REST list-status writes", () => {
             })
         ).rejects.toSatisfy(
             (error: unknown) => error instanceof AniLinkApiError && error.status === 404
+        );
+    });
+});
+
+describe("MyAnimeList REST anime discovery reads", () => {
+    test("seasonal gets a season's anime with encoded fields and returns the REST body verbatim", async () => {
+        const api = buildMyAnimeListApi();
+
+        await expect(
+            api.anime.seasonal(2024, "winter", { fields: ["id", "title"] })
+        ).resolves.toEqual({ id: 21, title: "Fullmetal Alchemist" });
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/anime/season/2024/winter?fields=id%2Ctitle"
+        );
+        expect(lastConfig().method).toBe("GET");
+        expect(lastConfig().headers.Authorization).toBeUndefined();
+    });
+
+    test("seasonal omits the fields query parameter when no fields are selected", async () => {
+        const api = buildMyAnimeListApi();
+
+        await api.anime.seasonal(2024, "winter");
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/anime/season/2024/winter");
+        expect(lastConfig().method).toBe("GET");
+    });
+
+    test("seasonal accepts fields as a comma-separated string", async () => {
+        const api = buildMyAnimeListApi();
+
+        await api.anime.seasonal(2024, "spring", { fields: "id,title" });
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/anime/season/2024/spring?fields=id%2Ctitle"
+        );
+    });
+
+    test("ranking sends the ranking type before fields and returns the REST body verbatim", async () => {
+        const api = buildMyAnimeListApi();
+
+        await expect(api.anime.ranking("airing", { fields: ["id", "title"] })).resolves.toEqual({
+            id: 21,
+            title: "Fullmetal Alchemist",
+        });
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/anime/ranking?ranking_type=airing&fields=id%2Ctitle"
+        );
+        expect(lastConfig().method).toBe("GET");
+        expect(lastConfig().headers.Authorization).toBeUndefined();
+    });
+
+    test("ranking omits the fields query parameter when no options are given", async () => {
+        const api = buildMyAnimeListApi();
+
+        await api.anime.ranking("airing");
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/anime/ranking?ranking_type=airing"
+        );
+        expect(lastConfig().method).toBe("GET");
+    });
+
+    test("ranking accepts fields as a comma-separated string", async () => {
+        const api = buildMyAnimeListApi();
+
+        await api.anime.ranking("favorite", { fields: "id,title" });
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/anime/ranking?ranking_type=favorite&fields=id%2Ctitle"
+        );
+    });
+
+    test("suggestions sends the bearer token with encoded fields", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await api.anime.suggestions({ fields: ["id", "title"] });
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/anime/suggestions?fields=id%2Ctitle"
+        );
+        expect(lastConfig().method).toBe("GET");
+        expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
+    });
+
+    test("suggestions omits the fields query parameter when no fields are selected", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await api.anime.suggestions();
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/anime/suggestions");
+        expect(lastConfig().method).toBe("GET");
+        expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
+    });
+
+    test("suggestions accepts fields as a comma-separated string", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await api.anime.suggestions({ fields: "id,title" });
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/anime/suggestions?fields=id%2Ctitle"
+        );
+    });
+
+    test("suggestions rejects without a MAL access token", async () => {
+        const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
+
+        await expect(api.anime.suggestions()).rejects.toBeInstanceOf(AniLinkAuthError);
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("seasonal normalizes MAL HTTP failures through the shared error surface", async () => {
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
+
+        await expect(
+            buildMyAnimeListApi().anime.seasonal(2024, "winter", { retry: false })
+        ).rejects.toSatisfy(
+            (error: unknown) => error instanceof AniLinkRestError && error.status === 404
+        );
+    });
+
+    test("ranking normalizes MAL HTTP failures through the shared error surface", async () => {
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(500));
+
+        await expect(
+            buildMyAnimeListApi().anime.ranking("airing", { retry: false })
+        ).rejects.toSatisfy(
+            (error: unknown) => error instanceof AniLinkRestError && error.status === 500
+        );
+    });
+
+    test("suggestions normalizes MAL HTTP failures through the shared error surface", async () => {
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(401));
+
+        await expect(
+            buildMyAnimeListApi({ accessToken: "mal-access-token" }).anime.suggestions({
+                retry: false,
+            })
+        ).rejects.toSatisfy(
+            (error: unknown) => error instanceof AniLinkRestError && error.status === 401
         );
     });
 });

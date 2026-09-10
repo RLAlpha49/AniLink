@@ -114,15 +114,165 @@ export interface MalUser {
 /**
  * {@link MalRequestOptions} is the public request options shared by MAL endpoint methods.
  *
- * It extends {@link RequestOptions} with the MyAnimeList `fields` selector consumed by `MalAnimeOperation.get`, `MalMangaOperation.get`, and `MalUserOperation.me` through `MyAnimeListApi`. Transport settings are merged over the instance defaults from `MalCredentials` via `buildMyAnimeListApi`.
+ * It extends {@link RequestOptions} with the MyAnimeList `fields` selector consumed by `MalAnimeOperation.get`, `MalAnimeOperation.seasonal`, `MalAnimeOperation.ranking`, `MalAnimeOperation.suggestions`, `MalMangaOperation.get`, and `MalUserOperation.me` through `MyAnimeListApi`. Transport settings are merged over the instance defaults from `MalCredentials` via `buildMyAnimeListApi`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
  */
 export interface MalRequestOptions extends RequestOptions {
     /** A comma-separated field selector, or the same selector as an array. */
     fields?: string | readonly string[];
+}
+
+/**
+ * The four broadcast seasons MyAnimeList partitions seasonal anime into.
+ *
+ * These are the fixed `season` path values accepted by
+ * `GET /anime/season/{year}/{season}`, consumed as the `season` parameter of
+ * `MalAnimeOperation.seasonal` and `MyAnimeListAnimeApi.seasonal`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+ */
+export type MalSeason = "winter" | "spring" | "summer" | "fall";
+
+/**
+ * The ranking lists MyAnimeList exposes for anime.
+ *
+ * These are the fixed `ranking_type` query values accepted by
+ * `GET /anime/ranking`, consumed as the `rankingType` parameter of
+ * `MalAnimeOperation.ranking` and `MyAnimeListAnimeApi.ranking`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
+ */
+export type MalRankingType =
+    | "all"
+    | "airing"
+    | "upcoming"
+    | "tv"
+    | "ova"
+    | "movie"
+    | "special"
+    | "bypopularity"
+    | "favorite";
+
+/**
+ * {@link MalPaging} is the paging node MyAnimeList attaches to list-style responses.
+ *
+ * It carries a `next` URL pointing at the next page when one exists; the
+ * discovery reads (`seasonal`, `ranking`, `suggestions`) return it inside
+ * their response types so callers can follow pages manually.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+ */
+export interface MalPaging {
+    /** The URL of the next page, when the list continues. */
+    next?: string;
+}
+
+/**
+ * {@link MalSeasonalAnime} is one entry of a seasonal anime list.
+ *
+ * It wraps the {@link MalAnime} node with the season-specific `ranking` position
+ * MyAnimeList reports for each entry, and is the element type of
+ * {@link MalSeasonalAnimeResponse} returned by `MalAnimeOperation.seasonal` and
+ * `MyAnimeListAnimeApi.seasonal`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+ */
+export interface MalSeasonalAnime {
+    /** The anime entry, shaped by the `fields` query parameter. */
+    node: MalAnime;
+    /** The entry's rank within the season, when MyAnimeList reports one. */
+    ranking?: { rank: number };
+    /** Any additional fields returned by MyAnimeList remain available without narrowing. */
+    [field: string]: unknown;
+}
+
+/**
+ * {@link MalRankingEntry} is one entry of an anime ranking list.
+ *
+ * It wraps the {@link MalAnime} node with its `ranking` position, and is the
+ * element type of {@link MalAnimeRankingResponse} returned by
+ * `MalAnimeOperation.ranking` and `MyAnimeListAnimeApi.ranking`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
+ */
+export interface MalRankingEntry {
+    /** The anime entry, shaped by the `fields` query parameter. */
+    node: MalAnime;
+    /** The entry's rank within the requested ranking list. */
+    ranking: { rank: number };
+    /** Any additional fields returned by MyAnimeList remain available without narrowing. */
+    [field: string]: unknown;
+}
+
+/**
+ * {@link MalSeasonalAnimeResponse} is the response of the seasonal anime endpoint.
+ *
+ * It is the shape returned by `MalAnimeOperation.seasonal` and
+ * `MyAnimeListAnimeApi.seasonal` from `GET /anime/season/{year}/{season}`: a
+ * page of {@link MalSeasonalAnime} entries plus the {@link MalPaging} node.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+ */
+export interface MalSeasonalAnimeResponse {
+    /** The seasonal anime entries on this page. */
+    data: MalSeasonalAnime[];
+    /** The paging node with the next-page URL, when the list continues. */
+    paging?: MalPaging;
+}
+
+/**
+ * {@link MalAnimeRankingResponse} is the response of the anime ranking endpoint.
+ *
+ * It is the shape returned by `MalAnimeOperation.ranking` and
+ * `MyAnimeListAnimeApi.ranking` from `GET /anime/ranking`: a page of
+ * {@link MalRankingEntry} entries plus the {@link MalPaging} node.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
+ */
+export interface MalAnimeRankingResponse {
+    /** The ranking entries on this page. */
+    data: MalRankingEntry[];
+    /** The paging node with the next-page URL, when the list continues. */
+    paging?: MalPaging;
+}
+
+/**
+ * {@link MalSuggestion} is one entry of the anime suggestions list.
+ *
+ * It wraps the {@link MalAnime} node without a ranking position, and is the
+ * element type of {@link MalAnimeSuggestionsResponse} returned by
+ * `MalAnimeOperation.suggestions` and `MyAnimeListAnimeApi.suggestions`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get
+ */
+export interface MalSuggestion {
+    /** The suggested anime entry, shaped by the `fields` query parameter. */
+    node: MalAnime;
+    /** Any additional fields returned by MyAnimeList remain available without narrowing. */
+    [field: string]: unknown;
+}
+
+/**
+ * {@link MalAnimeSuggestionsResponse} is the response of the anime suggestions endpoint.
+ *
+ * It is the shape returned by `MalAnimeOperation.suggestions` and
+ * `MyAnimeListAnimeApi.suggestions` from `GET /anime/suggestions`: a page of
+ * {@link MalSuggestion} entries (no ranking wrapper) plus the {@link MalPaging}
+ * node.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get
+ */
+export interface MalAnimeSuggestionsResponse {
+    /** The suggested anime entries on this page. */
+    data: MalSuggestion[];
+    /** The paging node with the next-page URL, when the list continues. */
+    paging?: MalPaging;
 }
 
 /**

@@ -4,15 +4,23 @@ import type {
     MalAnime,
     MalAnimeListStatus,
     MalAnimeListStatusUpdate,
+    MalAnimeRankingResponse,
+    MalAnimeSuggestionsResponse,
+    MalRankingType,
     MalRequestOptions,
+    MalSeason,
+    MalSeasonalAnimeResponse,
 } from "../types";
 
 /**
  * {@link MalAnimeOperation} is the REST operation adapter for MyAnimeList anime endpoints.
  *
- * It extends {@link RestOperation} and is composed into `MyAnimeListApi` via `buildMyAnimeListApi`, exposing {@link MalAnime} through {@link MalRequestOptions} and `MyAnimeListAnimeApi.get`.
+ * It extends {@link RestOperation} and is composed into `MyAnimeListApi` via `buildMyAnimeListApi`, exposing {@link MalAnime} through {@link MalRequestOptions} and `MyAnimeListAnimeApi.get`, plus the discovery reads `seasonal`, `ranking`, and `suggestions` for the seasonal, ranking, and suggestion endpoints.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get
  */
 export class MalAnimeOperation extends RestOperation {
     /** The base URL for MyAnimeList API v2, from {@link MAL_API_BASE_URL}. */
@@ -43,6 +51,109 @@ export class MalAnimeOperation extends RestOperation {
                     ? undefined
                     : { fields: Array.isArray(fields) ? fields.join(",") : fields },
             pathParams: { id },
+        });
+    }
+
+    /**
+     * {@link MalAnimeOperation.seasonal} gets the anime of one broadcast season.
+     *
+     * It calls `GET /anime/season/{year}/{season}` through `RestOperation.execute` and returns a {@link MalSeasonalAnimeResponse} page of {@link MalSeasonalAnime} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.seasonal` and it is a public read.
+     *
+     * @param year - The season's year.
+     * @param season - The season's broadcast window; one of {@link MalSeason}.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The seasonal anime page, a {@link MalSeasonalAnimeResponse}.
+     * @throws A normalized `AniLinkError` when the request fails.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const season = await api.anime.seasonal(2024, "winter", {
+     *   fields: ["id", "title", "main_picture"],
+     * });
+     * console.log(season.data[0]?.node.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+     */
+    public async seasonal(
+        year: number,
+        season: MalSeason,
+        options: MalRequestOptions = {}
+    ): Promise<MalSeasonalAnimeResponse> {
+        const { fields, ...transportOptions } = options;
+        return await this.execute<MalSeasonalAnimeResponse>("/anime/season/{year}/{season}", {
+            transportOptions,
+            query:
+                fields === undefined
+                    ? undefined
+                    : { fields: Array.isArray(fields) ? fields.join(",") : fields },
+            pathParams: { year, season },
+        });
+    }
+
+    /**
+     * {@link MalAnimeOperation.ranking} gets one of MyAnimeList's anime ranking lists.
+     *
+     * It calls `GET /anime/ranking` through `RestOperation.execute` with the `ranking_type` query parameter and returns a {@link MalAnimeRankingResponse} page of {@link MalRankingEntry} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.ranking` and it is a public read.
+     *
+     * @param rankingType - The ranking list to fetch; one of {@link MalRankingType}.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The ranking page, a {@link MalAnimeRankingResponse}.
+     * @throws A normalized `AniLinkError` when the request fails.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const top = await api.anime.ranking("airing", {
+     *   fields: ["id", "title", "mean"],
+     * });
+     * console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
+     */
+    public async ranking(
+        rankingType: MalRankingType,
+        options: MalRequestOptions = {}
+    ): Promise<MalAnimeRankingResponse> {
+        const { fields, ...transportOptions } = options;
+        return await this.execute<MalAnimeRankingResponse>("/anime/ranking", {
+            transportOptions,
+            query: {
+                ranking_type: rankingType,
+                ...(fields === undefined
+                    ? {}
+                    : { fields: Array.isArray(fields) ? fields.join(",") : fields }),
+            },
+        });
+    }
+
+    /**
+     * {@link MalAnimeOperation.suggestions} gets MyAnimeList's anime suggestions for the authenticated user.
+     *
+     * It calls `GET /anime/suggestions` through `RestOperation.execute` with `requiresAuth` and returns a {@link MalAnimeSuggestionsResponse} page of {@link MalSuggestion} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.suggestions` and it requires `MalCredentials.accessToken`.
+     *
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The suggestions page, a {@link MalAnimeSuggestionsResponse}.
+     * @throws An `AniLinkAuthError` without an access token, or a normalized request error.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const suggestions = await api.anime.suggestions({
+     *   fields: ["id", "title", "main_picture"],
+     * });
+     * console.log(suggestions.data[0]?.node.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get
+     */
+    public async suggestions(
+        options: MalRequestOptions = {}
+    ): Promise<MalAnimeSuggestionsResponse> {
+        const { fields, ...transportOptions } = options;
+        return await this.execute<MalAnimeSuggestionsResponse>("/anime/suggestions", {
+            requiresAuth: true,
+            transportOptions,
+            query:
+                fields === undefined
+                    ? undefined
+                    : { fields: Array.isArray(fields) ? fields.join(",") : fields },
         });
     }
 

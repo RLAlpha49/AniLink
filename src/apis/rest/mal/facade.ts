@@ -2,19 +2,27 @@ import type {
     MalAnime,
     MalAnimeListStatus,
     MalAnimeListStatusUpdate,
+    MalAnimeRankingResponse,
+    MalAnimeSuggestionsResponse,
     MalManga,
     MalMangaListStatus,
     MalMangaListStatusUpdate,
+    MalRankingType,
     MalRequestOptions,
+    MalSeason,
+    MalSeasonalAnimeResponse,
     MalUser,
 } from "./types";
 
 /**
  * {@link MyAnimeListAnimeApi} is the anime group exposed by {@link MyAnimeListApi} under `aniLink.mal.anime`.
  *
- * It is the facade boundary for MyAnimeList anime reads and list-status writes; the `MalAnimeOperation.get | get` method delegates to `MalAnimeOperation` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}, while `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /anime/{id}/my_list_status` endpoints.
+ * It is the facade boundary for MyAnimeList anime reads and list-status writes; the {@link MalAnimeOperation.get | get} method delegates to `MalAnimeOperation` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}, the discovery reads `seasonal`, `ranking`, and `suggestions` cover the seasonal, ranking, and suggestion endpoints, while `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /anime/{id}/my_list_status` endpoints.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete
  */
@@ -37,6 +45,80 @@ export interface MyAnimeListAnimeApi {
      * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
      */
     get: (id: number, options?: MalRequestOptions) => Promise<MalAnime>;
+
+    /**
+     * {@link MyAnimeListAnimeApi.seasonal} gets the anime of one broadcast season through `MalAnimeOperation.seasonal`.
+     *
+     * It is the public facade for `GET /anime/season/{year}/{season}`; use {@link MalRequestOptions.fields} to select the response shape and {@link MalRequestOptions} transport settings to override per call.
+     *
+     * @param year - The season's year.
+     * @param season - The season's broadcast window; one of {@link MalSeason}.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The seasonal anime page, a {@link MalSeasonalAnimeResponse}.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const season = await api.anime.seasonal(2024, "winter", {
+     *   fields: ["id", "title", "main_picture"],
+     * });
+     * console.log(season.data[0]?.node.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+     */
+    seasonal: (
+        year: number,
+        season: MalSeason,
+        options?: MalRequestOptions
+    ) => Promise<MalSeasonalAnimeResponse>;
+
+    /**
+     * {@link MyAnimeListAnimeApi.ranking} gets one of MyAnimeList's anime ranking lists through `MalAnimeOperation.ranking`.
+     *
+     * It is the public facade for `GET /anime/ranking`; use {@link MalRequestOptions.fields} to select the response shape and {@link MalRequestOptions} transport settings to override per call.
+     *
+     * @param rankingType - The ranking list to fetch; one of {@link MalRankingType}.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The ranking page, a {@link MalAnimeRankingResponse}.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const top = await api.anime.ranking("airing", {
+     *   fields: ["id", "title", "mean"],
+     * });
+     * console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
+     */
+    ranking: (
+        rankingType: MalRankingType,
+        options?: MalRequestOptions
+    ) => Promise<MalAnimeRankingResponse>;
+
+    /**
+     * {@link MyAnimeListAnimeApi.suggestions} gets MyAnimeList's anime suggestions for the authenticated user through `MalAnimeOperation.suggestions`.
+     *
+     * It is the public facade for `GET /anime/suggestions` and requires a MAL access token from `MalCredentials.accessToken` via `buildMyAnimeListApi`; use {@link MalRequestOptions.fields} to select the response shape.
+     *
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The suggestions page, a {@link MalAnimeSuggestionsResponse}.
+     * @throws `AniLinkAuthError` when no MAL access token is configured.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const suggestions = await api.anime.suggestions({
+     *   fields: ["id", "title", "main_picture"],
+     * });
+     * console.log(suggestions.data[0]?.node.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get
+     */
+    suggestions: (options?: MalRequestOptions) => Promise<MalAnimeSuggestionsResponse>;
 
     /**
      * {@link MyAnimeListAnimeApi.updateMyListStatus} updates the authenticated user's anime list status through `MalAnimeOperation.updateMyListStatus`.
@@ -198,7 +280,7 @@ export interface MyAnimeListUserApi {
 /**
  * {@link MyAnimeListApi} is the typed MyAnimeList REST surface exposed by `aniLink.mal`.
  *
- * It composes {@link MyAnimeListAnimeApi}, {@link MyAnimeListMangaApi}, and {@link MyAnimeListUserApi} from `MalAnimeOperation`, `MalMangaOperation`, and `MalUserOperation` via `buildMyAnimeListApi`. Read methods accept {@link MalRequestOptions} and return {@link MalAnime}, {@link MalManga}, or {@link MalUser}; the anime and manga groups additionally expose `updateMyListStatus` and `deleteFromList` for the authenticated list-status write/delete endpoints. OAuth helpers `buildMalAuthorizationUrl`, `getMalAccessToken`, and `refreshMalAccessToken` supply the token for `MalCredentials`.
+ * It composes {@link MyAnimeListAnimeApi}, {@link MyAnimeListMangaApi}, and {@link MyAnimeListUserApi} from `MalAnimeOperation`, `MalMangaOperation`, and `MalUserOperation` via `buildMyAnimeListApi`. Read methods accept {@link MalRequestOptions} and return {@link MalAnime}, {@link MalManga}, or {@link MalUser}; the anime group additionally exposes the discovery reads `seasonal`, `ranking`, and `suggestions` for the seasonal, ranking, and suggestion endpoints, and the anime and manga groups expose `updateMyListStatus` and `deleteFromList` for the authenticated list-status write/delete endpoints. OAuth helpers `buildMalAuthorizationUrl`, `getMalAccessToken`, and `refreshMalAccessToken` supply the token for `MalCredentials`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2
  */

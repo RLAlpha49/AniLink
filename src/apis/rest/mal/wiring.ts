@@ -27,6 +27,9 @@ export function buildMyAnimeListApi(credentials?: MalCredentials): MyAnimeListAp
     return {
         anime: {
             get: anime.get.bind(anime),
+            seasonal: anime.seasonal.bind(anime),
+            ranking: anime.ranking.bind(anime),
+            suggestions: anime.suggestions.bind(anime),
             updateMyListStatus: anime.updateMyListStatus.bind(anime),
             deleteFromList: anime.deleteFromList.bind(anime),
         },

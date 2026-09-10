@@ -114,8 +114,26 @@ describe("operation reference section manifests", () => {
         const grouped = await loadOperations("mal", "rest", outputDir);
         const operations = Object.values(grouped).flat();
 
-        expect(operations).toHaveLength(7);
+        expect(operations).toHaveLength(10);
         expect(operations.every((operation) => operation.provider === "mal")).toBe(true);
         expect(operations.every((operation) => operation.category === "rest")).toBe(true);
+    });
+
+    it("describes auth accurately for public MAL reads", () => {
+        const seasonal = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.anime.seasonal"
+        );
+        const ranking = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.anime.ranking"
+        );
+        const get = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.anime.get"
+        );
+
+        expect(seasonal?.auth).toBe("Not required — a public read.");
+        expect(ranking?.auth).toBe("Not required — a public read.");
+        expect(get?.auth).toBe(
+            "Not required for public anime data; pass an access token for list-related fields."
+        );
     });
 });

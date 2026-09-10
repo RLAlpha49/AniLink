@@ -9,10 +9,10 @@ layout: .vitepress/theme/DocsLayout.vue
 
 Gets one anime by its MyAnimeList ID. Calls `GET /anime/{id}` on the MAL API v2 — the bread-and-butter lookup.
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `id` | `number` | yes | The MyAnimeList anime ID |
-| `options` | `MalRequestOptions` | no | Field selection plus transport settings, merged over the instance defaults |
+| Parameter | Type                | Required | Description                                                                |
+| --------- | ------------------- | -------- | -------------------------------------------------------------------------- |
+| `id`      | `number`            | yes      | The MyAnimeList anime ID                                                   |
+| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults |
 
 **Auth:** not required for public anime data. Pass an access token for list-related fields — the public data is free, the personal data is not.
 
@@ -33,9 +33,9 @@ console.log(anime.title, anime.main_picture?.large);
 
 Gets the currently authenticated user. Calls `GET /users/@me` — the "who am I?" call.
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `options` | `MalRequestOptions` | no | Field selection plus transport settings |
+| Parameter | Type                | Required | Description                             |
+| --------- | ------------------- | -------- | --------------------------------------- |
+| `options` | `MalRequestOptions` | no       | Field selection plus transport settings |
 
 **Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent. No token, no trip.
 
@@ -56,10 +56,10 @@ console.log(user.name);
 
 Gets one manga by its MyAnimeList ID. Calls `GET /manga/{id}` on the MAL API v2 — the manga twin of `anime.get`.
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `id` | `number` | yes | The MyAnimeList manga ID |
-| `options` | `MalRequestOptions` | no | Field selection plus transport settings, merged over the instance defaults |
+| Parameter | Type                | Required | Description                                                                |
+| --------- | ------------------- | -------- | -------------------------------------------------------------------------- |
+| `id`      | `number`            | yes      | The MyAnimeList manga ID                                                   |
+| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults |
 
 **Auth:** not required for public manga data. Pass an access token for list-related fields — same deal as `anime.get`.
 
@@ -80,11 +80,11 @@ console.log(manga.title, manga.main_picture?.large);
 
 Updates the authenticated user's manga list status. Calls `PATCH /manga/{id}/my_list_status` with a form-urlencoded body — MAL rejects JSON on this endpoint, so do not try to be clever.
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `id` | `number` | yes | The MyAnimeList manga ID |
-| `payload` | `MalMangaListStatusUpdate` | yes | The list-status fields to update; only the fields to change, form-encoded for MAL |
-| `options` | `MalRequestOptions` | no | Field selection plus transport settings, merged over the instance defaults |
+| Parameter | Type                       | Required | Description                                                                       |
+| --------- | -------------------------- | -------- | --------------------------------------------------------------------------------- |
+| `id`      | `number`                   | yes      | The MyAnimeList manga ID                                                          |
+| `payload` | `MalMangaListStatusUpdate` | yes      | The list-status fields to update; only the fields to change, form-encoded for MAL |
+| `options` | `MalRequestOptions`        | no       | Field selection plus transport settings, merged over the instance defaults        |
 
 **Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
@@ -107,10 +107,10 @@ console.log(status.num_chapters_read);
 
 Removes a manga from the authenticated user's list. Calls `DELETE /manga/{id}/my_list_status` — gone means gone.
 
-| Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `id` | `number` | yes | The MyAnimeList manga ID |
-| `options` | `MalRequestOptions` | no | Transport settings, merged over the instance defaults |
+| Parameter | Type                | Required | Description                                           |
+| --------- | ------------------- | -------- | ----------------------------------------------------- |
+| `id`      | `number`            | yes      | The MyAnimeList manga ID                              |
+| `options` | `MalRequestOptions` | no       | Transport settings, merged over the instance defaults |
 
 **Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
@@ -123,6 +123,78 @@ await aniLink.mal.manga.deleteFromList(1);
 **Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `404` unknown ID), `AniLinkNetworkError`.
 
 **Reference:** [MAL manga list-status delete endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_delete) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListMangaApi.html)
+
+## `mal.anime.seasonal(year, season, options?)`
+
+Gets the anime of one broadcast season. Calls `GET /anime/season/{year}/{season}` — the seasonal chart, the browsing feature third-party apps are built on.
+
+| Parameter | Type                | Required | Description                                                                |
+| --------- | ------------------- | -------- | -------------------------------------------------------------------------- |
+| `year`    | `number`            | yes      | The season's year                                                          |
+| `season`  | `MalSeason`         | yes      | The broadcast window: `winter`, `spring`, `summer`, or `fall`              |
+| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults |
+
+**Auth:** not required — a public read, same deal as `anime.get`.
+
+**Returns:** `MalSeasonalAnimeResponse` — `data` holds one `MalSeasonalAnime` per entry: a `node` shaped by `fields` plus an optional `ranking.rank` for the entry's position in the season. `paging.next` carries the next-page URL when the list continues; follow it manually for now — manual requests bypass the library's pacing, retry, and circuit-breaker, so space them out on long lists.
+
+```typescript
+const season = await aniLink.mal.anime.seasonal(2024, "winter", {
+    fields: ["id", "title", "main_picture"],
+});
+console.log(season.data[0]?.node.title, season.data[0]?.ranking?.rank);
+```
+
+**Errors:** `AniLinkRestError` for non-success responses (e.g. `404` unknown season). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+
+**Reference:** [MAL seasonal anime endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
+
+## `mal.anime.ranking(rankingType, options?)`
+
+Gets one of MyAnimeList's anime ranking lists. Calls `GET /anime/ranking` with a `ranking_type` query parameter — the top lists, from `all` to `favorite`.
+
+| Parameter     | Type                | Required | Description                                                                                                   |
+| ------------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `rankingType` | `MalRankingType`    | yes      | The ranking list: `all`, `airing`, `upcoming`, `tv`, `ova`, `movie`, `special`, `bypopularity`, or `favorite` |
+| `options`     | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults                                    |
+
+**Auth:** not required — a public read, same deal as `anime.get`.
+
+**Returns:** `MalAnimeRankingResponse` — `data` holds one `MalRankingEntry` per position: a `node` shaped by `fields` plus its `ranking.rank`. `paging.next` carries the next-page URL when the list continues; follow it manually — manual requests bypass the library's pacing, retry, and circuit-breaker.
+
+```typescript
+const top = await aniLink.mal.anime.ranking("airing", {
+    fields: ["id", "title", "mean"],
+});
+console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);
+```
+
+**Errors:** `AniLinkRestError` for non-success responses (e.g. `400` invalid ranking type). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+
+**Reference:** [MAL anime ranking endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
+
+## `mal.anime.suggestions(options?)`
+
+Gets MyAnimeList's anime suggestions for the authenticated user. Calls `GET /anime/suggestions` — MAL's idea of what you should watch next.
+
+| Parameter | Type                | Required | Description                                                                |
+| --------- | ------------------- | -------- | -------------------------------------------------------------------------- |
+| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults |
+
+**Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent. Suggestions are personal, so the token is not optional.
+
+**Returns:** `MalAnimeSuggestionsResponse` — `data` holds `MalSuggestion` entries: a `node` shaped by `fields`, with no ranking wrapper here. `paging.next` carries the next-page URL when the list continues; the next page requires the same access token, and manual requests bypass the library's pacing and retry.
+
+```typescript
+const suggestions = await aniLink.mal.anime.suggestions({
+    fields: ["id", "title", "main_picture"],
+});
+console.log(suggestions.data[0]?.node.title);
+```
+
+**Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `401` expired token), `AniLinkNetworkError`.
+
+**Reference:** [MAL anime suggestions endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
 
 ## `fields` selection
 

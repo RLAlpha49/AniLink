@@ -7,10 +7,10 @@ layout: .vitepress/theme/DocsLayout.vue
 
 AniLink is a typed TypeScript client for the two big anime databases. One class — `AniLink` — hands you both providers side by side:
 
-| Provider              | Protocol | Namespace         | What it offers                                                                 |
-| --------------------- | -------- | ----------------- | ------------------------------------------------------------------------------ |
-| **AniList**           | GraphQL  | `aniLink.anilist` | Queries, page queries, mutations, pagination helpers, `custom()`, data helpers |
-| **MyAnimeList (MAL)** | REST     | `aniLink.mal`     | Anime and manga lookups, list-status updates and removals, `user.me`           |
+| Provider              | Protocol | Namespace         | What it offers                                                                                                               |
+| --------------------- | -------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **AniList**           | GraphQL  | `aniLink.anilist` | Queries, page queries, mutations, pagination helpers, `custom()`, data helpers                                               |
+| **MyAnimeList (MAL)** | REST     | `aniLink.mal`     | Anime and manga lookups, discovery reads (`seasonal`, `ranking`, `suggestions`), list-status updates and removals, `user.me` |
 
 The two surfaces share one transport layer — timeouts, retries, pacing, circuit breaker, hooks, error normalization — but they never share credentials. A MAL access token is never sent to AniList. An AniList bearer token is never sent to MAL. Your tokens stay in their lanes.
 
@@ -34,7 +34,7 @@ Call AniList or MAL directly and you soon find yourself hand-rolling HTTP, Graph
 ## How to choose a provider
 
 - After rich anime and manga metadata, lists, activity, or social features? **AniList** — it has the large GraphQL surface.
-- After data from a user's MyAnimeList account, or MAL anime and manga details? **MAL** — a focused REST surface: lookups, list-status updates, and `user.me`.
+- After data from a user's MyAnimeList account, or MAL anime and manga details? **MAL** — a focused REST surface: lookups, discovery reads, list-status updates, and `user.me`.
 - Need both? Compose them in one client and keep each provider's credentials in its own slot. [Provider configuration](/provider-configuration) explains the rules.
 
 ## Where to go next
