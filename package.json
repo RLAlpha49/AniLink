@@ -42,7 +42,7 @@
         "provenance": true
     },
     "scripts": {
-        "postinstall": "patch-package",
+        "postinstall": "node -e \"if(require('fs').existsSync('patches'))require('patch-package')\"",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
         "test:integration": "vitest run --config vitest.integration.config.mts",
