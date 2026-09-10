@@ -36,7 +36,7 @@ beforeEach(async () => {
 /** Well-known public ids that are stable in the AniList database. */
 const FIXTURES = {
     mediaId: 1, // Cowboy Bebop
-    characterSearch: "Spike Spiegel",
+    characterSearch: "Spiegel Spike",
     staffId: 95011, // Yamadera Kouichi
     studioId: 1, // Sunrise
     userId: 542244, // Alpha49
