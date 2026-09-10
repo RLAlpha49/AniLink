@@ -52,6 +52,8 @@
         "build": "rimraf dist && unbuild && node -e \"for (const f of require('fs').readdirSync('dist')) if (f.endsWith('.d.mts')) require('fs').rmSync('dist/' + f)\"",
         "anilist:api:compare": "tsx scripts/anilist-api-compare/cli.ts compare",
         "anilist:api:update-schema": "tsx scripts/anilist-api-compare/cli.ts update-schema",
+        "mal:token": "tsx scripts/tokens/mal-token.ts",
+        "anilist:token": "tsx scripts/tokens/anilist-token.ts",
         "jsdoc:check": "tsx scripts/check-jsdoc.ts",
         "interfaces:generate": "tsx scripts/generate-interfaces.ts",
         "lint": "eslint \"src/**/*.ts\" \"__tests__/**/*.ts\" scripts/ build.config.ts \"docs-src/**/*.{ts,vue}\"",

@@ -2,7 +2,9 @@
  * Vitest configuration for the unit suite.
  *
  * Runs unit tests outside `__tests__/integration` and collects V8 coverage
- * for `src`, while loading the shared network-blocking test setup.
+ * for `src` only — `scripts/` is dev tooling (including the token CLIs), not
+ * library code, so it is excluded from coverage — while loading the shared
+ * network-blocking test setup.
  */
 import { defineConfig } from 'vitest/config'
 
@@ -16,7 +18,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**'],
-      exclude: ['node_modules/**', 'dist/**', 'docs-src/**'],
+      exclude: ['node_modules/**', 'dist/**', 'docs-src/**', 'scripts/**'],
       reporter: ['text', 'lcov', 'json-summary'],
       thresholds: {
         statements: 90,
