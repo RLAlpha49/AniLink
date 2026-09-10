@@ -21,6 +21,7 @@
 import { CustomRequest } from "./CustomRequest";
 import { fuzzyDate } from "./helpers/fuzzyDate";
 import { flattenMediaListCollection } from "./helpers/flattenMediaListCollection";
+import { crossLink } from "./helpers/crossLink";
 import { paginate, paginatePages, paginateChunks } from "./Paginator";
 import { type RequestAuthInput, type RequestOptions } from "../../../base/RequestHandler";
 import type { AniListApi } from "./facade";
@@ -143,6 +144,7 @@ export function buildAniListWiring(
             paginateChunks,
             fuzzyDate,
             flattenMediaListCollection,
+            crossLink,
         },
         {
             custom: {

@@ -37,6 +37,8 @@ export type {
     PaginateOptions,
     PaginateResult,
 } from "./apis/graphql/anilist/Paginator";
+export { crossLink } from "./apis/graphql/anilist/helpers/crossLink";
+export type { CrossLinkMedia, CrossLinkResult } from "./apis/graphql/anilist/helpers/crossLink";
 
 export type { AniListApi, AniLinkOptions } from "./apis/graphql/anilist/facade";
 

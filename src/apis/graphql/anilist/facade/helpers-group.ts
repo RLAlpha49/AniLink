@@ -4,6 +4,7 @@
 import { type MediaListCollectionResponse } from "../interfaces/responses/query/MediaListCollectionResponse";
 import { type FuzzyDateOptions } from "../helpers/fuzzyDate";
 import { type FlattenedMediaListEntry } from "../helpers/flattenMediaListCollection";
+import { type CrossLinkMedia, type CrossLinkResult } from "../helpers/crossLink";
 import {
     type PaginateOptions,
     type PaginateResult,
@@ -140,4 +141,22 @@ export type AniListHelpers = {
     flattenMediaListCollection: (
         response: MediaListCollectionResponse
     ) => FlattenedMediaListEntry[];
+
+    /**
+     * {@link crossLink} builds bidirectional AniList↔MyAnimeList id lookup maps from AniList media entries.
+     * @param media - AniList media entries carrying `id` and `idMal`; e.g. the `media` array of a `page.medias` response, or a one-element array around a `query.media` result.
+     * @returns The `anilistToMal` and `malToAnilist` lookup maps plus the `unmapped` entries without a MAL id; a {@link CrossLinkResult}.
+     * @see https://docs.anilist.co/reference/object/media
+     * @example
+     * ```typescript
+     * const page = await aniLink.anilist.query.page.medias({ page: 1, perPage: 50, type: "ANIME" });
+     * const { anilistToMal, unmapped } = aniLink.anilist.crossLink(page.media);
+     *
+     * const malId = anilistToMal.get(21);
+     * if (malId !== undefined) {
+     *   const malAnime = await aniLink.mal.anime.get(malId, { fields: ["id", "title"] });
+     * }
+     * ```
+     */
+    crossLink: <TMedia extends CrossLinkMedia>(media: readonly TMedia[]) => CrossLinkResult<TMedia>;
 };

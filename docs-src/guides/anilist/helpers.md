@@ -5,7 +5,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # AniList helpers
 
-Two data helpers live on the `anilist` namespace: `aniLink.anilist.fuzzyDate` and `aniLink.anilist.flattenMediaListCollection`. They are methods on the client, not standalone imports — no extra import to remember.
+Three data helpers live on the `anilist` namespace: `aniLink.anilist.fuzzyDate`, `aniLink.anilist.flattenMediaListCollection`, and `aniLink.anilist.crossLink`. They are methods on the client, not standalone imports — no extra import to remember.
 
 ## `fuzzyDate`
 
@@ -69,7 +69,37 @@ Each entry carries the list-entry fields and its full list membership — not th
 
 Entries appearing in multiple status groups are deduplicated by entry id — a media present in both `COMPLETED` and a custom list yields one entry, with every group name accumulated in `listNames`. Custom-list-only membership is preserved, and entries are not filtered to the primary status groups. What you see is what AniList has.
 
+## `crossLink`
+
+AniList media carries `idMal` — the MyAnimeList id of the same show or book. `crossLink` turns any batch of AniList media entries into bidirectional id lookup maps, so a cross-provider workflow is two map lookups instead of a hand-rolled mapping. Entries without a MAL id are collected in `unmapped` instead of being silently dropped.
+
+```typescript
+const aniLink = new AniLink({
+    anilist: { authToken: "anilist-token" },
+    mal: { accessToken: "mal-token" },
+});
+
+const page = await aniLink.anilist.query.page.medias({ page: 1, perPage: 50, type: "ANIME" });
+const { anilistToMal, unmapped } = aniLink.anilist.crossLink(page.media);
+
+const malId = anilistToMal.get(21);
+if (malId !== undefined) {
+    const malAnime = await aniLink.mal.anime.get(malId, { fields: ["id", "title"] });
+}
+```
+
+### `CrossLinkResult` shape
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `anilistToMal` | `ReadonlyMap<number, number>` | AniList media id → MyAnimeList id, for entries that carry one |
+| `malToAnilist` | `ReadonlyMap<number, number>` | MyAnimeList id → AniList media id; the last entry wins on shared MAL ids |
+| `unmapped` | `TMedia[]` | The input entries that carry no `idMal`, in input order |
+
+The helper is pure — no requests are made. Feed it the `media` array of a `page.medias` response, a one-element array around a `query.media` result, or any `Media`-shaped entries carrying `id` and `idMal`. See the [cross-provider workflow recipe](/recipes) for the full flow.
+
 ## Next steps
 
 - <Icon name="ArrowRight" :size="14" /> [Pagination](/guides/anilist/pagination) — `paginateChunks` for large collections.
+- <Icon name="ArrowRight" :size="14" /> [Cross-provider workflow recipe](/recipes) — `crossLink` feeding `mal.anime.get`.
 - <Icon name="ArrowRight" :size="14" /> [Query operation reference](/operations/anilist/query#lists) — the `mediaListCollection` response shape.

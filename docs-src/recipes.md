@@ -54,10 +54,10 @@ console.log(anime.title, anime.main_picture?.medium);
 
 ## Cross-provider title comparison
 
-**Providers: both.** Compare how the two databases title the same show. A word of warning first: AniLink does **not** normalize data across providers — the mapping between them is yours to write.
+**Providers: both.** Compare how the two databases title the same show. AniList media carries `idMal` — the MyAnimeList id of the same entry — and the `crossLink` helper turns a batch of AniList results into id lookup maps, so the mapping is two map lookups instead of hand-rolled code. AniLink still does **not** normalize data across providers — titles, scores, and statuses are each provider's own.
 
 <Mermaid
-    :code="`flowchart LR\n    A[AniLink instance\nboth providers configured]:::c\n    A -->|query.media id=21| AL[AniList\nmedia.title.romaji]:::al\n    A -->|mal.anime.get 21| MAL[MAL\nanime.title]:::mal\n    AL --> M[Your mapping logic\ncompare titles]:::out\n    MAL --> M\n\n    classDef c fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c;\n    classDef al fill:#d5e8d4,stroke:#82b366,color:#2d5016;\n    classDef mal fill:#e1d5e7,stroke:#9673a6,color:#3b3a45;\n    classDef out fill:#fff2cc,stroke:#d6b656,color:#5c4a00;`"
+    :code="`flowchart LR\n    A[AniLink instance\nboth providers configured]:::c\n    A -->|query.media id=21| AL[AniList\nmedia.idMal]:::al\n    AL -->|crossLink| MAP[anilistToMal\nlookup map]:::proc\n    MAP -->|malId| MAL[mal.anime.get\nmalId]:::mal\n    AL --> M[Your mapping logic\ncompare titles]:::out\n    MAL --> M\n\n    classDef c fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c;\n    classDef al fill:#d5e8d4,stroke:#82b366,color:#2d5016;\n    classDef mal fill:#e1d5e7,stroke:#9673a6,color:#3b3a45;\n    classDef proc fill:#fff2cc,stroke:#d6b656,color:#5c4a00;\n    classDef out fill:#f5f5f5,stroke:#666666,color:#333333;`"
 />
 
 ```typescript
@@ -68,13 +68,30 @@ const aniLink = new AniLink({
     mal: { accessToken: process.env.MAL_TOKEN },
 });
 
-const [anilistMedia, malAnime] = await Promise.all([
-    aniLink.anilist.query.media({ id: 21, type: "ANIME" }),
-    aniLink.mal.anime.get(21, { fields: ["id", "title"] }),
-]);
+const anilistMedia = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
 
-console.log("AniList:", anilistMedia.media?.title?.romaji);
-console.log("MAL:", malAnime.title);
+// Build the id lookup maps from the AniList result.
+const { anilistToMal } = aniLink.anilist.crossLink([anilistMedia]);
+
+const malId = anilistToMal.get(21);
+if (malId !== undefined) {
+    const malAnime = await aniLink.mal.anime.get(malId, { fields: ["id", "title"] });
+    console.log("AniList:", anilistMedia.title.romaji);
+    console.log("MAL:", malAnime.title);
+}
+```
+
+For a whole page of results, feed the `media` array straight in — `crossLink` is pure, makes no requests, and collects entries without a MAL id in `unmapped`:
+
+```typescript
+const page = await aniLink.anilist.query.page.medias({ page: 1, perPage: 50, type: "ANIME" });
+const { anilistToMal, unmapped } = aniLink.anilist.crossLink(page.media);
+
+const malIds = page.media
+    .map((media) => anilistToMal.get(media.id))
+    .filter((malId): malId is number => malId !== undefined);
+
+console.log(`${malIds.length} mapped, ${unmapped.length} without a MAL id`);
 ```
 
 ## Background token-refresh loop

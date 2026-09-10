@@ -24,6 +24,7 @@ const HELPER_MEMBERS = [
     "paginateChunks",
     "fuzzyDate",
     "flattenMediaListCollection",
+    "crossLink",
 ] as const;
 
 /** The custom escape hatch wired manually in `wiring.ts`. */
