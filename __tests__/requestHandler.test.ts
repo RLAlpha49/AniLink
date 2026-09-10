@@ -839,6 +839,35 @@ describe("response cache integration", () => {
         expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 
+    test("returns a value the caller can mutate without poisoning the cache", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+
+        const first = (await sendRequest(
+            "https://graphql.anilist.co",
+            "GET",
+            undefined,
+            undefined,
+            {
+                options,
+            }
+        )) as { id: number };
+        first.id = 999; // caller mutates the reference they were handed
+
+        const second = (await sendRequest(
+            "https://graphql.anilist.co",
+            "GET",
+            undefined,
+            undefined,
+            {
+                options,
+            }
+        )) as { id: number };
+
+        expect(second).toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+
     test("caches per bearer-token identity so different tokens do not cross-contaminate", async () => {
         const cache = new ResponseCache({ ttlMs: 10_000 });
         const options = { responseCache: cache };

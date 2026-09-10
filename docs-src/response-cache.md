@@ -40,6 +40,8 @@ Only `GET` responses are cached. AniList queries are `POST` requests and are **n
 
 To cache AniList reads, use `custom()` with a `GET` method, or cache at the application layer.
 
+Values are deep-copied on write and on read: the cache never shares a reference with the caller, so mutating an object after `set` (or after receiving it from `get`) cannot poison later hits. Cache keys hash the request body, so a credential-bearing `GET` body is never duplicated into the key in plaintext.
+
 ## Cache hits and observability
 
 Cache hits are observable through the existing `onResponse` hook. When a response is served from cache, the hook fires with `cacheHit: true` and `durationMs: 0` — hard to miss in a dashboard:

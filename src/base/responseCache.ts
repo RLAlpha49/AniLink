@@ -8,6 +8,8 @@
  * cached response from a network round-trip.
  */
 
+import { createHash } from "node:crypto";
+
 /**
  * A single cached response entry.
  */
@@ -16,8 +18,6 @@ interface CacheEntry<T> {
     data: T;
     /** The epoch millisecond at which the entry expires. */
     expiresAt: number;
-    /** LRU recency stamp; the entry with the smallest value is evicted. */
-    lastUsed: number;
 }
 
 /**
@@ -29,6 +29,58 @@ export interface ResponseCacheOptions {
     /** The maximum number of entries to retain. Defaults to 128. Entries are evicted LRU when the cap is reached. */
     maxEntries?: number;
 }
+
+/**
+ * Whether `value` is a plain object literal (or `Object.create(null)`), as
+ * opposed to a built-in like `Date`/`Map` or a class instance.
+ */
+const isPlainObject = (value: object): boolean => {
+    const proto = Object.getPrototypeOf(value);
+    return proto === Object.prototype || proto === null;
+};
+
+/**
+ * Deterministic serialization for cache keys: object properties are sorted
+ * so bodies that differ only in key order produce one key. The `seen` set
+ * guards against cycles (repeated references serialize as `"[Circular]"`),
+ * and removing a reference after serialization keeps duplicate sibling
+ * references working like `JSON.stringify`.
+ *
+ * Non-plain objects (`Date`, `Map`, class instances, …) fall back to
+ * `JSON.stringify` so their native rendering (`Date` → ISO string) keeps
+ * distinct values on distinct keys. A naive sorted-key walk would render
+ * every one of them as `{}` and collapse different bodies onto one cache
+ * entry — a wrong-answer cache hit.
+ */
+const stableStringify = (value: unknown, seen: Set<object> = new Set()): string => {
+    if (value === null || typeof value !== "object") {
+        return JSON.stringify(value) ?? "undefined";
+    }
+    if (seen.has(value)) {
+        return '"[Circular]"';
+    }
+    seen.add(value);
+    try {
+        if (Array.isArray(value)) {
+            return `[${value.map((item) => stableStringify(item, seen)).join(",")}]`;
+        }
+        if (!isPlainObject(value)) {
+            // Built-ins and class instances: keep JSON.stringify's native
+            // rendering (toJSON, ISO dates, …) so distinct values stay
+            // distinct. Key-order stability does not apply to them.
+            return JSON.stringify(value) ?? "undefined";
+        }
+        const keys = Object.keys(value).sort();
+        return `{${keys
+            .map(
+                (key) =>
+                    `${JSON.stringify(key)}:${stableStringify((value as Record<string, unknown>)[key], seen)}`
+            )
+            .join(",")}}`;
+    } finally {
+        seen.delete(value);
+    }
+};
 
 /**
  * An in-memory TTL response cache with an LRU eviction cap.
@@ -63,8 +115,6 @@ export class ResponseCache {
     private readonly entries = new Map<string, CacheEntry<unknown>>();
     private readonly ttlMs: number;
     private readonly maxEntries: number;
-    /** Monotonic counter for LRU ordering, immune to same-millisecond ties. */
-    private lruCounter = 0;
 
     /**
      * Creates a response cache.
@@ -88,6 +138,13 @@ export class ResponseCache {
     /**
      * Builds the cache key for a request.
      *
+     * The serialized body is SHA-256 hashed (truncated to 16 hex chars)
+     * before it enters the key, so a credential-bearing GET body is never
+     * duplicated into the key string in plaintext — the key map retains
+     * entries for up to the TTL, outliving the error paths the rest of the
+     * library scrubs. The hash is deterministic, so equal bodies still share
+     * one entry and different bodies still get different entries.
+     *
      * @param method - The HTTP method.
      * @param url - The request URL.
      * @param data - The request body, when present.
@@ -95,8 +152,16 @@ export class ResponseCache {
      * responses never cross bearer-token identities.
      * @returns The cache key.
      */
-    private static buildKey(method: string, url: string, data?: object, authKey?: string): string {
-        const body = data === undefined ? "" : JSON.stringify(data);
+    private static buildKey(
+        method: string,
+        url: string,
+        data?: object | string,
+        authKey?: string
+    ): string {
+        const body =
+            data === undefined
+                ? "none"
+                : `sha256:${createHash("sha256").update(stableStringify(data)).digest("hex").slice(0, 16)}`;
         return `${method}:${url}:${body}:${authKey ?? "none"}`;
     }
 
@@ -113,7 +178,7 @@ export class ResponseCache {
      * responses never cross bearer-token identities.
      * @returns A deep clone of the cached response body, or `undefined`.
      */
-    get<T>(method: string, url: string, data?: object, authKey?: string): T | undefined {
+    get<T>(method: string, url: string, data?: object | string, authKey?: string): T | undefined {
         const key = ResponseCache.buildKey(method, url, data, authKey);
         const entry = this.entries.get(key);
         if (entry === undefined) {
@@ -123,13 +188,17 @@ export class ResponseCache {
             this.entries.delete(key);
             return undefined;
         }
-        entry.lastUsed = ++this.lruCounter;
+        // Refresh recency: delete + re-insert moves the entry to the end.
+        this.entries.delete(key);
+        this.entries.set(key, entry);
         return structuredClone(entry.data) as T;
     }
 
     /**
      * Stores a response in the cache, evicting the LRU entry when the cap is
      * reached. Only `GET` responses are cached; other methods are no-ops.
+     * The value is deep-copied on write; the cache never aliases the
+     * caller's object.
      *
      * @param method - The HTTP method.
      * @param url - The request URL.
@@ -141,19 +210,37 @@ export class ResponseCache {
     set<T>(
         method: string,
         url: string,
-        data: object | undefined,
+        data: object | string | undefined,
         authKey: string | undefined,
         response: T
     ): void {
         if (method !== "GET") return;
         const key = ResponseCache.buildKey(method, url, data, authKey);
-        if (this.entries.size >= this.maxEntries && !this.entries.has(key)) {
+        let snapshot: T;
+        try {
+            // Write-side defensive copy: the cache never shares a reference
+            // with the caller, so mutating the object handed to (or returned
+            // by) sendRequest cannot poison later hits. Cloned before any
+            // mutation of `this.entries` so an uncloneable payload leaves
+            // the cache untouched instead of dropping the existing entry
+            // or evicting an unrelated one.
+            snapshot = structuredClone(response);
+        } catch {
+            // Uncloneable payload (functions, DOM nodes): skip caching
+            // rather than fail a request that already succeeded, and never
+            // fall back to storing the live reference.
+            return;
+        }
+        if (this.entries.has(key)) {
+            // Refresh recency for an existing key instead of relying on
+            // `Map.set` keeping its original position.
+            this.entries.delete(key);
+        } else if (this.entries.size >= this.maxEntries) {
             this.evictLru();
         }
         this.entries.set(key, {
-            data: response,
+            data: snapshot,
             expiresAt: Date.now() + this.ttlMs,
-            lastUsed: ++this.lruCounter,
         });
     }
 
@@ -172,7 +259,7 @@ export class ResponseCache {
      * @returns `true` when an entry was removed, `false` when it was absent
      *          or the method is not cached.
      */
-    delete(method: string, url: string, data?: object, authKey?: string): boolean {
+    delete(method: string, url: string, data?: object | string, authKey?: string): boolean {
         if (method !== "GET") return false;
         const key = ResponseCache.buildKey(method, url, data, authKey);
         return this.entries.delete(key);
@@ -182,14 +269,9 @@ export class ResponseCache {
      * Evicts the least-recently-used entry.
      */
     private evictLru(): void {
-        let oldestKey: string | undefined;
-        let oldestStamp = Infinity;
-        for (const [key, entry] of this.entries) {
-            if (entry.lastUsed < oldestStamp) {
-                oldestStamp = entry.lastUsed;
-                oldestKey = key;
-            }
-        }
+        // Map preserves insertion order; the first key is the least
+        // recently used after the delete+re-insert refreshes in get/set.
+        const oldestKey = this.entries.keys().next().value;
         if (oldestKey !== undefined) {
             this.entries.delete(oldestKey);
         }
