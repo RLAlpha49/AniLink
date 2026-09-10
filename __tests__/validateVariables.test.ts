@@ -286,4 +286,132 @@ describe("validateVariables", () => {
             ).not.toThrow();
         });
     });
+
+    test("redacts values whose key looks like credential material", () => {
+        let caught: unknown;
+        try {
+            validateVariables({ clientSecret: "hunter2-value" }, { clientSecret: "number" });
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError.details[0]).toContain("[REDACTED]");
+        expect(validationError.details[0]).not.toContain("hunter2-value");
+    });
+
+    test("redacts allowlist array items whose path looks like credential material", () => {
+        let caught: unknown;
+        try {
+            validateVariables(
+                { apiTokens: ["token-a", "wrong"] },
+                { apiTokens: ["token-a", "token-b"] }
+            );
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError.details[0]).toContain("[REDACTED]");
+        expect(validationError.details[0]).not.toContain("wrong");
+        // The offending index is still reported.
+        expect(validationError.details[0]).toContain("apiTokens[1]");
+    });
+
+    test("redacts nested credential-shaped keys when the parent path is not sensitive", () => {
+        let caught: unknown;
+        try {
+            validateVariables({ settings: { apiToken: "hunter2-value" } }, { settings: "number" });
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError.details[0]).toContain("[REDACTED]");
+        expect(validationError.details[0]).not.toContain("hunter2-value");
+    });
+
+    test("redacts credential-shaped keys inside array elements under a non-sensitive path", () => {
+        let caught: unknown;
+        try {
+            validateVariables({ pages: [{ apiKey: "key-value" }] }, { pages: "number" });
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError.details[0]).toContain("[REDACTED]");
+        expect(validationError.details[0]).not.toContain("key-value");
+    });
+
+    test("redacts credential-shaped keys on class instances under a non-sensitive path", () => {
+        // A class instance is not a plain object, but JSON.stringify still
+        // renders its own enumerable properties — the credential must be
+        // redacted through that path too.
+        class Settings {
+            apiKey = "instance-secret-value";
+            name = "x";
+        }
+        let caught: unknown;
+        try {
+            validateVariables({ settings: new Settings() }, { settings: "number" });
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError.details[0]).toContain("[REDACTED]");
+        expect(validationError.details[0]).not.toContain("instance-secret-value");
+    });
+
+    test("redacts credential-shaped keys on class instances inside arrays", () => {
+        class Item {
+            clientSecret = "array-instance-secret";
+        }
+        let caught: unknown;
+        try {
+            validateVariables({ items: [new Item()] }, { items: "number" });
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError.details[0]).toContain("[REDACTED]");
+        expect(validationError.details[0]).not.toContain("array-instance-secret");
+    });
+
+    test("redacts values under session, passphrase, and otp keys", () => {
+        const cases: [string, unknown][] = [
+            ["sessionId", "session-secret-value"],
+            ["passphrase", "passphrase-secret-value"],
+            ["otpCode", "otp-secret-value"],
+        ];
+        for (const [key, value] of cases) {
+            let caught: unknown;
+            try {
+                validateVariables({ [key]: value }, { [key]: "number" });
+            } catch (error) {
+                caught = error;
+            }
+
+            const validationError = caught as AniLinkValidationError;
+            expect(validationError.details[0]).toContain("[REDACTED]");
+            expect(validationError.details[0]).not.toContain(String(value));
+        }
+    });
+
+    test("does not redact real AniList variable names that merely contain pattern fragments", () => {
+        // `pinned` (ToggleActivityPin) and `private` (SaveMediaListEntry) are
+        // real AniList variables; the redaction pattern must not swallow
+        // their values in validation errors.
+        let caught: unknown;
+        try {
+            validateVariables({ pinned: true, private: true }, { pinned: "number" });
+        } catch (error) {
+            caught = error;
+        }
+
+        const validationError = caught as AniLinkValidationError;
+        expect(validationError.details[0]).toContain("true");
+    });
 });

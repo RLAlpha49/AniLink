@@ -187,10 +187,14 @@ test("does not expose the raw Axios error by default", async () => {
 });
 
 test("exposes the original Axios error when explicitly enabled", async () => {
+    // No `request` object: nothing sensitive to scrub, so the raw error
+    // keeps its identity. (An error carrying a `request` object always has
+    // it replaced with a marker — see the redaction tests below — because
+    // a real Node ClientRequest embeds the sent header string, including
+    // `Authorization`, in `_header`.)
     const axiosError = {
         isAxiosError: true,
         response: { status: 500, data: { message: "server error" } },
-        request: { headers: { Authorization: "Bearer secret-token" } },
     };
     mocks.request.mockRejectedValueOnce(axiosError);
 
@@ -974,4 +978,139 @@ describe("raw error redaction", () => {
         expect(JSON.stringify(raw)).not.toContain("super-secret-token-value");
         expect(JSON.stringify(raw)).not.toContain("private-session-id");
     });
+
+    test("redacts sensitive headers reachable through response.config", async () => {
+        const secret = "Bearer response-config-secret";
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: {
+                status: 502,
+                data: { message: "bad gateway" },
+                headers: { "content-type": "application/json" },
+                config: { headers: { Authorization: secret, "X-API-Key": "api-key-value" } },
+            },
+            config: { headers: { Authorization: "Bearer top-level-secret" } },
+        });
+
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: false,
+            options: { exposeRawAxiosError: true, retry: false },
+        }).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        const raw = (error as AniLinkApiError).rawAxiosError as {
+            response?: { config?: { headers?: Record<string, string> } };
+        };
+        expect(raw.response?.config?.headers?.Authorization).toBe("[REDACTED]");
+        expect(raw.response?.config?.headers?.["X-API-Key"]).toBe("[REDACTED]");
+        expect(JSON.stringify(raw)).not.toContain("response-config-secret");
+        expect(JSON.stringify(raw)).not.toContain("api-key-value");
+        expect(JSON.stringify(raw)).not.toContain("top-level-secret");
+    });
+
+    test("redacts set-cookie in the upstream response headers", async () => {
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: {
+                status: 500,
+                data: { message: "server error" },
+                headers: {
+                    "set-cookie": "session=private-session-cookie",
+                    "content-type": "application/json",
+                },
+            },
+            config: {},
+        });
+
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: false,
+            options: { exposeRawAxiosError: true, retry: false },
+        }).catch((requestError: unknown) => requestError);
+
+        const raw = (error as AniLinkApiError).rawAxiosError as {
+            response?: { headers?: Record<string, string> };
+        };
+        expect(raw.response?.headers?.["set-cookie"]).toBe("[REDACTED]");
+        expect(raw.response?.headers?.["content-type"]).toBe("application/json");
+        expect(JSON.stringify(raw)).not.toContain("private-session-cookie");
+    });
+
+    test("redacts the raw ClientRequest reachable through error.request", async () => {
+        // Node's ClientRequest carries `_header`: the raw request header
+        // string including `Authorization: Bearer …`. A consumer logging the
+        // raw error would surface it, so the clone must not share the live
+        // request object.
+        const fakeClientRequest = {
+            _header: "POST / HTTP/1.1\r\nAuthorization: Bearer request-object-secret\r\n\r\n",
+            method: "POST",
+        };
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 500, data: { message: "server error" } },
+            config: { headers: { Authorization: "Bearer config-secret" } },
+            request: fakeClientRequest,
+        });
+
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: false,
+            options: { exposeRawAxiosError: true, retry: false },
+        }).catch((requestError: unknown) => requestError);
+
+        const raw = (error as AniLinkApiError).rawAxiosError as { request?: unknown };
+        expect(raw.request).not.toBe(fakeClientRequest);
+        expect(JSON.stringify(raw)).not.toContain("request-object-secret");
+    });
+
+    test("redacts the request body and basic-auth material on the cloned config", async () => {
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 500, data: { message: "server error" } },
+            config: {
+                headers: {},
+                data: { password: "body-password-value", grant_type: "password" },
+                auth: { username: "user", password: "basic-auth-secret" },
+            },
+        });
+
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: false,
+            options: { exposeRawAxiosError: true, retry: false },
+        }).catch((requestError: unknown) => requestError);
+
+        const raw = (error as AniLinkApiError).rawAxiosError as {
+            config?: { data?: unknown; auth?: unknown };
+        };
+        expect(JSON.stringify(raw)).not.toContain("body-password-value");
+        expect(JSON.stringify(raw)).not.toContain("basic-auth-secret");
+    });
+
+    test("redacts additional credential header shapes (x-auth-token, session, proxy-auth)", async () => {
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 500, data: { message: "server error" } },
+            config: {
+                headers: {
+                    "X-Auth-Token": "auth-token-value",
+                    "X-Session-Id": "session-id-value",
+                    "Proxy-Auth": "proxy-auth-value",
+                    Accept: "application/json",
+                },
+            },
+        });
+
+        const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
+            requiresAuth: false,
+            options: { exposeRawAxiosError: true, retry: false },
+        }).catch((requestError: unknown) => requestError);
+
+        const raw = (error as AniLinkApiError).rawAxiosError as {
+            config: { headers: Record<string, string> };
+        };
+        expect(raw.config.headers["X-Auth-Token"]).toBe("[REDACTED]");
+        expect(raw.config.headers["X-Session-Id"]).toBe("[REDACTED]");
+        expect(raw.config.headers["Proxy-Auth"]).toBe("[REDACTED]");
+        // Non-credential headers stay intact.
+        expect(raw.config.headers["Accept"]).toBe("application/json");
+    });
+
 });

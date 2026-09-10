@@ -19,19 +19,37 @@ import {
 } from "./AniLinkError";
 import type { ResolvedRequestOptions } from "./requestOptions";
 
-const SENSITIVE_HEADER_KEYS = /^(authorization|cookie|set-cookie|proxy-authorization)$/i;
+const SENSITIVE_HEADER_KEYS =
+    /^(authorization|cookie|set-cookie|proxy-authorization|proxy-auth|authentication|(x-)?api[-_]?key|(x-)?auth[-_]?token|(x-)?session(-id)?|session)$/i;
 
 /**
  * Returns a shallow-cloned copy of an Axios error with sensitive request
  * headers redacted, so opting into {@link RequestOptions.exposeRawAxiosError}
  * for diagnostics cannot leak the bearer token or cookies the request was
- * sent with. Only the `config.headers` (and nested `common`/per-method) maps
- * are scrubbed; the rest of the error is preserved verbatim so the diagnostic
- * value callers opted in for stays intact.
+ * sent with. The `config.headers` (and nested `common`/per-method) maps, the
+ * response's back-reference to the request config (`response.config`), the
+ * upstream response headers, the request body (`config.data`), basic-auth
+ * material (`config.auth`), and the raw `ClientRequest` (`error.request`)
+ * are all scrubbed; the rest of the error is preserved verbatim so the
+ * diagnostic value callers opted in for stays intact.
  */
 const redactAxiosError = (error: AxiosError): AxiosError => {
     const config = error.config as Record<string, unknown> | undefined;
-    if (config === undefined || config.headers === undefined) {
+    const response = error.response as Record<string, unknown> | undefined;
+    const isHeaderMap = (value: unknown): value is Record<string, unknown> =>
+        value !== null && typeof value === "object" && !Array.isArray(value);
+    // Clone only when something actually needs redacting, so errors with
+    // no sensitive material keep their original identity.
+    const configNeedsRedaction =
+        config !== undefined &&
+        (isHeaderMap(config.headers) || config.data !== undefined || config.auth !== undefined);
+    const responseNeedsRedaction =
+        response !== undefined &&
+        (response.config !== undefined ||
+            isHeaderMap(response.headers) ||
+            response.request !== undefined);
+    const requestNeedsRedaction = error.request !== undefined;
+    if (!configNeedsRedaction && !responseNeedsRedaction && !requestNeedsRedaction) {
         return error;
     }
     const redactHeaders = (headers: Record<string, unknown>): Record<string, unknown> => {
@@ -48,13 +66,61 @@ const redactAxiosError = (error: AxiosError): AxiosError => {
         }
         return scrubbed;
     };
-    const cloned = { ...error, config: { ...config } } as unknown as AxiosError;
-    const clonedConfig = cloned.config as unknown as Record<string, unknown>;
-    const headers = config.headers as Record<string, unknown>;
-    if (headers !== null && typeof headers === "object" && !Array.isArray(headers)) {
-        // Axios stores headers either as a flat map or as a per-method map
-        // (`{ common, get, post, … }`). Redact both shapes.
-        clonedConfig.headers = redactHeaders(headers);
+    const redactConfig = (source: Record<string, unknown>): Record<string, unknown> => {
+        const cloned = { ...source };
+        const headers = source.headers;
+        if (isHeaderMap(headers)) {
+            // Axios stores headers either as a flat map or as a per-method map
+            // (`{ common, get, post, … }`). Redact both shapes.
+            cloned.headers = redactHeaders(headers);
+        }
+        if (source.data !== undefined) {
+            // The request body can carry credentials (an OAuth
+            // `client_secret`, a `password` variable in a custom mutation);
+            // it is replaced wholesale rather than partially redacted,
+            // because a partially-redacted body has no diagnostic value.
+            cloned.data = "[REDACTED]";
+        }
+        if (source.auth !== undefined) {
+            // Axios basic-auth material: `{ username, password }`.
+            cloned.auth = "[REDACTED]";
+        }
+        return cloned;
+    };
+    const cloned = { ...error } as unknown as AxiosError;
+    const clonedRecord = cloned as unknown as Record<string, unknown>;
+    if (requestNeedsRedaction) {
+        // The raw Node `ClientRequest` carries `_header`: the verbatim
+        // request header string including `Authorization: Bearer …`. It is
+        // replaced with a marker instead of cloned — the live object must
+        // never be shared with the consumer's diagnostics.
+        clonedRecord.request = "[REDACTED]";
+    }
+    if (config !== undefined) {
+        clonedRecord.config = redactConfig(config);
+    }
+    if (response !== undefined) {
+        // The response object carries a back-reference to the original
+        // request config (`response.config`); redact it too or the bearer
+        // token survives through this second path. The response is cloned
+        // because `{ ...error }` shares it with the original error.
+        const clonedResponse: Record<string, unknown> = { ...response };
+        const responseConfig = response.config as Record<string, unknown> | undefined;
+        if (responseConfig !== undefined) {
+            clonedResponse.config = redactConfig(responseConfig);
+        }
+        const responseHeaders = response.headers;
+        if (isHeaderMap(responseHeaders)) {
+            // Upstream response headers can carry `set-cookie`; the same
+            // sensitive-key list applies.
+            clonedResponse.headers = redactHeaders(responseHeaders);
+        }
+        if (response.request !== undefined) {
+            // The response's back-reference to the raw `ClientRequest` is
+            // scrubbed for the same reason as `error.request`.
+            clonedResponse.request = "[REDACTED]";
+        }
+        clonedRecord.response = clonedResponse;
     }
     return cloned;
 };

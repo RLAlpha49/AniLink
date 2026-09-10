@@ -42,12 +42,88 @@ const isAllowlist = (mapping: unknown): mapping is readonly string[] => Array.is
 const isObjectMapping = (mapping: unknown): mapping is { readonly [key: string]: unknown } =>
     typeof mapping === "object" && mapping !== null && !Array.isArray(mapping);
 
-const describeValue = (value: unknown): string => {
+/**
+ * Key pattern whose values must never be echoed into error details. The
+ * `pass`, `session`, `otp`, and `bearer` alternatives match as fragments so
+ * prefixed shapes like `sessionId` or `passphrase` are covered; none of
+ * them collide with real AniList variable names (verified against the
+ * full shipped variable set — `pinned` and `private` are the near-misses
+ * this pattern deliberately leaves alone).
+ */
+const SENSITIVE_KEY_PATTERN =
+    /token|secret|password|authorization|cookie|credential|api[-_]?key|pass|session|otp|bearer/i;
+
+/**
+ * Whether `value` is a plain object literal (or `Object.create(null)`), as
+ * opposed to a built-in like `Date`/`Map` or a class instance. Only plain
+ * objects and arrays are rebuilt during redaction so exotic objects keep
+ * their native `JSON.stringify` rendering (a `Date` stays an ISO string, not
+ * `{}`).
+ */
+const isPlainObject = (value: object): boolean => {
+    const proto = Object.getPrototypeOf(value);
+    return proto === Object.prototype || proto === null;
+};
+
+/**
+ * Recursively redacts values under sensitive keys before serialization so a
+ * credential nested inside a non-sensitive value (for example
+ * `settings.apiToken`) never reaches error details. The last path segment
+ * decides: a sensitive key redacts its whole subtree, while a non-sensitive
+ * key recurses into its object/array children.
+ *
+ * Class instances are rebuilt too: `JSON.stringify` renders their own
+ * enumerable properties, so a credential on an instance under a
+ * non-sensitive path would otherwise survive redaction. Built-ins whose
+ * string form carries no nested keys (`Date`, `Map`, `RegExp`, …) pass
+ * through unchanged and keep their native rendering.
+ *
+ * @param key - The property name (or bracketed index) the value sits under.
+ * @param value - The value to redact before serialization.
+ * @returns The redacted value, or the input when nothing needs redacting.
+ */
+const redactValue = (key: string, value: unknown): unknown => {
+    if (SENSITIVE_KEY_PATTERN.test(key)) {
+        return "[REDACTED]";
+    }
+    if (Array.isArray(value)) {
+        return value.map((item) => redactValue(key, item));
+    }
+    if (value !== null && typeof value === "object" && !isPlainObject(value)) {
+        // Non-plain object: a class instance is rebuilt (its own enumerable
+        // properties are serialized by JSON.stringify), while a built-in
+        // like Date/Map has no own enumerable credential keys and passes
+        // through unchanged.
+        const entries = Object.entries(value);
+        if (entries.length === 0) {
+            return value;
+        }
+        return Object.assign(
+            Object.create(Object.getPrototypeOf(value)),
+            Object.fromEntries(entries.map(([k, v]) => [k, redactValue(k, v)]))
+        );
+    }
+    if (value !== null && typeof value === "object") {
+        return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, redactValue(k, v)]));
+    }
+    return value;
+};
+
+const describeValue = (path: string, value: unknown): string => {
+    // Validation errors land in application logs; a value stored under a
+    // credential-shaped key is never echoed, even when it fails validation
+    // for an unrelated reason (wrong type).
+    if (SENSITIVE_KEY_PATTERN.test(path)) {
+        return "[REDACTED]";
+    }
     if (value === null || (typeof value !== "object" && typeof value !== "function")) {
         return String(value);
     }
     try {
-        return JSON.stringify(value) ?? String(value);
+        // Nested credential-shaped keys are redacted before serialization
+        // even when the parent path is not sensitive, so a value like
+        // `{ apiToken: "..." }` never leaks through the JSON rendering.
+        return JSON.stringify(redactValue(path, value)) ?? String(value);
     } catch {
         return `[${typeof value}]`;
     }
@@ -62,7 +138,9 @@ const validateValue = (
 ): void => {
     if (isPrimitive(mapping)) {
         if (typeof value !== mapping) {
-            errors.push(`Invalid ${path}: ${describeValue(value)}. Expected type: ${mapping}`);
+            errors.push(
+                `Invalid ${path}: ${describeValue(path, value)}. Expected type: ${mapping}`
+            );
         }
         return;
     }
@@ -70,7 +148,9 @@ const validateValue = (
     if (isArrayType(mapping)) {
         const elementType = mapping.slice(0, -2);
         if (!Array.isArray(value) || !value.every((element) => typeof element === elementType)) {
-            errors.push(`Invalid ${path}: ${describeValue(value)}. Expected type: ${mapping}`);
+            errors.push(
+                `Invalid ${path}: ${describeValue(path, value)}. Expected type: ${mapping}`
+            );
         }
         return;
     }
@@ -80,13 +160,13 @@ const validateValue = (
             value.forEach((item, index) => {
                 if (!mapping.includes(item as string)) {
                     errors.push(
-                        `Invalid ${path}[${index}]: ${describeValue(item)}. Expected one of: ${mapping.join(", ")}`
+                        `Invalid ${path}[${index}]: ${describeValue(`${path}[${index}]`, item)}. Expected one of: ${mapping.join(", ")}`
                     );
                 }
             });
         } else if (!mapping.includes(value as string)) {
             errors.push(
-                `Invalid ${path}: ${describeValue(value)}. Expected one of: ${mapping.join(", ")}`
+                `Invalid ${path}: ${describeValue(path, value)}. Expected one of: ${mapping.join(", ")}`
             );
         }
         return;
@@ -111,7 +191,7 @@ const validateObject = (
     rejectUnknownKeys: boolean
 ): void => {
     if (value === null || typeof value !== "object") {
-        errors.push(`Invalid ${path}: ${describeValue(value)}. Expected an object.`);
+        errors.push(`Invalid ${path}: ${describeValue(path, value)}. Expected an object.`);
         return;
     }
 
