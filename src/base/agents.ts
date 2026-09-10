@@ -38,54 +38,63 @@ const axiosClient = axios.create({
  * cache. Each entry holds two keep-alive agents (http + https) plus their
  * idle sockets, so the cache is bounded to stop unbounded socket/handle growth
  * when callers pass many distinct `maxSockets`/`maxFreeSockets` combinations
- * through one long-lived process. Least-recently-used entries are evicted and
- * their agents `.destroy()`-ed when the cap is reached.
+ * through one long-lived process. Least-recently-used entries are evicted
+ * (dropped from the cache without destroying their agents, which may still
+ * carry in-flight requests) when the cap is reached.
  */
 const MAX_CACHED_AGENT_PAIRS = 8;
 
 interface CachedAgentPair {
     httpAgent: http.Agent;
     httpsAgent: https.Agent;
-    /** LRU recency stamp; the entry with the smallest value is evicted. */
-    lastUsed: number;
 }
 
 const cachedAgentPairs = new Map<string, CachedAgentPair>();
+
+/**
+ * Agent pairs evicted from the cache but not yet destroyed. Eviction must
+ * not `.destroy()` an agent that may still carry in-flight requests, so the
+ * pair is parked here instead; {@link destroyCachedAgents} drains the list
+ * so an evicted pair's idle sockets can still be released on demand. The
+ * list is bounded by the cache cap (each eviction parks at most one pair,
+ * and a re-requested configuration reuses or rebuilds rather than
+ * duplicating), so it cannot grow without bound.
+ */
+const parkedEvictedPairs: CachedAgentPair[] = [];
 
 const buildAgentCacheKey = (maxSockets: number, maxFreeSockets: number): string =>
     `${maxSockets}:${maxFreeSockets}`;
 
 /**
- * Evicts the least-recently-used cached agent pair when the cache is full,
- * calling `.destroy()` on both agents so their idle sockets and pending
- * timers release immediately instead of waiting for GC finalizers.
+ * Evicts the least-recently-used cached agent pair when the cache is full.
+ * The map entry is dropped WITHOUT calling `.destroy()`: the evicted agents
+ * may still carry in-flight requests, and destroying them would close live
+ * sockets. The pair is parked in {@link parkedEvictedPairs} so explicit
+ * teardown through {@link destroyCachedAgents} can still reach it; until
+ * then its idle sockets linger until the server closes them (keep-alive
+ * timeout) or GC reclaims the now-unreachable agent. Map preserves insertion
+ * order, so the first key is the least recently used after the delete+re-insert
+ * refresh in {@link resolveAgents}.
  */
 const evictLruAgentPair = (): void => {
-    let oldestKey: string | undefined;
-    let oldestStamp = Infinity;
-    for (const [key, pair] of cachedAgentPairs) {
-        if (pair.lastUsed < oldestStamp) {
-            oldestStamp = pair.lastUsed;
-            oldestKey = key;
-        }
-    }
+    const oldestKey = cachedAgentPairs.keys().next().value;
     if (oldestKey !== undefined) {
         const evicted = cachedAgentPairs.get(oldestKey);
+        cachedAgentPairs.delete(oldestKey);
         if (evicted !== undefined) {
-            evicted.httpAgent.destroy();
-            evicted.httpsAgent.destroy();
-            cachedAgentPairs.delete(oldestKey);
+            parkedEvictedPairs.push(evicted);
         }
     }
 };
 
 /**
- * Destroys every cached custom agent pair and clears the cache. Intended for
- * tests and explicit teardown so long-lived processes can release the
+ * Destroys every cached custom agent pair — plus every pair evicted while
+ * requests may still have been in flight — and clears the cache. Intended
+ * for tests and explicit teardown so long-lived processes can release the
  * keep-alive sockets held by customized agents on demand.
  *
- * **Must not be called while requests using cached agents are in-flight.**
- * The cached agents are shared across every request with identical
+ * **Must not be called while requests using these agents are in-flight.**
+ * The agents are shared across every request with identical
  * `maxSockets`/`maxFreeSockets` bounds, so destroying them closes the
  * underlying sockets and can fail concurrent requests that are still
  * draining over those sockets. Call this only after all in-flight requests
@@ -99,6 +108,11 @@ export const destroyCachedAgents = (): void => {
         pair.httpsAgent.destroy();
     }
     cachedAgentPairs.clear();
+    for (const pair of parkedEvictedPairs) {
+        pair.httpAgent.destroy();
+        pair.httpsAgent.destroy();
+    }
+    parkedEvictedPairs.length = 0;
 };
 
 /**
@@ -110,8 +124,9 @@ export const destroyCachedAgents = (): void => {
  * bound constructs dedicated agents, but identical configurations now share
  * one cached agent pair (bounded by {@link MAX_CACHED_AGENT_PAIRS}) so
  * repeated requests with the same socket settings reuse warm sockets instead
- * of leaking a fresh agent pair per request. LRU entries are evicted and
- * `.destroy()`-ed when the cap is reached.
+ * of leaking a fresh agent pair per request. LRU entries are evicted
+ * (dropped from the cache without destroying their agents, which may still
+ * carry in-flight requests) when the cap is reached.
  *
  * @param maxSockets - Upper bound on concurrent sockets, when customized.
  * @param maxFreeSockets - Upper bound on retained idle sockets, when customized.
@@ -135,7 +150,9 @@ export const resolveAgents = (
     const key = buildAgentCacheKey(sockets, freeSockets);
     const cached = cachedAgentPairs.get(key);
     if (cached !== undefined) {
-        cached.lastUsed = Date.now();
+        // Refresh recency: delete + re-insert moves the pair to the end.
+        cachedAgentPairs.delete(key);
+        cachedAgentPairs.set(key, cached);
         return { httpAgent: cached.httpAgent, httpsAgent: cached.httpsAgent };
     }
     if (cachedAgentPairs.size >= MAX_CACHED_AGENT_PAIRS) {
@@ -150,7 +167,6 @@ export const resolveAgents = (
     const pair: CachedAgentPair = {
         httpAgent: new http.Agent(agentOptions),
         httpsAgent: new https.Agent(agentOptions),
-        lastUsed: Date.now(),
     };
     cachedAgentPairs.set(key, pair);
     return { httpAgent: pair.httpAgent, httpsAgent: pair.httpsAgent };

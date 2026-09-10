@@ -118,4 +118,102 @@ describe("agent cache", () => {
         const reissuedAgent = agentsFor(10).httpAgent;
         expect(reissuedAgent).not.toBe(evictedAgent);
     });
+
+    test("eviction does not destroy the evicted agent while it may be in use", async () => {
+        const { sendRequest } = await import("../src/base/RequestHandler");
+
+        // Fill the cache exactly to its cap (8) with distinct pairs.
+        for (let i = 1; i <= 8; i += 1) {
+            await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+                requiresAuth: false,
+                options: { retry: false, maxSockets: i, maxFreeSockets: 1 },
+            });
+        }
+
+        // The first pair (maxSockets 1) is the LRU entry; the 9th insert
+        // evicts it. `http.Agent` exposes no `destroyed` flag, so destruction
+        // is observed through spies on its `destroy` methods, installed
+        // BEFORE the eviction fires. The evicted agents may still carry
+        // in-flight requests, so eviction must not destroy them.
+        const evictedHttp = agentsFor(0).httpAgent as { destroy: () => void };
+        const evictedHttps = agentsFor(0).httpsAgent as { destroy: () => void };
+        const httpDestroy = vi.spyOn(evictedHttp, "destroy");
+        const httpsDestroy = vi.spyOn(evictedHttps, "destroy");
+
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            requiresAuth: false,
+            options: { retry: false, maxSockets: 9, maxFreeSockets: 1 },
+        });
+
+        expect(httpDestroy).not.toHaveBeenCalled();
+        expect(httpsDestroy).not.toHaveBeenCalled();
+        httpDestroy.mockRestore();
+        httpsDestroy.mockRestore();
+    });
+
+    test("refreshes recency on reuse so a touched pair survives the next eviction", async () => {
+        const { sendRequest } = await import("../src/base/RequestHandler");
+
+        // Fill the cache to its cap (8) with distinct pairs.
+        for (let i = 1; i <= 8; i += 1) {
+            await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+                requiresAuth: false,
+                options: { retry: false, maxSockets: i, maxFreeSockets: 1 },
+            });
+        }
+
+        // Touch the oldest pair (maxSockets 1) so it becomes the most
+        // recently used; the untouched maxSockets 2 pair is now the LRU.
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            requiresAuth: false,
+            options: { retry: false, maxSockets: 1, maxFreeSockets: 1 },
+        });
+        const touchedAgent = agentsFor(8).httpAgent;
+
+        // The 9th distinct pair evicts maxSockets 2 (the new LRU), not the
+        // touched maxSockets 1 pair.
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            requiresAuth: false,
+            options: { retry: false, maxSockets: 9, maxFreeSockets: 1 },
+        });
+
+        // Re-requesting maxSockets 1 must return the touched (surviving)
+        // agent, not a fresh one.
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            requiresAuth: false,
+            options: { retry: false, maxSockets: 1, maxFreeSockets: 1 },
+        });
+        expect(agentsFor(10).httpAgent).toBe(touchedAgent);
+    });
+
+    test("destroyCachedAgents tears down pairs evicted while requests may still be in flight", async () => {
+        const { sendRequest } = await import("../src/base/RequestHandler");
+
+        // Fill the cache to its cap (8) with distinct pairs.
+        for (let i = 1; i <= 8; i += 1) {
+            await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+                requiresAuth: false,
+                options: { retry: false, maxSockets: i, maxFreeSockets: 1 },
+            });
+        }
+
+        // Evict the first pair with a 9th distinct configuration.
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            requiresAuth: false,
+            options: { retry: false, maxSockets: 9, maxFreeSockets: 1 },
+        });
+        const evictedHttp = agentsFor(0).httpAgent as { destroy: () => void };
+        const evictedHttps = agentsFor(0).httpsAgent as { destroy: () => void };
+        const httpDestroy = vi.spyOn(evictedHttp, "destroy");
+        const httpsDestroy = vi.spyOn(evictedHttps, "destroy");
+
+        // Explicit teardown must reach the evicted pair too: without it, an
+        // evicted pair's idle sockets could never be released on demand.
+        destroyCachedAgents();
+
+        expect(httpDestroy).toHaveBeenCalledTimes(1);
+        expect(httpsDestroy).toHaveBeenCalledTimes(1);
+        httpDestroy.mockRestore();
+        httpsDestroy.mockRestore();
+    });
 });
