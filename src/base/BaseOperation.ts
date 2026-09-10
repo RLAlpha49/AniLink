@@ -143,7 +143,7 @@ export abstract class BaseOperation {
      * @typeParam T - The parsed response type returned verbatim by the pipeline.
      * @param url - The absolute endpoint URL to call.
      * @param method - The HTTP method for the call.
-     * @param data - The request body payload, when the call carries one.
+     * @param data - The request body payload, when the call carries one: a JSON-serializable object, or a pre-encoded string body (for example form-urlencoded OAuth grants).
      * @param options - Named trailing options; see {@link DispatchOptions}.
      * @returns Whatever the shared pipeline resolves for the call.
      * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, or a normalized {@link AniLinkError} when the request fails.
@@ -151,7 +151,7 @@ export abstract class BaseOperation {
     protected async dispatch<T = unknown>(
         url: string,
         method: HttpMethod,
-        data?: object,
+        data?: object | string,
         options: DispatchOptions = {}
     ): Promise<T> {
         const { requiresAuth, operation, transportOptions, contentType, protocol } = options;

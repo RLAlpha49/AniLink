@@ -129,7 +129,7 @@ const requestMalToken = async (
     options?: RequestOptions
 ): Promise<MalTokenResponse> => {
     try {
-        const body = new URLSearchParams(params).toString() as unknown as object;
+        const body = new URLSearchParams(params).toString();
         return await sendRequest<MalTokenResponse>(MAL_TOKEN_URL, "POST", body, undefined, {
             requiresAuth: false,
             options: {

@@ -34,9 +34,11 @@ export interface RestExecuteOptions {
     readonly query?: Record<string, unknown>;
 
     /**
-     * The JSON request body (POST/PUT/PATCH), when provided.
+     * The request body (POST/PUT/PATCH): a JSON object, or a pre-encoded
+     * string body (for example a form-urlencoded list-status payload), when
+     * provided.
      */
-    readonly body?: object;
+    readonly body?: object | string;
 
     /**
      * Values substituted into `{placeholder}` segments of `path`. Defaults to

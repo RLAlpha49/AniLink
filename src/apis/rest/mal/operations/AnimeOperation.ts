@@ -104,10 +104,7 @@ export class MalAnimeOperation extends RestOperation {
             requiresAuth: true,
             transportOptions,
             contentType: "application/x-www-form-urlencoded",
-            // `body` is typed `object` for the JSON default; the encoded form
-            // string follows the same cast precedent as the MAL OAuth calls
-            // in `auth.ts` (axios serializes strings verbatim).
-            body: this.encodeListStatusBody(payload) as unknown as object,
+            body: this.encodeListStatusBody(payload),
             query:
                 fields === undefined
                     ? undefined

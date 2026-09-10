@@ -66,7 +66,7 @@ export { parseRetryAfter, getBackoffDelay, applyJitter } from "./retry";
 interface ExecuteOptions {
     url: string;
     method: HttpMethod;
-    data?: object;
+    data?: object | string;
     headers: Record<string, string>;
 }
 
@@ -351,7 +351,7 @@ const warnOptionsKeyedState = (onHookError: OnHookErrorHandler | undefined): voi
  * @typeParam T - The expected response payload type.
  * @param url - The URL to send the request to.
  * @param method - The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE').
- * @param data - The data to send with the request.
+ * @param data - The data to send with the request: a JSON-serializable object, or a pre-encoded string body (for example form-urlencoded OAuth grants).
  * @param auth - The authentication material to include in the request headers. A string is treated as a bearer token for backwards compatibility.
  * @param sendOptions - Named trailing options; see {@link SendRequestOptions}.
  * @returns The unwrapped response data. For documents with a single root
@@ -371,7 +371,7 @@ const warnOptionsKeyedState = (onHookError: OnHookErrorHandler | undefined): voi
 export const sendRequest = async <T = unknown>(
     url: string,
     method: HttpMethod,
-    data?: object,
+    data?: object | string,
     auth?: RequestAuthInput,
     sendOptions?: SendRequestOptions
 ): Promise<T> => {

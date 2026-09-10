@@ -101,7 +101,7 @@ const requestToken = async (
         exposeRawAxiosError: false,
     };
     try {
-        const body = new URLSearchParams(params).toString() as unknown as object;
+        const body = new URLSearchParams(params).toString();
         return await sendRequest<AniListTokenResponse>(ANILIST_TOKEN_URL, "POST", body, undefined, {
             requiresAuth: false,
             options,

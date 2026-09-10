@@ -1142,4 +1142,27 @@ describe("raw error redaction", () => {
         expect(raw.config.headers["Accept"]).toBe("application/json");
     });
 
+    test("accepts a string body and forwards it verbatim", async () => {
+        await sendRequest(
+            "https://example.test/token",
+            "POST",
+            "grant_type=refresh_token",
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false },
+                contentType: "application/x-www-form-urlencoded",
+                protocol: "rest",
+            }
+        );
+
+        expect(mocks.request).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: "grant_type=refresh_token",
+                headers: expect.objectContaining({
+                    "Content-Type": "application/x-www-form-urlencoded",
+                }),
+            })
+        );
+    });
 });
