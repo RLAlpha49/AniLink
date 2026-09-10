@@ -25,7 +25,7 @@ import { resolveRequestOptions, type ResolvedRequestOptions } from "./requestOpt
 import { axiosClient } from "./agents";
 import { unwrapGraphQLResponse } from "./envelope";
 import { getRateLimitInfo, normalizeRequestError, stampRequestId } from "./errors";
-import { getRetryBudgetState, getRetryDelay } from "./retry";
+import { computeNextRetryDelay, getRetryBudgetState } from "./retry";
 import {
     checkCircuitOpen,
     circuitScopeOf,
@@ -114,9 +114,15 @@ const executeWithRetry = async <T>(
         try {
             await awaitPaceDeadline(stateOwner, host, resolved, hookContext);
         } catch (paceError) {
+            // A caller abort during the pre-dispatch pacing wait carries no
+            // upstream-health signal. When the reserved half-open probe is
+            // aborted here, the breaker closes — matching the axios-cancel
+            // path, where the same abort also closes it — instead of
+            // re-opening with a fresh cooldown that punishes the caller with
+            // a fast-fail window for an abort that says nothing about the
+            // upstream.
             if (circuit !== undefined && circuit.probeInFlight) {
-                circuit.probeInFlight = false;
-                circuit.openedAt = Date.now();
+                recordCircuitSuccess(circuit, resolved, hookContext, host);
             }
             throw paceError;
         }
@@ -159,15 +165,23 @@ const executeWithRetry = async <T>(
             }
             const normalized = normalizeRequestError(resolved, error, rawPassthrough, requestId);
             const wasProbe = circuit?.probeInFlight === true;
-            recordCircuitFailure(circuit, resolved.circuitBreaker, resolved, hookContext, host);
-            const delay =
-                wasProbe || policy === null || budgetState === undefined
-                    ? wasProbe || policy === null
-                        ? null
-                        : getRetryDelay(normalized, error, attempt, policy)
-                    : budgetState.retriesUsed >= resolved.retryBudget!.maxRetriesPerWindow
-                      ? null // budget exhausted: surface the failure without retrying
-                      : getRetryDelay(normalized, error, attempt, policy);
+            recordCircuitFailure(
+                circuit,
+                resolved.circuitBreaker,
+                normalized,
+                resolved,
+                hookContext,
+                host
+            );
+            const delay = computeNextRetryDelay({
+                normalized,
+                rawError: error,
+                attempt,
+                policy,
+                budgetState,
+                budget: resolved.retryBudget,
+                wasProbe,
+            });
             if (delay !== null && budgetState !== undefined) {
                 budgetState.retriesUsed += 1;
             }

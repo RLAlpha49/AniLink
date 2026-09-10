@@ -69,7 +69,9 @@ const unpaced = new AniLink("token", { paceWithRateLimit: false });
 
 ## Circuit breaker
 
-Off by default, to keep the zero-accounting fast path free of cross-request state. With `circuitBreaker: { threshold, cooldownMs }`, after `threshold` consecutive failed attempts further requests fail fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has passed since the last failure. Then the next request is let through as a probe.
+Off by default, to keep the zero-accounting fast path free of cross-request state. With `circuitBreaker: { threshold, cooldownMs }`, after `threshold` consecutive **availability failures** further requests fail fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has passed since the last failure. Then the next request is let through as a probe.
+
+Only availability failures count toward the streak: network errors, timeouts, `429`s, and `5xx` responses. Caller-side errors (`4xx`, GraphQL validation failures) and caller-initiated aborts say nothing about upstream health, so they never trip the breaker — and because such a failure proves the upstream answered, it **resets** the streak, exactly as a success would. A consumer-side bug producing 404s between scattered 500s cannot fast-fail healthy traffic on a stale streak.
 
 <Callout kind="tip">
 
@@ -87,7 +89,11 @@ When unset, no failure accounting happens across requests.
 
 ### GraphQL envelope failures
 
-AniList has a habit of reporting failures as HTTP 200 with a GraphQL `errors` array rather than as an HTTP error status. The breaker counts these as failures: a sustained run of GraphQL-level 429 or 5xx envelopes trips it just like HTTP-level failures, so the common AniList overload signature is covered.
+AniList has a habit of reporting failures as HTTP 200 with a GraphQL `errors` array rather than as an HTTP error status. The breaker counts GraphQL-level 429 and 5xx envelopes as availability failures: a sustained run trips it just like HTTP-level failures, so the common AniList overload signature is covered. GraphQL validation errors (an envelope 200 with no upstream error status) are caller-side: they neither trip the breaker nor reset the streak.
+
+### Probe outcomes
+
+After the cooldown elapses, one request is let through as a probe. A successful probe closes the breaker. A probe that fails with an availability failure re-opens it for another cooldown. A probe that fails with a caller-side error (or is aborted by the caller) **closes** the breaker — the upstream answered, so it is reachable — instead of wedging the half-open state.
 
 ### Breaker lifecycle events
 

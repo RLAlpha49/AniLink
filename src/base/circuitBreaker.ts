@@ -9,7 +9,13 @@
  * `probeInFlight` flag reserves a single post-cooldown probe so concurrent
  * requests fast-fail until the probe settles.
  */
-import { AniLinkErrorCodes, AniLinkNetworkError, AniLinkValidationError } from "./AniLinkError";
+import {
+    AniLinkApiError,
+    AniLinkError,
+    AniLinkErrorCodes,
+    AniLinkNetworkError,
+    AniLinkValidationError,
+} from "./AniLinkError";
 import type { RequestContext } from "./transportTypes";
 import type { ResolvedRequestOptions } from "./requestOptions";
 import { safeInvoke } from "./hooks";
@@ -32,9 +38,34 @@ export interface CircuitState {
     consecutiveFailures: number;
     openedAt: number | null;
     probeInFlight: boolean;
-    /** LRU recency stamp for the per-owner scope eviction cap. */
-    lastUsed: number;
 }
+
+/**
+ * Classifies a normalized failure as an availability failure — the only
+ * class that may count toward the circuit breaker.
+ *
+ * Availability failures are transport-level conditions that indicate the
+ * upstream is unhealthy: network errors, timeouts, rate limiting (429), and
+ * server faults (5xx), including their GraphQL-envelope counterparts.
+ * Caller-side errors (4xx, GraphQL validation failures with no upstream
+ * status) and caller-initiated aborts say nothing about upstream health, so
+ * counting them would let a consumer-side bug fast-fail healthy traffic.
+ *
+ * @param error - The normalized failure from the request pipeline.
+ * @returns Whether the failure may count toward the breaker.
+ */
+export const isAvailabilityFailure = (error: AniLinkError): boolean => {
+    if (error instanceof AniLinkNetworkError) {
+        // Caller-initiated aborts are not upstream failures.
+        return error.code !== AniLinkErrorCodes.ABORTED;
+    }
+    if (error instanceof AniLinkApiError) {
+        // AniLinkGraphQLError subclasses carry the upstream status (or the
+        // envelope default 200), so GraphQL-level 429/5xx count here too.
+        return error.status === 429 || error.status >= 500;
+    }
+    return false;
+};
 
 /**
  * Upper bound on distinct host scopes tracked per owner. Public transport
@@ -74,20 +105,16 @@ export const getCircuitState = (owner: object, scope: string): CircuitState => {
     }
     let state = scopes.get(scope);
     if (state !== undefined) {
-        state.lastUsed = Date.now();
+        // Refresh recency: delete + re-insert moves the scope to the end.
+        scopes.delete(scope);
+        scopes.set(scope, state);
         return state;
     }
     // Cap the per-owner scope map so dynamic-URL callers cannot grow it
-    // without bound. Evict the least-recently-used scope entry.
+    // without bound. Map preserves insertion order, so the first key is the
+    // least recently used after the delete+re-insert refreshes above.
     if (scopes.size >= MAX_CIRCUIT_SCOPES_PER_OWNER) {
-        let oldestScope: string | undefined;
-        let oldestStamp = Infinity;
-        for (const [s, st] of scopes) {
-            if (st.lastUsed < oldestStamp) {
-                oldestStamp = st.lastUsed;
-                oldestScope = s;
-            }
-        }
+        const oldestScope = scopes.keys().next().value;
         if (oldestScope !== undefined) {
             scopes.delete(oldestScope);
         }
@@ -96,7 +123,6 @@ export const getCircuitState = (owner: object, scope: string): CircuitState => {
         consecutiveFailures: 0,
         openedAt: null,
         probeInFlight: false,
-        lastUsed: Date.now(),
     };
     scopes.set(scope, state);
     return state;
@@ -170,20 +196,47 @@ export const recordCircuitSuccess = (
 
 /**
  * Counts a failed attempt and opens the circuit once the consecutive-failure
- * budget is exhausted. When the failure is the reserved post-cooldown probe,
- * clears the half-open state and re-opens the breaker immediately so the next
- * request fast-fails until the cooldown elapses again. Emits `onCircuitOpen`
- * on the first trip into open (not on re-opens from a failed probe, which are
- * a continuation of the same open period).
+ * budget is exhausted. Only availability failures (see
+ * {@link isAvailabilityFailure}) count: network errors, timeouts, 429s, and
+ * 5xx responses. Caller-side errors (4xx, GraphQL validation failures) and
+ * caller-initiated aborts say nothing about upstream health, so they never
+ * advance the streak — and because such a failure proves the upstream
+ * answered, it resets the streak like a success would: a stale 500-streak
+ * cannot trip the breaker after interleaved caller-side errors. When such a
+ * failure is the reserved post-cooldown probe, the breaker closes (the
+ * upstream answered, so it is reachable) instead of re-opening. When the
+ * failure is the reserved post-cooldown probe, clears the half-open state and
+ * re-opens the breaker immediately so the next request fast-fails until the
+ * cooldown elapses again. Emits `onCircuitOpen` on the first trip into open
+ * (not on re-opens from a failed probe, which are a continuation of the same
+ * open period).
+ *
+ * @param circuit - The caller's breaker state, when the breaker is enabled.
+ * @param breaker - The breaker configuration, when enabled.
+ * @param normalized - The normalized failure from the request pipeline.
+ * @param resolved - The resolved request options, for the `onCircuitOpen` hook.
+ * @param hookContext - The request context, for the `onCircuitOpen` hook.
+ * @param host - The upstream host scope, for the `onCircuitOpen` hook.
+ * @returns Nothing; mutates the breaker state.
  */
 export const recordCircuitFailure = (
     circuit: CircuitState | undefined,
     breaker: { threshold: number; cooldownMs: number } | undefined,
+    normalized: AniLinkError,
     resolved: ResolvedRequestOptions,
     hookContext: RequestContext,
     host: string
 ): void => {
     if (circuit === undefined || breaker === undefined) {
+        return;
+    }
+    if (!isAvailabilityFailure(normalized)) {
+        // The upstream answered with a caller-side error, so it is
+        // reachable: the availability-failure streak resets, exactly as it
+        // would on a success. If this was the reserved half-open probe,
+        // closing the breaker (emitting onCircuitClose) is part of that
+        // reset instead of leaving it wedged.
+        recordCircuitSuccess(circuit, resolved, hookContext, host);
         return;
     }
     if (circuit.probeInFlight) {
