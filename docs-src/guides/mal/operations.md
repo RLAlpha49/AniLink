@@ -25,7 +25,7 @@ const anime = await aniLink.mal.anime.get(21, {
 console.log(anime.title, anime.main_picture?.large);
 ```
 
-**Errors:** `AniLinkApiError` for non-success responses (e.g. `404` unknown ID, `400` invalid fields). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+**Errors:** `AniLinkRestError` for non-success responses (e.g. `404` unknown ID, `400` invalid fields). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
 **Reference:** [MAL anime details endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
 
@@ -48,7 +48,7 @@ const user = await aniLink.mal.user.me({
 console.log(user.name);
 ```
 
-**Errors:** `AniLinkAuthError` (no token configured), `AniLinkApiError` (e.g. `401` expired token), `AniLinkNetworkError`.
+**Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `401` expired token), `AniLinkNetworkError`.
 
 **Reference:** [MAL user endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListUserApi.html)
 
@@ -72,7 +72,7 @@ const manga = await aniLink.mal.manga.get(1, {
 console.log(manga.title, manga.main_picture?.large);
 ```
 
-**Errors:** `AniLinkApiError` for non-success responses (e.g. `404` unknown ID, `400` invalid fields). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+**Errors:** `AniLinkRestError` for non-success responses (e.g. `404` unknown ID, `400` invalid fields). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
 **Reference:** [MAL manga details endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListMangaApi.html)
 
@@ -99,7 +99,7 @@ const status = await aniLink.mal.manga.updateMyListStatus(1, {
 console.log(status.num_chapters_read);
 ```
 
-**Errors:** `AniLinkAuthError` (no token configured), `AniLinkApiError` (e.g. `400` invalid fields), `AniLinkNetworkError`.
+**Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `400` invalid fields), `AniLinkNetworkError`.
 
 **Reference:** [MAL manga list-status endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListMangaApi.html)
 
@@ -120,7 +120,7 @@ Removes a manga from the authenticated user's list. Calls `DELETE /manga/{id}/my
 await aniLink.mal.manga.deleteFromList(1);
 ```
 
-**Errors:** `AniLinkAuthError` (no token configured), `AniLinkApiError` (e.g. `404` unknown ID), `AniLinkNetworkError`.
+**Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `404` unknown ID), `AniLinkNetworkError`.
 
 **Reference:** [MAL manga list-status delete endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_delete) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListMangaApi.html)
 

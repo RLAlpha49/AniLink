@@ -850,7 +850,7 @@ function buildMalOperation(
 
     const errors: ThrowsEntry[] = isPublicRead
         ? [
-              { error: "AniLinkApiError", condition: "non-success MyAnimeList response" },
+              { error: "AniLinkRestError", condition: "non-success MyAnimeList response" },
               {
                   error: "AniLinkNetworkError",
                   condition: "timeout, cancellation, or other transport failure",
@@ -858,7 +858,7 @@ function buildMalOperation(
           ]
         : [
               { error: "AniLinkAuthError", condition: "no MAL access token is configured" },
-              { error: "AniLinkApiError", condition: "non-success MyAnimeList response" },
+              { error: "AniLinkRestError", condition: "non-success MyAnimeList response" },
               {
                   error: "AniLinkNetworkError",
                   condition: "timeout, cancellation, or other transport failure",
