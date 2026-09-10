@@ -40,7 +40,7 @@ beforeEach(() => {
 describe("MyAnimeList OAuth2 PKCE helpers", () => {
     test("builds an authorization URL with encoded PKCE and state parameters", () => {
         expect(buildMalAuthorizationUrl("client id", "challenge/value", "csrf state")).toBe(
-            "https://myanimelist.net/v1/oauth2/authorize?response_type=code&client_id=client%20id&code_challenge=challenge%2Fvalue&code_challenge_method=S256&state=csrf%20state"
+            "https://myanimelist.net/v1/oauth2/authorize?response_type=code&client_id=client%20id&code_challenge=challenge%2Fvalue&code_challenge_method=plain&state=csrf%20state"
         );
     });
 

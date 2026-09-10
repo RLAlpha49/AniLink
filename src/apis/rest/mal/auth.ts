@@ -67,10 +67,10 @@ export interface MalRefreshTokenRequest {
 /**
  * {@link buildMalAuthorizationUrl} is the PKCE helper that builds the MyAnimeList OAuth2 authorization URL for {@link getMalAccessToken}.
  *
- * It encodes the client identity and PKCE challenge from {@link MalAuthorizationCodeRequest} and returns the URL to open in a browser. The current implementation sends `code_challenge_method=S256`; verify that method against the linked MAL authorization reference before relying on the helper. Validate the `state` on redirect before exchanging the code via {@link getMalAccessToken}.
+ * It encodes the client identity and PKCE challenge from {@link MalAuthorizationCodeRequest} and returns the URL to open in a browser. MAL's authorization server currently supports only the `plain` PKCE method. Validate the `state` on redirect before exchanging the code via {@link getMalAccessToken}.
  *
  * @param clientId - The MAL application client ID from {@link MalAuthorizationCodeRequest.clientId}.
- * @param codeChallenge - The PKCE challenge generated for the login attempt; this helper sends it with the `S256` method.
+ * @param codeChallenge - The PKCE challenge for the login attempt; under MAL's `plain` method this is the verifier itself.
  * @param state - Optional opaque CSRF state to validate on the redirect.
  * @returns The fully encoded authorization URL for the MAL OAuth flow.
  * @example
@@ -89,7 +89,7 @@ export const buildMalAuthorizationUrl = (
         response_type: "code",
         client_id: clientId,
         code_challenge: codeChallenge,
-        code_challenge_method: "S256",
+        code_challenge_method: "plain",
     });
     if (state !== undefined) params.set("state", state);
     return `${MAL_AUTHORIZE_URL}?${params.toString().replaceAll("+", "%20")}`;

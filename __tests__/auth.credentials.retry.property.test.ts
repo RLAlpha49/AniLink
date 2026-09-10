@@ -90,7 +90,7 @@ describe("buildMalAuthorizationUrl property tests", () => {
 
                     expect(parsed.searchParams.get("client_id")).toBe(clientId);
                     expect(parsed.searchParams.get("code_challenge")).toBe(codeChallenge);
-                    expect(parsed.searchParams.get("code_challenge_method")).toBe("S256");
+                    expect(parsed.searchParams.get("code_challenge_method")).toBe("plain");
                     expect(parsed.searchParams.get("response_type")).toBe("code");
                     if (state !== null) {
                         expect(parsed.searchParams.get("state")).toBe(state);
