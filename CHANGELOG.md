@@ -1,5 +1,77 @@
 # Changelog
 
+## [2.2.0](https://github.com/RLAlpha49/AniLink/compare/v2.1.0...v2.2.0) (2026-09-10)
+
+### ✨ Features
+
+* **credentials:** validate credential keys and add client-level onHookError default ([8cf4b7e](https://github.com/RLAlpha49/AniLink/commit/8cf4b7ea39631511a735e8979db1e18207082eec))
+* **facade:** accept structured RequestAuthInput and document response-shape ownership ([c9dc33b](https://github.com/RLAlpha49/AniLink/commit/c9dc33bd571f62bbaef69427df7ed32c11a3a9bc))
+* **mal:** add anime list-status update and delete endpoints ([9c42665](https://github.com/RLAlpha49/AniLink/commit/9c42665948fdaa326f4d1f100410b422f7c74a26))
+* **mal:** add manga get, list-status update, and delete endpoints ([02964d3](https://github.com/RLAlpha49/AniLink/commit/02964d386f8d8a30f049f91486b27735cd79c871))
+* **pagination:** add abort signal and per-page/chunk callbacks ([17db175](https://github.com/RLAlpha49/AniLink/commit/17db175b08491cd99bd437f9af8e7a66ce4511b0))
+* **pagination:** default to look-ahead concurrency for faster traversal ([fd607c4](https://github.com/RLAlpha49/AniLink/commit/fd607c4cc0783eb48aa53bdcf334e93620729bde))
+* **transport:** add proactive rate-limit pacing, request correlation, and pacing-aware cancellation ([594282a](https://github.com/RLAlpha49/AniLink/commit/594282a71ddd94347f2ee7524740a638b61a8724))
+* **transport:** add response cache, circuit hooks, correlation IDs, and error hardening ([8683f96](https://github.com/RLAlpha49/AniLink/commit/8683f96d3fbe8c45a1f6db8774f2de1b8e629e75))
+* **transport:** warn when breaker state is keyed by per-request options ([955e80e](https://github.com/RLAlpha49/AniLink/commit/955e80e478add62bb4fdbc2d74cbd69ab73cb889))
+
+### 🐛 Bug Fixes
+
+* **codegen:** guard operation-document extraction against comment/import bindings ([866e19d](https://github.com/RLAlpha49/AniLink/commit/866e19d4057d3d1a98fd3581ed747e2b06f8852b))
+* **docs:** correct mermaid diagram code block in observability docs ([752a618](https://github.com/RLAlpha49/AniLink/commit/752a618000f3391c1f96daab2f995a156d4779ce))
+* **docs:** replace {[@link](https://github.com/link)} tags with backticks in some JSDoc comments ([a6bd875](https://github.com/RLAlpha49/AniLink/commit/a6bd87527be3876815a85a30cf95c6a426c82483))
+* **integration:** add AniLinkApiError import for error assertions ([06d0050](https://github.com/RLAlpha49/AniLink/commit/06d0050da75ab4fa002ff19b335efddfe3374c64))
+* **transport:** count only availability failures toward the circuit breaker ([9387472](https://github.com/RLAlpha49/AniLink/commit/9387472bd6188810b8666922f7a84eff784e1606))
+* **transport:** park evicted keep-alive agents instead of destroying them in flight ([257e5ea](https://github.com/RLAlpha49/AniLink/commit/257e5eafa1dc5f85f5b2adf8a8ec567f4a32207e))
+* **transport:** snapshot cache entries and keep credentials out of cache keys ([2d3b188](https://github.com/RLAlpha49/AniLink/commit/2d3b1883a2fbdcccbbc42c187ed054299d73abd6))
+* **viewer:** make variables parameter optional ([1cb1b45](https://github.com/RLAlpha49/AniLink/commit/1cb1b45e58022d2be432a07f4ce56913b785ffbe))
+
+### ♻️ Refactoring
+
+* **auth:** share token-request error normalization between providers ([95caef2](https://github.com/RLAlpha49/AniLink/commit/95caef2a2a62e8095a981d22ccec035455dee617))
+* **errors:** add shared error-family barrel and route provider barrels through it ([be00266](https://github.com/RLAlpha49/AniLink/commit/be0026635c7f5c85b3e44e2f08673afe5c22159d))
+* **pagination:** report traversal callback failures through safeInvoke ([04da8b8](https://github.com/RLAlpha49/AniLink/commit/04da8b897ae60e126c284d647bb4c98d80debb10))
+* **pagination:** split look-ahead into numeric and cursor drivers ([deca43a](https://github.com/RLAlpha49/AniLink/commit/deca43a794e4310b7c00ee6bf660ca8297c102f3))
+* **registry:** make operation registry the single source of truth with lazy wiring and compile-time parity ([d447a9f](https://github.com/RLAlpha49/AniLink/commit/d447a9f5fa4d1644029554546ad2cec92e095573))
+* **transport:** accept pre-encoded string bodies without casts ([0c7eef3](https://github.com/RLAlpha49/AniLink/commit/0c7eef35f1e998c37a3ccdbf1c9b58f7b3d30e64))
+* **transport:** disable raw Axios error exposure for token requests ([217fb02](https://github.com/RLAlpha49/AniLink/commit/217fb02feeaa5d664fb7338196c11ea5af82c53e))
+* **transport:** extract computeNextRetryDelay from the retry loop ([d781c8a](https://github.com/RLAlpha49/AniLink/commit/d781c8a4c73fb669ec0e305a68997b9f0f0a775c))
+* **transport:** replace positional dispatch/request tails with named options objects ([89aff3a](https://github.com/RLAlpha49/AniLink/commit/89aff3a7a92fc8575656c0dd4c4438a2ce4a820c))
+* **transport:** split RequestHandler god module into cohesive transport modules ([2203689](https://github.com/RLAlpha49/AniLink/commit/2203689c15b7711966e6cdc825ad69e2a14d3c05))
+
+### 📚 Documentation
+
+* document pacing cancellation, look-ahead pagination, and observability hooks ([3dcb7f4](https://github.com/RLAlpha49/AniLink/commit/3dcb7f4abfea0262a352dba5a3eb362035204d6b))
+* refine documentation language and consistency across guides ([c893560](https://github.com/RLAlpha49/AniLink/commit/c8935609d6c58ac676f92d39a272e801dff9993c))
+
+### 📦 Build
+
+* **codegen:** extend operation reference generator for MAL list-status methods ([14d3f8a](https://github.com/RLAlpha49/AniLink/commit/14d3f8aa7d725b474c7d7eaf419ccb9f89b9372b))
+* **codegen:** extend operation reference generator for MAL manga methods ([52439a3](https://github.com/RLAlpha49/AniLink/commit/52439a32807fa49efae66680a53f8913a972ba0e))
+* skip onnxruntime-node package installation ([9b528b1](https://github.com/RLAlpha49/AniLink/commit/9b528b12fe389ce5cd5fcc51f6a4f87227007079))
+* update postinstall to conditionally run patch-package ([c4796fb](https://github.com/RLAlpha49/AniLink/commit/c4796fbd6583de85a8ec3d86fe794ab610aff43b))
+
+### 🔧 CI/CD
+
+* expand test matrix to Node 24 and gate integration on token availability ([5716dd3](https://github.com/RLAlpha49/AniLink/commit/5716dd35db4bfa1c7476ee94b4b57b8b87ce5412))
+* skip integration tests on tokenless forks and narrow CodeQL/doc triggers ([e94b694](https://github.com/RLAlpha49/AniLink/commit/e94b6948282151d8ac9ec7b6bf6240eaf0cb2129))
+
+### 🧪 Tests
+
+* add unit and mutation-coverage suites for hooks, pacing, and validateVariables ([a74da0c](https://github.com/RLAlpha49/AniLink/commit/a74da0c6c4794c70d2f26d1ef002848049330afe))
+* **api:** cover direct response unwrapping for page operations ([ded203b](https://github.com/RLAlpha49/AniLink/commit/ded203bc825e5562742caa9ece985f7d3f7823b2))
+* **api:** verify facade group composition matches the registry ([a1889b2](https://github.com/RLAlpha49/AniLink/commit/a1889b284c8f416cc0002ca8d86cafdb195c4b89))
+* **auth:** verify token requests never expose the raw Axios error ([9a9371f](https://github.com/RLAlpha49/AniLink/commit/9a9371f31190a17c52d6146930d11ccf4580e72f))
+* **config:** enable vitest fs module cache ([2a780a2](https://github.com/RLAlpha49/AniLink/commit/2a780a202fa295c7ef60e9e20f4113958e183025))
+* harden branch and property coverage for pagination, BaseOperation, and retry ([da7a667](https://github.com/RLAlpha49/AniLink/commit/da7a66738ba2bca54315a2708d709c2910700e2d))
+* harden tests and remove redundant checks and ticket references ([65b97c1](https://github.com/RLAlpha49/AniLink/commit/65b97c1d89a12bdf1db4ebaad7896a17ed851512))
+* **integration:** align character search fixture with canonical name order ([fa3caa1](https://github.com/RLAlpha49/AniLink/commit/fa3caa1b21c003820f29266295db94cee8214383))
+* **integration:** extract preflight helper and unit-test the contract ([1ce498d](https://github.com/RLAlpha49/AniLink/commit/1ce498d69099da1ef09553436876513366cfb5bb))
+* **mutation:** add StrykerJS mutation testing setup ([d5fe73e](https://github.com/RLAlpha49/AniLink/commit/d5fe73e941513c6a27a120b7f7748a77fe6ad431))
+* **mutation:** patch vitest runner and disable related file filtering ([00508ea](https://github.com/RLAlpha49/AniLink/commit/00508ea3a32233593cf143bf485d72f705c28982))
+* **mutation:** raise stryker concurrency to 4 ([6acc4ba](https://github.com/RLAlpha49/AniLink/commit/6acc4ba694ea429ed973b10d7a517b55d6c3c9ec))
+* **pagination:** await async property assertions explicitly ([91a4678](https://github.com/RLAlpha49/AniLink/commit/91a4678887a14496d5eba2a8fa642b03e24cce81))
+* **transport:** add property-based tests for retry backoff and jitter ([6047abb](https://github.com/RLAlpha49/AniLink/commit/6047abb24b5a7ff0694fc2a85bfec8102259a217))
+
 ## [2.1.0](https://github.com/RLAlpha49/AniLink/compare/v2.0.0...v2.1.0) (2026-09-02)
 
 ### ✨ Features
