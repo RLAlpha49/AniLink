@@ -31,12 +31,14 @@ export type {
 } from "./apis/rest/mal/facade";
 export type {
     MalAnime,
+    MalAnimeListSort,
     MalAnimeListStatus,
     MalAnimeListStatusUpdate,
     MalAnimeListStatusValue,
     MalAnimeRankingResponse,
     MalAnimeSuggestionsResponse,
     MalManga,
+    MalMangaListSort,
     MalMangaListStatus,
     MalMangaListStatusUpdate,
     MalMangaListStatusValue,
@@ -50,6 +52,12 @@ export type {
     MalSeasonalAnimeResponse,
     MalSuggestion,
     MalUser,
+    MalUserAnimeListEntry,
+    MalUserAnimeListOptions,
+    MalUserAnimeListResponse,
+    MalUserMangaListEntry,
+    MalUserMangaListOptions,
+    MalUserMangaListResponse,
 } from "./apis/rest/mal/types";
 export type { AniLinkCredentials, MalCredentials, ProviderCredentials } from "./base/credentials";
 

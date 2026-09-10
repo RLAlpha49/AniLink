@@ -52,6 +52,59 @@ console.log(user.name);
 
 **Reference:** [MAL user endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListUserApi.html)
 
+## `mal.user.animeList(username, options?)`
+
+Gets a user's anime list, one page at a time. Calls `GET /users/{username}/animelist` — the paginated read that was missing while AniList users had first-class pagination helpers all along.
+
+| Parameter  | Type                      | Required | Description                                                                                                                      |
+| ---------- | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `username` | `string`                  | yes      | The MyAnimeList user name, or `@me` for the authenticated user (case-insensitive, whitespace trimmed)                            |
+| `options`  | `MalUserAnimeListOptions` | no       | Status filter, sort order, paging (`limit`/`offset`), field selection, and transport settings, merged over the instance defaults |
+
+**Auth:** not required for public user lists — `@me` and private lists require an access token; a client ID alone cannot resolve `@me`. Without a token, `@me` fails fast with `AniLinkAuthError` before any request is sent.
+
+**Returns:** `MalUserAnimeListResponse` — `data` holds one `MalUserAnimeListEntry` per entry: a `node` shaped by `fields` plus a `list_status` wrapper that appears when requested (for example `list_status{priority,comments}`). `paging.next` and `paging.previous` carry the next/previous page URLs when the list continues in that direction; the paging is offset-based, so the next URL carries the incremented `offset`. Follow pages manually — manual requests bypass the library's pacing, retry, and circuit breaker, so space them out on long lists. With `responseCache` enabled, list reads may be stale for `ttlMs` after `updateMyListStatus` — the cache is TTL-only and does not invalidate on writes.
+
+```typescript
+const list = await aniLink.mal.user.animeList("@me", {
+    status: "watching",
+    sort: "list_score",
+    limit: 100,
+    fields: ["id", "title", "list_status"],
+});
+console.log(list.data[0]?.node.title, list.data[0]?.list_status?.score);
+```
+
+**Errors:** `AniLinkAuthError` (`@me` without a token — thrown before any request is sent), `AniLinkRestError` for non-success responses (e.g. `400` invalid status or sort, `401` expired token). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+
+**Reference:** [MAL user anime list endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListUserApi.html)
+
+## `mal.user.mangaList(username, options?)`
+
+Gets a user's manga list, one page at a time. Calls `GET /users/{username}/mangalist` — the manga twin of `user.animeList`.
+
+| Parameter  | Type                      | Required | Description                                                                                                                      |
+| ---------- | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `username` | `string`                  | yes      | The MyAnimeList user name, or `@me` for the authenticated user (case-insensitive, whitespace trimmed)                            |
+| `options`  | `MalUserMangaListOptions` | no       | Status filter, sort order, paging (`limit`/`offset`), field selection, and transport settings, merged over the instance defaults |
+
+**Auth:** not required for public user lists — `@me` and private lists require an access token; a client ID alone cannot resolve `@me`. Without a token, `@me` fails fast with `AniLinkAuthError` before any request is sent.
+
+**Returns:** `MalUserMangaListResponse` — `data` holds one `MalUserMangaListEntry` per entry: a `node` shaped by `fields` plus a `list_status` wrapper that appears when requested. `paging.next` and `paging.previous` carry the next/previous page URLs when the list continues in that direction; the paging is offset-based, so the next URL carries the incremented `offset`. Follow pages manually — manual requests bypass the library's pacing, retry, and circuit breaker. With `responseCache` enabled, list reads may be stale for `ttlMs` after `updateMyListStatus` — the cache is TTL-only and does not invalidate on writes.
+
+```typescript
+const list = await aniLink.mal.user.mangaList("@me", {
+    status: "reading",
+    sort: "list_updated_at",
+    fields: ["id", "title", "list_status"],
+});
+console.log(list.data[0]?.node.title, list.data[0]?.list_status?.score);
+```
+
+**Errors:** `AniLinkAuthError` (`@me` without a token — thrown before any request is sent), `AniLinkRestError` for non-success responses (e.g. `400` invalid status or sort, `401` expired token). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+
+**Reference:** [MAL user manga list endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListUserApi.html)
+
 ## `mal.manga.get(id, options?)`
 
 Gets one manga by its MyAnimeList ID. Calls `GET /manga/{id}` on the MAL API v2 — the manga twin of `anime.get`.

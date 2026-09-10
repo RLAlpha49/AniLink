@@ -350,6 +350,161 @@ describe("MyAnimeList REST anime discovery reads", () => {
     });
 });
 
+describe("MyAnimeList REST user-list reads", () => {
+    test("animeList builds the encoded URL with status, sort, limit, offset, and fields", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await api.user.animeList("@me", {
+            status: "watching",
+            sort: "list_score",
+            limit: 5,
+            offset: 10,
+            fields: ["id", "title", "list_status"],
+        });
+        // `@me` is sent as the literal path segment, matching `me` and the
+        // MAL reference, instead of relying on server-side `%40` decoding.
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/users/@me/animelist?fields=id%2Ctitle%2Clist_status&status=watching&sort=list_score&limit=5&offset=10"
+        );
+        expect(lastConfig().method).toBe("GET");
+        expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
+    });
+
+    test("animeList returns the list body verbatim with its paging node", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+        const body = {
+            data: [
+                {
+                    node: { id: 21, title: "Fullmetal Alchemist" },
+                    list_status: { status: "watching", score: 9 },
+                },
+            ],
+            paging: {
+                previous: "https://api.myanimelist.net/v2/users/@me/animelist?offset=0",
+                next: "https://api.myanimelist.net/v2/users/@me/animelist?offset=2",
+            },
+        };
+        mocks.request.mockResolvedValueOnce({ data: body });
+
+        await expect(
+            api.user.animeList("@me", { fields: ["id", "title", "list_status"] })
+        ).resolves.toEqual(body);
+    });
+
+    test("animeList omits absent optional query parameters", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await api.user.animeList("@me");
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/users/@me/animelist");
+        expect(lastConfig().method).toBe("GET");
+    });
+
+    test("mangaList builds the encoded mangalist URL with the reading status", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await api.user.mangaList("@me", {
+            status: "reading",
+            fields: ["id", "title", "list_status"],
+        });
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/users/@me/mangalist?fields=id%2Ctitle%2Clist_status&status=reading"
+        );
+        expect(lastConfig().method).toBe("GET");
+        expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
+    });
+
+    test("animeList sends the client ID header without a bearer token when only a client ID is configured", async () => {
+        const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
+
+        await api.user.animeList("some-user");
+
+        expect(lastConfig().headers["X-MAL-CLIENT-ID"]).toBe("mal-client-id");
+        expect(lastConfig().headers.Authorization).toBeUndefined();
+    });
+
+    test("animeList fails fast with AniLinkAuthError on @me without an access token", async () => {
+        const api = buildMyAnimeListApi();
+
+        await expect(api.user.animeList("@me")).rejects.toBeInstanceOf(AniLinkAuthError);
+        // The guard fires before any request is sent.
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("mangaList fails fast with AniLinkAuthError on @me without an access token", async () => {
+        const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
+
+        await expect(api.user.mangaList("@me")).rejects.toBeInstanceOf(AniLinkAuthError);
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("animeList fails fast on @me variants like @ME and padded @me without an access token", async () => {
+        const api = buildMyAnimeListApi();
+
+        await expect(api.user.animeList("@ME")).rejects.toBeInstanceOf(AniLinkAuthError);
+        await expect(api.user.animeList(" @me ")).rejects.toBeInstanceOf(AniLinkAuthError);
+        // The guard fires before any request is sent for every variant.
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("mangaList fails fast on @me variants like @ME and padded @me without an access token", async () => {
+        const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
+
+        await expect(api.user.mangaList("@ME")).rejects.toBeInstanceOf(AniLinkAuthError);
+        await expect(api.user.mangaList(" @me ")).rejects.toBeInstanceOf(AniLinkAuthError);
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("animeList sends the literal @me path for normalized @me variants", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await api.user.animeList(" @me ");
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/users/@me/animelist");
+        expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
+    });
+
+    test("mangaList sends the literal @me path for normalized @me variants", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await api.user.mangaList("@ME");
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/users/@me/mangalist");
+        expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
+    });
+
+    test("animeList accepts a pre-joined fields string", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await api.user.animeList("some-user", { fields: "id,title,list_status" });
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/users/some-user/animelist?fields=id%2Ctitle%2Clist_status"
+        );
+    });
+
+    test("animeList percent-encodes the username path segment", async () => {
+        const api = buildMyAnimeListApi();
+
+        await api.user.animeList("some user");
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/users/some%20user/animelist");
+    });
+
+    test("animeList normalizes MAL HTTP failures through the shared error surface", async () => {
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
+
+        await expect(
+            buildMyAnimeListApi({ accessToken: "mal-access-token" }).user.animeList("@me", {
+                retry: false,
+            })
+        ).rejects.toSatisfy(
+            (error: unknown) => error instanceof AniLinkRestError && error.status === 404
+        );
+    });
+});
+
 describe("MyAnimeList REST manga namespace", () => {
     test("gets manga details with encoded fields and returns the REST body verbatim", async () => {
         const api = buildMyAnimeListApi();

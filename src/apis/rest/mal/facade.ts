@@ -12,6 +12,10 @@ import type {
     MalSeason,
     MalSeasonalAnimeResponse,
     MalUser,
+    MalUserAnimeListOptions,
+    MalUserAnimeListResponse,
+    MalUserMangaListOptions,
+    MalUserMangaListResponse,
 } from "./types";
 
 /**
@@ -252,9 +256,11 @@ export interface MyAnimeListMangaApi {
 /**
  * {@link MyAnimeListUserApi} is the user group exposed by {@link MyAnimeListApi} under `aniLink.mal.user`.
  *
- * It is the facade boundary for the authenticated MyAnimeList user read; the single `MalUserOperation.me | me` method delegates to `MalUserOperation` and returns a {@link MalUser} shaped by {@link MalRequestOptions.fields}.
+ * It is the facade boundary for the MyAnimeList user reads; the `MalUserOperation.me | me` method delegates to `MalUserOperation` and returns a {@link MalUser} shaped by {@link MalRequestOptions.fields}, while the paginated user-list reads `animeList` and `mangaList` cover `GET /users/{user_name}/animelist` and `GET /users/{user_name}/mangalist`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
  */
 export interface MyAnimeListUserApi {
     /**
@@ -275,6 +281,60 @@ export interface MyAnimeListUserApi {
      * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
      */
     me: (options?: MalRequestOptions) => Promise<MalUser>;
+
+    /**
+     * {@link MyAnimeListUserApi.animeList} gets a user's anime list through `MalUserOperation.animeList`.
+     *
+     * It is the public facade for `GET /users/{user_name}/animelist`; `username` accepts a user name or `@me`, and public lists need no credentials while `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserAnimeListOptions} to filter by status, sort, page with `limit`/`offset`, and select the response shape.
+     *
+     * @param username - The MyAnimeList user name, or `@me` for the authenticated user (case-insensitive, surrounding whitespace ignored).
+     * @param options - Optional status, sort, paging, field selection, and transport settings; a {@link MalUserAnimeListOptions} merged over the instance defaults.
+     * @returns The anime list page, a {@link MalUserAnimeListResponse}.
+     * @throws `AniLinkAuthError` when `username` is `@me` and no access token is configured.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const list = await api.user.animeList("@me", {
+     *   status: "watching",
+     *   fields: ["id", "title", "list_status"],
+     * });
+     * console.log(list.data[0]?.node.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
+     */
+    animeList: (
+        username: string,
+        options?: MalUserAnimeListOptions
+    ) => Promise<MalUserAnimeListResponse>;
+
+    /**
+     * {@link MyAnimeListUserApi.mangaList} gets a user's manga list through `MalUserOperation.mangaList`.
+     *
+     * It is the public facade for `GET /users/{user_name}/mangalist`; `username` accepts a user name or `@me`, and public lists need no credentials while `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserMangaListOptions} to filter by status, sort, page with `limit`/`offset`, and select the response shape.
+     *
+     * @param username - The MyAnimeList user name, or `@me` for the authenticated user (case-insensitive, surrounding whitespace ignored).
+     * @param options - Optional status, sort, paging, field selection, and transport settings; a {@link MalUserMangaListOptions} merged over the instance defaults.
+     * @returns The manga list page, a {@link MalUserMangaListResponse}.
+     * @throws `AniLinkAuthError` when `username` is `@me` and no access token is configured.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const list = await api.user.mangaList("@me", {
+     *   status: "reading",
+     *   fields: ["id", "title", "list_status"],
+     * });
+     * console.log(list.data[0]?.node.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
+     */
+    mangaList: (
+        username: string,
+        options?: MalUserMangaListOptions
+    ) => Promise<MalUserMangaListResponse>;
 }
 
 /**

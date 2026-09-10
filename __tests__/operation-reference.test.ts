@@ -114,7 +114,7 @@ describe("operation reference section manifests", () => {
         const grouped = await loadOperations("mal", "rest", outputDir);
         const operations = Object.values(grouped).flat();
 
-        expect(operations).toHaveLength(10);
+        expect(operations).toHaveLength(12);
         expect(operations.every((operation) => operation.provider === "mal")).toBe(true);
         expect(operations.every((operation) => operation.category === "rest")).toBe(true);
     });
@@ -134,6 +134,44 @@ describe("operation reference section manifests", () => {
         expect(ranking?.auth).toBe("Not required — a public read.");
         expect(get?.auth).toBe(
             "Not required for public anime data; pass an access token for list-related fields."
+        );
+    });
+
+    it("describes the MAL user-list reads accurately", () => {
+        const animeList = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.user.animeList"
+        );
+        const mangaList = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.user.mangaList"
+        );
+
+        expect(animeList).toBeDefined();
+        expect(mangaList).toBeDefined();
+        expect(animeList?.auth).toBe(
+            "Not required for public user lists; `@me` and private lists require an access token — a client ID alone cannot resolve `@me`."
+        );
+        expect(mangaList?.auth).toBe(
+            "Not required for public user lists; `@me` and private lists require an access token — a client ID alone cannot resolve `@me`."
+        );
+        // The user-list reads fail fast on `@me` without a token, like `me`.
+        expect(animeList?.errors.map((entry) => entry.error)).toContain("AniLinkAuthError");
+        expect(mangaList?.errors.map((entry) => entry.error)).toContain("AniLinkAuthError");
+        // The list options carry their status/sort/limit/offset nested fields.
+        expect(
+            animeList?.request
+                .find((param) => param.name === "options")
+                ?.nestedFields?.map((field) => field.name)
+        ).toEqual(["status", "sort", "limit", "offset", "fields", "timeout", "signal"]);
+        expect(
+            mangaList?.request
+                .find((param) => param.name === "options")
+                ?.nestedFields?.map((field) => field.name)
+        ).toEqual(["status", "sort", "limit", "offset", "fields", "timeout", "signal"]);
+        expect(animeList?.links.find((link) => link.label === "MAL API reference")?.url).toBe(
+            "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get"
+        );
+        expect(mangaList?.links.find((link) => link.label === "MAL API reference")?.url).toBe(
+            "https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get"
         );
     });
 });

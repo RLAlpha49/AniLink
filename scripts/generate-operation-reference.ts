@@ -756,12 +756,35 @@ const MAL_FACADE_METHODS = new Set([
     "seasonal",
     "ranking",
     "suggestions",
+    "animeList",
+    "mangaList",
     "updateMyListStatus",
     "deleteFromList",
 ]);
 
 /** The MAL facade methods that read public data without an access token. */
-const MAL_PUBLIC_READ_METHODS = new Set(["get", "seasonal", "ranking"]);
+const MAL_PUBLIC_READ_METHODS = new Set(["get", "seasonal", "ranking", "animeList", "mangaList"]);
+
+/**
+ * Fallback purpose text per MAL operation, used when the facade JSDoc yields
+ * no main text. Keyed by `namespace.methodName`; an unknown key throws so a
+ * new operation without a fallback fails the docs build loudly instead of
+ * being documented with another operation's text.
+ */
+const MAL_PURPOSE_FALLBACKS: Record<string, string> = {
+    "anime.get": "Gets one anime by its MyAnimeList ID.",
+    "manga.get": "Gets one manga by its MyAnimeList ID.",
+    "anime.seasonal": "Gets the anime of one broadcast season.",
+    "anime.ranking": "Gets one of MyAnimeList's anime ranking lists.",
+    "anime.suggestions": "Gets MyAnimeList's anime suggestions for the authenticated user.",
+    "user.animeList": "Gets a user's anime list, one page at a time.",
+    "user.mangaList": "Gets a user's manga list, one page at a time.",
+    "user.me": "Gets the currently authenticated MyAnimeList user.",
+    "anime.updateMyListStatus": "Updates the authenticated user's anime list status.",
+    "manga.updateMyListStatus": "Updates the authenticated user's manga list status.",
+    "anime.deleteFromList": "Removes an anime from the authenticated user's list.",
+    "manga.deleteFromList": "Removes a manga from the authenticated user's list.",
+};
 
 /** The MAL facade interface that owns each namespace. */
 const MAL_FACADE_INTERFACES: Record<
@@ -852,7 +875,7 @@ function buildMalOperation(
     }
     const optionsParam = request.find((r) => r.name === "options");
     if (optionsParam) {
-        optionsParam.nestedFields = malOptionFields();
+        optionsParam.nestedFields = malOptionFields(optionsParam.type);
     }
     const payloadParam = request.find((r) => r.name === "payload");
     if (payloadParam) {
@@ -861,6 +884,10 @@ function buildMalOperation(
 
     const errors: ThrowsEntry[] = isPublicRead
         ? [
+              // The user-list reads fail fast on `@me` without a token, like `me`.
+              ...(methodName === "animeList" || methodName === "mangaList"
+                  ? [{ error: "AniLinkAuthError", condition: "`@me` without an access token" }]
+                  : []),
               { error: "AniLinkRestError", condition: "non-success MyAnimeList response" },
               {
                   error: "AniLinkNetworkError",
@@ -880,6 +907,13 @@ function buildMalOperation(
     const upstream = malUpstreamReference(namespace, methodName);
     const signature = malSignature(methodName, params, responseType);
     const typedocInterface = malTypedocInterface(namespace);
+    const jsdocPurpose = jsdocMainText(jsdoc);
+    const purposeFallback = MAL_PURPOSE_FALLBACKS[`${namespace}.${methodName}`];
+    if (jsdocPurpose === "" && purposeFallback === undefined) {
+        throw new Error(
+            `No JSDoc main text and no purpose fallback for mal.${namespace}.${methodName}; add one to MAL_PURPOSE_FALLBACKS.`
+        );
+    }
 
     return {
         provider: "mal",
@@ -889,23 +923,13 @@ function buildMalOperation(
         name: `${namespace}.${methodName}`,
         category: "rest",
         signature,
-        purpose:
-            jsdocMainText(jsdoc) ||
-            (methodName === "get"
-                ? namespace === "manga"
-                    ? "Gets one manga by its MyAnimeList ID."
-                    : "Gets one anime by its MyAnimeList ID."
-                : methodName === "seasonal"
-                  ? "Gets the anime of one broadcast season."
-                  : methodName === "ranking"
-                    ? "Gets one of MyAnimeList's anime ranking lists."
-                    : methodName === "suggestions"
-                      ? "Gets MyAnimeList's anime suggestions for the authenticated user."
-                      : "Gets the currently authenticated MyAnimeList user."),
+        purpose: jsdocPurpose || purposeFallback || "",
         auth: isPublicRead
             ? methodName === "get"
                 ? `Not required for public ${namespace} data; pass an access token for list-related fields.`
-                : "Not required — a public read."
+                : methodName === "animeList" || methodName === "mangaList"
+                  ? "Not required for public user lists; `@me` and private lists require an access token — a client ID alone cannot resolve `@me`."
+                  : "Not required — a public read."
             : "Required — MAL OAuth2 access token (`mal.accessToken` credential slot).",
         request,
         responseType,
@@ -929,6 +953,12 @@ function malTypedocInterface(namespace: string): string {
 /** The upstream MAL API reference URL for one operation. */
 function malUpstreamReference(namespace: string, methodName: string): string {
     if (namespace === "user") {
+        if (methodName === "animeList") {
+            return "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get";
+        }
+        if (methodName === "mangaList") {
+            return "https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get";
+        }
         return "https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get";
     }
     if (namespace === "manga") {
@@ -982,6 +1012,26 @@ function malExample(namespace: "anime" | "manga" | "user", methodName: string): 
             '    fields: ["id", "name", "location", "joined_at"],',
             "});",
             "console.log(user.name);",
+        ].join("\n");
+    }
+    if (methodName === "animeList") {
+        return [
+            ...header,
+            'const list = await aniLink.mal.user.animeList("@me", {',
+            '    status: "watching",',
+            '    fields: ["id", "title", "list_status"],',
+            "});",
+            "console.log(list.data[0]?.node.title);",
+        ].join("\n");
+    }
+    if (methodName === "mangaList") {
+        return [
+            ...header,
+            'const list = await aniLink.mal.user.mangaList("@me", {',
+            '    status: "reading",',
+            '    fields: ["id", "title", "list_status"],',
+            "});",
+            "console.log(list.data[0]?.node.title);",
         ].join("\n");
     }
     if (methodName === "seasonal") {
@@ -1043,6 +1093,9 @@ function malParamDescription(namespace: string, name: string): string {
     if (name === "id") {
         return namespace === "manga" ? "The MyAnimeList manga ID." : "The MyAnimeList anime ID.";
     }
+    if (name === "username") {
+        return "The MyAnimeList user name, or @me for the authenticated user.";
+    }
     if (name === "year") {
         return "The season's year.";
     }
@@ -1062,8 +1115,49 @@ function malParamDescription(namespace: string, name: string): string {
 }
 
 /** The MAL options fields documented on every MAL operation. */
-function malOptionFields(): ParamField[] {
+function malOptionFields(optionsType = ""): ParamField[] {
+    const listFields: ParamField[] =
+        optionsType === "MalUserAnimeListOptions" || optionsType === "MalUserMangaListOptions"
+            ? [
+                  {
+                      name: "status",
+                      type:
+                          optionsType === "MalUserAnimeListOptions"
+                              ? "MalAnimeListStatusValue"
+                              : "MalMangaListStatusValue",
+                      required: false,
+                      description:
+                          optionsType === "MalUserAnimeListOptions"
+                              ? "The watch status to filter by (watching, completed, on_hold, dropped, plan_to_watch); omit to return all."
+                              : "The reading status to filter by (reading, completed, on_hold, dropped, plan_to_read); omit to return all.",
+                  },
+                  {
+                      name: "sort",
+                      type:
+                          optionsType === "MalUserAnimeListOptions"
+                              ? "MalAnimeListSort"
+                              : "MalMangaListSort",
+                      required: false,
+                      description:
+                          "The sort order (list_score, list_updated_at, and the start-date sort are descending; the title and id sorts are ascending).",
+                  },
+                  {
+                      name: "limit",
+                      type: "number",
+                      required: false,
+                      description:
+                          "The number of entries per page; defaults to 100, capped at 1000 by MyAnimeList.",
+                  },
+                  {
+                      name: "offset",
+                      type: "number",
+                      required: false,
+                      description: "The offset of the first entry; defaults to 0.",
+                  },
+              ]
+            : [];
     return [
+        ...listFields,
         {
             name: "fields",
             type: "string | readonly string[]",

@@ -38,6 +38,10 @@ export function buildMyAnimeListApi(credentials?: MalCredentials): MyAnimeListAp
             updateMyListStatus: manga.updateMyListStatus.bind(manga),
             deleteFromList: manga.deleteFromList.bind(manga),
         },
-        user: { me: user.me.bind(user) },
+        user: {
+            me: user.me.bind(user),
+            animeList: user.animeList.bind(user),
+            mangaList: user.mangaList.bind(user),
+        },
     };
 }

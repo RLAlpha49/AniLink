@@ -118,7 +118,7 @@ const compareRows: CompareRow[] = [
     {
         label: "Surface",
         anilist: "Queries · Page · Mutations · custom()",
-        mal: "anime.get · user.me",
+        mal: "anime.get · seasonal · ranking · user.animeList · user.mangaList · user.me",
     },
     { label: "Auth", anilist: "OAuth bearer token", mal: "PKCE OAuth2 access token" },
     { label: "Credential slot", anilist: "anilist.authToken", mal: "mal.accessToken" },

@@ -164,13 +164,17 @@ export type MalRankingType =
  *
  * It carries a `next` URL pointing at the next page when one exists; the
  * discovery reads (`seasonal`, `ranking`, `suggestions`) return it inside
- * their response types so callers can follow pages manually.
+ * their response types so callers can follow pages manually. A `previous`
+ * URL appears when the list continues backwards, per MyAnimeList's common
+ * list/pagination format.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
  */
 export interface MalPaging {
     /** The URL of the next page, when the list continues. */
     next?: string;
+    /** The URL of the previous page, when the list continues backwards. */
+    previous?: string;
 }
 
 /**
@@ -435,4 +439,148 @@ export interface MalMangaListStatus {
     updated_at?: string;
     /** Any additional fields returned by MyAnimeList remain available without narrowing. */
     [field: string]: unknown;
+}
+
+/**
+ * The sort orders MyAnimeList accepts for a user's anime list.
+ *
+ * These are the fixed `sort` query values accepted by
+ * `GET /users/{user_name}/animelist`, consumed as the `sort` field of
+ * {@link MalUserAnimeListOptions} on `MalUserOperation.animeList` and
+ * `MyAnimeListUserApi.animeList`. `list_score`, `list_updated_at`, and
+ * `anime_start_date` sort descending; `anime_title` and `anime_id` sort
+ * ascending (`anime_id` is listed as under development by MyAnimeList).
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
+ */
+export type MalAnimeListSort =
+    "list_score" | "list_updated_at" | "anime_title" | "anime_start_date" | "anime_id";
+
+/**
+ * {@link MalUserAnimeListOptions} is the request options for reading a user's anime list.
+ *
+ * It extends {@link MalRequestOptions} with the `status`, `sort`, `limit`, and
+ * `offset` query parameters accepted by `GET /users/{user_name}/animelist`,
+ * consumed by `MalUserOperation.animeList` and `MyAnimeListUserApi.animeList`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
+ */
+export interface MalUserAnimeListOptions extends MalRequestOptions {
+    /** The watch status to filter by; one of {@link MalAnimeListStatusValue}. Omit to return all. */
+    status?: MalAnimeListStatusValue;
+    /** The sort order; one of {@link MalAnimeListSort}. */
+    sort?: MalAnimeListSort;
+    /** The number of entries per page; defaults to 100, capped at 1000 by MyAnimeList. */
+    limit?: number;
+    /** The offset of the first entry; defaults to 0. */
+    offset?: number;
+}
+
+/**
+ * {@link MalUserAnimeListEntry} is one entry of a user's anime list.
+ *
+ * It wraps the {@link MalAnime} node with its {@link MalAnimeListStatus} list
+ * status, and is the element type of {@link MalUserAnimeListResponse} returned
+ * by `MalUserOperation.animeList` and `MyAnimeListUserApi.animeList`. The
+ * `list_status` wrapper appears when requested via
+ * {@link MalRequestOptions.fields} (for example `list_status{priority,comments}`).
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
+ */
+export interface MalUserAnimeListEntry {
+    /** The anime entry, shaped by the `fields` query parameter. */
+    node: MalAnime;
+    /** The entry's list status, when requested via `fields`. */
+    list_status?: MalAnimeListStatus;
+    /** Any additional fields returned by MyAnimeList remain available without narrowing. */
+    [field: string]: unknown;
+}
+
+/**
+ * {@link MalUserAnimeListResponse} is the response of the user anime list endpoint.
+ *
+ * It is the shape returned by `MalUserOperation.animeList` and
+ * `MyAnimeListUserApi.animeList` from `GET /users/{user_name}/animelist`: a
+ * page of {@link MalUserAnimeListEntry} entries plus the {@link MalPaging}
+ * node with `next`/`previous` URLs.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
+ */
+export interface MalUserAnimeListResponse {
+    /** The anime list entries on this page. */
+    data: MalUserAnimeListEntry[];
+    /** The paging node with the next/previous page URLs, when the list continues. */
+    paging?: MalPaging;
+}
+
+/**
+ * The sort orders MyAnimeList accepts for a user's manga list.
+ *
+ * These are the fixed `sort` query values accepted by
+ * `GET /users/{user_name}/mangalist`, consumed as the `sort` field of
+ * {@link MalUserMangaListOptions} on `MalUserOperation.mangaList` and
+ * `MyAnimeListUserApi.mangaList`. `list_score`, `list_updated_at`, and
+ * `manga_start_date` sort descending; `manga_title` and `manga_id` sort
+ * ascending (`manga_id` is listed as under development by MyAnimeList).
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
+ */
+export type MalMangaListSort =
+    "list_score" | "list_updated_at" | "manga_title" | "manga_start_date" | "manga_id";
+
+/**
+ * {@link MalUserMangaListOptions} is the request options for reading a user's manga list.
+ *
+ * It extends {@link MalRequestOptions} with the `status`, `sort`, `limit`, and
+ * `offset` query parameters accepted by `GET /users/{user_name}/mangalist`,
+ * consumed by `MalUserOperation.mangaList` and `MyAnimeListUserApi.mangaList`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
+ */
+export interface MalUserMangaListOptions extends MalRequestOptions {
+    /** The reading status to filter by; one of {@link MalMangaListStatusValue}. Omit to return all. */
+    status?: MalMangaListStatusValue;
+    /** The sort order; one of {@link MalMangaListSort}. */
+    sort?: MalMangaListSort;
+    /** The number of entries per page; defaults to 100, capped at 1000 by MyAnimeList. */
+    limit?: number;
+    /** The offset of the first entry; defaults to 0. */
+    offset?: number;
+}
+
+/**
+ * {@link MalUserMangaListEntry} is one entry of a user's manga list.
+ *
+ * It wraps the {@link MalManga} node with its {@link MalMangaListStatus} list
+ * status, and is the element type of {@link MalUserMangaListResponse} returned
+ * by `MalUserOperation.mangaList` and `MyAnimeListUserApi.mangaList`. The
+ * `list_status` wrapper appears when requested via
+ * {@link MalRequestOptions.fields} (for example `list_status{priority,comments}`).
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
+ */
+export interface MalUserMangaListEntry {
+    /** The manga entry, shaped by the `fields` query parameter. */
+    node: MalManga;
+    /** The entry's list status, when requested via `fields`. */
+    list_status?: MalMangaListStatus;
+    /** Any additional fields returned by MyAnimeList remain available without narrowing. */
+    [field: string]: unknown;
+}
+
+/**
+ * {@link MalUserMangaListResponse} is the response of the user manga list endpoint.
+ *
+ * It is the shape returned by `MalUserOperation.mangaList` and
+ * `MyAnimeListUserApi.mangaList` from `GET /users/{user_name}/mangalist`: a
+ * page of {@link MalUserMangaListEntry} entries plus the {@link MalPaging}
+ * node with `next`/`previous` URLs.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
+ */
+export interface MalUserMangaListResponse {
+    /** The manga list entries on this page. */
+    data: MalUserMangaListEntry[];
+    /** The paging node with the next/previous page URLs, when the list continues. */
+    paging?: MalPaging;
 }

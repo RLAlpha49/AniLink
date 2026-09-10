@@ -66,6 +66,30 @@ describe("MyAnimeList live integration — reads only", () => {
         expect(user.name).toBeTruthy();
     });
 
+    test.skipIf(!token)("user.animeList resolves the authenticated user's anime list", async () => {
+        const list = await client().mal.user.animeList("@me", {
+            limit: 5,
+            fields: ["id", "title", "list_status"],
+        });
+
+        expect(Array.isArray(list.data)).toBe(true);
+        expect(
+            list.paging === undefined ||
+                typeof list.paging.next === "string" ||
+                typeof list.paging.previous === "string" ||
+                (list.paging.next === undefined && list.paging.previous === undefined)
+        ).toBe(true);
+    });
+
+    test.skipIf(!token)("user.mangaList resolves the authenticated user's manga list", async () => {
+        const list = await client().mal.user.mangaList("@me", {
+            limit: 5,
+            fields: ["id", "title", "list_status"],
+        });
+
+        expect(Array.isArray(list.data)).toBe(true);
+    });
+
     test.skipIf(!token)("anime.get surfaces a 404 as a normalized API error", async () => {
         // An id far beyond the MyAnimeList id space, so the lookup misses.
         await expect(client().mal.anime.get(999_999_999, { retry: false })).rejects.toSatisfy(
