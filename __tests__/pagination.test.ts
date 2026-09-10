@@ -557,7 +557,10 @@ describe("safeCallback error swallowing", () => {
         // The traversal completes despite the throwing callback.
         expect(result.pageCount).toBe(2);
         expect(onPage).toHaveBeenCalledTimes(2);
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining("onPage"), expect.any(Error));
+        expect(warn).toHaveBeenCalledWith(
+            expect.stringContaining("onPage"),
+            expect.stringContaining("observer failed")
+        );
         warn.mockRestore();
     });
 
@@ -578,7 +581,10 @@ describe("safeCallback error swallowing", () => {
 
         expect(result.chunkCount).toBe(2);
         expect(onChunk).toHaveBeenCalledTimes(2);
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining("onChunk"), expect.any(Error));
+        expect(warn).toHaveBeenCalledWith(
+            expect.stringContaining("onChunk"),
+            expect.stringContaining("chunk observer failed")
+        );
         warn.mockRestore();
     });
 });

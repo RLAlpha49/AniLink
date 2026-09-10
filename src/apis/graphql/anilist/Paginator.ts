@@ -1,4 +1,5 @@
 import type { PageInfo } from "./interfaces/responses/page/PageInfo";
+import { safeInvoke } from "../../../base/hooks";
 import {
     bridgeAbortSignal,
     fetchWithLookAhead,
@@ -33,9 +34,10 @@ const DEFAULT_MAX_CHUNKS = 100;
 /**
  * Invokes a traversal callback (`onPage`/`onChunk`) and swallows any error it
  * throws so a failing observer cannot abort a traversal after all responses
- * have already been collected. The error is reported via `console.warn`
- * (matching the transport layer's default `onHookError` fallback) so a
- * broken callback is still visible without discarding the collected items.
+ * have already been collected. Delegates to the transport layer's
+ * {@link safeInvoke} so a broken callback is reported through the same
+ * mechanism and message shape as every other user-supplied callback in the
+ * library.
  *
  * @param callback - The user-supplied callback, when provided.
  * @param name - The callback name, for the warn message.
@@ -46,14 +48,7 @@ const safeCallback = <T>(
     name: string,
     payload: T
 ): void => {
-    if (callback === undefined) {
-        return;
-    }
-    try {
-        callback(payload);
-    } catch (callbackError) {
-        console.warn(`AniLink ${name} callback failed:`, callbackError);
-    }
+    safeInvoke(callback as (...args: never[]) => void, name, undefined, payload);
 };
 
 /**
