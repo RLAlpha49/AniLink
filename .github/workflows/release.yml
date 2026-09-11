@@ -21,6 +21,7 @@ permissions:
     issues: write
     pull-requests: write
     id-token: write
+    actions: read
 
 concurrency:
     group: ${{ github.workflow }}-${{ inputs.dry_run && 'dry-run' || 'publish' }}
@@ -41,7 +42,7 @@ jobs:
             }}
         name: semantic-release
         runs-on: ubuntu-latest
-        timeout-minutes: 15
+        timeout-minutes: 25
         # Live publishes wait for approval; dry runs use an unprotected environment.
         environment: ${{ inputs.dry_run && 'release-dry-run' || 'npm' }}
         steps:
@@ -63,23 +64,65 @@ jobs:
                     exit 1
                   fi
 
+            # The gate polls (like the docs deploy gate) instead of checking
+            # once: a dispatch shortly after a push would otherwise fail while
+            # CI is still running. The branch comes from the dispatched ref,
+            # not a hardcoded master, so dispatches from other refs report
+            # accurately instead of finding zero runs.
             - name: Verify CI is green for dry-run release
               if: ${{ github.event_name == 'workflow_dispatch' }}
               shell: bash
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                  latest_conclusion="$(gh run list \
-                      --workflow CI \
-                      --branch master \
-                      --limit 1 \
-                      --json conclusion \
-                      --jq '.[0].conclusion')"
-                  if [ "$latest_conclusion" != "success" ]; then
-                    echo "::error::Latest CI run on master concluded with '$latest_conclusion'; refusing to generate a dry-run release preview from an unvalidated commit"
-                    exit 1
-                  fi
-                  echo "Latest CI run on master is green; proceeding with dry-run release preview."
+                  dispatched_sha="${{ github.sha }}"
+                  wait_deadline=$((SECONDS + 600))
+                  api_failures=0
+                  zero_run_polls=0
+                  api_stderr="$(mktemp)"
+                  while :; do
+                    if ! runs_json="$(gh run list \
+                        --workflow CI \
+                        --branch "${GITHUB_REF_NAME}" \
+                        --commit "$dispatched_sha" \
+                        --json status,conclusion 2>"$api_stderr")"; then
+                      api_failures=$((api_failures + 1))
+                      if [ "$api_failures" -ge 5 ]; then
+                        echo "::error::GitHub API kept failing while polling CI status for commit $dispatched_sha"
+                        cat "$api_stderr"
+                        exit 1
+                      fi
+                      sleep 30
+                      continue
+                    fi
+                    api_failures=0
+                    green_runs="$(printf '%s' "$runs_json" | jq '[.[] | select(.conclusion == "success")] | length')"
+                    if [ "$green_runs" -gt 0 ]; then
+                      echo "CI is green for commit $dispatched_sha; proceeding with dry-run release preview."
+                      exit 0
+                    fi
+                    total_runs="$(printf '%s' "$runs_json" | jq 'length')"
+                    completed_runs="$(printf '%s' "$runs_json" | jq '[.[] | select(.status == "completed")] | length')"
+                    if [ "$total_runs" -gt 0 ] && [ "$completed_runs" -eq "$total_runs" ]; then
+                      echo "::error::CI runs for commit $dispatched_sha on ${GITHUB_REF_NAME} completed without success; refusing to generate a dry-run release preview from an unvalidated commit"
+                      exit 1
+                    fi
+                    if [ "$total_runs" -eq 0 ]; then
+                      zero_run_polls=$((zero_run_polls + 1))
+                      if [ "$zero_run_polls" -ge 4 ]; then
+                        echo "::error::No CI run exists for commit $dispatched_sha after $((zero_run_polls * 30))s (skipped, or dispatched on a ref CI does not build); refusing to generate a dry-run release preview from an unvalidated commit"
+                        exit 1
+                      fi
+                    else
+                      zero_run_polls=0
+                    fi
+                    if [ "$SECONDS" -ge "$wait_deadline" ]; then
+                      echo "::error::Timed out waiting for CI to complete for commit $dispatched_sha on ${GITHUB_REF_NAME}; refusing to generate a dry-run release preview from an unvalidated commit"
+                      exit 1
+                    fi
+                    echo "CI for commit $dispatched_sha is still in progress; waiting..."
+                    sleep 30
+                  done
 
             - name: Set up Node.js
               uses: actions/setup-node@v7

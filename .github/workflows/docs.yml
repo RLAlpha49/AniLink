@@ -1,18 +1,13 @@
 name: Documentation
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
     branches:
       - master
-    paths:
-      - "src/**"
-      - "docs-src/**"
-      - "scripts/generate-operation-reference.ts"
-      - "scripts/generate-search-index.ts"
-      - "scripts/generate-interfaces.ts"
-      - "typedoc.json"
-      - "README.md"
-      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
@@ -24,38 +19,197 @@ concurrency:
 
 jobs:
   publish:
+    # Only green CI runs from master pushes (not pull requests or manual CI
+    # dispatches) deploy, and only while the CI-tested commit is still the
+    # tip of master: if master has advanced since the run, this deploy is
+    # skipped and the newer push's own CI run deploys instead. Manual
+    # workflow_dispatch is always allowed and is gated on CI below.
+    if: >-
+      ${{
+        (github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'master' &&
+          github.event.workflow_run.head_sha == github.sha) ||
+        github.event_name == 'workflow_dispatch'
+      }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
+      # contents: read is required for checkout and the compare API once
+      # the repository is private; job-level permissions define the token's
+      # full set for this job, so it must be restated here.
+      contents: read
       pages: write
       id-token: write
+      actions: read
+      checks: read
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # workflow_run triggers cannot filter by path, so the old push-trigger
+      # path filter is enforced here: a master push that touched nothing
+      # docs-relevant skips the deploy instead of rebuilding the site. The
+      # compare covers the complete pushed commit range — the CI run's check
+      # suite records the push's before/after SHAs — so a docs change in any
+      # pushed commit, not just the tip, triggers a deploy. A range or
+      # compare that cannot be resolved fails open — the old filter would
+      # have deployed if the paths matched.
+      - name: Check for docs-relevant changes
+        id: docs_changes
+        if: ${{ github.event_name == 'workflow_run' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          CHECK_SUITE_URL: ${{ github.event.workflow_run.check_suite_url }}
+        run: |
+          relevant_paths='^src/|^docs-src/|^scripts/generate-operation-reference\.ts$|^scripts/generate-search-index\.ts$|^scripts/generate-llms-txt\.ts$|^scripts/generate-interfaces\.ts$|^scripts/typedoc-plugin-head\.mjs$|^typedoc\.json$|^typedoc-custom\.css$|^typedoc-header\.js$|^package(-lock)?\.json$|^README\.md$|^\.github/workflows/docs\.yml$'
+          # The CI run's check suite records the push's before/after SHAs, so
+          # the compare covers every commit in the push, not just the tip.
+          # A missing suite or an all-zero "before" (first push to the ref)
+          # has no usable range: fail open and deploy, as the old push-event
+          # path filter would have.
+          if ! range="$(gh api "$CHECK_SUITE_URL" \
+            --jq 'if .before and .before != "0000000000000000000000000000000000000000" then .before + "..." + .after else empty end' 2>/dev/null)" \
+            || [ -z "$range" ]; then
+            echo "push range unavailable; assuming docs-relevant and deploying"
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! changed="$(gh api \
+            --paginate \
+            "repos/${GITHUB_REPOSITORY}/compare/${range}" \
+            --jq '.files[].filename' 2>/dev/null)"; then
+            echo "compare failed; assuming docs-relevant and deploying"
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Changed files in push ${HEAD_SHA} (${range}):"
+          printf '%s\n' "$changed"
+          if printf '%s\n' "$changed" | grep -Eq "$relevant_paths"; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Push touched no docs-relevant files; skipping docs deploy."
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Manual dispatches have no workflow_run guarantee, so the gate polls
+      # (up to 10 minutes) for a green CI run of the dispatched commit before
+      # deploying. Transient gh/API failures are retried (up to 5 consecutive
+      # errors) so a blip does not kill an otherwise healthy deploy; a commit
+      # with no CI run at all fails fast instead of spinning to the deadline.
+      - name: Verify CI is green for dispatched commit
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          commit_sha="${{ github.sha }}"
+          wait_deadline=$((SECONDS + 600))
+          api_failures=0
+          zero_run_polls=0
+          api_stderr="$(mktemp)"
+          while :; do
+            if ! runs_json="$(gh run list \
+              --workflow CI \
+              --branch "${GITHUB_REF_NAME}" \
+              --commit "$commit_sha" \
+              --json status,conclusion 2>"$api_stderr")"; then
+              api_failures=$((api_failures + 1))
+              if [ "$api_failures" -ge 5 ]; then
+                echo "::error::GitHub API kept failing while polling CI status for commit $commit_sha; refusing to deploy docs from an unvalidated commit"
+                cat "$api_stderr"
+                exit 1
+              fi
+              echo "GitHub API call failed (attempt $api_failures); retrying in 30s..."
+              sleep 30
+              continue
+            fi
+            api_failures=0
+            green_runs="$(printf '%s' "$runs_json" | jq '[.[] | select(.conclusion == "success")] | length')"
+            if [ "$green_runs" -gt 0 ]; then
+              echo "CI is green for commit $commit_sha; proceeding with docs deploy."
+              exit 0
+            fi
+            total_runs="$(printf '%s' "$runs_json" | jq 'length')"
+            completed_runs="$(printf '%s' "$runs_json" | jq '[.[] | select(.status == "completed")] | length')"
+            if [ "$total_runs" -gt 0 ] && [ "$completed_runs" -eq "$total_runs" ]; then
+              cancelled_runs="$(printf '%s' "$runs_json" | jq '[.[] | select(.conclusion == "cancelled")] | length')"
+              if [ "$cancelled_runs" -eq "$total_runs" ]; then
+                echo "::notice::CI run for commit $commit_sha was cancelled (superseded push); skipping docs deploy for this commit."
+                exit 1
+              fi
+              echo "::error::CI runs for commit $commit_sha completed without success; refusing to deploy docs from an unvalidated commit"
+              exit 1
+            fi
+            if [ "$total_runs" -eq 0 ]; then
+              zero_run_polls=$((zero_run_polls + 1))
+              if [ "$zero_run_polls" -ge 4 ]; then
+                echo "::error::No CI run exists for commit $commit_sha after $((zero_run_polls * 30))s (skipped, or dispatched on a ref CI does not build); refusing to deploy docs from an unvalidated commit"
+                exit 1
+              fi
+            else
+              zero_run_polls=0
+            fi
+            if [ "$SECONDS" -ge "$wait_deadline" ]; then
+              echo "::error::Timed out waiting for CI to complete for commit $commit_sha; refusing to deploy docs from an unvalidated commit"
+              exit 1
+            fi
+            echo "CI for commit $commit_sha is still pending; waiting for it to finish..."
+            sleep 30
+          done
+
+      # Full history: the sitemap lastmod stamps come from each page's last
+      # git commit date, which a depth-1 clone cannot provide. The ref is
+      # the exact commit CI tested (workflow_run context), not whatever
+      # master points at when this job starts.
       - name: Check out source
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Node.js
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         run: npm ci
 
+      # Keyed on the search-rank module (which pins the model id and
+      # revision) and the lockfile (which pins the transformers version):
+      # a change to either can change the weights or the on-disk cache
+      # layout, so the cache must not survive it. The key is derived from
+      # hashFiles so it cannot drift from the pinned constants.
+      - name: Cache embedding model
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
+        uses: actions/cache@v4
+        with:
+          path: .models
+          key: embedding-model-${{ hashFiles('docs-src/lib/search-rank.ts') }}-${{ hashFiles('package-lock.json') }}
+
       - name: Generate documentation, operation reference, and guides site
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         run: npm run docs:generate
 
       - name: Configure GitHub Pages
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./docs
 
       - name: Deploy to GitHub Pages
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         id: deployment
         uses: actions/deploy-pages@v5

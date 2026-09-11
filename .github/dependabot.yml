@@ -11,9 +11,8 @@ updates:
       - dependency-name: "@types/node"
         update-types:
           - "version-update:semver-major"
-      - dependency-name: "typescript"
-        update-types:
-          - "version-update:semver-major"
+      # semantic-release changelog preset; major bumps change the release
+      # output and must be reviewed manually alongside a release.
       - dependency-name: "conventional-changelog-conventionalcommits"
         update-types:
           - "version-update:semver-major"
