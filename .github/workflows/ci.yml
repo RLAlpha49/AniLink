@@ -169,3 +169,25 @@ jobs:
       - name: Pack, install locally, and run live query smoke test
         if: ${{ env.ANILIST_TOKEN != '' }}
         run: npm run test:package
+
+  secret-scan:
+    name: Secret scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          # Full history so gitleaks can scan every commit reachable from the push.
+          fetch-depth: 0
+
+      # Defense in depth alongside CodeQL: catches accidental credential
+      # commits (tokens, keys) before they land on master. If this repository
+      # moves to an organization, add GITLEAKS_LICENSE (see gitleaks.io).
+      # PR comments are disabled because the workflow token is read-only;
+      # a detected leak still fails the job, which is the enforcement path.
+      - name: Scan for leaked secrets
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: 'false'
