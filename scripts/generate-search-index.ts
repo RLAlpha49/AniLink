@@ -22,10 +22,13 @@ import type { ReferenceManifest } from "./generate-operation-reference";
 export {
     cosineSimilarity,
     mergeResults,
+    SEARCH_MODEL_ID,
+    SEARCH_MODEL_REVISION,
     type SearchDoc,
     type SearchIndex,
     type ScoredResult,
 } from "../docs-src/lib/search-rank";
+import { SEARCH_MODEL_ID, SEARCH_MODEL_REVISION } from "../docs-src/lib/search-rank";
 import type { SearchDoc, SearchIndex } from "../docs-src/lib/search-rank";
 
 /** Slugify a heading to a VitePress anchor. */
@@ -198,7 +201,8 @@ export function chunkTypedoc(html: string, url: string): SearchDoc[] {
 // CLI: embed all chunks and write the index.
 // ---------------------------------------------------------------------------
 
-const MODEL_ID = "Xenova/bge-small-en-v1.5";
+const MODEL_ID = SEARCH_MODEL_ID;
+const MODEL_REVISION = SEARCH_MODEL_REVISION;
 const DIM = 384;
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
@@ -286,9 +290,11 @@ function mdTitle(md: string, fallback: string): string {
 
 /** Build-time entrypoint: chunk, embed, and write the index. */
 async function main(): Promise<void> {
-    const { pipeline } = await import("@huggingface/transformers");
+    const { pipeline, env } = await import("@huggingface/transformers");
+    env.cacheDir = join(ROOT, ".models");
     const extractor = await pipeline("feature-extraction", MODEL_ID, {
         dtype: "q8",
+        revision: MODEL_REVISION,
     });
 
     const docs: SearchDoc[] = [];

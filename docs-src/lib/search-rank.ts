@@ -6,6 +6,24 @@
  * import any Node-only built-ins so it bundles cleanly for the browser.
  */
 
+/**
+ * The embedding model used by the semantic search, shared verbatim by the
+ * build-time indexer (`scripts/generate-search-index.ts`), the VitePress
+ * search UI (`SemanticSearch.vue`), and the TypeDoc search bridge
+ * (`anilink-search.js`). All three must embed with the same weights or
+ * cosine rankings silently degrade, so the id and revision live here — the
+ * one module every consumer already imports.
+ */
+export const SEARCH_MODEL_ID = "Xenova/bge-small-en-v1.5";
+
+/**
+ * Pinned model revision. Pinning keeps build-time and browser embeddings
+ * byte-identical across deploys; every consumer — the build indexer, the
+ * VitePress search UI, the TypeDoc bridge, and the CI model cache key —
+ * must reference this same constant or cosine rankings silently degrade.
+ */
+export const SEARCH_MODEL_REVISION = "ea104dacec62c0de699686887e3f920caeb4f3e3";
+
 /** One searchable chunk. */
 export interface SearchDoc {
     /** Stable id (hash of url+title). */

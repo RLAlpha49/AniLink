@@ -27,6 +27,8 @@ import { CornerDownLeft, Search, Sparkles } from "@lucide/vue";
 import {
     cosineSimilarity,
     mergeResults,
+    SEARCH_MODEL_ID,
+    SEARCH_MODEL_REVISION,
     type ScoredResult,
     type SearchDoc,
     type SearchIndex,
@@ -90,10 +92,9 @@ async function loadModel(): Promise<void> {
     semanticLoading.value = true;
     try {
         const mod = await import("@huggingface/transformers");
-        extractor = (await mod.pipeline(
-            "feature-extraction",
-            "Xenova/bge-small-en-v1.5"
-        )) as Extractor;
+        extractor = (await mod.pipeline("feature-extraction", SEARCH_MODEL_ID, {
+            revision: SEARCH_MODEL_REVISION,
+        })) as Extractor;
         semanticReady.value = true;
     } catch {
         semanticError.value = true;

@@ -85,7 +85,7 @@
     "author": "RLAlpha49",
     "license": "MIT",
     "devDependencies": {
-        "@huggingface/transformers": "^4.2.0",
+        "@huggingface/transformers": "4.2.0",
         "@lucide/vue": "^1.41.0",
         "@semantic-release/changelog": "^7.0.0",
         "@semantic-release/commit-analyzer": "^13.0.1",

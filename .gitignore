@@ -5,6 +5,7 @@
 /docs
 /docs-src/.vitepress/cache
 /dist
+/.models
 /node_modules
 .env
 .env.*.tmp

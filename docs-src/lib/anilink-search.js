@@ -13,6 +13,13 @@
     "use strict";
 
     var MODEL_ID = "Xenova/bge-small-en-v1.5";
+    var MODEL_REVISION = "ea104dacec62c0de699686887e3f920caeb4f3e3";
+    // Keep in sync with SEARCH_MODEL_ID / SEARCH_MODEL_REVISION in
+    // docs-src/lib/search-rank.ts and the @huggingface/transformers version
+    // in package.json: all three must embed with the same weights or cosine
+    // rankings silently degrade.
+    var TRANSFORMERS_CDN =
+        "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/dist/transformers.min.js";
     var INDEX_URL = "/search-index.json";
     var STORAGE_KEY = "anilink-search-recent";
 
@@ -38,7 +45,9 @@
     }
 
     function cosine(a, b) {
-        var dot = 0, na = 0, nb = 0;
+        var dot = 0,
+            na = 0,
+            nb = 0;
         for (var i = 0; i < a.length; i++) {
             dot += a[i] * b[i];
             na += a[i] * a[i];
@@ -64,7 +73,8 @@
     function mergeResults(semantic, keyword) {
         function norm(arr) {
             if (!arr.length) return arr;
-            var max = -Infinity, min = Infinity;
+            var max = -Infinity,
+                min = Infinity;
             for (var i = 0; i < arr.length; i++) {
                 if (arr[i].score > max) max = arr[i].score;
                 if (arr[i].score < min) min = arr[i].score;
@@ -77,7 +87,9 @@
         var sem = norm(semantic);
         var key = norm(keyword);
         var keyUrls = {};
-        key.forEach(function (r) { keyUrls[r.url] = true; });
+        key.forEach(function (r) {
+            keyUrls[r.url] = true;
+        });
         var byUrl = {};
         sem.forEach(function (r) {
             byUrl[r.url] = Object.assign({}, r, {
@@ -86,13 +98,19 @@
         });
         key.forEach(function (r) {
             if (byUrl[r.url]) {
-                if (r.score > byUrl[r.url].score) byUrl[r.url] = Object.assign({}, r, { matchedBy: "both" });
+                if (r.score > byUrl[r.url].score)
+                    byUrl[r.url] = Object.assign({}, r, { matchedBy: "both" });
             } else {
                 byUrl[r.url] = Object.assign({}, r, { matchedBy: "keyword" });
             }
         });
-        return Object.keys(byUrl).map(function (u) { return byUrl[u]; })
-            .sort(function (a, b) { return b.score - a.score; });
+        return Object.keys(byUrl)
+            .map(function (u) {
+                return byUrl[u];
+            })
+            .sort(function (a, b) {
+                return b.score - a.score;
+            });
     }
 
     async function loadIndex() {
@@ -107,8 +125,10 @@
         semanticLoading = true;
         renderStatus();
         try {
-            var mod = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0/dist/transformers.min.js");
-            extractor = await mod.pipeline("feature-extraction", MODEL_ID);
+            var mod = await import(TRANSFORMERS_CDN);
+            extractor = await mod.pipeline("feature-extraction", MODEL_ID, {
+                revision: MODEL_REVISION,
+            });
             semanticReady = true;
         } catch {
             semanticError = true;
@@ -121,17 +141,34 @@
     async function runSearch() {
         var q = input.value.trim();
         activeIndex = 0;
-        if (!q) { results = []; renderResults(); return; }
+        if (!q) {
+            results = [];
+            renderResults();
+            return;
+        }
 
         keywordLoading = true;
         renderStatus();
         try {
             await loadIndex();
-            var keyword = index.map(function (d) {
-                return { url: d.url, title: d.title, text: d.text, source: d.source, score: keywordScore(d, q), matchedBy: "keyword" };
-            }).filter(function (r) { return r.score > 0; })
-              .sort(function (a, b) { return b.score - a.score; })
-              .slice(0, 8);
+            var keyword = index
+                .map(function (d) {
+                    return {
+                        url: d.url,
+                        title: d.title,
+                        text: d.text,
+                        source: d.source,
+                        score: keywordScore(d, q),
+                        matchedBy: "keyword",
+                    };
+                })
+                .filter(function (r) {
+                    return r.score > 0;
+                })
+                .sort(function (a, b) {
+                    return b.score - a.score;
+                })
+                .slice(0, 8);
             results = keyword;
             renderResults();
         } finally {
@@ -147,9 +184,21 @@
         try {
             var out = await extractor(q, { pooling: "mean", normalize: true });
             var qvec = Array.from(out.tolist()[0]);
-            var semantic = index.map(function (d) {
-                return { url: d.url, title: d.title, text: d.text, source: d.source, score: d.vector ? cosine(qvec, d.vector) : 0, matchedBy: "semantic" };
-            }).sort(function (a, b) { return b.score - a.score; }).slice(0, 8);
+            var semantic = index
+                .map(function (d) {
+                    return {
+                        url: d.url,
+                        title: d.title,
+                        text: d.text,
+                        source: d.source,
+                        score: d.vector ? cosine(qvec, d.vector) : 0,
+                        matchedBy: "semantic",
+                    };
+                })
+                .sort(function (a, b) {
+                    return b.score - a.score;
+                })
+                .slice(0, 8);
             results = mergeResults(semantic, results);
             activeIndex = 0;
             renderResults();
@@ -162,8 +211,16 @@
     function select(url) {
         var q = input.value.trim();
         if (q) {
-            recent = [q].concat(recent.filter(function (r) { return r !== q; })).slice(0, 5);
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(recent)); } catch {}
+            recent = [q]
+                .concat(
+                    recent.filter(function (r) {
+                        return r !== q;
+                    })
+                )
+                .slice(0, 5);
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
+            } catch {}
         }
         closeModal();
         window.location.assign(url);
@@ -176,7 +233,8 @@
         if (semanticError) text = "Semantic unavailable — keyword results only";
         else if (semanticLoading) text = "Warming up semantic search…";
         else if (keywordLoading) text = "Searching…";
-        else if (input && input.value.trim() && semanticReady && results.length) text = "Semantic results";
+        else if (input && input.value.trim() && semanticReady && results.length)
+            text = "Semantic results";
         statusEl.style.display = text ? "flex" : "none";
         statusEl.innerHTML = "";
         if (anyLoading) {
@@ -198,7 +256,9 @@
 
     function renderResults() {
         if (!listEl) return;
-        var filtered = results.filter(function (r) { return filters[r.source]; });
+        var filtered = results.filter(function (r) {
+            return filters[r.source];
+        });
         listEl.innerHTML = "";
         if (!filtered.length) {
             if (input && input.value.trim()) {
@@ -231,7 +291,10 @@
                 var match = document.createElement("span");
                 match.className = "as-match match-" + r.matchedBy;
                 match.textContent = r.matchedBy === "both" ? "\u2726 +kw" : "\u2726";
-                match.title = r.matchedBy === "both" ? "Matched by keyword and semantic search" : "Matched by semantic search";
+                match.title =
+                    r.matchedBy === "both"
+                        ? "Matched by keyword and semantic search"
+                        : "Matched by semantic search";
                 badges.appendChild(match);
             }
             btn.appendChild(badges);
@@ -249,8 +312,13 @@
             wrap.appendChild(snip);
             btn.appendChild(wrap);
 
-            btn.addEventListener("click", function () { select(r.url); });
-            btn.addEventListener("mousemove", function () { activeIndex = i; renderActive(); });
+            btn.addEventListener("click", function () {
+                select(r.url);
+            });
+            btn.addEventListener("mousemove", function () {
+                activeIndex = i;
+                renderActive();
+            });
             li.appendChild(btn);
             listEl.appendChild(li);
         });
@@ -336,11 +404,23 @@
 
         input.addEventListener("input", runSearch);
         input.addEventListener("keydown", function (e) {
-            var filtered = results.filter(function (r) { return filters[r.source]; });
+            var filtered = results.filter(function (r) {
+                return filters[r.source];
+            });
             if (!filtered.length) return;
-            if (e.key === "ArrowDown") { e.preventDefault(); activeIndex = (activeIndex + 1) % filtered.length; renderActive(); }
-            else if (e.key === "ArrowUp") { e.preventDefault(); activeIndex = (activeIndex - 1 + filtered.length) % filtered.length; renderActive(); }
-            else if (e.key === "Enter") { e.preventDefault(); var r = filtered[activeIndex]; if (r) select(r.url); }
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                activeIndex = (activeIndex + 1) % filtered.length;
+                renderActive();
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                activeIndex = (activeIndex - 1 + filtered.length) % filtered.length;
+                renderActive();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                var r = filtered[activeIndex];
+                if (r) select(r.url);
+            }
         });
     }
 
@@ -349,7 +429,9 @@
         overlay.className = "as-overlay theme-" + theme();
         document.body.appendChild(overlay);
         document.body.style.overflow = "hidden";
-        requestAnimationFrame(function () { if (input) input.focus(); });
+        requestAnimationFrame(function () {
+            if (input) input.focus();
+        });
         renderStatus();
         // Preload the search index and the model the moment the modal opens.
         // The index is small and needed for every search (keyword results
@@ -372,23 +454,31 @@
         var nativeDialog = document.getElementById("tsd-search");
         if (nativeDialog && !nativeDialog.dataset.asHijacked) {
             nativeDialog.dataset.asHijacked = "1";
-            nativeDialog.showModal = function () { openModal(); };
-            nativeDialog.show = function () { openModal(); };
+            nativeDialog.showModal = function () {
+                openModal();
+            };
+            nativeDialog.show = function () {
+                openModal();
+            };
             nativeDialog.close = function () {};
         }
     }
 
     function init() {
-        document.addEventListener("click", function (e) {
-            var target = e.target;
-            if (!target) return;
-            var trigger = target.closest ? target.closest("#tsd-search-trigger") : null;
-            if (trigger) {
-                e.preventDefault();
-                e.stopPropagation();
-                openModal();
-            }
-        }, true);
+        document.addEventListener(
+            "click",
+            function (e) {
+                var target = e.target;
+                if (!target) return;
+                var trigger = target.closest ? target.closest("#tsd-search-trigger") : null;
+                if (trigger) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openModal();
+                }
+            },
+            true
+        );
 
         neutralizeNativeSearch();
         setTimeout(neutralizeNativeSearch, 0);
