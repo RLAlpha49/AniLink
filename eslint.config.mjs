@@ -45,13 +45,30 @@ export default [
     ...prettierConfig,
   },
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'scripts/**/*.ts', 'docs-src/**/*.{js,mjs}'],
     plugins: {
       security,
     },
     rules: {
       ...security.configs.recommended.rules,
+      // Object access in `src` is type-checked (TypeScript strict mode), so
+      // this rule is redundant there; new dynamic indexing must use
+      // ValidateVariables.ts-style allowlists instead of raw object access.
       'security/detect-object-injection': 'off',
+    },
+  },
+  {
+    // Build-time codegen scripts traverse the repository with computed
+    // paths and build regexes from identifiers parsed out of the repo's own
+    // source, so the non-literal fs/regexp rules fire on their designed
+    // behavior. These scripts only run against the repository's own trusted
+    // content (CI, docs generation), never on untrusted input, so those
+    // rules are scoped off here; every other security rule still applies.
+    files: ['scripts/**/*.ts'],
+    rules: {
+      'security/detect-non-literal-fs-filename': 'off',
+      'security/detect-non-literal-regexp': 'off',
+      'security/detect-unsafe-regex': 'off',
     },
   },
   {
@@ -61,6 +78,7 @@ export default [
       'docs',
       'coverage',
       '/docs/*',
+      'docs-src/.vitepress/cache',
     ],
   },
 ];
