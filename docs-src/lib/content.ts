@@ -55,6 +55,13 @@ export const PAGES: DocPage[] = [
         section: "start",
     },
     {
+        path: "/privacy",
+        title: "Privacy",
+        summary: "What the docs site does — and does not do — with your data.",
+        provider: "shared",
+        section: "start",
+    },
+    {
         path: "/error-handling",
         title: "Error handling",
         summary: "Normalized error classes and stable codes.",

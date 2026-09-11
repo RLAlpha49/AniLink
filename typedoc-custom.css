@@ -1019,3 +1019,107 @@ footer p {
     background: color-mix(in srgb, var(--rd-text-soft) 30%, transparent);
     border-radius: 4px;
 }
+
+/* ====================================================================== */
+/* Analytics consent banner                                                */
+/* ====================================================================== */
+
+#anilink-consent-banner {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: min(680px, calc(100vw - 2rem));
+    padding: 0.75rem 1rem;
+    background: var(--rd-bg);
+    border: 1px solid var(--rd-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    font-size: 0.82rem;
+    color: var(--rd-text);
+    font-family: var(--font-family-text);
+    line-height: 1.45;
+    animation: consent-rise 0.25s ease;
+}
+@keyframes consent-rise {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 12px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+#anilink-consent-banner .consent-text {
+    margin: 0;
+    line-height: 1.45;
+}
+#anilink-consent-banner .consent-text a {
+    color: var(--rd-accent);
+    text-decoration: underline;
+}
+#anilink-consent-banner .consent-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+#anilink-consent-banner .consent-btn {
+    padding: 0.4rem 0.85rem;
+    border-radius: 7px;
+    border: 1px solid var(--rd-border);
+    background: var(--rd-bg-soft);
+    color: var(--rd-text);
+    font-size: 0.8rem;
+    font-family: var(--font-family-text);
+    cursor: pointer;
+}
+#anilink-consent-banner .consent-btn:hover {
+    border-color: var(--rd-accent);
+}
+#anilink-consent-banner .consent-accept {
+    background: var(--rd-accent);
+    border-color: var(--rd-accent);
+    color: var(--rd-bg);
+}
+@media (max-width: 560px) {
+    #anilink-consent-banner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+    }
+    #anilink-consent-banner .consent-actions {
+        justify-content: flex-end;
+    }
+}
+
+/* Reopen control shown while a valid choice is stored and the banner is
+ * closed; mirrors the Vue component's .consent-settings button. */
+#anilink-consent-settings {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 900;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    padding: 0;
+    background: var(--rd-bg);
+    border: 1px solid var(--rd-border);
+    border-radius: 50%;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14);
+    color: var(--rd-text);
+    font-family: var(--font-family-text);
+    cursor: pointer;
+}
+
+#anilink-consent-settings:hover {
+    border-color: var(--rd-accent);
+    color: var(--rd-accent);
+}

@@ -23,6 +23,7 @@ import {
 } from "@lucide/vue";
 import Home from "../../lib/components/Home.vue";
 import SearchModal from "../../lib/components/SearchModal.vue";
+import ConsentBanner from "../../lib/components/ConsentBanner.vue";
 import NotFound from "./NotFound.vue";
 
 const searchModal = ref<InstanceType<typeof SearchModal> | null>(null);
@@ -519,6 +520,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
         </div>
     </div>
     <SearchModal ref="searchModal" />
+    <ConsentBanner />
 </template>
 
 <style scoped>

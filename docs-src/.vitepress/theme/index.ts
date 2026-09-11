@@ -4,6 +4,7 @@ import DocsLayout from "./DocsLayout.vue";
 import NotFound from "./NotFound.vue";
 import Callout from "../../lib/components/Callout.vue";
 import CodeBlock from "../../lib/components/CodeBlock.vue";
+import ConsentBanner from "../../lib/components/ConsentBanner.vue";
 import Home from "../../lib/components/Home.vue";
 import Icon from "../../lib/components/Icon.vue";
 import Mermaid from "../../lib/components/Mermaid.vue";
@@ -17,6 +18,7 @@ import "./styles/base.css";
 function registerComponents(app: App): void {
     app.component("Callout", Callout);
     app.component("CodeBlock", CodeBlock);
+    app.component("ConsentBanner", ConsentBanner);
     app.component("Home", Home);
     app.component("Icon", Icon);
     app.component("Mermaid", Mermaid);

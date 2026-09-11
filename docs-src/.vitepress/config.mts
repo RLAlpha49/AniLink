@@ -1,7 +1,8 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig, type Plugin } from "vitepress";
+import { defineConfig, type HeadConfig, type Plugin } from "vitepress";
+import { CONSENT_BOOT_SCRIPT } from "../lib/consent.mjs";
 
 const docsConfigDir = dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = normalize(join(docsConfigDir, "..", "..", "package.json"));
@@ -239,6 +240,7 @@ export default defineConfig({
         ["meta", { property: "og:site_name", content: "AniLink" }],
         ["meta", { name: "twitter:site", content: "@AniLinkAPI" }],
         ["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
+        ["script", {}, CONSENT_BOOT_SCRIPT],
         [
             "script",
             { id: "anilink-restore-theme" },
