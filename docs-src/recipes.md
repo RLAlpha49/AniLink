@@ -1,5 +1,6 @@
 ---
 title: Recipes
+description: "Complete copy-pasteable AniLink workflows — list walking, upserts, token refresh — with each recipe stating its provider scope up front."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: MAL client configuration
+description: "The mal slot fields — access token and shared transport options — and how they map onto the REST operations."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

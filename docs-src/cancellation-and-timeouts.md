@@ -1,5 +1,6 @@
 ---
 title: Cancellation & timeouts
+description: "Per-request timeout and AbortSignal support in AniLink, including the fail-fast validation of invalid timeout values."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

@@ -1,5 +1,6 @@
 ---
 title: Pagination
+description: "The three AniList pagination helpers — paginate, paginatePages, and the chunk-based sibling paginateChunks — and when to use each traversal style."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

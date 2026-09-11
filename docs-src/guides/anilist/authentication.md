@@ -1,5 +1,6 @@
 ---
 title: AniList authentication
+description: "Create an AniList GraphQL client token and pass it positionally or in the anilist credential slot."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

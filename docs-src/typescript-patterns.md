@@ -1,5 +1,6 @@
 ---
 title: TypeScript patterns
+description: "How AniLink operation variables and responses stay fully typed, so inferred shapes appear on hover without type archaeology."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

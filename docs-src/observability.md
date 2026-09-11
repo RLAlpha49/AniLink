@@ -1,5 +1,6 @@
 ---
 title: Observability
+description: "The four AniLink request-lifecycle hooks, configured per provider slot so they never leak between providers."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

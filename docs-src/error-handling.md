@@ -1,5 +1,6 @@
 ---
 title: Error handling
+description: "The AniLinkError taxonomy with stable code values: classify transport failures by instanceof or code, never by parsing messages."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

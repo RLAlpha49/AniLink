@@ -1,5 +1,6 @@
 ---
 title: Troubleshooting & FAQ
+description: "Symptom, cause, and fix rows grouped by provider: skim for what hurts — auth, rate limits, and common AniLink setup mistakes."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

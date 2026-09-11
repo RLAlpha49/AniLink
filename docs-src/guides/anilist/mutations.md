@@ -1,5 +1,6 @@
 ---
 title: Mutations
+description: "The authenticated aniLink.anilist.mutation operations: token requirement, and why mutations are never retried by default."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

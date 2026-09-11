@@ -1,5 +1,6 @@
 ---
 title: AniList client configuration
+description: "Every AniList slot option — timeout, retries, pacing, hooks, exposeRawAxiosError — with types, defaults, and when to change each."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

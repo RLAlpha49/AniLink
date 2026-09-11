@@ -1,5 +1,6 @@
 ---
 title: AniList mutation operations
+description: "The authenticated AniList GraphQL mutation operations, grouped by response domain."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

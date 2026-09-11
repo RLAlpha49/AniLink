@@ -1,5 +1,6 @@
 ---
 title: AniList custom operations
+description: "The flexible custom AniList GraphQL operation, including its request and response contract."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

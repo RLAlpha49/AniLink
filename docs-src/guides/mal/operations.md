@@ -1,5 +1,6 @@
 ---
 title: MAL operations
+description: "The MyAnimeList REST operation surface: anime and manga lookups, seasonal, rankings, suggestions, and user lists with parameter tables per operation."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
@@ -265,4 +266,6 @@ Field names are MAL's own, and AniLink passes them through verbatim. See the [MA
 
 ## Next steps
 
+- <Icon name="ArrowRight" :size="14" /> [MAL operation catalog](/operations/mal) — every operation on this page with its full request/response anatomy.
+- <Icon name="ArrowRight" :size="14" /> [Operation reference overview](/operations/) — how the generated catalogs stay in sync with the code.
 - <Icon name="ArrowRight" :size="14" /> [Per-request options](/per-request-options) — transport overrides per call.

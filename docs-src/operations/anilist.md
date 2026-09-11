@@ -1,5 +1,6 @@
 ---
 title: AniList operation catalog
+description: "Entry point for the AniList operation pages, grouped by query, page-query, mutation, and custom categories."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

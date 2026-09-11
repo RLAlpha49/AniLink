@@ -1,5 +1,6 @@
 ---
 title: Introduction
+description: "What AniLink is: one AniLink class exposing typed anilist and mal surfaces side by side, with a provider, protocol, and namespace overview."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

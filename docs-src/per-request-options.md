@@ -1,5 +1,6 @@
 ---
 title: Per-request options
+description: "Override timeouts, retries, and other instance defaults for a single call with the trailing per-request options argument every operation accepts."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

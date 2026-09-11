@@ -1,5 +1,6 @@
 ---
 title: Retries & resilience
+description: "The three shared-transport resilience mechanisms — transient-failure retries, rate-limit pacing, and the circuit breaker — and their per-provider defaults."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

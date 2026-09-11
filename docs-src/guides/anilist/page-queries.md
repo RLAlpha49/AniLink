@@ -1,5 +1,6 @@
 ---
 title: Page queries
+description: "Fetch one known page of an AniList collection with aniLink.anilist.query.page: page and perPage controls returning pageInfo."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

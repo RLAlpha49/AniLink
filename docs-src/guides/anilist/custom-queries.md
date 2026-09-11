@@ -1,5 +1,6 @@
 ---
 title: Custom queries
+description: "Send a GraphQL document you write yourself with anilist.custom — the typed escape hatch for field combinations the operations do not expose."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

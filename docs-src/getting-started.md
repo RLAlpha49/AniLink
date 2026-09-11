@@ -1,5 +1,6 @@
 ---
 title: Getting started
+description: "Install anilink-api-wrapper, construct a client with credentials, and send a first request to either provider."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

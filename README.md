@@ -19,6 +19,8 @@ A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co
 npm install anilink-api-wrapper
 ```
 
+Requires Node.js >= 22; the package is ESM-only (`import` syntax only, no CommonJS `require`).
+
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
 

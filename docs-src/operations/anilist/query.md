@@ -1,5 +1,6 @@
 ---
 title: AniList query operations
+description: "The public AniList GraphQL query operations, grouped by response domain."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

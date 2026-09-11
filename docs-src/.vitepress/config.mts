@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +14,8 @@ const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
 const SITE_URL = "https://anilink.alpha49.com";
 const DEFAULT_SITE_DESCRIPTION =
     "AniLink is the TypeScript docs and reference for AniList and MyAnimeList integrations, including authentication, paging, GraphQL queries, and API patterns.";
+
+const SOCIAL_CARD_ALT = "AniLink — typed AniList and MyAnimeList client for TypeScript";
 
 if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
     throw new Error(`Missing valid version in ${packageJsonPath}`);
@@ -49,6 +52,90 @@ function pageDescriptionFor(title: string | undefined, relativePath: string | un
     const context = describeRouteContext(route);
 
     return `${baseTitle} — AniLink ${context} for TypeScript. Learn the patterns, client setup, and API usage needed to integrate AniList and MyAnimeList reliably.`;
+}
+
+/**
+ * Map a sitemap URL back to the docs-src markdown file that produced it.
+ *
+ * Sitemap URLs carry no leading slash and no extension: "" is the landing
+ * page, "guides/anilist/pagination" is a regular page, and "operations/" is a
+ * directory index. Returns null when no source file matches so callers can
+ * fall back.
+ */
+function sourceFileForSitemapUrl(url: string): string | null {
+    const route = url.replace(/\/+$/, "");
+    const candidates = route === "" ? ["index.md"] : [`${route}.md`, join(route, "index.md")];
+    for (const candidate of candidates) {
+        const file = normalize(join(docsConfigDir, "..", candidate));
+        if (existsSync(file) && statSync(file).isFile()) {
+            return file;
+        }
+    }
+    return null;
+}
+
+/**
+ * File → last-commit-date map for every docs-src page, built with one git
+ * process. `git log --name-only` walks history newest-first; the first
+ * (newest) commit touching each file wins. Files with no history (new,
+ * uncommitted pages) are absent from the map.
+ *
+ * Returns an empty map when git is unavailable or the build runs outside a
+ * repository — callers then omit lastmod rather than guessing.
+ */
+function gitLastmodMap(): Map<string, string> {
+    const map = new Map<string, string>();
+    try {
+        // One process for the whole tree instead of one per sitemap URL
+        // (a per-URL spawn cost ~0.5s each on Windows, ~15s per build).
+        const output = execFileSync(
+            "git",
+            ["log", "--format=%cI", "--name-only", "--", "docs-src"],
+            {
+                cwd: normalize(join(docsConfigDir, "..", "..")),
+                encoding: "utf8",
+                stdio: ["ignore", "pipe", "ignore"],
+                maxBuffer: 32 * 1024 * 1024,
+            }
+        );
+        let date: string | null = null;
+        for (const line of output.split("\n")) {
+            const trimmed = line.trim();
+            if (trimmed === "") continue;
+            if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) {
+                date = trimmed;
+            } else if (date !== null) {
+                // Git prints repo-relative paths with forward separators;
+                // make them absolute and OS-normalized so the sitemap
+                // lookup (which builds absolute paths) matches on every
+                // platform. History walks newest-first, so only the first
+                // (newest) commit touching each file sets its date.
+                const absolute = normalize(join(docsConfigDir, "..", "..", trimmed));
+                if (!map.has(absolute)) {
+                    map.set(absolute, date);
+                }
+            }
+        }
+    } catch {
+        // No git, shallow history, or not a repo: leave the map empty.
+    }
+    return map;
+}
+
+/**
+ * Last-modified timestamp for a sitemap URL, as an ISO 8601 string — or
+ * undefined to omit the field.
+ *
+ * Uses the file's last git commit date. When the date cannot be resolved
+ * (uncommitted page, no git history, git unavailable), the lastmod field is
+ * omitted rather than stamped with the build time: a sitemap whose every
+ * entry says "modified just now" on each deploy teaches crawlers to ignore
+ * the field. The sitemap spec allows omission.
+ */
+function lastmodForSitemapUrl(url: string, gitDates: Map<string, string>): string | undefined {
+    const file = sourceFileForSitemapUrl(url);
+    if (!file) return undefined;
+    return gitDates.get(file);
 }
 
 /**
@@ -212,6 +299,19 @@ export default defineConfig({
     cleanUrls: true,
     sitemap: {
         hostname: SITE_URL,
+        // Drop the 404 page (it must not be crawlable) and stamp every
+        // remaining entry with a lastmod date from its git history. Entries
+        // whose date cannot be resolved keep lastmod omitted (undefined)
+        // instead of a misleading build-time stamp.
+        transformItems: (items) => {
+            const gitDates = gitLastmodMap();
+            return items
+                .filter((item) => {
+                    const path = item.url.replace(/\/+$/, "");
+                    return path !== "404" && !path.endsWith("/404");
+                })
+                .map((item) => ({ ...item, lastmod: lastmodForSitemapUrl(item.url, gitDates) }));
+        },
     },
     ignoreDeadLinks: [/^\/typedoc\//],
     srcExclude: ["**/README.md", ".vitepress/**", "lib/**"],
@@ -236,7 +336,6 @@ export default defineConfig({
             },
         ],
         ["meta", { name: "theme-color", content: "#0b1220" }],
-        ["meta", { name: "robots", content: "index,follow" }],
         ["meta", { property: "og:site_name", content: "AniLink" }],
         ["meta", { name: "twitter:site", content: "@AniLinkAPI" }],
         ["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
@@ -257,6 +356,7 @@ export default defineConfig({
     ],
     transformHead: ({ pageData, title }) => {
         const route = pageData.relativePath ? routeFromRelativePath(pageData.relativePath) : "/";
+        const isNotFound = route === "/404";
         const canonicalUrl = `${SITE_URL}${route === "/" ? "/" : route}`;
         const pageTitle = title ? `${title} | AniLink` : "AniLink";
         const description =
@@ -282,19 +382,29 @@ export default defineConfig({
             },
         };
 
-        return [
+        const head: HeadConfig[] = [
+            ["meta", { name: "robots", content: isNotFound ? "noindex,follow" : "index,follow" }],
             ["meta", { name: "description", content: description }],
             ["meta", { property: "og:title", content: pageTitle }],
             ["meta", { property: "og:description", content: description }],
             ["meta", { property: "og:type", content: "website" }],
             ["meta", { property: "og:url", content: canonicalUrl }],
-            ["meta", { property: "og:image", content: `${SITE_URL}/logo.png` }],
+            ["meta", { property: "og:image", content: `${SITE_URL}/social-card.png` }],
+            ["meta", { property: "og:image:width", content: "1200" }],
+            ["meta", { property: "og:image:height", content: "630" }],
+            ["meta", { property: "og:image:alt", content: SOCIAL_CARD_ALT }],
             ["meta", { name: "twitter:card", content: "summary_large_image" }],
             ["meta", { name: "twitter:title", content: pageTitle }],
             ["meta", { name: "twitter:description", content: description }],
-            ["meta", { name: "twitter:image", content: `${SITE_URL}/logo.png` }],
+            ["meta", { name: "twitter:image", content: `${SITE_URL}/social-card.png` }],
+            ["meta", { name: "twitter:image:alt", content: SOCIAL_CARD_ALT }],
             ["script", { type: "application/ld+json" }, JSON.stringify(jsonLd)],
-            ["link", { rel: "canonical", href: canonicalUrl }],
         ];
+
+        if (!isNotFound) {
+            head.push(["link", { rel: "canonical", href: canonicalUrl }]);
+        }
+
+        return head;
     },
 });

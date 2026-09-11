@@ -1,5 +1,6 @@
 ---
 title: MAL authentication
+description: "The MyAnimeList OAuth2 with PKCE flow: register an application, run the code exchange, and use the resulting access token."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

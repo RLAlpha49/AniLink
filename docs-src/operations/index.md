@@ -1,5 +1,6 @@
 ---
 title: Operation reference
+description: "The generated per-operation catalog of every public AniLink operation across both providers, produced from source metadata so it cannot drift from the code."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

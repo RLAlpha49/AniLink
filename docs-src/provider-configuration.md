@@ -1,5 +1,6 @@
 ---
 title: Provider configuration
+description: "The two ways to pass AniLink credentials — positional token or per-provider anilist and mal slots — and how each maps to the client surfaces."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

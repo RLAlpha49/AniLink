@@ -1,5 +1,6 @@
 ---
 title: Querying data
+description: "The aniLink.anilist.query surface grouped by domain: typed variables object plus optional trailing RequestOptions everywhere."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

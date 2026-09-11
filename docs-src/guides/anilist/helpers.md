@@ -1,5 +1,6 @@
 ---
 title: AniList helpers
+description: "The three AniList data helpers — fuzzyDate, flattenMediaListCollection, and crossLink — as client methods on the anilist namespace."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

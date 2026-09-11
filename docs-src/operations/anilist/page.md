@@ -1,5 +1,6 @@
 ---
 title: AniList page-query operations
+description: "The paginated AniList GraphQL page-query operations, grouped by response domain."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

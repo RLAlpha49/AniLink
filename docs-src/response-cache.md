@@ -1,5 +1,6 @@
 ---
 title: Response cache
+description: "The opt-in in-memory TTL response cache keyed by method, url, and body: repeated identical reads skip the network and mutations are never cached."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
