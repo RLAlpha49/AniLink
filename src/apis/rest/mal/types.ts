@@ -18,7 +18,7 @@ export interface MalPicture {
 /**
  * {@link MalAnime} is the typed portion of a MyAnimeList anime response returned by `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get`.
  *
- * It always carries `id` and `title`; additional fields appear when requested via {@link MalRequestOptions.fields} and are exposed through the index signature without narrowing.
+ * It always carries `id` and `title`; additional fields appear when requested via {@link MalRequestOptions.fields} — or, when `fields` is omitted, via the {@link DEFAULT_MAL_ANIME_FIELDS} fallback — and are exposed through the index signature without narrowing.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  */

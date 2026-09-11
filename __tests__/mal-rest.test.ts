@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { AniLinkApiError, AniLinkAuthError, AniLinkRestError } from "../src/base/AniLinkError";
+import { DEFAULT_MAL_ANIME_FIELDS } from "../src/apis/rest/mal/constants";
 import { buildMyAnimeListApi } from "../src/apis/rest/mal/wiring";
 import { getAxiosStub, makeAxiosResponseError } from "./helpers/axiosStub";
 
@@ -38,6 +39,25 @@ describe("MyAnimeList REST provider", () => {
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/anime/21?fields=id%2Ctitle");
         expect(lastConfig().method).toBe("GET");
         expect(lastConfig().headers.Authorization).toBeUndefined();
+    });
+
+    test("sends the default anime fields when no fields are selected", async () => {
+        const api = buildMyAnimeListApi();
+
+        await api.anime.get(21);
+
+        expect(lastConfig().url).toBe(
+            "https://api.myanimelist.net/v2/anime/21?fields=" +
+                encodeURIComponent(DEFAULT_MAL_ANIME_FIELDS.join(","))
+        );
+    });
+
+    test("an explicit fields override wins over the default anime fields", async () => {
+        const api = buildMyAnimeListApi();
+
+        await api.anime.get(21, { fields: ["id", "title"] });
+
+        expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/anime/21?fields=id%2Ctitle");
     });
 
     test("sends the MAL client ID on public requests when configured", async () => {

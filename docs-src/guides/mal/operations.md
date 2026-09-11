@@ -261,6 +261,8 @@ await aniLink.mal.anime.get(21, { fields: ["id", "title", "main_picture"] });
 
 Field names are MAL's own, and AniLink passes them through verbatim. See the [MAL API v2 field reference](https://myanimelist.net/apiconfig/references/api/v2) for the full list.
 
+`anime.get` is the one operation with a default: omit `fields` and it sends `DEFAULT_MAL_ANIME_FIELDS` (`id`, `title`, `main_picture`, `synopsis`, `status`, `mean`, `num_episodes`, `media_type`, `start_date`, `broadcast`, `start_time`, `average_episode_duration`), so `await aniLink.mal.anime.get(21)` works out of the box. An explicit `fields` value always replaces the default. The discovery reads (`seasonal`, `ranking`, `suggestions`) keep omitting `fields` when none are given.
+
 ## Next steps
 
 - <Icon name="ArrowRight" :size="14" /> [Per-request options](/per-request-options) — transport overrides per call.

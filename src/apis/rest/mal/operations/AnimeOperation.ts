@@ -1,5 +1,5 @@
 import { RestOperation } from "../../RestOperation";
-import { MAL_API_BASE_URL } from "../constants";
+import { DEFAULT_MAL_ANIME_FIELDS, MAL_API_BASE_URL } from "../constants";
 import type {
     MalAnime,
     MalAnimeListStatus,
@@ -29,7 +29,7 @@ export class MalAnimeOperation extends RestOperation {
     /**
      * {@link MalAnimeOperation.get} gets one anime by its MyAnimeList ID.
      *
-     * It calls `GET /anime/{id}` through `RestOperation.execute` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.get`.
+     * It calls `GET /anime/{id}` through `RestOperation.execute` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}; when `fields` is omitted it falls back to {@link DEFAULT_MAL_ANIME_FIELDS}. The facade alias is `MyAnimeListAnimeApi.get`.
      *
      * @param id - The MyAnimeList anime ID.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -44,12 +44,12 @@ export class MalAnimeOperation extends RestOperation {
      */
     public async get(id: number, options: MalRequestOptions = {}): Promise<MalAnime> {
         const { fields, ...transportOptions } = options;
+        const selectedFields = fields ?? DEFAULT_MAL_ANIME_FIELDS;
         return await this.execute<MalAnime>("/anime/{id}", {
             transportOptions,
-            query:
-                fields === undefined
-                    ? undefined
-                    : { fields: Array.isArray(fields) ? fields.join(",") : fields },
+            query: {
+                fields: Array.isArray(selectedFields) ? selectedFields.join(",") : selectedFields,
+            },
             pathParams: { id },
         });
     }
