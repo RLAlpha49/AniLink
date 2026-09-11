@@ -7,8 +7,8 @@
 /dist
 /.models
 /node_modules
-.env
-.env.*.tmp
+.env*
+!.env.example
 .stryker-tmp
 /reports
 .github/copilot-instructions.md
