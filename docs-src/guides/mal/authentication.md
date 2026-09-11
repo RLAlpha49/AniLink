@@ -80,6 +80,41 @@ if (Date.now() >= getMalTokenExpiry(token).getTime() - 60_000) {
 
 `getMalTokenExpiry(response, now?)` computes the absolute expiry from `expires_in`. The refresh response may omit `refresh_token` — keep the stored one when it does (rotation semantics).
 
+## 4. Automatic refresh
+
+Steps 1–3 leave the refresh chore to you. Configure `refreshToken` and `clientId` and the client takes over: when any MAL request fails with a `401`, the client exchanges the stored refresh token for a fresh access token, swaps the stored auth material, and replays the original request once — automatically.
+
+```typescript
+import { AniLink } from "anilink-api-wrapper";
+
+const aniLink = new AniLink({
+    mal: {
+        accessToken: token.access_token,
+        refreshToken: token.refresh_token,
+        clientId: "mal-client-id",
+        // clientSecret: "optional", // only for applications that use one
+        onTokenRefresh: (response) => {
+            // Persist the new pair synchronously — see the warning below.
+            token = { ...response, refresh_token: response.refresh_token ?? token.refresh_token };
+        },
+    },
+});
+```
+
+The behavior, precisely:
+
+- **Opt-in.** No `refreshToken` + `clientId`, no refresh path — a `401` surfaces immediately, exactly as before.
+- **Bootstrappable.** A client configured with only `refreshToken` + `clientId` (no `accessToken`) refreshes on the first auth-required call instead of failing — a persisted refresh token alone is enough to construct a working client.
+- **One replay.** The original request is retried exactly once with the new token. A replay that `401`s again surfaces that error — no retry loop.
+- **Deduplicated.** Concurrent `401`s trigger a single refresh call; every replay waits for the same new token.
+- **Rotation-safe.** A refresh response without `refresh_token` keeps the stored one (rotation semantics).
+- **Observable.** `onTokenRefresh` fires exactly once per refresh grant — concurrent `401`s share one grant and one callback — with the effective `MalTokenResponse`, so you can persist the new pair. A callback that throws is reported through `onHookError` (falling back to a console warning) and never aborts the replayed request.
+- **Fail-fast.** A failed refresh surfaces the sanitized token-request error — the request is never replayed with the stale token.
+
+The refresh grant runs on the same 10-second token-request timeout as `refreshMalAccessToken`. It is not governed by your MAL transport settings — your `timeout`, hooks, pacing, and retry policy do not apply to the token request. In particular, do not add `401` to `retryOnStatus`: the refresh lifecycle owns `401` handling, and a retry-configured `401` would multiply requests before the refresh ever runs.
+
+**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. If the process exits — or the callback throws — between the refresh and your persistence write, the in-memory client works but your stored credentials are stale. When MAL rotates the refresh token, the stored one is then permanently invalid and automatic refresh cannot recover after a restart; manual re-authorization is the only fix.
+
 ## Constants and types
 
 | Export                        | Value / shape                                                      |

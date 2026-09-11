@@ -52,6 +52,12 @@ export interface MalCredentials extends ProviderCredentials {
     clientId?: string;
     /** The MAL application secret, when the application requires one. */
     clientSecret?: string;
+    /**
+     * Called after every successful automatic token refresh so callers can
+     * persist the new access/refresh token pair. Enables the automatic
+     * refresh lifecycle together with `refreshToken` and `clientId`.
+     */
+    onTokenRefresh?: import("../apis/rest/mal/tokenRefresh").MalTokenRefreshCallback;
 }
 
 /**
@@ -161,6 +167,7 @@ export function resolveMalCredentials(
             "refreshToken",
             "clientId",
             "clientSecret",
+            "onTokenRefresh",
         ]),
     };
 }

@@ -3,6 +3,7 @@ import { MalAnimeOperation } from "./operations/AnimeOperation";
 import { MalMangaOperation } from "./operations/MangaOperation";
 import { MalUserOperation } from "./operations/UserOperation";
 import type { MyAnimeListApi } from "./facade";
+import { buildRefreshedAuth, MalTokenRefresher } from "./tokenRefresh";
 
 /**
  * {@link buildMyAnimeListApi} is the wiring helper that builds the {@link MyAnimeListApi} from provider-owned {@link MalCredentials}.
@@ -24,24 +25,82 @@ export function buildMyAnimeListApi(credentials?: MalCredentials): MyAnimeListAp
     const manga = new MalMangaOperation(auth, options);
     const user = new MalUserOperation(auth, options);
 
+    // The automatic refresh lifecycle is opt-in: it activates only when both
+    // the refresh token and client ID are configured (non-empty). Without
+    // them the facade keeps the direct bound methods — zero wrapper
+    // overhead, zero behavior change.
+    const refresher =
+        credentials?.refreshToken !== undefined &&
+        credentials.refreshToken !== "" &&
+        credentials.clientId !== undefined &&
+        credentials.clientId !== ""
+            ? new MalTokenRefresher({
+                  clientId: credentials.clientId,
+                  refreshToken: credentials.refreshToken,
+                  clientSecret: credentials.clientSecret,
+                  onTokenRefresh: credentials.onTokenRefresh,
+                  onHookError: credentials.onHookError,
+                  applyAccessToken: (accessToken) => {
+                      const refreshed = buildRefreshedAuth(auth, accessToken);
+                      for (const operation of [anime, manga, user]) {
+                          operation.updateAuth(refreshed);
+                      }
+                  },
+              })
+            : undefined;
+
+    if (refresher === undefined) {
+        return {
+            anime: {
+                get: anime.get.bind(anime),
+                seasonal: anime.seasonal.bind(anime),
+                ranking: anime.ranking.bind(anime),
+                suggestions: anime.suggestions.bind(anime),
+                updateMyListStatus: anime.updateMyListStatus.bind(anime),
+                deleteFromList: anime.deleteFromList.bind(anime),
+            },
+            manga: {
+                get: manga.get.bind(manga),
+                updateMyListStatus: manga.updateMyListStatus.bind(manga),
+                deleteFromList: manga.deleteFromList.bind(manga),
+            },
+            user: {
+                me: user.me.bind(user),
+                animeList: user.animeList.bind(user),
+                mangaList: user.mangaList.bind(user),
+            },
+        };
+    }
+
+    // With refresh credentials, every facade method runs under the refresh
+    // lifecycle: a 401 triggers one deduplicated refresh, the fresh auth
+    // material is swapped onto all three operation instances, and the
+    // original request is replayed once.
+    const wrap =
+        <A extends unknown[], R>(
+            method: (...args: A) => Promise<R>
+        ): ((...args: A) => Promise<R>) =>
+        (...args: A) =>
+            refresher.executeWithRefresh(() => method(...args));
+
     return {
         anime: {
-            get: anime.get.bind(anime),
-            seasonal: anime.seasonal.bind(anime),
-            ranking: anime.ranking.bind(anime),
-            suggestions: anime.suggestions.bind(anime),
-            updateMyListStatus: anime.updateMyListStatus.bind(anime),
-            deleteFromList: anime.deleteFromList.bind(anime),
+            get: wrap(anime.get.bind(anime)),
+            seasonal: wrap(anime.seasonal.bind(anime)),
+            ranking: wrap(anime.ranking.bind(anime)),
+            suggestions: wrap(anime.suggestions.bind(anime)),
+            updateMyListStatus: wrap(anime.updateMyListStatus.bind(anime)),
+            deleteFromList: wrap(anime.deleteFromList.bind(anime)),
         },
         manga: {
-            get: manga.get.bind(manga),
-            updateMyListStatus: manga.updateMyListStatus.bind(manga),
-            deleteFromList: manga.deleteFromList.bind(manga),
+            get: wrap(manga.get.bind(manga)),
+            updateMyListStatus: wrap(manga.updateMyListStatus.bind(manga)),
+            deleteFromList: wrap(manga.deleteFromList.bind(manga)),
         },
         user: {
-            me: user.me.bind(user),
-            animeList: user.animeList.bind(user),
-            mangaList: user.mangaList.bind(user),
+            me: wrap(user.me.bind(user)),
+            animeList: wrap(user.animeList.bind(user)),
+            mangaList: wrap(user.mangaList.bind(user)),
         },
     };
 }

@@ -18,6 +18,7 @@
     "customJs": "./typedoc-header.js",
     "excludePrivate": true,
     "excludeProtected": true,
+    "excludeInternal": true,
     "excludeExternals": true,
     "includeVersion": true,
     "hostedBaseUrl": "https://anilink.alpha49.com/",

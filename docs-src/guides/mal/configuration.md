@@ -10,9 +10,10 @@ layout: .vitepress/theme/DocsLayout.vue
 | Field | Type | Purpose |
 | --- | --- | --- |
 | `accessToken` | `string` | The MAL OAuth2 access token used by REST operations |
-| `refreshToken` | `string` | Stored refresh token for `refreshMalAccessToken` |
+| `refreshToken` | `string` | Stored refresh token; with `clientId`, enables automatic refresh on `401` (and bootstraps a client that has no `accessToken`) |
 | `clientId` | `string` | The MAL application client ID used by OAuth helpers |
 | `clientSecret` | `string` | Optional. Only for applications that require one |
+| `onTokenRefresh` | `(response: MalTokenResponse) => void` | Optional. Fires exactly once per refresh grant so you can persist the new token pair; a throwing callback is reported to `onHookError` and never aborts the replayed request |
 
 Any shared transport option (`timeout`, `retry`, `signal`, hooks, pacing, circuit breaker) may be set in the same slot. It is scoped to MAL — and stays there.
 
@@ -25,9 +26,12 @@ const aniLink = new AniLink({
         refreshToken: "mal-refresh-token",
         clientId: "mal-client-id",
         timeout: 10_000,
+        onTokenRefresh: (response) => saveTokens(response), // persist refreshed pairs
     },
 });
 ```
+
+With `refreshToken` and `clientId` both set, a `401` triggers an automatic refresh and a single replay — see [MAL authentication](/guides/mal/authentication#_4-automatic-refresh). A client configured with only those two fields (no `accessToken`) bootstraps itself on the first auth-required call.
 
 ## `buildMyAnimeListApi(credentials?)`
 

@@ -11,7 +11,7 @@ Symptom → cause → fix, labelled by provider. Skim for what hurts; the answer
 
 **AniList** — the token is missing, expired, or revoked. Mutations and viewer-scoped queries want a token; public queries do not. Fix: re-run the [OAuth flow](/guides/anilist/authentication) and construct a new client with the fresh token.
 
-**MAL** — the access token expired, and MAL tokens are short-lived by design. Fix: refresh with `refreshMalAccessToken` before expiry. See the [token-refresh recipe](/recipes#background-token-refresh-loop).
+**MAL** — the access token expired, and MAL tokens are short-lived by design. Fix: configure `refreshToken` and `clientId` and the client refreshes automatically on `401` (one replay, no loop) — see [automatic refresh](/guides/mal/authentication#_4-automatic-refresh). Otherwise refresh with `refreshMalAccessToken` before expiry. See the [token-refresh recipe](/recipes#background-token-refresh-loop).
 
 ## 429 Too Many Requests
 

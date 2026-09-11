@@ -86,8 +86,12 @@ export abstract class BaseOperation {
 
     /**
      * The authentication token shared by all operations of an instance.
+     *
+     * Mutable only through {@link BaseOperation.updateAuth} so a provider
+     * wiring seam can swap in refreshed auth material (for example the MAL
+     * automatic token-refresh lifecycle) without rebuilding operations.
      */
-    private readonly requestAuth?: RequestAuthInput;
+    private requestAuth?: RequestAuthInput;
 
     /**
      * The transport settings resolved at construction time.
@@ -130,6 +134,20 @@ export abstract class BaseOperation {
      */
     protected get instanceOptions(): RequestOptions | undefined {
         return this.resolvedOptions;
+    }
+
+    /**
+     * Swaps the instance authentication material in place.
+     *
+     * @internal This mutator exists for provider wiring seams that refresh
+     * credentials mid-flight (the MAL automatic token-refresh lifecycle swaps
+     * the stored auth on the operation instances before replaying a 401'd
+     * request). It is not part of the public API surface.
+     *
+     * @param auth - The replacement authentication material, or `undefined` to clear it.
+     */
+    public updateAuth(auth: RequestAuthInput | undefined): void {
+        this.requestAuth = auth;
     }
 
     /**
