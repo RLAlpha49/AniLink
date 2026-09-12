@@ -46,6 +46,9 @@ jobs:
       - name: Check JSDoc comments
         run: npm run jsdoc:check
 
+      - name: Check generated facade groups are up to date
+        run: npm run facade:generate -- --check
+
       - name: Check generated interfaces are up to date
         run: npm run interfaces:generate -- --check
 

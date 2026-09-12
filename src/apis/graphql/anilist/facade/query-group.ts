@@ -1,84 +1,88 @@
 /**
  * The `query` member (query + page operations) of the `AniListApi` type.
+ *
+ * GENERATED FILE — do not edit by hand; regenerate with `npm run facade:generate`.
+ * Signatures derive from the operation registry and operation classes; curated
+ * JSDoc prose lives in scripts/generate-facade-groups.config.ts.
  */
-import { type ActivityReply, type Activity } from "../interfaces/Activity";
-import type { RequestOptions } from "../../../../base/RequestHandler";
-import { type MediaTagCollectionVariables } from "../query/MediaTagCollection";
-import { type SiteStatisticsVariables } from "../query/SiteStatistics";
-import { type ExternalLinkSourceCollectionVariables } from "../query/ExternalLinkSourceCollection";
-import { type ActivityVariables } from "../query/Activity";
-import { type ActivityReplyVariables } from "../query/ActivityReply";
-import { type ActivityRepliesVariables } from "../query/page/ActivityReplies";
-import { type ActivitiesVariables } from "../query/page/Activities";
+import { type RequestOptions } from "../../../../base/RequestHandler";
+import { type Activity, type ActivityReply } from "../interfaces/Activity";
 import { type ActivitiesPageResponse } from "../interfaces/responses/page/Activities";
 import { type ActivityRepliesPageResponse } from "../interfaces/responses/page/ActivityReplies";
-import { type AiringScheduleVariables } from "../query/AiringSchedule";
-import { type AiringScheduleResponse } from "../interfaces/responses/query/AiringSchedule";
-import { type AiringSchedulesVariables } from "../query/page/AiringSchedules";
 import { type AiringSchedulesPageResponse } from "../interfaces/responses/page/AiringSchedules";
-import { type AniChartUserResponse } from "../interfaces/responses/query/AniChartUser";
-import { type CharacterVariables } from "../query/Character";
-import { type CharacterResponse } from "../interfaces/responses/query/Character";
-import { type CharactersVariables } from "../query/page/Characters";
 import { type CharactersPageResponse } from "../interfaces/responses/page/Characters";
-import { type ExternalLinkSourceCollectionResponse } from "../interfaces/responses/query/ExternalLinkSourceCollection";
-import { type FollowerVariables } from "../query/Follower";
-import { type FollowersVariables } from "../query/page/Followers";
 import { type FollowersPageResponse } from "../interfaces/responses/page/Followers";
-import { type FollowingVariables } from "../query/Following";
-import { type FollowingsVariables } from "../query/page/Followings";
 import { type FollowingsPageResponse } from "../interfaces/responses/page/Followings";
-import { type LikesVariables } from "../query/page/Likes";
 import { type LikesPageResponse } from "../interfaces/responses/page/Likes";
-import { type MarkdownVariables } from "../query/Markdown";
-import { type MediaListCollectionVariables } from "../query/MediaListCollection";
-import { type MediaListCollectionResponse } from "../interfaces/responses/query/MediaListCollectionResponse";
-import { type MediaListVariables } from "../query/MediaList";
-import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
-import { type MediaListsVariables } from "../query/page/MediaLists";
 import { type MediaListsPageResponse } from "../interfaces/responses/page/MediaLists";
-import { type MediaVariables } from "../query/Media";
+import { type MediaTrendsPageResponse } from "../interfaces/responses/page/MediaTrends";
+import { type MediasPageResponse } from "../interfaces/responses/page/Medias";
+import { type NotificationsPageResponse } from "../interfaces/responses/page/Notifications";
+import { type RecommendationsPageResponse } from "../interfaces/responses/page/Recommendations";
+import { type ReviewsPageResponse } from "../interfaces/responses/page/Reviews";
+import { type StaffsPageResponse } from "../interfaces/responses/page/Staffs";
+import { type StudiosPageResponse } from "../interfaces/responses/page/Studios";
+import { type ThreadCommentsPageResponse } from "../interfaces/responses/page/ThreadComments";
+import { type ThreadsPageResponse } from "../interfaces/responses/page/Threads";
+import { type UsersPageResponse } from "../interfaces/responses/page/Users";
+import { type AiringScheduleResponse } from "../interfaces/responses/query/AiringSchedule";
+import { type AniChartUserResponse } from "../interfaces/responses/query/AniChartUser";
+import { type CharacterResponse } from "../interfaces/responses/query/Character";
+import { type ExternalLinkSourceCollectionResponse } from "../interfaces/responses/query/ExternalLinkSourceCollection";
 import { type MediaResponse } from "../interfaces/responses/query/Media";
+import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
+import { type MediaListCollectionResponse } from "../interfaces/responses/query/MediaListCollectionResponse";
 import { type MediaTagCollectionResponse } from "../interfaces/responses/query/MediaTagCollection";
-import { type MediaTrendVariables } from "../query/MediaTrend";
 import { type MediaTrendResponse } from "../interfaces/responses/query/MediaTrend";
+import { type NotificationResponse } from "../interfaces/responses/query/Notification";
+import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
+import { type ReviewResponse } from "../interfaces/responses/query/Review";
+import { type SiteStatisticsResponse } from "../interfaces/responses/query/SiteStatistics";
+import { type StaffResponse } from "../interfaces/responses/query/Staff";
+import { type StudioResponse } from "../interfaces/responses/query/Studio";
+import { type ThreadResponse } from "../interfaces/responses/query/Thread";
+import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
+import { type UserResponse } from "../interfaces/responses/query/User";
+import { type ActivityVariables } from "../query/Activity";
+import { type ActivityReplyVariables } from "../query/ActivityReply";
+import { type AiringScheduleVariables } from "../query/AiringSchedule";
+import { type CharacterVariables } from "../query/Character";
+import { type ExternalLinkSourceCollectionVariables } from "../query/ExternalLinkSourceCollection";
+import { type FollowerVariables } from "../query/Follower";
+import { type FollowingVariables } from "../query/Following";
+import { type MarkdownVariables } from "../query/Markdown";
+import { type MediaVariables } from "../query/Media";
+import { type MediaListVariables } from "../query/MediaList";
+import { type MediaListCollectionVariables } from "../query/MediaListCollection";
+import { type MediaTagCollectionVariables } from "../query/MediaTagCollection";
+import { type MediaTrendVariables } from "../query/MediaTrend";
+import { type NotificationVariables } from "../query/Notification";
+import { type RecommendationVariables } from "../query/Recommendation";
+import { type ReviewVariables } from "../query/Review";
+import { type SiteStatisticsVariables } from "../query/SiteStatistics";
+import { type StaffVariables } from "../query/Staff";
+import { type StudioVariables } from "../query/Studio";
+import { type ThreadVariables } from "../query/Thread";
+import { type ThreadCommentVariables } from "../query/ThreadComment";
+import { type UserVariables } from "../query/User";
+import { type ActivitiesVariables } from "../query/page/Activities";
+import { type ActivityRepliesVariables } from "../query/page/ActivityReplies";
+import { type AiringSchedulesVariables } from "../query/page/AiringSchedules";
+import { type CharactersVariables } from "../query/page/Characters";
+import { type FollowersVariables } from "../query/page/Followers";
+import { type FollowingsVariables } from "../query/page/Followings";
+import { type LikesVariables } from "../query/page/Likes";
+import { type MediaListsVariables } from "../query/page/MediaLists";
 import { type MediaTrendsVariables } from "../query/page/MediaTrends";
 import { type MediasVariables } from "../query/page/Medias";
-import { type MediasPageResponse } from "../interfaces/responses/page/Medias";
-import { type MediaTrendsPageResponse } from "../interfaces/responses/page/MediaTrends";
-import { type NotificationVariables } from "../query/Notification";
-import { type NotificationResponse } from "../interfaces/responses/query/Notification";
 import { type NotificationsVariables } from "../query/page/Notifications";
-import { type NotificationsPageResponse } from "../interfaces/responses/page/Notifications";
-import { type RecommendationVariables } from "../query/Recommendation";
-import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { type RecommendationsVariables } from "../query/page/Recommendations";
-import { type RecommendationsPageResponse } from "../interfaces/responses/page/Recommendations";
-import { type ReviewVariables } from "../query/Review";
-import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { type ReviewsVariables } from "../query/page/Reviews";
-import { type ReviewsPageResponse } from "../interfaces/responses/page/Reviews";
-import { type SiteStatisticsResponse } from "../interfaces/responses/query/SiteStatistics";
-import { type StaffVariables } from "../query/Staff";
-import { type StaffResponse } from "../interfaces/responses/query/Staff";
 import { type StaffsVariables } from "../query/page/Staffs";
-import { type StaffsPageResponse } from "../interfaces/responses/page/Staffs";
-import { type StudioVariables } from "../query/Studio";
-import { type StudioResponse } from "../interfaces/responses/query/Studio";
 import { type StudiosVariables } from "../query/page/Studios";
-import { type StudiosPageResponse } from "../interfaces/responses/page/Studios";
-import { type ThreadCommentVariables } from "../query/ThreadComment";
-import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { type ThreadCommentsVariables } from "../query/page/ThreadComments";
-import { type ThreadCommentsPageResponse } from "../interfaces/responses/page/ThreadComments";
-import { type ThreadVariables } from "../query/Thread";
-import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { type ThreadsVariables } from "../query/page/Threads";
-import { type ThreadsPageResponse } from "../interfaces/responses/page/Threads";
-import { type UserVariables } from "../query/User";
-import { type UserResponse } from "../interfaces/responses/query/User";
 import { type UsersVariables } from "../query/page/Users";
-import { type UsersPageResponse } from "../interfaces/responses/page/Users";
 import { type RegistryPageKeys, type RegistryQueryKeys } from "../registry";
 
 /**
@@ -123,7 +127,6 @@ export type AniListQueries = {
      * @property {Function} staff - Fetches staff data from the AniList API.
      * @property {Function} mediaList - Fetches media list data from the AniList API.
      * @property {Function} mediaListCollection - Fetches media list collection data from the AniList API.
-     * @property {Function} like - Fetches users who liked a model from the AniList API.
      * @property {Function} genreCollection - Fetches genre collection data from the AniList API.
      * @property {Function} mediaTagCollection - Fetches media tag collection data from the AniList API.
      * @property {Function} viewer - Fetches viewer data from the AniList API.
@@ -564,7 +567,6 @@ export type AniListQueries = {
             variables?: ExternalLinkSourceCollectionVariables,
             options?: RequestOptions
         ) => Promise<ExternalLinkSourceCollectionResponse>;
-
         /**
          * {@link AniListQueries} groups the paginated query operations. All page queries mirror the single-object queries above
          * with the addition of `page` and `perPage` variables, and return a `*PageResponse` carrying the items

@@ -2,11 +2,12 @@
  * Instance construction and namespace assembly for the AniList facade.
  *
  * The object graph is assembled from the declarative operation registry in
- * `registry.ts` — one entry per operation, keyed by its facade path. Adding an
- * operation therefore touches exactly two sites: the registry entry and the
- * matching declaration on the group type under `facade/`. The facade group
- * modules carry a compile-time `Record<RegistryXxxKeys, true>` parity constant
- * so the two sites cannot drift without failing `tsc`.
+ * `registry.ts` — one entry per operation, keyed by its facade path. Adding
+ * an operation therefore touches the operation class and its registry entry,
+ * then regenerates the group types under `facade/` with
+ * `npm run facade:generate`. The generated facade group modules carry
+ * compile-time parity asserts so the registry and the typed surface cannot
+ * drift without failing `tsc`.
  *
  * Operations are constructed lazily: each facade property is a getter that
  * instantiates and binds its operation class on first access, then caches the

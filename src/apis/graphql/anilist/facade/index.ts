@@ -1,13 +1,13 @@
 /**
  * AniList provider facade.
  *
- * Adding an operation touches three sites: the operation class under `query/`
- * or `mutation/`, its entry in the declarative registry in `registry.ts`, and
- * its declaration on one of the group types under `facade/` (composed into
- * {@link AniListApi} below). Instance wiring in `wiring.ts` is automatic from
- * the registry, and the group modules carry a compile-time
- * `Record<RegistryXxxKeys, true>` parity constant so the registry
- * and the typed surface cannot drift without failing `tsc`.
+ * Adding an operation touches two sites: the operation class under `query/`
+ * or `mutation/` and its entry in the declarative registry in `registry.ts`.
+ * Run `npm run facade:generate` to refresh the derived group types (composed
+ * into {@link AniListApi} below). Instance wiring in `wiring.ts` is automatic
+ * from the registry, and the group modules are generated from the registry
+ * and carry compile-time parity asserts so the registry and the typed
+ * surface cannot drift without failing `tsc`.
  */
 import type { AniListCustom } from "./custom-group";
 import type { AniListQueries } from "./query-group";

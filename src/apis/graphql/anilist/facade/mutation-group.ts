@@ -1,48 +1,52 @@
 /**
  * The `mutation` member of the `AniListApi` type.
+ *
+ * GENERATED FILE — do not edit by hand; regenerate with `npm run facade:generate`.
+ * Signatures derive from the operation registry and operation classes; curated
+ * JSDoc prose lives in scripts/generate-facade-groups.config.ts.
  */
-import { type ActivityReply, type Activity } from "../interfaces/Activity";
+import { type RequestOptions } from "../../../../base/RequestHandler";
+import { type Activity, type ActivityReply } from "../interfaces/Activity";
+import { type BasicUser } from "../interfaces/Basic";
 import { type Likeable } from "../interfaces/Likeable";
-import type { RequestOptions } from "../../../../base/RequestHandler";
+import { type DeleteMediaListEntryResponse } from "../interfaces/responses/mutation/DeleteMediaListEntry";
+import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
 import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
-import { type SaveMediaListEntryVariables } from "../mutation/SaveMediaListEntry";
-import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
+import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
+import { type UserResponse } from "../interfaces/responses/query/User";
+import { type DeleteActivityVariables } from "../mutation/DeleteActivity";
+import { type DeleteActivityReplyVariables } from "../mutation/DeleteActivityReply";
+import { type DeleteCustomListVariables } from "../mutation/DeleteCustomList";
+import { type DeleteMediaListEntryVariables } from "../mutation/DeleteMediaListEntry";
+import { type DeleteReviewVariables } from "../mutation/DeleteReview";
+import { type DeleteThreadVariables } from "../mutation/DeleteThread";
+import { type DeleteThreadCommentVariables } from "../mutation/DeleteThreadComment";
+import { type RateReviewVariables } from "../mutation/RateReview";
+import { type SaveActivityReplyVariables } from "../mutation/SaveActivityReply";
+import { type SaveListActivityVariables } from "../mutation/SaveListActivity";
+import { type SaveMediaListEntryVariables } from "../mutation/SaveMediaListEntry";
+import { type SaveMessageActivityVariables } from "../mutation/SaveMessageActivity";
+import { type SaveRecommendationVariables } from "../mutation/SaveRecommendation";
+import { type SaveReviewVariables } from "../mutation/SaveReview";
+import { type SaveTextActivityVariables } from "../mutation/SaveTextActivity";
+import { type SaveThreadVariables } from "../mutation/SaveThread";
+import { type SaveThreadCommentVariables } from "../mutation/SaveThreadComment";
+import { type ToggleActivityPinVariables } from "../mutation/ToggleActivityPin";
+import { type ToggleActivitySubscriptionVariables } from "../mutation/ToggleActivitySubscription";
+import { type ToggleFavouriteVariables } from "../mutation/ToggleFavourite";
+import { type ToggleFollowVariables } from "../mutation/ToggleFollow";
+import { type ToggleLikeVariables } from "../mutation/ToggleLike";
+import { type ToggleThreadSubscriptionVariables } from "../mutation/ToggleThreadSubscription";
+import { type UpdateAniChartHighlightsVariables } from "../mutation/UpdateAniChartHighlights";
+import { type UpdateAniChartSettingsVariables } from "../mutation/UpdateAniChartSettings";
+import { type UpdateFavouriteOrderVariables } from "../mutation/UpdateFavouriteOrder";
 import { type UpdateMediaListEntriesVariables } from "../mutation/UpdateMediaListEntries";
 import { type UpdateUserResponse, type UpdateUserVariables } from "../mutation/UpdateUser";
-import { type UserResponse } from "../interfaces/responses/query/User";
-import { type DeleteMediaListEntryVariables } from "../mutation/DeleteMediaListEntry";
-import { type DeleteMediaListEntryResponse } from "../interfaces/responses/mutation/DeleteMediaListEntry";
-import { type DeleteCustomListVariables } from "../mutation/DeleteCustomList";
-import { type SaveTextActivityVariables } from "../mutation/SaveTextActivity";
-import { type SaveMessageActivityVariables } from "../mutation/SaveMessageActivity";
-import { type SaveListActivityVariables } from "../mutation/SaveListActivity";
-import { type DeleteActivityVariables } from "../mutation/DeleteActivity";
-import { type ToggleActivitySubscriptionVariables } from "../mutation/ToggleActivitySubscription";
-import { type ToggleActivityPinVariables } from "../mutation/ToggleActivityPin";
-import { type SaveActivityReplyVariables } from "../mutation/SaveActivityReply";
-import { type DeleteActivityReplyVariables } from "../mutation/DeleteActivityReply";
-import { type ToggleLikeVariables } from "../mutation/ToggleLike";
-import { type BasicUser } from "../interfaces/Basic";
-import { type ToggleFollowVariables } from "../mutation/ToggleFollow";
-import { type ToggleFavouriteVariables } from "../mutation/ToggleFavourite";
-import { type Favourites } from "../interfaces/responses/mutation/Favourites";
-import { type UpdateFavouriteOrderVariables } from "../mutation/UpdateFavouriteOrder";
-import { type SaveReviewVariables } from "../mutation/SaveReview";
-import { type RateReviewVariables } from "../mutation/RateReview";
-import { type DeleteReviewVariables } from "../mutation/DeleteReview";
-import { type SaveRecommendationVariables } from "../mutation/SaveRecommendation";
-import { type SaveThreadVariables } from "../mutation/SaveThread";
-import { type DeleteThreadVariables } from "../mutation/DeleteThread";
-import { type ToggleThreadSubscriptionVariables } from "../mutation/ToggleThreadSubscription";
-import { type SaveThreadCommentVariables } from "../mutation/SaveThreadComment";
-import { type DeleteThreadCommentVariables } from "../mutation/DeleteThreadComment";
-import { type UpdateAniChartSettingsVariables } from "../mutation/UpdateAniChartSettings";
-import { type UpdateAniChartHighlightsVariables } from "../mutation/UpdateAniChartHighlights";
-import { type DeleteResult } from "../types/DeleteResult";
 import { type RegistryMutationKeys } from "../registry";
+import { type DeleteResult } from "../types/DeleteResult";
 
 /**
  * Compile-time exhaustiveness check between this facade group and the

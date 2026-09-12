@@ -4,8 +4,11 @@
  * Every operation is one entry in {@link ANILIST_OPERATION_REGISTRY}: the
  * facade key it is exposed under, its category, the operation class that
  * implements it, and the method to bind. {@link buildAniListWiring} instantiates and
- * binds every entry, so adding an operation touches exactly two sites: this
- * registry and the matching declaration on the group type under `facade/`.
+ * binds every entry, so adding an operation touches exactly two sites: the
+ * operation class and its entry in this registry — then run
+ * `npm run facade:generate` to refresh the derived group types under
+ * `facade/` (curated JSDoc prose lives in
+ * `scripts/generate-facade-groups.config.ts`).
  */
 import { ActivityQuery } from "./query/Activity";
 import { ActivityReplyQuery } from "./query/ActivityReply";
