@@ -16,6 +16,20 @@ export interface MalPicture {
 }
 
 /**
+ * {@link MalBroadcast} is the broadcast schedule node of a MyAnimeList anime.
+ *
+ * It is the `broadcast` field inside {@link MalAnime}, selected via {@link MalRequestOptions.fields} through `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
+ */
+export interface MalBroadcast {
+    /** The day of the week the anime broadcasts in Japan time, or `other`. */
+    day_of_the_week?: string;
+    /** The broadcast start time in JST in `HH:mm` form, when MyAnimeList provides one. */
+    start_time?: string;
+}
+
+/**
  * {@link MalAnime} is the typed portion of a MyAnimeList anime response returned by `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get`.
  *
  * It always carries `id` and `title`; additional fields appear when requested via {@link MalRequestOptions.fields} — or, when `fields` is omitted, via the {@link DEFAULT_MAL_ANIME_FIELDS} fallback — and are exposed through the index signature without narrowing.
@@ -42,9 +56,7 @@ export interface MalAnime {
     /** The first air/start date in ISO 8601 format, when requested via the `fields` query parameter. */
     start_date?: string;
     /** The broadcast schedule, when requested via the `fields` query parameter. */
-    broadcast?: string;
-    /** The 24-hour broadcast start time (JST) in `HHMM` form, when requested via the `fields` query parameter. */
-    start_time?: string;
+    broadcast?: MalBroadcast;
     /** The average episode duration in seconds, when requested via the `fields` query parameter. */
     average_episode_duration?: number;
     /** Any additional fields requested by a caller remain available without narrowing. */
@@ -101,8 +113,8 @@ export interface MalUser {
     location?: string;
     /** Optional account creation timestamp. */
     joined_at?: string;
-    /** The user's profile picture variants, when requested via the `fields` query parameter. */
-    picture?: MalPicture;
+    /** The user's profile picture URL, when requested via the `fields` query parameter. */
+    picture?: string;
     /** The user's gender, when requested via the `fields` query parameter. */
     gender?: string;
     /** The user's birthday in ISO 8601 format, when requested via the `fields` query parameter. */
@@ -180,18 +192,16 @@ export interface MalPaging {
 /**
  * {@link MalSeasonalAnime} is one entry of a seasonal anime list.
  *
- * It wraps the {@link MalAnime} node with the season-specific `ranking` position
- * MyAnimeList reports for each entry, and is the element type of
+ * It wraps the {@link MalAnime} node, and is the element type of
  * {@link MalSeasonalAnimeResponse} returned by `MalAnimeOperation.seasonal` and
- * `MyAnimeListAnimeApi.seasonal`.
+ * `MyAnimeListAnimeApi.seasonal`. The entry's rank within the season, when
+ * requested, is a `rank` field on the node itself, not a wrapper.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
  */
 export interface MalSeasonalAnime {
     /** The anime entry, shaped by the `fields` query parameter. */
     node: MalAnime;
-    /** The entry's rank within the season, when MyAnimeList reports one. */
-    ranking?: { rank: number };
     /** Any additional fields returned by MyAnimeList remain available without narrowing. */
     [field: string]: unknown;
 }
@@ -325,7 +335,7 @@ export interface MalAnimeListStatusUpdate {
 /**
  * {@link MalAnimeListStatus} is the response returned by MyAnimeList for a user's anime list status.
  *
- * It is the shape returned by `MalAnimeOperation.updateMyListStatus` and `MyAnimeListAnimeApi.updateMyListStatus` from `PATCH /anime/{anime_id}/my_list_status`. MyAnimeList returns `tags` as a single comma-separated string and reports the episode count as `num_episodes_watched` (the request field is `num_watched_episodes` — a documented MAL asymmetry); the server-managed `updated_at` timestamp is included when set.
+ * It is the shape returned by `MalAnimeOperation.updateMyListStatus` and `MyAnimeListAnimeApi.updateMyListStatus` from `PATCH /anime/{anime_id}/my_list_status`. MyAnimeList returns `tags` as an array of strings and reports the episode count as `num_episodes_watched` (the request field is `num_watched_episodes` — a documented MAL asymmetry); the server-managed `updated_at` timestamp is included when set.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put
  */
@@ -350,8 +360,8 @@ export interface MalAnimeListStatus {
     rewatch_value: number;
     /** The priority rating (0-2). */
     priority: number;
-    /** User-defined tags attached to the entry, as a single comma-separated string. */
-    tags: string;
+    /** User-defined tags attached to the entry, as an array of strings. */
+    tags: string[];
     /** The server-managed timestamp of the last update, in ISO 8601 form. */
     updated_at?: string;
     /** Any additional fields returned by MyAnimeList remain available without narrowing. */
@@ -406,7 +416,7 @@ export interface MalMangaListStatusUpdate {
 /**
  * {@link MalMangaListStatus} is the response returned by MyAnimeList for a user's manga list status.
  *
- * It is the shape returned by `MalMangaOperation.updateMyListStatus` and `MyAnimeListMangaApi.updateMyListStatus` from `PATCH /manga/{manga_id}/my_list_status`. MyAnimeList returns `tags` as a single comma-separated string and reports the chapter count as `num_chapters_read`; the server-managed `updated_at` timestamp is included when set.
+ * It is the shape returned by `MalMangaOperation.updateMyListStatus` and `MyAnimeListMangaApi.updateMyListStatus` from `PATCH /manga/{manga_id}/my_list_status`. MyAnimeList returns `tags` as an array of strings and reports the chapter count as `num_chapters_read`; the server-managed `updated_at` timestamp is included when set.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put
  */
@@ -433,8 +443,8 @@ export interface MalMangaListStatus {
     reread_value: number;
     /** The priority rating (0-2). */
     priority: number;
-    /** User-defined tags attached to the entry, as a single comma-separated string. */
-    tags: string;
+    /** User-defined tags attached to the entry, as an array of strings. */
+    tags: string[];
     /** The server-managed timestamp of the last update, in ISO 8601 form. */
     updated_at?: string;
     /** Any additional fields returned by MyAnimeList remain available without narrowing. */

@@ -142,7 +142,7 @@ Updates the authenticated user's manga list status. Calls `PATCH /manga/{id}/my_
 
 **Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
-**Returns:** `MalMangaListStatus` — the updated list status. MAL reports the chapter count as `num_chapters_read` and returns `tags` as a single comma-separated string. Quirks of the API, faithfully passed through.
+**Returns:** `MalMangaListStatus` — the updated list status. MAL reports the chapter count as `num_chapters_read` and returns `tags` as an array of strings. Quirks of the API, faithfully passed through.
 
 ```typescript
 const status = await aniLink.mal.manga.updateMyListStatus(1, {
@@ -190,13 +190,13 @@ Gets the anime of one broadcast season. Calls `GET /anime/season/{year}/{season}
 
 **Auth:** not required — a public read, same deal as `anime.get`.
 
-**Returns:** `MalSeasonalAnimeResponse` — `data` holds one `MalSeasonalAnime` per entry: a `node` shaped by `fields` plus an optional `ranking.rank` for the entry's position in the season. `paging.next` carries the next-page URL when the list continues; follow it manually for now — manual requests bypass the library's pacing, retry, and circuit-breaker, so space them out on long lists.
+**Returns:** `MalSeasonalAnimeResponse` — `data` holds one `MalSeasonalAnime` per entry: a `node` shaped by `fields`; the entry's rank within the season, when requested, is a `rank` field on the node itself. `paging.next` carries the next-page URL when the list continues; follow it manually for now — manual requests bypass the library's pacing, retry, and circuit-breaker, so space them out on long lists.
 
 ```typescript
 const season = await aniLink.mal.anime.seasonal(2024, "winter", {
-    fields: ["id", "title", "main_picture"],
+    fields: ["id", "title", "main_picture", "rank"],
 });
-console.log(season.data[0]?.node.title, season.data[0]?.ranking?.rank);
+console.log(season.data[0]?.node.title, season.data[0]?.node.rank);
 ```
 
 **Errors:** `AniLinkRestError` for non-success responses (e.g. `404` unknown season). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
@@ -262,7 +262,7 @@ await aniLink.mal.anime.get(21, { fields: ["id", "title", "main_picture"] });
 
 Field names are MAL's own, and AniLink passes them through verbatim. See the [MAL API v2 field reference](https://myanimelist.net/apiconfig/references/api/v2) for the full list.
 
-`anime.get` is the one operation with a default: omit `fields` and it sends `DEFAULT_MAL_ANIME_FIELDS` (`id`, `title`, `main_picture`, `synopsis`, `status`, `mean`, `num_episodes`, `media_type`, `start_date`, `broadcast`, `start_time`, `average_episode_duration`), so `await aniLink.mal.anime.get(21)` works out of the box. An explicit `fields` value always replaces the default. The discovery reads (`seasonal`, `ranking`, `suggestions`) keep omitting `fields` when none are given.
+`anime.get` is the one operation with a default: omit `fields` and it sends `DEFAULT_MAL_ANIME_FIELDS` (`id`, `title`, `main_picture`, `synopsis`, `status`, `mean`, `num_episodes`, `media_type`, `start_date`, `broadcast`, `average_episode_duration`), so `await aniLink.mal.anime.get(21)` works out of the box. An explicit `fields` value always replaces the default. The discovery reads (`seasonal`, `ranking`, `suggestions`) keep omitting `fields` when none are given.
 
 ## Next steps
 

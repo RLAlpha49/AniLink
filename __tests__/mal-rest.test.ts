@@ -111,7 +111,7 @@ describe("MyAnimeList REST list-status writes", () => {
                 num_times_rewatched: 0,
                 rewatch_value: 0,
                 priority: 0,
-                tags: "",
+                tags: [],
             },
         });
 
@@ -130,7 +130,7 @@ describe("MyAnimeList REST list-status writes", () => {
             num_times_rewatched: 0,
             rewatch_value: 0,
             priority: 0,
-            tags: "",
+            tags: [],
         });
     });
 
@@ -556,7 +556,7 @@ describe("MyAnimeList REST manga namespace", () => {
                 num_times_reread: 0,
                 reread_value: 0,
                 priority: 0,
-                tags: "",
+                tags: [],
             },
         });
 
@@ -576,7 +576,7 @@ describe("MyAnimeList REST manga namespace", () => {
             num_times_reread: 0,
             reread_value: 0,
             priority: 0,
-            tags: "",
+            tags: [],
         });
     });
 

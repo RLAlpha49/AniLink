@@ -33,6 +33,7 @@ export type {
 export type {
     MalAnime,
     MalAnimeListSort,
+    MalBroadcast,
     MalAnimeListStatus,
     MalAnimeListStatusUpdate,
     MalAnimeListStatusValue,

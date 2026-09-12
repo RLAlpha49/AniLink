@@ -52,6 +52,5 @@ export const DEFAULT_MAL_ANIME_FIELDS: readonly string[] = [
     "media_type",
     "start_date",
     "broadcast",
-    "start_time",
     "average_episode_duration",
 ];
