@@ -50,7 +50,10 @@ jobs:
         run: npm run interfaces:generate -- --check
 
       - name: Compare package contracts against AniList schema snapshot
-        run: npm run anilist:api:compare -- --strict --ignore-unimplemented
+        run: npm run anilist:api:compare -- --strict
+
+      - name: Compare package contracts against MyAnimeList OpenAPI snapshot
+        run: npm run mal:api:compare -- --strict
 
       - name: Build package
         run: npm run build

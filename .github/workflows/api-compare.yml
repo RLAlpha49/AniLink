@@ -1,0 +1,100 @@
+name: Live API drift check
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      live:
+        description: Compare against the providers' current live contracts
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Compare AniList API
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.live }}" = "true" ]; then
+            npm run anilist:api:compare -- --live --strict
+          else
+            npm run anilist:api:compare
+          fi
+
+      - name: Compare MyAnimeList API
+        if: always()
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.live }}" = "true" ]; then
+            npm run mal:api:compare -- --live --strict
+          else
+            npm run mal:api:compare
+          fi
+      - name: Annotate discrepancies
+        if: always()
+        run: |
+          annotate() {
+            report="$1"
+            if [ ! -f "$report" ]; then
+              echo "No comparison report found at $report"
+              return
+            fi
+            node -e '
+              const fs = require("node:fs");
+              const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+              // The REST report has no separate warnings array; every finding
+              // lives in discrepancies. Guard so both report shapes work.
+              const discrepancies = [
+                ...report.discrepancies.map((d) => ({ ...d, kind: "discrepancy" })),
+                ...(report.warnings ?? []).map((w) => ({ ...w, kind: "warning" }))
+              ];
+              if (discrepancies.length === 0) {
+                console.log("No API discrepancies found");
+                return;
+              }
+              // Report text can originate from live upstream schemas; strip
+              // newlines and workflow-command characters so it cannot forge
+              // annotations or commands.
+              const sanitize = (text) =>
+                String(text).replace(/[\r\n]/g, " ").replace(/%/g, "%25");
+              for (const d of discrepancies) {
+                const file = d.sourcePath ? d.sourcePath.split(":")[0] : undefined;
+                const location = file ? ` file=${sanitize(file)}` : "";
+                console.log(
+                  `::warning${location}::[${d.kind}/${d.severity}] ${sanitize(d.operation ?? "api")}: ${sanitize(d.message)}`
+                );
+              }
+            ' "$report"
+          }
+          annotate "artifacts/anilist-api-compare/report.json"
+          annotate "artifacts/mal-api-compare/report.json"
+      - name: Upload comparison reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: anilist-api-comparison
+          path: artifacts/anilist-api-compare/
+          if-no-files-found: error
+
+      - name: Upload MyAnimeList comparison reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mal-api-comparison
+          path: artifacts/mal-api-compare/
+          if-no-files-found: warn
