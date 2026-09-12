@@ -1,6 +1,7 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { getIntrospectionQuery, type IntrospectionQuery } from "graphql";
+import prettier from "prettier";
 
 const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
 
@@ -46,7 +47,18 @@ export async function fetchSchema(
 
 export async function writeSchema(filePath: string, schema: IntrospectionQuery): Promise<void> {
     await mkdir(dirname(filePath), { recursive: true });
-    await writeFile(filePath, `${JSON.stringify(schema, null, 2)}\n`, "utf8");
+    const options = (await prettier.resolveConfig(filePath)) ?? {
+        tabWidth: 4,
+        printWidth: 100,
+        endOfLine: "lf",
+    };
+    const formatted = await prettier.format(`${JSON.stringify(schema, null, 2)}\n`, {
+        ...options,
+        parser: "json",
+    });
+    const tempPath = `${filePath}.tmp`;
+    await writeFile(tempPath, formatted, "utf8");
+    await rename(tempPath, filePath);
 }
 
 function validateSchema(value: unknown): IntrospectionQuery {

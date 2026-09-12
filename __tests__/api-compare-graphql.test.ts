@@ -6,9 +6,10 @@ import {
     discoverPackageContracts,
     discoverPackageOperations,
     parseOperationSource,
-} from "../scripts/anilist-api-compare/package-inventory";
+} from "../scripts/api-compare/package-inventory";
 import { normalizeSelectionSet } from "../lib/api-compare/graph";
 import { comparePackageToSchema } from "../lib/api-compare/compare";
+import { runCli } from "../scripts/api-compare/cli";
 import type { Schema } from "../lib/api-compare/types";
 
 describe("graph.normalizeSelectionSet - inline fragments", () => {
@@ -150,7 +151,7 @@ describe("compare - union member contracts via inline fragments", () => {
      * @throws When the operating system cannot create or populate the temporary fixture.
      */
     function writeFixture(): string {
-        const root = mkdtempSync(join(tmpdir(), "anilink-api-compare-"));
+        const root = mkdtempSync(join(tmpdir(), "anilink-api-compare-graphql-"));
         mkdirSync(join(root, "query"), { recursive: true });
         mkdirSync(join(root, "mutation"), { recursive: true });
         mkdirSync(join(root, "interfaces"), { recursive: true });
@@ -270,6 +271,52 @@ describe("compare - union member contracts via inline fragments", () => {
                 (discrepancy) => discrepancy.category === "unknown-union-member"
             )
         ).toHaveLength(0);
+    });
+});
+
+describe("runCli exit status - GraphQL path", () => {
+    it("treats unimplemented operations as warnings, not strict-mode failures", async () => {
+        // CI runs the AniList comparison with --strict and no
+        // --ignore-unimplemented flag; the CLI filters unimplemented-operation
+        // findings from the exit-status decision unconditionally. Pin that
+        // behavior so a regression fails here instead of in CI.
+        const logs: string[] = [];
+        const result = await runCli({
+            argv: ["compare", "--provider", "anilist", "--strict"],
+            compare: async () => ({
+                discrepancies: [
+                    {
+                        severity: "warning",
+                        category: "unimplemented-operation",
+                        operation: "query.Like",
+                        message: "API operation query.Like is not implemented by the package",
+                    },
+                ],
+                implementedOperations: 55,
+            }),
+            log: (message) => logs.push(message),
+        });
+        expect(result.exitCode).toBe(0);
+        expect(logs).toContain("No actionable discrepancies found");
+    });
+
+    it("fails strict mode on real contract drift", async () => {
+        const result = await runCli({
+            argv: ["compare", "--provider", "anilist", "--strict"],
+            compare: async () => ({
+                discrepancies: [
+                    {
+                        severity: "error",
+                        category: "missing-response-field",
+                        operation: "MediaQuery",
+                        message: "Response field id is not present in the upstream contract",
+                    },
+                ],
+                implementedOperations: 55,
+            }),
+            log: () => {},
+        });
+        expect(result.exitCode).toBe(1);
     });
 });
 

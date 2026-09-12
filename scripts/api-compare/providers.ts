@@ -9,22 +9,19 @@ export interface ProviderConfig {
     name: string;
     /** Human-readable provider name used in log and report output. */
     label: string;
-    /** Repository-relative path of the provider's schema introspection snapshot. */
+    /** Repository-relative path of the provider's schema or OpenAPI snapshot. */
     schemaPath: string;
     /** Repository-relative root of the provider's package source. */
     sourceRoot: string;
     /** Repository-relative directory where comparison reports are written. */
     reportDirectory: string;
+    /** Comparison protocol: GraphQL introspection or OpenAPI contract. */
+    protocol: "graphql" | "openapi";
     /** GraphQL endpoint used for `--live` comparisons and `update-schema`. */
     graphqlUrl?: string;
+    /** Reference page embedding the OpenAPI document, for OpenAPI providers. */
+    openApiUrl?: string;
 }
-
-/**
- * Provider name selected when the CLI is invoked without `--provider`.
- *
- * Matches the `name` field of the AniList entry in {@link providerConfigs}.
- */
-export const DEFAULT_PROVIDER_NAME = "anilist";
 
 /**
  * Registry of every provider the schema-comparison CLI can target, keyed by
@@ -35,28 +32,36 @@ export const providerConfigs: Record<string, ProviderConfig> = {
     anilist: {
         name: "anilist",
         label: "AniList",
-        schemaPath: "scripts/anilist-api-compare/anilist-schema.json",
+        schemaPath: "scripts/api-compare/anilist-schema.json",
         sourceRoot: "src/apis/graphql/anilist",
         reportDirectory: "artifacts/anilist-api-compare",
+        protocol: "graphql",
         graphqlUrl: "https://graphql.anilist.co",
+    },
+    mal: {
+        name: "mal",
+        label: "MyAnimeList",
+        schemaPath: "scripts/api-compare/mal-openapi.json",
+        sourceRoot: "src/apis/rest/mal",
+        reportDirectory: "artifacts/mal-api-compare",
+        protocol: "openapi",
+        openApiUrl: "https://myanimelist.net/apiconfig/references/api/v2",
     },
 };
 
 /**
- * Resolves a provider by CLI name, falling back to the default provider when
- * no `--provider` flag is given.
+ * Resolves a provider by CLI name.
  *
- * @param name - Provider identifier from `--provider`, or `undefined` to
- *   select {@link DEFAULT_PROVIDER_NAME}.
+ * @param name - Provider identifier from `--provider`; required, so a
+ *   missing flag is an explicit usage error rather than a silent default.
  * @returns The matching {@link ProviderConfig}.
- * @throws {Error} When `name` is not a key in {@link providerConfigs}.
+ * @throws {Error} When `name` is missing or not a key in {@link providerConfigs}.
  */
-export function resolveProvider(name?: string): ProviderConfig {
-    const key = name ?? DEFAULT_PROVIDER_NAME;
-    const config = providerConfigs[key];
+export function resolveProvider(name: string): ProviderConfig {
+    const config = providerConfigs[name];
     if (!config) {
         throw new Error(
-            `Unknown provider "${name}". Available providers: ${Object.keys(providerConfigs).join(", ")}`
+            `Unknown or missing provider "${name}". Pass --provider with one of: ${Object.keys(providerConfigs).join(", ")}`
         );
     }
     return config;

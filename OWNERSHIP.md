@@ -13,7 +13,7 @@ reading the generator.
 | 1   | Schema-fragment constants | `src/apis/graphql/anilist/schemas/` (36 files)     | Handwritten selection-set fragments (`export const MediaSchema = \`...\``). The fields the client requests.                      |
 | 2   | Generation manifest       | `scripts/generate-interfaces.config.ts` (~50 KB)   | Pairs every generated export with its fragment or operation file, and records typing overrides (`fieldTypes`, `optionalFields`). |
 | 3   | Generated interfaces      | `src/apis/graphql/anilist/interfaces/` (68 files)  | Output of the generator. **Do not hand-edit** generated files; rerun `npm run interfaces:generate`.                              |
-| 4   | Drift-checker inventory   | `scripts/anilist-api-compare/package-inventory.ts` | Parses operation files and interface contracts to compare the package against the committed AniList schema snapshot.             |
+| 4   | Drift-checker inventory   | `scripts/api-compare/package-inventory.ts` | Parses operation files and interface contracts to compare the package against the committed AniList schema snapshot.                     |
 
 The generator (`scripts/generate-interfaces.ts`) reads artifacts 1 and 2,
 extracts inline documents from operation files, and writes artifact 3.

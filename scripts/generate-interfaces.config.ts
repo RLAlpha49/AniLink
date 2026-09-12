@@ -146,7 +146,7 @@ function pageWrapper(
  */
 export const generatorConfig: GeneratorConfig = {
     provider: ANILIST_PROVIDER_CONFIG,
-    schemaSnapshotPath: `scripts/anilist-api-compare/anilist-schema.json`,
+    schemaSnapshotPath: `scripts/api-compare/anilist-schema.json`,
     schemasDir: `src/${ANILIST_PROVIDER_CONFIG.sourceRoot}/schemas`,
     aliasImports: {
         MediaFormat: "src/apis/graphql/anilist/types/Format.ts",
