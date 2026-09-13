@@ -89,38 +89,13 @@ export const MAL_ENDPOINT_MAPPINGS: RestEndpointMapping[] = [
 ];
 
 /**
- * MAL endpoints the package deliberately does not wrap, each with a dated
- * review note so the ignore list stays an explicit, revisited contract.
- *
- * - `GET /anime` and `GET /manga` (review: 2026-Q4) are list queries whose
- *   only filter is a `q` text search; AniLink does not expose a text-search
- *   bridge for MAL yet, and the seasonal/ranking/list reads cover the
- *   browsing use cases.
- * - `GET /manga/ranking` (review: 2026-Q4) has no wrapped counterpart yet;
- *   wrapping it is a feature request, not contract drift.
- * - `GET /forum/*` (review: 2026-Q4) — the forum endpoints (boards, topics,
- *   topic detail) are a separate domain the package does not target.
- */
-export const MAL_IGNORED_ENDPOINTS: Record<string, string> = {
-    "GET /anime": "review: 2026-Q4",
-    "GET /manga": "review: 2026-Q4",
-    "GET /manga/ranking": "review: 2026-Q4",
-    "GET /forum/boards": "review: 2026-Q4",
-    "GET /forum/topics": "review: 2026-Q4",
-    "GET /forum/topic/{topic_id}": "review: 2026-Q4",
-};
-
-/**
- * The endpoint mappings and ignore lists per REST provider, keyed by the
- * provider name used in `providerConfigs`.
+ * The endpoint mappings per REST provider, keyed by the provider name used
+ * in `providerConfigs`.
  *
  * Adding a REST provider means adding an entry here.
  */
-export const REST_PROVIDER_MAPPINGS: Record<
-    string,
-    { endpoints: RestEndpointMapping[]; ignoredEndpoints: Record<string, string> }
-> = {
-    mal: { endpoints: MAL_ENDPOINT_MAPPINGS, ignoredEndpoints: MAL_IGNORED_ENDPOINTS },
+export const REST_PROVIDER_MAPPINGS: Record<string, { endpoints: RestEndpointMapping[] }> = {
+    mal: { endpoints: MAL_ENDPOINT_MAPPINGS },
 };
 
 /**

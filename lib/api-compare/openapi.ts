@@ -382,8 +382,6 @@ export interface RestContractComparisonInput {
     contracts: Record<string, RestTypeContract>;
     /** Mappings of package type to endpoint. */
     endpoints: RestEndpointMapping[];
-    /** Endpoints the package deliberately does not wrap, with dated review notes. */
-    ignoredEndpoints?: Record<string, string>;
 }
 
 /** The result of a REST contract comparison. */
@@ -403,8 +401,9 @@ export interface RestContractComparisonResult {
  *
  * Runs in both directions: every mapped package interface must match its
  * endpoint's response schema field-for-field, and every spec endpoint must
- * be mapped by some package type (or explicitly ignored with a dated review
- * note) so unwrapped upstream endpoints surface as warnings.
+ * be mapped by some package mapping — including coverage-only mappings,
+ * which omit `typeName` for void-returning methods — so unwrapped upstream
+ * endpoints surface as warnings.
  *
  * @param input - The spec document, package contracts, and endpoint mappings.
  * @returns All discrepancies plus verified-type and endpoint-coverage counts.
@@ -538,11 +537,9 @@ function endpointCoverage(input: RestContractComparisonInput): {
             const endpoint = `${method.toUpperCase()} ${path}`;
             if (mapped.has(endpoint)) {
                 implemented.push(endpoint);
-                continue;
+            } else {
+                unimplemented.push(endpoint);
             }
-            const reviewNote = input.ignoredEndpoints?.[endpoint];
-            if (reviewNote) continue;
-            unimplemented.push(endpoint);
         }
     }
     return { implemented, unimplemented };

@@ -45,7 +45,7 @@ Operations that can never be wrapped belong in `IGNORED_UNIMPLEMENTED_OPERATIONS
 The MAL comparison checks the package's handwritten REST response types (`src/apis/rest/mal/types.ts`) against MAL's published OpenAPI 3.0 document. It runs in both directions:
 
 - **Forward:** for every mapped response interface, each declared field must exist on the endpoint's response schema with a compatible type, so upstream contract changes surface as CI failures instead of runtime surprises.
-- **Reverse:** every endpoint in the spec must be mapped by a package type or listed in `MAL_IGNORED_ENDPOINTS` with a dated `review: YYYY-Qn` note, so newly published upstream endpoints surface as warnings instead of being silently missed. Unimplemented endpoints are warnings and never affect the exit status — not even in `--strict` mode.
+- **Reverse:** every endpoint in the spec must be mapped by a package type, so newly published upstream endpoints and unwrapped coverage gaps surface as warnings instead of being silently missed. Unimplemented endpoints are warnings and never affect the exit status — not even in `--strict` mode.
 
 MAL does not publish a standalone spec URL; the OpenAPI document is embedded inline in the [API v2 reference page](https://myanimelist.net/apiconfig/references/api/v2). The tool extracts it from that page for `--live` runs and `update-schema` — the page's own JS bundle also mentions `"openapi"` in its schema definitions, so the extractor only accepts JSON objects whose first key is `"openapi"` and that parse as a document.
 
@@ -73,7 +73,7 @@ npm run mal:api:update-schema
 
 The comparison covers the response interfaces mapped in `scripts/api-compare/rest-contracts.ts` (`MAL_ENDPOINT_MAPPINGS`). Request-shape interfaces (`MalRequestOptions` and its option subclasses, the form-encoded list-status update payloads) are excluded: the spec declares request bodies inline per-operation rather than as named components, and the integration suite exercises them live.
 
-Currently unwrapped endpoints and why:
+Endpoints the package does not wrap yet are reported as unimplemented-endpoint warnings in every run — there is no ignore list, so a coverage gap can never silently disappear from the reports. Currently unwrapped:
 
 | Endpoint                                                                | Reason                                                      |
 | ----------------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -81,7 +81,7 @@ Currently unwrapped endpoints and why:
 | `GET /manga/ranking`                                                    | No wrapped counterpart yet; a feature request, not drift    |
 | `GET /forum/boards`, `GET /forum/topics`, `GET /forum/topic/{topic_id}` | Forum domain the package does not target                    |
 
-Adding a wrapped MAL endpoint means adding its response interface to `MAL_ENDPOINT_MAPPINGS` (and removing any ignore entry it replaces).
+Adding a wrapped MAL endpoint means adding a `MAL_ENDPOINT_MAPPINGS` entry. Endpoints with a response contract to compare map their response interface through `typeName`; void-returning endpoints have no response schema to compare, so they use coverage-only entries with just `path` and `method` — see the existing `delete` mappings for the list-status endpoints. A response interface is therefore required only when there is a response contract to compare, but every added endpoint needs its mapping entry so the reverse coverage check can account for it.
 
 ## Shared behavior
 

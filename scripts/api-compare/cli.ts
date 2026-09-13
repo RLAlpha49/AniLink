@@ -199,7 +199,7 @@ async function runOpenApiComparison(
  *
  * @param argv - Comparison flags, including `--live` and `--schema`.
  * @param provider - OpenAPI provider configuration selected by the CLI.
- * @param mappings - The provider's endpoint mappings and ignore list.
+ * @param mappings - The provider's endpoint mappings.
  * @param schemaPath - Resolved snapshot path.
  * @returns The full comparison result used for logging and exit-status decisions.
  * @throws {Error} When the document cannot be loaded, fetched, or compared.
@@ -207,7 +207,7 @@ async function runOpenApiComparison(
 async function runRestComparison(
     argv: string[],
     provider: ProviderConfig,
-    mappings: { endpoints: RestEndpointMapping[]; ignoredEndpoints: Record<string, string> },
+    mappings: { endpoints: RestEndpointMapping[] },
     schemaPath: string
 ): Promise<ReturnType<typeof compareRestContracts>> {
     const live = argv.includes("--live");
@@ -220,7 +220,6 @@ async function runRestComparison(
         document,
         contracts,
         endpoints: mappings.endpoints,
-        ignoredEndpoints: mappings.ignoredEndpoints,
     });
 }
 

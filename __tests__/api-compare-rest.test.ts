@@ -13,7 +13,6 @@ import {
 import {
     discoverRestContracts,
     MAL_ENDPOINT_MAPPINGS,
-    MAL_IGNORED_ENDPOINTS,
 } from "../scripts/api-compare/rest-contracts";
 import { runCli } from "../scripts/api-compare/cli";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -404,19 +403,6 @@ describe("compareRestContracts", () => {
         ]);
     });
 
-    it("suppresses unimplemented warnings for ignored endpoints", () => {
-        const result = compareRestContracts({
-            document: buildSpec(),
-            contracts: buildContracts({
-                id: { type: "number", optional: false, array: false },
-            }),
-            endpoints: [WORK_MAPPING],
-            ignoredEndpoints: { "GET /works/season/{year}": "review: 2026-Q4" },
-        });
-        expect(result.unimplementedEndpoints).toEqual([]);
-        expect(result.discrepancies).toEqual([]);
-    });
-
     it("does not count a removed endpoint toward verified types", () => {
         const result = compareRestContracts({
             document: buildSpec(),
@@ -571,16 +557,6 @@ describe("discoverRestContracts - MAL provider integration", () => {
         await expect(
             discoverRestContracts(resolve(import.meta.dirname, ".."), "unknown")
         ).rejects.toThrow(/No REST source root configured/);
-    });
-
-    it("documents every unwrapped MAL endpoint with a review note", async () => {
-        // Every ignore entry must carry a dated review note so the list stays
-        // an explicit, revisited contract.
-        for (const [endpoint, note] of Object.entries(MAL_IGNORED_ENDPOINTS)) {
-            expect(note, `ignore entry ${endpoint} lacks a review note`).toMatch(
-                /review: \d{4}-Q[1-4]/
-            );
-        }
     });
 });
 
