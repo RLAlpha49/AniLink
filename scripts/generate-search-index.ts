@@ -22,6 +22,8 @@ import type { ReferenceManifest } from "./generate-operation-reference";
 export {
     cosineSimilarity,
     mergeResults,
+    quantizeVector,
+    dequantizeVector,
     SEARCH_MODEL_ID,
     SEARCH_MODEL_REVISION,
     type SearchDoc,
@@ -29,6 +31,7 @@ export {
     type ScoredResult,
 } from "../docs-src/lib/search-rank";
 import { SEARCH_MODEL_ID, SEARCH_MODEL_REVISION } from "../docs-src/lib/search-rank";
+import { quantizeVector } from "../docs-src/lib/search-rank";
 import type { SearchDoc, SearchIndex } from "../docs-src/lib/search-rank";
 
 /** Slugify a heading to a VitePress anchor. */
@@ -338,7 +341,21 @@ async function main(): Promise<void> {
         );
         const vectors = out.tolist();
         batch.forEach((d, j) => {
-            d.vector = Array.from(vectors[j] as Float32Array);
+            // Store int8 codes + a per-vector scale instead of full-precision
+            // floats: a 384-dim embedding costs ~3.5 KB as JSON numbers but
+            // ~1.1 KB quantized, shrinking the index from ~2.2 MB to well
+            // under 1 MB with near-lossless cosine ranking (embeddings are
+            // L2-normalized, so all components live in a narrow range).
+            const quantized = quantizeVector(Array.from(vectors[j] as Float32Array));
+            if (quantized) {
+                d.q = quantized.q;
+                d.scale = quantized.scale;
+            } else {
+                // A zero vector has nothing to encode; the doc stays
+                // keyword-only. Near-impossible with normalize: true, but
+                // observable if it ever fires.
+                console.warn(`  zero embedding for ${d.url} — doc will not rank semantically`);
+            }
         });
         process.stdout.write(`  embedded ${Math.min(i + BATCH, docs.length)}/${docs.length}\r`);
     }
@@ -346,7 +363,7 @@ async function main(): Promise<void> {
     // Stable ids.
     for (const d of docs) d.id = hashId(d.url + "|" + d.title);
 
-    const index: SearchIndex = { model: MODEL_ID, dim: DIM, docs };
+    const index: SearchIndex = { model: MODEL_ID, dim: DIM, format: "int8", docs };
     const outPath = join(ROOT, "docs", "search-index.json");
     writeFileSync(outPath, JSON.stringify(index));
     console.log(`\nWrote ${docs.length} chunks to ${outPath}`);

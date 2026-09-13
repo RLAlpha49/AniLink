@@ -22,7 +22,7 @@
  * model. The keyword phase still runs first so results appear while the
  * model warms up, and the model is browser-cached after the first load.
  */
-import { onMounted, ref, computed } from "vue";
+import { onBeforeUnmount, onMounted, ref, computed } from "vue";
 import { CornerDownLeft, Search, Sparkles } from "@lucide/vue";
 import {
     cosineSimilarity,
@@ -48,6 +48,40 @@ const semanticError = ref(false);
 const results = ref<ScoredResult[]>([]);
 const recent = ref<string[]>([]);
 const activeIndex = ref(0);
+
+/**
+ * Monotonic token for in-flight searches. Each `runSearch` invocation
+ * captures the current value before awaiting; when the semantic phase
+ * resumes, a mismatch means a newer keystroke already superseded this
+ * invocation, so its (stale) results are discarded instead of overwriting
+ * the newer keyword results.
+ */
+let searchToken = 0;
+/** Pending debounce timer for `runSearch`, cleared on unmount. */
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Debounced entry point for the input event: waits for a typing pause so
+ * the keyword phase runs once per pause instead of once per keystroke.
+ * Recent-search chips call `runSearch` directly (single deliberate action).
+ */
+function scheduleSearch(): void {
+    if (debounceTimer !== null) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        debounceTimer = null;
+        void runSearch();
+    }, 150);
+}
+
+/**
+ * Stable option id for a result URL. Derived from the URL so
+ * `aria-activedescendant` stays valid across re-renders and the two-phase
+ * keyword→semantic result swap. The URL is encoded rather than stripped so
+ * punctuation-differing URLs (e.g. `/a/b` vs `/a-b`) cannot collide.
+ */
+function optionId(url: string): string {
+    return "ss-option-" + encodeURIComponent(url);
+}
 
 /** Source-type filters. `null` = all sources enabled. */
 const filters = ref<Record<SearchDoc["source"], boolean>>({
@@ -83,6 +117,14 @@ async function loadIndex(): Promise<void> {
     if (index.length) return;
     const res = await fetch("/search-index.json");
     const json: SearchIndex = (await res.json()) as SearchIndex;
+    // Per-doc field sniffing (vector vs q/scale) ranks either format, but a
+    // format this runtime predates cannot — surface that instead of
+    // silently degraded semantic ranking.
+    if (json.format && json.format !== "float" && json.format !== "int8") {
+        console.warn(
+            `[anilink-search] unknown search-index format "${json.format}"; semantic ranking may be degraded`
+        );
+    }
     index = json.docs;
 }
 
@@ -119,9 +161,12 @@ function keywordScore(doc: SearchDoc, q: string): number {
 /** Run the keyword pass instantly, then the semantic pass when ready. */
 async function runSearch(): Promise<void> {
     const q = query.value.trim();
+    const token = ++searchToken;
     activeIndex.value = 0;
     if (!q) {
         results.value = [];
+        keywordLoading.value = false;
+        semanticLoading.value = false;
         return;
     }
 
@@ -131,6 +176,10 @@ async function runSearch(): Promise<void> {
     keywordLoading.value = true;
     try {
         await loadIndex();
+        // A newer invocation superseded this one while the index was still
+        // loading (first search after mount); its results are stale, so leave
+        // the newer results and loading state untouched.
+        if (token !== searchToken) return;
         const keyword: ScoredResult[] = index
             .map((d) => ({
                 url: d.url,
@@ -145,24 +194,34 @@ async function runSearch(): Promise<void> {
             .slice(0, 8);
         results.value = keyword;
     } finally {
-        keywordLoading.value = false;
+        if (token === searchToken) keywordLoading.value = false;
     }
 
     // Phase 2 — semantic results refine the list once the model is ready.
     if (semanticError.value) return;
     await loadModel();
+    // A newer invocation superseded this one while the model was still
+    // loading (first semantic search); bail before touching the loading
+    // state so the newer invocation's flags stay authoritative.
+    if (token !== searchToken) return;
     if (!extractor) return;
     semanticLoading.value = true;
     try {
         const out = await extractor(q, { pooling: "mean", normalize: true });
         const qvec = Array.from(out.tolist()[0] as Float32Array);
+        // A newer keystroke superseded this invocation while the model was
+        // embedding; its results are stale, so leave the newer keyword
+        // results (and any newer semantic pass) in place.
+        if (token !== searchToken) return;
         const semantic: ScoredResult[] = index
             .map((d) => ({
                 url: d.url,
                 title: d.title,
                 text: d.text,
                 source: d.source,
-                score: d.vector ? cosineSimilarity(qvec, d.vector) : 0,
+                // Pass the doc itself: cosineSimilarity decodes int8-quantized
+                // vectors (v2 index format) transparently.
+                score: cosineSimilarity(qvec, d),
                 matchedBy: "semantic" as const,
             }))
             .sort((a, b) => b.score - a.score)
@@ -170,7 +229,7 @@ async function runSearch(): Promise<void> {
         results.value = mergeResults(semantic, results.value);
         activeIndex.value = 0;
     } finally {
-        semanticLoading.value = false;
+        if (token === searchToken) semanticLoading.value = false;
     }
 }
 
@@ -204,6 +263,14 @@ function onKeydown(e: KeyboardEvent): void {
         if (r) select(r.url);
     }
 }
+
+onBeforeUnmount(() => {
+    // A pending debounce firing after unmount would touch dead refs.
+    if (debounceTimer !== null) {
+        clearTimeout(debounceTimer);
+        debounceTimer = null;
+    }
+});
 
 onMounted(() => {
     try {
@@ -239,7 +306,16 @@ void emit;
                 aria-label="Search docs"
                 autocomplete="off"
                 spellcheck="false"
-                @input="runSearch"
+                role="combobox"
+                aria-expanded="filteredResults.length > 0"
+                aria-controls="ss-listbox"
+                :aria-activedescendant="
+                    filteredResults[activeIndex]
+                        ? optionId(filteredResults[activeIndex].url)
+                        : undefined
+                "
+                aria-autocomplete="list"
+                @input="scheduleSearch"
                 @keydown="onKeydown"
             />
             <kbd class="ss-kbd" aria-hidden="true">↵</kbd>
@@ -270,17 +346,20 @@ void emit;
             </button>
         </fieldset>
 
-        <ul v-if="filteredResults.length" class="ss-list">
+        <ul v-if="filteredResults.length" id="ss-listbox" class="ss-list" role="listbox">
             <li
                 v-for="(r, i) in filteredResults"
                 :key="r.url"
                 class="ss-item"
                 :style="{ '--ss-i': i }"
+                role="presentation"
             >
                 <button
                     type="button"
                     class="ss-result"
                     :class="{ 'is-active': i === activeIndex }"
+                    :id="optionId(r.url)"
+                    role="option"
                     :aria-selected="i === activeIndex"
                     @click="select(r.url)"
                     @mousemove="activeIndex = i"

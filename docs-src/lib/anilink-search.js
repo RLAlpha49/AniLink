@@ -34,6 +34,31 @@
     var filters = { guide: true, operation: true, typedoc: true };
     var recent = [];
 
+    /**
+     * Monotonic token for in-flight searches. Each `runSearch` invocation
+     * captures the current value before awaiting; when a phase resumes, a
+     * mismatch means a newer keystroke already superseded this invocation,
+     * so its (stale) results are discarded instead of overwriting the
+     * newer keyword results or clobbering the newer run's loading flags.
+     */
+    var searchToken = 0;
+    /** Pending debounce timer for `runSearch`, cleared when the modal closes. */
+    var debounceTimer = null;
+
+    /**
+     * Debounced entry point for the input event: waits for a typing pause
+     * so the keyword phase runs once per pause instead of once per
+     * keystroke (each keystroke would otherwise await a full query
+     * embedding on the semantic path).
+     */
+    function scheduleSearch() {
+        if (debounceTimer !== null) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function () {
+            debounceTimer = null;
+            runSearch();
+        }, 150);
+    }
+
     var overlay, modal, input, statusEl, listEl, filtersEl;
 
     function theme() {
@@ -44,7 +69,34 @@
         return t;
     }
 
+    /**
+     * Reconstruct a doc's embedding as floats, whichever format the index
+     * was written in: v2 docs carry `q` (int8 codes) and `scale`, and
+     * `q[i] / 127 * scale` rebuilds the component; older float-format (v1)
+     * indexes carry `vector` directly. Both are handled so a stale index
+     * still ranks correctly. Results are memoized on the doc (`_v`) because
+     * vectors are immutable after `loadIndex` — the same doc is re-ranked
+     * on every query, so the reconstruction happens once, not per query.
+     */
+    function docVector(doc) {
+        if (doc._v) return doc._v;
+        var v = null;
+        if (doc.vector) {
+            v = doc.vector;
+        } else if (doc.q && typeof doc.scale === "number") {
+            v = new Array(doc.q.length);
+            for (var i = 0; i < doc.q.length; i++) {
+                v[i] = (doc.q[i] / 127) * doc.scale;
+            }
+        }
+        if (v) doc._v = v;
+        return v;
+    }
+
     function cosine(a, b) {
+        // A length mismatch (malformed index data) would make every product
+        // NaN; treat it as no similarity instead of a garbage score.
+        if (a.length !== b.length) return 0;
         var dot = 0,
             na = 0,
             nb = 0;
@@ -117,6 +169,16 @@
         if (index.length) return;
         var res = await fetch(INDEX_URL);
         var json = await res.json();
+        // Per-doc field sniffing (vector vs q/scale) ranks either format, but
+        // a format this runtime predates cannot — surface that instead of
+        // silently degraded semantic ranking.
+        if (json.format && json.format !== "float" && json.format !== "int8") {
+            console.warn(
+                "[anilink-search] unknown search-index format '" +
+                    json.format +
+                    "'; semantic ranking may be degraded"
+            );
+        }
         index = json.docs;
     }
 
@@ -140,10 +202,17 @@
 
     async function runSearch() {
         var q = input.value.trim();
+        var token = ++searchToken;
         activeIndex = 0;
         if (!q) {
             results = [];
+            // The token bump above invalidates any in-flight run, whose
+            // finally blocks then skip clearing their own loading flags —
+            // clear both here so the status line drops immediately.
+            keywordLoading = false;
+            semanticLoading = false;
             renderResults();
+            renderStatus();
             return;
         }
 
@@ -151,6 +220,7 @@
         renderStatus();
         try {
             await loadIndex();
+            if (token !== searchToken) return;
             var keyword = index
                 .map(function (d) {
                     return {
@@ -172,26 +242,34 @@
             results = keyword;
             renderResults();
         } finally {
-            keywordLoading = false;
-            renderStatus();
+            if (token === searchToken) {
+                keywordLoading = false;
+                renderStatus();
+            }
         }
 
         if (semanticError) return;
         await loadModel();
         if (!extractor) return;
+        if (token !== searchToken) return;
         semanticLoading = true;
         renderStatus();
         try {
             var out = await extractor(q, { pooling: "mean", normalize: true });
+            // A newer keystroke superseded this invocation while the model
+            // was embedding; its results are stale, so leave the newer
+            // keyword results (and any newer semantic pass) in place.
+            if (token !== searchToken) return;
             var qvec = Array.from(out.tolist()[0]);
             var semantic = index
                 .map(function (d) {
+                    var vec = docVector(d);
                     return {
                         url: d.url,
                         title: d.title,
                         text: d.text,
                         source: d.source,
-                        score: d.vector ? cosine(qvec, d.vector) : 0,
+                        score: vec ? cosine(qvec, vec) : 0,
                         matchedBy: "semantic",
                     };
                 })
@@ -203,8 +281,10 @@
             activeIndex = 0;
             renderResults();
         } finally {
-            semanticLoading = false;
-            renderStatus();
+            if (token === searchToken) {
+                semanticLoading = false;
+                renderStatus();
+            }
         }
     }
 
@@ -402,7 +482,7 @@
             if (e.target === overlay) closeModal();
         });
 
-        input.addEventListener("input", runSearch);
+        input.addEventListener("input", scheduleSearch);
         input.addEventListener("keydown", function (e) {
             var filtered = results.filter(function (r) {
                 return filters[r.source];
@@ -446,6 +526,12 @@
     }
 
     function closeModal() {
+        // A pending debounce firing after close would run a search against
+        // a detached input; drop it.
+        if (debounceTimer !== null) {
+            clearTimeout(debounceTimer);
+            debounceTimer = null;
+        }
         if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
         document.body.style.overflow = "";
     }
