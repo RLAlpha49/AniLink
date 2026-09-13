@@ -4,6 +4,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type ReviewsPageResponse } from "../../interfaces/responses/page/Reviews";
 import { ReviewSortMappings } from "../../types/Sort";
 import { ReviewSchema } from "../../schemas/responses/query/Review";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link ReviewsVariables} contains variables for the {@link ReviewsQuery} operation.
@@ -94,7 +102,19 @@ export class ReviewsQuery extends AniListOperation {
     async reviews(
         variables: ReviewsVariables,
         options?: RequestOptions
-    ): Promise<ReviewsPageResponse> {
+    ): Promise<ReviewsPageResponse>;
+    async reviews(
+        variables: ReviewsVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ReviewsPageResponse>;
+    async reviews<K extends FieldPath<ReviewsPageResponse>>(
+        variables: ReviewsVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ReviewsPageResponse, K | "pageInfo">>;
+    async reviews(
+        variables: ReviewsVariables,
+        options?: RequestOptions & FieldsSelection<ReviewsPageResponse>
+    ): FieldsResult<ReviewsPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $mediaId: Int, $userId: Int, $mediaType: MediaType, $sort: [ReviewSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -111,9 +131,14 @@ export class ReviewsQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ReviewsPageResponse>(query, variables, {
-            mappings: ReviewsMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ReviewsPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: ReviewsMappings,
+                transportOptions,
+            }
+        );
     }
 }

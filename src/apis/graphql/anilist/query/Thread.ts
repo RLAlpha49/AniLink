@@ -3,6 +3,21 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { type ThreadSort, ThreadSortMappings } from "../types/Sort";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed thread document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const THREAD_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link ThreadVariables} contains variables for the {@link ThreadQuery} operation.
@@ -102,7 +117,19 @@ export class ThreadQuery extends AniListOperation {
      * const result = await new ThreadQuery().thread({ id: 1 });
      * ```
      */
-    async thread(variables: ThreadVariables, options?: RequestOptions): Promise<ThreadResponse> {
+    async thread(variables: ThreadVariables, options?: RequestOptions): Promise<ThreadResponse>;
+    async thread(
+        variables: ThreadVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ThreadResponse>;
+    async thread<K extends FieldPath<ThreadResponse>>(
+        variables: ThreadVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ThreadResponse, K | "id">>;
+    async thread(
+        variables: ThreadVariables,
+        options?: RequestOptions & FieldsSelection<ThreadResponse>
+    ): FieldsResult<ThreadResponse, "id"> {
         const query = `
       query ($id: Int, $userId: Int, $replyUserId: Int, $subscribed: Boolean, $categoryId: Int, $mediaCategoryId: Int, $search: String, $id_in: [Int], $sort: [ThreadSort], $asHtml: Boolean) {
         Thread (id: $id, userId: $userId, replyUserId: $replyUserId, subscribed: $subscribed, categoryId: $categoryId, mediaCategoryId: $mediaCategoryId, search: $search, id_in: $id_in, sort: $sort) {
@@ -110,16 +137,21 @@ export class ThreadQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ThreadResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "notOnly",
-                    names: ["asHtml"],
-                    message: "The Thread query requires at least one filter variable.",
-                },
-            ],
-            mappings: ThreadMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ThreadResponse>(
+            composeDocument(query, fields, THREAD_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "notOnly",
+                        names: ["asHtml"],
+                        message: "The Thread query requires at least one filter variable.",
+                    },
+                ],
+                mappings: ThreadMappings,
+                transportOptions,
+            }
+        );
     }
 }

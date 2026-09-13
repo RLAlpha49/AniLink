@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 
@@ -57,7 +65,19 @@ export class DeleteThreadMutation extends AniListOperation {
     async deleteThread(
         variables: DeleteThreadVariables,
         options?: RequestOptions
-    ): Promise<DeleteResult> {
+    ): Promise<DeleteResult>;
+    async deleteThread(
+        variables: DeleteThreadVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<DeleteResult>;
+    async deleteThread<K extends FieldPath<DeleteResult>>(
+        variables: DeleteThreadVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<DeleteResult, K>>;
+    async deleteThread(
+        variables: DeleteThreadVariables,
+        options?: RequestOptions & FieldsSelection<DeleteResult>
+    ): FieldsResult<DeleteResult> {
         const mutation = `
       mutation ($id: Int) {
         DeleteThread (id: $id) {
@@ -65,7 +85,8 @@ export class DeleteThreadMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<DeleteResult>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<DeleteResult>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "all",
@@ -75,7 +96,7 @@ export class DeleteThreadMutation extends AniListOperation {
             ],
             mappings: DeleteThreadMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

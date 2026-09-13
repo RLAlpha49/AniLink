@@ -4,6 +4,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type StudiosPageResponse } from "../../interfaces/responses/page/Studios";
 import { CharacterSortMappings, MediaSortMappings, StudioSortMappings } from "../../types/Sort";
 import { StudioSchema } from "../../schemas/responses/query/Studio";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link StudiosVariables} contains variables for the {@link StudiosQuery} operation.
@@ -202,7 +210,19 @@ export class StudiosQuery extends AniListOperation {
     async studios(
         variables: StudiosVariables,
         options?: RequestOptions
-    ): Promise<StudiosPageResponse> {
+    ): Promise<StudiosPageResponse>;
+    async studios(
+        variables: StudiosVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<StudiosPageResponse>;
+    async studios<K extends FieldPath<StudiosPageResponse>>(
+        variables: StudiosVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<StudiosPageResponse, K | "pageInfo">>;
+    async studios(
+        variables: StudiosVariables,
+        options?: RequestOptions & FieldsSelection<StudiosPageResponse>
+    ): FieldsResult<StudiosPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StudioSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaIsMain: Boolean, $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Page (page: $page, perPage: $perPage) {
@@ -219,9 +239,14 @@ export class StudiosQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<StudiosPageResponse>(query, variables, {
-            mappings: StudiosMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<StudiosPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: StudiosMappings,
+                transportOptions,
+            }
+        );
     }
 }

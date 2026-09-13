@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type Activity } from "../interfaces/Activity";
 import { ListActivitySchema } from "../schemas/Activity";
@@ -65,14 +73,27 @@ export class SaveListActivityMutation extends AniListOperation {
     async saveListActivity(
         variables: SaveListActivityVariables,
         options?: RequestOptions
-    ): Promise<Activity> {
+    ): Promise<Activity>;
+    async saveListActivity(
+        variables: SaveListActivityVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<Activity>;
+    async saveListActivity<K extends FieldPath<Activity>>(
+        variables: SaveListActivityVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<Activity, K>>;
+    async saveListActivity(
+        variables: SaveListActivityVariables,
+        options?: RequestOptions & FieldsSelection<Activity>
+    ): FieldsResult<Activity> {
         const mutation = `
       mutation ($id: Int, $locked: Boolean, $asHtml: Boolean) {
         SaveListActivity(id: $id, locked:$locked)
           ${ListActivitySchema}
       }
     `;
-        return await this.execute<Activity>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<Activity>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "all",
@@ -82,7 +103,7 @@ export class SaveListActivityMutation extends AniListOperation {
             ],
             mappings: SaveListActivityMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

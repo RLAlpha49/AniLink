@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { type ReviewRating, ReviewRatingMappings } from "../types/ReviewRating";
@@ -60,7 +68,19 @@ export class RateReviewMutation extends AniListOperation {
     async rateReview(
         variables: RateReviewVariables,
         options?: RequestOptions
-    ): Promise<ReviewResponse> {
+    ): Promise<ReviewResponse>;
+    async rateReview(
+        variables: RateReviewVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ReviewResponse>;
+    async rateReview<K extends FieldPath<ReviewResponse>>(
+        variables: RateReviewVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ReviewResponse, K>>;
+    async rateReview(
+        variables: RateReviewVariables,
+        options?: RequestOptions & FieldsSelection<ReviewResponse>
+    ): FieldsResult<ReviewResponse> {
         const mutation = `
       mutation ($reviewId: Int, $rating: ReviewRating) {
         RateReview (reviewId: $reviewId, rating: $rating) {
@@ -68,17 +88,22 @@ export class RateReviewMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ReviewResponse>(mutation, variables, {
-            requirements: [
-                {
-                    kind: "all",
-                    names: ["reviewId", "rating"],
-                    message: "The RateReview mutation requires reviewId and rating variables.",
-                },
-            ],
-            mappings: RateReviewMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ReviewResponse>(
+            composeDocument(mutation, fields, []),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "all",
+                        names: ["reviewId", "rating"],
+                        message: "The RateReview mutation requires reviewId and rating variables.",
+                    },
+                ],
+                mappings: RateReviewMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }

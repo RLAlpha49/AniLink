@@ -4,6 +4,21 @@ import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { type MediaType } from "../types/Type";
 import { type ReviewSort, ReviewSortMappings } from "../types/Sort";
 import { ReviewSchema } from "../schemas/responses/query/Review";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed review document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const REVIEW_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link ReviewVariables} contains variables for the {@link ReviewQuery} operation.
@@ -79,7 +94,19 @@ export class ReviewQuery extends AniListOperation {
      * const result = await new ReviewQuery().review({ mediaId: 1 });
      * ```
      */
-    async review(variables: ReviewVariables, options?: RequestOptions): Promise<ReviewResponse> {
+    async review(variables: ReviewVariables, options?: RequestOptions): Promise<ReviewResponse>;
+    async review(
+        variables: ReviewVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ReviewResponse>;
+    async review<K extends FieldPath<ReviewResponse>>(
+        variables: ReviewVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ReviewResponse, K | "id">>;
+    async review(
+        variables: ReviewVariables,
+        options?: RequestOptions & FieldsSelection<ReviewResponse>
+    ): FieldsResult<ReviewResponse, "id"> {
         const query = `
       query ($id: Int, $mediaId: Int, $userId: Int, $mediaType: MediaType, $sort: [ReviewSort], $asHtml: Boolean) {
         Review (id: $id, mediaId: $mediaId, userId: $userId, mediaType: $mediaType, sort: $sort) {
@@ -87,16 +114,21 @@ export class ReviewQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ReviewResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "notOnly",
-                    names: ["asHtml"],
-                    message: "The Review query requires at least one filter variable.",
-                },
-            ],
-            mappings: ReviewMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ReviewResponse>(
+            composeDocument(query, fields, REVIEW_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "notOnly",
+                        names: ["asHtml"],
+                        message: "The Review query requires at least one filter variable.",
+                    },
+                ],
+                mappings: ReviewMappings,
+                transportOptions,
+            }
+        );
     }
 }

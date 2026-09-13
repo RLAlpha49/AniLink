@@ -3,6 +3,19 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type MediaTrendResponse } from "../interfaces/responses/query/MediaTrend";
 import { type MediaTrendSort, MediaTrendSortMappings } from "../types/Sort";
 import { MediaTrendSchema } from "../schemas/responses/query/MediaTrend";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed mediatrend document.
+ */
+export const MEDIA_TREND_ALWAYS: readonly string[] = [];
 
 /**
  * {@link MediaTrendVariables} contains variables for the {@link MediaTrendQuery} operation.
@@ -201,7 +214,19 @@ export class MediaTrendQuery extends AniListOperation {
     async mediaTrend(
         variables: MediaTrendVariables,
         options?: RequestOptions
-    ): Promise<MediaTrendResponse> {
+    ): Promise<MediaTrendResponse>;
+    async mediaTrend(
+        variables: MediaTrendVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<MediaTrendResponse>;
+    async mediaTrend<K extends FieldPath<MediaTrendResponse>>(
+        variables: MediaTrendVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<MediaTrendResponse, K>>;
+    async mediaTrend(
+        variables: MediaTrendVariables,
+        options?: RequestOptions & FieldsSelection<MediaTrendResponse>
+    ): FieldsResult<MediaTrendResponse> {
         const query = `
       query ($mediaId: Int, $date: Int, $trending: Int, $averageScore: Int, $popularity: Int, $episode: Int, $releasing: Boolean, $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $date_greater: Int, $date_lesser: Int, $trending_greater: Int, $trending_lesser: Int, $trending_not: Int, $averageScore_greater: Int, $averageScore_lesser: Int, $averageScore_not: Int, $popularity_greater: Int, $popularity_lesser: Int, $popularity_not: Int, $episode_greater: Int, $episode_lesser: Int, $episode_not: Int, $sort: [MediaTrendSort], $asHtml: Boolean) {
         MediaTrend (mediaId: $mediaId, date: $date, trending: $trending, averageScore: $averageScore, popularity: $popularity, episode: $episode, releasing: $releasing, mediaId_not: $mediaId_not, mediaId_in: $mediaId_in, mediaId_not_in: $mediaId_not_in, date_greater: $date_greater, date_lesser: $date_lesser, trending_greater: $trending_greater, trending_lesser: $trending_lesser, trending_not: $trending_not, averageScore_greater: $averageScore_greater, averageScore_lesser: $averageScore_lesser, averageScore_not: $averageScore_not, popularity_greater: $popularity_greater, popularity_lesser: $popularity_lesser, popularity_not: $popularity_not, episode_greater: $episode_greater, episode_lesser: $episode_lesser, episode_not: $episode_not, sort: $sort) {
@@ -209,16 +234,21 @@ export class MediaTrendQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<MediaTrendResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "notOnly",
-                    names: ["asHtml"],
-                    message: "The MediaTrend query requires at least one filter variable.",
-                },
-            ],
-            mappings: MediaTrendMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<MediaTrendResponse>(
+            composeDocument(query, fields, MEDIA_TREND_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "notOnly",
+                        names: ["asHtml"],
+                        message: "The MediaTrend query requires at least one filter variable.",
+                    },
+                ],
+                mappings: MediaTrendMappings,
+                transportOptions,
+            }
+        );
     }
 }

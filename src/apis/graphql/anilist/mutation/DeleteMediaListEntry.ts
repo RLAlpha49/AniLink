@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type DeleteMediaListEntryResponse } from "../interfaces/responses/mutation/DeleteMediaListEntry";
 
@@ -57,7 +65,19 @@ export class DeleteMediaListEntryMutation extends AniListOperation {
     async deleteMediaListEntry(
         variables: DeleteMediaListEntryVariables,
         options?: RequestOptions
-    ): Promise<DeleteMediaListEntryResponse> {
+    ): Promise<DeleteMediaListEntryResponse>;
+    async deleteMediaListEntry(
+        variables: DeleteMediaListEntryVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<DeleteMediaListEntryResponse>;
+    async deleteMediaListEntry<K extends FieldPath<DeleteMediaListEntryResponse>>(
+        variables: DeleteMediaListEntryVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<DeleteMediaListEntryResponse, K>>;
+    async deleteMediaListEntry(
+        variables: DeleteMediaListEntryVariables,
+        options?: RequestOptions & FieldsSelection<DeleteMediaListEntryResponse>
+    ): FieldsResult<DeleteMediaListEntryResponse> {
         const mutation = `
       mutation ($id: Int) {
         DeleteMediaListEntry(id: $id) {
@@ -65,17 +85,22 @@ export class DeleteMediaListEntryMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<DeleteMediaListEntryResponse>(mutation, variables, {
-            requirements: [
-                {
-                    kind: "all",
-                    names: ["id"],
-                    message: "The DeleteMediaListEntry mutation requires an id variable.",
-                },
-            ],
-            mappings: DeleteMediaListEntryMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<DeleteMediaListEntryResponse>(
+            composeDocument(mutation, fields, []),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "all",
+                        names: ["id"],
+                        message: "The DeleteMediaListEntry mutation requires an id variable.",
+                    },
+                ],
+                mappings: DeleteMediaListEntryMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }

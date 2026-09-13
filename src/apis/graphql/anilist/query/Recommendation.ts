@@ -3,6 +3,21 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { type RecommendationSort, RecommendationSortMappings } from "../types/Sort";
 import { RecommendationSchema } from "../schemas/responses/query/Recommendation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed recommendation document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const RECOMMENDATION_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link RecommendationVariables} contains variables for the {@link RecommendationQuery} operation.
@@ -105,7 +120,19 @@ export class RecommendationQuery extends AniListOperation {
     async recommendation(
         variables: RecommendationVariables,
         options?: RequestOptions
-    ): Promise<RecommendationResponse> {
+    ): Promise<RecommendationResponse>;
+    async recommendation(
+        variables: RecommendationVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<RecommendationResponse>;
+    async recommendation<K extends FieldPath<RecommendationResponse>>(
+        variables: RecommendationVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<RecommendationResponse, K | "id">>;
+    async recommendation(
+        variables: RecommendationVariables,
+        options?: RequestOptions & FieldsSelection<RecommendationResponse>
+    ): FieldsResult<RecommendationResponse, "id"> {
         const query = `
       query ($id: Int, $mediaId: Int, $mediaRecommendationId: Int, $userId: Int, $rating: Int, $onList: Boolean, $rating_greater: Int, $rating_lesser: Int, $sort: [RecommendationSort], $asHtml: Boolean) {
         Recommendation (id: $id, mediaId: $mediaId, mediaRecommendationId: $mediaRecommendationId, userId: $userId, rating: $rating, onList: $onList, rating_greater: $rating_greater, rating_lesser: $rating_lesser, sort: $sort) {
@@ -113,16 +140,21 @@ export class RecommendationQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<RecommendationResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "notOnly",
-                    names: ["asHtml"],
-                    message: "The Recommendation query requires at least one filter variable.",
-                },
-            ],
-            mappings: RecommendationMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<RecommendationResponse>(
+            composeDocument(query, fields, RECOMMENDATION_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "notOnly",
+                        names: ["asHtml"],
+                        message: "The Recommendation query requires at least one filter variable.",
+                    },
+                ],
+                mappings: RecommendationMappings,
+                transportOptions,
+            }
+        );
     }
 }

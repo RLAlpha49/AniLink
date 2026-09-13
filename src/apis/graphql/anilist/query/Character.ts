@@ -8,6 +8,21 @@ import {
     MediaSortMappings,
 } from "../types/Sort";
 import { CharacterSchema } from "../schemas/responses/query/Character";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed character document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const CHARACTER_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link CharacterVariables} contains variables for the {@link CharacterQuery} operation.
@@ -122,7 +137,19 @@ export class CharacterQuery extends AniListOperation {
     async character(
         variables: CharacterVariables,
         options?: RequestOptions
-    ): Promise<CharacterResponse> {
+    ): Promise<CharacterResponse>;
+    async character(
+        variables: CharacterVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<CharacterResponse>;
+    async character<K extends FieldPath<CharacterResponse>>(
+        variables: CharacterVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<CharacterResponse, K | "id">>;
+    async character(
+        variables: CharacterVariables,
+        options?: RequestOptions & FieldsSelection<CharacterResponse>
+    ): FieldsResult<CharacterResponse, "id"> {
         const query = `
       query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [CharacterSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int) {
         Character (id: $id, isBirthday: $isBirthday, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {
@@ -130,9 +157,14 @@ export class CharacterQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<CharacterResponse>(query, variables, {
-            mappings: CharacterMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<CharacterResponse>(
+            composeDocument(query, fields, CHARACTER_ALWAYS),
+            variables,
+            {
+                mappings: CharacterMappings,
+                transportOptions,
+            }
+        );
     }
 }

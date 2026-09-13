@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
@@ -64,7 +72,19 @@ export class DeleteCustomListMutation extends AniListOperation {
     async deleteCustomList(
         variables: DeleteCustomListVariables,
         options?: RequestOptions
-    ): Promise<DeleteResult> {
+    ): Promise<DeleteResult>;
+    async deleteCustomList(
+        variables: DeleteCustomListVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<DeleteResult>;
+    async deleteCustomList<K extends FieldPath<DeleteResult>>(
+        variables: DeleteCustomListVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<DeleteResult, K>>;
+    async deleteCustomList(
+        variables: DeleteCustomListVariables,
+        options?: RequestOptions & FieldsSelection<DeleteResult>
+    ): FieldsResult<DeleteResult> {
         const mutation = `
       mutation ($customList: String, $type: MediaType) {
         DeleteCustomList(customList: $customList, type: $type) {
@@ -72,7 +92,8 @@ export class DeleteCustomListMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<DeleteResult>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<DeleteResult>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "all",
@@ -83,7 +104,7 @@ export class DeleteCustomListMutation extends AniListOperation {
             ],
             mappings: DeleteCustomListMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

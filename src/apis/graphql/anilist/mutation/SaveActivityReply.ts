@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type ActivityReply } from "../interfaces/Activity";
 import { ActivityReplySchema } from "../schemas/Activity";
@@ -77,7 +85,19 @@ export class SaveActivityReplyMutation extends AniListOperation {
     async saveActivityReply(
         variables: SaveActivityReplyVariables,
         options?: RequestOptions
-    ): Promise<ActivityReply> {
+    ): Promise<ActivityReply>;
+    async saveActivityReply(
+        variables: SaveActivityReplyVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ActivityReply>;
+    async saveActivityReply<K extends FieldPath<ActivityReply>>(
+        variables: SaveActivityReplyVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ActivityReply, K>>;
+    async saveActivityReply(
+        variables: SaveActivityReplyVariables,
+        options?: RequestOptions & FieldsSelection<ActivityReply>
+    ): FieldsResult<ActivityReply> {
         const mutation = `
       mutation ($id: Int, $activityId: Int, $text: String, $asMod: Boolean, $asHtml: Boolean) {
         SaveActivityReply (id: $id, activityId: $activityId, text: $text, asMod: $asMod) {
@@ -85,7 +105,8 @@ export class SaveActivityReplyMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ActivityReply>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ActivityReply>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "any",
@@ -95,7 +116,7 @@ export class SaveActivityReplyMutation extends AniListOperation {
             ],
             mappings: SaveActivityReplyMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

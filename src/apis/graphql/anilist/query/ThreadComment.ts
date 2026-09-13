@@ -3,6 +3,21 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { type ThreadSort, ThreadSortMappings } from "../types/Sort";
 import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed threadcomment document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const THREAD_COMMENT_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link ThreadCommentVariables} contains variables for the {@link ThreadCommentQuery} operation.
@@ -75,7 +90,19 @@ export class ThreadCommentQuery extends AniListOperation {
     async threadComment(
         variables: ThreadCommentVariables,
         options?: RequestOptions
-    ): Promise<ThreadCommentResponse> {
+    ): Promise<ThreadCommentResponse>;
+    async threadComment(
+        variables: ThreadCommentVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ThreadCommentResponse>;
+    async threadComment<K extends FieldPath<ThreadCommentResponse>>(
+        variables: ThreadCommentVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ThreadCommentResponse, K | "id">>;
+    async threadComment(
+        variables: ThreadCommentVariables,
+        options?: RequestOptions & FieldsSelection<ThreadCommentResponse>
+    ): FieldsResult<ThreadCommentResponse, "id"> {
         const query = `
       query ($id: Int, $threadId: Int, $userId: Int, $sort: [ThreadCommentSort], $asHtml: Boolean) {
         ThreadComment (id: $id, threadId: $threadId, userId: $userId, sort: $sort) {
@@ -83,16 +110,21 @@ export class ThreadCommentQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ThreadCommentResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "notOnly",
-                    names: ["asHtml"],
-                    message: "The ThreadComment query requires at least one filter variable.",
-                },
-            ],
-            mappings: ThreadCommentMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ThreadCommentResponse>(
+            composeDocument(query, fields, THREAD_COMMENT_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "notOnly",
+                        names: ["asHtml"],
+                        message: "The ThreadComment query requires at least one filter variable.",
+                    },
+                ],
+                mappings: ThreadCommentMappings,
+                transportOptions,
+            }
+        );
     }
 }

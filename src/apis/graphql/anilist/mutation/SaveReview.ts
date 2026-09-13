@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type ReviewResponse } from "../interfaces/responses/query/Review";
 import { ReviewSchema } from "../schemas/responses/query/Review";
@@ -89,7 +97,19 @@ export class SaveReviewMutation extends AniListOperation {
     async saveReview(
         variables: SaveReviewVariables,
         options?: RequestOptions
-    ): Promise<ReviewResponse> {
+    ): Promise<ReviewResponse>;
+    async saveReview(
+        variables: SaveReviewVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ReviewResponse>;
+    async saveReview<K extends FieldPath<ReviewResponse>>(
+        variables: SaveReviewVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ReviewResponse, K>>;
+    async saveReview(
+        variables: SaveReviewVariables,
+        options?: RequestOptions & FieldsSelection<ReviewResponse>
+    ): FieldsResult<ReviewResponse> {
         const mutation = `
       mutation ($id: Int, $mediaId: Int, $body: String, $summary: String, $score: Int, $private: Boolean, $asHtml: Boolean) {
         SaveReview(id: $id, mediaId: $mediaId, body: $body, summary: $summary, score: $score, private: $private) {
@@ -97,17 +117,22 @@ export class SaveReviewMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ReviewResponse>(mutation, variables, {
-            requirements: [
-                {
-                    kind: "any",
-                    names: ["id", "mediaId"],
-                    message: "The SaveReview mutation requires an id or a mediaId variable.",
-                },
-            ],
-            mappings: SaveReviewMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ReviewResponse>(
+            composeDocument(mutation, fields, []),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "any",
+                        names: ["id", "mediaId"],
+                        message: "The SaveReview mutation requires an id or a mediaId variable.",
+                    },
+                ],
+                mappings: SaveReviewMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }

@@ -7,6 +7,20 @@ import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListSort, MediaListSortMappings } from "../types/Sort";
 import { type ScoreFormat, ScoreFormatMapping } from "../types/Format";
 import { MediaListCollectionQuerySchema } from "../schemas/responses/query/MediaListCollectionResponse";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed medialistcollection document: the chunk
+ * continuation flag the shared `paginateChunks` helper walks.
+ */
+export const MEDIA_LIST_COLLECTION_ALWAYS: readonly string[] = ["hasNextChunk"];
 
 /**
  * {@link MediaListCollectionVariables} contains variables for the {@link MediaListCollectionQuery} operation.
@@ -214,23 +228,40 @@ export class MediaListCollectionQuery extends AniListOperation {
     async mediaListCollection(
         variables: MediaListCollectionVariables,
         options?: RequestOptions
-    ): Promise<MediaListCollectionResponse> {
+    ): Promise<MediaListCollectionResponse>;
+    async mediaListCollection(
+        variables: MediaListCollectionVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<MediaListCollectionResponse>;
+    async mediaListCollection<K extends FieldPath<MediaListCollectionResponse>>(
+        variables: MediaListCollectionVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<MediaListCollectionResponse, K | "hasNextChunk">>;
+    async mediaListCollection(
+        variables: MediaListCollectionVariables,
+        options?: RequestOptions & FieldsSelection<MediaListCollectionResponse>
+    ): FieldsResult<MediaListCollectionResponse, "hasNextChunk"> {
         const query = MediaListCollectionQuerySchema;
-        return await this.execute<MediaListCollectionResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "all",
-                    names: ["type"],
-                    message: "The MediaListCollection query requires a type variable.",
-                },
-                {
-                    kind: "any",
-                    names: ["userId", "userName"],
-                    message: "The MediaListCollection query requires a userId or a userName.",
-                },
-            ],
-            mappings: MediaListCollectionMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<MediaListCollectionResponse>(
+            composeDocument(query, fields, MEDIA_LIST_COLLECTION_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "all",
+                        names: ["type"],
+                        message: "The MediaListCollection query requires a type variable.",
+                    },
+                    {
+                        kind: "any",
+                        names: ["userId", "userName"],
+                        message: "The MediaListCollection query requires a userId or a userName.",
+                    },
+                ],
+                mappings: MediaListCollectionMappings,
+                transportOptions,
+            }
+        );
     }
 }

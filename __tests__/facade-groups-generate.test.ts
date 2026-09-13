@@ -6,6 +6,7 @@ import { FACADE_OPERATION_DOCS } from "../scripts/generate-facade-groups.config"
 import {
     collectRegistryEntries,
     generateFacadeGroupFiles,
+    parseRegistrySource,
 } from "../scripts/generate-facade-groups";
 
 /**
@@ -73,5 +74,38 @@ describe("facade group generation", () => {
             page: ANILIST_OPERATION_REGISTRY.page.length,
             mutation: ANILIST_OPERATION_REGISTRY.mutation.length,
         });
+    });
+
+    test("every parsed registry entry resolves a runtime registry entry", () => {
+        // loadMethodInfo looks up alwaysSelected by name in the imported
+        // runtime registry; a miss must throw (a silent miss would generate a
+        // wrong DeepPick union without the always-keys). This test pins the
+        // lookup contract for the real registry: every parsed entry resolves.
+        const entries = collectRegistryEntries();
+        for (const entry of entries) {
+            const resolved = ANILIST_OPERATION_REGISTRY[entry.category].find(
+                (candidate) => candidate.name === entry.name
+            );
+            expect(
+                resolved,
+                `${entry.category}:${entry.name} must resolve in the runtime registry`
+            ).toBeDefined();
+        }
+    });
+
+    test("parseRegistrySource throws when an op call shape is not covered by the entry regex", () => {
+        // A fifth argument (or any call shape the entry regex does not cover)
+        // would silently drop the entry from generation — a wrong public
+        // facade with no error. The count guard must fail loudly instead.
+        const fake = [
+            "export const ANILIST_OPERATION_REGISTRY = {",
+            "    query: [",
+            '        op("user", UserQuery, USER_ALWAYS, extraArg),',
+            "    ],",
+            "    page: [],",
+            "    mutation: [],",
+            "} as const;",
+        ].join("\n");
+        expect(() => parseRegistrySource(fake)).toThrow(/parsed/);
     });
 });

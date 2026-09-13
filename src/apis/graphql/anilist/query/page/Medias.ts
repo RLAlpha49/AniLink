@@ -10,6 +10,14 @@ import { MediaStatusMappings } from "../../types/Status";
 import { MediaSourceMappings } from "../../types/Source";
 import { MediaSortMappings } from "../../types/Sort";
 import { MediaWithRelationsSchema } from "../../schemas/responses/query/Media";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link MediasVariables} contains variables for the {@link MediasQuery} operation.
@@ -480,10 +488,19 @@ export class MediasQuery extends AniListOperation {
      * const result = await new MediasQuery().medias({ search: "Cowboy Bebop", page: 1 });
      * ```
      */
+    async medias(variables: MediasVariables, options?: RequestOptions): Promise<MediasPageResponse>;
     async medias(
         variables: MediasVariables,
-        options?: RequestOptions
-    ): Promise<MediasPageResponse> {
+        options: RequestOptions & { fields: undefined }
+    ): Promise<MediasPageResponse>;
+    async medias<K extends FieldPath<MediasPageResponse>>(
+        variables: MediasVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<MediasPageResponse, K | "pageInfo">>;
+    async medias(
+        variables: MediasVariables,
+        options?: RequestOptions & FieldsSelection<MediasPageResponse>
+    ): FieldsResult<MediasPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $idMal: Int, $startDate: FuzzyDateInt, $endDate: FuzzyDateInt, $season: MediaSeason, $seasonYear: Int, $type: MediaType, $format: MediaFormat, $status: MediaStatus, $episodes: Int, $duration: Int, $chapters: Int, $volumes: Int, $isAdult: Boolean, $genre: String, $tag: String, $minimumTagRank: Int, $tagCategory: String, $onList: Boolean, $licensedBy: String, $licensedById: Int, $averageScore: Int, $popularity: Int, $source: MediaSource, $countryOfOrigin: CountryCode, $isLicensed: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $idMal_not: Int, $idMal_in: [Int], $idMal_not_in: [Int], $startDate_greater: FuzzyDateInt, $startDate_lesser: FuzzyDateInt, $startDate_like: String, $endDate_greater: FuzzyDateInt, $endDate_lesser: FuzzyDateInt, $endDate_like: String, $format_in: [MediaFormat], $format_not: MediaFormat, $format_not_in: [MediaFormat], $status_in: [MediaStatus], $status_not: MediaStatus, $status_not_in: [MediaStatus], $episodes_greater: Int, $episodes_lesser: Int, $duration_greater: Int, $duration_lesser: Int, $chapters_greater: Int, $chapters_lesser: Int, $volumes_greater: Int, $volumes_lesser: Int, $genre_in: [String], $genre_not_in: [String], $tag_in: [String], $tag_not_in: [String], $tagCategory_in: [String], $tagCategory_not_in: [String], $licensedBy_in: [String], $licensedById_in: [Int], $averageScore_not: Int, $averageScore_greater: Int, $averageScore_lesser: Int, $popularity_not: Int, $popularity_greater: Int, $popularity_lesser: Int, $source_in: [MediaSource], $sort: [MediaSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) { 
@@ -500,9 +517,14 @@ export class MediasQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<MediasPageResponse>(query, variables, {
-            mappings: MediasMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<MediasPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: MediasMappings,
+                transportOptions,
+            }
+        );
     }
 }

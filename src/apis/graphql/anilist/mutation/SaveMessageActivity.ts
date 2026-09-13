@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type Activity } from "../interfaces/Activity";
 import { MessageActivitySchema } from "../schemas/Activity";
@@ -89,7 +97,19 @@ export class SaveMessageActivityMutation extends AniListOperation {
     async saveMessageActivity(
         variables: SaveMessageActivityVariables,
         options?: RequestOptions
-    ): Promise<Activity> {
+    ): Promise<Activity>;
+    async saveMessageActivity(
+        variables: SaveMessageActivityVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<Activity>;
+    async saveMessageActivity<K extends FieldPath<Activity>>(
+        variables: SaveMessageActivityVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<Activity, K>>;
+    async saveMessageActivity(
+        variables: SaveMessageActivityVariables,
+        options?: RequestOptions & FieldsSelection<Activity>
+    ): FieldsResult<Activity> {
         const mutation = `
       mutation ($id: Int, $message: String, $recipientId: Int, $private: Boolean, $locked: Boolean, $asMod: Boolean, $asHtml: Boolean) {
         SaveMessageActivity(id: $id, message: $message, recipientId: $recipientId, private: $private, locked:$locked, asMod: $asMod) {
@@ -97,7 +117,8 @@ export class SaveMessageActivityMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<Activity>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<Activity>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "any",
@@ -108,7 +129,7 @@ export class SaveMessageActivityMutation extends AniListOperation {
             ],
             mappings: SaveMessageActivityMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

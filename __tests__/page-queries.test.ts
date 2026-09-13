@@ -15,6 +15,19 @@ import { describe, expect, test } from "vitest";
 /** Method names are validated against the public API surface at compile time. */
 type PageMethod = keyof AniListApi["query"]["page"];
 
+/**
+ * Narrows a table-driven page method to the plain call shape the unwrap
+ * tests use. The facade members are overloaded intersections (the `fields`
+ * surface); this one documented cast replaces per-call-site double casts.
+ */
+const asPageMethod = (
+    client: { anilist: AniListApi },
+    method: PageMethod
+): ((variables: object) => Promise<Record<string, unknown>>) =>
+    client.anilist.query.page[method] as unknown as (
+        variables: object
+    ) => Promise<Record<string, unknown>>;
+
 const pageCases: Array<[string, object, PageMethod, string]> = [
     ["users", { asHtml: true }, "users", "Page"],
     ["medias", { id: 1, type: "ANIME" }, "medias", "Page"],
@@ -278,9 +291,10 @@ describe("page operations unwrap the Page root field directly", () => {
             const mockItems = [{ id: 42, __typename: "MockItem" }];
             setMockResponse({ pageInfo: mockPageInfo, [itemsKey]: mockItems });
 
-            const call = client.anilist.query.page[method] as (
-                variables: object
-            ) => Promise<Record<string, unknown>>;
+            // The table drives every page method through one call shape; the
+            // single documented cast narrows the overloaded facade member to
+            // that shape (the overloads exist for the `fields` surface).
+            const call = asPageMethod(client, method);
             const result = await call(variables);
 
             expect(result.pageInfo).toEqual(mockPageInfo);

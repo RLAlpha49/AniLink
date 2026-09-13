@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type Activity } from "../interfaces/Activity";
 import { TextActivitySchema } from "../schemas/Activity";
@@ -71,7 +79,19 @@ export class SaveTextActivityMutation extends AniListOperation {
     async saveTextActivity(
         variables: SaveTextActivityVariables,
         options?: RequestOptions
-    ): Promise<Activity> {
+    ): Promise<Activity>;
+    async saveTextActivity(
+        variables: SaveTextActivityVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<Activity>;
+    async saveTextActivity<K extends FieldPath<Activity>>(
+        variables: SaveTextActivityVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<Activity, K>>;
+    async saveTextActivity(
+        variables: SaveTextActivityVariables,
+        options?: RequestOptions & FieldsSelection<Activity>
+    ): FieldsResult<Activity> {
         const mutation = `
       mutation ($id: Int, $text: String, $locked: Boolean, $asHtml: Boolean) {
         SaveTextActivity(id: $id, text: $text, locked:$locked) {
@@ -79,7 +99,8 @@ export class SaveTextActivityMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<Activity>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<Activity>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "any",
@@ -89,7 +110,7 @@ export class SaveTextActivityMutation extends AniListOperation {
             ],
             mappings: SaveTextActivityMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

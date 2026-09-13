@@ -4,6 +4,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type ThreadCommentsPageResponse } from "../../interfaces/responses/page/ThreadComments";
 import { ThreadSortMappings } from "../../types/Sort";
 import { ThreadCommentSchema } from "../../schemas/responses/query/ThreadComment";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link ThreadCommentsVariables} contains variables for the {@link ThreadCommentsQuery} operation.
@@ -88,7 +96,19 @@ export class ThreadCommentsQuery extends AniListOperation {
     async threadComments(
         variables: ThreadCommentsVariables,
         options?: RequestOptions
-    ): Promise<ThreadCommentsPageResponse> {
+    ): Promise<ThreadCommentsPageResponse>;
+    async threadComments(
+        variables: ThreadCommentsVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ThreadCommentsPageResponse>;
+    async threadComments<K extends FieldPath<ThreadCommentsPageResponse>>(
+        variables: ThreadCommentsVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ThreadCommentsPageResponse, K | "pageInfo">>;
+    async threadComments(
+        variables: ThreadCommentsVariables,
+        options?: RequestOptions & FieldsSelection<ThreadCommentsPageResponse>
+    ): FieldsResult<ThreadCommentsPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $threadId: Int, $userId: Int, $sort: [ThreadCommentSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -105,16 +125,21 @@ export class ThreadCommentsQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ThreadCommentsPageResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "any",
-                    names: ["threadId", "userId"],
-                    message: "The Page.threadComments query requires a threadId or a userId.",
-                },
-            ],
-            mappings: ThreadCommentsMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ThreadCommentsPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "any",
+                        names: ["threadId", "userId"],
+                        message: "The Page.threadComments query requires a threadId or a userId.",
+                    },
+                ],
+                mappings: ThreadCommentsMappings,
+                transportOptions,
+            }
+        );
     }
 }

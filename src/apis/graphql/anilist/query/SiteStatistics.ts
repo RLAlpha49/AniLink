@@ -3,6 +3,19 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type SiteStatisticsResponse } from "../interfaces/responses/query/SiteStatistics";
 import { type SiteTrendSort, SiteTrendSortMappings } from "../types/Sort";
 import { SiteStatisticsSchema } from "../schemas/responses/query/SiteStatistics";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed sitestatistics document.
+ */
+export const SITE_STATISTICS_ALWAYS: readonly string[] = [];
 
 /**
  * {@link SiteStatisticsVariables} contains variables for the {@link SiteStatisticsQuery} operation.
@@ -169,9 +182,21 @@ export class SiteStatisticsQuery extends AniListOperation {
      * ```
      */
     async siteStatistics(
-        variables: SiteStatisticsVariables = {},
+        variables?: SiteStatisticsVariables,
         options?: RequestOptions
-    ): Promise<SiteStatisticsResponse> {
+    ): Promise<SiteStatisticsResponse>;
+    async siteStatistics(
+        variables: SiteStatisticsVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<SiteStatisticsResponse>;
+    async siteStatistics<K extends FieldPath<SiteStatisticsResponse>>(
+        variables: SiteStatisticsVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<SiteStatisticsResponse, K>>;
+    async siteStatistics(
+        variables: SiteStatisticsVariables = {},
+        options: RequestOptions & FieldsSelection<SiteStatisticsResponse> = {}
+    ): FieldsResult<SiteStatisticsResponse> {
         const query = `
       query ($usersSort: [SiteTrendSort], $usersPage: Int, $usersPerPage: Int, $animeSort: [SiteTrendSort], $animePage: Int, $animePerPage: Int, $mangaSort: [SiteTrendSort], $mangaPage: Int, $mangaPerPage: Int, $charactersSort: [SiteTrendSort], $charactersPage: Int, $charactersPerPage: Int, $staffSort: [SiteTrendSort], $staffPage: Int, $staffPerPage: Int, $studiosSort: [SiteTrendSort], $studiosPage: Int, $studiosPerPage: Int, $reviewsSort: [SiteTrendSort], $reviewsPage: Int, $reviewsPerPage: Int) {
         SiteStatistics {
@@ -179,9 +204,14 @@ export class SiteStatisticsQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<SiteStatisticsResponse>(query, variables, {
-            mappings: SiteStatisticsMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<SiteStatisticsResponse>(
+            composeDocument(query, fields, SITE_STATISTICS_ALWAYS),
+            variables,
+            {
+                mappings: SiteStatisticsMappings,
+                transportOptions,
+            }
+        );
     }
 }

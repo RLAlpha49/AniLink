@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { AniLinkValidationError } from "../../../../base/AniLinkError";
@@ -108,7 +116,19 @@ export class UpdateFavouriteOrderMutation extends AniListOperation {
     async updateFavouriteOrder(
         variables: UpdateFavouriteOrderVariables,
         options?: RequestOptions
-    ): Promise<Favourites> {
+    ): Promise<Favourites>;
+    async updateFavouriteOrder(
+        variables: UpdateFavouriteOrderVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<Favourites>;
+    async updateFavouriteOrder<K extends FieldPath<Favourites>>(
+        variables: UpdateFavouriteOrderVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<Favourites, K>>;
+    async updateFavouriteOrder(
+        variables: UpdateFavouriteOrderVariables,
+        options?: RequestOptions & FieldsSelection<Favourites>
+    ): FieldsResult<Favourites> {
         if (
             (!variables.animeIds && variables.animeOrder) ||
             (!variables.mangaIds && variables.mangaOrder) ||
@@ -127,10 +147,11 @@ export class UpdateFavouriteOrderMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<Favourites>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<Favourites>(composeDocument(mutation, fields, []), variables, {
             mappings: UpdateFavouriteOrderMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

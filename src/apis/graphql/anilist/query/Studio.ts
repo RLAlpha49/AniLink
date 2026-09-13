@@ -10,6 +10,21 @@ import {
     StudioSortMappings,
 } from "../types/Sort";
 import { StudioSchema } from "../schemas/responses/query/Studio";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed studio document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const STUDIO_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link StudioVariables} contains variables for the {@link StudioQuery} operation.
@@ -193,7 +208,19 @@ export class StudioQuery extends AniListOperation {
      * const result = await new StudioQuery().studio({ id: 1 });
      * ```
      */
-    async studio(variables: StudioVariables, options?: RequestOptions): Promise<StudioResponse> {
+    async studio(variables: StudioVariables, options?: RequestOptions): Promise<StudioResponse>;
+    async studio(
+        variables: StudioVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<StudioResponse>;
+    async studio<K extends FieldPath<StudioResponse>>(
+        variables: StudioVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<StudioResponse, K | "id">>;
+    async studio(
+        variables: StudioVariables,
+        options?: RequestOptions & FieldsSelection<StudioResponse>
+    ): FieldsResult<StudioResponse, "id"> {
         const query = `
       query ($id: Int, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StudioSort], $asHtml: Boolean, $mediaSort: [MediaSort], $mediaIsMain: Boolean, $mediaOnList: Boolean, $mediaPage: Int, $mediaPerPage: Int, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Studio (id: $id, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {
@@ -201,9 +228,14 @@ export class StudioQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<StudioResponse>(query, variables, {
-            mappings: StudioMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<StudioResponse>(
+            composeDocument(query, fields, STUDIO_ALWAYS),
+            variables,
+            {
+                mappings: StudioMappings,
+                transportOptions,
+            }
+        );
     }
 }

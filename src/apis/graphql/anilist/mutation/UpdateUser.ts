@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import {
     type UserStaffNameLanguage,
@@ -375,7 +383,19 @@ export class UpdateUserMutation extends AniListOperation {
     async updateUser(
         variables: UpdateUserVariables,
         options?: RequestOptions
-    ): Promise<UpdateUserResponse> {
+    ): Promise<UpdateUserResponse>;
+    async updateUser(
+        variables: UpdateUserVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<UpdateUserResponse>;
+    async updateUser<K extends FieldPath<UpdateUserResponse>>(
+        variables: UpdateUserVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<UpdateUserResponse, K>>;
+    async updateUser(
+        variables: UpdateUserVariables,
+        options?: RequestOptions & FieldsSelection<UpdateUserResponse>
+    ): FieldsResult<UpdateUserResponse> {
         const mutation = `
       mutation ($about: String, $titleLanguage: UserTitleLanguage, $displayAdultContent: Boolean, $airingNotifications: Boolean, $scoreFormat: ScoreFormat, $rowOrder: String, $profileColor: String, $donatorBadge: String, $notificationOptions: [NotificationOptionInput], $timezone: String, $activityMergeTime: Int, $animeListOptions: MediaListOptionsInput, $mangaListOptions: MediaListOptionsInput, $staffNameLanguage: UserStaffNameLanguage, $restrictMessagesToFollowing: Boolean, $disabledListActivity: [ListActivityOptionInput]) {
         UpdateUser(about: $about, titleLanguage: $titleLanguage, displayAdultContent: $displayAdultContent, airingNotifications: $airingNotifications, scoreFormat: $scoreFormat, rowOrder: $rowOrder, profileColor: $profileColor, donatorBadge: $donatorBadge, notificationOptions: $notificationOptions, timezone: $timezone, activityMergeTime: $activityMergeTime, animeListOptions: $animeListOptions, mangaListOptions: $mangaListOptions, staffNameLanguage: $staffNameLanguage, restrictMessagesToFollowing: $restrictMessagesToFollowing, disabledListActivity: $disabledListActivity) {
@@ -431,10 +451,15 @@ export class UpdateUserMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<UpdateUserResponse>(mutation, variables, {
-            mappings: UpdateUserMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<UpdateUserResponse>(
+            composeDocument(mutation, fields, []),
+            variables,
+            {
+                mappings: UpdateUserMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }

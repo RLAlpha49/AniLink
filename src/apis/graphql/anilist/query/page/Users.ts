@@ -4,6 +4,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type UsersPageResponse } from "../../interfaces/responses/page/Users";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
 import { UserSchema } from "../../schemas/responses/query/User";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link UsersVariables} contains variables for the {@link UsersQuery} operation.
@@ -115,7 +123,19 @@ export class UsersQuery extends AniListOperation {
      * const result = await new UsersQuery().users({ search: "AniList", page: 1 });
      * ```
      */
-    async users(variables: UsersVariables, options?: RequestOptions): Promise<UsersPageResponse> {
+    async users(variables: UsersVariables, options?: RequestOptions): Promise<UsersPageResponse>;
+    async users(
+        variables: UsersVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<UsersPageResponse>;
+    async users<K extends FieldPath<UsersPageResponse>>(
+        variables: UsersVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<UsersPageResponse, K | "pageInfo">>;
+    async users(
+        variables: UsersVariables,
+        options?: RequestOptions & FieldsSelection<UsersPageResponse>
+    ): FieldsResult<UsersPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Page (page: $page, perPage: $perPage) {
@@ -132,9 +152,14 @@ export class UsersQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<UsersPageResponse>(query, variables, {
-            mappings: UsersMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<UsersPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: UsersMappings,
+                transportOptions,
+            }
+        );
     }
 }

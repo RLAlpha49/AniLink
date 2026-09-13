@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type UserResponse } from "../interfaces/responses/query/User";
 import { BasicUserSchema } from "../schemas/Basic";
@@ -53,7 +61,19 @@ export class ToggleFollowMutation extends AniListOperation {
     async toggleFollow(
         variables: ToggleFollowVariables,
         options?: RequestOptions
-    ): Promise<UserResponse> {
+    ): Promise<UserResponse>;
+    async toggleFollow(
+        variables: ToggleFollowVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<UserResponse>;
+    async toggleFollow<K extends FieldPath<UserResponse>>(
+        variables: ToggleFollowVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<UserResponse, K>>;
+    async toggleFollow(
+        variables: ToggleFollowVariables,
+        options?: RequestOptions & FieldsSelection<UserResponse>
+    ): FieldsResult<UserResponse> {
         const mutation = `
       mutation ($userId: Int) {
         ToggleFollow (userId: $userId) {
@@ -61,7 +81,8 @@ export class ToggleFollowMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<UserResponse>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<UserResponse>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "all",
@@ -71,7 +92,7 @@ export class ToggleFollowMutation extends AniListOperation {
             ],
             mappings: ToggleFollowMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

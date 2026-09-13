@@ -5,6 +5,14 @@ import { type StaffsPageResponse } from "../../interfaces/responses/page/Staffs"
 import { CharacterSortMappings, MediaSortMappings, StaffSortMappings } from "../../types/Sort";
 import { MediaTypeMappings } from "../../types/Type";
 import { StaffSchema } from "../../schemas/responses/query/Staff";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link StaffsVariables} contains variables for the {@link StaffsQuery} operation.
@@ -176,10 +184,19 @@ export class StaffsQuery extends AniListOperation {
      * const result = await new StaffsQuery().staffs({ search: "Hayao Miyazaki", page: 1 });
      * ```
      */
+    async staffs(variables: StaffsVariables, options?: RequestOptions): Promise<StaffsPageResponse>;
     async staffs(
         variables: StaffsVariables,
-        options?: RequestOptions
-    ): Promise<StaffsPageResponse> {
+        options: RequestOptions & { fields: undefined }
+    ): Promise<StaffsPageResponse>;
+    async staffs<K extends FieldPath<StaffsPageResponse>>(
+        variables: StaffsVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<StaffsPageResponse, K | "pageInfo">>;
+    async staffs(
+        variables: StaffsVariables,
+        options?: RequestOptions & FieldsSelection<StaffsPageResponse>
+    ): FieldsResult<StaffsPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StaffSort], $asHtml: Boolean, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Page (page: $page, perPage: $perPage) {
@@ -196,9 +213,14 @@ export class StaffsQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<StaffsPageResponse>(query, variables, {
-            mappings: StaffsMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<StaffsPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: StaffsMappings,
+                transportOptions,
+            }
+        );
     }
 }

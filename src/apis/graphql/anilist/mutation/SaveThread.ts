@@ -1,5 +1,13 @@
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
 
@@ -95,7 +103,19 @@ export class SaveThreadMutation extends AniListOperation {
     async saveThread(
         variables: SaveThreadVariables,
         options?: RequestOptions
-    ): Promise<ThreadResponse> {
+    ): Promise<ThreadResponse>;
+    async saveThread(
+        variables: SaveThreadVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ThreadResponse>;
+    async saveThread<K extends FieldPath<ThreadResponse>>(
+        variables: SaveThreadVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ThreadResponse, K>>;
+    async saveThread(
+        variables: SaveThreadVariables,
+        options?: RequestOptions & FieldsSelection<ThreadResponse>
+    ): FieldsResult<ThreadResponse> {
         const mutation = `
       mutation ($id: Int, $title: String, $body: String, $categories: [Int], $mediaCategories: [Int], $sticky: Boolean, $locked: Boolean, $asHtml: Boolean) {
         SaveThread (id: $id, title: $title, body: $body, categories: $categories, mediaCategories: $mediaCategories, sticky: $sticky, locked: $locked) {
@@ -103,17 +123,22 @@ export class SaveThreadMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ThreadResponse>(mutation, variables, {
-            requirements: [
-                {
-                    kind: "any",
-                    names: ["id", "title"],
-                    message: "The SaveThread mutation requires an id or a title variable.",
-                },
-            ],
-            mappings: SaveThreadMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ThreadResponse>(
+            composeDocument(mutation, fields, []),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "any",
+                        names: ["id", "title"],
+                        message: "The SaveThread mutation requires an id or a title variable.",
+                    },
+                ],
+                mappings: SaveThreadMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }

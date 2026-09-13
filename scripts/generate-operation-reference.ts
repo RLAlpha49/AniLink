@@ -7,6 +7,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSy
 import { dirname, resolve, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ANILIST_PROVIDER_CONFIG } from "./provider-config";
+import { collectOperationSignatures } from "./generate-facade-groups";
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -394,32 +395,54 @@ interface RawOp {
     description: string;
 }
 
-/** Parse the type-declaration blocks of the `facade/` group modules into raw operations. */
+/**
+ * Discover the AniList operations from the shared generator metadata.
+ *
+ * Signature facts (name, variables type, response type) come from
+ * {@link collectOperationSignatures} — the same source the facade group
+ * generator renders from — instead of re-parsing the generated facade source
+ * with regexes, so a formatting change in the facade generator can never
+ * silently drop operations here. The `custom` entry is not a registry
+ * operation and is still read from `custom-group.ts`. Descriptions fall back
+ * to the facade JSDoc main text, read positionally from the facade files.
+ */
 function discoverAniListOperations(sourceRoot: string): RawOp[] {
     const ops: RawOp[] = [];
-    for (const fileName of [
-        "custom-group.ts",
-        "query-group.ts",
-        "mutation-group.ts",
-        "helpers-group.ts",
-    ]) {
-        ops.push(...discoverOperationsInFile(join(sourceRoot, "facade", fileName)));
+    for (const signature of collectOperationSignatures()) {
+        const facade = resolveAniListFacade(
+            { ...signature, description: "", responseType: signature.responseType },
+            sourceRoot
+        );
+        const description = facade
+            ? jsdocMainText(findFacadePropertyJsdoc(facade.facadeFile, facade.propName))
+            : "";
+        ops.push({
+            category: signature.category,
+            name: signature.name,
+            variablesType: signature.variablesType,
+            responseType: signature.responseType,
+            description,
+        });
     }
+    // The `custom` passthrough is not a registry operation; read it from its
+    // facade module as before.
+    ops.push(...discoverOperationsInFile(join(sourceRoot, "facade", "custom-group.ts")));
     return ops;
 }
 
-/** Parse one facade group module into raw operations. */
+/**
+ * Read the `custom` passthrough entry from its facade module.
+ *
+ * Only the `custom` operation is discovered from facade text: it is not a
+ * registry operation, so the shared signature metadata does not cover it.
+ * Every registered operation arrives via {@link collectOperationSignatures}.
+ */
 function discoverOperationsInFile(filePath: string): RawOp[] {
     const content = readFileText(filePath);
     const lines = content.split("\n");
     const ops: RawOp[] = [];
-
-    let section: "query" | "mutation" | "page" | "custom" | null = null;
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        section = advanceSection(line, section);
-
-        if (/^\s*custom:\s*</.test(line)) {
+        if (/^\s*custom:\s*</.test(lines[i])) {
             ops.push({
                 category: "custom",
                 name: "custom",
@@ -427,64 +450,9 @@ function discoverOperationsInFile(filePath: string): RawOp[] {
                 responseType: "any",
                 description: jsdocMainText(findJsdocAbove(lines, i)),
             });
-            continue;
-        }
-
-        const sig = tryParseSignature(lines, i);
-        if (sig && section) {
-            ops.push({
-                category: section,
-                name: sig.name,
-                variablesType: sig.variablesType,
-                responseType: sig.responseType,
-                description: jsdocMainText(findJsdocAbove(lines, i)),
-            });
         }
     }
     return ops;
-}
-
-/** Advance the facade-section state machine for one line. */
-function advanceSection(
-    line: string,
-    current: "query" | "mutation" | "page" | "custom" | null
-): "query" | "mutation" | "page" | "custom" | null {
-    if (/^\s+query:\s*\{/.test(line)) return "query";
-    if (/^\s+page:\s*\{/.test(line)) return "page";
-    if (/^\s+mutation:\s*\{/.test(line)) return "mutation";
-    if (/^\s{8}\},?\s*$/.test(line) && current === "page") return "query";
-    if (/^\s{4}\},?\s*$/.test(line) && (current === "query" || current === "mutation")) {
-        return null;
-    }
-    return current;
-}
-
-/** Try to parse an operation signature starting at `lines[start]`. */
-function tryParseSignature(
-    lines: string[],
-    start: number
-): { name: string; variablesType: string; responseType: string } | null {
-    const single =
-        /^\s+([a-zA-Z]+):\s*\(variables:\s*([A-Za-z]+)(?:,\s*options\?:\s*[A-Za-z]+)?\)\s*=>\s*Promise<([A-Za-z]+)>;\s*$/.exec(
-            lines[start]
-        );
-    if (single) {
-        return { name: single[1], variablesType: single[2], responseType: single[3] };
-    }
-    const opener = /^\s+([a-zA-Z]+):\s*\(\s*$/.exec(lines[start]);
-    if (!opener) return null;
-    const name = opener[1];
-    let combined = lines[start];
-    for (let k = start + 1; k < Math.min(start + 6, lines.length); k++) {
-        combined += " " + lines[k].trim();
-        if (lines[k].includes("=>") && lines[k].includes(";")) break;
-    }
-    const m =
-        /\(\s*variables:\s*([A-Za-z]+)(?:,\s*options\?:\s*[A-Za-z]+)?\s*\)\s*=>\s*Promise<([A-Za-z]+)>;/.exec(
-            combined
-        );
-    if (!m) return null;
-    return { name, variablesType: m[1], responseType: m[2] };
 }
 
 /** Resolve the source class, method, and file for an AniList operation. */
@@ -828,21 +796,22 @@ function discoverMalOperations(): ReferenceOperation[] {
     const sigRe = /^ {4}(\w+):\s*\(([^)]*)\)\s*=>\s*Promise<(\w+)>;/gm;
     let sig: RegExpExecArray | null;
     while ((sig = sigRe.exec(content)) !== null) {
-        const methodName = sig[1];
+        const current: RegExpExecArray = sig;
+        const methodName = current[1];
         if (!MAL_FACADE_METHODS.has(methodName)) continue;
-        const span = ifaceSpans.find((s) => sig.index >= s.start && sig.index < s.end);
+        const span = ifaceSpans.find((s) => current.index >= s.start && current.index < s.end);
         const owner = span?.name ? MAL_FACADE_INTERFACES[span.name] : undefined;
         // Skip the composite `MyAnimeListApi` interface, which re-declares the
         // namespace properties as typed members rather than method signatures.
         if (!owner) continue;
-        const lineIndex = content.slice(0, sig.index).split("\n").length - 1;
+        const lineIndex = content.slice(0, current.index).split("\n").length - 1;
         ops.push(
             buildMalOperation(
                 owner.namespace,
                 owner.domain,
                 methodName,
-                sig[2].replace(/\s+/g, " ").trim(),
-                sig[3],
+                current[2].replace(/\s+/g, " ").trim(),
+                current[3],
                 findJsdocAbove(lines, lineIndex)
             )
         );

@@ -17,6 +17,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { format, resolveConfig } from "prettier";
 import { FACADE_OPERATION_DOCS, type FacadeOperationDoc } from "./generate-facade-groups.config";
+import { ANILIST_OPERATION_REGISTRY } from "../src/apis/graphql/anilist/registry";
 
 const REPO_ROOT = resolve(import.meta.dirname, "..");
 const ANILIST_DIR = join(REPO_ROOT, "src/apis/graphql/anilist");
@@ -42,12 +43,55 @@ interface MethodInfo {
     variablesOptional: boolean;
     responseType: string;
     see: string | null;
+    /** Whether the operation accepts a `fields` selection option (imports from `schemas/selection/`). */
+    hasFields: boolean;
+    /** Root-level keys the operation always selects, quoted for a type union (e.g. `"id" | "idMal"`). */
+    alwaysKeys: string[];
     /** Identifier-to-module map of the class file's own imports (class-relative). */
     imports: Map<string, string>;
     /** Types declared inside the class file itself (not imported). */
     declaredLocally: Set<string>;
     /** AniList-relative module path of the class (e.g. `query/page/Users`). */
     classModule: string;
+}
+
+/**
+ * The signature facts other generators need for one operation, without the
+ * facade-rendering internals.
+ */
+export interface OperationSignature {
+    /** The facade section the operation is exposed under. */
+    category: "query" | "page" | "mutation";
+    /** The facade key the bound method is exposed under. */
+    name: string;
+    /** The variables interface name, or `""` for operations without variables. */
+    variablesType: string;
+    /** The response type name (array suffix allowed). */
+    responseType: string;
+}
+
+/**
+ * Collect the signature facts for every registered operation.
+ *
+ * The single shared metadata source for generators: the facade group
+ * generator renders its members from these facts, and the operation-reference
+ * generator consumes them instead of re-parsing the generated facade source
+ * with regexes — so a formatting change in one generator can never silently
+ * break the other's discovery.
+ *
+ * @returns One signature per registry entry, in declaration order.
+ * @throws {Error} When a class method cannot be found or parsed.
+ */
+export function collectOperationSignatures(): OperationSignature[] {
+    return collectRegistryEntries().map((entry) => {
+        const method = loadMethodInfo(entry);
+        return {
+            category: entry.category,
+            name: entry.name,
+            variablesType: method.hasVariables ? (method.variablesType ?? "") : "",
+            responseType: method.responseType,
+        };
+    });
 }
 
 /**
@@ -60,14 +104,24 @@ interface MethodInfo {
  * @throws {Error} When a category group or the registry object cannot be found.
  */
 export function collectRegistryEntries(): RegistryEntry[] {
-    const registrySource = readFileSync(join(ANILIST_DIR, "registry.ts"), "utf8");
-    const classModules = new Map<string, string>();
-    for (const match of registrySource.matchAll(
-        /^import\s*\{\s*(\w+)\s*\}\s*from\s*"([^"]+)";/gm
-    )) {
-        classModules.set(match[1], match[2]);
-    }
+    return parseRegistrySource(readFileSync(join(ANILIST_DIR, "registry.ts"), "utf8"));
+}
 
+/**
+ * Parse registry source text into registry entries.
+ *
+ * Split out of {@link collectRegistryEntries} so the entry regex and its
+ * count guard can be tested against synthetic registry source without
+ * touching the real file.
+ *
+ * @param registrySource - The full text of `registry.ts`.
+ * @returns All registry entries in declaration order.
+ * @throws {Error} When a category group or the registry object cannot be found,
+ *   or when an `op`/`opAs` call in a category block is not parsed by the entry
+ *   regex (a call shape the regex does not cover would otherwise be silently
+ *   dropped from generation).
+ */
+export function parseRegistrySource(registrySource: string): RegistryEntry[] {
     const objectStart = registrySource.indexOf("ANILIST_OPERATION_REGISTRY");
     const objectEnd = registrySource.indexOf("} as const", objectStart);
     if (objectStart < 0 || objectEnd < 0) {
@@ -81,16 +135,26 @@ export function collectRegistryEntries(): RegistryEntry[] {
         if (!categoryMatch) {
             throw new Error(`Could not locate the "${category}" group in registry.ts.`);
         }
-        for (const entry of categoryMatch[1].matchAll(
-            /\b(?:opAs|op)\(\s*"([^"]+)"\s*,\s*(\w+)\s*(?:,\s*"([^"]+)"\s*)?\)/g
-        )) {
-            entries.push({
-                category,
-                name: entry[1],
-                className: entry[2],
-                methodName: entry[3] ?? entry[1],
-            });
+        const entryRegex =
+            /\b(?:opAs|op)\(\s*"([^"]+)"\s*,\s*(\w+)\s*(?:,\s*"([^"]+)"\s*)?(?:,\s*\w+\s*)?\)/g;
+        const parsed = [...categoryMatch[1].matchAll(entryRegex)].map((entry) => ({
+            category,
+            name: entry[1],
+            className: entry[2],
+            methodName: entry[3] ?? entry[1],
+        }));
+        // Count guard: every op/opAs call in the block must be parsed. A call
+        // shape the regex does not cover (e.g. a fifth argument) would
+        // otherwise be silently dropped from generation — a wrong public
+        // facade with no error.
+        const rawCalls = categoryMatch[1].match(/\b(?:opAs|op)\(/g) ?? [];
+        if (parsed.length !== rawCalls.length) {
+            throw new Error(
+                `Registry "${category}" block has ${rawCalls.length} op/opAs calls but only ${parsed.length} parsed. ` +
+                    "An entry shape is not covered by the entry regex; extend the regex or fix the registry."
+            );
         }
+        entries.push(...parsed);
     }
     return entries;
 }
@@ -104,8 +168,11 @@ export function collectRegistryEntries(): RegistryEntry[] {
  */
 function classModuleFor(className: string): string {
     const registrySource = readFileSync(join(ANILIST_DIR, "registry.ts"), "utf8");
+    // The class may share its import line with the class's exported
+    // always-keys constant (e.g. `import { MediaQuery, MEDIA_ALWAYS } ...`),
+    // so the specifier list is matched as a whole rather than exactly.
     const importMatch = new RegExp(
-        `^import\\s*\\{\\s*${className}\\s*\\}\\s*from\\s*"([^"]+)";`,
+        `^import\\s*\\{[^}]*\\b${className}\\b[^}]*\\}\\s*from\\s*"([^"]+)";`,
         "m"
     ).exec(registrySource);
     if (!importMatch) {
@@ -174,12 +241,37 @@ function loadMethodInfo(entry: RegistryEntry): MethodInfo {
         declaredLocally.add(declaration[1]);
     }
 
+    // A `fields` operation composes its document from the selection
+    // composer under schemas/selection/; the class file imports from that
+    // directory (query, page, and mutation classes alike).
+    const hasFields = /from\s+"[^"]*schemas\/selection\//.test(source);
+
+    // The always-selected keys come from the registry entry — the same
+    // `alwaysSelected` array the operation class passes to the composer at
+    // runtime — so the generated DeepPick union can never drift from what the
+    // runtime document actually selects. A parsed entry that does not
+    // resolve in the runtime registry must throw: a silent miss would
+    // generate `DeepPick<Response, K>` without the always-keys — a wrong
+    // public type with no error.
+    const registryEntry = ANILIST_OPERATION_REGISTRY[entry.category].find(
+        (candidate) => candidate.name === entry.name
+    );
+    if (!registryEntry) {
+        throw new Error(
+            `Registry entry "${entry.category}:${entry.name}" parsed from registry.ts does not resolve in ANILIST_OPERATION_REGISTRY. ` +
+                "The parsed source and the imported runtime registry have drifted."
+        );
+    }
+    const alwaysKeys = registryEntry.alwaysSelected?.map((key) => `"${key}"`) ?? [];
+
     return {
         hasVariables,
         variablesType,
         variablesOptional,
         responseType: signature[2].trim(),
         see: seeMatch ? seeMatch[1] : null,
+        hasFields,
+        alwaysKeys,
         imports,
         declaredLocally,
         classModule,
@@ -344,9 +436,40 @@ function renderMember(
 
     if (method.hasVariables && variablesType) {
         const optionalMarker = method.variablesOptional ? "?" : "";
-        lines.push(
-            `${pad}${entry.name}: (variables${optionalMarker}: ${variablesType}, options?: RequestOptions) => Promise<${method.responseType}>;`
-        );
+        if (method.hasFields) {
+            // A `fields` operation carries a three-member intersection: the
+            // default call returns the full response, a call with `fields:
+            // undefined` (the conditional pattern) also returns the full
+            // response, and a call with `fields` narrows to `DeepPick<Response,
+            // K | Always>` — the always-selected keys join the pick because the
+            // composed document always sends them. Array responses keep their
+            // element-wise pick.
+            const response = method.responseType;
+            const arrayMatch = /^(\w+)\[\]$/.exec(response);
+            const element = arrayMatch ? arrayMatch[1] : response;
+            const alwaysUnion = method.alwaysKeys.length
+                ? ` | ${method.alwaysKeys.join(" | ")}`
+                : "";
+            const narrow = arrayMatch
+                ? `DeepPick<${element}, K${alwaysUnion}>[]`
+                : `DeepPick<${element}, K${alwaysUnion}>`;
+            lines.push(
+                `${pad}${entry.name}: ((variables${optionalMarker}: ${variablesType}, options?: RequestOptions) => Promise<${response}>) &`
+            );
+            lines.push(
+                `${pad}    ((variables: ${variablesType}, options: RequestOptions & { fields: undefined }) => Promise<${response}>) &`
+            );
+            lines.push(`${pad}    (<K extends FieldPath<${element}>>(`);
+            lines.push(`${pad}        variables: ${variablesType},`);
+            lines.push(
+                `${pad}        options: RequestOptions & { fields: readonly K[] | undefined }`
+            );
+            lines.push(`${pad}    ) => Promise<${narrow}>);`);
+        } else {
+            lines.push(
+                `${pad}${entry.name}: (variables${optionalMarker}: ${variablesType}, options?: RequestOptions) => Promise<${method.responseType}>;`
+            );
+        }
     } else {
         lines.push(
             `${pad}${entry.name}: (options?: RequestOptions) => Promise<${method.responseType}>;`
@@ -381,18 +504,14 @@ const QUERY_PARITY_BLOCK = `/**
  * removed in either place produces a type error. The registry is the source
  * of truth; this asserts the typed surface keeps pace.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertQueryParity: RegistryQueryKeys = null as unknown as Exclude<
     keyof AniListQueries["query"],
     "page"
 >;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertQueryParityReverse: Exclude<keyof AniListQueries["query"], "page"> =
     null as unknown as RegistryQueryKeys;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertPageParity: RegistryPageKeys =
     null as unknown as keyof AniListQueries["query"]["page"];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertPageParityReverse: keyof AniListQueries["query"]["page"] =
     null as unknown as RegistryPageKeys;`;
 
@@ -404,10 +523,8 @@ const MUTATION_PARITY_BLOCK = `/**
  * same set: a key added or removed in either place produces a type error. The
  * registry is the source of truth; this asserts the typed surface keeps pace.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertMutationParity: RegistryMutationKeys =
     null as unknown as keyof AniListMutations["mutation"];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertMutationParityReverse: keyof AniListMutations["mutation"] =
     null as unknown as RegistryMutationKeys;`;
 
@@ -499,10 +616,12 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
     const queryImports = new Map<string, string[]>([
         ["../../../../base/RequestHandler", ["RequestOptions"]],
         ["../registry", ["RegistryPageKeys", "RegistryQueryKeys"]],
+        ["../schemas/selection/fieldsSelection", ["DeepPick", "FieldPath"]],
     ]);
     const mutationImports = new Map<string, string[]>([
         ["../../../../base/RequestHandler", ["RequestOptions"]],
         ["../registry", ["RegistryMutationKeys"]],
+        ["../schemas/selection/fieldsSelection", ["DeepPick", "FieldPath"]],
     ]);
 
     /** Register one type import on a group's import map. */

@@ -2,6 +2,14 @@ import { AniListOperation } from "../../AniListOperation";
 import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type ActivityRepliesPageResponse } from "../../interfaces/responses/page/ActivityReplies";
 import { ActivityReplySchema } from "../../schemas/Activity";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link ActivityRepliesVariables} contains variables for the {@link ActivityRepliesQuery} operation.
@@ -74,7 +82,19 @@ export class ActivityRepliesQuery extends AniListOperation {
     async activityReplies(
         variables: ActivityRepliesVariables,
         options?: RequestOptions
-    ): Promise<ActivityRepliesPageResponse> {
+    ): Promise<ActivityRepliesPageResponse>;
+    async activityReplies(
+        variables: ActivityRepliesVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ActivityRepliesPageResponse>;
+    async activityReplies<K extends FieldPath<ActivityRepliesPageResponse>>(
+        variables: ActivityRepliesVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ActivityRepliesPageResponse, K | "pageInfo">>;
+    async activityReplies(
+        variables: ActivityRepliesVariables,
+        options?: RequestOptions & FieldsSelection<ActivityRepliesPageResponse>
+    ): FieldsResult<ActivityRepliesPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $activityId: Int, $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -91,9 +111,14 @@ export class ActivityRepliesQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ActivityRepliesPageResponse>(query, variables, {
-            mappings: ActivityRepliesMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ActivityRepliesPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: ActivityRepliesMappings,
+                transportOptions,
+            }
+        );
     }
 }

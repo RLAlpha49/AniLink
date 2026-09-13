@@ -1,5 +1,13 @@
 import { type RecommendationResponse } from "../interfaces/responses/query/Recommendation";
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import {
     type RecommendationRating,
@@ -75,7 +83,19 @@ export class SaveRecommendationMutation extends AniListOperation {
     async saveRecommendation(
         variables: SaveRecommendationVariables,
         options?: RequestOptions
-    ): Promise<RecommendationResponse> {
+    ): Promise<RecommendationResponse>;
+    async saveRecommendation(
+        variables: SaveRecommendationVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<RecommendationResponse>;
+    async saveRecommendation<K extends FieldPath<RecommendationResponse>>(
+        variables: SaveRecommendationVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<RecommendationResponse, K>>;
+    async saveRecommendation(
+        variables: SaveRecommendationVariables,
+        options?: RequestOptions & FieldsSelection<RecommendationResponse>
+    ): FieldsResult<RecommendationResponse> {
         const mutation = `
       mutation ($mediaId: Int, $mediaRecommendationId: Int, $rating: RecommendationRating, $asHtml: Boolean) {
         SaveRecommendation(mediaId: $mediaId, mediaRecommendationId: $mediaRecommendationId, rating: $rating) {
@@ -83,18 +103,23 @@ export class SaveRecommendationMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<RecommendationResponse>(mutation, variables, {
-            requirements: [
-                {
-                    kind: "all",
-                    names: ["mediaId", "mediaRecommendationId", "rating"],
-                    message:
-                        "The SaveRecommendation mutation requires mediaId, mediaRecommendationId, and rating variables.",
-                },
-            ],
-            mappings: SaveRecommendationMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<RecommendationResponse>(
+            composeDocument(mutation, fields, []),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "all",
+                        names: ["mediaId", "mediaRecommendationId", "rating"],
+                        message:
+                            "The SaveRecommendation mutation requires mediaId, mediaRecommendationId, and rating variables.",
+                    },
+                ],
+                mappings: SaveRecommendationMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }

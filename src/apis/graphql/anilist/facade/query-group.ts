@@ -84,6 +84,7 @@ import { type ThreadCommentsVariables } from "../query/page/ThreadComments";
 import { type ThreadsVariables } from "../query/page/Threads";
 import { type UsersVariables } from "../query/page/Users";
 import { type RegistryPageKeys, type RegistryQueryKeys } from "../registry";
+import { type DeepPick, type FieldPath } from "../schemas/selection/fieldsSelection";
 
 /**
  * Compile-time exhaustiveness check between this facade group and the
@@ -94,18 +95,14 @@ import { type RegistryPageKeys, type RegistryQueryKeys } from "../registry";
  * removed in either place produces a type error. The registry is the source
  * of truth; this asserts the typed surface keeps pace.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertQueryParity: RegistryQueryKeys = null as unknown as Exclude<
     keyof AniListQueries["query"],
     "page"
 >;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertQueryParityReverse: Exclude<keyof AniListQueries["query"], "page"> =
     null as unknown as RegistryQueryKeys;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertPageParity: RegistryPageKeys =
     null as unknown as keyof AniListQueries["query"]["page"];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertPageParityReverse: keyof AniListQueries["query"]["page"] =
     null as unknown as RegistryPageKeys;
 
@@ -160,7 +157,15 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/user
          */
-        user: (variables: UserVariables, options?: RequestOptions) => Promise<UserResponse>;
+        user: ((variables: UserVariables, options?: RequestOptions) => Promise<UserResponse>) &
+            ((
+                variables: UserVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<UserResponse>) &
+            (<K extends FieldPath<UserResponse>>(
+                variables: UserVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<UserResponse, K | "id">>);
 
         /**
          * `MediaQuery` fetches the media data for a single anime or manga by `id` or `idMal`. Returns a {@link MediaResponse}.
@@ -174,7 +179,15 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/media
          */
-        media: (variables: MediaVariables, options?: RequestOptions) => Promise<MediaResponse>;
+        media: ((variables: MediaVariables, options?: RequestOptions) => Promise<MediaResponse>) &
+            ((
+                variables: MediaVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<MediaResponse>) &
+            (<K extends FieldPath<MediaResponse>>(
+                variables: MediaVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<MediaResponse, K | "id" | "idMal">>);
 
         /**
          * `MediaTrendQuery` fetches the trend entry for a single airing media. Returns a {@link MediaTrendResponse}.
@@ -188,10 +201,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/mediatrend
          */
-        mediaTrend: (
+        mediaTrend: ((
             variables: MediaTrendVariables,
             options?: RequestOptions
-        ) => Promise<MediaTrendResponse>;
+        ) => Promise<MediaTrendResponse>) &
+            ((
+                variables: MediaTrendVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<MediaTrendResponse>) &
+            (<K extends FieldPath<MediaTrendResponse>>(
+                variables: MediaTrendVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<MediaTrendResponse, K>>);
 
         /**
          * `AiringScheduleQuery` fetches a single airing schedule entry by `id` or `mediaId`. Returns an {@link AiringScheduleResponse}.
@@ -206,10 +227,18 @@ export type AniListQueries = {
          * Must be querying an airing anime. Returns error if not.
          * @see https://docs.anilist.co/reference/object/airingschedule
          */
-        airingSchedule: (
+        airingSchedule: ((
             variables: AiringScheduleVariables,
             options?: RequestOptions
-        ) => Promise<AiringScheduleResponse>;
+        ) => Promise<AiringScheduleResponse>) &
+            ((
+                variables: AiringScheduleVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<AiringScheduleResponse>) &
+            (<K extends FieldPath<AiringScheduleResponse>>(
+                variables: AiringScheduleVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<AiringScheduleResponse, K | "id">>);
 
         /**
          * `CharacterQuery` fetches a single character by `id`. Returns a {@link CharacterResponse}.
@@ -231,10 +260,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/character
          */
-        character: (
+        character: ((
             variables: CharacterVariables,
             options?: RequestOptions
-        ) => Promise<CharacterResponse>;
+        ) => Promise<CharacterResponse>) &
+            ((
+                variables: CharacterVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<CharacterResponse>) &
+            (<K extends FieldPath<CharacterResponse>>(
+                variables: CharacterVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<CharacterResponse, K | "id">>);
 
         /**
          * `StaffQuery` fetches a single staff member by `id`. Returns a {@link StaffResponse}.
@@ -263,7 +300,15 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/staff
          */
-        staff: (variables: StaffVariables, options?: RequestOptions) => Promise<StaffResponse>;
+        staff: ((variables: StaffVariables, options?: RequestOptions) => Promise<StaffResponse>) &
+            ((
+                variables: StaffVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<StaffResponse>) &
+            (<K extends FieldPath<StaffResponse>>(
+                variables: StaffVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<StaffResponse, K | "id">>);
 
         /**
          * `MediaListQuery` fetches a single media list entry by `id`, or by `userName`/`userId` plus `mediaId`. Returns a {@link MediaListResponse}.
@@ -277,10 +322,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
          */
-        mediaList: (
+        mediaList: ((
             variables: MediaListVariables,
             options?: RequestOptions
-        ) => Promise<MediaListResponse>;
+        ) => Promise<MediaListResponse>) &
+            ((
+                variables: MediaListVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<MediaListResponse>) &
+            (<K extends FieldPath<MediaListResponse>>(
+                variables: MediaListVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<MediaListResponse, K | "id">>);
 
         /**
          * `MediaListCollectionQuery` fetches a user's full list collection, chunked via `chunk`/`perChunk`. Returns a {@link MediaListCollectionResponse}; flatten it with `AniListHelpers.flattenMediaListCollection`.
@@ -300,10 +353,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/medialistcollection
          */
-        mediaListCollection: (
+        mediaListCollection: ((
             variables: MediaListCollectionVariables,
             options?: RequestOptions
-        ) => Promise<MediaListCollectionResponse>;
+        ) => Promise<MediaListCollectionResponse>) &
+            ((
+                variables: MediaListCollectionVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<MediaListCollectionResponse>) &
+            (<K extends FieldPath<MediaListCollectionResponse>>(
+                variables: MediaListCollectionVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<MediaListCollectionResponse, K | "hasNextChunk">>);
 
         /**
          * `GenreCollectionQuery` returns the list of all genres recognized by AniList. No variables are required.
@@ -380,7 +441,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/studio
          */
-        studio: (variables: StudioVariables, options?: RequestOptions) => Promise<StudioResponse>;
+        studio: ((
+            variables: StudioVariables,
+            options?: RequestOptions
+        ) => Promise<StudioResponse>) &
+            ((
+                variables: StudioVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<StudioResponse>) &
+            (<K extends FieldPath<StudioResponse>>(
+                variables: StudioVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<StudioResponse, K | "id">>);
 
         /**
          * `ReviewQuery` fetches a single review by `id`. Returns a {@link ReviewResponse}.
@@ -394,7 +466,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/review
          */
-        review: (variables: ReviewVariables, options?: RequestOptions) => Promise<ReviewResponse>;
+        review: ((
+            variables: ReviewVariables,
+            options?: RequestOptions
+        ) => Promise<ReviewResponse>) &
+            ((
+                variables: ReviewVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<ReviewResponse>) &
+            (<K extends FieldPath<ReviewResponse>>(
+                variables: ReviewVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<ReviewResponse, K | "id">>);
 
         /**
          * `ActivityQuery` fetches a single activity by `id`. Returns an {@link Activity} (a union of text, message, and list activities).
@@ -470,7 +553,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/thread
          */
-        thread: (variables: ThreadVariables, options?: RequestOptions) => Promise<ThreadResponse>;
+        thread: ((
+            variables: ThreadVariables,
+            options?: RequestOptions
+        ) => Promise<ThreadResponse>) &
+            ((
+                variables: ThreadVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<ThreadResponse>) &
+            (<K extends FieldPath<ThreadResponse>>(
+                variables: ThreadVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<ThreadResponse, K | "id">>);
 
         /**
          * `ThreadCommentQuery` fetches a single thread comment by `id`. Returns a {@link ThreadCommentResponse}.
@@ -484,10 +578,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/threadcomment
          */
-        threadComment: (
+        threadComment: ((
             variables: ThreadCommentVariables,
             options?: RequestOptions
-        ) => Promise<ThreadCommentResponse>;
+        ) => Promise<ThreadCommentResponse>) &
+            ((
+                variables: ThreadCommentVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<ThreadCommentResponse>) &
+            (<K extends FieldPath<ThreadCommentResponse>>(
+                variables: ThreadCommentVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<ThreadCommentResponse, K | "id">>);
 
         /**
          * `RecommendationQuery` fetches a single recommendation by `id` or `mediaId`. Returns a {@link RecommendationResponse}.
@@ -501,10 +603,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/recommendation
          */
-        recommendation: (
+        recommendation: ((
             variables: RecommendationVariables,
             options?: RequestOptions
-        ) => Promise<RecommendationResponse>;
+        ) => Promise<RecommendationResponse>) &
+            ((
+                variables: RecommendationVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<RecommendationResponse>) &
+            (<K extends FieldPath<RecommendationResponse>>(
+                variables: RecommendationVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<RecommendationResponse, K | "id">>);
 
         /**
          * `MarkdownQuery` parses AniList markdown into HTML. Returns the rendered HTML string.
@@ -546,10 +656,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/sitestatistics
          */
-        siteStatistics: (
+        siteStatistics: ((
             variables?: SiteStatisticsVariables,
             options?: RequestOptions
-        ) => Promise<SiteStatisticsResponse>;
+        ) => Promise<SiteStatisticsResponse>) &
+            ((
+                variables: SiteStatisticsVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<SiteStatisticsResponse>) &
+            (<K extends FieldPath<SiteStatisticsResponse>>(
+                variables: SiteStatisticsVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<SiteStatisticsResponse, K>>);
 
         /**
          * `ExternalLinkSourceCollectionQuery` returns the available external link sources, optionally filtered by `variables`. Returns an {@link ExternalLinkSourceCollectionResponse}.
@@ -607,10 +725,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/user
              */
-            users: (
+            users: ((
                 variables: UsersVariables,
                 options?: RequestOptions
-            ) => Promise<UsersPageResponse>;
+            ) => Promise<UsersPageResponse>) &
+                ((
+                    variables: UsersVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<UsersPageResponse>) &
+                (<K extends FieldPath<UsersPageResponse>>(
+                    variables: UsersVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<UsersPageResponse, K | "pageInfo">>);
 
             /**
              * `MediasQuery` fetches a page of anime/manga. Returns a {@link MediasPageResponse} with the items and `PageInfo`.
@@ -624,10 +750,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/media
              */
-            medias: (
+            medias: ((
                 variables: MediasVariables,
                 options?: RequestOptions
-            ) => Promise<MediasPageResponse>;
+            ) => Promise<MediasPageResponse>) &
+                ((
+                    variables: MediasVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<MediasPageResponse>) &
+                (<K extends FieldPath<MediasPageResponse>>(
+                    variables: MediasVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<MediasPageResponse, K | "pageInfo">>);
 
             /**
              * `CharactersQuery` fetches a page of characters. Returns a {@link CharactersPageResponse} with the items and `PageInfo`.
@@ -641,10 +775,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/character
              */
-            characters: (
+            characters: ((
                 variables: CharactersVariables,
                 options?: RequestOptions
-            ) => Promise<CharactersPageResponse>;
+            ) => Promise<CharactersPageResponse>) &
+                ((
+                    variables: CharactersVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<CharactersPageResponse>) &
+                (<K extends FieldPath<CharactersPageResponse>>(
+                    variables: CharactersVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<CharactersPageResponse, K | "pageInfo">>);
 
             /**
              * `StaffsQuery` fetches a page of staff members. Returns a {@link StaffsPageResponse} with the items and `PageInfo`.
@@ -658,10 +800,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/staff
              */
-            staffs: (
+            staffs: ((
                 variables: StaffsVariables,
                 options?: RequestOptions
-            ) => Promise<StaffsPageResponse>;
+            ) => Promise<StaffsPageResponse>) &
+                ((
+                    variables: StaffsVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<StaffsPageResponse>) &
+                (<K extends FieldPath<StaffsPageResponse>>(
+                    variables: StaffsVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<StaffsPageResponse, K | "pageInfo">>);
 
             /**
              * `StudiosQuery` fetches a page of studios. Returns a {@link StudiosPageResponse} with the items and `PageInfo`.
@@ -675,10 +825,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/studio
              */
-            studios: (
+            studios: ((
                 variables: StudiosVariables,
                 options?: RequestOptions
-            ) => Promise<StudiosPageResponse>;
+            ) => Promise<StudiosPageResponse>) &
+                ((
+                    variables: StudiosVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<StudiosPageResponse>) &
+                (<K extends FieldPath<StudiosPageResponse>>(
+                    variables: StudiosVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<StudiosPageResponse, K | "pageInfo">>);
 
             /**
              * `MediaListsQuery` fetches a page of media list entries. Returns a {@link MediaListsPageResponse} with the items and `PageInfo`.
@@ -692,10 +850,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/medialist
              */
-            mediaLists: (
+            mediaLists: ((
                 variables: MediaListsVariables,
                 options?: RequestOptions
-            ) => Promise<MediaListsPageResponse>;
+            ) => Promise<MediaListsPageResponse>) &
+                ((
+                    variables: MediaListsVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<MediaListsPageResponse>) &
+                (<K extends FieldPath<MediaListsPageResponse>>(
+                    variables: MediaListsVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<MediaListsPageResponse, K | "pageInfo">>);
 
             /**
              * `AiringSchedulesQuery` fetches a page of airing schedule entries. Returns an {@link AiringSchedulesPageResponse} with the items and `PageInfo`.
@@ -709,10 +875,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/airingschedule
              */
-            airingSchedules: (
+            airingSchedules: ((
                 variables: AiringSchedulesVariables,
                 options?: RequestOptions
-            ) => Promise<AiringSchedulesPageResponse>;
+            ) => Promise<AiringSchedulesPageResponse>) &
+                ((
+                    variables: AiringSchedulesVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<AiringSchedulesPageResponse>) &
+                (<K extends FieldPath<AiringSchedulesPageResponse>>(
+                    variables: AiringSchedulesVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<AiringSchedulesPageResponse, K | "pageInfo">>);
 
             /**
              * `MediaTrendsQuery` fetches a page of media trend entries. Returns a {@link MediaTrendsPageResponse} with the items and `PageInfo`.
@@ -727,10 +901,18 @@ export type AniListQueries = {
              * Must be querying an airing anime. Returns error if not.
              * @see https://docs.anilist.co/reference/object/mediatrend
              */
-            mediaTrends: (
+            mediaTrends: ((
                 variables: MediaTrendsVariables,
                 options?: RequestOptions
-            ) => Promise<MediaTrendsPageResponse>;
+            ) => Promise<MediaTrendsPageResponse>) &
+                ((
+                    variables: MediaTrendsVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<MediaTrendsPageResponse>) &
+                (<K extends FieldPath<MediaTrendsPageResponse>>(
+                    variables: MediaTrendsVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<MediaTrendsPageResponse, K | "pageInfo">>);
 
             /**
              * `NotificationsQuery` fetches a page of the authenticated user's notifications. Returns a {@link NotificationsPageResponse} with the items and `PageInfo`. Must be authenticated.
@@ -761,10 +943,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/user
              */
-            followers: (
+            followers: ((
                 variables: FollowersVariables,
                 options?: RequestOptions
-            ) => Promise<FollowersPageResponse>;
+            ) => Promise<FollowersPageResponse>) &
+                ((
+                    variables: FollowersVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<FollowersPageResponse>) &
+                (<K extends FieldPath<FollowersPageResponse>>(
+                    variables: FollowersVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<FollowersPageResponse, K | "pageInfo">>);
 
             /**
              * `FollowingsQuery` fetches a page of users that the given `userId` follows. Returns a {@link FollowingsPageResponse} with the items and `PageInfo`.
@@ -778,10 +968,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/user
              */
-            following: (
+            following: ((
                 variables: FollowingsVariables,
                 options?: RequestOptions
-            ) => Promise<FollowingsPageResponse>;
+            ) => Promise<FollowingsPageResponse>) &
+                ((
+                    variables: FollowingsVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<FollowingsPageResponse>) &
+                (<K extends FieldPath<FollowingsPageResponse>>(
+                    variables: FollowingsVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<FollowingsPageResponse, K | "pageInfo">>);
 
             /**
              * `ActivitiesQuery` fetches a page of activities. Returns an {@link ActivitiesPageResponse} with the items and `PageInfo`.
@@ -812,10 +1010,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/activityreply
              */
-            activityReplies: (
+            activityReplies: ((
                 variables: ActivityRepliesVariables,
                 options?: RequestOptions
-            ) => Promise<ActivityRepliesPageResponse>;
+            ) => Promise<ActivityRepliesPageResponse>) &
+                ((
+                    variables: ActivityRepliesVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<ActivityRepliesPageResponse>) &
+                (<K extends FieldPath<ActivityRepliesPageResponse>>(
+                    variables: ActivityRepliesVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<ActivityRepliesPageResponse, K | "pageInfo">>);
 
             /**
              * `ThreadsQuery` fetches a page of forum threads. Returns a {@link ThreadsPageResponse} with the items and `PageInfo`.
@@ -829,10 +1035,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/thread
              */
-            threads: (
+            threads: ((
                 variables: ThreadsVariables,
                 options?: RequestOptions
-            ) => Promise<ThreadsPageResponse>;
+            ) => Promise<ThreadsPageResponse>) &
+                ((
+                    variables: ThreadsVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<ThreadsPageResponse>) &
+                (<K extends FieldPath<ThreadsPageResponse>>(
+                    variables: ThreadsVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<ThreadsPageResponse, K | "pageInfo">>);
 
             /**
              * `ThreadCommentsQuery` fetches a page of comments for a thread. Returns a {@link ThreadCommentsPageResponse} with the items and `PageInfo`.
@@ -846,10 +1060,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/threadcomment
              */
-            threadComments: (
+            threadComments: ((
                 variables: ThreadCommentsVariables,
                 options?: RequestOptions
-            ) => Promise<ThreadCommentsPageResponse>;
+            ) => Promise<ThreadCommentsPageResponse>) &
+                ((
+                    variables: ThreadCommentsVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<ThreadCommentsPageResponse>) &
+                (<K extends FieldPath<ThreadCommentsPageResponse>>(
+                    variables: ThreadCommentsVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<ThreadCommentsPageResponse, K | "pageInfo">>);
 
             /**
              * `ReviewsQuery` fetches a page of reviews. Returns a {@link ReviewsPageResponse} with the items and `PageInfo`.
@@ -863,10 +1085,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/review
              */
-            reviews: (
+            reviews: ((
                 variables: ReviewsVariables,
                 options?: RequestOptions
-            ) => Promise<ReviewsPageResponse>;
+            ) => Promise<ReviewsPageResponse>) &
+                ((
+                    variables: ReviewsVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<ReviewsPageResponse>) &
+                (<K extends FieldPath<ReviewsPageResponse>>(
+                    variables: ReviewsVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<ReviewsPageResponse, K | "pageInfo">>);
 
             /**
              * `RecommendationsQuery` fetches a page of recommendations. Returns a {@link RecommendationsPageResponse} with the items and `PageInfo`.
@@ -880,10 +1110,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/object/recommendation
              */
-            recommendations: (
+            recommendations: ((
                 variables: RecommendationsVariables,
                 options?: RequestOptions
-            ) => Promise<RecommendationsPageResponse>;
+            ) => Promise<RecommendationsPageResponse>) &
+                ((
+                    variables: RecommendationsVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<RecommendationsPageResponse>) &
+                (<K extends FieldPath<RecommendationsPageResponse>>(
+                    variables: RecommendationsVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<RecommendationsPageResponse, K | "pageInfo">>);
 
             /**
              * `LikesQuery` fetches a page of users who liked a likeable entity. Returns a {@link LikesPageResponse} with the items and `PageInfo`.
@@ -897,10 +1135,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/union/likeableunion
              */
-            likes: (
+            likes: ((
                 variables: LikesVariables,
                 options?: RequestOptions
-            ) => Promise<LikesPageResponse>;
+            ) => Promise<LikesPageResponse>) &
+                ((
+                    variables: LikesVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<LikesPageResponse>) &
+                (<K extends FieldPath<LikesPageResponse>>(
+                    variables: LikesVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<LikesPageResponse, K | "pageInfo">>);
         };
     };
 };

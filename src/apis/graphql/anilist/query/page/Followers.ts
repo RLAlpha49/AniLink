@@ -4,6 +4,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type FollowersPageResponse } from "../../interfaces/responses/page/Followers";
 import { UserSortMappings, UserStatisticSortMappings } from "../../types/Sort";
 import { UserSchema } from "../../schemas/responses/query/User";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link FollowersVariables} contains variables for the {@link FollowersQuery} operation.
@@ -100,7 +108,19 @@ export class FollowersQuery extends AniListOperation {
     async followers(
         variables: FollowersVariables,
         options?: RequestOptions
-    ): Promise<FollowersPageResponse> {
+    ): Promise<FollowersPageResponse>;
+    async followers(
+        variables: FollowersVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<FollowersPageResponse>;
+    async followers<K extends FieldPath<FollowersPageResponse>>(
+        variables: FollowersVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<FollowersPageResponse, K | "pageInfo">>;
+    async followers(
+        variables: FollowersVariables,
+        options?: RequestOptions & FieldsSelection<FollowersPageResponse>
+    ): FieldsResult<FollowersPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $userId: Int!, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         Page (page: $page, perPage: $perPage) {
@@ -117,16 +137,21 @@ export class FollowersQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<FollowersPageResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "all",
-                    names: ["userId"],
-                    message: "The Page.followers query requires a userId.",
-                },
-            ],
-            mappings: FollowersMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<FollowersPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "all",
+                        names: ["userId"],
+                        message: "The Page.followers query requires a userId.",
+                    },
+                ],
+                mappings: FollowersMappings,
+                transportOptions,
+            }
+        );
     }
 }

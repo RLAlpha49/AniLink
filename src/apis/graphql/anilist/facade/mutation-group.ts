@@ -46,6 +46,7 @@ import { type UpdateFavouriteOrderVariables } from "../mutation/UpdateFavouriteO
 import { type UpdateMediaListEntriesVariables } from "../mutation/UpdateMediaListEntries";
 import { type UpdateUserResponse, type UpdateUserVariables } from "../mutation/UpdateUser";
 import { type RegistryMutationKeys } from "../registry";
+import { type DeepPick, type FieldPath } from "../schemas/selection/fieldsSelection";
 import { type DeleteResult } from "../types/DeleteResult";
 
 /**
@@ -55,10 +56,8 @@ import { type DeleteResult } from "../types/DeleteResult";
  * same set: a key added or removed in either place produces a type error. The
  * registry is the source of truth; this asserts the typed surface keeps pace.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertMutationParity: RegistryMutationKeys =
     null as unknown as keyof AniListMutations["mutation"];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- compile-time exhaustiveness check; intentionally unused at runtime
 const _assertMutationParityReverse: keyof AniListMutations["mutation"] =
     null as unknown as RegistryMutationKeys;
 
@@ -135,10 +134,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/user
          */
-        updateUser: (
+        updateUser: ((
             variables: UpdateUserVariables,
             options?: RequestOptions
-        ) => Promise<UpdateUserResponse>;
+        ) => Promise<UpdateUserResponse>) &
+            ((
+                variables: UpdateUserVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<UpdateUserResponse>) &
+            (<K extends FieldPath<UpdateUserResponse>>(
+                variables: UpdateUserVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<UpdateUserResponse, K>>);
 
         /**
          * `SaveMediaListEntryMutation` saves a media list entry on the AniList API.
@@ -153,10 +160,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
          */
-        saveMediaListEntry: (
+        saveMediaListEntry: ((
             variables: SaveMediaListEntryVariables,
             options?: RequestOptions
-        ) => Promise<MediaListResponse>;
+        ) => Promise<MediaListResponse>) &
+            ((
+                variables: SaveMediaListEntryVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<MediaListResponse>) &
+            (<K extends FieldPath<MediaListResponse>>(
+                variables: SaveMediaListEntryVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<MediaListResponse, K>>);
 
         /**
          * `UpdateMediaListEntriesMutation` updates media list entries on the AniList API.
@@ -176,10 +191,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
          */
-        updateMediaListEntries: (
+        updateMediaListEntries: ((
             variables: UpdateMediaListEntriesVariables,
             options?: RequestOptions
-        ) => Promise<MediaListResponse[]>;
+        ) => Promise<MediaListResponse[]>) &
+            ((
+                variables: UpdateMediaListEntriesVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<MediaListResponse[]>) &
+            (<K extends FieldPath<MediaListResponse>>(
+                variables: UpdateMediaListEntriesVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<MediaListResponse, K>[]>);
 
         /**
          * `DeleteMediaListEntryMutation` deletes a media list entry on the AniList API.
@@ -195,10 +218,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
          */
-        deleteMediaListEntry: (
+        deleteMediaListEntry: ((
             variables: DeleteMediaListEntryVariables,
             options?: RequestOptions
-        ) => Promise<DeleteMediaListEntryResponse>;
+        ) => Promise<DeleteMediaListEntryResponse>) &
+            ((
+                variables: DeleteMediaListEntryVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<DeleteMediaListEntryResponse>) &
+            (<K extends FieldPath<DeleteMediaListEntryResponse>>(
+                variables: DeleteMediaListEntryVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<DeleteMediaListEntryResponse, K>>);
 
         /**
          * `DeleteCustomListMutation` deletes a custom list on the AniList API. There is no mutation specifically for creating a custom list; create one through `UpdateUserMutation` under the `animeListOptions` or `mangaListOptions` variables.
@@ -213,10 +244,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
          */
-        deleteCustomList: (
+        deleteCustomList: ((
             variables: DeleteCustomListVariables,
             options?: RequestOptions
-        ) => Promise<DeleteResult>;
+        ) => Promise<DeleteResult>) &
+            ((
+                variables: DeleteCustomListVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<DeleteResult>) &
+            (<K extends FieldPath<DeleteResult>>(
+                variables: DeleteCustomListVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
          * `SaveTextActivityMutation` saves a text activity on the AniList API.
@@ -231,10 +270,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
          */
-        saveTextActivity: (
+        saveTextActivity: ((
             variables: SaveTextActivityVariables,
             options?: RequestOptions
-        ) => Promise<Activity>;
+        ) => Promise<Activity>) &
+            ((
+                variables: SaveTextActivityVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<Activity>) &
+            (<K extends FieldPath<Activity>>(
+                variables: SaveTextActivityVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<Activity, K>>);
 
         /**
          * `SaveMessageActivityMutation` saves a message activity on the AniList API.
@@ -249,10 +296,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
          */
-        saveMessageActivity: (
+        saveMessageActivity: ((
             variables: SaveMessageActivityVariables,
             options?: RequestOptions
-        ) => Promise<Activity>;
+        ) => Promise<Activity>) &
+            ((
+                variables: SaveMessageActivityVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<Activity>) &
+            (<K extends FieldPath<Activity>>(
+                variables: SaveMessageActivityVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<Activity, K>>);
 
         /**
          * `SaveListActivityMutation` saves a list activity on the AniList API.
@@ -268,10 +323,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
          */
-        saveListActivity: (
+        saveListActivity: ((
             variables: SaveListActivityVariables,
             options?: RequestOptions
-        ) => Promise<Activity>;
+        ) => Promise<Activity>) &
+            ((
+                variables: SaveListActivityVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<Activity>) &
+            (<K extends FieldPath<Activity>>(
+                variables: SaveListActivityVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<Activity, K>>);
 
         /**
          * `DeleteActivityMutation` deletes an activity on the AniList API.
@@ -287,10 +350,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
          */
-        deleteActivity: (
+        deleteActivity: ((
             variables: DeleteActivityVariables,
             options?: RequestOptions
-        ) => Promise<DeleteResult>;
+        ) => Promise<DeleteResult>) &
+            ((
+                variables: DeleteActivityVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<DeleteResult>) &
+            (<K extends FieldPath<DeleteResult>>(
+                variables: DeleteActivityVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
          * `ToggleActivityPinMutation` toggles the pin status of an activity on the AniList API.
@@ -343,10 +414,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/activityreply
          */
-        saveActivityReply: (
+        saveActivityReply: ((
             variables: SaveActivityReplyVariables,
             options?: RequestOptions
-        ) => Promise<ActivityReply>;
+        ) => Promise<ActivityReply>) &
+            ((
+                variables: SaveActivityReplyVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<ActivityReply>) &
+            (<K extends FieldPath<ActivityReply>>(
+                variables: SaveActivityReplyVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<ActivityReply, K>>);
 
         /**
          * `DeleteActivityReplyMutation` deletes an activity reply on the AniList API.
@@ -361,10 +440,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
          */
-        deleteActivityReply: (
+        deleteActivityReply: ((
             variables: DeleteActivityReplyVariables,
             options?: RequestOptions
-        ) => Promise<DeleteResult>;
+        ) => Promise<DeleteResult>) &
+            ((
+                variables: DeleteActivityReplyVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<DeleteResult>) &
+            (<K extends FieldPath<DeleteResult>>(
+                variables: DeleteActivityReplyVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
          * `ToggleLikeMutation` toggles a like on the AniList API.
@@ -380,10 +467,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/user
          */
-        toggleLike: (
+        toggleLike: ((
             variables: ToggleLikeVariables,
             options?: RequestOptions
-        ) => Promise<BasicUser>;
+        ) => Promise<BasicUser>) &
+            ((
+                variables: ToggleLikeVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<BasicUser>) &
+            (<K extends FieldPath<BasicUser>>(
+                variables: ToggleLikeVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<BasicUser, K>>);
 
         /**
          * `ToggleLikeV2Mutation` toggles a like on the AniList API.
@@ -418,10 +513,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/user
          */
-        toggleFollow: (
+        toggleFollow: ((
             variables: ToggleFollowVariables,
             options?: RequestOptions
-        ) => Promise<UserResponse>;
+        ) => Promise<UserResponse>) &
+            ((
+                variables: ToggleFollowVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<UserResponse>) &
+            (<K extends FieldPath<UserResponse>>(
+                variables: ToggleFollowVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<UserResponse, K>>);
 
         /**
          * `ToggleFavouriteMutation` toggles a favourite on the AniList API.
@@ -436,10 +539,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/favourites
          */
-        toggleFavourite: (
+        toggleFavourite: ((
             variables: ToggleFavouriteVariables,
             options?: RequestOptions
-        ) => Promise<Favourites>;
+        ) => Promise<Favourites>) &
+            ((
+                variables: ToggleFavouriteVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<Favourites>) &
+            (<K extends FieldPath<Favourites>>(
+                variables: ToggleFavouriteVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<Favourites, K>>);
 
         /**
          * `UpdateFavouriteOrderMutation` updates the order of favourites on the AniList API.
@@ -465,10 +576,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/favourites
          */
-        updateFavouriteOrder: (
+        updateFavouriteOrder: ((
             variables: UpdateFavouriteOrderVariables,
             options?: RequestOptions
-        ) => Promise<Favourites>;
+        ) => Promise<Favourites>) &
+            ((
+                variables: UpdateFavouriteOrderVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<Favourites>) &
+            (<K extends FieldPath<Favourites>>(
+                variables: UpdateFavouriteOrderVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<Favourites, K>>);
 
         /**
          * `SaveReviewMutation` saves a review on the AniList API.
@@ -483,10 +602,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/review
          */
-        saveReview: (
+        saveReview: ((
             variables: SaveReviewVariables,
             options?: RequestOptions
-        ) => Promise<ReviewResponse>;
+        ) => Promise<ReviewResponse>) &
+            ((
+                variables: SaveReviewVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<ReviewResponse>) &
+            (<K extends FieldPath<ReviewResponse>>(
+                variables: SaveReviewVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<ReviewResponse, K>>);
 
         /**
          * `RateReviewMutation` rates a review on the AniList API.
@@ -501,10 +628,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/review
          */
-        rateReview: (
+        rateReview: ((
             variables: RateReviewVariables,
             options?: RequestOptions
-        ) => Promise<ReviewResponse>;
+        ) => Promise<ReviewResponse>) &
+            ((
+                variables: RateReviewVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<ReviewResponse>) &
+            (<K extends FieldPath<ReviewResponse>>(
+                variables: RateReviewVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<ReviewResponse, K>>);
 
         /**
          * `DeleteReviewMutation` deletes a review on the AniList API.
@@ -519,10 +654,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
          */
-        deleteReview: (
+        deleteReview: ((
             variables: DeleteReviewVariables,
             options?: RequestOptions
-        ) => Promise<DeleteResult>;
+        ) => Promise<DeleteResult>) &
+            ((
+                variables: DeleteReviewVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<DeleteResult>) &
+            (<K extends FieldPath<DeleteResult>>(
+                variables: DeleteReviewVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
          * `SaveRecommendationMutation` saves a recommendation on the AniList API.
@@ -537,10 +680,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/recommendation
          */
-        saveRecommendation: (
+        saveRecommendation: ((
             variables: SaveRecommendationVariables,
             options?: RequestOptions
-        ) => Promise<RecommendationResponse>;
+        ) => Promise<RecommendationResponse>) &
+            ((
+                variables: SaveRecommendationVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<RecommendationResponse>) &
+            (<K extends FieldPath<RecommendationResponse>>(
+                variables: SaveRecommendationVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<RecommendationResponse, K>>);
 
         /**
          * `SaveThreadMutation` saves a thread on the AniList API.
@@ -564,10 +715,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/thread
          */
-        saveThread: (
+        saveThread: ((
             variables: SaveThreadVariables,
             options?: RequestOptions
-        ) => Promise<ThreadResponse>;
+        ) => Promise<ThreadResponse>) &
+            ((
+                variables: SaveThreadVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<ThreadResponse>) &
+            (<K extends FieldPath<ThreadResponse>>(
+                variables: SaveThreadVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<ThreadResponse, K>>);
 
         /**
          * `DeleteThreadMutation` deletes a thread on the AniList API.
@@ -582,10 +741,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
          */
-        deleteThread: (
+        deleteThread: ((
             variables: DeleteThreadVariables,
             options?: RequestOptions
-        ) => Promise<DeleteResult>;
+        ) => Promise<DeleteResult>) &
+            ((
+                variables: DeleteThreadVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<DeleteResult>) &
+            (<K extends FieldPath<DeleteResult>>(
+                variables: DeleteThreadVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
          * `ToggleThreadSubscriptionMutation` toggles a thread subscription on the AniList API.
@@ -600,10 +767,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/thread
          */
-        toggleThreadSubscription: (
+        toggleThreadSubscription: ((
             variables: ToggleThreadSubscriptionVariables,
             options?: RequestOptions
-        ) => Promise<ThreadResponse>;
+        ) => Promise<ThreadResponse>) &
+            ((
+                variables: ToggleThreadSubscriptionVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<ThreadResponse>) &
+            (<K extends FieldPath<ThreadResponse>>(
+                variables: ToggleThreadSubscriptionVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<ThreadResponse, K>>);
 
         /**
          * `SaveThreadCommentMutation` saves a thread comment on the AniList API.
@@ -625,10 +800,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/threadcomment
          */
-        saveThreadComment: (
+        saveThreadComment: ((
             variables: SaveThreadCommentVariables,
             options?: RequestOptions
-        ) => Promise<ThreadCommentResponse>;
+        ) => Promise<ThreadCommentResponse>) &
+            ((
+                variables: SaveThreadCommentVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<ThreadCommentResponse>) &
+            (<K extends FieldPath<ThreadCommentResponse>>(
+                variables: SaveThreadCommentVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<ThreadCommentResponse, K>>);
 
         /**
          * `DeleteThreadCommentMutation` deletes a thread comment on the AniList API.
@@ -643,10 +826,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/object/deleted
          */
-        deleteThreadComment: (
+        deleteThreadComment: ((
             variables: DeleteThreadCommentVariables,
             options?: RequestOptions
-        ) => Promise<DeleteResult>;
+        ) => Promise<DeleteResult>) &
+            ((
+                variables: DeleteThreadCommentVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<DeleteResult>) &
+            (<K extends FieldPath<DeleteResult>>(
+                variables: DeleteThreadCommentVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
          * `UpdateAniChartSettingsMutation` updates the AniChart settings for a user on the AniList API.

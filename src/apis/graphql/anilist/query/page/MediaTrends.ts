@@ -4,6 +4,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type MediaTrendsPageResponse } from "../../interfaces/responses/page/MediaTrends";
 import { MediaTrendSortMappings } from "../../types/Sort";
 import { MediaTrendSchema } from "../../schemas/responses/query/MediaTrend";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link MediaTrendsVariables} contains variables for the {@link MediaTrendsQuery} operation.
@@ -214,7 +222,19 @@ export class MediaTrendsQuery extends AniListOperation {
     async mediaTrends(
         variables: MediaTrendsVariables,
         options?: RequestOptions
-    ): Promise<MediaTrendsPageResponse> {
+    ): Promise<MediaTrendsPageResponse>;
+    async mediaTrends(
+        variables: MediaTrendsVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<MediaTrendsPageResponse>;
+    async mediaTrends<K extends FieldPath<MediaTrendsPageResponse>>(
+        variables: MediaTrendsVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<MediaTrendsPageResponse, K | "pageInfo">>;
+    async mediaTrends(
+        variables: MediaTrendsVariables,
+        options?: RequestOptions & FieldsSelection<MediaTrendsPageResponse>
+    ): FieldsResult<MediaTrendsPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $mediaId: Int, $date: Int, $trending: Int, $averageScore: Int, $popularity: Int, $episode: Int, $releasing: Boolean, $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $date_greater: Int, $date_lesser: Int, $trending_greater: Int, $trending_lesser: Int, $trending_not: Int, $averageScore_greater: Int, $averageScore_lesser: Int, $averageScore_not: Int, $popularity_greater: Int, $popularity_lesser: Int, $popularity_not: Int, $episode_greater: Int, $episode_lesser: Int, $episode_not: Int, $sort: [MediaTrendSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -231,9 +251,14 @@ export class MediaTrendsQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<MediaTrendsPageResponse>(query, variables, {
-            mappings: MediaTrendsMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<MediaTrendsPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: MediaTrendsMappings,
+                transportOptions,
+            }
+        );
     }
 }

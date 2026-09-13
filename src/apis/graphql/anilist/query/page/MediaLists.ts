@@ -8,6 +8,14 @@ import { FuzzyDateMappings } from "../../types/FuzzyDate";
 import { MediaListSortMappings } from "../../types/Sort";
 import { ScoreFormatMapping } from "../../types/Format";
 import { MediaListSchema } from "../../schemas/responses/query/MediaList";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link MediaListsVariables} contains variables for the {@link MediaListsQuery} operation.
@@ -230,7 +238,19 @@ export class MediaListsQuery extends AniListOperation {
     async mediaLists(
         variables: MediaListsVariables,
         options?: RequestOptions
-    ): Promise<MediaListsPageResponse> {
+    ): Promise<MediaListsPageResponse>;
+    async mediaLists(
+        variables: MediaListsVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<MediaListsPageResponse>;
+    async mediaLists<K extends FieldPath<MediaListsPageResponse>>(
+        variables: MediaListsVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<MediaListsPageResponse, K | "pageInfo">>;
+    async mediaLists(
+        variables: MediaListsVariables,
+        options?: RequestOptions & FieldsSelection<MediaListsPageResponse>
+    ): FieldsResult<MediaListsPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $userId: Int, $userName: String, $type: MediaType, $status: MediaListStatus, $mediaId: Int, $isFollowing: Boolean, $notes: String, $startedAt: FuzzyDateInt, $completedAt: FuzzyDateInt, $compareWithAuthList: Boolean, $userId_in: [Int], $status_in: [MediaListStatus], $status_not_in: [MediaListStatus], $status_not: MediaListStatus, $mediaId_in: [Int], $mediaId_not_in: [Int], $notes_like: String, $startedAt_greater: FuzzyDateInt, $startedAt_lesser: FuzzyDateInt, $startedAt_like: String, $completedAt_greater: FuzzyDateInt, $completedAt_lesser: FuzzyDateInt, $completedAt_like: String, $sort: [MediaListSort], $scoreFormat: ScoreFormat, $asArray: Boolean, $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -247,16 +267,21 @@ export class MediaListsQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<MediaListsPageResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "any",
-                    names: ["userId", "userName"],
-                    message: "The Page.mediaList query requires either a userId or a userName.",
-                },
-            ],
-            mappings: MediaListsMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<MediaListsPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "any",
+                        names: ["userId", "userName"],
+                        message: "The Page.mediaList query requires either a userId or a userName.",
+                    },
+                ],
+                mappings: MediaListsMappings,
+                transportOptions,
+            }
+        );
     }
 }

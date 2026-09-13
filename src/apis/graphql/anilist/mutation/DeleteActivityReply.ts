@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type DeleteResult } from "../types/DeleteResult";
 
@@ -57,7 +65,19 @@ export class DeleteActivityReplyMutation extends AniListOperation {
     async deleteActivityReply(
         variables: DeleteActivityReplyVariables,
         options?: RequestOptions
-    ): Promise<DeleteResult> {
+    ): Promise<DeleteResult>;
+    async deleteActivityReply(
+        variables: DeleteActivityReplyVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<DeleteResult>;
+    async deleteActivityReply<K extends FieldPath<DeleteResult>>(
+        variables: DeleteActivityReplyVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<DeleteResult, K>>;
+    async deleteActivityReply(
+        variables: DeleteActivityReplyVariables,
+        options?: RequestOptions & FieldsSelection<DeleteResult>
+    ): FieldsResult<DeleteResult> {
         const mutation = `
       mutation ($id: Int) {
         DeleteActivityReply (id: $id) {
@@ -65,7 +85,8 @@ export class DeleteActivityReplyMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<DeleteResult>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<DeleteResult>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "all",
@@ -75,7 +96,7 @@ export class DeleteActivityReplyMutation extends AniListOperation {
             ],
             mappings: DeleteActivityReplyMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

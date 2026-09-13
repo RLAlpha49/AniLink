@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
@@ -77,7 +85,19 @@ export class ToggleFavouriteMutation extends AniListOperation {
     async toggleFavourite(
         variables: ToggleFavouriteVariables,
         options?: RequestOptions
-    ): Promise<Favourites> {
+    ): Promise<Favourites>;
+    async toggleFavourite(
+        variables: ToggleFavouriteVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<Favourites>;
+    async toggleFavourite<K extends FieldPath<Favourites>>(
+        variables: ToggleFavouriteVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<Favourites, K>>;
+    async toggleFavourite(
+        variables: ToggleFavouriteVariables,
+        options?: RequestOptions & FieldsSelection<Favourites>
+    ): FieldsResult<Favourites> {
         const mutation = `
       mutation ($animeId: Int, $mangaId: Int, $characterId: Int, $staffId: Int, $studioId: Int) {
         ToggleFavourite (animeId: $animeId, mangaId: $mangaId, characterId: $characterId, staffId: $staffId, studioId: $studioId) {
@@ -85,7 +105,8 @@ export class ToggleFavouriteMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<Favourites>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<Favourites>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "any",
@@ -96,7 +117,7 @@ export class ToggleFavouriteMutation extends AniListOperation {
             ],
             mappings: ToggleFavouriteMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

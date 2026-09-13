@@ -4,6 +4,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type ThreadsPageResponse } from "../../interfaces/responses/page/Threads";
 import { ThreadSortMappings } from "../../types/Sort";
 import { ThreadSchema } from "../../schemas/responses/query/Thread";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link ThreadsVariables} contains variables for the {@link ThreadsQuery} operation.
@@ -118,7 +126,19 @@ export class ThreadsQuery extends AniListOperation {
     async threads(
         variables: ThreadsVariables,
         options?: RequestOptions
-    ): Promise<ThreadsPageResponse> {
+    ): Promise<ThreadsPageResponse>;
+    async threads(
+        variables: ThreadsVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ThreadsPageResponse>;
+    async threads<K extends FieldPath<ThreadsPageResponse>>(
+        variables: ThreadsVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ThreadsPageResponse, K | "pageInfo">>;
+    async threads(
+        variables: ThreadsVariables,
+        options?: RequestOptions & FieldsSelection<ThreadsPageResponse>
+    ): FieldsResult<ThreadsPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $userId: Int, $replyUserId: Int, $subscribed: Boolean, $categoryId: Int, $mediaCategoryId: Int, $search: String, $id_in: [Int], $sort: [ThreadSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -135,9 +155,14 @@ export class ThreadsQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ThreadsPageResponse>(query, variables, {
-            mappings: ThreadsMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ThreadsPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: ThreadsMappings,
+                transportOptions,
+            }
+        );
     }
 }

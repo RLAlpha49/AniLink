@@ -11,6 +11,21 @@ import {
 } from "../types/Sort";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 import { StaffSchema } from "../schemas/responses/query/Staff";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed staff document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const STAFF_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link StaffVariables} contains variables for the {@link StaffQuery} operation.
@@ -170,7 +185,19 @@ export class StaffQuery extends AniListOperation {
      * const result = await new StaffQuery().staff({ id: 1 });
      * ```
      */
-    async staff(variables: StaffVariables, options?: RequestOptions): Promise<StaffResponse> {
+    async staff(variables: StaffVariables, options?: RequestOptions): Promise<StaffResponse>;
+    async staff(
+        variables: StaffVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<StaffResponse>;
+    async staff<K extends FieldPath<StaffResponse>>(
+        variables: StaffVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<StaffResponse, K | "id">>;
+    async staff(
+        variables: StaffVariables,
+        options?: RequestOptions & FieldsSelection<StaffResponse>
+    ): FieldsResult<StaffResponse, "id"> {
         const query = `
       query ($id: Int, $isBirthday: Boolean, $search: String, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $sort: [StaffSort], $asHtml: Boolean, $staffMediaSort: [MediaSort], $staffMediaType: MediaType, $staffMediaOnList: Boolean, $staffMediaPage: Int, $staffMediaPerPage: Int, $charactersSort: [CharacterSort], $charactersPage: Int, $charactersPerPage: Int, $characterMediaSort: [MediaSort], $characterMediaOnList: Boolean, $characterMediaPage: Int, $characterMediaPerPage: Int) {
         Staff (id: $id, isBirthday: $isBirthday, search: $search, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, sort: $sort) {
@@ -178,9 +205,14 @@ export class StaffQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<StaffResponse>(query, variables, {
-            mappings: StaffMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<StaffResponse>(
+            composeDocument(query, fields, STAFF_ALWAYS),
+            variables,
+            {
+                mappings: StaffMappings,
+                transportOptions,
+            }
+        );
     }
 }

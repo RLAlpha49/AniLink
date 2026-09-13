@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 import { BasicUserSchema } from "../schemas/Basic";
@@ -58,7 +66,19 @@ export class ToggleLikeMutation extends AniListOperation {
      * const result = await new ToggleLikeMutation("your-token").toggleLike({ id: 1, type: "ACTIVITY" });
      * ```
      */
-    async toggleLike(variables: ToggleLikeVariables, options?: RequestOptions): Promise<BasicUser> {
+    async toggleLike(variables: ToggleLikeVariables, options?: RequestOptions): Promise<BasicUser>;
+    async toggleLike(
+        variables: ToggleLikeVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<BasicUser>;
+    async toggleLike<K extends FieldPath<BasicUser>>(
+        variables: ToggleLikeVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<BasicUser, K>>;
+    async toggleLike(
+        variables: ToggleLikeVariables,
+        options?: RequestOptions & FieldsSelection<BasicUser>
+    ): FieldsResult<BasicUser> {
         const mutation = `
       mutation ($id: Int, $type: LikeableType) {
         ToggleLike (id: $id, type: $type) {
@@ -66,7 +86,8 @@ export class ToggleLikeMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<BasicUser>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<BasicUser>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "all",
@@ -76,7 +97,7 @@ export class ToggleLikeMutation extends AniListOperation {
             ],
             mappings: ToggleLikeMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

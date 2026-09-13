@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 
 import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
@@ -146,7 +154,19 @@ export class SaveMediaListEntryMutation extends AniListOperation {
     async saveMediaListEntry(
         variables: SaveMediaListEntryVariables,
         options?: RequestOptions
-    ): Promise<MediaListResponse> {
+    ): Promise<MediaListResponse>;
+    async saveMediaListEntry(
+        variables: SaveMediaListEntryVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<MediaListResponse>;
+    async saveMediaListEntry<K extends FieldPath<MediaListResponse>>(
+        variables: SaveMediaListEntryVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<MediaListResponse, K>>;
+    async saveMediaListEntry(
+        variables: SaveMediaListEntryVariables,
+        options?: RequestOptions & FieldsSelection<MediaListResponse>
+    ): FieldsResult<MediaListResponse> {
         const mutation = `
       mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Float, $scoreRaw: Int, $progress: Int, $progressVolumes: Int, $repeat: Int, $priority: Int, $private: Boolean, $notes: String, $hiddenFromStatusLists: Boolean, $customLists: [String], $advancedScores: [Float], $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput) {
         SaveMediaListEntry(id: $id, mediaId: $mediaId, status: $status, score: $score, scoreRaw: $scoreRaw, progress: $progress, progressVolumes: $progressVolumes, repeat: $repeat, priority: $priority, private: $private, notes: $notes, hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists, advancedScores: $advancedScores, startedAt: $startedAt, completedAt: $completedAt) {
@@ -172,17 +192,22 @@ export class SaveMediaListEntryMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<MediaListResponse>(mutation, variables, {
-            requirements: [
-                {
-                    kind: "all",
-                    names: ["mediaId"],
-                    message: "The SaveMediaListEntry mutation requires a mediaId variable.",
-                },
-            ],
-            mappings: SaveMediaListEntryMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<MediaListResponse>(
+            composeDocument(mutation, fields, []),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "all",
+                        names: ["mediaId"],
+                        message: "The SaveMediaListEntry mutation requires a mediaId variable.",
+                    },
+                ],
+                mappings: SaveMediaListEntryMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }

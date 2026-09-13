@@ -4,6 +4,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type RecommendationsPageResponse } from "../../interfaces/responses/page/Recommendations";
 import { RecommendationSortMappings } from "../../types/Sort";
 import { RecommendationSchema } from "../../schemas/responses/query/Recommendation";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link RecommendationsVariables} contains variables for the {@link RecommendationsQuery} operation.
@@ -118,7 +126,19 @@ export class RecommendationsQuery extends AniListOperation {
     async recommendations(
         variables: RecommendationsVariables,
         options?: RequestOptions
-    ): Promise<RecommendationsPageResponse> {
+    ): Promise<RecommendationsPageResponse>;
+    async recommendations(
+        variables: RecommendationsVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<RecommendationsPageResponse>;
+    async recommendations<K extends FieldPath<RecommendationsPageResponse>>(
+        variables: RecommendationsVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<RecommendationsPageResponse, K | "pageInfo">>;
+    async recommendations(
+        variables: RecommendationsVariables,
+        options?: RequestOptions & FieldsSelection<RecommendationsPageResponse>
+    ): FieldsResult<RecommendationsPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $mediaId: Int, $mediaRecommendationId: Int, $userId: Int, $rating: Int, $onList: Boolean, $rating_greater: Int, $rating_lesser: Int, $sort: [RecommendationSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -135,9 +155,14 @@ export class RecommendationsQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<RecommendationsPageResponse>(query, variables, {
-            mappings: RecommendationsMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<RecommendationsPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: RecommendationsMappings,
+                transportOptions,
+            }
+        );
     }
 }

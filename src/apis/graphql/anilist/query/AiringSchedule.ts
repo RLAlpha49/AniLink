@@ -3,6 +3,21 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type AiringScheduleResponse } from "../interfaces/responses/query/AiringSchedule";
 import { type AiringSort, AiringSortMappings } from "../types/Sort";
 import { AiringScheduleSchema } from "../schemas/responses/query/AiringSchedule";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed airingschedule document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const AIRING_SCHEDULE_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link AiringScheduleVariables} contains variables for the {@link AiringScheduleQuery} operation.
@@ -165,7 +180,19 @@ export class AiringScheduleQuery extends AniListOperation {
     async airingSchedule(
         variables: AiringScheduleVariables,
         options?: RequestOptions
-    ): Promise<AiringScheduleResponse> {
+    ): Promise<AiringScheduleResponse>;
+    async airingSchedule(
+        variables: AiringScheduleVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<AiringScheduleResponse>;
+    async airingSchedule<K extends FieldPath<AiringScheduleResponse>>(
+        variables: AiringScheduleVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<AiringScheduleResponse, K | "id">>;
+    async airingSchedule(
+        variables: AiringScheduleVariables,
+        options?: RequestOptions & FieldsSelection<AiringScheduleResponse>
+    ): FieldsResult<AiringScheduleResponse, "id"> {
         const query = `
       query ($id: Int, $mediaId: Int, $episode: Int, $airingAt: Int, $notYetAired: Boolean, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $episode_not: Int, $episode_in: [Int], $episode_not_in: [Int], $episode_greater: Int, $episode_lesser: Int, $airingAt_greater: Int, $airingAt_lesser: Int, $sort: [AiringSort], $asHtml: Boolean) {
         AiringSchedule (id: $id, mediaId: $mediaId, episode: $episode, airingAt: $airingAt, notYetAired: $notYetAired, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, mediaId_not: $mediaId_not, mediaId_in: $mediaId_in, mediaId_not_in: $mediaId_not_in, episode_not: $episode_not, episode_in: $episode_in, episode_not_in: $episode_not_in, episode_greater: $episode_greater, episode_lesser: $episode_lesser, airingAt_greater: $airingAt_greater, airingAt_lesser: $airingAt_lesser, sort: $sort) {
@@ -173,16 +200,21 @@ export class AiringScheduleQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<AiringScheduleResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "notOnly",
-                    names: ["asHtml"],
-                    message: "The AiringSchedule query requires at least one filter variable.",
-                },
-            ],
-            mappings: AiringScheduleMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<AiringScheduleResponse>(
+            composeDocument(query, fields, AIRING_SCHEDULE_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "notOnly",
+                        names: ["asHtml"],
+                        message: "The AiringSchedule query requires at least one filter variable.",
+                    },
+                ],
+                mappings: AiringScheduleMappings,
+                transportOptions,
+            }
+        );
     }
 }

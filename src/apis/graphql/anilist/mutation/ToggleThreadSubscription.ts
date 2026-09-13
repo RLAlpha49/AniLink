@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type ThreadResponse } from "../interfaces/responses/query/Thread";
 import { ThreadSchema } from "../schemas/responses/query/Thread";
@@ -65,7 +73,19 @@ export class ToggleThreadSubscriptionMutation extends AniListOperation {
     async toggleThreadSubscription(
         variables: ToggleThreadSubscriptionVariables,
         options?: RequestOptions
-    ): Promise<ThreadResponse> {
+    ): Promise<ThreadResponse>;
+    async toggleThreadSubscription(
+        variables: ToggleThreadSubscriptionVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ThreadResponse>;
+    async toggleThreadSubscription<K extends FieldPath<ThreadResponse>>(
+        variables: ToggleThreadSubscriptionVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ThreadResponse, K>>;
+    async toggleThreadSubscription(
+        variables: ToggleThreadSubscriptionVariables,
+        options?: RequestOptions & FieldsSelection<ThreadResponse>
+    ): FieldsResult<ThreadResponse> {
         const mutation = `
       mutation ($threadId: Int, $subscribe: Boolean, $asHtml: Boolean) {
         ToggleThreadSubscription (threadId: $threadId, subscribe: $subscribe) {
@@ -73,18 +93,23 @@ export class ToggleThreadSubscriptionMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ThreadResponse>(mutation, variables, {
-            requirements: [
-                {
-                    kind: "all",
-                    names: ["threadId", "subscribe"],
-                    message:
-                        "The ToggleThreadSubscription mutation requires threadId and subscribe variables.",
-                },
-            ],
-            mappings: ToggleThreadSubscriptionMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ThreadResponse>(
+            composeDocument(mutation, fields, []),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "all",
+                        names: ["threadId", "subscribe"],
+                        message:
+                            "The ToggleThreadSubscription mutation requires threadId and subscribe variables.",
+                    },
+                ],
+                mappings: ToggleThreadSubscriptionMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }

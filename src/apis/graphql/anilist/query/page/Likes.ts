@@ -3,6 +3,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type LikeableType, LikeableTypeMappings } from "../../types/Type";
 import { type LikesPageResponse } from "../../interfaces/responses/page/Likes";
 import { BasicUserSchema } from "../../schemas/Basic";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link LikesVariables} contains variables for the {@link LikesQuery} operation.
@@ -66,7 +74,19 @@ export class LikesQuery extends AniListOperation {
      * const result = await new LikesQuery().likes({ likeableId: 1, type: "ACTIVITY" });
      * ```
      */
-    async likes(variables: LikesVariables, options?: RequestOptions): Promise<LikesPageResponse> {
+    async likes(variables: LikesVariables, options?: RequestOptions): Promise<LikesPageResponse>;
+    async likes(
+        variables: LikesVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<LikesPageResponse>;
+    async likes<K extends FieldPath<LikesPageResponse>>(
+        variables: LikesVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<LikesPageResponse, K | "pageInfo">>;
+    async likes(
+        variables: LikesVariables,
+        options?: RequestOptions & FieldsSelection<LikesPageResponse>
+    ): FieldsResult<LikesPageResponse, "pageInfo"> {
         const query = `
       query ($likeableId: Int, $type: LikeableType, $page: Int, $perPage: Int) {
         Page (page: $page, perPage: $perPage) {
@@ -83,16 +103,21 @@ export class LikesQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<LikesPageResponse>(query, variables, {
-            requirements: [
-                {
-                    kind: "all",
-                    names: ["likeableId", "type"],
-                    message: "The Page.likes query requires both a likeableId and a type.",
-                },
-            ],
-            mappings: LikesMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<LikesPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "all",
+                        names: ["likeableId", "type"],
+                        message: "The Page.likes query requires both a likeableId and a type.",
+                    },
+                ],
+                mappings: LikesMappings,
+                transportOptions,
+            }
+        );
     }
 }

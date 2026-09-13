@@ -4,6 +4,14 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type AiringSchedulesPageResponse } from "../../interfaces/responses/page/AiringSchedules";
 import { AiringSortMappings } from "../../types/Sort";
 import { AiringScheduleSchema } from "../../schemas/responses/query/AiringSchedule";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 
 /**
  * {@link AiringSchedulesVariables} contains variables for the {@link AiringSchedulesQuery} operation.
@@ -178,7 +186,19 @@ export class AiringSchedulesQuery extends AniListOperation {
     async airingSchedules(
         variables: AiringSchedulesVariables,
         options?: RequestOptions
-    ): Promise<AiringSchedulesPageResponse> {
+    ): Promise<AiringSchedulesPageResponse>;
+    async airingSchedules(
+        variables: AiringSchedulesVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<AiringSchedulesPageResponse>;
+    async airingSchedules<K extends FieldPath<AiringSchedulesPageResponse>>(
+        variables: AiringSchedulesVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<AiringSchedulesPageResponse, K | "pageInfo">>;
+    async airingSchedules(
+        variables: AiringSchedulesVariables,
+        options?: RequestOptions & FieldsSelection<AiringSchedulesPageResponse>
+    ): FieldsResult<AiringSchedulesPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $mediaId: Int, $episode: Int, $airingAt: Int, $notYetAired: Boolean, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $episode_not: Int, $episode_in: [Int], $episode_not_in: [Int], $episode_greater: Int, $episode_lesser: Int, $airingAt_greater: Int, $airingAt_lesser: Int, $sort: [AiringSort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -195,9 +215,14 @@ export class AiringSchedulesQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<AiringSchedulesPageResponse>(query, variables, {
-            mappings: AiringSchedulesMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<AiringSchedulesPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: AiringSchedulesMappings,
+                transportOptions,
+            }
+        );
     }
 }

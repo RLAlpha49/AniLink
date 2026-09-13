@@ -8,6 +8,21 @@ import {
     UserStatisticSortMappings,
 } from "../types/Sort";
 import { UserSchema } from "../schemas/responses/query/User";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed user document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const USER_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link UserVariables} contains variables for the {@link UserQuery} operation.
@@ -107,7 +122,19 @@ export class UserQuery extends AniListOperation {
      * const result = await new UserQuery().user({ id: 1 });
      * ```
      */
-    async user(variables: UserVariables, options?: RequestOptions): Promise<UserResponse> {
+    async user(variables: UserVariables, options?: RequestOptions): Promise<UserResponse>;
+    async user(
+        variables: UserVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<UserResponse>;
+    async user<K extends FieldPath<UserResponse>>(
+        variables: UserVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<UserResponse, K | "id">>;
+    async user(
+        variables: UserVariables,
+        options?: RequestOptions & FieldsSelection<UserResponse>
+    ): FieldsResult<UserResponse, "id"> {
         const query = `
       query ($id: Int, $name: String, $isModerator: Boolean, $search: String, $sort: [UserSort], $asHtml: Boolean, $animeStatLimit: Int, $mangaStatLimit: Int, $animeStatSort: [UserStatisticsSort], $mangaStatSort: [UserStatisticsSort]) {
         User (id: $id, name: $name, isModerator: $isModerator, search: $search, sort: $sort) {
@@ -115,9 +142,14 @@ export class UserQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<UserResponse>(query, variables, {
-            mappings: UserMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<UserResponse>(
+            composeDocument(query, fields, USER_ALWAYS),
+            variables,
+            {
+                mappings: UserMappings,
+                transportOptions,
+            }
+        );
     }
 }

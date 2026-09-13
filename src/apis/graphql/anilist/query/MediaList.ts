@@ -7,6 +7,21 @@ import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListSort, MediaListSortMappings } from "../types/Sort";
 import { type ScoreFormat, ScoreFormatMapping } from "../types/Format";
 import { MediaListSchema } from "../schemas/responses/query/MediaList";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
+
+/**
+ * Keys selected in every composed medialist document.
+ *
+ * `id` is always selected: the handle callers need to follow up with any other call.
+ */
+export const MEDIA_LIST_ALWAYS: readonly string[] = ["id"];
 
 /**
  * {@link MediaListVariables} contains variables for the {@link MediaListQuery} operation.
@@ -217,7 +232,19 @@ export class MediaListQuery extends AniListOperation {
     async mediaList(
         variables: MediaListVariables,
         options?: RequestOptions
-    ): Promise<MediaListResponse> {
+    ): Promise<MediaListResponse>;
+    async mediaList(
+        variables: MediaListVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<MediaListResponse>;
+    async mediaList<K extends FieldPath<MediaListResponse>>(
+        variables: MediaListVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<MediaListResponse, K | "id">>;
+    async mediaList(
+        variables: MediaListVariables,
+        options?: RequestOptions & FieldsSelection<MediaListResponse>
+    ): FieldsResult<MediaListResponse, "id"> {
         const query = `
             query ($id: Int, $userId: Int, $userName: String, $type: MediaType, $status: MediaListStatus, $mediaId: Int, $isFollowing: Boolean, $notes: String, $startedAt: FuzzyDateInt, $completedAt: FuzzyDateInt, $compareWithAuthList: Boolean, $userId_in: [Int], $status_in: [MediaListStatus], $status_not_in: [MediaListStatus], $status_not: MediaListStatus, $mediaId_in: [Int], $mediaId_not_in: [Int], $notes_like: String, $startedAt_greater: FuzzyDateInt, $startedAt_lesser: FuzzyDateInt, $startedAt_like: String, $completedAt_greater: FuzzyDateInt, $completedAt_lesser: FuzzyDateInt, $completedAt_like: String, $sort: [MediaListSort], $scoreFormat: ScoreFormat, $asArray: Boolean, $asHtml: Boolean) {
                 MediaList (id: $id, userId: $userId, userName: $userName, type: $type, status: $status, mediaId: $mediaId, isFollowing: $isFollowing, notes: $notes, startedAt: $startedAt, completedAt: $completedAt, compareWithAuthList: $compareWithAuthList, userId_in: $userId_in, status_in: $status_in, status_not_in: $status_not_in, status_not: $status_not, mediaId_in: $mediaId_in, mediaId_not_in: $mediaId_not_in, notes_like: $notes_like, startedAt_greater: $startedAt_greater, startedAt_lesser: $startedAt_lesser, startedAt_like: $startedAt_like, completedAt_greater: $completedAt_greater, completedAt_lesser: $completedAt_lesser, completedAt_like: $completedAt_like, sort: $sort) {
@@ -225,9 +252,14 @@ export class MediaListQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<MediaListResponse>(query, variables, {
-            mappings: MediaListMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<MediaListResponse>(
+            composeDocument(query, fields, MEDIA_LIST_ALWAYS),
+            variables,
+            {
+                mappings: MediaListMappings,
+                transportOptions,
+            }
+        );
     }
 }

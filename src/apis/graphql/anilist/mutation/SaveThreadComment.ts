@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type ThreadCommentResponse } from "../interfaces/responses/query/ThreadComment";
 import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
@@ -83,7 +91,19 @@ export class SaveThreadCommentMutation extends AniListOperation {
     async saveThreadComment(
         variables: SaveThreadCommentVariables,
         options?: RequestOptions
-    ): Promise<ThreadCommentResponse> {
+    ): Promise<ThreadCommentResponse>;
+    async saveThreadComment(
+        variables: SaveThreadCommentVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ThreadCommentResponse>;
+    async saveThreadComment<K extends FieldPath<ThreadCommentResponse>>(
+        variables: SaveThreadCommentVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ThreadCommentResponse, K>>;
+    async saveThreadComment(
+        variables: SaveThreadCommentVariables,
+        options?: RequestOptions & FieldsSelection<ThreadCommentResponse>
+    ): FieldsResult<ThreadCommentResponse> {
         const mutation = `
       mutation ($id: Int, $threadId: Int, $parentCommentId: Int, $comment: String, $locked: Boolean, $asHtml: Boolean) {
         SaveThreadComment (id: $id, threadId: $threadId, parentCommentId: $parentCommentId, comment: $comment, locked: $locked) {
@@ -91,18 +111,23 @@ export class SaveThreadCommentMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ThreadCommentResponse>(mutation, variables, {
-            requirements: [
-                {
-                    kind: "any",
-                    names: ["id", "threadId"],
-                    message:
-                        "The SaveThreadComment mutation requires an id or a threadId variable.",
-                },
-            ],
-            mappings: SaveThreadCommentMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ThreadCommentResponse>(
+            composeDocument(mutation, fields, []),
+            variables,
+            {
+                requirements: [
+                    {
+                        kind: "any",
+                        names: ["id", "threadId"],
+                        message:
+                            "The SaveThreadComment mutation requires an id or a threadId variable.",
+                    },
+                ],
+                mappings: SaveThreadCommentMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }
