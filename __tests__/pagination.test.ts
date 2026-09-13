@@ -6,6 +6,7 @@ import {
     type PaginateOptions,
     type ChunkPaginateOptions,
 } from "../src/apis/graphql/anilist/Paginator";
+import { AniLinkValidationError } from "../src/base/AniLinkError";
 import type { PageInfo } from "../src/apis/graphql/anilist/interfaces/responses/page/PageInfo";
 import { fuzzyDate } from "../src/apis/graphql/anilist/helpers/fuzzyDate";
 import { flattenMediaListCollection } from "../src/apis/graphql/anilist/helpers/flattenMediaListCollection";
@@ -274,6 +275,35 @@ describe("paginate", () => {
         // dispose (run in the generator's finally) must have aborted it.
         expect(inFlightSignals.length).toBeGreaterThanOrEqual(2);
         expect(inFlightSignals[1].aborted).toBe(true);
+    });
+
+    test("throws when the page response lacks the itemsKey entirely", async () => {
+        // A typo'd itemsKey ("medai") reads undefined at the key: that is a
+        // caller mistake, not the documented non-array never[] case, and must
+        // fail loudly instead of returning a silent empty result.
+        const fetchPage = vi.fn(async (): Promise<TestPage> => ({
+            pageInfo: pageInfo({ hasNextPage: false }),
+            media: [{ id: 1 }],
+        }));
+
+        await expect(
+            paginate(fetchPage, "medai" as unknown as "media", { maxPages: 1 })
+        ).rejects.toThrow(AniLinkValidationError);
+        await expect(
+            paginate(fetchPage, "medai" as unknown as "media", { maxPages: 1 })
+        ).rejects.toThrow(/medai/);
+    });
+
+    test("collects nothing for a present non-array itemsKey (the never[] case)", async () => {
+        const fetchPage = vi.fn(async (): Promise<TestPage> => ({
+            pageInfo: pageInfo({ hasNextPage: false }),
+            media: [{ id: 1 }],
+        }));
+
+        const result = await paginate(fetchPage, "pageInfo", { maxPages: 1 });
+
+        expect(result.items).toEqual([]);
+        expect(result.pageCount).toBe(1);
     });
 });
 
@@ -781,6 +811,34 @@ describe("paginateChunks", () => {
         const result = await paginateChunks(fetchChunk, "lists", { perChunk: 1000 });
 
         expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500, expect.any(AbortSignal));
+        expect(result.chunkCount).toBe(1);
+    });
+
+    test("throws when the chunk response lacks the itemsKey entirely", async () => {
+        // A typo'd itemsKey reads undefined at the key: a caller mistake that
+        // must fail loudly instead of returning a silent empty result.
+        const fetchChunk = vi.fn(async (): Promise<TestChunk> => ({
+            hasNextChunk: false,
+            lists: [{ name: "Watching" }],
+        }));
+
+        await expect(
+            paginateChunks(fetchChunk, "listz" as unknown as "lists", { maxChunks: 1 })
+        ).rejects.toThrow(AniLinkValidationError);
+        await expect(
+            paginateChunks(fetchChunk, "listz" as unknown as "lists", { maxChunks: 1 })
+        ).rejects.toThrow(/listz/);
+    });
+
+    test("collects nothing for a present non-array itemsKey (the never[] case)", async () => {
+        const fetchChunk = vi.fn(async (): Promise<TestChunk> => ({
+            hasNextChunk: false,
+            lists: [{ name: "Watching" }],
+        }));
+
+        const result = await paginateChunks(fetchChunk, "hasNextChunk", { maxChunks: 1 });
+
+        expect(result.items).toEqual([]);
         expect(result.chunkCount).toBe(1);
     });
 });

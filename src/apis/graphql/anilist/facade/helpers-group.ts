@@ -20,6 +20,30 @@ type PageFetcher<TPage extends { pageInfo: PageInfo }> = (
     perPage: number
 ) => Promise<TPage>;
 
+/**
+ * The element type of the items array stored at `itemsKey` on a page response;
+ * `never` when `itemsKey` is not an array-typed key, so a bad key collapses
+ * `items` to `never[]` at the call site instead of blocking `TPage` inference
+ * from the fetch callback.
+ */
+type PageItem<TPage extends { pageInfo: PageInfo }, K extends string> = K extends keyof TPage
+    ? TPage[K] extends readonly (infer U)[]
+        ? U
+        : never
+    : never;
+
+/**
+ * The element type of the items array stored at `itemsKey` on a chunk response;
+ * `never` when `itemsKey` is not an array-typed key, so a bad key collapses
+ * `items` to `never[]` at the call site instead of blocking `TChunk` inference
+ * from the fetch callback.
+ */
+type ChunkItem<TChunk extends { hasNextChunk: boolean }, K extends string> = K extends keyof TChunk
+    ? TChunk[K] extends readonly (infer U)[]
+        ? U
+        : never
+    : never;
+
 /** Callback that fetches a single `MediaListCollection` chunk. */
 type ChunkFetcher<TChunk extends { hasNextChunk: boolean }> = (
     chunk: number,
@@ -49,17 +73,11 @@ export type AniListHelpers = {
      * );
      * ```
      */
-    paginate: <
-        TPage extends { pageInfo: PageInfo },
-        K extends {
-            [P in keyof TPage]: TPage[P] extends readonly unknown[] ? P : never;
-        }[keyof TPage] &
-            keyof TPage,
-    >(
+    paginate: <TPage extends { pageInfo: PageInfo }, K extends string>(
         fetchPage: PageFetcher<TPage>,
         itemsKey: K,
         options?: PaginateOptions
-    ) => Promise<PaginateResult<TPage[K] extends readonly (infer U)[] ? U : never>>;
+    ) => Promise<PaginateResult<PageItem<TPage, K>>>;
 
     /**
      * `paginatePages` is an async generator yielding each {@link PageInfo}-based page until
@@ -101,17 +119,11 @@ export type AniListHelpers = {
      * );
      * ```
      */
-    paginateChunks: <
-        TChunk extends { hasNextChunk: boolean },
-        K extends {
-            [P in keyof TChunk]: TChunk[P] extends readonly unknown[] ? P : never;
-        }[keyof TChunk] &
-            keyof TChunk,
-    >(
+    paginateChunks: <TChunk extends { hasNextChunk: boolean }, K extends string>(
         fetchChunk: ChunkFetcher<TChunk>,
         itemsKey: K,
         options?: ChunkPaginateOptions
-    ) => Promise<ChunkPaginateResult<TChunk[K] extends readonly (infer U)[] ? U : never>>;
+    ) => Promise<ChunkPaginateResult<ChunkItem<TChunk, K>>>;
 
     /**
      * {@link fuzzyDate} builds an AniList {@link FuzzyDateInput} from optional year, month, and day parts.

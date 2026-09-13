@@ -1,5 +1,6 @@
 import type { PageInfo } from "./interfaces/responses/page/PageInfo";
 import { safeInvoke } from "../../../base/hooks";
+import { AniLinkValidationError } from "../../../base/AniLinkError";
 import {
     bridgeAbortSignal,
     fetchWithLookAhead,
@@ -75,8 +76,13 @@ type ArrayKeys<T> = {
     [K in keyof T]: T[K] extends readonly unknown[] ? K : never;
 }[keyof T];
 
-/** Extract the element type of the array stored at key `K` of `T`. */
-type ArrayElement<T, K extends keyof T> = T[K] extends readonly (infer U)[] ? U : never;
+/**
+ * Extract the element type of the array stored at key `K` of `T`; `never` when
+ * `K` is not an array-typed key, so a bad `itemsKey` collapses `items` to `never[]`
+ * at the call site instead of blocking `TPage` inference.
+ */
+type ArrayElement<T, K extends keyof T> =
+    K extends ArrayKeys<T> ? (T[K] extends readonly (infer U)[] ? U : never) : never;
 
 /** Options controlling a {@link paginate} traversal over {@link PageInfo}-based pages. */
 export interface PaginateOptions {
@@ -256,6 +262,7 @@ function extractHasMore(response: unknown): boolean {
  * @param itemsKey - The key of the items array on the page response (e.g. `"media"`, `"users"`).
  * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, and `onPage` controls.
  * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run.
+ * @throws An {@link AniLinkValidationError} when a fetched page response has no `itemsKey` key at all (a typo'd key reads `undefined`); a present non-array value at the key is the documented `never[]` case and collects nothing.
  * @see https://docs.anilist.co/reference/object/pageinfo
  * @example
  * ```typescript
@@ -269,7 +276,7 @@ function extractHasMore(response: unknown): boolean {
  */
 export async function paginate<
     TPage extends { pageInfo: PageInfo },
-    K extends ArrayKeys<TPage> & keyof TPage,
+    K extends keyof TPage & string,
 >(
     fetchPage: (page: number, perPage: number, signal?: AbortSignal) => Promise<TPage>,
     itemsKey: K,
@@ -299,7 +306,20 @@ export async function paginate<
         const items: ArrayElement<TPage, K>[] = [];
         const pages: Array<{ pageInfo: PageInfo; items: ArrayElement<TPage, K>[] }> = [];
         for (const response of responses) {
-            const pageItems = response[itemsKey] as unknown as ArrayElement<TPage, K>[];
+            // A missing key (a typo'd `itemsKey` reads `undefined`) is a caller
+            // mistake and must fail loudly — a silent empty result is the
+            // hardest failure to debug in a pagination API where empty is a
+            // normal outcome. A present non-array value (e.g. `pageInfo`) is
+            // the documented `never[]` case: the type-level guard already
+            // rejects it at compile time, so at runtime it collects nothing
+            // instead of spreading a non-iterable.
+            const raw = response[itemsKey] as unknown;
+            if (raw === undefined) {
+                throw new AniLinkValidationError([
+                    `paginate: the page response has no "${itemsKey}" key. Check the itemsKey argument.`,
+                ]);
+            }
+            const pageItems = Array.isArray(raw) ? (raw as ArrayElement<TPage, K>[]) : [];
             pages.push({ pageInfo: response.pageInfo, items: pageItems });
             items.push(...pageItems);
             safeCallback(options?.onPage, "onPage", {
@@ -431,6 +451,7 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
  * @param itemsKey - The key of the items array on the chunk response (e.g. `"lists"`).
  * @param options - Optional `perChunk`, `startChunk`, `maxChunks`, `concurrency`, `signal`, and `onChunk` controls.
  * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run.
+ * @throws An {@link AniLinkValidationError} when a fetched chunk response has no `itemsKey` key at all (a typo'd key reads `undefined`); a present non-array value at the key is the documented `never[]` case and collects nothing.
  * @see https://docs.anilist.co/reference/object/medialistcollection
  * @example
  * ```typescript
@@ -446,7 +467,7 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
  */
 export async function paginateChunks<
     TChunk extends { hasNextChunk: boolean },
-    K extends ArrayKeys<TChunk> & keyof TChunk,
+    K extends keyof TChunk & string,
 >(
     fetchChunk: (chunk: number, perChunk: number, signal?: AbortSignal) => Promise<TChunk>,
     itemsKey: K,
@@ -476,7 +497,20 @@ export async function paginateChunks<
         const items: ArrayElement<TChunk, K>[] = [];
         const chunks: Array<{ hasNextChunk: boolean; items: ArrayElement<TChunk, K>[] }> = [];
         for (const response of responses) {
-            const chunkItems = response[itemsKey] as unknown as ArrayElement<TChunk, K>[];
+            // A missing key (a typo'd `itemsKey` reads `undefined`) is a caller
+            // mistake and must fail loudly — a silent empty result is the
+            // hardest failure to debug in a pagination API where empty is a
+            // normal outcome. A present non-array value (e.g. `hasNextChunk`) is
+            // the documented `never[]` case: the type-level guard already
+            // rejects it at compile time, so at runtime it collects nothing
+            // instead of spreading a non-iterable.
+            const raw = response[itemsKey] as unknown;
+            if (raw === undefined) {
+                throw new AniLinkValidationError([
+                    `paginateChunks: the chunk response has no "${itemsKey}" key. Check the itemsKey argument.`,
+                ]);
+            }
+            const chunkItems = Array.isArray(raw) ? (raw as ArrayElement<TChunk, K>[]) : [];
             chunks.push({ hasNextChunk: response.hasNextChunk, items: chunkItems });
             items.push(...chunkItems);
             safeCallback(options?.onChunk, "onChunk", {
