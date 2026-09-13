@@ -85,7 +85,7 @@ const { anilistToMal, unmapped } = aniLink.anilist.crossLink(page.media);
 
 const malId = anilistToMal.get(21);
 if (malId !== undefined) {
-    const malAnime = await aniLink.mal.anime.get(malId, { fields: ["id", "title"] });
+    const malAnime = await aniLink.mal.anime.get({ id: malId }, { fields: ["id", "title"] });
 }
 ```
 

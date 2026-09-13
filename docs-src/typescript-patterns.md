@@ -19,7 +19,7 @@ const aniLink = new AniLink();
 const media = await aniLink.anilist.query.media({ id: 1, type: "ANIME" });
 
 // Inferred: MalAnime (id and title guaranteed; extra fields via index signature)
-const anime = await aniLink.mal.anime.get(21, { fields: ["id", "title"] });
+const anime = await aniLink.mal.anime.get({ id: 21 }, { fields: ["id", "title"] });
 ```
 
 ## Discriminating errors by `code` and `instanceof`

@@ -16,20 +16,32 @@ const PROVIDER_SOURCE_ROOTS: Record<string, string> = {
 /**
  * Package interfaces intentionally excluded from the contract comparison.
  *
- * - `MalRequestOptions` and its option subclasses are request shapes, not
- *   response contracts; their query parameters are validated by the
- *   integration suite instead.
+ * - `MalRequestOptions` and the per-operation params interfaces are request
+ *   shapes, not response contracts; their query parameters are validated by
+ *   the integration suite instead. Every params interface follows the
+ *   `Mal<Thing>Params` naming convention, so the convention itself is the
+ *   exclusion — a new params type is excluded automatically and cannot
+ *   silently slip a request shape into the response-contract comparison.
  * - `MalAnimeListStatusUpdate` / `MalMangaListStatusUpdate` are form-encoded
  *   request bodies; the spec declares them inline per-operation rather than
  *   as named components, so they are verified by the live integration tests.
  */
 const EXCLUDED_TYPE_NAMES = new Set([
     "MalRequestOptions",
-    "MalUserAnimeListOptions",
-    "MalUserMangaListOptions",
     "MalAnimeListStatusUpdate",
     "MalMangaListStatusUpdate",
 ]);
+
+/**
+ * Whether an interface is a request shape excluded from the response-contract
+ * comparison: the named exclusions plus every `Mal<Thing>Params` type.
+ *
+ * @param name - The exported interface name.
+ * @returns Whether the interface is excluded from the comparison.
+ */
+function isExcludedType(name: string): boolean {
+    return EXCLUDED_TYPE_NAMES.has(name) || (name.startsWith("Mal") && name.endsWith("Params"));
+}
 
 /**
  * The package types compared against the MAL OpenAPI spec, each mapped to the
@@ -159,7 +171,7 @@ function extractContracts(
         if (!ts.isInterfaceDeclaration(statement)) continue;
         if (!hasExportModifier(statement)) continue;
         const name = statement.name.text;
-        if (EXCLUDED_TYPE_NAMES.has(name)) continue;
+        if (isExcludedType(name)) continue;
         const fields: RestTypeContract["fields"] = {};
         for (const member of statement.members) {
             if (!ts.isPropertySignature(member)) continue;

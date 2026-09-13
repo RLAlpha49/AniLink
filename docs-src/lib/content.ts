@@ -216,6 +216,13 @@ export const PAGES: DocPage[] = [
         section: "mal",
     },
     {
+        path: "/guides/mal/complete-examples",
+        title: "Complete examples",
+        summary: "Every MAL operation with its complete params object filled out.",
+        provider: "mal",
+        section: "mal",
+    },
+    {
         path: "/operations/index",
         title: "Operation reference",
         summary: "The generated per-operation catalog.",

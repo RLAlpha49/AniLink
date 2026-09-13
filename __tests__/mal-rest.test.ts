@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { AniLinkApiError, AniLinkAuthError, AniLinkRestError } from "../src/base/AniLinkError";
+import {
+    AniLinkApiError,
+    AniLinkAuthError,
+    AniLinkRestError,
+    AniLinkValidationError,
+} from "../src/base/AniLinkError";
 import { DEFAULT_MAL_ANIME_FIELDS } from "../src/apis/rest/mal/constants";
 import { buildMyAnimeListApi } from "../src/apis/rest/mal/wiring";
 import { getAxiosStub, makeAxiosResponseError } from "./helpers/axiosStub";
@@ -31,7 +36,7 @@ describe("MyAnimeList REST provider", () => {
     test("gets anime details with encoded fields and returns the REST body verbatim", async () => {
         const api = buildMyAnimeListApi();
 
-        await expect(api.anime.get(21, { fields: ["id", "title"] })).resolves.toEqual({
+        await expect(api.anime.get({ id: 21 }, { fields: ["id", "title"] })).resolves.toEqual({
             id: 21,
             title: "Fullmetal Alchemist",
         });
@@ -44,7 +49,7 @@ describe("MyAnimeList REST provider", () => {
     test("sends the default anime fields when no fields are selected", async () => {
         const api = buildMyAnimeListApi();
 
-        await api.anime.get(21);
+        await api.anime.get({ id: 21 });
 
         expect(lastConfig().url).toBe(
             "https://api.myanimelist.net/v2/anime/21?fields=" +
@@ -55,7 +60,7 @@ describe("MyAnimeList REST provider", () => {
     test("an explicit fields override wins over the default anime fields", async () => {
         const api = buildMyAnimeListApi();
 
-        await api.anime.get(21, { fields: ["id", "title"] });
+        await api.anime.get({ id: 21 }, { fields: ["id", "title"] });
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/anime/21?fields=id%2Ctitle");
     });
@@ -63,7 +68,7 @@ describe("MyAnimeList REST provider", () => {
     test("sends the MAL client ID on public requests when configured", async () => {
         const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
 
-        await api.anime.get(21);
+        await api.anime.get({ id: 21 });
 
         expect(lastConfig().headers["X-MAL-CLIENT-ID"]).toBe("mal-client-id");
         expect(lastConfig().headers.Authorization).toBeUndefined();
@@ -88,7 +93,7 @@ describe("MyAnimeList REST provider", () => {
     test("normalizes MAL HTTP failures through the shared error surface", async () => {
         mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
 
-        await expect(apiForTest().anime.get(999_999, { retry: false })).rejects.toSatisfy(
+        await expect(apiForTest().anime.get({ id: 999_999 }, { retry: false })).rejects.toSatisfy(
             (error: unknown) => error instanceof AniLinkApiError && error.status === 404
         );
     });
@@ -115,7 +120,7 @@ describe("MyAnimeList REST list-status writes", () => {
             },
         });
 
-        const status = await api.anime.updateMyListStatus(21, payload);
+        const status = await api.anime.updateMyListStatus({ id: 21, ...payload });
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/anime/21/my_list_status");
         expect(lastConfig().method).toBe("PATCH");
@@ -138,7 +143,8 @@ describe("MyAnimeList REST list-status writes", () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
         mocks.request.mockResolvedValueOnce({ data: { status: "watching" } });
 
-        await api.anime.updateMyListStatus(21, {
+        await api.anime.updateMyListStatus({
+            id: 21,
             status: "watching",
             tags: ["rewatch", "favorite"],
         });
@@ -151,8 +157,7 @@ describe("MyAnimeList REST list-status writes", () => {
         mocks.request.mockResolvedValueOnce({ data: { status: "watching" } });
 
         await api.anime.updateMyListStatus(
-            21,
-            { status: "watching" },
+            { id: 21, status: "watching" },
             { fields: ["status", "score"] }
         );
 
@@ -166,7 +171,10 @@ describe("MyAnimeList REST list-status writes", () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
         mocks.request.mockResolvedValueOnce({ data: { status: "watching" } });
 
-        await api.anime.updateMyListStatus(21, { status: "watching" }, { fields: "status,score" });
+        await api.anime.updateMyListStatus(
+            { id: 21, status: "watching" },
+            { fields: "status,score" }
+        );
 
         expect(lastConfig().url).toBe(
             "https://api.myanimelist.net/v2/anime/21/my_list_status?fields=status%2Cscore"
@@ -177,8 +185,17 @@ describe("MyAnimeList REST list-status writes", () => {
         const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
 
         await expect(
-            api.anime.updateMyListStatus(21, { status: "watching" })
+            api.anime.updateMyListStatus({ id: 21, status: "watching" })
         ).rejects.toBeInstanceOf(AniLinkAuthError);
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("updateMyListStatus rejects a payload with no list-status field to change", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await expect(api.anime.updateMyListStatus({ id: 21 })).rejects.toBeInstanceOf(
+            AniLinkValidationError
+        );
         expect(mocks.request).not.toHaveBeenCalled();
     });
 
@@ -187,8 +204,7 @@ describe("MyAnimeList REST list-status writes", () => {
 
         await expect(
             buildMyAnimeListApi({ accessToken: "mal-access-token" }).anime.updateMyListStatus(
-                21,
-                { score: 11 },
+                { id: 21, score: 11 },
                 { retry: false }
             )
         ).rejects.toSatisfy(
@@ -196,11 +212,25 @@ describe("MyAnimeList REST list-status writes", () => {
         );
     });
 
+    test("updateMyListStatus drops excess properties instead of form-encoding them", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+        mocks.request.mockResolvedValueOnce({ data: { status: "watching" } });
+
+        // A typo'd field name from a JavaScript caller must stay off the wire.
+        await api.anime.updateMyListStatus({
+            id: 21,
+            status: "watching",
+            num_watched_episode: 10,
+        } as unknown as Parameters<typeof api.anime.updateMyListStatus>[0]);
+
+        expect(lastConfig().data).toBe("status=watching");
+    });
+
     test("deleteFromList sends a DELETE with the bearer token to the list-status URL", async () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
         mocks.request.mockResolvedValueOnce({ data: null });
 
-        await expect(api.anime.deleteFromList(21)).resolves.toBeUndefined();
+        await expect(api.anime.deleteFromList({ id: 21 })).resolves.toBeUndefined();
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/anime/21/my_list_status");
         expect(lastConfig().method).toBe("DELETE");
@@ -211,7 +241,7 @@ describe("MyAnimeList REST list-status writes", () => {
     test("deleteFromList rejects without a MAL access token", async () => {
         const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
 
-        await expect(api.anime.deleteFromList(21)).rejects.toBeInstanceOf(AniLinkAuthError);
+        await expect(api.anime.deleteFromList({ id: 21 })).rejects.toBeInstanceOf(AniLinkAuthError);
         expect(mocks.request).not.toHaveBeenCalled();
     });
 
@@ -219,9 +249,12 @@ describe("MyAnimeList REST list-status writes", () => {
         mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
 
         await expect(
-            buildMyAnimeListApi({ accessToken: "mal-access-token" }).anime.deleteFromList(21, {
-                retry: false,
-            })
+            buildMyAnimeListApi({ accessToken: "mal-access-token" }).anime.deleteFromList(
+                { id: 21 },
+                {
+                    retry: false,
+                }
+            )
         ).rejects.toSatisfy(
             (error: unknown) => error instanceof AniLinkApiError && error.status === 404
         );
@@ -233,7 +266,7 @@ describe("MyAnimeList REST anime discovery reads", () => {
         const api = buildMyAnimeListApi();
 
         await expect(
-            api.anime.seasonal(2024, "winter", { fields: ["id", "title"] })
+            api.anime.seasonal({ year: 2024, season: "winter" }, { fields: ["id", "title"] })
         ).resolves.toEqual({ id: 21, title: "Fullmetal Alchemist" });
 
         expect(lastConfig().url).toBe(
@@ -246,7 +279,7 @@ describe("MyAnimeList REST anime discovery reads", () => {
     test("seasonal omits the fields query parameter when no fields are selected", async () => {
         const api = buildMyAnimeListApi();
 
-        await api.anime.seasonal(2024, "winter");
+        await api.anime.seasonal({ year: 2024, season: "winter" });
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/anime/season/2024/winter");
         expect(lastConfig().method).toBe("GET");
@@ -255,7 +288,7 @@ describe("MyAnimeList REST anime discovery reads", () => {
     test("seasonal accepts fields as a comma-separated string", async () => {
         const api = buildMyAnimeListApi();
 
-        await api.anime.seasonal(2024, "spring", { fields: "id,title" });
+        await api.anime.seasonal({ year: 2024, season: "spring" }, { fields: "id,title" });
 
         expect(lastConfig().url).toBe(
             "https://api.myanimelist.net/v2/anime/season/2024/spring?fields=id%2Ctitle"
@@ -265,7 +298,9 @@ describe("MyAnimeList REST anime discovery reads", () => {
     test("ranking sends the ranking type before fields and returns the REST body verbatim", async () => {
         const api = buildMyAnimeListApi();
 
-        await expect(api.anime.ranking("airing", { fields: ["id", "title"] })).resolves.toEqual({
+        await expect(
+            api.anime.ranking({ rankingType: "airing" }, { fields: ["id", "title"] })
+        ).resolves.toEqual({
             id: 21,
             title: "Fullmetal Alchemist",
         });
@@ -280,7 +315,7 @@ describe("MyAnimeList REST anime discovery reads", () => {
     test("ranking omits the fields query parameter when no options are given", async () => {
         const api = buildMyAnimeListApi();
 
-        await api.anime.ranking("airing");
+        await api.anime.ranking({ rankingType: "airing" });
 
         expect(lastConfig().url).toBe(
             "https://api.myanimelist.net/v2/anime/ranking?ranking_type=airing"
@@ -291,7 +326,7 @@ describe("MyAnimeList REST anime discovery reads", () => {
     test("ranking accepts fields as a comma-separated string", async () => {
         const api = buildMyAnimeListApi();
 
-        await api.anime.ranking("favorite", { fields: "id,title" });
+        await api.anime.ranking({ rankingType: "favorite" }, { fields: "id,title" });
 
         expect(lastConfig().url).toBe(
             "https://api.myanimelist.net/v2/anime/ranking?ranking_type=favorite&fields=id%2Ctitle"
@@ -341,7 +376,7 @@ describe("MyAnimeList REST anime discovery reads", () => {
         mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
 
         await expect(
-            buildMyAnimeListApi().anime.seasonal(2024, "winter", { retry: false })
+            buildMyAnimeListApi().anime.seasonal({ year: 2024, season: "winter" }, { retry: false })
         ).rejects.toSatisfy(
             (error: unknown) => error instanceof AniLinkRestError && error.status === 404
         );
@@ -351,7 +386,7 @@ describe("MyAnimeList REST anime discovery reads", () => {
         mocks.request.mockRejectedValueOnce(makeAxiosResponseError(500));
 
         await expect(
-            buildMyAnimeListApi().anime.ranking("airing", { retry: false })
+            buildMyAnimeListApi().anime.ranking({ rankingType: "airing" }, { retry: false })
         ).rejects.toSatisfy(
             (error: unknown) => error instanceof AniLinkRestError && error.status === 500
         );
@@ -374,13 +409,16 @@ describe("MyAnimeList REST user-list reads", () => {
     test("animeList builds the encoded URL with status, sort, limit, offset, and fields", async () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
 
-        await api.user.animeList("@me", {
-            status: "watching",
-            sort: "list_score",
-            limit: 5,
-            offset: 10,
-            fields: ["id", "title", "list_status"],
-        });
+        await api.user.animeList(
+            {
+                username: "@me",
+                status: "watching",
+                sort: "list_score",
+                limit: 5,
+                offset: 10,
+            },
+            { fields: ["id", "title", "list_status"] }
+        );
         // `@me` is sent as the literal path segment, matching `me` and the
         // MAL reference, instead of relying on server-side `%40` decoding.
         expect(lastConfig().url).toBe(
@@ -407,14 +445,14 @@ describe("MyAnimeList REST user-list reads", () => {
         mocks.request.mockResolvedValueOnce({ data: body });
 
         await expect(
-            api.user.animeList("@me", { fields: ["id", "title", "list_status"] })
+            api.user.animeList({ username: "@me" }, { fields: ["id", "title", "list_status"] })
         ).resolves.toEqual(body);
     });
 
     test("animeList omits absent optional query parameters", async () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
 
-        await api.user.animeList("@me");
+        await api.user.animeList({ username: "@me" });
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/users/@me/animelist");
         expect(lastConfig().method).toBe("GET");
@@ -423,10 +461,10 @@ describe("MyAnimeList REST user-list reads", () => {
     test("mangaList builds the encoded mangalist URL with the reading status", async () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
 
-        await api.user.mangaList("@me", {
-            status: "reading",
-            fields: ["id", "title", "list_status"],
-        });
+        await api.user.mangaList(
+            { username: "@me", status: "reading" },
+            { fields: ["id", "title", "list_status"] }
+        );
 
         expect(lastConfig().url).toBe(
             "https://api.myanimelist.net/v2/users/@me/mangalist?fields=id%2Ctitle%2Clist_status&status=reading"
@@ -438,7 +476,7 @@ describe("MyAnimeList REST user-list reads", () => {
     test("animeList sends the client ID header without a bearer token when only a client ID is configured", async () => {
         const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
 
-        await api.user.animeList("some-user");
+        await api.user.animeList({ username: "some-user" });
 
         expect(lastConfig().headers["X-MAL-CLIENT-ID"]).toBe("mal-client-id");
         expect(lastConfig().headers.Authorization).toBeUndefined();
@@ -447,7 +485,9 @@ describe("MyAnimeList REST user-list reads", () => {
     test("animeList fails fast with AniLinkAuthError on @me without an access token", async () => {
         const api = buildMyAnimeListApi();
 
-        await expect(api.user.animeList("@me")).rejects.toBeInstanceOf(AniLinkAuthError);
+        await expect(api.user.animeList({ username: "@me" })).rejects.toBeInstanceOf(
+            AniLinkAuthError
+        );
         // The guard fires before any request is sent.
         expect(mocks.request).not.toHaveBeenCalled();
     });
@@ -455,15 +495,21 @@ describe("MyAnimeList REST user-list reads", () => {
     test("mangaList fails fast with AniLinkAuthError on @me without an access token", async () => {
         const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
 
-        await expect(api.user.mangaList("@me")).rejects.toBeInstanceOf(AniLinkAuthError);
+        await expect(api.user.mangaList({ username: "@me" })).rejects.toBeInstanceOf(
+            AniLinkAuthError
+        );
         expect(mocks.request).not.toHaveBeenCalled();
     });
 
     test("animeList fails fast on @me variants like @ME and padded @me without an access token", async () => {
         const api = buildMyAnimeListApi();
 
-        await expect(api.user.animeList("@ME")).rejects.toBeInstanceOf(AniLinkAuthError);
-        await expect(api.user.animeList(" @me ")).rejects.toBeInstanceOf(AniLinkAuthError);
+        await expect(api.user.animeList({ username: "@ME" })).rejects.toBeInstanceOf(
+            AniLinkAuthError
+        );
+        await expect(api.user.animeList({ username: " @me " })).rejects.toBeInstanceOf(
+            AniLinkAuthError
+        );
         // The guard fires before any request is sent for every variant.
         expect(mocks.request).not.toHaveBeenCalled();
     });
@@ -471,15 +517,19 @@ describe("MyAnimeList REST user-list reads", () => {
     test("mangaList fails fast on @me variants like @ME and padded @me without an access token", async () => {
         const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
 
-        await expect(api.user.mangaList("@ME")).rejects.toBeInstanceOf(AniLinkAuthError);
-        await expect(api.user.mangaList(" @me ")).rejects.toBeInstanceOf(AniLinkAuthError);
+        await expect(api.user.mangaList({ username: "@ME" })).rejects.toBeInstanceOf(
+            AniLinkAuthError
+        );
+        await expect(api.user.mangaList({ username: " @me " })).rejects.toBeInstanceOf(
+            AniLinkAuthError
+        );
         expect(mocks.request).not.toHaveBeenCalled();
     });
 
     test("animeList sends the literal @me path for normalized @me variants", async () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
 
-        await api.user.animeList(" @me ");
+        await api.user.animeList({ username: " @me " });
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/users/@me/animelist");
         expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
@@ -488,7 +538,7 @@ describe("MyAnimeList REST user-list reads", () => {
     test("mangaList sends the literal @me path for normalized @me variants", async () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
 
-        await api.user.mangaList("@ME");
+        await api.user.mangaList({ username: "@ME" });
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/users/@me/mangalist");
         expect(lastConfig().headers.Authorization).toBe("Bearer mal-access-token");
@@ -497,7 +547,7 @@ describe("MyAnimeList REST user-list reads", () => {
     test("animeList accepts a pre-joined fields string", async () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
 
-        await api.user.animeList("some-user", { fields: "id,title,list_status" });
+        await api.user.animeList({ username: "some-user" }, { fields: "id,title,list_status" });
 
         expect(lastConfig().url).toBe(
             "https://api.myanimelist.net/v2/users/some-user/animelist?fields=id%2Ctitle%2Clist_status"
@@ -507,7 +557,7 @@ describe("MyAnimeList REST user-list reads", () => {
     test("animeList percent-encodes the username path segment", async () => {
         const api = buildMyAnimeListApi();
 
-        await api.user.animeList("some user");
+        await api.user.animeList({ username: "some user" });
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/users/some%20user/animelist");
     });
@@ -516,12 +566,34 @@ describe("MyAnimeList REST user-list reads", () => {
         mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
 
         await expect(
-            buildMyAnimeListApi({ accessToken: "mal-access-token" }).user.animeList("@me", {
-                retry: false,
-            })
+            buildMyAnimeListApi({ accessToken: "mal-access-token" }).user.animeList(
+                { username: "@me" },
+                {
+                    retry: false,
+                }
+            )
         ).rejects.toSatisfy(
             (error: unknown) => error instanceof AniLinkRestError && error.status === 404
         );
+    });
+
+    test("animeList fails fast with AniLinkValidationError on an empty username", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await expect(api.user.animeList({ username: "" })).rejects.toBeInstanceOf(
+            AniLinkValidationError
+        );
+        // The guard fires before any request is sent.
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("mangaList fails fast with AniLinkValidationError on a whitespace-only username", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await expect(api.user.mangaList({ username: "   " })).rejects.toBeInstanceOf(
+            AniLinkValidationError
+        );
+        expect(mocks.request).not.toHaveBeenCalled();
     });
 });
 
@@ -529,7 +601,7 @@ describe("MyAnimeList REST manga namespace", () => {
     test("gets manga details with encoded fields and returns the REST body verbatim", async () => {
         const api = buildMyAnimeListApi();
 
-        await expect(api.manga.get(1, { fields: ["id", "title"] })).resolves.toEqual({
+        await expect(api.manga.get({ id: 1 }, { fields: ["id", "title"] })).resolves.toEqual({
             id: 21,
             title: "Fullmetal Alchemist",
         });
@@ -560,7 +632,7 @@ describe("MyAnimeList REST manga namespace", () => {
             },
         });
 
-        const status = await api.manga.updateMyListStatus(1, payload);
+        const status = await api.manga.updateMyListStatus({ id: 1, ...payload });
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/manga/1/my_list_status");
         expect(lastConfig().method).toBe("PATCH");
@@ -584,7 +656,8 @@ describe("MyAnimeList REST manga namespace", () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
         mocks.request.mockResolvedValueOnce({ data: { status: "reading" } });
 
-        await api.manga.updateMyListStatus(1, {
+        await api.manga.updateMyListStatus({
+            id: 1,
             status: "reading",
             tags: ["reread", "favorite"],
         });
@@ -597,8 +670,7 @@ describe("MyAnimeList REST manga namespace", () => {
         mocks.request.mockResolvedValueOnce({ data: { status: "reading" } });
 
         await api.manga.updateMyListStatus(
-            1,
-            { status: "reading" },
+            { id: 1, status: "reading" },
             { fields: ["status", "score"] }
         );
 
@@ -612,7 +684,10 @@ describe("MyAnimeList REST manga namespace", () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
         mocks.request.mockResolvedValueOnce({ data: { status: "reading" } });
 
-        await api.manga.updateMyListStatus(1, { status: "reading" }, { fields: "status,score" });
+        await api.manga.updateMyListStatus(
+            { id: 1, status: "reading" },
+            { fields: "status,score" }
+        );
 
         expect(lastConfig().url).toBe(
             "https://api.myanimelist.net/v2/manga/1/my_list_status?fields=status%2Cscore"
@@ -622,8 +697,17 @@ describe("MyAnimeList REST manga namespace", () => {
     test("manga.updateMyListStatus rejects without a MAL access token", async () => {
         const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
 
-        await expect(api.manga.updateMyListStatus(1, { status: "reading" })).rejects.toBeInstanceOf(
-            AniLinkAuthError
+        await expect(
+            api.manga.updateMyListStatus({ id: 1, status: "reading" })
+        ).rejects.toBeInstanceOf(AniLinkAuthError);
+        expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    test("manga.updateMyListStatus rejects a payload with no list-status field to change", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+
+        await expect(api.manga.updateMyListStatus({ id: 1 })).rejects.toBeInstanceOf(
+            AniLinkValidationError
         );
         expect(mocks.request).not.toHaveBeenCalled();
     });
@@ -633,8 +717,7 @@ describe("MyAnimeList REST manga namespace", () => {
 
         await expect(
             buildMyAnimeListApi({ accessToken: "mal-access-token" }).manga.updateMyListStatus(
-                1,
-                { score: 11 },
+                { id: 1, score: 11 },
                 { retry: false }
             )
         ).rejects.toSatisfy(
@@ -642,11 +725,25 @@ describe("MyAnimeList REST manga namespace", () => {
         );
     });
 
+    test("manga.updateMyListStatus drops excess properties instead of form-encoding them", async () => {
+        const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
+        mocks.request.mockResolvedValueOnce({ data: { status: "reading" } });
+
+        // A typo'd field name from a JavaScript caller must stay off the wire.
+        await api.manga.updateMyListStatus({
+            id: 1,
+            status: "reading",
+            num_chapter_read: 10,
+        } as unknown as Parameters<typeof api.manga.updateMyListStatus>[0]);
+
+        expect(lastConfig().data).toBe("status=reading");
+    });
+
     test("manga.deleteFromList sends a DELETE with the bearer token to the manga list-status URL", async () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
         mocks.request.mockResolvedValueOnce({ data: null });
 
-        await expect(api.manga.deleteFromList(1)).resolves.toBeUndefined();
+        await expect(api.manga.deleteFromList({ id: 1 })).resolves.toBeUndefined();
 
         expect(lastConfig().url).toBe("https://api.myanimelist.net/v2/manga/1/my_list_status");
         expect(lastConfig().method).toBe("DELETE");
@@ -657,7 +754,7 @@ describe("MyAnimeList REST manga namespace", () => {
     test("manga.deleteFromList rejects without a MAL access token", async () => {
         const api = buildMyAnimeListApi({ clientId: "mal-client-id" });
 
-        await expect(api.manga.deleteFromList(1)).rejects.toBeInstanceOf(AniLinkAuthError);
+        await expect(api.manga.deleteFromList({ id: 1 })).rejects.toBeInstanceOf(AniLinkAuthError);
         expect(mocks.request).not.toHaveBeenCalled();
     });
 
@@ -665,9 +762,12 @@ describe("MyAnimeList REST manga namespace", () => {
         mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
 
         await expect(
-            buildMyAnimeListApi({ accessToken: "mal-access-token" }).manga.deleteFromList(1, {
-                retry: false,
-            })
+            buildMyAnimeListApi({ accessToken: "mal-access-token" }).manga.deleteFromList(
+                { id: 1 },
+                {
+                    retry: false,
+                }
+            )
         ).rejects.toSatisfy(
             (error: unknown) => error instanceof AniLinkApiError && error.status === 404
         );
@@ -676,7 +776,9 @@ describe("MyAnimeList REST manga namespace", () => {
     test("manga.get normalizes MAL HTTP failures through the shared error surface", async () => {
         mocks.request.mockRejectedValueOnce(makeAxiosResponseError(404));
 
-        await expect(buildMyAnimeListApi().manga.get(999_999, { retry: false })).rejects.toSatisfy(
+        await expect(
+            buildMyAnimeListApi().manga.get({ id: 999_999 }, { retry: false })
+        ).rejects.toSatisfy(
             (error: unknown) => error instanceof AniLinkApiError && error.status === 404
         );
     });

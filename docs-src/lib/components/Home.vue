@@ -181,7 +181,7 @@ const codeSource = [
     'console.log(anime.media?.title?.romaji); // → "One Piece"',
     "",
     "// MyAnimeList — typed REST, public fields need no token.",
-    "const mal = await aniLink.mal.anime.get(21, {",
+    "const mal = await aniLink.mal.anime.get({ id: 21 }, {",
     '    fields: ["id", "title", "main_picture"],',
     "});",
     "console.log(mal.title);",

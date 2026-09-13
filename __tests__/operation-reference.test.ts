@@ -156,22 +156,78 @@ describe("operation reference section manifests", () => {
         // The user-list reads fail fast on `@me` without a token, like `me`.
         expect(animeList?.errors.map((entry) => entry.error)).toContain("AniLinkAuthError");
         expect(mangaList?.errors.map((entry) => entry.error)).toContain("AniLinkAuthError");
-        // The list options carry their status/sort/limit/offset nested fields.
+        // The params object carries the username plus the list filters; the
+        // trailing options carry only fields and transport settings.
+        expect(
+            animeList?.request
+                .find((param) => param.name === "params")
+                ?.nestedFields?.map((field) => field.name)
+        ).toEqual(["username", "status", "sort", "limit", "offset"]);
+        expect(
+            mangaList?.request
+                .find((param) => param.name === "params")
+                ?.nestedFields?.map((field) => field.name)
+        ).toEqual(["username", "status", "sort", "limit", "offset"]);
         expect(
             animeList?.request
                 .find((param) => param.name === "options")
                 ?.nestedFields?.map((field) => field.name)
-        ).toEqual(["status", "sort", "limit", "offset", "fields", "timeout", "signal"]);
+        ).toEqual(["fields", "timeout", "signal"]);
         expect(
             mangaList?.request
                 .find((param) => param.name === "options")
                 ?.nestedFields?.map((field) => field.name)
-        ).toEqual(["status", "sort", "limit", "offset", "fields", "timeout", "signal"]);
+        ).toEqual(["fields", "timeout", "signal"]);
         expect(animeList?.links.find((link) => link.label === "MAL API reference")?.url).toBe(
             "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get"
         );
         expect(mangaList?.links.find((link) => link.label === "MAL API reference")?.url).toBe(
             "https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get"
         );
+    });
+
+    it("excludes fields from deleteFromList options and keeps it elsewhere", () => {
+        const animeDelete = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.anime.deleteFromList"
+        );
+        const mangaDelete = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.manga.deleteFromList"
+        );
+        const update = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.anime.updateMyListStatus"
+        );
+
+        // The DELETE response carries no body to shape, so `fields` is not
+        // documented on the delete operations' options.
+        expect(
+            animeDelete?.request
+                .find((param) => param.name === "options")
+                ?.nestedFields?.map((field) => field.name)
+        ).toEqual(["timeout", "signal"]);
+        expect(
+            mangaDelete?.request
+                .find((param) => param.name === "options")
+                ?.nestedFields?.map((field) => field.name)
+        ).toEqual(["timeout", "signal"]);
+        // Every other operation keeps the full options documentation.
+        expect(
+            update?.request
+                .find((param) => param.name === "options")
+                ?.nestedFields?.map((field) => field.name)
+        ).toEqual(["fields", "timeout", "signal"]);
+    });
+
+    it("documents the empty-payload validation error on the list-status writes", () => {
+        const animeUpdate = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.anime.updateMyListStatus"
+        );
+        const mangaUpdate = writtenManifest.operations.find(
+            (operation) => operation.namespace === "mal.manga.updateMyListStatus"
+        );
+
+        // The writes fail fast when params carries no list-status field to
+        // change; the reference must document that like the facade does.
+        expect(animeUpdate?.errors.map((entry) => entry.error)).toContain("AniLinkValidationError");
+        expect(mangaUpdate?.errors.map((entry) => entry.error)).toContain("AniLinkValidationError");
     });
 });

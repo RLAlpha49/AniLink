@@ -15,7 +15,7 @@ import { buildRefreshedAuth, MalTokenRefresher } from "./tokenRefresh";
  * @example
  * ```typescript
  * const api = buildMyAnimeListApi({ accessToken: "mal-token" });
- * const anime = await api.anime.get(21);
+ * const anime = await api.anime.get({ id: 21 });
  * ```
  * @see https://myanimelist.net/apiconfig/references/api/v2
  */

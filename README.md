@@ -11,7 +11,7 @@
 [![CodeQL](https://github.com/RLAlpha49/AniLink/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/RLAlpha49/AniLink/actions/workflows/codeql.yml)
 [![Documentation](https://img.shields.io/website?url=https%3A%2F%2Fanilink.alpha49.com%2F&label=docs)](https://anilink.alpha49.com/)
 
-A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co/) and the [MyAnimeList REST API](https://myanimelist.net/apiconfig/references/api/v2). One class, two isolated provider surfaces, normalized errors, retries, and a generated operation reference.
+A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co/) and the [MyAnimeList REST API](https://myanimelist.net/apiconfig/references/api/v2). One class, two isolated provider surfaces — and one calling convention: every operation with inputs takes a single typed params object plus an optional trailing options object, while the parameterless reads — `mal.user.me(options?)` and `mal.anime.suggestions(options?)` — take the options object alone. Normalized errors, retries, pacing, and caching work identically on both.
 
 ## Quickstart
 
@@ -30,7 +30,7 @@ const anime = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
 
 // MyAnimeList (REST) — isolated credential slot
 const client = new AniLink({ mal: { accessToken: "mal-token" } });
-const malAnime = await client.mal.anime.get(21, { fields: ["id", "title", "main_picture"] });
+const malAnime = await client.mal.anime.get({ id: 21 }, { fields: ["id", "title", "main_picture"] });
 ```
 
 ## What you can do

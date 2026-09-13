@@ -44,9 +44,10 @@ import { AniLink } from "anilink-api-wrapper";
 
 const aniLink = new AniLink({ mal: { accessToken: process.env.MAL_TOKEN } });
 
-const anime = await aniLink.mal.anime.get(21, {
-    fields: ["id", "title", "main_picture", "synopsis", "mean"],
-});
+const anime = await aniLink.mal.anime.get(
+    { id: 21 },
+    { fields: ["id", "title", "main_picture", "synopsis", "mean"] }
+);
 
 console.log(anime.title, anime.main_picture?.medium);
 ```
@@ -76,7 +77,7 @@ const { anilistToMal } = aniLink.anilist.crossLink([anilistMedia]);
 
 const malId = anilistToMal.get(21);
 if (malId !== undefined) {
-    const malAnime = await aniLink.mal.anime.get(malId, { fields: ["id", "title"] });
+    const malAnime = await aniLink.mal.anime.get({ id: malId }, { fields: ["id", "title"] });
     console.log("AniList:", anilistMedia.title.romaji);
     console.log("MAL:", malAnime.title);
 }

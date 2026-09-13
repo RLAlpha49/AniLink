@@ -43,18 +43,24 @@ const FIXTURES = {
 
 describe("MyAnimeList live integration — reads only", () => {
     test.skipIf(!token)("anime.get resolves a well-known anime with field selection", async () => {
-        const anime = await client().mal.anime.get(FIXTURES.animeId, {
-            fields: FIXTURES.fields,
-        });
+        const anime = await client().mal.anime.get(
+            { id: FIXTURES.animeId },
+            {
+                fields: FIXTURES.fields,
+            }
+        );
 
         expect(anime.id).toBe(FIXTURES.animeId);
         expect(anime.title).toBeTruthy();
     });
 
     test.skipIf(!token)("anime.get accepts a pre-joined fields string", async () => {
-        const anime = await client().mal.anime.get(FIXTURES.animeId, {
-            fields: FIXTURES.fields.join(","),
-        });
+        const anime = await client().mal.anime.get(
+            { id: FIXTURES.animeId },
+            {
+                fields: FIXTURES.fields.join(","),
+            }
+        );
 
         expect(anime.id).toBe(FIXTURES.animeId);
     });
@@ -67,10 +73,10 @@ describe("MyAnimeList live integration — reads only", () => {
     });
 
     test.skipIf(!token)("user.animeList resolves the authenticated user's anime list", async () => {
-        const list = await client().mal.user.animeList("@me", {
-            limit: 5,
-            fields: ["id", "title", "list_status"],
-        });
+        const list = await client().mal.user.animeList(
+            { username: "@me", limit: 5 },
+            { fields: ["id", "title", "list_status"] }
+        );
 
         expect(Array.isArray(list.data)).toBe(true);
         expect(
@@ -82,17 +88,19 @@ describe("MyAnimeList live integration — reads only", () => {
     });
 
     test.skipIf(!token)("user.mangaList resolves the authenticated user's manga list", async () => {
-        const list = await client().mal.user.mangaList("@me", {
-            limit: 5,
-            fields: ["id", "title", "list_status"],
-        });
+        const list = await client().mal.user.mangaList(
+            { username: "@me", limit: 5 },
+            { fields: ["id", "title", "list_status"] }
+        );
 
         expect(Array.isArray(list.data)).toBe(true);
     });
 
     test.skipIf(!token)("anime.get surfaces a 404 as a normalized API error", async () => {
         // An id far beyond the MyAnimeList id space, so the lookup misses.
-        await expect(client().mal.anime.get(999_999_999, { retry: false })).rejects.toSatisfy(
+        await expect(
+            client().mal.anime.get({ id: 999_999_999 }, { retry: false })
+        ).rejects.toSatisfy(
             (error: unknown) => error instanceof AniLinkApiError && error.status === 404
         );
     });

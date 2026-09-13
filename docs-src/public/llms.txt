@@ -6,7 +6,7 @@
 
 ## Start here
 
-- [Introduction](https://anilink.alpha49.com/introduction): What AniLink is: one AniLink class exposing typed anilist and mal surfaces side by side, with a provider, protocol, and namespace overview.
+- [Introduction](https://anilink.alpha49.com/introduction): What AniLink is: one AniLink class exposing typed anilist and mal surfaces side by side behind one (params, options?) calling convention, with a provider, protocol, and namespace overview.
 - [Getting started](https://anilink.alpha49.com/getting-started): Install anilink-api-wrapper, construct a client with credentials, and send a first request to either provider.
 - [Provider configuration](https://anilink.alpha49.com/provider-configuration): The two ways to pass AniLink credentials — positional token or per-provider anilist and mal slots — and how each maps to the client surfaces.
 - [Privacy](https://anilink.alpha49.com/privacy): How the AniLink docs site handles analytics: GA4 measurement stays off until you accept in the consent banner, and declining clears analytics cookies.
@@ -44,6 +44,7 @@
 - [MAL authentication](https://anilink.alpha49.com/guides/mal/authentication): The MyAnimeList OAuth2 with PKCE flow: register an application, run the code exchange, and use the resulting access token.
 - [MAL configuration](https://anilink.alpha49.com/guides/mal/configuration): The mal slot fields — access token and shared transport options — and how they map onto the REST operations.
 - [MAL operations](https://anilink.alpha49.com/guides/mal/operations): The MyAnimeList REST operation surface: anime and manga lookups, seasonal, rankings, suggestions, and user lists with parameter tables per operation.
+- [Complete examples](https://anilink.alpha49.com/guides/mal/complete-examples): Every MyAnimeList operation with its complete params object filled out.
 
 ## Operations
 

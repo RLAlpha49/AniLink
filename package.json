@@ -1,7 +1,7 @@
 {
     "name": "anilink-api-wrapper",
     "version": "2.3.0",
-    "description": "API wrapper for AniManga sites such as Anilist, MyAnimeList, Kitsu.",
+    "description": "A typed TypeScript wrapper that unifies the AniList GraphQL and MyAnimeList REST APIs behind one calling convention: one params object and one options object per operation, with normalized errors, retries, pacing, and caching shared across providers.",
     "type": "module",
     "main": "dist/AniLink.mjs",
     "types": "./dist/AniLink.d.ts",

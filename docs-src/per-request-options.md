@@ -33,10 +33,13 @@ See [Field selection](/guides/anilist/field-selection) for the nested path rules
 MAL operations take `MalRequestOptions`, which extends `RequestOptions` with the MAL `fields` selector:
 
 ```typescript
-const anime = await aniLink.mal.anime.get(21, {
-    fields: ["id", "title", "main_picture"],
-    timeout: 8_000,
-});
+const anime = await aniLink.mal.anime.get(
+    { id: 21 },
+    {
+        fields: ["id", "title", "main_picture"],
+        timeout: 8_000,
+    }
+);
 ```
 
 | Option | Type | Default | Description |

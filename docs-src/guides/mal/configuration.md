@@ -42,7 +42,7 @@ The standalone facade builder, exported for when you want MAL without the compos
 import { buildMyAnimeListApi } from "anilink-api-wrapper";
 
 const api = buildMyAnimeListApi({ accessToken: "mal-token" });
-const anime = await api.anime.get(21);
+const anime = await api.anime.get({ id: 21 });
 ```
 
 `buildMyAnimeListApi` resolves credentials and composes the same `MyAnimeListApi` surface the `AniLink` client exposes under `mal` — identical behavior, smaller footprint.

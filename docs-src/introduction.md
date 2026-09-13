@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: "What AniLink is: one AniLink class exposing typed anilist and mal surfaces side by side, with a provider, protocol, and namespace overview."
+description: "What AniLink is: one AniLink class exposing typed anilist and mal surfaces side by side behind one calling convention — (params, options?) for operations with inputs, (options?) for the parameterless reads — with a provider, protocol, and namespace overview."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
@@ -24,6 +24,7 @@ The two surfaces share one transport layer — timeouts, retries, pacing, circui
 Call AniList or MAL directly and you soon find yourself hand-rolling HTTP, GraphQL documents, OAuth flows, retry logic, and rate-limit handling — the same plumbing, twice. AniLink rolls it once, with types:
 
 - **Typed operations.** Every operation has typed variables and a typed response, generated from the provider schemas. Hover a call and the shapes are just there.
+- **One calling convention.** Every operation with inputs takes one typed params object and one optional trailing options object — `(params, options?)`; the parameterless reads — `mal.user.me(options?)` and `mal.anime.suggestions(options?)` — take the options object alone. Learn it once, use it on both providers. AniList params are its GraphQL variables; MAL params are its path, query, and body inputs. `fields` selects response shape on both.
 - **Normalized errors.** Provider failures become `AniLinkError` subclasses with stable `code` values, so you classify failures without parsing messages.
 - **Resilience built in.** Retries with jittered backoff, optional rate-limit pacing, and an optional circuit breaker work identically on both providers.
 - **Provider isolation.** Credentials and transport settings stay scoped to their provider slot.

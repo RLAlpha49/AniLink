@@ -182,7 +182,7 @@ describe("client-level onHookError wiring", () => {
             },
         });
 
-        await client.mal.anime.get(21, { retry: false });
+        await client.mal.anime.get({ id: 21 }, { retry: false });
 
         expect(clientHookError).toHaveBeenCalledTimes(1);
         expect(clientHookError.mock.calls[0][0]).toBe("onResponse");

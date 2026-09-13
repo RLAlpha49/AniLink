@@ -1,4 +1,4 @@
-import type { MalPaging, MalPicture, MalRequestOptions } from "./common";
+import type { MalPaging, MalPicture } from "./common";
 
 /**
  * MyAnimeList manga types: the {@link MalManga} entity, the manga list-status
@@ -127,7 +127,7 @@ export interface MalMangaListStatus {
  *
  * These are the fixed `sort` query values accepted by
  * `GET /users/{user_name}/mangalist`, consumed as the `sort` field of
- * {@link MalUserMangaListOptions} on `MalUserOperation.mangaList` and
+ * {@link MalUserMangaListParams} on `MalUserOperation.mangaList` and
  * `MyAnimeListUserApi.mangaList`. `list_score`, `list_updated_at`, and
  * `manga_start_date` sort descending; `manga_title` and `manga_id` sort
  * ascending (`manga_id` is listed as under development by MyAnimeList).
@@ -138,23 +138,47 @@ export type MalMangaListSort =
     "list_score" | "list_updated_at" | "manga_title" | "manga_start_date" | "manga_id";
 
 /**
- * {@link MalUserMangaListOptions} is the request options for reading a user's manga list.
+ * {@link MalMangaGetParams} is the params object of the manga lookup read.
  *
- * It extends {@link MalRequestOptions} with the `status`, `sort`, `limit`, and
- * `offset` query parameters accepted by `GET /users/{user_name}/mangalist`,
- * consumed by `MalUserOperation.mangaList` and `MyAnimeListUserApi.mangaList`.
+ * It carries the API's own inputs for `GET /manga/{id}`, consumed by
+ * `MalMangaOperation.get` and `MyAnimeListMangaApi.get` as the single params
+ * object of the unified `(params, options?)` convention.
  *
- * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get
  */
-export interface MalUserMangaListOptions extends MalRequestOptions {
-    /** The reading status to filter by; one of {@link MalMangaListStatusValue}. Omit to return all. */
-    status?: MalMangaListStatusValue;
-    /** The sort order; one of {@link MalMangaListSort}. */
-    sort?: MalMangaListSort;
-    /** The number of entries per page; defaults to 100, capped at 1000 by MyAnimeList. */
-    limit?: number;
-    /** The offset of the first entry; defaults to 0. */
-    offset?: number;
+export interface MalMangaGetParams {
+    /** The MyAnimeList manga ID. */
+    id: number;
+}
+
+/**
+ * {@link MalMangaListStatusUpdateParams} is the params object of the manga list-status write.
+ *
+ * It extends {@link MalMangaListStatusUpdate} with the path `id` and carries
+ * every input of `PATCH /manga/{id}/my_list_status`, consumed by
+ * `MalMangaOperation.updateMyListStatus` and `MyAnimeListMangaApi.updateMyListStatus`
+ * as the single params object of the unified `(params, options?)` convention.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put
+ */
+export interface MalMangaListStatusUpdateParams extends MalMangaListStatusUpdate {
+    /** The MyAnimeList manga ID. */
+    id: number;
+}
+
+/**
+ * {@link MalMangaDeleteParams} is the params object of the manga list-status delete.
+ *
+ * It carries the API's own inputs for `DELETE /manga/{id}/my_list_status`,
+ * consumed by `MalMangaOperation.deleteFromList` and
+ * `MyAnimeListMangaApi.deleteFromList` as the single params object of the
+ * unified `(params, options?)` convention.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_delete
+ */
+export interface MalMangaDeleteParams {
+    /** The MyAnimeList manga ID. */
+    id: number;
 }
 
 /**

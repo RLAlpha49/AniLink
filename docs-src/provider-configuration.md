@@ -69,7 +69,7 @@ const clients = buildProviderClients({
     mal: { accessToken: "mal-token" },
 });
 
-const anime = await clients.mal.anime.get(21);
+const anime = await clients.mal.anime.get({ id: 21 });
 ```
 
 `buildProviderClients(credentials?, legacyOptions?)` invokes each registered provider factory with only that provider's credential slot. `legacyOptions` exists for the positional form and is forwarded only to the AniList factory — nothing more.

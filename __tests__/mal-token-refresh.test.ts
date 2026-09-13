@@ -146,7 +146,7 @@ describe("MAL automatic token refresh", () => {
         mocks.request.mockRejectedValueOnce(makeAxiosResponseError(401));
         mocks.request.mockResolvedValueOnce({ data: tokenResponse() });
 
-        const [user, anime] = await Promise.all([api.user.me(), api.anime.get(21)]);
+        const [user, anime] = await Promise.all([api.user.me(), api.anime.get({ id: 21 })]);
 
         expect(user).toEqual({ id: 21, title: "Fullmetal Alchemist" });
         expect(anime).toEqual({ id: 21, title: "Fullmetal Alchemist" });
@@ -169,7 +169,7 @@ describe("MAL automatic token refresh", () => {
         mocks.request.mockRejectedValueOnce(makeAxiosResponseError(401));
         mocks.request.mockResolvedValueOnce({ data: tokenResponse() });
 
-        await Promise.all([api.user.me(), api.anime.get(21)]);
+        await Promise.all([api.user.me(), api.anime.get({ id: 21 })]);
 
         expect(tokenEndpointCalls()).toHaveLength(1);
         expect(onTokenRefresh).toHaveBeenCalledTimes(1);

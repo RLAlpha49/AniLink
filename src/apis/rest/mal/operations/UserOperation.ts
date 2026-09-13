@@ -1,11 +1,12 @@
 import { RestOperation } from "../../RestOperation";
+import { AniLinkValidationError } from "../../../../base/AniLinkError";
 import { MAL_API_BASE_URL } from "../constants";
 import type {
     MalRequestOptions,
     MalUser,
-    MalUserAnimeListOptions,
+    MalUserAnimeListParams,
     MalUserAnimeListResponse,
-    MalUserMangaListOptions,
+    MalUserMangaListParams,
     MalUserMangaListResponse,
 } from "../types";
 
@@ -31,6 +32,21 @@ export class MalUserOperation extends RestOperation {
     }
 
     /**
+     * Validates a normalized username before it is interpolated into a URL
+     * path: an empty string would produce a malformed `/users//animelist`
+     * path, so it fails fast with a clear client-side message instead of a
+     * confusing upstream 404 or URL-parse error.
+     *
+     * @param normalized - The trimmed, lowercased username.
+     * @throws An {@link AniLinkValidationError} when the username is empty.
+     */
+    private static requireUsername(normalized: string): void {
+        if (normalized === "") {
+            throw new AniLinkValidationError(["username must be a non-empty user name or @me"]);
+        }
+    }
+
+    /**
      * {@link MalUserOperation.me} gets the currently authenticated MyAnimeList user.
      *
      * It calls `GET /users/@me` through `RestOperation.execute` with `requiresAuth` and returns a {@link MalUser} shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListUserApi.me` and it requires `MalCredentials.accessToken`.
@@ -50,40 +66,42 @@ export class MalUserOperation extends RestOperation {
         return await this.execute<MalUser>("/users/@me", {
             requiresAuth: true,
             transportOptions,
-            query:
-                fields === undefined
-                    ? undefined
-                    : { fields: Array.isArray(fields) ? fields.join(",") : fields },
+            // `buildQueryString` skips undefined values, so `fields` can be
+            // passed straight through.
+            query: { fields: Array.isArray(fields) ? fields.join(",") : fields },
         });
     }
 
     /**
      * {@link MalUserOperation.animeList} gets a user's anime list, one page at a time.
      *
-     * It calls `GET /users/{username}/animelist` through `RestOperation.execute` and returns a {@link MalUserAnimeListResponse} page of {@link MalUserAnimeListEntry} entries shaped by {@link MalUserAnimeListOptions.fields}. The facade alias is `MyAnimeListUserApi.animeList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
+     * It calls `GET /users/{username}/animelist` through `RestOperation.execute` and returns a {@link MalUserAnimeListResponse} page of {@link MalUserAnimeListEntry} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListUserApi.animeList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
      *
-     * @param username - The MyAnimeList user name, or `@me` for the authenticated user (case-insensitive, surrounding whitespace ignored).
-     * @param options - Optional status, sort, paging, field selection, and transport settings; a {@link MalUserAnimeListOptions} merged over the instance defaults.
+     * @param params - The anime-list read inputs; a {@link MalUserAnimeListParams} carrying the username plus the optional status, sort, and paging filters.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The anime list page, a {@link MalUserAnimeListResponse}.
      * @throws An `AniLinkAuthError` when `username` is `@me` and no access token is configured.
+     * @throws An `AniLinkValidationError` when `username` is empty or only whitespace.
      * @throws A normalized `AniLinkError` when the request fails.
      * @example
      * ```typescript
      * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
-     * const list = await api.user.animeList("@me", {
-     *   status: "watching",
-     *   fields: ["id", "title", "list_status"],
-     * });
+     * const list = await api.user.animeList(
+     *   { username: "@me", status: "watching" },
+     *   { fields: ["id", "title", "list_status"] }
+     * );
      * console.log(list.data[0]?.node.title);
      * ```
      * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
      */
     public async animeList(
-        username: string,
-        options: MalUserAnimeListOptions = {}
+        params: MalUserAnimeListParams,
+        options: MalRequestOptions = {}
     ): Promise<MalUserAnimeListResponse> {
-        const { fields, status, sort, limit, offset, ...transportOptions } = options;
+        const { username, status, sort, limit, offset } = params;
+        const { fields, ...transportOptions } = options;
         const normalized = MalUserOperation.normalizeUsername(username);
+        MalUserOperation.requireUsername(normalized);
         return await this.execute<MalUserAnimeListResponse>(
             normalized === "@me" ? "/users/@me/animelist" : "/users/{username}/animelist",
             {
@@ -108,30 +126,33 @@ export class MalUserOperation extends RestOperation {
     /**
      * {@link MalUserOperation.mangaList} gets a user's manga list, one page at a time.
      *
-     * It calls `GET /users/{username}/mangalist` through `RestOperation.execute` and returns a {@link MalUserMangaListResponse} page of {@link MalUserMangaListEntry} entries shaped by {@link MalUserMangaListOptions.fields}. The facade alias is `MyAnimeListUserApi.mangaList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
+     * It calls `GET /users/{username}/mangalist` through `RestOperation.execute` and returns a {@link MalUserMangaListResponse} page of {@link MalUserMangaListEntry} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListUserApi.mangaList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
      *
-     * @param username - The MyAnimeList user name, or `@me` for the authenticated user (case-insensitive, surrounding whitespace ignored).
-     * @param options - Optional status, sort, paging, field selection, and transport settings; a {@link MalUserMangaListOptions} merged over the instance defaults.
+     * @param params - The manga-list read inputs; a {@link MalUserMangaListParams} carrying the username plus the optional status, sort, and paging filters.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The manga list page, a {@link MalUserMangaListResponse}.
      * @throws An `AniLinkAuthError` when `username` is `@me` and no access token is configured.
+     * @throws An `AniLinkValidationError` when `username` is empty or only whitespace.
      * @throws A normalized `AniLinkError` when the request fails.
      * @example
      * ```typescript
      * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
-     * const list = await api.user.mangaList("@me", {
-     *   status: "reading",
-     *   fields: ["id", "title", "list_status"],
-     * });
+     * const list = await api.user.mangaList(
+     *   { username: "@me", status: "reading" },
+     *   { fields: ["id", "title", "list_status"] }
+     * );
      * console.log(list.data[0]?.node.title);
      * ```
      * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
      */
     public async mangaList(
-        username: string,
-        options: MalUserMangaListOptions = {}
+        params: MalUserMangaListParams,
+        options: MalRequestOptions = {}
     ): Promise<MalUserMangaListResponse> {
-        const { fields, status, sort, limit, offset, ...transportOptions } = options;
+        const { username, status, sort, limit, offset } = params;
+        const { fields, ...transportOptions } = options;
         const normalized = MalUserOperation.normalizeUsername(username);
+        MalUserOperation.requireUsername(normalized);
         return await this.execute<MalUserMangaListResponse>(
             normalized === "@me" ? "/users/@me/mangalist" : "/users/{username}/mangalist",
             {

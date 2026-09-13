@@ -96,7 +96,7 @@ export const PROVIDER_FACTORIES = {
  *     anilist: { authToken: "anilist-token" },
  *     mal: { accessToken: "mal-token" },
  * });
- * const anime = await clients.mal.anime.get(21);
+ * const anime = await clients.mal.anime.get({ id: 21 });
  * ```
  */
 export function buildProviderClients(

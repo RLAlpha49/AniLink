@@ -34,9 +34,10 @@ import { AniLink } from "anilink-api-wrapper";
 
 const aniLink = new AniLink({ mal: { accessToken: "mal-token" } });
 
-const anime = await aniLink.mal.anime.get(21, {
-    fields: ["id", "title", "main_picture"],
-});
+const anime = await aniLink.mal.anime.get(
+    { id: 21 },
+    { fields: ["id", "title", "main_picture"] }
+);
 console.log(anime.title);
 ```
 

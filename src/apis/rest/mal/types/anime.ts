@@ -1,4 +1,4 @@
-import type { MalPaging, MalPicture, MalRequestOptions } from "./common";
+import type { MalPaging, MalPicture } from "./common";
 
 /**
  * MyAnimeList anime types: the {@link MalAnime} entity and its broadcast
@@ -269,7 +269,7 @@ export interface MalAnimeListStatus {
  *
  * These are the fixed `sort` query values accepted by
  * `GET /users/{user_name}/animelist`, consumed as the `sort` field of
- * {@link MalUserAnimeListOptions} on `MalUserOperation.animeList` and
+ * {@link MalUserAnimeListParams} on `MalUserOperation.animeList` and
  * `MyAnimeListUserApi.animeList`. `list_score`, `list_updated_at`, and
  * `anime_start_date` sort descending; `anime_title` and `anime_id` sort
  * ascending (`anime_id` is listed as under development by MyAnimeList).
@@ -280,23 +280,77 @@ export type MalAnimeListSort =
     "list_score" | "list_updated_at" | "anime_title" | "anime_start_date" | "anime_id";
 
 /**
- * {@link MalUserAnimeListOptions} is the request options for reading a user's anime list.
+ * {@link MalAnimeGetParams} is the params object of the anime lookup read.
  *
- * It extends {@link MalRequestOptions} with the `status`, `sort`, `limit`, and
- * `offset` query parameters accepted by `GET /users/{user_name}/animelist`,
- * consumed by `MalUserOperation.animeList` and `MyAnimeListUserApi.animeList`.
+ * It carries the API's own inputs for `GET /anime/{id}`, consumed by
+ * `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get` as the single params
+ * object of the unified `(params, options?)` convention.
  *
- * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  */
-export interface MalUserAnimeListOptions extends MalRequestOptions {
-    /** The watch status to filter by; one of {@link MalAnimeListStatusValue}. Omit to return all. */
-    status?: MalAnimeListStatusValue;
-    /** The sort order; one of {@link MalAnimeListSort}. */
-    sort?: MalAnimeListSort;
-    /** The number of entries per page; defaults to 100, capped at 1000 by MyAnimeList. */
-    limit?: number;
-    /** The offset of the first entry; defaults to 0. */
-    offset?: number;
+export interface MalAnimeGetParams {
+    /** The MyAnimeList anime ID. */
+    id: number;
+}
+
+/**
+ * {@link MalSeasonalParams} is the params object of the seasonal anime read.
+ *
+ * It carries the API's own inputs for `GET /anime/season/{year}/{season}`,
+ * consumed by `MalAnimeOperation.seasonal` and `MyAnimeListAnimeApi.seasonal`
+ * as the single params object of the unified `(params, options?)` convention.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
+ */
+export interface MalSeasonalParams {
+    /** The season's year. */
+    year: number;
+    /** The season's broadcast window; one of {@link MalSeason}. */
+    season: MalSeason;
+}
+
+/**
+ * {@link MalRankingParams} is the params object of the anime ranking read.
+ *
+ * It carries the API's own inputs for `GET /anime/ranking`, consumed by
+ * `MalAnimeOperation.ranking` and `MyAnimeListAnimeApi.ranking` as the single
+ * params object of the unified `(params, options?)` convention.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
+ */
+export interface MalRankingParams {
+    /** The ranking list to fetch; one of {@link MalRankingType}. */
+    rankingType: MalRankingType;
+}
+
+/**
+ * {@link MalAnimeListStatusUpdateParams} is the params object of the anime list-status write.
+ *
+ * It extends {@link MalAnimeListStatusUpdate} with the path `id` and carries
+ * every input of `PATCH /anime/{id}/my_list_status`, consumed by
+ * `MalAnimeOperation.updateMyListStatus` and `MyAnimeListAnimeApi.updateMyListStatus`
+ * as the single params object of the unified `(params, options?)` convention.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put
+ */
+export interface MalAnimeListStatusUpdateParams extends MalAnimeListStatusUpdate {
+    /** The MyAnimeList anime ID. */
+    id: number;
+}
+
+/**
+ * {@link MalAnimeDeleteParams} is the params object of the anime list-status delete.
+ *
+ * It carries the API's own inputs for `DELETE /anime/{id}/my_list_status`,
+ * consumed by `MalAnimeOperation.deleteFromList` and
+ * `MyAnimeListAnimeApi.deleteFromList` as the single params object of the
+ * unified `(params, options?)` convention.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete
+ */
+export interface MalAnimeDeleteParams {
+    /** The MyAnimeList anime ID. */
+    id: number;
 }
 
 /**

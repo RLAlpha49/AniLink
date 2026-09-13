@@ -838,24 +838,45 @@ function buildMalOperation(
             name: pname,
             type: pm[3].trim(),
             required: !pm[2],
-            description: malParamDescription(namespace, pname),
+            description: malParamDescription(pname),
         });
         pm = paramRe.exec(params);
     }
     const optionsParam = request.find((r) => r.name === "options");
     if (optionsParam) {
-        optionsParam.nestedFields = malOptionFields(optionsParam.type);
+        // `deleteFromList` resolves with no response body, so `fields` has
+        // nothing to shape there; every other operation documents it.
+        optionsParam.nestedFields =
+            methodName === "deleteFromList"
+                ? malOptionFields().filter((field) => field.name !== "fields")
+                : malOptionFields();
     }
-    const payloadParam = request.find((r) => r.name === "payload");
-    if (payloadParam) {
-        payloadParam.nestedFields = malListStatusUpdateFields(namespace);
+    // The unified `(params, options?)` convention: the params object carries
+    // the API's own inputs. Every method with a `params` argument must be
+    // mapped here — an unmapped method fails the build instead of silently
+    // publishing wrong reference docs.
+    const paramsParam = request.find((r) => r.name === "params");
+    if (paramsParam) {
+        const paramsFields = malParamsFields(namespace, methodName);
+        if (paramsFields === undefined) {
+            throw new Error(
+                `No params fields mapped for mal.${namespace}.${methodName}; add it to malParamsFields.`
+            );
+        }
+        paramsParam.nestedFields = paramsFields;
     }
 
     const errors: ThrowsEntry[] = isPublicRead
         ? [
               // The user-list reads fail fast on `@me` without a token, like `me`.
               ...(methodName === "animeList" || methodName === "mangaList"
-                  ? [{ error: "AniLinkAuthError", condition: "`@me` without an access token" }]
+                  ? [
+                        { error: "AniLinkAuthError", condition: "`@me` without an access token" },
+                        {
+                            error: "AniLinkValidationError",
+                            condition: "empty or whitespace-only `username`",
+                        },
+                    ]
                   : []),
               { error: "AniLinkRestError", condition: "non-success MyAnimeList response" },
               {
@@ -865,6 +886,16 @@ function buildMalOperation(
           ]
         : [
               { error: "AniLinkAuthError", condition: "no MAL access token is configured" },
+              // The list-status writes fail fast on an empty payload, like the
+              // username reads fail fast on an empty username.
+              ...(methodName === "updateMyListStatus"
+                  ? [
+                        {
+                            error: "AniLinkValidationError",
+                            condition: "params carries no list-status field to change",
+                        },
+                    ]
+                  : []),
               { error: "AniLinkRestError", condition: "non-success MyAnimeList response" },
               {
                   error: "AniLinkNetworkError",
@@ -968,7 +999,7 @@ function malExample(namespace: "anime" | "manga" | "user", methodName: string): 
         const id = namespace === "manga" ? 1 : 21;
         return [
             ...header,
-            `const ${entity} = await aniLink.mal.${namespace}.get(${id}, {`,
+            `const ${entity} = await aniLink.mal.${namespace}.get({ id: ${id} }, {`,
             '    fields: ["id", "title", "main_picture", "synopsis"],',
             "});",
             `console.log(${entity}.title);`,
@@ -986,38 +1017,40 @@ function malExample(namespace: "anime" | "manga" | "user", methodName: string): 
     if (methodName === "animeList") {
         return [
             ...header,
-            'const list = await aniLink.mal.user.animeList("@me", {',
-            '    status: "watching",',
-            '    fields: ["id", "title", "list_status"],',
-            "});",
+            "const list = await aniLink.mal.user.animeList(",
+            '    { username: "@me", status: "watching" },',
+            '    { fields: ["id", "title", "list_status"] }',
+            ");",
             "console.log(list.data[0]?.node.title);",
         ].join("\n");
     }
     if (methodName === "mangaList") {
         return [
             ...header,
-            'const list = await aniLink.mal.user.mangaList("@me", {',
-            '    status: "reading",',
-            '    fields: ["id", "title", "list_status"],',
-            "});",
+            "const list = await aniLink.mal.user.mangaList(",
+            '    { username: "@me", status: "reading" },',
+            '    { fields: ["id", "title", "list_status"] }',
+            ");",
             "console.log(list.data[0]?.node.title);",
         ].join("\n");
     }
     if (methodName === "seasonal") {
         return [
             ...header,
-            'const season = await aniLink.mal.anime.seasonal(2024, "winter", {',
-            '    fields: ["id", "title", "main_picture"],',
-            "});",
+            "const season = await aniLink.mal.anime.seasonal(",
+            '    { year: 2024, season: "winter" },',
+            '    { fields: ["id", "title", "main_picture"] }',
+            ");",
             "console.log(season.data[0]?.node.title);",
         ].join("\n");
     }
     if (methodName === "ranking") {
         return [
             ...header,
-            'const top = await aniLink.mal.anime.ranking("airing", {',
-            '    fields: ["id", "title", "mean"],',
-            "});",
+            "const top = await aniLink.mal.anime.ranking(",
+            '    { rankingType: "airing" },',
+            '    { fields: ["id", "title", "mean"] }',
+            ");",
             "console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);",
         ].join("\n");
     }
@@ -1034,7 +1067,8 @@ function malExample(namespace: "anime" | "manga" | "user", methodName: string): 
         if (namespace === "manga") {
             return [
                 ...header,
-                "const status = await aniLink.mal.manga.updateMyListStatus(1, {",
+                "const status = await aniLink.mal.manga.updateMyListStatus({",
+                "    id: 1,",
                 '    status: "reading",',
                 "    num_chapters_read: 10,",
                 "    score: 9,",
@@ -1044,7 +1078,8 @@ function malExample(namespace: "anime" | "manga" | "user", methodName: string): 
         }
         return [
             ...header,
-            "const status = await aniLink.mal.anime.updateMyListStatus(21, {",
+            "const status = await aniLink.mal.anime.updateMyListStatus({",
+            "    id: 21,",
             '    status: "watching",',
             "    num_watched_episodes: 10,",
             "    score: 9,",
@@ -1054,28 +1089,13 @@ function malExample(namespace: "anime" | "manga" | "user", methodName: string): 
     }
     // deleteFromList
     const id = namespace === "manga" ? 1 : 21;
-    return [...header, `await aniLink.mal.${namespace}.deleteFromList(${id});`].join("\n");
+    return [...header, `await aniLink.mal.${namespace}.deleteFromList({ id: ${id} });`].join("\n");
 }
 
 /** Human-readable description for a MAL facade parameter. */
-function malParamDescription(namespace: string, name: string): string {
-    if (name === "id") {
-        return namespace === "manga" ? "The MyAnimeList manga ID." : "The MyAnimeList anime ID.";
-    }
-    if (name === "username") {
-        return "The MyAnimeList user name, or @me for the authenticated user.";
-    }
-    if (name === "year") {
-        return "The season's year.";
-    }
-    if (name === "season") {
-        return "The season's broadcast window (winter, spring, summer, or fall).";
-    }
-    if (name === "rankingType") {
-        return "The ranking list to fetch (all, airing, upcoming, tv, ova, movie, special, bypopularity, or favorite).";
-    }
-    if (name === "payload") {
-        return "The list-status fields to update; only the fields to change, form-encoded for MAL.";
+function malParamDescription(name: string): string {
+    if (name === "params") {
+        return "The operation's own inputs as one typed object; see its nested fields.";
     }
     if (name === "options") {
         return "Optional field selection and transport settings; merged over the instance defaults.";
@@ -1083,50 +1103,124 @@ function malParamDescription(namespace: string, name: string): string {
     return "";
 }
 
-/** The MAL options fields documented on every MAL operation. */
-function malOptionFields(optionsType = ""): ParamField[] {
-    const listFields: ParamField[] =
-        optionsType === "MalUserAnimeListOptions" || optionsType === "MalUserMangaListOptions"
-            ? [
-                  {
-                      name: "status",
-                      type:
-                          optionsType === "MalUserAnimeListOptions"
-                              ? "MalAnimeListStatusValue"
-                              : "MalMangaListStatusValue",
-                      required: false,
-                      description:
-                          optionsType === "MalUserAnimeListOptions"
-                              ? "The watch status to filter by (watching, completed, on_hold, dropped, plan_to_watch); omit to return all."
-                              : "The reading status to filter by (reading, completed, on_hold, dropped, plan_to_read); omit to return all.",
-                  },
-                  {
-                      name: "sort",
-                      type:
-                          optionsType === "MalUserAnimeListOptions"
-                              ? "MalAnimeListSort"
-                              : "MalMangaListSort",
-                      required: false,
-                      description:
-                          "The sort order (list_score, list_updated_at, and the start-date sort are descending; the title and id sorts are ascending).",
-                  },
-                  {
-                      name: "limit",
-                      type: "number",
-                      required: false,
-                      description:
-                          "The number of entries per page; defaults to 100, capped at 1000 by MyAnimeList.",
-                  },
-                  {
-                      name: "offset",
-                      type: "number",
-                      required: false,
-                      description: "The offset of the first entry; defaults to 0.",
-                  },
-              ]
-            : [];
+/**
+ * The nested fields of one MAL method's `params` object, keyed by method
+ * name. Returns `undefined` for methods without a mapping so the caller can
+ * fail loudly instead of documenting a wrong shape.
+ */
+function malParamsFields(
+    namespace: "anime" | "manga" | "user",
+    methodName: string
+): ParamField[] | undefined {
+    switch (methodName) {
+        case "get":
+        case "deleteFromList":
+            return [malIdField(namespace)];
+        case "updateMyListStatus":
+            return [malIdField(namespace), ...malListStatusUpdateFields(namespace)];
+        case "animeList":
+            return [malUsernameField(), ...malListFilterFields("anime")];
+        case "mangaList":
+            return [malUsernameField(), ...malListFilterFields("manga")];
+        case "seasonal":
+            return [malYearField(), malSeasonField()];
+        case "ranking":
+            return [malRankingTypeField()];
+        default:
+            return undefined;
+    }
+}
+
+/** The `id` field of the get/update/delete params objects. */
+function malIdField(namespace: string): ParamField {
+    return {
+        name: "id",
+        type: "number",
+        required: true,
+        description:
+            namespace === "manga" ? "The MyAnimeList manga ID." : "The MyAnimeList anime ID.",
+    };
+}
+
+/** The `username` field of the user-list params objects. */
+function malUsernameField(): ParamField {
+    return {
+        name: "username",
+        type: "string",
+        required: true,
+        description: "The MyAnimeList user name, or @me for the authenticated user.",
+    };
+}
+
+/** The `year` field of the seasonal params object. */
+function malYearField(): ParamField {
+    return {
+        name: "year",
+        type: "number",
+        required: true,
+        description: "The season's year.",
+    };
+}
+
+/** The `season` field of the seasonal params object. */
+function malSeasonField(): ParamField {
+    return {
+        name: "season",
+        type: "MalSeason",
+        required: true,
+        description: "The season's broadcast window (winter, spring, summer, or fall).",
+    };
+}
+
+/** The `rankingType` field of the ranking params object. */
+function malRankingTypeField(): ParamField {
+    return {
+        name: "rankingType",
+        type: "MalRankingType",
+        required: true,
+        description:
+            "The ranking list to fetch (all, airing, upcoming, tv, ova, movie, special, bypopularity, or favorite).",
+    };
+}
+
+/** The status/sort/limit/offset filter fields of the user-list params objects. */
+function malListFilterFields(listKind: "anime" | "manga"): ParamField[] {
+    const isAnime = listKind === "anime";
     return [
-        ...listFields,
+        {
+            name: "status",
+            type: isAnime ? "MalAnimeListStatusValue" : "MalMangaListStatusValue",
+            required: false,
+            description: isAnime
+                ? "The watch status to filter by (watching, completed, on_hold, dropped, plan_to_watch); omit to return all."
+                : "The reading status to filter by (reading, completed, on_hold, dropped, plan_to_read); omit to return all.",
+        },
+        {
+            name: "sort",
+            type: isAnime ? "MalAnimeListSort" : "MalMangaListSort",
+            required: false,
+            description:
+                "The sort order (list_score, list_updated_at, and the start-date sort are descending; the title and id sorts are ascending).",
+        },
+        {
+            name: "limit",
+            type: "number",
+            required: false,
+            description:
+                "The number of entries per page; defaults to 100, capped at 1000 by MyAnimeList.",
+        },
+        {
+            name: "offset",
+            type: "number",
+            required: false,
+            description: "The offset of the first entry; defaults to 0.",
+        },
+    ];
+}
+
+/** The MAL options fields documented on MAL operations. */
+function malOptionFields(): ParamField[] {
+    return [
         {
             name: "fields",
             type: "string | readonly string[]",
