@@ -30,5 +30,5 @@ Every operation entry carries the same anatomy, so once you have read one, you h
 ## Relationship to the other surfaces
 
 - <Icon name="ArrowRight" :size="14" /> **Guides** teach concepts and workflows and link here for per-operation detail.
-- <Icon name="ArrowRight" :size="14" /> **TypeDoc** (the [API reference](/typedoc/AniLink.html)) states the exact contract-level types. The operation reference links to it for full response shapes.
+- <Icon name="ArrowRight" :size="14" /> **TypeDoc** (the [API reference](/typedoc/modules/AniLink.html)) states the exact contract-level types. The operation reference links to it for full response shapes.
 - <Icon name="ArrowRight" :size="14" /> The former interactive Explorer was retired in favor of this catalog — it listed operations but never documented request/response anatomy, and this does both.

@@ -43,4 +43,4 @@ Call AniList or MAL directly and you soon find yourself hand-rolling HTTP, Graph
 
 - <Icon name="ArrowRight" :size="14" /> [Getting started](/getting-started) — install and make your first calls.
 - <Icon name="ArrowRight" :size="14" /> [Operation reference](/operations/index) — look up any operation's full request/response anatomy.
-- <Icon name="ArrowRight" :size="14" /> [API reference](/typedoc/AniLink.html) — exact TypeDoc signatures.
+- <Icon name="ArrowRight" :size="14" /> [API reference](/typedoc/modules/AniLink.html) — exact TypeDoc signatures.

@@ -943,11 +943,17 @@ function buildMalOperation(
     };
 }
 
-/** The TypeDoc interface page name for a MAL namespace. */
+/** The TypeDoc interface page name for a MAL namespace.
+ *
+ * TypeDoc qualifies interface pages with their defining module, so the page
+ * for `MyAnimeListAnimeApi` lives at
+ * `interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html` — not
+ * `interfaces/MyAnimeListAnimeApi.html`.
+ */
 function malTypedocInterface(namespace: string): string {
-    if (namespace === "manga") return "MyAnimeListMangaApi";
-    if (namespace === "user") return "MyAnimeListUserApi";
-    return "MyAnimeListAnimeApi";
+    if (namespace === "manga") return "apis_rest_mal_facade.MyAnimeListMangaApi";
+    if (namespace === "user") return "apis_rest_mal_facade.MyAnimeListUserApi";
+    return "apis_rest_mal_facade.MyAnimeListAnimeApi";
 }
 
 /** The upstream MAL API reference URL for one operation. */

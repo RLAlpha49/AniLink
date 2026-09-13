@@ -29,7 +29,7 @@ console.log(anime.title, anime.main_picture?.large);
 
 **Errors:** `AniLinkRestError` for non-success responses (e.g. `404` unknown ID, `400` invalid fields). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
-**Reference:** [MAL anime details endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
+**Reference:** [MAL anime details endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
 
 ## `mal.user.me(options?)`
 
@@ -52,7 +52,7 @@ console.log(user.name);
 
 **Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `401` expired token), `AniLinkNetworkError`.
 
-**Reference:** [MAL user endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListUserApi.html)
+**Reference:** [MAL user endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListUserApi.html)
 
 ## `mal.user.animeList(params, options?)`
 
@@ -77,7 +77,7 @@ console.log(list.data[0]?.node.title, list.data[0]?.list_status?.score);
 
 **Errors:** `AniLinkAuthError` (`@me` without a token — thrown before any request is sent), `AniLinkValidationError` (empty or whitespace-only `username` — thrown before any request is sent), `AniLinkRestError` for non-success responses (e.g. `400` invalid status or sort, `401` expired token). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
-**Reference:** [MAL user anime list endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListUserApi.html)
+**Reference:** [MAL user anime list endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListUserApi.html)
 
 ## `mal.user.mangaList(params, options?)`
 
@@ -102,7 +102,7 @@ console.log(list.data[0]?.node.title, list.data[0]?.list_status?.score);
 
 **Errors:** `AniLinkAuthError` (`@me` without a token — thrown before any request is sent), `AniLinkValidationError` (empty or whitespace-only `username` — thrown before any request is sent), `AniLinkRestError` for non-success responses (e.g. `400` invalid status or sort, `401` expired token). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
-**Reference:** [MAL user manga list endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListUserApi.html)
+**Reference:** [MAL user manga list endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListUserApi.html)
 
 ## `mal.manga.get(params, options?)`
 
@@ -127,7 +127,7 @@ console.log(manga.title, manga.main_picture?.large);
 
 **Errors:** `AniLinkRestError` for non-success responses (e.g. `404` unknown ID, `400` invalid fields). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
-**Reference:** [MAL manga details endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListMangaApi.html)
+**Reference:** [MAL manga details endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListMangaApi.html)
 
 ## `mal.manga.updateMyListStatus(params, options?)`
 
@@ -154,7 +154,7 @@ console.log(status.num_chapters_read);
 
 **Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `400` invalid fields), `AniLinkNetworkError`. Excess properties on the params object (typos like `num_chapter_read`) are dropped client-side instead of being form-encoded to MAL.
 
-**Reference:** [MAL manga list-status endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListMangaApi.html)
+**Reference:** [MAL manga list-status endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListMangaApi.html)
 
 ## `mal.manga.deleteFromList(params, options?)`
 
@@ -175,7 +175,7 @@ await aniLink.mal.manga.deleteFromList({ id: 1 });
 
 **Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `404` unknown ID), `AniLinkNetworkError`.
 
-**Reference:** [MAL manga list-status delete endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_delete) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListMangaApi.html)
+**Reference:** [MAL manga list-status delete endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_delete) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListMangaApi.html)
 
 ## `mal.anime.seasonal(params, options?)`
 
@@ -200,7 +200,7 @@ console.log(season.data[0]?.node.title, season.data[0]?.node.rank);
 
 **Errors:** `AniLinkRestError` for non-success responses (e.g. `404` unknown season). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
-**Reference:** [MAL seasonal anime endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
+**Reference:** [MAL seasonal anime endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
 
 ## `mal.anime.ranking(params, options?)`
 
@@ -225,7 +225,7 @@ console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);
 
 **Errors:** `AniLinkRestError` for non-success responses (e.g. `400` invalid ranking type). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
-**Reference:** [MAL anime ranking endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
+**Reference:** [MAL anime ranking endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
 
 ## `mal.anime.suggestions(options?)`
 
@@ -248,7 +248,7 @@ console.log(suggestions.data[0]?.node.title);
 
 **Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `401` expired token), `AniLinkNetworkError`.
 
-**Reference:** [MAL anime suggestions endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get) · [TypeDoc](/typedoc/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
+**Reference:** [MAL anime suggestions endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
 
 ## `fields` selection
 
