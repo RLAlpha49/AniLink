@@ -1,5 +1,51 @@
 # Changelog
 
+## [2.3.0](https://github.com/RLAlpha49/AniLink/compare/v2.2.0...v2.3.0) (2026-09-13)
+
+### ✨ Features
+
+* **anilist:** add crossLink helper for bidirectional id mapping ([f198994](https://github.com/RLAlpha49/AniLink/commit/f198994d31b7f6ed2946e0194da80da26a9d63d8))
+* **anilist:** add fields selection with narrowed response types ([2b9ca86](https://github.com/RLAlpha49/AniLink/commit/2b9ca861e15e8c2a6a7a47526733f3bad1c5cdc7))
+* **docs:** gate analytics behind a consent banner ([5cd7f36](https://github.com/RLAlpha49/AniLink/commit/5cd7f366ea7dc47376929175069d6ba35e61f135))
+* **docs:** generate llms.txt from the page inventory ([e4a84b1](https://github.com/RLAlpha49/AniLink/commit/e4a84b1beb4b8ffd37b8397265b44a56fa0c6ce3))
+* **mal:** add anime and manga list reads ([175b61d](https://github.com/RLAlpha49/AniLink/commit/175b61d8bb8e816fa7f8b65c1faf3f58968e8a2b))
+* **mal:** add automatic token refresh on 401 ([531f6ba](https://github.com/RLAlpha49/AniLink/commit/531f6bade76664b4c742dc6815e8f7cef5d76644))
+* **mal:** add default fields to anime get operation ([70a2a20](https://github.com/RLAlpha49/AniLink/commit/70a2a200d7c6df960fa02e8e1329b662b2525df8))
+* **mal:** add seasonal, ranking, and suggestions anime reads ([4ebc0ba](https://github.com/RLAlpha49/AniLink/commit/4ebc0ba61b9592e0310a6f9a453cfa8012958edf))
+
+### 🐛 Bug Fixes
+
+* **anilist:** fail loudly when a paginate itemsKey is missing ([cb4f2f2](https://github.com/RLAlpha49/AniLink/commit/cb4f2f22c34fb87f440ebb6e0f2aae23e3a343e3))
+* **docs:** pin the semantic search embedding model revision ([6795505](https://github.com/RLAlpha49/AniLink/commit/6795505c119e749ecacd9ae6d85e828bee12f94e))
+* **mal:** align response types with the MAL OpenAPI contract ([890fa55](https://github.com/RLAlpha49/AniLink/commit/890fa5577e7bd494b04553726f7ad2443918e56d))
+* **mal:** send the plain PKCE method in the authorization URL ([3af8a33](https://github.com/RLAlpha49/AniLink/commit/3af8a33a1d74cd91522690dcb8688a7d330ec363))
+
+### ♻️ Refactoring
+
+* **anilist:** generate facade group files from the operation registry ([87a054f](https://github.com/RLAlpha49/AniLink/commit/87a054fd0bb76c48b3727d5c1a039658c9668fa1))
+* **mal:** split types into resource-specific files ([8585ab5](https://github.com/RLAlpha49/AniLink/commit/8585ab50ba8a4206f99a9390af394796ff55fd8c))
+
+### 📚 Documentation
+
+* add page descriptions, social card, and git-dated sitemap ([8e0612f](https://github.com/RLAlpha49/AniLink/commit/8e0612f676e160576107b5f3c42b89e09906e3a9))
+* **anilist:** add field selection and complete examples guides ([1885ec0](https://github.com/RLAlpha49/AniLink/commit/1885ec071169a3755950c14664878b6833d6b7f4))
+* **mal:** correct the documented error class to AniLinkRestError ([691a40b](https://github.com/RLAlpha49/AniLink/commit/691a40bcf61ac475858cf613fe10349f716f9815))
+
+### 📦 Build
+
+* lint scripts and docs-site JavaScript ([8330e47](https://github.com/RLAlpha49/AniLink/commit/8330e47774add4fe8621c6e832d2a5faf07b9c20))
+
+### 🔧 CI/CD
+
+* add gitleaks secret scanning to CI ([6f99ff2](https://github.com/RLAlpha49/AniLink/commit/6f99ff208439cdde77a2f90cbb0f1a683dc7282d))
+* compare MAL contracts in CI and rename the drift workflow ([c882748](https://github.com/RLAlpha49/AniLink/commit/c882748d690df6760fe96cc72c7ee68a68d09dd4))
+* deploy docs and gate releases on green CI runs ([6969ed0](https://github.com/RLAlpha49/AniLink/commit/6969ed00e3bd92baf0c8bbfde12d1908b8a9c2ba))
+
+### 🧪 Tests
+
+* **anilist:** accept either name order for the Spike Spiegel fixture ([7cd7238](https://github.com/RLAlpha49/AniLink/commit/7cd72381c3102de1e57dc1498152ea56bf9b671c))
+* typecheck the test suite and generator tooling ([61b215c](https://github.com/RLAlpha49/AniLink/commit/61b215c45ce183273298c014eabefabcbbc0419c))
+
 ## [2.2.0](https://github.com/RLAlpha49/AniLink/compare/v2.1.0...v2.2.0) (2026-09-10)
 
 ### ✨ Features
