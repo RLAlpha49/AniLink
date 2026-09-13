@@ -12,6 +12,7 @@ import {
     ArrowLeft,
     ArrowRight,
     ArrowUpRight,
+    ChevronDown,
     Disc,
     List,
     Menu,
@@ -36,6 +37,58 @@ const isLanding = computed(() => normalizePath(route.path) === "/");
 
 const sidebarOpen = ref(false);
 
+/* ---------------- mobile navigation drawer (R-003) ---------------- */
+
+/** Element to restore focus to when the drawer closes. */
+let lastFocused: HTMLElement | null = null;
+
+/** Close the drawer and hand focus back to the toggle button. */
+function closeSidebar(): void {
+    if (!sidebarOpen.value) return;
+    sidebarOpen.value = false;
+    lastFocused?.focus();
+    lastFocused = null;
+}
+
+/** Open the drawer, remembering the toggle so focus can return to it. */
+function toggleSidebar(): void {
+    if (sidebarOpen.value) {
+        closeSidebar();
+        return;
+    }
+    if (typeof document !== "undefined") {
+        lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
+    sidebarOpen.value = true;
+    // Move focus to the first nav link once the drawer has rendered open.
+    nextTick(() => {
+        if (typeof document === "undefined") return;
+        document.querySelector<HTMLElement>("#docs-rail .docs-nav-link")?.focus();
+    });
+}
+
+/** Close the drawer when Escape is pressed while it is open. */
+function onSidebarKeydown(e: KeyboardEvent): void {
+    if (e.key === "Escape") {
+        closeSidebar();
+    }
+}
+
+// Listen for Escape only while the drawer is open.
+watch(sidebarOpen, (isOpen) => {
+    if (typeof window === "undefined") return;
+    if (isOpen) {
+        window.addEventListener("keydown", onSidebarKeydown);
+    } else {
+        window.removeEventListener("keydown", onSidebarKeydown);
+    }
+});
+
+/* ---------------- collapsible in-page TOC (R-002) ---------------- */
+
+/** Open state of the narrow-viewport "On this page" block. */
+const mobileTocOpen = ref(false);
+
 /** Reset the reading column to the top whenever the page changes. */
 function resetScrollToTop(): void {
     if (typeof window === "undefined") return;
@@ -50,7 +103,8 @@ function resetScrollToTop(): void {
 watch(
     () => route.path,
     () => {
-        sidebarOpen.value = false;
+        closeSidebar();
+        mobileTocOpen.value = false;
         resetScrollToTop();
     }
 );
@@ -273,6 +327,9 @@ onBeforeUnmount(() => {
         window.cancelAnimationFrame(measureFrame);
         measureFrame = null;
     }
+    if (typeof window !== "undefined") {
+        window.removeEventListener("keydown", onSidebarKeydown);
+    }
 });
 
 // Re-measure when the set of TOC entries changes (page navigation).
@@ -310,7 +367,9 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                         type="button"
                         class="docs-menu"
                         aria-label="Toggle navigation"
-                        @click="sidebarOpen = !sidebarOpen"
+                        :aria-expanded="sidebarOpen"
+                        aria-controls="docs-rail"
+                        @click="toggleSidebar"
                     >
                         <Menu :size="18" aria-hidden="true" />
                     </button>
@@ -359,8 +418,16 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                 </div>
             </header>
 
+            <!-- Scrim behind the mobile drawer; click closes it. -->
+            <div
+                v-if="sidebarOpen"
+                class="docs-rail-scrim"
+                aria-hidden="true"
+                @click="closeSidebar"
+            ></div>
+
             <div class="docs-columns">
-                <aside class="docs-rail" :class="{ 'is-open': sidebarOpen }">
+                <aside id="docs-rail" class="docs-rail" :class="{ 'is-open': sidebarOpen }">
                     <nav class="docs-nav" aria-label="Documentation">
                         <div v-for="group in NAV_GROUPS" :key="group.title" class="docs-nav-group">
                             <p class="docs-nav-title">{{ group.title }}</p>
@@ -456,6 +523,38 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                     class="docs-main"
                     :class="{ 'docs-main--landing': isLanding }"
                 >
+                    <!--
+                        Narrow-viewport replacement for the sidebar TOC: a
+                        collapsible "On this page" block shown below 1080px,
+                        where the .docs-toc aside is hidden. Reuses the same
+                        tocHeaders model and scrollToHeading handler.
+                    -->
+                    <div v-if="showToc" class="docs-toc-mobile">
+                        <button
+                            type="button"
+                            class="docs-toc-mobile-toggle"
+                            :aria-expanded="mobileTocOpen"
+                            @click="mobileTocOpen = !mobileTocOpen"
+                        >
+                            <List :size="14" aria-hidden="true" /> 目次 · Contents
+                            <ChevronDown
+                                class="docs-toc-mobile-chevron"
+                                :size="13"
+                                aria-hidden="true"
+                            />
+                        </button>
+                        <ul v-if="mobileTocOpen" class="docs-toc-mobile-list">
+                            <li v-for="h in tocHeaders" :key="h.id">
+                                <a
+                                    :href="`#${h.id}`"
+                                    :class="[`depth-${h.level}`]"
+                                    @click="scrollToHeading(h.id, $event)"
+                                    >{{ h.title }}</a
+                                >
+                            </li>
+                        </ul>
+                    </div>
+
                     <Home v-if="isLanding" />
                     <NotFound v-else-if="isNotFound" />
                     <article v-else class="doc-content docs-doc">
@@ -1448,13 +1547,98 @@ html.dark .docs :deep(.provider-tabs .tab-btn--mal.active) {
 
 /* ---------------- responsive ---------------- */
 
+/* Collapsible in-page TOC shown only where the sidebar TOC is hidden. */
+.docs-toc-mobile {
+    display: none;
+    margin-bottom: 1.75rem;
+    border: 1px solid var(--rd-border);
+    background: color-mix(in srgb, var(--rd-bg-soft) 45%, transparent);
+}
+
+.docs-toc-mobile-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: "Zen Old Mincho", "Shippori Mincho", serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rd-text-soft);
+}
+
+.docs-toc-mobile-toggle:hover {
+    color: var(--rd-accent);
+}
+
+.docs-toc-mobile-chevron {
+    margin-left: auto;
+    transition: transform 0.18s ease;
+}
+
+.docs-toc-mobile-toggle[aria-expanded="true"] .docs-toc-mobile-chevron {
+    transform: rotate(180deg);
+}
+
+.docs-toc-mobile-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.35rem 0.9rem 0.75rem;
+    border-top: 1px solid var(--rd-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.docs-toc-mobile-list a {
+    display: block;
+    padding: 0.18rem 0;
+    color: var(--rd-text-soft);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.docs-toc-mobile-list a:hover {
+    color: var(--rd-text);
+}
+
+.docs-toc-mobile-list a.depth-3 {
+    padding-left: 1.1rem;
+}
+
+/* Scrim behind the mobile navigation drawer. */
+.docs-rail-scrim {
+    display: none;
+}
+
 @media (max-width: 1080px) {
     .docs-toc {
         display: none;
     }
+
+    .docs-toc-mobile {
+        display: block;
+    }
 }
 
 @media (max-width: 880px) {
+    .docs-rail-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        top: var(--docs-top-height);
+        z-index: 30;
+        background: color-mix(in srgb, var(--rd-bg) 30%, rgba(0, 0, 0, 0.45));
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+    }
+
     .docs-body {
         z-index: auto;
     }
