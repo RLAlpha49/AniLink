@@ -19,6 +19,10 @@ The site uses Google Analytics 4 to understand which pages are read and how visi
 - Declining — or ignoring the banner — leaves measurement off. Declining later also deletes any `_ga` cookies that were set while consent was granted. If you had previously accepted, the already-loaded analytics library may still send cookieless, identifier-free pings after you decline; these pings set no cookies and cannot identify you across visits.
 - Accepting grants **analytics only**: the advertising signals (`ad_storage`, `ad_user_data`, `ad_personalization`) stay permanently denied because the docs run no ads and build no personalization profiles.
 
+## Fonts
+
+The docs load their typefaces — Shippori Mincho, Zen Old Mincho, IBM Plex Sans, and JetBrains Mono — from Google Fonts: the stylesheet from fonts.googleapis.com and the font files from fonts.gstatic.com. These requests happen on every page load, before any consent choice, because the fonts are part of the page's layout and load with the page itself so text renders styled from first paint. As with any network request, they expose your IP address and browser metadata to Google. The font requests use no cookies or application storage, but your browser may cache the downloaded stylesheet and font files.
+
 ## What is not collected
 
 - No advertising or personalization profiles.
@@ -29,12 +33,12 @@ The site uses Google Analytics 4 to understand which pages are read and how visi
 
 The docs site also stores two strictly-necessary, analytics-free preferences in localStorage:
 
-| Key | Purpose |
-| --- | --- |
-| `anilink-docs-theme` | Remembers your light/dark theme choice. |
+| Key                     | Purpose                                                |
+| ----------------------- | ------------------------------------------------------ |
+| `anilink-docs-theme`    | Remembers your light/dark theme choice.                |
 | `anilink-search-recent` | Remembers your last five search queries, locally only. |
 
-The semantic-search model weights are cached by your browser (Cache API) so repeat searches do not re-download the model. That cache contains no personal data. On your **first search**, the search runtime fetches the embedding library from cdn.jsdelivr.net and the model weights from the Hugging Face CDN. Your search queries and the document content stay in your browser, and the model runs entirely there; as with any network request, however, both CDN providers receive standard request metadata such as your IP address and browser information.
+The semantic-search model weights are cached by your browser (Cache API) so repeat searches do not re-download the model. That cache contains no personal data. When the fetches happen depends on the surface: the API reference loads the embedding library (from cdn.jsdelivr.net) and the model weights (from the Hugging Face CDN) when you open its search dialog, before you type anything; the main docs site loads only its small first-party search index when you open the search dialog and defers the library and model weights until your first submitted search. Your search queries and the document content stay in your browser, and the model runs entirely there; as with any network request, however, both CDN providers receive standard request metadata such as your IP address and browser information.
 
 ## Contact
 
