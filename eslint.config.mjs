@@ -32,6 +32,22 @@ export default [
     ...prettierConfig,
   },
   {
+    // Underscore-prefixed parameters mark intentionally-unused mock signatures
+    // (test doubles that mirror a transport's arity without consuming every
+    // argument); the prefix documents the intent at the declaration site.
+    files: ['src/**/*.ts', '__tests__/**/*.ts', 'scripts/**/*.ts', 'lib/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
+  {
     files: ['__tests__/**/*.ts', 'scripts/**/*.ts', '*.ts'],
     languageOptions: {
       parser,

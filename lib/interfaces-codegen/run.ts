@@ -5,7 +5,7 @@
  * lives in the CLI script so this module stays testable.
  */
 
-import { GENERATED_FILE_HEADER, applyGeneratedRegion, renderRegion } from "./emit";
+import { applyGeneratedRegion, renderRegion } from "./emit";
 import {
     resolveExportSpec,
     type ExportSpec,
@@ -74,7 +74,7 @@ export function buildGeneratedFiles(input: BuildInput): Map<string, string> {
         const inner = renderRegion(types, imports);
         // applyGeneratedRegion owns ALL marker placement for both modes.
         const content = applyGeneratedRegion(
-            output.mode === "region" ? input.existingContents?.get(output.path) ?? "" : "",
+            output.mode === "region" ? (input.existingContents?.get(output.path) ?? "") : "",
             inner
         );
         files.set(output.path, content);
@@ -84,11 +84,11 @@ export function buildGeneratedFiles(input: BuildInput): Map<string, string> {
 
 function parseSchemaIndex(schemaJson: unknown): SchemaIndex {
     const candidate = schemaJson as
-        | { __schema?: { types?: unknown }; data?: { __schema?: { types?: unknown } } }
-        | undefined;
+        { __schema?: { types?: unknown }; data?: { __schema?: { types?: unknown } } } | undefined;
     const root = candidate?.data?.__schema ?? candidate?.__schema;
     const types = root?.types;
-    if (!Array.isArray(types)) throw new Error("invalid introspection JSON: missing __schema.types");
+    if (!Array.isArray(types))
+        throw new Error("invalid introspection JSON: missing __schema.types");
     const index: SchemaIndex = new Map();
     for (const type of types as IntrospectionType[]) {
         if (type?.name) index.set(type.name, type);

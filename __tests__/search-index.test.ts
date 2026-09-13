@@ -167,7 +167,9 @@ describe("chunkOperations", () => {
                     auth: "Not required.",
                     request: [{ name: "id", type: "number", required: true, description: "ID" }],
                     responseType: "MediaResponse",
-                    response: [{ name: "id", type: "number", description: "The id" }],
+                    response: [
+                        { name: "id", type: "number", required: true, description: "The id" },
+                    ],
                     errors: [{ error: "AniLinkApiError", condition: "bad response" }],
                     example: "await aniLink.anilist.query.media({ id: 1 });",
                     links: [],

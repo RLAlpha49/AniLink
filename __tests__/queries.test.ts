@@ -208,7 +208,11 @@ test("flattenMediaListCollection helper flattens list groups from the facade", (
         ],
         hasNextChunk: false,
     };
-    const entries = client.anilist.flattenMediaListCollection(collection);
+    // The fixture carries only the fields the flatten helper reads; cast
+    // once at the boundary instead of spelling out the full Media shape.
+    const entries = client.anilist.flattenMediaListCollection(
+        collection as unknown as Parameters<typeof client.anilist.flattenMediaListCollection>[0]
+    );
     expect(entries).toHaveLength(1);
     expect(entries[0].listNames).toEqual(["Completed"]);
     expect(entries[0].mediaId).toBe(100);

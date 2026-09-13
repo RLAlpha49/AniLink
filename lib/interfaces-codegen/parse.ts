@@ -88,7 +88,7 @@ function parseBody(body: string): ParseResult {
         }
         // The identifier before an optional `:` is the GraphQL alias and the
         // property name the response actually carries.
-        let fieldName = identifier[0];
+        const fieldName = identifier[0];
         index += fieldName.length;
         const alias = /^\s*:\s*([A-Za-z_]\w*)/.exec(body.slice(index));
         if (alias) index += alias.index + alias[0].length;

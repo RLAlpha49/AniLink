@@ -4,6 +4,7 @@ import {
     type FragmentDefinitionNode,
     type InlineFragmentNode,
     type OperationDefinitionNode,
+    type TypeNode,
 } from "graphql";
 import { INLINE_FRAGMENT_NAME, type SelectionNode, type VariableDefinition } from "./types";
 
@@ -109,7 +110,7 @@ function collectFragmentDefinitions(document: string): Map<string, FragmentDefin
     return definitions;
 }
 
-function printType(type: OperationDefinitionNode["variableDefinitions"][number]["type"]): string {
+function printType(type: TypeNode): string {
     if (type.kind === "NamedType") return type.name.value;
     if (type.kind === "ListType") return `[${printType(type.type)}]`;
     return `${printType(type.type)}!`;

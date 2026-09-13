@@ -44,6 +44,11 @@ class TestAnimeOperation extends RestOperation {
             pathParams: { id },
         });
     }
+
+    /** Test-only exposure of the protected pipeline for seam tests. */
+    async executePublic(path: string, options?: RestExecuteOptions): Promise<unknown> {
+        return await this.execute(path, options);
+    }
 }
 
 /** The Axios config captured from the most recent request call. */
@@ -85,7 +90,9 @@ describe("REST transport seam", () => {
     test("path placeholders are substituted and percent-encoded", async () => {
         // Drive the library's {placeholder} mechanism with a value that
         // requires encoding, instead of interpolating the URL in the test.
-        await new TestAnimeOperation().execute("/anime/{id}", {
+        // `execute` is protected on the base class; the test subclass exposes
+        // it so the seam suite can drive the pipeline directly.
+        await new TestAnimeOperation().executePublic("/anime/{id}", {
             pathParams: { id: "one piece/21" },
         });
 

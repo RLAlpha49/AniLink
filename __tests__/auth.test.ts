@@ -16,14 +16,34 @@ import {
 } from "../src/base/AniLinkError";
 
 const mocks = vi.hoisted(() => {
-    const request = vi.fn(async () => ({
-        data: {
-            access_token: "new-access-token",
-            token_type: "Bearer",
-            expires_in: 31536000,
-            refresh_token: "new-refresh-token",
-        },
-    }));
+    /** The Axios request config the token pipeline builds; captured per call. */
+    interface CapturedTokenConfig {
+        url?: string;
+        method?: string;
+        data?: unknown;
+        headers?: Record<string, string>;
+        timeout?: number;
+        signal?: AbortSignal;
+    }
+
+    /** The token-endpoint response shape; `refresh_token` may be absent. */
+    interface TokenResponseData {
+        access_token: string;
+        token_type: string;
+        expires_in: number;
+        refresh_token?: string;
+    }
+
+    const request = vi.fn(
+        async (_config: CapturedTokenConfig): Promise<{ data: TokenResponseData }> => ({
+            data: {
+                access_token: "new-access-token",
+                token_type: "Bearer",
+                expires_in: 31536000,
+                refresh_token: "new-refresh-token",
+            },
+        })
+    );
     const create = vi.fn(() => request);
     const isAxiosError = vi.fn((error: unknown) =>
         Boolean((error as { isAxiosError?: boolean } | null)?.isAxiosError)

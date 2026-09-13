@@ -141,7 +141,10 @@ describe("resolveMalCredentials property tests", () => {
                     expect(options).not.toHaveProperty("clientSecret");
 
                     // The access token reaches the auth slot, not the options.
-                    expect(resolved.auth?.token).toBe(creds.accessToken);
+                    // The auth slot is a RequestAuthInput union; the object
+                    // form is the only one that can carry the token here.
+                    const auth = typeof resolved.auth === "object" ? resolved.auth : undefined;
+                    expect(auth?.token).toBe(creds.accessToken);
                 }
             )
         );
@@ -156,7 +159,8 @@ describe("resolveMalCredentials property tests", () => {
                 }),
                 (creds) => {
                     const resolved = resolveMalCredentials(creds);
-                    expect(resolved.auth?.headers?.["X-MAL-CLIENT-ID"]).toBe(creds.clientId);
+                    const auth = typeof resolved.auth === "object" ? resolved.auth : undefined;
+                    expect(auth?.headers?.["X-MAL-CLIENT-ID"]).toBe(creds.clientId);
                     expect(resolved.options ?? {}).not.toHaveProperty("clientId");
                 }
             )

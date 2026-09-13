@@ -49,8 +49,14 @@ describe("ANILIST_OPERATION_REGISTRY", () => {
         for (const category of ["query", "page", "mutation"] as const) {
             for (const entry of ANILIST_OPERATION_REGISTRY[category]) {
                 const method = entry.methodName ?? entry.name;
+                // The registry unions every operation class; index the
+                // prototype through the shared record shape the wiring uses.
+                const prototype = entry.operationClass.prototype as unknown as Record<
+                    string,
+                    unknown
+                >;
                 expect(
-                    typeof entry.operationClass.prototype[method],
+                    typeof prototype[method],
                     `${facadePath(category, entry.name)} must expose "${method}"`
                 ).toBe("function");
             }

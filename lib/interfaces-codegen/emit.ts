@@ -41,19 +41,17 @@ export function renderTypeDeclaration(type: GeneratedType): string {
         .map((property) => {
             const lines: string[] = [];
             if (property.description) {
-                lines.push("    /**", `     * ${sanitizeDescription(property.description)}`, "     */");
+                lines.push(
+                    "    /**",
+                    `     * ${sanitizeDescription(property.description)}`,
+                    "     */"
+                );
             }
             lines.push(`    ${property.name}${property.optional ? "?" : ""}: ${property.tsType};`);
             return lines.join("\n");
         })
         .join("\n\n");
-    return [
-        ...doc,
-        `export interface ${type.name} {`,
-        properties,
-        "}",
-        "",
-    ].join("\n");
+    return [...doc, `export interface ${type.name} {`, properties, "}", ""].join("\n");
 }
 
 function sanitizeDescription(description: string): string {
@@ -69,11 +67,12 @@ export function renderRegion(
     imports: Array<{ names: string[]; from: string }>
 ): string {
     const importLines = imports
-        .map((entry) => `import { type ${[...entry.names].sort().join(", type ")} } from "${entry.from}";`)
+        .map(
+            (entry) =>
+                `import { type ${[...entry.names].sort().join(", type ")} } from "${entry.from}";`
+        )
         .join("\n");
-    return [importLines, ...types.map(renderTypeDeclaration)]
-        .join("\n")
-        .replace(/\n{3,}/g, "\n\n");
+    return [importLines, ...types.map(renderTypeDeclaration)].join("\n").replace(/\n{3,}/g, "\n\n");
 }
 
 /**
@@ -129,7 +128,10 @@ export function pruneSupersededContent(source: string, generatedNames: Set<strin
     visit(sourceFile);
 
     let pruned = source;
-    for (const range of removals.toSorted((a, b) => b.start - a.start)) {
+    // Copy-then-sort (not `toSorted`) so the file typechecks under the
+    // ES2022 lib target; the sort is descending by start so earlier spans
+    // stay valid as later ones are excised first.
+    for (const range of [...removals].sort((a, b) => b.start - a.start)) {
         pruned = pruned.slice(0, range.start) + pruned.slice(range.end);
     }
 
@@ -140,12 +142,12 @@ export function pruneSupersededContent(source: string, generatedNames: Set<strin
         if (!ts.isImportDeclaration(statement) || !statement.importClause?.namedBindings) continue;
         if (!ts.isNamedImports(statement.importClause.namedBindings)) continue;
         const rest = `${pruned.slice(0, statement.getStart())}${pruned.slice(statement.end)}`;
-        const allUnused = statement.importClause.namedBindings.elements.every((element) =>
-            !new RegExp(String.raw`\b${element.name.text}\b`).test(rest)
+        const allUnused = statement.importClause.namedBindings.elements.every(
+            (element) => !new RegExp(String.raw`\b${element.name.text}\b`).test(rest)
         );
         if (allUnused) importRemovals.push({ start: statement.getFullStart(), end: statement.end });
     }
-    for (const range of importRemovals.toSorted((a, b) => b.start - a.start)) {
+    for (const range of [...importRemovals].sort((a, b) => b.start - a.start)) {
         pruned = pruned.slice(0, range.start) + pruned.slice(range.end);
     }
     return pruned.replace(/\n{3,}/g, "\n\n").replace(/\s+$/, "\n");

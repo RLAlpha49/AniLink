@@ -555,7 +555,7 @@ describe("request lifecycle hooks", () => {
         const onRequestStart = vi.fn(() => {
             events.push("start");
         });
-        const onResponse = vi.fn(() => {
+        const onResponse = vi.fn((_context: unknown) => {
             events.push("response");
         });
 
@@ -575,9 +575,12 @@ describe("request lifecycle hooks", () => {
             attempt: 1,
         });
         expect(onResponse).toHaveBeenCalledTimes(1);
-        const [responseContext] = onResponse.mock.calls[0] as [
-            { url: string; method: string; attempt: number; durationMs: number },
-        ];
+        const responseContext = onResponse.mock.calls[0]?.[0] as {
+            url: string;
+            method: string;
+            attempt: number;
+            durationMs: number;
+        };
         expect(responseContext).toMatchObject({
             url: "https://graphql.anilist.co",
             method: "POST",

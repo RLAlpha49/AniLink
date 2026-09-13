@@ -1,5 +1,25 @@
 import { describe, expect, test } from "vitest";
-import { fetchCursorChain, fetchWithLookAhead, type LookAheadEntry } from "../src/base/pagination";
+import { fetchCursorChain, fetchWithLookAhead } from "../src/base/pagination";
+
+/**
+ * The fixture page shape these tests fetch: a cursor page carrying items, a
+ * has-more flag, and the next cursor key. `nextKey` is required on the type
+ * (the driver's next-key extractor returns it); the {@link page} factory
+ * defaults it to `""` so terminal pages never need to spell one out.
+ */
+interface LookAheadEntry {
+    items: string[];
+    hasMore: boolean;
+    nextKey: string;
+}
+
+/** A fixture page with the next key defaulted for terminal entries. */
+const page = (
+    entry: Omit<LookAheadEntry, "nextKey"> & Partial<Pick<LookAheadEntry, "nextKey">>
+): LookAheadEntry => ({
+    nextKey: "",
+    ...entry,
+});
 
 /**
  * Cursor-aware look-ahead driver suite.
@@ -15,15 +35,15 @@ describe("fetchWithLookAhead cursor keys", () => {
     test("uses each entry's nextKey for the following request", async () => {
         const requestedKeys: (string | number)[] = [];
         const pages: Record<string, LookAheadEntry> = {
-            start: { items: ["a"], hasMore: true, nextKey: "cursor-1" },
-            "cursor-1": { items: ["b"], hasMore: true, nextKey: "cursor-2" },
-            "cursor-2": { items: ["c"], hasMore: false },
+            start: page({ items: ["a"], hasMore: true, nextKey: "cursor-1" }),
+            "cursor-1": page({ items: ["b"], hasMore: true, nextKey: "cursor-2" }),
+            "cursor-2": page({ items: ["c"], hasMore: false }),
         };
 
         const result = await fetchWithLookAhead<LookAheadEntry, string>(
             async (key) => {
                 requestedKeys.push(key);
-                return pages[String(key)] ?? { items: [], hasMore: false };
+                return pages[String(key)] ?? page({ items: [], hasMore: false });
             },
             (response) => response.hasMore,
             (response) => response.nextKey,
@@ -43,7 +63,12 @@ describe("fetchWithLookAhead cursor keys", () => {
 
     test("numeric keys keep the existing page-number behavior", async () => {
         const requestedKeys: number[] = [];
-        const result = await fetchWithLookAhead<LookAheadEntry, number>(
+        // The numeric-key variant carries number keys, so it gets its own
+        // entry shape rather than reusing the string-key fixture type.
+        const result = await fetchWithLookAhead<
+            { items: number[]; hasMore: boolean; nextKey: number },
+            number
+        >(
             async (key) => {
                 requestedKeys.push(key);
                 return {
@@ -71,7 +96,7 @@ describe("fetchWithLookAhead cursor keys", () => {
                 requestedKeys.push(String(key));
                 // Terminal entry still carries a stale nextKey; the driver
                 // must ignore it once hasMore is false.
-                return { items: ["x"], hasMore: false, nextKey: "never" };
+                return page({ items: ["x"], hasMore: false, nextKey: "never" });
             },
             (response) => response.hasMore,
             (response) => response.nextKey,
@@ -88,7 +113,10 @@ describe("fetchWithLookAhead cursor keys", () => {
 describe("fetchWithLookAhead legacy numeric contract", () => {
     test("without extractNextKey, advances by slot arithmetic from startNumber", async () => {
         const requestedKeys: number[] = [];
-        const result = await fetchWithLookAhead<{ n: number; more: boolean }>(
+        // The legacy call shape routes through the cursor overload with an
+        // explicit `undefined` extractor; the implementation then falls back
+        // to numeric slot arithmetic from the first key.
+        const result = await fetchWithLookAhead<{ n: number; more: boolean }, number>(
             async (key) => {
                 requestedKeys.push(key);
                 return { n: key, more: key < 3 };
@@ -108,15 +136,15 @@ describe("fetchWithLookAhead legacy numeric contract", () => {
 describe("fetchCursorChain (direct)", () => {
     test("returns the two-page cursor-chain contract for both call shapes", async () => {
         const pages: Record<string, LookAheadEntry> = {
-            start: { items: ["a"], hasMore: true, nextKey: "cursor-1" },
-            "cursor-1": { items: ["b"], hasMore: false },
+            start: page({ items: ["a"], hasMore: true, nextKey: "cursor-1" }),
+            "cursor-1": page({ items: ["b"], hasMore: false }),
         };
         const requestedKeys: string[] = [];
 
         const viaLegacy = await fetchWithLookAhead<LookAheadEntry, string>(
             async (key) => {
                 requestedKeys.push(key);
-                return pages[String(key)] ?? { items: [], hasMore: false };
+                return pages[String(key)] ?? page({ items: [], hasMore: false });
             },
             (response) => response.hasMore,
             (response) => response.nextKey,
@@ -125,7 +153,7 @@ describe("fetchCursorChain (direct)", () => {
             2
         );
         const viaDirect = await fetchCursorChain(
-            async (key) => pages[String(key)] ?? { items: [], hasMore: false },
+            async (key) => pages[String(key)] ?? page({ items: [], hasMore: false }),
             (response) => response.hasMore,
             (response) => response.nextKey,
             "start",
@@ -139,8 +167,8 @@ describe("fetchCursorChain (direct)", () => {
         // regression cannot hide behind the comparison.
         const expected = {
             responses: [
-                { items: ["a"], hasMore: true, nextKey: "cursor-1" },
-                { items: ["b"], hasMore: false },
+                page({ items: ["a"], hasMore: true, nextKey: "cursor-1" }),
+                page({ items: ["b"], hasMore: false }),
             ],
             count: 2,
             truncated: false,

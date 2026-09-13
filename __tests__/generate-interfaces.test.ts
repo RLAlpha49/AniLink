@@ -7,6 +7,9 @@ import {
 import {
     resolveExportSpec,
     type ExportSpec,
+    type GeneratedType,
+    type PropertyModel,
+    type ResolveContext,
     type SchemaIndex,
 } from "../lib/interfaces-codegen/model";
 import { applyGeneratedRegion, renderTypeDeclaration } from "../lib/interfaces-codegen/emit";
@@ -191,7 +194,38 @@ describe("stripOperationWrapper", () => {
 });
 
 function schemaIndex(entries: Record<string, object>): SchemaIndex {
-    return new Map(Object.entries(entries));
+    return new Map(Object.entries(entries)) as unknown as SchemaIndex;
+}
+
+/**
+ * Builds a {@link ResolveContext} for tests from named parts: `constants`,
+ * `schema`, and optionally `operations` and `exportsByConstant`. The indexes
+ * a case does not supply are defaulted empty. Named parameters keep the
+ * schema and the export map from being confused positionally.
+ */
+function resolveContext(parts: {
+    constants: Map<string, string>;
+    schema: SchemaIndex;
+    operations?: Map<string, string>;
+    exportsByConstant?: Map<string, string>;
+}): ResolveContext {
+    return {
+        constants: parts.constants,
+        operations: parts.operations ?? new Map(),
+        exportsByConstant: parts.exportsByConstant ?? new Map(),
+        schema: parts.schema,
+    };
+}
+
+/** A {@link GeneratedType} fixture with the referenced-types set defaulted. */
+function generatedType(type: Omit<GeneratedType, "referencedTypes">): GeneratedType {
+    return { ...type, referencedTypes: new Set() };
+}
+
+/** The interface-kind properties of a resolved type; the fixtures resolve interface specs. */
+function propsOf(type: GeneratedType): PropertyModel[] {
+    if (type.properties === undefined) throw new Error("fixture expected interface properties");
+    return type.properties;
 }
 
 describe("resolveExportSpec", () => {
@@ -219,13 +253,17 @@ describe("resolveExportSpec", () => {
                 fields: Object.values(mediaListFields),
             },
         });
-        const result = resolveExportSpec(baseSpec, {
-            constants: new Map([["MediaListEntrySchema", "id\nstatus"]]),
-            schema,
-        });
-        expect(result.properties.map((property) => `${property.name}: ${property.tsType}`)).toEqual(
-            ["id: number", "status: string"]
+        const result = resolveExportSpec(
+            baseSpec,
+            resolveContext({
+                constants: new Map([["MediaListEntrySchema", "id\nstatus"]]),
+                schema: schema,
+            })
         );
+        expect(propsOf(result).map((property) => `${property.name}: ${property.tsType}`)).toEqual([
+            "id: number",
+            "status: string",
+        ]);
     });
 
     it("maps list-typed fields to array types", () => {
@@ -254,9 +292,9 @@ describe("resolveExportSpec", () => {
                 graphqlType: "User",
                 source: { constant: "UserSchema" },
             },
-            { constants: new Map([["UserSchema", "bans"]]), schema }
+            resolveContext({ constants: new Map([["UserSchema", "bans"]]), schema: schema })
         );
-        expect(result.properties[0].tsType).toBe("string[]");
+        expect(propsOf(result)[0].tsType).toBe("string[]");
     });
 
     it("honors nested field type overrides for enums", () => {
@@ -282,9 +320,12 @@ describe("resolveExportSpec", () => {
                 source: { constant: "UserSchema" },
                 fieldTypes: { "options.titleLanguage": { tsType: "UserTitleLanguage" } },
             },
-            { constants: new Map([["UserSchema", "options {\n  titleLanguage\n}"]]), schema }
+            resolveContext({
+                constants: new Map([["UserSchema", "options {\n  titleLanguage\n}"]]),
+                schema: schema,
+            })
         );
-        expect(result.properties[0].tsType).toContain("titleLanguage: UserTitleLanguage");
+        expect(propsOf(result)[0].tsType).toContain("titleLanguage: UserTitleLanguage");
     });
 
     it("emits a named reference when a sub-selection is a single interpolated constant", () => {
@@ -302,17 +343,17 @@ describe("resolveExportSpec", () => {
                 graphqlType: "Media",
                 source: { constant: "MediaWithRelationsSchema" },
             },
-            {
+            resolveContext({
                 constants: new Map([
                     ["FuzzyDateSchema", "year\nmonth\nday"],
                     ["MediaWithRelationsSchema", "startDate {\n  ${FuzzyDateSchema}\n}"],
                 ]),
+                schema: schema,
                 exportsByConstant: new Map([["FuzzyDateSchema", "FuzzyDate"]]),
-                schema,
-            }
+            })
         );
         expect(result.referencedTypes).toContain("FuzzyDate");
-        expect(result.properties[0].tsType).toBe("FuzzyDate");
+        expect(propsOf(result)[0].tsType).toBe("FuzzyDate");
     });
 
     it("inlines ad-hoc sub-selections as nested object literals", () => {
@@ -349,16 +390,16 @@ describe("resolveExportSpec", () => {
                 graphqlType: "AiringNotification",
                 source: { constant: "AiringNotificationSchema" },
             },
-            {
+            resolveContext({
                 constants: new Map([
                     ["AiringNotificationSchema", "media {\n  id\n  title {\n    romaji\n  }\n}"],
                 ]),
-                schema,
-            }
+                schema: schema,
+            })
         );
-        expect(result.properties[0].tsType).toContain("id: number;");
-        expect(result.properties[0].tsType).toContain("title:");
-        expect(result.properties[0].tsType).toContain("romaji: string");
+        expect(propsOf(result)[0].tsType).toContain("id: number;");
+        expect(propsOf(result)[0].tsType).toContain("title:");
+        expect(propsOf(result)[0].tsType).toContain("romaji: string");
     });
 
     it("wraps bare interpolated constants in their GraphQL list type", () => {
@@ -387,16 +428,16 @@ describe("resolveExportSpec", () => {
                 graphqlType: "Media",
                 source: { constant: "MediaWithRelationsSchema" },
             },
-            {
+            resolveContext({
                 constants: new Map([
                     ["ExternalLinkSchema", "externalLinks {\n  id\n  url\n}"],
                     ["MediaWithRelationsSchema", "${ExternalLinkSchema}"],
                 ]),
+                schema: schema,
                 exportsByConstant: new Map([["ExternalLinkSchema", "ExternalLink"]]),
-                schema,
-            }
+            })
         );
-        expect(result.properties[0].tsType).toBe("ExternalLink[]");
+        expect(propsOf(result)[0].tsType).toBe("ExternalLink[]");
     });
 
     it("synthesizes a property description when the snapshot has none", () => {
@@ -420,16 +461,16 @@ describe("resolveExportSpec", () => {
                 graphqlType: "SiteStatistics",
                 source: { constant: "SiteStatisticsSchema" },
             },
-            {
+            resolveContext({
                 constants: new Map([
                     ["SiteStatisticsSchema", "users {\n  ${SiteTrendConnectionSchema}\n}"],
                 ]),
+                schema: schema,
                 exportsByConstant: new Map([["SiteTrendConnectionSchema", "SiteTrendConnection"]]),
-                schema,
-            }
+            })
         );
-        expect(result.properties[0].description).toContain("`users`");
-        expect(result.properties[0].description).toContain("SiteTrendConnection");
+        expect(propsOf(result)[0].description).toContain("`users`");
+        expect(propsOf(result)[0].description).toContain("SiteTrendConnection");
     });
 
     it("unwraps wrapped-mode constants to their inner selection", () => {
@@ -452,9 +493,12 @@ describe("resolveExportSpec", () => {
                 graphqlType: "MediaTitle",
                 source: { constant: "TitleSchema", wrapped: true },
             },
-            { constants: new Map([["TitleSchema", "title {\n  romaji\n}"]]), schema }
+            resolveContext({
+                constants: new Map([["TitleSchema", "title {\n  romaji\n}"]]),
+                schema: schema,
+            })
         );
-        expect(result.properties.map((property) => property.name)).toEqual(["romaji"]);
+        expect(propsOf(result).map((property) => property.name)).toEqual(["romaji"]);
     });
 
     it("extracts one fragment member by type condition", () => {
@@ -479,15 +523,15 @@ describe("resolveExportSpec", () => {
                 source: { constant: "NotificationSchema", condition: "AiringNotification" },
                 fieldTypes: { type: { tsType: '"AIRING"' } },
             },
-            {
+            resolveContext({
                 constants: new Map([
                     ["NotificationSchema", "... on AiringNotification {\n  id\n  type\n}"],
                 ]),
-                schema,
-            }
+                schema: schema,
+            })
         );
-        expect(result.properties.map((property) => property.name)).toEqual(["id", "type"]);
-        expect(result.properties[1].tsType).toBe('"AIRING"');
+        expect(propsOf(result).map((property) => property.name)).toEqual(["id", "type"]);
+        expect(propsOf(result)[1].tsType).toBe('"AIRING"');
     });
 
     it("honors named-reference overrides pointing at handwritten types", () => {
@@ -511,14 +555,14 @@ describe("resolveExportSpec", () => {
                 source: { constant: "MediaSchema" },
                 fieldTypes: { stats: { refType: "MediaStats" } },
             },
-            {
+            resolveContext({
                 constants: new Map([
                     ["MediaSchema", "stats {\n  scoreDistribution {\n    score\n  }\n}"],
                 ]),
-                schema,
-            }
+                schema: schema,
+            })
         );
-        expect(result.properties[0].tsType).toBe("MediaStats");
+        expect(propsOf(result)[0].tsType).toBe("MediaStats");
         expect(result.referencedTypes).toContain("MediaStats");
     });
 
@@ -547,7 +591,7 @@ describe("resolveExportSpec", () => {
                         typoField: { refType: "Whatever" },
                     },
                 },
-                { constants: new Map([["MediaSchema", "id"]]), schema }
+                resolveContext({ constants: new Map([["MediaSchema", "id"]]), schema: schema })
             )
         ).toThrow(/typoField/);
     });
@@ -590,7 +634,7 @@ describe("resolveExportSpec", () => {
                 },
                 fieldTypes: { pageInfo: { refType: "PageInfo" } },
             },
-            {
+            resolveContext({
                 constants: new Map(),
                 operations: new Map([
                     [
@@ -598,14 +642,14 @@ describe("resolveExportSpec", () => {
                         "query ($page: Int) {\n  Page (page: $page) {\n    pageInfo {\n      total\n    }\n    likes {\n      id\n    }\n  }\n}",
                     ],
                 ]),
+                schema: schema,
                 exportsByConstant: new Map([["UserSchema", "UserResponse"]]),
-                schema,
-            }
+            })
         );
-        expect(result.properties.map((property) => property.name)).toEqual(["pageInfo", "likes"]);
-        expect(result.properties[0].tsType).toBe("PageInfo");
-        expect(result.properties[1].tsType.startsWith("Array<{")).toBe(true);
-        expect(result.properties[1].tsType).toContain("id: number");
+        expect(propsOf(result).map((property) => property.name)).toEqual(["pageInfo", "likes"]);
+        expect(propsOf(result)[0].tsType).toBe("PageInfo");
+        expect(propsOf(result)[1].tsType.startsWith("Array<{")).toBe(true);
+        expect(propsOf(result)[1].tsType).toContain("id: number");
     });
 
     it("marks optional properties listed in optionalFields", () => {
@@ -624,9 +668,9 @@ describe("resolveExportSpec", () => {
                 source: { constant: "MediaSchema" },
                 optionalFields: ["episodes"],
             },
-            { constants: new Map([["MediaSchema", "episodes"]]), schema }
+            resolveContext({ constants: new Map([["MediaSchema", "episodes"]]), schema: schema })
         );
-        expect(result.properties[0].optional).toBe(true);
+        expect(propsOf(result)[0].optional).toBe(true);
     });
 
     it("throws when a selected field does not exist on the GraphQL type", () => {
@@ -645,7 +689,10 @@ describe("resolveExportSpec", () => {
                     graphqlType: "Media",
                     source: { constant: "MediaSchema" },
                 },
-                { constants: new Map([["MediaSchema", "nonExistentField"]]), schema }
+                resolveContext({
+                    constants: new Map([["MediaSchema", "nonExistentField"]]),
+                    schema: schema,
+                })
             )
         ).toThrow(/nonExistentField/);
     });
@@ -653,16 +700,18 @@ describe("resolveExportSpec", () => {
 
 describe("emit", () => {
     it("renders an interface declaration with JSDoc and @see", () => {
-        const rendered = renderTypeDeclaration({
-            name: "FuzzyDate",
-            see: "https://docs.anilist.co/reference/object/fuzzydate",
-            summary: "A fuzzy date.",
-            kind: "interface",
-            properties: [
-                { name: "year", tsType: "number", optional: false },
-                { name: "month", tsType: "number", optional: true },
-            ],
-        });
+        const rendered = renderTypeDeclaration(
+            generatedType({
+                name: "FuzzyDate",
+                see: "https://docs.anilist.co/reference/object/fuzzydate",
+                summary: "A fuzzy date.",
+                kind: "interface",
+                properties: [
+                    { name: "year", tsType: "number", optional: false },
+                    { name: "month", tsType: "number", optional: true },
+                ],
+            })
+        );
         expect(rendered).toContain("export interface FuzzyDate {");
         expect(rendered).toContain("@see https://docs.anilist.co/reference/object/fuzzydate");
         expect(rendered).toContain("year: number;");
@@ -670,13 +719,15 @@ describe("emit", () => {
     });
 
     it("renders union declarations", () => {
-        const rendered = renderTypeDeclaration({
-            name: "Activity",
-            see: "https://docs.anilist.co/reference/union/activityunion",
-            summary: "A single activity.",
-            kind: "union",
-            members: ["TextActivity", "ListActivity", "MessageActivity"],
-        });
+        const rendered = renderTypeDeclaration(
+            generatedType({
+                name: "Activity",
+                see: "https://docs.anilist.co/reference/union/activityunion",
+                summary: "A single activity.",
+                kind: "union",
+                members: ["TextActivity", "ListActivity", "MessageActivity"],
+            })
+        );
         expect(rendered).toContain(
             "export type Activity = TextActivity | ListActivity | MessageActivity;"
         );
@@ -729,6 +780,7 @@ describe("buildGeneratedFiles", () => {
             outputs: [
                 {
                     path: "src/apis/graphql/anilist/interfaces/FuzzyDate.ts",
+                    mode: "file",
                     exports: [
                         {
                             exportedName: "FuzzyDate",

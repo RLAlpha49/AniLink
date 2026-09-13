@@ -1,0 +1,11 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "rootDir": ".",
+        "skipLibCheck": true,
+        "types": ["node", "vitest/globals"]
+    },
+    "include": ["__tests__/**/*.ts", "src/**/*.ts", "lib/**/*.ts", "scripts/**/*.ts"],
+    "exclude": ["node_modules", "__tests__/integration/**", "docs"]
+}

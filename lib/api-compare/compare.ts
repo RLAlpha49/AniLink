@@ -33,9 +33,7 @@ export function findIgnoredOperationsMissingReviewNote(source: string): string[]
     for (const operation of IGNORED_UNIMPLEMENTED_OPERATIONS) {
         // The note lives next to the operation name in the doc comment above.
         const escaped = operation.replaceAll(".", String.raw`\.`);
-        const pattern = new RegExp(
-            String.raw`${escaped}[^\n]*\(review:\s*\d{4}-Q[1-4]\)`
-        );
+        const pattern = new RegExp(String.raw`${escaped}[^\n]*\(review:\s*\d{4}-Q[1-4]\)`);
         if (!pattern.test(source)) missing.push(operation);
     }
     return missing;
@@ -94,7 +92,8 @@ export function comparePackageToSchema(input: {
     const unimplementedOperations = (["query", "mutation"] as const).flatMap((kind) => {
         const typeName = rootTypes[kind];
         const rootType = typeName ? types.get(typeName) : undefined;
-        return (rootType?.fields ?? [])
+        const fields = rootType?.kind === "OBJECT" ? rootType.fields : [];
+        return fields
             .filter((field) => !implemented.has(field.name))
             .map((field) => `${kind}.${field.name}`);
     });
@@ -309,7 +308,7 @@ function compareSelection(
             compareSelection(
                 operation,
                 node.selection,
-                { kind: "OBJECT", name: node.typeCondition, ofType: null },
+                { kind: "OBJECT", name: node.typeCondition },
                 types,
                 discrepancies
             );

@@ -31,9 +31,17 @@ export interface RecordedRequest {
 }
 
 const requestMock = vi.hoisted(() =>
-    vi.fn(async (): Promise<unknown> => ({
-        __typename: "MockResponse",
-    }))
+    vi.fn(
+        async (
+            _url: string,
+            _method: "GET" | "POST",
+            _data?: object,
+            _auth?: string,
+            _sendOptions?: SendRequestOptions
+        ): Promise<unknown> => ({
+            __typename: "MockResponse",
+        })
+    )
 );
 
 vi.mock("../../src/base/RequestHandler", async () => {
@@ -67,15 +75,25 @@ export const setMockResponse = (
 ): void => {
     if (typeof response === "function") {
         const factory = response as (request: RecordedRequest) => unknown;
-        mockSendRequest.mockImplementation(async (url, method, data, token, sendOptions) =>
-            factory({
-                url,
-                method,
-                data,
-                token,
-                requiresAuth: sendOptions?.requiresAuth,
-                sendOptions,
-            })
+        // The parameter list mirrors the real `sendRequest` signature so a
+        // parameter reorder in the transport fails here at compile time
+        // instead of silently mis-capturing every mock-based test.
+        mockSendRequest.mockImplementation(
+            async (
+                url: string,
+                method: "GET" | "POST",
+                data?: object,
+                auth?: string,
+                sendOptions?: SendRequestOptions
+            ): Promise<unknown> =>
+                factory({
+                    url,
+                    method,
+                    data,
+                    token: auth,
+                    requiresAuth: sendOptions?.requiresAuth,
+                    sendOptions,
+                })
         );
         return;
     }

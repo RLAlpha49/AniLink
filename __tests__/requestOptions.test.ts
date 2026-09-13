@@ -11,7 +11,9 @@ import { AniLink } from "../src/AniLink";
  */
 
 const mocks = vi.hoisted(() => {
-    const request = vi.fn(async () => ({ data: { data: { Media: { id: 1 } } } }));
+    const request = vi.fn(async (_config: { timeout?: number }): Promise<unknown> => ({
+        data: { data: { Media: { id: 1 } } },
+    }));
     const create = vi.fn(() => request);
     const isAxiosError = vi.fn(() => false);
     const isCancel = vi.fn(() => false);
@@ -59,9 +61,7 @@ describe("per-request transport option overrides", () => {
         );
         await client.anilist.query.mediaListCollection({ userId: 542244, type: "ANIME" });
 
-        const timeouts = mocks.request.mock.calls.map(
-            (call) => (call[0] as { timeout?: number }).timeout
-        );
+        const timeouts = mocks.request.mock.calls.map((call) => call[0]?.timeout);
         expect(timeouts).toEqual([30_000, 5_000]);
     });
 

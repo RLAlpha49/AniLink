@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { AniLink } from "../src/AniLink";
 import { AniLinkAuthError } from "../src/base/AniLinkError";
-import { resolveAniListCredentials, resolveMalCredentials } from "../src/base/credentials";
+import {
+    type AniListCredentials,
+    resolveAniListCredentials,
+    resolveMalCredentials,
+} from "../src/base/credentials";
 import { getAxiosStub } from "./helpers/axiosStub";
 
 /**
@@ -28,6 +32,7 @@ interface CapturedAxiosConfig {
     url: string;
     method: string;
     headers: Record<string, string>;
+    timeout?: number;
 }
 
 const lastConfig = (): CapturedAxiosConfig =>
@@ -125,16 +130,14 @@ describe("strict credential-key validation", () => {
         expect(() =>
             resolveAniListCredentials({
                 authToken: "t",
-                // @ts-expect-error -- intentional typo to exercise the guard
                 bogusKey: 1,
-            })
+            } as unknown as Parameters<typeof resolveAniListCredentials>[0])
         ).toThrow(TypeError);
         expect(() =>
             resolveAniListCredentials({
                 authToken: "t",
-                // @ts-expect-error -- intentional typo to exercise the guard
                 bogusKey: 1,
-            })
+            } as unknown as Parameters<typeof resolveAniListCredentials>[0])
         ).toThrow(/bogusKey/);
     });
 
@@ -142,9 +145,8 @@ describe("strict credential-key validation", () => {
         expect(() =>
             resolveAniListCredentials({
                 authToken: "t",
-                // @ts-expect-error -- intentional typo to exercise the guard
                 accesstoken: "lowercase-typo",
-            })
+            } as unknown as Parameters<typeof resolveAniListCredentials>[0])
         ).toThrow(/Unknown credential key "accesstoken"/);
     });
 
@@ -154,9 +156,8 @@ describe("strict credential-key validation", () => {
                 new AniLink({
                     anilist: {
                         authToken: "t",
-                        // @ts-expect-error -- intentional unknown key
                         customThing: true,
-                    },
+                    } as unknown as AniListCredentials,
                 })
         ).toThrow(TypeError);
     });

@@ -44,6 +44,8 @@ export interface GeneratorConfig {
     outputs: OutputSpec[];
     /** Generated-referenced alias types that live outside the interfaces tree. */
     aliasImports: Record<string, string>;
+    /** Extra scalar mappings merged over the codegen defaults (e.g. `FuzzyDateInt`). */
+    scalarTypes?: Record<string, string>;
 }
 
 /** Verified AniList reference URLs used by generated interface JSDoc. */

@@ -310,14 +310,19 @@ describe("fetchCursorChain", () => {
     });
 
     test("returns an empty result for an undefined first key without fetching", async () => {
-        const requestedKeys: string[] = [];
-        const result = await fetchCursorChain<string | undefined, string | undefined>(
+        const requestedKeys: Array<string | undefined> = [];
+        // The entry type carries the optional key so the fetch callback and
+        // the next-key extractor agree on `string | undefined` throughout.
+        const result = await fetchCursorChain<
+            { key: string | undefined; hasMore: boolean; nextKey: string },
+            string | undefined
+        >(
             async (key) => {
-                requestedKeys.push(key as string);
+                requestedKeys.push(key);
                 return { key, hasMore: true, nextKey: "next" };
             },
             () => true,
-            (response) => (response as { nextKey?: string }).nextKey,
+            (response) => response.nextKey,
             undefined,
             10
         );
