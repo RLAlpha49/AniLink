@@ -8,7 +8,17 @@
  * performs a full navigation to the result URL.
  */
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useRouter } from "vitepress";
 import SemanticSearch from "./SemanticSearch.vue";
+
+const router = useRouter();
+
+/**
+ * Offset for the sticky header so scrolled-to headings are not hidden.
+ * Mirrors HEADING_SCROLL_OFFSET in DocsLayout.vue so anchor targets land
+ * at the same position whether reached via the TOC or via search.
+ */
+const HEADING_SCROLL_OFFSET = 80;
 
 const open = ref(false);
 /** Panel element — the focus-trap boundary. */
@@ -41,9 +51,65 @@ function closeModal(): void {
     lastFocused = null;
 }
 
+/**
+ * Scroll an anchor target into view inside the reading column, offset for
+ * the sticky header. Mirrors the container logic in DocsLayout.vue's
+ * scrollToHeading: the docs layout scrolls `.docs-columns`, not the window.
+ */
+function scrollToAnchor(hash: string): void {
+    if (typeof window === "undefined") return;
+    const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+    if (!target) return;
+    const container = document.querySelector<HTMLElement>(".docs-columns");
+    if (container) {
+        const top =
+            target.getBoundingClientRect().top -
+            container.getBoundingClientRect().top +
+            container.scrollTop -
+            HEADING_SCROLL_OFFSET;
+        container.scrollTo({ top, behavior: "smooth" });
+    } else {
+        window.scrollTo({
+            top: target.getBoundingClientRect().top + window.scrollY - HEADING_SCROLL_OFFSET,
+            behavior: "smooth",
+        });
+    }
+}
+
 function onSelect(url: string): void {
     closeModal();
-    if (typeof window !== "undefined") window.location.assign(url);
+    if (typeof window === "undefined") return;
+    // Prefer the VitePress router: SPA navigation keeps the page (and the
+    // already-loaded transformers model) alive instead of a full reload.
+    // The router is only meaningful in the browser; under SSR there is no
+    // history to push, so fall back to a full page assignment.
+    if (router) {
+        const hashIdx = url.indexOf("#");
+        const path = hashIdx >= 0 ? url.slice(0, hashIdx) : url;
+        const hash = hashIdx >= 0 ? url.slice(hashIdx) : "";
+        // Same-page anchor link (e.g. an operation anchor on the operations
+        // page): router.go() pushes the URL but does not scroll when the
+        // pathname is unchanged, so scroll the target manually.
+        if (hash && path === router.route.path) {
+            void router.go(url).then(() => scrollToAnchor(hash));
+        } else if (hash) {
+            // Cross-page anchor link (most results): the router's built-in
+            // hash scroll targets the window, but this layout scrolls
+            // `.docs-columns` (html/body are overflow:hidden), so the built-in
+            // scroll is a no-op here and the route watcher resets to the top.
+            // Navigate, then scroll the anchor manually once the new page has
+            // rendered.
+            void router.go(url).then(() => {
+                nextTick(() => {
+                    requestAnimationFrame(() => scrollToAnchor(hash));
+                });
+            });
+        } else {
+            void router.go(url);
+        }
+        return;
+    }
+    window.location.assign(url);
 }
 
 /** True when the key event target is an editable element. */
