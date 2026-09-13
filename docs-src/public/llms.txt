@@ -6,7 +6,7 @@
 
 ## Start here
 
-- [Introduction](https://anilink.alpha49.com/introduction): What AniLink is: one AniLink class exposing typed anilist and mal surfaces side by side behind one (params, options?) calling convention, with a provider, protocol, and namespace overview.
+- [Introduction](https://anilink.alpha49.com/introduction): What AniLink is: one AniLink class exposing typed anilist and mal surfaces side by side behind one calling convention — (params, options?) for operations with inputs, (options?) for the parameterless reads — with a provider, protocol, and namespace overview.
 - [Getting started](https://anilink.alpha49.com/getting-started): Install anilink-api-wrapper, construct a client with credentials, and send a first request to either provider.
 - [Provider configuration](https://anilink.alpha49.com/provider-configuration): The two ways to pass AniLink credentials — positional token or per-provider anilist and mal slots — and how each maps to the client surfaces.
 - [Privacy](https://anilink.alpha49.com/privacy): How the AniLink docs site handles analytics: GA4 measurement stays off until you accept in the consent banner, and declining clears analytics cookies.
