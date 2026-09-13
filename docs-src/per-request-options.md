@@ -10,14 +10,23 @@ Every operation accepts a trailing options argument that overrides the instance 
 
 ## AniList operations
 
-AniList operations take `options?: RequestOptions` as their last parameter:
+AniList operations take `options?: RequestOptions` as their last parameter. Field-aware operations — those whose signature lists `fields` alongside the transport options — also accept it in the same object: the response-shaping option that composes the document from only the selections you name, at any nesting depth, and narrows the return type to `DeepPick<...>`. Not every operation is field-aware (for example `query.markdown` and `query.viewer` return fixed shapes); check the operation's signature, or see the full list in [Field selection](/guides/anilist/field-selection):
 
 ```typescript
 const media = await aniLink.anilist.query.media(
     { id: 1, type: "ANIME" },
     { timeout: 5_000, signal: controller.signal }
 );
+
+const slim = await aniLink.anilist.query.media(
+    { id: 1, type: "ANIME" },
+    { fields: ["id", "title.romaji", "averageScore"] }
+);
+// slim: DeepPick<MediaResponse, "id" | "title.romaji" | "averageScore" | "idMal">
+// — the always-selected idMal joins the pick; the document always sends it.
 ```
+
+See [Field selection](/guides/anilist/field-selection) for the nested path rules, the always-selected `id`, and which operations accept `fields`.
 
 ## MAL operations
 
@@ -66,7 +75,7 @@ Per-request options are merged **shallowly** over the instance defaults. A parti
 
 ## Provider scoping
 
-Options never cross providers. A per-request `timeout` on an AniList call leaves MAL calls untouched, and `fields` exists only on MAL operations.
+Options never cross providers. A per-request `timeout` on an AniList call leaves MAL calls untouched. Both providers have a `fields` option, but they differ: AniList `fields` narrows the return type (`DeepPick<...>`, including nested paths like `title.romaji`), while MAL `fields` selects the response shape without type narrowing.
 
 ## Next steps
 

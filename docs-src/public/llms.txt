@@ -4,14 +4,14 @@
 
 - [AniLink home](https://anilink.alpha49.com/): Typed TypeScript client for the AniList GraphQL and MyAnimeList REST APIs: one class, two isolated provider surfaces, normalized errors, retries, and pagination helpers.
 
-## Guides
+## Start here
 
 - [Introduction](https://anilink.alpha49.com/introduction): What AniLink is: one AniLink class exposing typed anilist and mal surfaces side by side, with a provider, protocol, and namespace overview.
 - [Getting started](https://anilink.alpha49.com/getting-started): Install anilink-api-wrapper, construct a client with credentials, and send a first request to either provider.
 - [Provider configuration](https://anilink.alpha49.com/provider-configuration): The two ways to pass AniLink credentials — positional token or per-provider anilist and mal slots — and how each maps to the client surfaces.
 - [Privacy](https://anilink.alpha49.com/privacy): How the AniLink docs site handles analytics: GA4 measurement stays off until you accept in the consent banner, and declining clears analytics cookies.
 
-## Guides
+## Core concepts
 
 - [Error handling](https://anilink.alpha49.com/error-handling): The AniLinkError taxonomy with stable code values: classify transport failures by instanceof or code, never by parsing messages.
 - [Retries & resilience](https://anilink.alpha49.com/retries-and-resilience): The three shared-transport resilience mechanisms — transient-failure retries, rate-limit pacing, and the circuit breaker — and their per-provider defaults.
@@ -20,7 +20,7 @@
 - [Observability](https://anilink.alpha49.com/observability): The four AniLink request-lifecycle hooks, configured per provider slot so they never leak between providers.
 - [Response cache](https://anilink.alpha49.com/response-cache): The opt-in in-memory TTL response cache keyed by method, url, and body: repeated identical reads skip the network and mutations are never cached.
 
-## Guides
+## Cookbook
 
 - [Recipes](https://anilink.alpha49.com/recipes): Complete copy-pasteable AniLink workflows — list walking, upserts, token refresh — with each recipe stating its provider scope up front.
 - [TypeScript patterns](https://anilink.alpha49.com/typescript-patterns): How AniLink operation variables and responses stay fully typed, so inferred shapes appear on hover without type archaeology.
@@ -31,8 +31,10 @@
 - [AniList authentication](https://anilink.alpha49.com/guides/anilist/authentication): Create an AniList GraphQL client token and pass it positionally or in the anilist credential slot.
 - [AniList configuration](https://anilink.alpha49.com/guides/anilist/configuration): Every AniList slot option — timeout, retries, pacing, hooks, exposeRawAxiosError — with types, defaults, and when to change each.
 - [Querying data](https://anilink.alpha49.com/guides/anilist/querying): The aniLink.anilist.query surface grouped by domain: typed variables object plus optional trailing RequestOptions everywhere.
+- [Field selection](https://anilink.alpha49.com/guides/anilist/field-selection): Request only the fields you need from AniList operations, at any nesting depth, with response types that narrow to your selection.
+- [Complete examples](https://anilink.alpha49.com/guides/anilist/complete-examples): Flagship AniList operations with every variable filled out.
 - [Page queries](https://anilink.alpha49.com/guides/anilist/page-queries): Fetch one known page of an AniList collection with aniLink.anilist.query.page: page and perPage controls returning pageInfo.
-- [Pagination](https://anilink.alpha49.com/guides/anilist/pagination): The three AniList pagination helpers — paginate, paginatePages, and the cursor-style sibling — and when to use each traversal style.
+- [Pagination](https://anilink.alpha49.com/guides/anilist/pagination): The three AniList pagination helpers — paginate, paginatePages, and the chunk-based sibling paginateChunks — and when to use each traversal style.
 - [Mutations](https://anilink.alpha49.com/guides/anilist/mutations): The authenticated aniLink.anilist.mutation operations: token requirement, and why mutations are never retried by default.
 - [Custom queries](https://anilink.alpha49.com/guides/anilist/custom-queries): Send a GraphQL document you write yourself with anilist.custom — the typed escape hatch for field combinations the operations do not expose.
 - [Helpers](https://anilink.alpha49.com/guides/anilist/helpers): The three AniList data helpers — fuzzyDate, flattenMediaListCollection, and crossLink — as client methods on the anilist namespace.

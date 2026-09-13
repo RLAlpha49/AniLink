@@ -146,6 +146,20 @@ export const PAGES: DocPage[] = [
         section: "anilist",
     },
     {
+        path: "/guides/anilist/field-selection",
+        title: "Field selection",
+        summary: "Request only the fields you need, with narrowed response types.",
+        provider: "anilist",
+        section: "anilist",
+    },
+    {
+        path: "/guides/anilist/complete-examples",
+        title: "Complete examples",
+        summary: "Flagship operations with every variable filled out.",
+        provider: "anilist",
+        section: "anilist",
+    },
+    {
         path: "/guides/anilist/page-queries",
         title: "Page queries",
         summary: "The Page schema and its collection queries.",

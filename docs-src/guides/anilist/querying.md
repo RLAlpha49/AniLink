@@ -8,6 +8,20 @@ layout: .vitepress/theme/DocsLayout.vue
 
 The query surface is grouped by domain. Every method takes a typed variables object and an optional trailing `RequestOptions` — same shape everywhere, so muscle memory transfers.
 
+## Selecting fields
+
+Every query returns the maximal selection by default. Field-aware queries — those whose signature lists a `fields` option — accept it in the trailing options to request only what you need, at any nesting depth, and the return type narrows to exactly your selection. Plain-response queries such as `query.markdown` and `query.viewer` have no `fields` option; they always return their fixed shape:
+
+```typescript
+const slim = await aniLink.anilist.query.media(
+    { id: 123 },
+    { fields: ["id", "title.romaji", "averageScore"] }
+);
+// slim: DeepPick<MediaResponse, "id" | "title.romaji" | "averageScore" | "idMal">
+```
+
+See [Field selection](/guides/anilist/field-selection) for the nested path rules, the always-selected `id`, page and mutation support, and when to use `aniLink.anilist.custom()` instead.
+
 ## Media
 
 | Operation | Purpose |
