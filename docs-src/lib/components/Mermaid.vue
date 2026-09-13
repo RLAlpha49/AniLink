@@ -38,7 +38,7 @@ async function render(): Promise<void> {
         mermaid.initialize({
             startOnLoad: false,
             theme: isDark() ? "dark" : "neutral",
-            securityLevel: "loose",
+            securityLevel: "strict",
             fontFamily: '"JetBrains Mono", monospace',
         });
         const { svg: out } = await mermaid.render(id, props.code);
