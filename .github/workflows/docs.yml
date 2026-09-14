@@ -199,6 +199,16 @@ jobs:
         if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         run: npm run docs:generate
 
+      - name: Verify API reference was generated
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
+        shell: bash
+        run: |
+          if [ ! -f docs/typedoc/index.html ]; then
+            echo "::error::docs/typedoc/index.html is missing — the API reference was not generated; refusing to deploy a partial site."
+            exit 1
+          fi
+          echo "API reference present: docs/typedoc/index.html"
+
       - name: Configure GitHub Pages
         if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         uses: actions/configure-pages@v6

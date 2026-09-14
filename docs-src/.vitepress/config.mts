@@ -4,11 +4,13 @@ import { dirname, extname, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type HeadConfig, type Plugin } from "vitepress";
 import { CONSENT_BOOT_SCRIPT } from "../lib/consent.mjs";
+import { flatPages, type DocPage } from "../lib/content";
 
 const docsConfigDir = dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = normalize(join(docsConfigDir, "..", "..", "package.json"));
 const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
     version?: unknown;
+    description?: unknown;
 };
 
 const SITE_URL = "https://anilink.alpha49.com";
@@ -20,6 +22,11 @@ const SOCIAL_CARD_ALT = "AniLink — typed AniList and MyAnimeList client for Ty
 if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
     throw new Error(`Missing valid version in ${packageJsonPath}`);
 }
+
+const packageDescription =
+    typeof packageJson.description === "string" && packageJson.description.length > 0
+        ? packageJson.description
+        : DEFAULT_SITE_DESCRIPTION;
 
 function routeFromRelativePath(relativePath: string | undefined): string {
     if (!relativePath) return "/";
@@ -52,6 +59,87 @@ function pageDescriptionFor(title: string | undefined, relativePath: string | un
     const context = describeRouteContext(route);
 
     return `${baseTitle} — AniLink ${context} for TypeScript. Learn the patterns, client setup, and API usage needed to integrate AniList and MyAnimeList reliably.`;
+}
+
+/**
+ * Social-card image for a route context. The branded cards are generated
+ * by `scripts/generate-social-cards.ts`; the default card is a designed
+ * asset committed at `docs-src/public/social-card.png`.
+ */
+function socialCardFor(context: string): string {
+    if (context === "AniList") return `${SITE_URL}/social-card-anilist.png`;
+    if (context === "MyAnimeList") return `${SITE_URL}/social-card-mal.png`;
+    if (context === "operation reference") return `${SITE_URL}/social-card-operations.png`;
+    return `${SITE_URL}/social-card.png`;
+}
+
+/** Alt text naming the surface the selected card brands. */
+function socialCardAltFor(context: string): string {
+    if (context === "AniList") return "AniLink — typed AniList GraphQL client for TypeScript";
+    if (context === "MyAnimeList") return "AniLink — typed MyAnimeList REST client for TypeScript";
+    if (context === "operation reference") {
+        return "AniLink — AniList and MyAnimeList operation reference";
+    }
+    return SOCIAL_CARD_ALT;
+}
+
+/** One BreadcrumbList entry; the final crumb carries no item URL. */
+interface BreadcrumbItem {
+    "@type": "ListItem";
+    position: number;
+    name: string;
+    item?: string;
+}
+
+/** Built route for a content-model page ("/operations/index" builds to "/operations"). */
+function routeForPage(page: DocPage): string {
+    return page.path.endsWith("/index") ? page.path.slice(0, -"/index".length) : page.path;
+}
+
+/** Find the content-model page behind a built route, if it has one. */
+function pageForRoute(route: string): DocPage | undefined {
+    return flatPages().find(
+        (page) =>
+            page.path === route ||
+            (page.path.endsWith("/index") && page.path.slice(0, -"/index".length) === route)
+    );
+}
+
+/**
+ * Breadcrumb trail for a built route: the landing page, every ancestor that
+ * exists as a real page in the content model, and the current page. Guide
+ * sections are flat (no intermediate pages), so their trails are two levels;
+ * nested operation pages carry the full section chain. Navigation-group
+ * titles are not used as crumbs: only the operation-reference group has a
+ * real landing page, and that page already appears as an ancestor.
+ */
+function breadcrumbFor(route: string): BreadcrumbItem[] | undefined {
+    if (route === "/" || route === "/404") return undefined;
+    const current = pageForRoute(route);
+    if (!current) return undefined;
+
+    const segments = route.replace(/^\//, "").split("/");
+    const ancestors: DocPage[] = [];
+    let prefix = "";
+    for (let index = 0; index < segments.length - 1; index++) {
+        prefix += `/${segments[index]}`;
+        const page = pageForRoute(prefix);
+        if (page) ancestors.push(page);
+    }
+
+    const items: BreadcrumbItem[] = [
+        { "@type": "ListItem", position: 1, name: "AniLink", item: `${SITE_URL}/` },
+    ];
+    for (const page of ancestors) {
+        items.push({
+            "@type": "ListItem",
+            position: items.length + 1,
+            name: page.title,
+            item: `${SITE_URL}${routeForPage(page)}`,
+        });
+    }
+    items.push({ "@type": "ListItem", position: items.length + 1, name: current.title });
+    return items;
 }
 
 /**
@@ -357,14 +445,30 @@ export default defineConfig({
     transformHead: ({ pageData, title }) => {
         const route = pageData.relativePath ? routeFromRelativePath(pageData.relativePath) : "/";
         const isNotFound = route === "/404";
+        const isLanding = route === "/";
+        const isGuide = route.startsWith("/guides/");
         const canonicalUrl = `${SITE_URL}${route === "/" ? "/" : route}`;
-        const pageTitle = title ? `${title} | AniLink` : "AniLink";
+        // VitePress applies the site-title template before this hook, so the
+        // incoming title already reads "Pagination | AniLink" on content pages;
+        // appending the suffix here doubled it in og:title, twitter:title, and
+        // the JSON-LD name.
+        const pageTitle = title || "AniLink";
         const description =
             (pageData.frontmatter.description as string | undefined) ||
             pageDescriptionFor(title, pageData.relativePath);
-        const jsonLd = {
-            "@context": "https://schema.org",
-            "@type": route === "/" ? "WebSite" : "WebPage",
+        const routeContext = describeRouteContext(route);
+        const socialCard = socialCardFor(routeContext);
+        const socialCardAlt = socialCardAltFor(routeContext);
+
+        const publisher = {
+            "@type": "Organization",
+            name: "AniLink",
+            url: SITE_URL,
+            logo: `${SITE_URL}/logo.png`,
+        };
+
+        const mainEntity: Record<string, unknown> = {
+            "@type": isLanding ? "WebSite" : isGuide ? "TechArticle" : "WebPage",
             name: pageTitle,
             description,
             url: canonicalUrl,
@@ -374,12 +478,57 @@ export default defineConfig({
                 name: "AniLink",
                 url: SITE_URL,
             },
-            publisher: {
-                "@type": "Organization",
+            publisher,
+        };
+        if (isGuide) {
+            // Article-family entities describe themselves with a headline and
+            // an image; `name` stays for consumers that read Thing.name.
+            mainEntity.headline = pageTitle;
+            mainEntity.image = socialCard;
+            mainEntity.author = publisher;
+        }
+
+        const graph: Record<string, unknown>[] = [mainEntity];
+
+        if (isLanding) {
+            // The site documents a published npm package; this entity connects
+            // the two. `AniLink` is the package's entry point class and
+            // `anilink-api-wrapper` its npm name.
+            graph.push({
+                "@type": "SoftwareApplication",
                 name: "AniLink",
+                alternateName: "anilink-api-wrapper",
+                applicationCategory: "DeveloperApplication",
+                operatingSystem: "Node.js",
+                runtimePlatform: "Node.js",
+                programmingLanguage: "TypeScript",
+                softwareVersion: packageJson.version,
+                description: packageDescription,
                 url: SITE_URL,
-                logo: `${SITE_URL}/logo.png`,
-            },
+                downloadUrl: "https://www.npmjs.com/package/anilink-api-wrapper",
+                isAccessibleForFree: true,
+                license: "https://opensource.org/licenses/MIT",
+                featureList:
+                    "Typed operations for the AniList GraphQL and MyAnimeList REST APIs with normalized errors, retries, pacing, caching, and pagination helpers.",
+                publisher,
+                sameAs: [
+                    "https://www.npmjs.com/package/anilink-api-wrapper",
+                    "https://github.com/RLAlpha49/AniLink",
+                ],
+            });
+        }
+
+        const breadcrumb = breadcrumbFor(route);
+        if (breadcrumb) {
+            graph.push({
+                "@type": "BreadcrumbList",
+                itemListElement: breadcrumb,
+            });
+        }
+
+        const jsonLd = {
+            "@context": "https://schema.org",
+            "@graph": graph,
         };
 
         const head: HeadConfig[] = [
@@ -387,17 +536,17 @@ export default defineConfig({
             ["meta", { name: "description", content: description }],
             ["meta", { property: "og:title", content: pageTitle }],
             ["meta", { property: "og:description", content: description }],
-            ["meta", { property: "og:type", content: "website" }],
+            ["meta", { property: "og:type", content: isGuide ? "article" : "website" }],
             ["meta", { property: "og:url", content: canonicalUrl }],
-            ["meta", { property: "og:image", content: `${SITE_URL}/social-card.png` }],
+            ["meta", { property: "og:image", content: socialCard }],
             ["meta", { property: "og:image:width", content: "1200" }],
             ["meta", { property: "og:image:height", content: "630" }],
-            ["meta", { property: "og:image:alt", content: SOCIAL_CARD_ALT }],
+            ["meta", { property: "og:image:alt", content: socialCardAlt }],
             ["meta", { name: "twitter:card", content: "summary_large_image" }],
             ["meta", { name: "twitter:title", content: pageTitle }],
             ["meta", { name: "twitter:description", content: description }],
-            ["meta", { name: "twitter:image", content: `${SITE_URL}/social-card.png` }],
-            ["meta", { name: "twitter:image:alt", content: SOCIAL_CARD_ALT }],
+            ["meta", { name: "twitter:image", content: socialCard }],
+            ["meta", { name: "twitter:image:alt", content: socialCardAlt }],
             ["script", { type: "application/ld+json" }, JSON.stringify(jsonLd)],
         ];
 

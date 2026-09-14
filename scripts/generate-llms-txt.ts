@@ -9,7 +9,7 @@
  * lists. Regenerate via `npm run docs:generate` whenever pages or
  * frontmatter change so the committed file stays current.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { flatPages, type DocPage } from "../docs-src/lib/content";
@@ -93,15 +93,17 @@ export function generateLlmsTxt(): string {
         lines.push("");
     }
 
-    lines.push("## API Reference");
-    lines.push("");
-    lines.push(
-        `- [TypeDoc API reference](${SITE_URL}/typedoc/): Generated API reference for every public class, interface, type, and function.`
-    );
-    lines.push(
-        `- [TypeDoc llms.txt](${SITE_URL}/typedoc/llms.txt): Machine-readable index of the TypeDoc API reference pages.`
-    );
-    lines.push("");
+    if (existsSync(join(ROOT, "docs", "typedoc", "llms.txt"))) {
+        lines.push("## API Reference");
+        lines.push("");
+        lines.push(
+            `- [TypeDoc API reference](${SITE_URL}/typedoc/): Generated API reference for every public class, interface, type, and function.`
+        );
+        lines.push(
+            `- [TypeDoc llms.txt](${SITE_URL}/typedoc/llms.txt): Machine-readable index of the TypeDoc API reference pages.`
+        );
+        lines.push("");
+    }
 
     return lines.join("\n");
 }

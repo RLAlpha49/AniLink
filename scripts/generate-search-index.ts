@@ -12,8 +12,9 @@
  *
  * The pure chunking + math helpers are exported for unit testing.
  */
+import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, normalize, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { ReferenceManifest } from "./generate-operation-reference";
 
@@ -291,6 +292,120 @@ function mdTitle(md: string, fallback: string): string {
     return (/^# (.+?)\r?$/m.exec(md)?.[1] ?? fallback).trim();
 }
 
+/** Site origin for sitemap URLs — matches `hostname` in the VitePress config. */
+const SITE_URL = "https://anilink.alpha49.com";
+
+/**
+ * File → last-commit-date map for every file under `src/`, built with one
+ * git process (the same approach as `gitLastmodMap()` in
+ * `docs-src/.vitepress/config.mts`, scoped to the TypeDoc source tree).
+ *
+ * Returns an empty map when git is unavailable or the build runs outside a
+ * repository — callers then omit lastmod rather than guessing.
+ */
+function gitLastmodMap(root: string): Map<string, string> {
+    const map = new Map<string, string>();
+    try {
+        const output = execFileSync("git", ["log", "--format=%cI", "--name-only", "--", "src"], {
+            cwd: root,
+            encoding: "utf8",
+            stdio: ["ignore", "pipe", "ignore"],
+            maxBuffer: 32 * 1024 * 1024,
+        });
+        let date: string | null = null;
+        for (const line of output.split("\n")) {
+            const trimmed = line.trim();
+            if (trimmed === "") continue;
+            if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) {
+                // `git log --format=%cI` prints the committer date in the
+                // repository's local timezone; normalize to UTC so the
+                // stamps match the VitePress sitemap's Z-suffixed format.
+                date = new Date(trimmed).toISOString();
+            } else if (date !== null) {
+                // Git prints repo-relative paths with forward separators;
+                // make them absolute and OS-normalized so the per-page lookup
+                // (which builds absolute paths) matches on every platform.
+                // History walks newest-first, so only the first (newest)
+                // commit touching each file sets its date.
+                const absolute = normalize(join(root, trimmed));
+                if (!map.has(absolute)) {
+                    map.set(absolute, date);
+                }
+            }
+        }
+    } catch {
+        // No git history (fresh clone without history, or git missing):
+        // omit lastmod instead of stamping a misleading build-time date.
+    }
+    return map;
+}
+
+/**
+ * Extract the repo-relative source file a TypeDoc page documents from its
+ * `tsd-sources` aside (e.g. `src/AniLink.ts` from the GitHub blob href).
+ *
+ * @param html Raw TypeDoc page HTML.
+ * @returns The repo-relative source path, or null when the page has no
+ * source link (index/hierarchy pages, re-exports without sources).
+ */
+export function typedocSourceFile(html: string): string | null {
+    const aside = /<aside class="tsd-sources">([\s\S]*?)<\/aside>/.exec(html);
+    if (!aside) return null;
+    const href = /<a href="[^"]*\/blob\/[0-9a-f]+\/([^"#]+)(?:#[^"]*)?"/.exec(aside[1]);
+    return href ? href[1] : null;
+}
+
+/**
+ * Merge the TypeDoc API reference pages into the VitePress sitemap at
+ * `docs/sitemap.xml`. VitePress only knows its own routes, so the API
+ * reference — which lives under `/typedoc/` in the deployed site — would
+ * otherwise be invisible to crawlers. Runs after `docs:site` in the
+ * `docs:generate` chain, when both outputs exist.
+ *
+ * Each entry gets a lastmod from the git history of the source file the
+ * page documents (mirroring the VitePress sitemap's git-derived stamps);
+ * pages whose source cannot be resolved keep lastmod omitted, which the
+ * sitemap spec allows, rather than a misleading build-time stamp.
+ *
+ * @param typedocRoot Absolute path to `docs/typedoc`.
+ * @param root Absolute path to the repo root.
+ */
+function mergeTypedocSitemap(typedocRoot: string, root: string): void {
+    const sitemapPath = join(root, "docs", "sitemap.xml");
+    if (!existsSync(sitemapPath)) return;
+
+    const gitDates = gitLastmodMap(root);
+    const entries: string[] = [];
+    for (const file of walk(typedocRoot, (n) => n.endsWith(".html"))) {
+        const rel = file.slice(typedocRoot.length + 1).replaceAll("\\", "/");
+        // TypeDoc's own sitemap assumes the reference is deployed at the
+        // site root; here it is served under /typedoc/, so prefix the loc.
+        const loc = `${SITE_URL}/typedoc/${rel}`;
+        const source = typedocSourceFile(readFileSync(file, "utf8"));
+        const lastmod = source ? gitDates.get(normalize(join(root, source))) : undefined;
+        entries.push(
+            `    <url><loc>${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}</url>`
+        );
+    }
+    if (entries.length === 0) return;
+
+    // Splice the TypeDoc entries before the closing </urlset> of the
+    // VitePress-generated sitemap. The existing entries (including the
+    // 404 exclusion applied by the VitePress sitemap plugin) are preserved
+    // as-is; the merge is idempotent because a second run replaces only the
+    // previously appended block.
+    const current = readFileSync(sitemapPath, "utf8");
+    const base = current.replace(
+        /\n?<!-- typedoc-merge-start -->[\s\S]*?<!-- typedoc-merge-end -->/,
+        ""
+    );
+    const merged =
+        base.replace(/\s*<\/urlset>\s*$/, "\n") +
+        `<!-- typedoc-merge-start -->\n${entries.join("\n")}\n<!-- typedoc-merge-end -->\n</urlset>\n`;
+    writeFileSync(sitemapPath, merged, "utf8");
+    console.log(`Merged ${entries.length} TypeDoc URLs into ${sitemapPath}`);
+}
+
 /** Build-time entrypoint: chunk, embed, and write the index. */
 async function main(): Promise<void> {
     const { pipeline, env } = await import("@huggingface/transformers");
@@ -326,6 +441,10 @@ async function main(): Promise<void> {
     const typedocRoot = join(ROOT, "docs", "typedoc");
     if (existsSync(typedocRoot)) {
         docs.push(...indexTypedoc(typedocRoot, ROOT));
+        // Also surface the API reference pages to crawlers: VitePress's
+        // sitemap covers only its own routes, so the TypeDoc URLs are
+        // appended here, after both builds have run in `docs:generate`.
+        mergeTypedocSitemap(typedocRoot, ROOT);
     }
 
     // Embed in batches of 16.
