@@ -79,12 +79,15 @@ describe("recordPaceDeadline", () => {
             { ...resolvedBase, onPace },
             hookContext
         );
-        // The wait is still pending; onPace already fired with the delay.
+        // The wait is still pending; onPace has not fired yet — it fires
+        // after the wait completes so an aborted wait never emits a
+        // full-delay event.
+        expect(onPace).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(5000);
+        await expect(wait).resolves.toBeUndefined();
         expect(onPace).toHaveBeenCalledTimes(1);
         expect(onPace.mock.calls[0][0].delayMs).toBe(5000);
         expect(onPace.mock.calls[0][0].requestId).toBe("req-pace-1");
-        vi.advanceTimersByTime(5000);
-        await expect(wait).resolves.toBeUndefined();
     });
 
     test("clears the deadline when the reset time is now or in the past", async () => {
@@ -111,9 +114,9 @@ describe("recordPaceDeadline", () => {
             { ...resolvedBase, onPace },
             hookContext
         );
-        expect(onPace.mock.calls[0][0].delayMs).toBe(8000);
         vi.advanceTimersByTime(8000);
         await expect(wait).resolves.toBeUndefined();
+        expect(onPace.mock.calls[0][0].delayMs).toBe(8000);
     });
 
     test("does not replace a later deadline with an earlier one", async () => {
@@ -127,9 +130,9 @@ describe("recordPaceDeadline", () => {
             { ...resolvedBase, onPace },
             hookContext
         );
-        expect(onPace.mock.calls[0][0].delayMs).toBe(9000);
         vi.advanceTimersByTime(9000);
         await expect(wait).resolves.toBeUndefined();
+        expect(onPace.mock.calls[0][0].delayMs).toBe(9000);
     });
 
     test("scopes deadlines per host under one owner", async () => {
@@ -237,10 +240,12 @@ describe("paceAfterSuccess", () => {
             hookContext,
             undefined
         );
-        expect(onPace).toHaveBeenCalledTimes(1);
-        expect(onPace.mock.calls[0][0].delayMs).toBe(3000);
+        // The wait is still pending; onPace fires after it completes.
+        expect(onPace).not.toHaveBeenCalled();
         vi.advanceTimersByTime(3000);
         await expect(wait).resolves.toBeUndefined();
+        expect(onPace).toHaveBeenCalledTimes(1);
+        expect(onPace.mock.calls[0][0].delayMs).toBe(3000);
     });
 
     test("does not pace when the remaining quota is at or above the floor", async () => {
@@ -297,9 +302,10 @@ describe("paceAfterSuccess", () => {
             hookContext,
             { limit: 90, remaining: 5, reset }
         );
-        expect(onPace).toHaveBeenCalledTimes(1);
+        expect(onPace).not.toHaveBeenCalled();
         vi.advanceTimersByTime(3000);
         await expect(wait).resolves.toBeUndefined();
+        expect(onPace).toHaveBeenCalledTimes(1);
     });
 
     test("records the deadline for the owner and host when both are given", async () => {
@@ -326,11 +332,14 @@ describe("paceAfterSuccess", () => {
             { ...resolvedBase, onPace },
             hookContext
         );
-        expect(onPace).toHaveBeenCalledTimes(1);
-        expect(onPace.mock.calls[0][0].delayMs).toBeGreaterThan(0);
+        // Both waits are pending; both onPace emissions fire after they
+        // complete.
+        expect(onPace).not.toHaveBeenCalled();
         vi.advanceTimersByTime(3000);
         await expect(wait).resolves.toBeUndefined();
         await expect(second).resolves.toBeUndefined();
+        expect(onPace).toHaveBeenCalledTimes(1);
+        expect(onPace.mock.calls[0][0].delayMs).toBeGreaterThan(0);
     });
 
     test("caps the wait at the maximum pacing window", async () => {
@@ -346,11 +355,13 @@ describe("paceAfterSuccess", () => {
             hookContext,
             undefined
         );
+        expect(onPace).not.toHaveBeenCalled();
+        // The cap is 5 minutes; advance past it so the wait settles.
+        vi.advanceTimersByTime(5 * 60 * 1000);
+        await expect(wait).resolves.toBeUndefined();
         const delay = onPace.mock.calls[0][0].delayMs;
         expect(delay).toBeGreaterThan(0);
         expect(delay).toBeLessThan(60 * 60 * 1000);
-        vi.advanceTimersByTime(delay);
-        await expect(wait).resolves.toBeUndefined();
     });
 });
 

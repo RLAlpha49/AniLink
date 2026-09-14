@@ -277,7 +277,10 @@ export interface RequestOptions {
     paceWithRateLimit?: boolean;
     /**
      * Remaining-quota threshold below which {@link RequestOptions.paceWithRateLimit}
-     * delays the next request until the window resets. Defaults to `1`.
+     * delays the next request until the window resets. Defaults to `1`. Must
+     * be a finite, non-negative integer; `0` disables floor-based pacing
+     * (the transport still honors `Retry-After` on 429 responses), and a
+     * defined-but-invalid value throws instead of being silently coerced.
      */
     rateLimitFloor?: number;
     /**

@@ -14,7 +14,7 @@ Four hooks report request lifecycle events. Configure them per provider slot —
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `onRequestStart` | Immediately before each attempt is sent                                                                                                                   | `{ requestId, url, method, attempt }`                                                                                          |
 | `onResponse`     | After each attempt completes, success or failure. Carries `cacheHit: true` when served from the response cache                                            | `{ requestId, url, method, attempt, durationMs, rateLimit?, cacheHit? }`                                                       |
-| `onPace`         | Just before proactive rate-limit pacing delays the next request after a success                                                                           | `{ requestId, url, method, attempt, delayMs }`                                                                                 |
+| `onPace`         | After a proactive rate-limit pacing wait completes (an aborted wait emits nothing — observe it via `onError` with `abortedDuringPacing: true`)            | { requestId, url, method, attempt, delayMs }                                                                                   |
 | `onError`        | When an attempt fails and `onRetry` is not configured (covering retryable failures), when retries are exhausted, and when a circuit-open fast-fail occurs | `(error: AniLinkError, context)` with `context = { requestId, url, method, attempt, code, status?, nextDelayMs?, rateLimit? }` |
 | `onRetry`        | When a failed attempt is going to be retried; handles retryable failures when configured, in place of `onError` for those attempts                        | Same shape as `onError` with `nextDelayMs` set                                                                                 |
 | `onCircuitOpen`  | When the circuit breaker trips (consecutive failures reach the threshold)                                                                                  | `{ requestId, url, method, attempt, host, failures }`                                                                          |
@@ -77,7 +77,7 @@ const aniLink = new AniLink("token", {
 
 ## Pacing signal
 
-When `paceWithRateLimit` is enabled and a successful response reports the quota below `rateLimitFloor`, the next request waits for the window to reset. The `onPace` hook fires with the wait length (`delayMs`) just before the wait starts, so a deliberate rate-limit wait never gets mistaken for a hung request in hook-based metrics. See [Retries & resilience](/retries-and-resilience) for the pacing configuration.
+When `paceWithRateLimit` is enabled and a successful response reports the quota below `rateLimitFloor`, the next request waits for the window to reset. The `onPace` hook fires with the wait length (`delayMs`) after the wait completes, so a deliberate rate-limit wait never gets mistaken for a hung request in hook-based metrics — and an aborted wait never emits a full-delay event that would over-count pacing time. See [Retries & resilience](/retries-and-resilience) for the pacing configuration.
 
 ## Circuit breaker events
 

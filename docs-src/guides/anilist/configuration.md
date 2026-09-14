@@ -14,7 +14,7 @@ layout: .vitepress/theme/DocsLayout.vue
 | `signal` | `AbortSignal` | — | Cancels in-flight requests | User-driven cancellation |
 | `retry` | `boolean \| Partial<RetryPolicy>` | built-in policy | Automatic retries. `false` opts out. Partial policy merges over defaults | Non-idempotent workflows, custom backoff |
 | `paceWithRateLimit` | `boolean` | `true` | Waits for window reset when remaining quota drops below `rateLimitFloor` | High-volume schedulers |
-| `rateLimitFloor` | `number` | `1` | Remaining-quota threshold that triggers pacing (minimum 1) | Start pacing earlier than the last request |
+| `rateLimitFloor` | `number` | `1` | Remaining-quota threshold that triggers pacing. Must be a finite, non-negative integer; `0` disables floor-based pacing. A defined-but-invalid value throws | Start pacing earlier than the last request |
 | `ignorePaceDeadline` | `boolean` | `false` | Bypass the shared pacing deadline for this call | Urgent single requests during a rate-limited window |
 | `circuitBreaker` | `{ threshold, cooldownMs }` | off | Fail fast with `CIRCUIT_OPEN_ERROR` after `threshold` consecutive failures until `cooldownMs` elapses | Protect against sustained outages |
 | `responseCache` | `ResponseCache` | off | Opt-in TTL cache for `GET` requests | Read-heavy traversals with repeated identical reads |
@@ -22,8 +22,8 @@ layout: .vitepress/theme/DocsLayout.vue
 | `onRetry` | `OnErrorHandler` | — | Fires when a failed attempt will be retried | Retry telemetry |
 | `onRequestStart` | `OnRequestStartHandler` | — | Fires immediately before each attempt | Request counting |
 | `onResponse` | `OnResponseHandler` | — | Fires after each attempt with `durationMs` and `cacheHit?` | Latency metrics, cache hit/miss tracking |
-| `onPace` | `OnPaceHandler` | — | Fires before a rate-limit pacing wait | Pacing telemetry |
-| `onHookError` | `OnHookErrorHandler` | — | Fires when a lifecycle hook throws | Route hook failures to a logger |
+| `onPace` | `OnPaceHandler` | — | Fires after a rate-limit pacing wait completes (an aborted wait emits nothing — observe it via `onError` with `abortedDuringPacing: true`) | Pacing telemetry |
+| `onHookError` | `OnHookErrorHandler` | — | Fires when a lifecycle hook throws. **Wire this to your logger in production** — without it, hook failures fall back to `console.warn`, which is unqueryable in serverless/structured-logging setups | Route hook failures to a logger |
 | `onCircuitOpen` | `OnCircuitOpenHandler` | — | Fires when the circuit breaker trips | Breaker trip alerts |
 | `onCircuitClose` | `OnCircuitCloseHandler` | — | Fires when the circuit breaker closes after a probe | Breaker recovery tracking |
 | `exposeRawAxiosError` | `boolean` | `false` | Attaches the raw Axios error as `rawAxiosError`/`cause`. Sensitive headers are redacted | Local debugging only |

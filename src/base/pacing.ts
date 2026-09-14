@@ -132,8 +132,11 @@ export const awaitPaceDeadline = async (
         paceDeadlines.get(owner)?.delete(host);
         return;
     }
-    safeInvoke(resolved.onPace, "onPace", resolved.onHookError, { ...hookContext, delayMs });
     await sleepForPacing(delayMs, resolved, hookContext);
+    // Emitted after the wait completes so an observer never receives a
+    // full-delay event for a wait that was aborted partway through —
+    // pacing-time metrics would otherwise over-count aborted waits.
+    safeInvoke(resolved.onPace, "onPace", resolved.onHookError, { ...hookContext, delayMs });
 };
 
 /**
@@ -171,8 +174,11 @@ export const paceAfterSuccess = async (
         if (owner !== undefined && host !== undefined) {
             recordPaceDeadline(owner, host, deadlineMs);
         }
-        safeInvoke(resolved.onPace, "onPace", resolved.onHookError, { ...hookContext, delayMs });
         await sleepForPacing(delayMs, resolved, hookContext);
+        // Emitted after the wait completes so an observer never receives a
+        // full-delay event for a wait that was aborted partway through —
+        // pacing-time metrics would otherwise over-count aborted waits.
+        safeInvoke(resolved.onPace, "onPace", resolved.onHookError, { ...hookContext, delayMs });
     }
 };
 

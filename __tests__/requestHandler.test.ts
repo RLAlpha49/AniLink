@@ -88,6 +88,30 @@ test("allows zero to disable the Axios timeout", async () => {
     expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({ timeout: 0 }));
 });
 
+test("rejects a defined-but-invalid rateLimitFloor instead of silently coercing it", async () => {
+    // A fractional, negative, or non-finite floor is a caller bug: coercing
+    // `0` to `1` would make "never pace on floor" inexpressible except by
+    // disabling pacing entirely.
+    for (const rateLimitFloor of [-1, 2.5, Number.NaN, Infinity]) {
+        await expect(
+            sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+                requiresAuth: false,
+                options: { rateLimitFloor },
+            })
+        ).rejects.toThrow(/rateLimitFloor/);
+    }
+    expect(mocks.request).not.toHaveBeenCalled();
+});
+
+test("accepts a rateLimitFloor of 0 as the explicit no-floor pacing configuration", async () => {
+    await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+        requiresAuth: false,
+        options: { rateLimitFloor: 0 },
+    });
+
+    expect(mocks.request).toHaveBeenCalledTimes(1);
+});
+
 test("throws AniLinkAuthError when a token is required but missing", async () => {
     const error = await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
         requiresAuth: true,

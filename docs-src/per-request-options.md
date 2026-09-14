@@ -67,7 +67,7 @@ const anime = await aniLink.mal.anime.get(
 | `onRetry` | `OnErrorHandler` | instance value | Fires when a failed attempt will be retried. |
 | `onRequestStart` | `OnRequestStartHandler` | instance value | Fires immediately before each attempt. |
 | `onResponse` | `OnResponseHandler` | instance value | Fires after each attempt with `durationMs` and `cacheHit?`. |
-| `onPace` | `OnPaceHandler` | instance value | Fires before a rate-limit pacing wait. |
+| `onPace` | `OnPaceHandler` | instance value | Fires after a rate-limit pacing wait completes; an aborted wait emits nothing (observe via `onError`). |
 | `onHookError` | `OnHookErrorHandler` | instance value | Fires when a lifecycle hook throws. |
 | `onCircuitOpen` | `OnCircuitOpenHandler` | instance value | Fires when the circuit breaker trips. |
 | `onCircuitClose` | `OnCircuitCloseHandler` | instance value | Fires when the circuit breaker closes after a probe. |

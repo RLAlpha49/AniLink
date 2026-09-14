@@ -71,6 +71,17 @@ export const resolveRequestOptions = (options: RequestOptions = {}): ResolvedReq
         throw new TypeError("timeout must be a finite number greater than or equal to 0");
     }
 
+    const rateLimitFloor = options.rateLimitFloor ?? 1;
+    if (
+        !Number.isFinite(rateLimitFloor) ||
+        rateLimitFloor < 0 ||
+        !Number.isInteger(rateLimitFloor)
+    ) {
+        throw new TypeError(
+            "rateLimitFloor must be a finite, non-negative integer (0 disables floor-based pacing)"
+        );
+    }
+
     const agents = resolveAgents(options.maxSockets, options.maxFreeSockets);
 
     return {
@@ -79,7 +90,7 @@ export const resolveRequestOptions = (options: RequestOptions = {}): ResolvedReq
         exposeRawAxiosError: options.exposeRawAxiosError ?? false,
         retry: resolveRetryPolicy(options.retry),
         paceWithRateLimit: options.paceWithRateLimit ?? true,
-        rateLimitFloor: Math.max(1, options.rateLimitFloor ?? 1),
+        rateLimitFloor,
         circuitBreaker: options.circuitBreaker,
         retryBudget: options.retryBudget,
         httpAgent: agents.httpAgent,
