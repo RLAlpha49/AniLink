@@ -139,9 +139,16 @@ export abstract class GraphQLOperation extends BaseOperation {
     ): Promise<T> {
         const { requirements, mappings, requiresAuth, transportOptions } = options;
 
-        if (requirements && variables !== undefined) {
+        // Requirements are evaluated against an empty object when the caller
+        // omitted the variables object entirely, so an operation declaring
+        // `kind: "one"`/`"any"`/`"all"` requirements fails fast with a local
+        // AniLinkValidationError instead of deferring to a remote 400. Type
+        // mappings stay skipped: with no variables object there is nothing
+        // to type-check.
+        const variablesForRequirements = variables ?? {};
+        if (requirements) {
             for (const requirement of requirements) {
-                requireVariables(variables, requirement, requirement.message);
+                requireVariables(variablesForRequirements, requirement, requirement.message);
             }
         }
 
