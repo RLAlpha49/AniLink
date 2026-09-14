@@ -123,3 +123,66 @@ binding fails `collectOperationDocument` with a message naming the file.
 | `npm run interfaces:generate`            | Write updated generated interface files.                                                                         |
 | `npm run interfaces:generate -- --check` | Exit 1 when any generated file is stale; runs in CI. Also fails when an operation file lacks the inline binding. |
 | `npm run anilist:api:compare`            | Run the drift checker (artifact 4) against the committed schema snapshot.                                        |
+
+## Design decisions
+
+Rationale for architecture choices made outside the codegen pipeline. Each
+entry records the context, the choice, and the consequence. The response-shape
+codegen decisions above are covered by the artifact map; these are the
+cross-cutting ones.
+
+### ESM-only distribution
+
+- **Context:** Node 22 is the minimum supported runtime; dual ESM/CJS
+  publishing doubles the build matrix, the smoke-test surface, and the
+  interop edge cases (named-export detection, `require` of ESM) for every
+  release.
+- **Choice:** `type: "module"` with `rollup.emitCJS: false` in
+  `build.config.ts` — `.mjs` output only, no CommonJS build.
+- **Consequence:** CJS consumers must migrate or use dynamic `import()`.
+  The package surface stays single-format, and the packaged smoke test
+  (`npm run test:package`) exercises exactly what ships.
+
+### axios as the sole runtime dependency
+
+- **Context:** The transport needs timeouts, abort-signal support, agents,
+  and interceptors on both providers; a hand-rolled `fetch` layer would
+  re-implement agent pooling and error classification that axios already
+  provides, while `undici` would trade one dependency for another.
+- **Choice:** `axios` is the only entry in `dependencies`; everything else is
+  devDependencies or Node built-ins.
+- **Consequence:** One transitive supply-chain surface to audit, and error
+  normalization (`normalizeRequestError`) has a single raw-error shape to
+  handle. Consumers who need `fetch` semantics get them through the
+  normalized `AniLinkError` taxonomy instead.
+
+### Hooks and correlation IDs over a telemetry SDK
+
+- **Context:** Pulling in OpenTelemetry (or any telemetry SDK) would add
+  heavy runtime dependencies, provider-specific init code, and a version
+  coupling consumers do not ask for from an API wrapper.
+- **Choice:** Observability is eight opt-in hooks
+  (`onRequestStart`, `onResponse`, `onPace`, `onError`, `onRetry`,
+  `onCircuitOpen`, `onCircuitClose`, plus the `onHookError` observer) plus a
+  library-generated `requestId` stamped on every hook payload and every
+  thrown `AniLinkError`, so consumers wire their own logger or metrics
+  backend.
+- **Consequence:** Zero telemetry dependencies; consumers own the
+  aggregation. The trade-off is that AniLink ships no dashboards — the hooks
+  are the contract, and the docs' observability guide shows the wiring.
+
+### In-memory-only state
+
+- **Context:** The response cache, keep-alive agent pools, circuit-breaker
+  streaks, retry-budget windows, and pacing deadlines are all per-process
+  cross-request state; a persistence layer (Redis, files) would turn a
+  wrapper into a stateful service and leak credentials into storage.
+- **Choice:** All cross-request state lives in memory, keyed by stable
+  per-instance owners (`BaseOperation.stateOwner`, the agent cache, the
+  `ResponseCache` instance). Nothing is persisted or shared across
+  processes.
+- **Consequence:** State resets on restart and never coordinates multiple
+  processes — a fleet of workers each keeps its own breaker and budget.
+  Consumers needing cross-process coordination implement it at their own
+  layer; the library stays embeddable and side-effect-free
+  (`sideEffects: false`).
