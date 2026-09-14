@@ -47,9 +47,9 @@ const DEFAULT_MAX_CHUNKS = 100;
 
 /**
  * Arbitrary for a finite numeric option, including invalid values the paginator
- * must reject by falling back to a default. `NaN`, `Infinity`, `-Infinity`, and
- * non-positive values all fall back; finite positives are used as-is (then clamped
- * for the capped variants).
+ * must reject with a `TypeError`. `NaN`, `Infinity`, `-Infinity`, and
+ * non-positive values all throw; finite positives are used as-is (then floored
+ * and clamped for the capped variants).
  */
 const numericOption = fc.oneof(
     fc.double({ min: -100, max: 1000, noNaN: false, noDefaultInfinity: false }),
@@ -58,6 +58,13 @@ const numericOption = fc.oneof(
     fc.constant(Infinity),
     fc.constant(-Infinity)
 );
+
+/**
+ * Whether a numeric option value is valid for the paginator: a finite,
+ * positive number. Invalid values throw a `TypeError` at traversal start.
+ */
+const isValidOption = (value: number | undefined): boolean =>
+    value !== undefined && Number.isFinite(value) && value > 0;
 
 /** Arbitrary for a `PaginateOptions`-shaped object with arbitrary numeric knobs. */
 const paginateOptionsArb = fc.record({
@@ -76,10 +83,14 @@ const chunkOptionsArb = fc.record({
 /**
  * Resolve a numeric option the same way `Paginator.resolvePositiveInt` does, so
  * tests can predict the effective value without re-implementing the clamping.
+ * Invalid values throw here too — the property tests assert the traversal
+ * throws for exactly the same inputs.
  */
 function resolvePositiveInt(value: number | undefined, fallback: number): number {
     if (value === undefined) return fallback;
-    if (!Number.isFinite(value) || value <= 0) return fallback;
+    if (!Number.isFinite(value) || value <= 0) {
+        throw new TypeError(`Invalid option ${value}`);
+    }
     return Math.floor(value);
 }
 
@@ -94,6 +105,21 @@ describe("paginate (property-based)", () => {
                 fc.array(fc.boolean(), { maxLength: 20 }),
                 paginateOptionsArb,
                 async (hasNextSequence, options) => {
+                    // Invalid numeric options throw before any fetch; the
+                    // fetch-count invariants only apply to valid inputs.
+                    if (
+                        !isValidOption(options.perPage) ||
+                        !isValidOption(options.startPage) ||
+                        !isValidOption(options.maxPages)
+                    ) {
+                        const fetchPage = vi.fn(async (): Promise<TestPage> => {
+                            throw new Error("must not fetch");
+                        });
+                        await expect(
+                            paginate(fetchPage, "media", { ...options, concurrency: 1 })
+                        ).rejects.toThrow(TypeError);
+                        return;
+                    }
                     const maxPages = resolvePositiveInt(options.maxPages, DEFAULT_MAX_PAGES);
                     let callCount = 0;
                     const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
@@ -175,6 +201,14 @@ describe("paginate (property-based)", () => {
                     media: [{ id: page }],
                 }));
 
+                if (!isValidOption(perPage)) {
+                    await expect(paginate(fetchPage, "media", { perPage })).rejects.toThrow(
+                        TypeError
+                    );
+                    expect(fetchPage).not.toHaveBeenCalled();
+                    return;
+                }
+
                 await paginate(fetchPage, "media", { perPage });
 
                 const expected = resolveCappedInt(perPage, MAX_PER_PAGE, MAX_PER_PAGE);
@@ -184,13 +218,21 @@ describe("paginate (property-based)", () => {
         );
     });
 
-    test("starts from startPage when it is a positive finite integer, else from 1", async () => {
+    test("starts from startPage when it is a positive finite integer, else throws", async () => {
         await fc.assert(
             fc.asyncProperty(numericOption, async (startPage) => {
                 const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
                     pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
                     media: [{ id: page }],
                 }));
+
+                if (!isValidOption(startPage)) {
+                    await expect(paginate(fetchPage, "media", { startPage })).rejects.toThrow(
+                        TypeError
+                    );
+                    expect(fetchPage).not.toHaveBeenCalled();
+                    return;
+                }
 
                 await paginate(fetchPage, "media", { startPage });
 
@@ -281,6 +323,18 @@ describe("paginatePages (property-based)", () => {
                     media: [{ id: page }],
                 }));
 
+                if (!isValidOption(perPage)) {
+                    await expect(
+                        (async () => {
+                            for await (const _page of paginatePages(fetchPage, { perPage })) {
+                                void _page;
+                            }
+                        })()
+                    ).rejects.toThrow(TypeError);
+                    expect(fetchPage).not.toHaveBeenCalled();
+                    return;
+                }
+
                 for await (const _page of paginatePages(fetchPage, { perPage })) {
                     void _page;
                 }
@@ -300,6 +354,21 @@ describe("paginateChunks (property-based)", () => {
                 fc.array(fc.boolean(), { maxLength: 20 }),
                 chunkOptionsArb,
                 async (hasNextSequence, options) => {
+                    // Invalid numeric options throw before any fetch; the
+                    // fetch-count invariants only apply to valid inputs.
+                    if (
+                        !isValidOption(options.perChunk) ||
+                        !isValidOption(options.startChunk) ||
+                        !isValidOption(options.maxChunks)
+                    ) {
+                        const fetchChunk = vi.fn(async (): Promise<TestChunk> => {
+                            throw new Error("must not fetch");
+                        });
+                        await expect(
+                            paginateChunks(fetchChunk, "lists", { ...options, concurrency: 1 })
+                        ).rejects.toThrow(TypeError);
+                        return;
+                    }
                     const maxChunks = resolvePositiveInt(options.maxChunks, DEFAULT_MAX_CHUNKS);
                     let callCount = 0;
                     const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => {
@@ -379,6 +448,14 @@ describe("paginateChunks (property-based)", () => {
                     lists: [{ name: `list-${chunk}` }],
                 }));
 
+                if (!isValidOption(perChunk)) {
+                    await expect(paginateChunks(fetchChunk, "lists", { perChunk })).rejects.toThrow(
+                        TypeError
+                    );
+                    expect(fetchChunk).not.toHaveBeenCalled();
+                    return;
+                }
+
                 await paginateChunks(fetchChunk, "lists", { perChunk });
 
                 const expected = resolveCappedInt(perChunk, MAX_PER_CHUNK, MAX_PER_CHUNK);
@@ -388,13 +465,21 @@ describe("paginateChunks (property-based)", () => {
         );
     });
 
-    test("starts from startChunk when it is a positive finite integer, else from 1", async () => {
+    test("starts from startChunk when it is a positive finite integer, else throws", async () => {
         await fc.assert(
             fc.asyncProperty(numericOption, async (startChunk) => {
                 const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
                     hasNextChunk: false,
                     lists: [{ name: `list-${chunk}` }],
                 }));
+
+                if (!isValidOption(startChunk)) {
+                    await expect(
+                        paginateChunks(fetchChunk, "lists", { startChunk })
+                    ).rejects.toThrow(TypeError);
+                    expect(fetchChunk).not.toHaveBeenCalled();
+                    return;
+                }
 
                 await paginateChunks(fetchChunk, "lists", { startChunk });
 

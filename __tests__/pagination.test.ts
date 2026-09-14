@@ -107,20 +107,36 @@ describe("paginate", () => {
         expect(result.items).toEqual([{ id: 1 }]);
     });
 
-    test("falls back to defaults when options are invalid", async () => {
+    test("throws on defined-but-invalid numeric options instead of silently coercing", async () => {
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
             pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
             media: [{ id: page }],
         }));
 
-        const result = await paginate(fetchPage, "media", {
-            perPage: -5,
-            startPage: 0,
-            maxPages: NaN,
-        } as PaginateOptions);
+        // A negative perPage, a zero startPage, and a NaN maxPages are caller
+        // bugs: silently coercing them to defaults (a negative maxPages typo
+        // becoming a 100-page traversal) hides the mistake behind a full run.
+        await expect(
+            paginate(fetchPage, "media", { perPage: -5 } as PaginateOptions)
+        ).rejects.toThrow(/perPage/);
+        await expect(
+            paginate(fetchPage, "media", { startPage: 0 } as PaginateOptions)
+        ).rejects.toThrow(/startPage/);
+        await expect(
+            paginate(fetchPage, "media", { maxPages: Number.NaN } as PaginateOptions)
+        ).rejects.toThrow(/maxPages/);
+        expect(fetchPage).not.toHaveBeenCalled();
+    });
 
-        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 50, expect.any(AbortSignal));
-        expect(result.pageCount).toBe(1);
+    test("floors fractional numeric options", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
+            media: [{ id: page }],
+        }));
+
+        await paginate(fetchPage, "media", { perPage: 2.7, concurrency: 1 });
+
+        expect(fetchPage).toHaveBeenNthCalledWith(1, 1, 2, expect.any(AbortSignal));
     });
 
     test("clamps perPage above AniList's cap of 50 down to 50", async () => {
@@ -786,20 +802,22 @@ describe("paginateChunks", () => {
         expect(result.chunkCount).toBe(1);
     });
 
-    test("falls back to defaults when options are invalid", async () => {
+    test("throws on defined-but-invalid chunk options instead of silently coercing", async () => {
         const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
             hasNextChunk: false,
             lists: [{ name: `list-${chunk}` }],
         }));
 
-        const result = await paginateChunks(fetchChunk, "lists", {
-            perChunk: -1,
-            startChunk: 0,
-            maxChunks: Infinity,
-        } as ChunkPaginateOptions);
-
-        expect(fetchChunk).toHaveBeenNthCalledWith(1, 1, 500, expect.any(AbortSignal));
-        expect(result.chunkCount).toBe(1);
+        await expect(
+            paginateChunks(fetchChunk, "lists", { perChunk: -1 } as ChunkPaginateOptions)
+        ).rejects.toThrow(/perChunk/);
+        await expect(
+            paginateChunks(fetchChunk, "lists", { startChunk: 0 } as ChunkPaginateOptions)
+        ).rejects.toThrow(/startChunk/);
+        await expect(
+            paginateChunks(fetchChunk, "lists", { maxChunks: Infinity } as ChunkPaginateOptions)
+        ).rejects.toThrow(/maxChunks/);
+        expect(fetchChunk).not.toHaveBeenCalled();
     });
 
     test("clamps perChunk above the documented max of 500 down to 500", async () => {
@@ -867,26 +885,16 @@ describe("paginate concurrency", () => {
         expect(result.items).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }]);
     });
 
-    test("falls back to the default look-ahead window when concurrency is invalid", async () => {
-        let inFlight = 0;
-        let maxObserved = 0;
-        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
-            inFlight += 1;
-            maxObserved = Math.max(maxObserved, inFlight);
-            await new Promise((resolve) => setTimeout(resolve, 5));
-            inFlight -= 1;
-            return {
-                pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 5 }),
-                media: [{ id: page }],
-            };
-        });
+    test("throws on an invalid concurrency instead of silently coercing to the default window", async () => {
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
+            media: [{ id: page }],
+        }));
 
-        const result = await paginate(fetchPage, "media", {
-            concurrency: -3,
-        } as PaginateOptions);
-
-        expect(maxObserved).toBe(3);
-        expect(result.pageCount).toBe(5);
+        await expect(
+            paginate(fetchPage, "media", { concurrency: -3 } as PaginateOptions)
+        ).rejects.toThrow(/concurrency/);
+        expect(fetchPage).not.toHaveBeenCalled();
     });
 
     test("keeps multiple pages in flight with concurrency above one", async () => {

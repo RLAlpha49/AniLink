@@ -40,29 +40,57 @@ export interface LookAheadResult<TEntry> {
 }
 
 /**
- * Resolve a numeric option with a fallback, rejecting non-finite or non-positive values.
+ * Resolve a numeric option with a fallback, throwing on defined-but-invalid values.
+ *
+ * A defined value that is not a finite, positive integer (for example
+ * `perPage: -5`, `NaN`, `0`, or `2.7`) is a caller bug and throws a
+ * `TypeError` instead of silently coercing to the fallback — a negative
+ * `maxPages` typo silently becoming a 100-page traversal is far harder to
+ * debug than a thrown error at the call site. This matches the
+ * fail-fast convention of `resolveAgents` and `resolveRequestOptions`.
+ * Fractional values are floored (the only defensible coercion for a
+ * count-like option); `undefined` falls back.
+ *
  * @param value - The caller-supplied value (may be `undefined`).
- * @param fallback - The default to use when `value` is not a usable positive integer.
+ * @param fallback - The default to use when `value` is `undefined`.
+ * @param name - The option name used in the error message.
  * @returns A positive, finite integer.
+ * @throws A `TypeError` when `value` is defined but not a finite, positive number.
  * @see {@link resolveCappedInt}
  */
-export function resolvePositiveInt(value: number | undefined, fallback: number): number {
+export function resolvePositiveInt(
+    value: number | undefined,
+    fallback: number,
+    name = "option"
+): number {
     if (value === undefined) return fallback;
-    if (!Number.isFinite(value) || value <= 0) return fallback;
+    if (!Number.isFinite(value) || value <= 0) {
+        throw new TypeError(`Invalid ${name} ${value}: it must be a finite number greater than 0.`);
+    }
     return Math.floor(value);
 }
 
 /**
  * Resolve a numeric option like {@link resolvePositiveInt}, then clamp any result
  * above `max` down to exactly `max` so upstream API limits are never exceeded.
+ * Values above the cap are clamped (not thrown) because exceeding a
+ * provider-documented cap is a legitimate tuning attempt, not a bug.
+ *
  * @param value - The caller-supplied value (may be `undefined`).
  * @param max - The upper bound; larger values are reduced to this.
- * @param fallback - The default to use when `value` is not a usable positive integer.
+ * @param fallback - The default to use when `value` is `undefined`.
+ * @param name - The option name used in the error message.
  * @returns A positive, finite integer no greater than `max`.
+ * @throws A `TypeError` when `value` is defined but not a finite, positive number.
  * @see {@link resolvePositiveInt}
  */
-export function resolveCappedInt(value: number | undefined, max: number, fallback: number): number {
-    return Math.min(resolvePositiveInt(value, fallback), max);
+export function resolveCappedInt(
+    value: number | undefined,
+    max: number,
+    fallback: number,
+    name = "option"
+): number {
+    return Math.min(resolvePositiveInt(value, fallback, name), max);
 }
 
 /**

@@ -4,6 +4,7 @@ import { AniLinkValidationError } from "../../../base/AniLinkError";
 import {
     bridgeAbortSignal,
     fetchWithLookAhead,
+    MAX_CONCURRENCY,
     resolveCappedInt,
     resolvePositiveInt,
 } from "../../../base/pagination";
@@ -60,12 +61,6 @@ const safeCallback = <T>(
  * `concurrency: 1` for strictly sequential fetches.
  */
 const DEFAULT_CONCURRENCY = 3;
-
-/**
- * Upper bound on caller-supplied look-ahead `concurrency`. Values above this are
- * clamped down so a typo like `concurrency: 1000` cannot hammer AniList.
- */
-const MAX_CONCURRENCY = 8;
 
 /**
  * Keys of `T` whose value is a readonly array — the items field of a page or
@@ -282,13 +277,14 @@ export async function paginate<
     itemsKey: K,
     options?: PaginateOptions
 ): Promise<PaginateResult<ArrayElement<TPage, K>>> {
-    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE);
-    const startPage = resolvePositiveInt(options?.startPage, 1);
-    const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES);
+    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE, "perPage");
+    const startPage = resolvePositiveInt(options?.startPage, 1, "startPage");
+    const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES, "maxPages");
     const concurrency = resolveCappedInt(
         options?.concurrency,
         MAX_CONCURRENCY,
-        DEFAULT_CONCURRENCY
+        DEFAULT_CONCURRENCY,
+        "concurrency"
     );
 
     const { signal, dispose } = bridgeAbortSignal(options?.signal);
@@ -369,13 +365,14 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
     fetchPage: (page: number, perPage: number, signal?: AbortSignal) => Promise<TPage>,
     options?: PaginateOptions
 ): AsyncGenerator<TPage> {
-    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE);
-    const startPage = resolvePositiveInt(options?.startPage, 1);
-    const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES);
+    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE, "perPage");
+    const startPage = resolvePositiveInt(options?.startPage, 1, "startPage");
+    const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES, "maxPages");
     const concurrency = resolveCappedInt(
         options?.concurrency,
         MAX_CONCURRENCY,
-        DEFAULT_CONCURRENCY
+        DEFAULT_CONCURRENCY,
+        "concurrency"
     );
 
     const { signal, dispose } = bridgeAbortSignal(options?.signal);
@@ -473,13 +470,19 @@ export async function paginateChunks<
     itemsKey: K,
     options?: ChunkPaginateOptions
 ): Promise<ChunkPaginateResult<ArrayElement<TChunk, K>>> {
-    const perChunk = resolveCappedInt(options?.perChunk, MAX_PER_CHUNK, DEFAULT_PER_CHUNK);
-    const startChunk = resolvePositiveInt(options?.startChunk, 1);
-    const maxChunks = resolvePositiveInt(options?.maxChunks, DEFAULT_MAX_CHUNKS);
+    const perChunk = resolveCappedInt(
+        options?.perChunk,
+        MAX_PER_CHUNK,
+        DEFAULT_PER_CHUNK,
+        "perChunk"
+    );
+    const startChunk = resolvePositiveInt(options?.startChunk, 1, "startChunk");
+    const maxChunks = resolvePositiveInt(options?.maxChunks, DEFAULT_MAX_CHUNKS, "maxChunks");
     const concurrency = resolveCappedInt(
         options?.concurrency,
         MAX_CONCURRENCY,
-        DEFAULT_CONCURRENCY
+        DEFAULT_CONCURRENCY,
+        "concurrency"
     );
 
     const { signal, dispose } = bridgeAbortSignal(options?.signal);

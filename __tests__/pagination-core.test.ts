@@ -9,27 +9,43 @@ import {
 } from "../src/base/pagination";
 
 describe("resolvePositiveInt", () => {
-    test("falls back on undefined and invalid values", () => {
+    test("falls back on undefined", () => {
         expect(resolvePositiveInt(undefined, 7)).toBe(7);
-        expect(resolvePositiveInt(Number.NaN, 7)).toBe(7);
-        expect(resolvePositiveInt(Number.POSITIVE_INFINITY, 7)).toBe(7);
-        expect(resolvePositiveInt(Number.NEGATIVE_INFINITY, 7)).toBe(7);
-        expect(resolvePositiveInt(0, 7)).toBe(7);
-        expect(resolvePositiveInt(-3, 7)).toBe(7);
+    });
+
+    test("throws on defined-but-invalid values instead of silently coercing", () => {
+        // A defined-but-invalid value is a caller bug: silently coercing it
+        // to the fallback hides the mistake behind a full traversal.
+        for (const invalid of [
+            Number.NaN,
+            Number.POSITIVE_INFINITY,
+            Number.NEGATIVE_INFINITY,
+            0,
+            -3,
+        ]) {
+            expect(() => resolvePositiveInt(invalid, 7)).toThrow(TypeError);
+        }
     });
 
     test("floors positive values", () => {
         expect(resolvePositiveInt(5, 7)).toBe(5);
         expect(resolvePositiveInt(5.9, 7)).toBe(5);
     });
+
+    test("names the offending option in the error message", () => {
+        expect(() => resolvePositiveInt(-5, 7, "perPage")).toThrow(/perPage/);
+    });
 });
 
 describe("resolveCappedInt", () => {
-    test("clamps above the cap and falls back below it", () => {
+    test("clamps above the cap and falls back on undefined", () => {
         expect(resolveCappedInt(100, 50, 50)).toBe(50);
         expect(resolveCappedInt(undefined, 50, 25)).toBe(25);
-        expect(resolveCappedInt(Number.NaN, 50, 25)).toBe(25);
         expect(resolveCappedInt(10, 50, 25)).toBe(10);
+    });
+
+    test("throws on defined-but-invalid values like resolvePositiveInt", () => {
+        expect(() => resolveCappedInt(Number.NaN, 50, 25)).toThrow(TypeError);
     });
 });
 
