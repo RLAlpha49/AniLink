@@ -9,6 +9,7 @@ import {
     type AniLinkCredentials,
     type AniListCredentials,
     type MalCredentials,
+    type ProviderCredentials,
 } from "../base/credentials";
 import type { RequestOptions } from "../base/RequestHandler";
 import type { MyAnimeListApi } from "../apis/rest/mal/facade";
@@ -104,16 +105,20 @@ export function buildProviderClients(
     legacyOptions?: AniLinkOptions
 ): ProviderClients {
     const clientHookError = credentials.onHookError;
-    const anilistSlot =
-        clientHookError !== undefined && credentials.anilist?.onHookError === undefined
-            ? { ...credentials.anilist, onHookError: clientHookError }
-            : credentials.anilist;
-    const malSlot =
-        clientHookError !== undefined && credentials.mal?.onHookError === undefined
-            ? { ...credentials.mal, onHookError: clientHookError }
-            : credentials.mal;
+    // Applies the client-level onHookError default to one provider slot; a
+    // slot that defines its own observer keeps it.
+    const withDefaultHook = <T extends ProviderCredentials>(slot: T | undefined): T | undefined =>
+        clientHookError !== undefined && slot?.onHookError === undefined
+            ? ({ ...slot, onHookError: clientHookError } as T)
+            : slot;
+
+    // Explicit construction keeps every factory call fully typed: a
+    // factory signature change fails here at compile time instead of
+    // surfacing at runtime behind a cast. legacyOptions is forwarded only
+    // to the AniList factory, matching the legacy `new AniLink(token,
+    // options)` contract.
     return {
-        anilist: PROVIDER_FACTORIES.anilist(anilistSlot, legacyOptions),
-        mal: PROVIDER_FACTORIES.mal(malSlot),
+        anilist: PROVIDER_FACTORIES.anilist(withDefaultHook(credentials.anilist), legacyOptions),
+        mal: PROVIDER_FACTORIES.mal(withDefaultHook(credentials.mal)),
     };
 }

@@ -34,7 +34,7 @@ const aniLink = new AniLink({
 });
 ```
 
-When the first argument is a credentials object, the second constructor argument goes unused — transport settings belong inside each provider's slot, where they are easy to find.
+When the first argument is a credentials object, the second constructor argument is rejected with a `TypeError` — transport settings belong inside each provider's slot, where they are easy to find. The credentials form carries its own per-provider transport settings, so a second argument would be silently dropped; the constructor rejects the ambiguous call instead.
 
 ## Credential slots
 

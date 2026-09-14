@@ -113,7 +113,8 @@ export class AniLink {
      * owns its own credentials shape, and credentials given under one key are
      * never applied to another provider's requests.
      * @param {string | AniLinkCredentials} [authToken] - The authentication token to use for AniList API requests, or a per-provider credentials object (`{ anilist?: …, mal?: … }`).
-     * @param {AniLinkOptions | AniLinkCredentials} [options] - Transport settings scoped to this instance: `timeout`, `signal` cancellation, automatic retries under the default policy (`retry: false` opts out), opt-in `paceWithRateLimit` pacing and `circuitBreaker` fast-fail, the `onError`/`onRetry`/`onRequestStart`/`onResponse` observability hooks, and `exposeRawAxiosError` debugging. Options never leak between instances. When the first argument is a credentials object, this parameter is unused (transport settings belong inside each provider's credentials).
+     * @param {AniLinkOptions} [options] - Transport settings scoped to this instance: `timeout`, `signal` cancellation, automatic retries under the default policy (`retry: false` opts out), opt-in `paceWithRateLimit` pacing and `circuitBreaker` fast-fail, the `onError`/`onRetry`/`onRequestStart`/`onResponse` observability hooks, and `exposeRawAxiosError` debugging. Options never leak between instances. Only valid when the first argument is a token string or omitted; combining a credentials object with a second argument throws, because the credentials form carries its own per-provider transport settings and a second argument would be silently dropped.
+     * @throws {TypeError} When a per-provider credentials object is combined with a second `options` argument. The credentials form carries transport settings inside each provider slot, so the second argument would be silently ignored — the constructor rejects the ambiguous call instead.
      * @public
      * @example
      * ```typescript
@@ -142,6 +143,11 @@ export class AniLink {
         } else if (authToken === undefined) {
             clients = buildProviderClients({}, options);
         } else {
+            if (options !== undefined) {
+                throw new TypeError(
+                    "AniLink: when the first argument is a credentials object, transport settings belong inside each provider's credentials slot. Pass options as `new AniLink(credentials)` with per-slot settings, or use the legacy `new AniLink(token, options)` form."
+                );
+            }
             clients = buildProviderClients(authToken);
         }
         this.anilist = clients.anilist;
