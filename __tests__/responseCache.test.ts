@@ -89,6 +89,39 @@ describe("ResponseCache", () => {
         expect(() => new ResponseCache({ ttlMs: -1 })).toThrow(TypeError);
     });
 
+    test("ttlMs of 0 disables retention entirely: set is a no-op and get is a miss", () => {
+        const cache = new ResponseCache({ ttlMs: 0 });
+
+        cache.set("GET", "https://example.com/api", undefined, undefined, { id: 1 });
+
+        // The explicit "do not retain" configuration must be honored: no
+        // already-expired entry is stored, so every read is a miss.
+        expect(cache.get("GET", "https://example.com/api")).toBeUndefined();
+    });
+
+    test("canonicalizes query parameter order so the same resource shares one entry", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+
+        cache.set("GET", "https://example.com/api?a=1&b=2", undefined, undefined, { id: 1 });
+
+        // Same resource, different parameter order: one shared entry.
+        expect(cache.get("GET", "https://example.com/api?b=2&a=1")).toEqual({ id: 1 });
+        // A different resource still misses.
+        expect(cache.get("GET", "https://example.com/api?a=1&b=3")).toBeUndefined();
+    });
+
+    test("does not mistake a question mark inside a fragment for the query delimiter", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+
+        cache.set("GET", "https://example.com/api#frag?x=1", undefined, undefined, { id: 1 });
+
+        // The `?` lives inside the fragment, so there is no query string to
+        // sort: both spellings key identically and hit the same entry.
+        expect(cache.get("GET", "https://example.com/api#frag?x=1")).toEqual({ id: 1 });
+        // A URL with a real query string is a different key.
+        expect(cache.get("GET", "https://example.com/api?x=1#frag")).toBeUndefined();
+    });
+
     test("rejects non-integer or non-positive maxEntries", () => {
         expect(() => new ResponseCache({ maxEntries: 0 })).toThrow(TypeError);
         expect(() => new ResponseCache({ maxEntries: -1 })).toThrow(TypeError);

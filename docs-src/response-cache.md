@@ -41,7 +41,7 @@ Only `GET` responses are cached. AniList queries are `POST` requests and are **n
 
 To cache AniList reads, use `custom()` with a `GET` method, or cache at the application layer.
 
-Values are deep-copied on write and on read: the cache never shares a reference with the caller, so mutating an object after `set` (or after receiving it from `get`) cannot poison later hits. Cache keys hash the request body, so a credential-bearing `GET` body is never duplicated into the key in plaintext.
+Values are deep-copied on write and on read: the cache never shares a reference with the caller, so mutating an object after `set` (or after receiving it from `get`) cannot poison later hits. Cache keys hash the request body, so a credential-bearing `GET` body is never duplicated into the key in plaintext. The URL's query string is canonicalized (parameters sorted) before keying, so the same resource requested with a different parameter order (`?a=1&b=2` vs `?b=2&a=1`) hits the same entry.
 
 ## Cache hits and observability
 
@@ -70,7 +70,28 @@ The `onRequestStart` hook also fires for cache hits so request-volume counters s
 cache.clear();
 ```
 
-Expired entries are evicted lazily on read — a `get` call for an expired entry removes it and returns `undefined`. No background sweeper required.
+Expired entries are evicted lazily on read — a `get` call for an expired entry removes it and returns `undefined` — and opportunistically on write, so never-re-read entries do not linger past their TTL. No background sweeper required.
+
+### Read-after-write staleness
+
+The cache is TTL-only: a mutation sent through the same client does **not** invalidate cached `GET` responses, so a read-after-write sequence can return stale data for up to `ttlMs`. When that window matters, delete the affected entry after the mutation:
+
+```typescript
+const aniLink = new AniLink({
+    mal: { accessToken: "mal-token", responseCache: cache },
+});
+
+// Read (cached) …
+await aniLink.mal.anime.get({ id: 21 });
+
+// … mutate …
+await aniLink.mal.anime.updateMyListStatus({ anime_id: 21, status: "completed" });
+
+// … and drop the cached read so the next `get` refetches.
+cache.delete("GET", "https://api.myanimelist.net/v2/anime/21?fields=...");
+```
+
+`delete` keys on the exact `(method, url, body, authKey)` the read used — the same arguments `get` takes. Keep `ttlMs` short for read-after-write-sensitive workloads; treat `delete` as the targeted tool and `clear` as the sledgehammer.
 
 ## Next steps
 

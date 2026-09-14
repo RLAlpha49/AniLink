@@ -24,7 +24,13 @@ interface CacheEntry<T> {
  * Configuration for the opt-in response cache.
  */
 export interface ResponseCacheOptions {
-    /** The time-to-live for cached entries, in milliseconds. Defaults to 60_000 (1 minute). */
+    /**
+     * The time-to-live for cached entries, in milliseconds. Defaults to
+     * 60_000 (1 minute). `0` disables retention entirely — every `set()` is
+     * a no-op and every `get()` is a miss — so a shared cache instance can be
+     * wired in for shape-compatibility while a particular workload opts out
+     * of caching without constructing a second client.
+     */
     ttlMs?: number;
     /** The maximum number of entries to retain. Defaults to 128. Entries are evicted LRU when the cap is reached. */
     maxEntries?: number;
@@ -115,6 +121,7 @@ export class ResponseCache {
     private readonly entries = new Map<string, CacheEntry<unknown>>();
     private readonly ttlMs: number;
     private readonly maxEntries: number;
+    private nextExpiryCheckAt: number | undefined;
 
     /**
      * Creates a response cache.
@@ -136,6 +143,36 @@ export class ResponseCache {
     }
 
     /**
+     * Canonicalizes a URL for keying: the query string's parameters are
+     * sorted so `?a=1&b=2` and `?b=2&a=1` — the same resource — share one
+     * cache entry instead of missing each other.
+     *
+     * The query string is anchored at the first `?` that appears before any
+     * `#`, so a `?` inside a fragment (`path#frag?x`) is never mistaken for
+     * the query delimiter — harmless for keying, but the method must stay
+     * correct if it is ever reused for matching or allowlists.
+     *
+     * @param url - The request URL, possibly carrying a query string.
+     * @returns The URL with its query parameters in sorted order.
+     */
+    private static canonicalizeUrl(url: string): string {
+        const fragmentIndex = url.indexOf("#");
+        const searchStart = fragmentIndex === -1 ? url : url.slice(0, fragmentIndex);
+        const queryIndex = searchStart.indexOf("?");
+        if (queryIndex === -1) {
+            return url;
+        }
+        const base = searchStart.slice(0, queryIndex);
+        const query = searchStart.slice(queryIndex + 1);
+        const fragment = fragmentIndex === -1 ? "" : url.slice(fragmentIndex);
+        if (query === "") {
+            return url;
+        }
+        const sorted = query.split("&").sort().join("&");
+        return `${base}?${sorted}${fragment}`;
+    }
+
+    /**
      * Builds the cache key for a request.
      *
      * The serialized body is SHA-256 hashed (truncated to 16 hex chars)
@@ -143,7 +180,9 @@ export class ResponseCache {
      * duplicated into the key string in plaintext — the key map retains
      * entries for up to the TTL, outliving the error paths the rest of the
      * library scrubs. The hash is deterministic, so equal bodies still share
-     * one entry and different bodies still get different entries.
+     * one entry and different bodies still get different entries. The URL's
+     * query string is canonicalized (parameters sorted) so the same resource
+     * requested with a different parameter order hits the same entry.
      *
      * @param method - The HTTP method.
      * @param url - The request URL.
@@ -162,7 +201,7 @@ export class ResponseCache {
             data === undefined
                 ? "none"
                 : `sha256:${createHash("sha256").update(stableStringify(data)).digest("hex").slice(0, 16)}`;
-        return `${method}:${url}:${body}:${authKey ?? "none"}`;
+        return `${method}:${ResponseCache.canonicalizeUrl(url)}:${body}:${authKey ?? "none"}`;
     }
 
     /**
@@ -191,7 +230,17 @@ export class ResponseCache {
         // Refresh recency: delete + re-insert moves the entry to the end.
         this.entries.delete(key);
         this.entries.set(key, entry);
-        return structuredClone(entry.data) as T;
+        try {
+            return structuredClone(entry.data) as T;
+        } catch {
+            // Read-side defensive guard, mirroring set(): a payload that
+            // cannot be cloned (for example one stored through a future
+            // unguarded path) degrades to a cache miss instead of throwing
+            // on a hit. The entry is dropped so later reads do not retry
+            // the same failing clone.
+            this.entries.delete(key);
+            return undefined;
+        }
     }
 
     /**
@@ -215,6 +264,11 @@ export class ResponseCache {
         response: T
     ): void {
         if (method !== "GET") return;
+        // `ttlMs: 0` is the explicit "do not retain" configuration: storing
+        // an already-expired entry would make `get()` a guaranteed miss while
+        // still paying the clone and eviction bookkeeping, so skip the write
+        // entirely.
+        if (this.ttlMs === 0) return;
         const key = ResponseCache.buildKey(method, url, data, authKey);
         let snapshot: T;
         try {
@@ -231,6 +285,13 @@ export class ResponseCache {
             // fall back to storing the live reference.
             return;
         }
+        // Opportunistic purge: expired entries are also evicted on write so
+        // never-re-read entries do not linger until LRU pressure. Bounded by
+        // `maxEntries`, but this keeps long-TTL caches from holding plaintext
+        // bodies longer than their TTL. The `nextExpiryCheckAt` watermark
+        // amortizes the sweep: it runs at most once per TTL elapse, not on
+        // every write.
+        this.purgeExpired();
         if (this.entries.has(key)) {
             // Refresh recency for an existing key instead of relying on
             // `Map.set` keeping its original position.
@@ -275,6 +336,32 @@ export class ResponseCache {
         if (oldestKey !== undefined) {
             this.entries.delete(oldestKey);
         }
+    }
+
+    /**
+     * Removes every entry whose TTL has elapsed. Called opportunistically on
+     * `set()` so expired entries are dropped even when they are never read
+     * again; `get()` also evicts lazily on read. The `nextExpiryCheckAt`
+     * watermark skips the sweep entirely while no entry can have expired,
+     * keeping the per-write cost O(1) amortized instead of O(n).
+     */
+    private purgeExpired(): void {
+        const now = Date.now();
+        if (this.nextExpiryCheckAt !== undefined && now < this.nextExpiryCheckAt) {
+            return;
+        }
+        let nextCheck: number | undefined;
+        for (const [key, entry] of this.entries) {
+            if (now >= entry.expiresAt) {
+                this.entries.delete(key);
+            } else {
+                nextCheck =
+                    nextCheck === undefined
+                        ? entry.expiresAt
+                        : Math.min(nextCheck, entry.expiresAt);
+            }
+        }
+        this.nextExpiryCheckAt = nextCheck;
     }
 
     /**
