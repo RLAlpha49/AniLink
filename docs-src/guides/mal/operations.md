@@ -177,6 +177,70 @@ await aniLink.mal.manga.deleteFromList({ id: 1 });
 
 **Reference:** [MAL manga list-status delete endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_delete) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListMangaApi.html)
 
+## `mal.anime.updateMyListStatus(params, options?)`
+
+Updates the authenticated user's anime list status. Calls `PATCH /anime/{id}/my_list_status` with a form-urlencoded body — the anime twin of `mal.manga.updateMyListStatus`, and MAL rejects JSON on this endpoint too.
+
+| Parameter | Type                             | Required | Description                                                                                         |
+| --------- | -------------------------------- | -------- | --------------------------------------------------------------------------------------------------- |
+| `params`  | `MalAnimeListStatusUpdateParams` | yes      | `{ id, ...fields }` — the anime ID plus only the list-status fields to change, form-encoded for MAL |
+| `options` | `MalRequestOptions`              | no       | Field selection plus transport settings, merged over the instance defaults                          |
+
+Every payload field is optional — send only the ones you want to change. The `MalAnimeListStatusUpdate` fields:
+
+| Field                  | Type       | Description                                                                               |
+| ---------------------- | ---------- | ----------------------------------------------------------------------------------------- |
+| `status`               | `string`   | The watch status; one of `watching`, `completed`, `on_hold`, `dropped`, `plan_to_watch`   |
+| `num_watched_episodes` | `number`   | The number of episodes the user has watched                                               |
+| `score`                | `number`   | The user's score out of 10                                                                |
+| `start_date`           | `string`   | The date watching started, ISO 8601; MAL also accepts partial dates (`YYYY-MM` or `YYYY`) |
+| `finish_date`          | `string`   | The date watching finished, ISO 8601; partial dates accepted                              |
+| `comments`             | `string`   | Free-form notes attached to the entry                                                     |
+| `is_rewatching`        | `boolean`  | Whether the user is currently rewatching the anime                                        |
+| `num_times_rewatched`  | `number`   | The number of times the user has rewatched the anime                                      |
+| `rewatch_value`        | `number`   | The rewatch value rating (0-5)                                                            |
+| `priority`             | `number`   | The priority rating (0-2)                                                                 |
+| `tags`                 | `string[]` | User-defined tags; sent to MAL as a comma-separated string                                |
+
+**Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
+
+**Returns:** `MalAnimeListStatus` — the updated list status. MAL reports the episode count as `num_episodes_watched` (the request field is `num_watched_episodes` — a documented MAL asymmetry) and returns `tags` as an array of strings. Quirks of the API, faithfully passed through.
+
+```typescript
+const status = await aniLink.mal.anime.updateMyListStatus({
+    id: 21,
+    status: "watching",
+    num_watched_episodes: 10,
+    score: 9,
+});
+console.log(status.num_episodes_watched);
+```
+
+**Errors:** `AniLinkAuthError` (no token configured), `AniLinkValidationError` (params carries no list-status field to change — thrown before any request is sent), `AniLinkRestError` (e.g. `400` invalid fields), `AniLinkNetworkError`. Excess properties on the params object (typos like `num_watched_episode`) are dropped client-side instead of being form-encoded to MAL.
+
+**Reference:** [MAL anime list-status endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
+
+## `mal.anime.deleteFromList(params, options?)`
+
+Removes an anime from the authenticated user's list. Calls `DELETE /anime/{id}/my_list_status` — gone means gone.
+
+| Parameter | Type                   | Required | Description                                           |
+| --------- | ---------------------- | -------- | ----------------------------------------------------- |
+| `params`  | `MalAnimeDeleteParams` | yes      | `{ id }` — the MyAnimeList anime ID                   |
+| `options` | `MalRequestOptions`    | no       | Transport settings, merged over the instance defaults |
+
+**Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
+
+**Returns:** `void` — the response carries no body.
+
+```typescript
+await aniLink.mal.anime.deleteFromList({ id: 21 });
+```
+
+**Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `404` unknown ID), `AniLinkNetworkError`.
+
+**Reference:** [MAL anime list-status delete endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
+
 ## `mal.anime.seasonal(params, options?)`
 
 Gets the anime of one broadcast season. Calls `GET /anime/season/{year}/{season}` — the seasonal chart, the browsing feature third-party apps are built on.

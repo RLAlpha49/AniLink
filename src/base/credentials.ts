@@ -41,6 +41,17 @@ export interface AniListCredentials extends ProviderCredentials {
  * request-auth value without leaking either field into other providers'
  * requests.
  *
+ * The inherited transport-level `onHookError` (a {@link RequestOptions} field,
+ * not a MAL-specific one) does double duty on this slot: the transport
+ * invokes it for request-hook failures, and the automatic token-refresh
+ * lifecycle (`MalTokenRefresher`, wired in `apis/rest/mal/wiring.ts`)
+ * consumes the same value for token-refresh observer failures — a failed
+ * refresh grant is reported under the `malTokenRefresh` hook name and a
+ * throwing `onTokenRefresh` callback under the `onTokenRefresh` hook name.
+ * A slot-level `onHookError` therefore covers both failure classes; the
+ * client-level `onHookError` on {@link AniLinkCredentials} covers them only
+ * when the slot defines no observer of its own.
+ *
  * @see {@link resolveMalCredentials}
  */
 export interface MalCredentials extends ProviderCredentials {

@@ -61,6 +61,7 @@ const anime = await aniLink.mal.anime.get(
 | `paceWithRateLimit` | `boolean` | instance value | Proactive rate-limit pacing. |
 | `rateLimitFloor` | `number` | instance value | Remaining-quota threshold that triggers pacing. |
 | `circuitBreaker` | `{ threshold, cooldownMs }` | instance value | Circuit breaker configuration. |
+| `retryBudget` | `{ maxRetriesPerWindow, windowMs }` | instance value | Per-window cap on total retries across requests. Exhausted budgets surface failures without retries until the window elapses. |
 | `ignorePaceDeadline` | `boolean` | `false` | Bypass the shared rate-limit pacing deadline for this call. |
 | `responseCache` | `ResponseCache` | instance value | Opt-in response cache for `GET` requests. |
 | `onError` | `OnErrorHandler` | instance value | Fires per failed attempt and when retries are exhausted. |

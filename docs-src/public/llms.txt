@@ -17,7 +17,7 @@
 - [Retries & resilience](https://anilink.alpha49.com/retries-and-resilience): The three shared-transport resilience mechanisms — transient-failure retries, rate-limit pacing, and the circuit breaker — and their per-provider defaults.
 - [Cancellation & timeouts](https://anilink.alpha49.com/cancellation-and-timeouts): Per-request timeout and AbortSignal support in AniLink, including the fail-fast validation of invalid timeout values.
 - [Per-request options](https://anilink.alpha49.com/per-request-options): Override timeouts, retries, and other instance defaults for a single call with the trailing per-request options argument every operation accepts.
-- [Observability](https://anilink.alpha49.com/observability): The four AniLink request-lifecycle hooks, configured per provider slot so they never leak between providers.
+- [Observability](https://anilink.alpha49.com/observability): The seven AniLink request-lifecycle hooks plus the onHookError failure observer, configured per provider slot so they never leak between providers.
 - [Response cache](https://anilink.alpha49.com/response-cache): The opt-in in-memory TTL response cache keyed by method, url, and body: repeated identical reads skip the network and mutations are never cached.
 
 ## Cookbook
@@ -37,7 +37,7 @@
 - [Pagination](https://anilink.alpha49.com/guides/anilist/pagination): The three AniList pagination helpers — paginate, paginatePages, and the chunk-based sibling paginateChunks — and when to use each traversal style.
 - [Mutations](https://anilink.alpha49.com/guides/anilist/mutations): The authenticated aniLink.anilist.mutation operations: token requirement, and why mutations are never retried by default.
 - [Custom queries](https://anilink.alpha49.com/guides/anilist/custom-queries): Send a GraphQL document you write yourself with anilist.custom — the typed escape hatch for field combinations the operations do not expose.
-- [Helpers](https://anilink.alpha49.com/guides/anilist/helpers): The three AniList data helpers — fuzzyDate, flattenMediaListCollection, and crossLink — as client methods on the anilist namespace.
+- [Helpers](https://anilink.alpha49.com/guides/anilist/helpers): The four AniList data helpers — fuzzyDate, fuzzyDateInt, flattenMediaListCollection, and crossLink — as client methods on the anilist namespace.
 
 ## MyAnimeList guides
 

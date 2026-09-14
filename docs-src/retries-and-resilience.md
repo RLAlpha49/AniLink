@@ -54,6 +54,22 @@ const tuned = new AniLink("token", {
 
 When a request runs out of retries, the last error is thrown — catch it as shown in [Error handling](/error-handling).
 
+## Retry budget
+
+The per-call `maxRetries` bounds retries for **one** request. A workload issuing thousands of requests during a sustained outage would still multiply API call volume by up to `maxRetries + 1` indefinitely — every failing call spends its own full retry allotment. The opt-in `retryBudget` bounds the **total** retry spend per rolling window across the client's requests:
+
+```typescript
+const budgeted = new AniLink("token", {
+    retryBudget: { maxRetriesPerWindow: 50, windowMs: 60_000 },
+});
+```
+
+The budget complements the other two mechanisms: the retry policy bounds one request's retries, the circuit breaker fast-fails after consecutive failures, and the budget caps the aggregate retry spend — which handles chronic intermittent failures even when the breaker never trips. When the budget for the current window is exhausted, failures surface without retries until the window elapses; the window then resets and retries resume.
+
+The window is **fixed, not sliding**: it is anchored to the first failure after the previous window elapsed and resets completely when `windowMs` passes. A burst of failures at adjacent window edges can therefore spend up to `2 × maxRetriesPerWindow` retries within one `windowMs` of wall-clock time — size `maxRetriesPerWindow` for that worst-case edge burst if you need a strict bound.
+
+Like the breaker, the budget's state is keyed per operation instance, so the cap applies across every request that operation dispatches — not per call. Budget state is in-memory only and resets on restart; see [Observability](/observability) for the `stateOwner` diagnostic that fires when cross-request state would be keyed by a per-request options object.
+
 ## Rate-limit pacing
 
 On by default. The transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits for the window to reset instead of discovering the limit the hard way, via a `429`. And that hard way is expensive: with pacing off, every `429` costs a wasted request plus a retry wait. Pacing avoids both by tracking the window from the response headers. The optional `onPace` hook fires after each pacing wait completes with the wait length, so an intentional rate-limit wait never gets mistaken for a hung request — and an aborted wait never emits a full-delay event — see [Observability](/observability).

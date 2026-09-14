@@ -1,12 +1,12 @@
 ---
 title: Observability
-description: "The four AniLink request-lifecycle hooks, configured per provider slot so they never leak between providers."
+description: "The seven AniLink request-lifecycle hooks plus the onHookError failure observer, configured per provider slot so they never leak between providers."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # Observability
 
-Four hooks report request lifecycle events. Configure them per provider slot — they never leak between providers.
+Seven lifecycle hooks report request lifecycle events — `onRequestStart`, `onResponse`, `onPace`, `onError`, `onRetry`, `onCircuitOpen`, and `onCircuitClose` — plus the `onHookError` observer, which reports failures of any of those hooks (and of the MAL token-refresh callbacks) instead of lifecycle events itself. Configure them per provider slot — they never leak between providers.
 
 ## Hook contracts
 
@@ -135,6 +135,20 @@ const aniLink = new AniLink({
     mal: { accessToken: "m" }, // inherits the client-level onHookError
 });
 ```
+
+### `onHookError` precedence
+
+The full precedence chain, most specific first:
+
+1. **Per-request** — an `onHookError` set on the trailing options object of a single call wins for that call.
+2. **Slot-level** — an `onHookError` set inside a provider's credentials (it is a transport `RequestOptions` field, so it lives next to `onResponse` and friends in the slot) wins for that provider's requests and blocks the client-level default.
+3. **Client-level** — the top-level `onHookError` on the credentials object applies only to slots that do not define their own.
+
+When unset at every level, hook failures fall back to `console.warn`.
+
+On the MAL slot, the slot-level `onHookError` does double duty: besides request-hook failures, it also observes the automatic token-refresh lifecycle — a failed refresh grant is reported under the `malTokenRefresh` hook name, and a throwing `onTokenRefresh` persistence callback under the `onTokenRefresh` hook name. The client-level default covers both when the slot defines no observer of its own.
+
+The `stateOwner` diagnostic (below) follows the same resolution: it is emitted through the triggering request's resolved observer — the per-request one when set, otherwise the slot's, otherwise the client-level default.
 
 ### The `stateOwner` diagnostic
 
