@@ -83,8 +83,18 @@ describe("per-provider credential isolation", () => {
                 timeout: 7_000,
             })
         ).toEqual({
-            auth: { token: "mal-token", headers: { "X-MAL-CLIENT-ID": "mal-client" } },
+            // The client-ID header is suppressed when a bearer token is
+            // present: it is only for client-ID-only access to public
+            // endpoints.
+            auth: { token: "mal-token", headers: undefined },
             options: { timeout: 7_000 },
+        });
+    });
+
+    test("attaches the client-ID header only when no access token is configured", () => {
+        expect(resolveMalCredentials({ clientId: "mal-client" })).toEqual({
+            auth: { token: undefined, headers: { "X-MAL-CLIENT-ID": "mal-client" } },
+            options: undefined,
         });
     });
 

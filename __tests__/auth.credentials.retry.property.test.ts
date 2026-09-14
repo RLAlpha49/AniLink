@@ -150,7 +150,7 @@ describe("resolveMalCredentials property tests", () => {
         );
     });
 
-    test("always routes clientId into the X-MAL-CLIENT-ID header, never into options", () => {
+    test("routes clientId into the X-MAL-CLIENT-ID header only without an access token, and never into options", () => {
         fc.assert(
             fc.property(
                 fc.record({
@@ -160,7 +160,9 @@ describe("resolveMalCredentials property tests", () => {
                 (creds) => {
                     const resolved = resolveMalCredentials(creds);
                     const auth = typeof resolved.auth === "object" ? resolved.auth : undefined;
-                    expect(auth?.headers?.["X-MAL-CLIENT-ID"]).toBe(creds.clientId);
+                    // With a bearer token the header is suppressed: it is only
+                    // for client-ID-only access to public endpoints.
+                    expect(auth?.headers?.["X-MAL-CLIENT-ID"]).toBeUndefined();
                     expect(resolved.options ?? {}).not.toHaveProperty("clientId");
                 }
             )

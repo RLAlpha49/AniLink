@@ -206,7 +206,7 @@ describe("MAL automatic token refresh", () => {
         );
     });
 
-    test("preserves the X-MAL-CLIENT-ID header on the replayed request", async () => {
+    test("does not send the X-MAL-CLIENT-ID header on the replayed request when a bearer token is present", async () => {
         const api = buildMyAnimeListApi({
             accessToken: "expired-access-token",
             refreshToken: "stored-refresh-token",
@@ -220,7 +220,10 @@ describe("MAL automatic token refresh", () => {
 
         const replayConfig = configAt(2);
         expect(replayConfig.headers.Authorization).toBe("Bearer fresh-access-token");
-        expect(replayConfig.headers["X-MAL-CLIENT-ID"]).toBe("mal-client-id");
+        // The client-ID header is only for client-ID-only access to public
+        // endpoints; with a bearer token it would only widen client-ID
+        // exposure to intermediaries that log request headers.
+        expect(replayConfig.headers["X-MAL-CLIENT-ID"]).toBeUndefined();
     });
 
     test("bootstraps from a missing access token: AniLinkAuthError triggers one refresh, then the request runs with the new token", async () => {
@@ -241,7 +244,6 @@ describe("MAL automatic token refresh", () => {
         expect(mocks.request).toHaveBeenCalledTimes(2);
         expect(tokenEndpointCalls()).toHaveLength(1);
         expect(configAt(1).headers.Authorization).toBe("Bearer fresh-access-token");
-        expect(configAt(1).headers["X-MAL-CLIENT-ID"]).toBe("mal-client-id");
         expect(onTokenRefresh).toHaveBeenCalledTimes(1);
     });
 
@@ -369,13 +371,58 @@ describe("MAL automatic token refresh", () => {
         expect(tokenEndpointCalls()).toHaveLength(0);
     });
 
-    test("buildRefreshedAuth copies object headers and tolerates missing or string auth", () => {
+    test("does not activate the refresh lifecycle when the refresh credentials are whitespace-only", async () => {
+        // A whitespace-only value must be treated as missing, exactly like the
+        // empty string: otherwise every 401 performs a doomed refresh grant
+        // before replaying.
+        const api = buildMyAnimeListApi({
+            accessToken: "mal-access-token",
+            refreshToken: "   ",
+            clientId: "   ",
+        });
+
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(401));
+
+        await expect(api.user.me()).rejects.toSatisfy(
+            (error: unknown) => error instanceof AniLinkRestError && error.status === 401
+        );
+
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+        expect(tokenEndpointCalls()).toHaveLength(0);
+    });
+
+    test("pins the AniLinkRestError extends AniLinkApiError inheritance the refresh classifier relies on", () => {
+        // The 401 classifier in MalTokenRefresher matches on AniLinkApiError;
+        // MAL 401s are normalized to AniLinkRestError. If this inheritance is
+        // ever restructured, this test fails before the refresh lifecycle
+        // silently stops triggering.
+        const restError = new AniLinkRestError(401, { error: "invalid_token" });
+        expect(restError).toBeInstanceOf(AniLinkApiError);
+        expect(restError.status).toBe(401);
+    });
+
+    test("buildRefreshedAuth preserves non-client-ID headers and drops X-MAL-CLIENT-ID", () => {
+        // The replayed request authenticates with the bearer token; the
+        // client-ID header is only for client-ID-only public access, and a
+        // stale one would widen client-ID exposure to header-logging
+        // intermediaries (mirroring resolveMalCredentials).
+        expect(
+            buildRefreshedAuth(
+                {
+                    token: "old",
+                    headers: { "X-MAL-CLIENT-ID": "mal-client-id", "X-Other": "kept" },
+                },
+                "new"
+            )
+        ).toEqual({ token: "new", headers: { "X-Other": "kept" } });
+        // A headers object containing only the client-ID header collapses to
+        // no headers at all.
         expect(
             buildRefreshedAuth(
                 { token: "old", headers: { "X-MAL-CLIENT-ID": "mal-client-id" } },
                 "new"
             )
-        ).toEqual({ token: "new", headers: { "X-MAL-CLIENT-ID": "mal-client-id" } });
+        ).toEqual({ token: "new", headers: undefined });
         expect(buildRefreshedAuth(undefined, "new")).toEqual({ token: "new", headers: undefined });
         expect(buildRefreshedAuth("plain-token", "new")).toEqual({
             token: "new",
@@ -394,7 +441,10 @@ describe("MAL automatic token refresh", () => {
                 timeout: 5_000,
             })
         ).toEqual({
-            auth: { token: "mal-token", headers: { "X-MAL-CLIENT-ID": "mal-client-id" } },
+            // The client-ID header is suppressed when a bearer token is
+            // present: it is only for client-ID-only access to public
+            // endpoints.
+            auth: { token: "mal-token", headers: undefined },
             options: { timeout: 5_000 },
         });
     });

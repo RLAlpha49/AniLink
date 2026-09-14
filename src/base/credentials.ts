@@ -144,6 +144,12 @@ export function resolveAniListCredentials(
 /**
  * Splits MAL authentication and OAuth fields from the shared transport settings.
  *
+ * The `X-MAL-CLIENT-ID` header is attached only when no access token is
+ * configured: that is MAL's documented use for the header (client-ID-only
+ * access to public endpoints). When a bearer token is present,
+ * `Authorization: Bearer` is the authentication and the extra header would
+ * only widen client-ID exposure to intermediaries that log request headers.
+ *
  * @param credentials - The MAL credential slot.
  * @returns Provider authentication and transport settings, or empty values when omitted.
  *
@@ -154,9 +160,9 @@ export function resolveMalCredentials(
 ): ResolvedProviderCredentials {
     if (credentials === undefined) return {};
     const headers =
-        credentials.clientId === undefined
-            ? undefined
-            : { "X-MAL-CLIENT-ID": credentials.clientId };
+        credentials.clientId !== undefined && credentials.accessToken === undefined
+            ? { "X-MAL-CLIENT-ID": credentials.clientId }
+            : undefined;
     return {
         auth:
             credentials.accessToken === undefined && headers === undefined

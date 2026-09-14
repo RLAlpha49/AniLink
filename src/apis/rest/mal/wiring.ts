@@ -6,6 +6,18 @@ import type { MyAnimeListApi } from "./facade";
 import { buildRefreshedAuth, MalTokenRefresher } from "./tokenRefresh";
 
 /**
+ * Whether a credential string is present with at least one non-whitespace
+ * character. A whitespace-only value must not activate the refresh
+ * lifecycle: it would construct a refresher whose every 401 performs a
+ * doomed refresh grant before replaying, instead of surfacing the 401.
+ *
+ * @param value - The credential string, when configured.
+ * @returns Whether the value is non-blank.
+ */
+const isNonBlank = (value: string | undefined): value is string =>
+    typeof value === "string" && value.trim() !== "";
+
+/**
  * {@link buildMyAnimeListApi} is the wiring helper that builds the {@link MyAnimeListApi} from provider-owned {@link MalCredentials}.
  *
  * It resolves credentials through {@link resolveMalCredentials} and composes {@link MalAnimeOperation}, {@link MalMangaOperation}, and {@link MalUserOperation} into the {@link MyAnimeListApi} facade exposed as `aniLink.mal`. Transport settings from {@link MalCredentials} flow to `MalRequestOptions` without leaking between providers.
@@ -26,14 +38,12 @@ export function buildMyAnimeListApi(credentials?: MalCredentials): MyAnimeListAp
     const user = new MalUserOperation(auth, options);
 
     // The automatic refresh lifecycle is opt-in: it activates only when both
-    // the refresh token and client ID are configured (non-empty). Without
-    // them the facade keeps the direct bound methods — zero wrapper
-    // overhead, zero behavior change.
+    // the refresh token and client ID are configured (non-blank — a
+    // whitespace-only value is treated as missing, matching the empty-string
+    // case). Without them the facade keeps the direct bound methods — zero
+    // wrapper overhead, zero behavior change.
     const refresher =
-        credentials?.refreshToken !== undefined &&
-        credentials.refreshToken !== "" &&
-        credentials.clientId !== undefined &&
-        credentials.clientId !== ""
+        isNonBlank(credentials?.refreshToken) && isNonBlank(credentials?.clientId)
             ? new MalTokenRefresher({
                   clientId: credentials.clientId,
                   refreshToken: credentials.refreshToken,
@@ -41,9 +51,10 @@ export function buildMyAnimeListApi(credentials?: MalCredentials): MyAnimeListAp
                   onTokenRefresh: credentials.onTokenRefresh,
                   onHookError: credentials.onHookError,
                   applyAccessToken: (accessToken) => {
-                      const refreshed = buildRefreshedAuth(auth, accessToken);
                       for (const operation of [anime, manga, user]) {
-                          operation.updateAuth(refreshed);
+                          operation.updateAuth(
+                              buildRefreshedAuth(operation.getAuth(), accessToken)
+                          );
                       }
                   },
               })

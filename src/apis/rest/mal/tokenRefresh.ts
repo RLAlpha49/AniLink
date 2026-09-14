@@ -48,7 +48,9 @@ export interface MalTokenRefresherOptions {
     /**
      * Swaps the fresh access token onto the operation instances. Called
      * between the refresh and the replay so the replayed request carries the
-     * new auth material.
+     * new auth material. The callback must rebuild from each operation's
+     * live auth (not a construction-time snapshot) so auth changed through
+     * any other path survives the replay.
      */
     applyAccessToken: (accessToken: string) => void;
 }
@@ -94,7 +96,10 @@ export class MalTokenRefresher {
      * refresh (concurrent failures share the in-flight refresh) followed by
      * a single replay with the new auth material. Any other failure — a
      * non-401 first attempt, a failed refresh, or a replay that fails again
-     * — surfaces unchanged.
+     * — surfaces unchanged. A failed refresh grant is reported to
+     * `onHookError` (under the `malTokenRefresh` hook name) before the
+     * sanitized error rethrows, so the grant failure is observable through
+     * the same channel as every other lifecycle failure.
      *
      * @param operation - A closure performing one request attempt; called at most twice.
      * @returns The first successful attempt's result.
@@ -104,12 +109,30 @@ export class MalTokenRefresher {
         try {
             return await operation();
         } catch (error) {
+            // AniLinkRestError extends AniLinkApiError (pinned by test), so
+            // one instanceof check covers both REST and GraphQL 401s, and
+            // `status` is always a number on the base class.
             const isExpiredToken = error instanceof AniLinkApiError && error.status === 401;
             const isMissingToken = error instanceof AniLinkAuthError;
             if (!isExpiredToken && !isMissingToken) {
                 throw error;
             }
-            await this.refresh();
+            try {
+                await this.refresh();
+            } catch (refreshError) {
+                // The refresh grant runs outside the transport pipeline, so
+                // its failure would otherwise bypass the onError/onRetry
+                // observability entirely. Report it through the hook-error
+                // channel before rethrowing the sanitized error.
+                if (this.onHookError !== undefined) {
+                    try {
+                        this.onHookError("malTokenRefresh", refreshError);
+                    } catch {
+                        // A failing observer must never break the rethrow path.
+                    }
+                }
+                throw refreshError;
+            }
             return await operation();
         }
     }
@@ -160,9 +183,12 @@ export class MalTokenRefresher {
 /**
  * Builds the auth material the operations replay with after a refresh.
  *
- * The token swap keeps the client-ID header from the original resolved auth
- * (it is constant for the client's lifetime) and replaces only the bearer
- * token.
+ * The token swap replaces the bearer token, preserves the other headers,
+ * and drops the `X-MAL-CLIENT-ID` header: the replayed request
+ * authenticates with the bearer token, and the client-ID header is only
+ * for client-ID-only access to public endpoints — keeping a stale one
+ * would widen client-ID exposure to intermediaries that log request
+ * headers, contradicting `resolveMalCredentials`.
  *
  * @param auth - The auth material the operations were constructed with.
  * @param accessToken - The fresh access token from the refresh grant.
@@ -171,8 +197,15 @@ export class MalTokenRefresher {
 export const buildRefreshedAuth = (
     auth: RequestAuthInput | undefined,
     accessToken: string
-): RequestAuthInput => ({
-    token: accessToken,
-    headers:
-        typeof auth === "object" && auth?.headers !== undefined ? { ...auth.headers } : undefined,
-});
+): RequestAuthInput => {
+    const headers =
+        typeof auth === "object" && auth?.headers !== undefined
+            ? Object.fromEntries(
+                  Object.entries(auth.headers).filter(([key]) => key !== "X-MAL-CLIENT-ID")
+              )
+            : undefined;
+    return {
+        token: accessToken,
+        headers: headers !== undefined && Object.keys(headers).length > 0 ? headers : undefined,
+    };
+};

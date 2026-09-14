@@ -151,6 +151,22 @@ export abstract class BaseOperation {
     }
 
     /**
+     * Reads the current instance authentication material.
+     *
+     * @internal Companion to {@link BaseOperation.updateAuth} for wiring
+     * seams that rebuild auth from the operation's live state at swap time
+     * (the MAL refresh lifecycle reads each operation's current auth before
+     * applying a fresh access token, so a replay never rebuilds headers from
+     * a stale construction-time snapshot). It is not part of the public API
+     * surface.
+     *
+     * @returns The current {@link RequestAuthInput}, or `undefined`.
+     */
+    public getAuth(): RequestAuthInput | undefined {
+        return this.requestAuth;
+    }
+
+    /**
      * Dispatches one HTTP call through the shared transport pipeline.
      *
      * The token guard, Authorization header, timeout, retry policy, pacing,
