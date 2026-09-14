@@ -128,9 +128,16 @@ export const destroyCachedAgents = (): void => {
  * (dropped from the cache without destroying their agents, which may still
  * carry in-flight requests) when the cap is reached.
  *
+ * A defined-but-invalid bound (non-finite, non-integer, or negative) throws a
+ * `TypeError`, matching the transport's handling of `timeout`: a typo like
+ * `maxSockets: 2.5` is a caller bug that must surface, not silently coerce to
+ * a default.
+ *
  * @param maxSockets - Upper bound on concurrent sockets, when customized.
  * @param maxFreeSockets - Upper bound on retained idle sockets, when customized.
  * @returns The agents to send the request with.
+ * @throws A `TypeError` when either bound is defined but not a finite,
+ * non-negative integer.
  */
 export const resolveAgents = (
     maxSockets: number | undefined,
@@ -140,8 +147,13 @@ export const resolveAgents = (
         return { httpAgent: defaultHttpAgent, httpsAgent: defaultHttpsAgent };
     }
     const normalizeSockets = (value: number | undefined, fallback: number, min: number): number => {
-        if (value === undefined || !Number.isFinite(value) || !Number.isInteger(value)) {
-            return Math.max(min, fallback);
+        if (value === undefined) {
+            return fallback;
+        }
+        if (!Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
+            throw new TypeError(
+                `Invalid socket bound ${value}: maxSockets/maxFreeSockets must be finite, non-negative integers.`
+            );
         }
         return Math.max(min, value);
     };

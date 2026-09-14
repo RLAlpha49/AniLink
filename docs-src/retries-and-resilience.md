@@ -68,6 +68,29 @@ const paced = new AniLink("token", {
 const unpaced = new AniLink("token", { paceWithRateLimit: false });
 ```
 
+`rateLimitFloor` must be a finite, non-negative integer; `0` disables floor-based pacing (the transport still honors `Retry-After` on `429` responses), and a defined-but-invalid value throws instead of being silently coerced.
+
+<Callout kind="warning">
+
+**Bulk traversals:** a single low-quota response pauses *every* subsequent request to that host until the window resets — up to 5 minutes per wait. For bulk jobs (`paginate`/`paginateChunks` with default concurrency 3), this serializes throughput. Prefer `paceWithRateLimit: false` plus an explicit retry policy for bulk work, and keep pacing on for latency-sensitive user-facing calls.
+
+</Callout>
+
+## Keep-alive agents and teardown
+
+Every request reuses shared keep-alive agents, so repeated calls ride warm sockets. Customizing `maxSockets`/`maxFreeSockets` opts a call into dedicated agents; identical configurations share one cached agent pair (bounded at 8 pairs, least-recently-used eviction).
+
+A pair evicted from that cache is **parked, not destroyed** — its idle sockets linger until the server closes them or you tear down explicitly, because destroying an agent that may still carry in-flight requests would close live sockets. For long-lived processes that churn through many distinct socket configurations, release the retained sockets on shutdown:
+
+```typescript
+import { destroyCachedAgents } from "anilink-api-wrapper";
+
+// After every in-flight request has settled (for example in a shutdown hook).
+destroyCachedAgents();
+```
+
+Calling it while requests using those agents are still in flight can fail them — only tear down after the last request has settled.
+
 ## Circuit breaker
 
 Off by default, to keep the zero-accounting fast path free of cross-request state. With `circuitBreaker: { threshold, cooldownMs }`, after `threshold` consecutive **availability failures** further requests fail fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has passed since the last failure. Then the next request is let through as a probe.
