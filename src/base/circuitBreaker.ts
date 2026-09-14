@@ -204,12 +204,12 @@ export const recordCircuitSuccess = (
  * answered, it resets the streak like a success would: a stale 500-streak
  * cannot trip the breaker after interleaved caller-side errors. When such a
  * failure is the reserved post-cooldown probe, the breaker closes (the
- * upstream answered, so it is reachable) instead of re-opening. When the
- * failure is the reserved post-cooldown probe, clears the half-open state and
- * re-opens the breaker immediately so the next request fast-fails until the
- * cooldown elapses again. Emits `onCircuitOpen` on the first trip into open
- * (not on re-opens from a failed probe, which are a continuation of the same
- * open period).
+ * upstream answered, so it is reachable) instead of wedging the half-open
+ * state. When an *availability* failure is the reserved post-cooldown probe,
+ * it clears the half-open state and re-opens the breaker immediately so the
+ * next request fast-fails until the cooldown elapses again. Emits
+ * `onCircuitOpen` on the first trip into open (not on re-opens from a failed
+ * probe, which are a continuation of the same open period).
  *
  * @param circuit - The caller's breaker state, when the breaker is enabled.
  * @param breaker - The breaker configuration, when enabled.

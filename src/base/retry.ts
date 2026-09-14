@@ -236,6 +236,15 @@ const retryBudgetStates = new WeakMap<object, RetryBudgetState>();
  * Returns the live retry-budget window for the caller, rolling it forward to
  * a fresh window when the previous one has elapsed.
  *
+ * The window is **fixed**, not sliding: it is anchored to the first failure
+ * after the previous window elapsed, and resets completely when
+ * `windowEndsAt` passes. A burst of failures at adjacent window edges can
+ * therefore spend up to `2 x maxRetriesPerWindow` retries within one
+ * `windowMs` of wall-clock time (the tail of one window plus the head of
+ * the next). This is the documented trade-off for the O(1) single-counter
+ * accounting; consumers that need a strict sliding-window bound should size
+ * `maxRetriesPerWindow` for the worst-case edge burst.
+ *
  * @param owner - The caller's transport-settings object.
  * @param budget - The configured budget, when enabled.
  * @returns The mutable budget state, or `undefined` when the budget is disabled.
