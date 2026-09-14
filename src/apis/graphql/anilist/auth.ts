@@ -87,24 +87,36 @@ const normalizeTokenRequestError = (error: unknown): AniLinkError =>
  * Sends one AniList OAuth2 token request through the shared transport.
  *
  * @param params - The URL-encoded grant fields (`grant_type`, `client_id`, `client_secret`, and code or refresh token as applicable).
- * @param signal - Optional `AbortSignal` to cancel the token request while it is in flight.
+ * @param signal - Optional `AbortSignal` to cancel the token request while it is in flight. Takes precedence over `options.signal` when both are given.
+ * @param options - Optional transport settings for the token call; `timeout` defaults to `AUTH_TOKEN_TIMEOUT_MS` and `retry` defaults to disabled because grant credentials are single-use. Pass an explicit `retry` policy to opt back in.
  * @returns The parsed {@link AniListTokenResponse} on success.
  * @throws An {@link AniLinkApiError} when AniList rejects the grant, or an {@link AniLinkNetworkError} on transport failure; both are sanitized by `normalizeTokenRequestError`.
  */
 const requestToken = async (
     params: Record<string, string>,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    options?: RequestOptions
 ): Promise<AniListTokenResponse> => {
-    const options: RequestOptions = {
-        timeout: AUTH_TOKEN_TIMEOUT_MS,
-        signal,
+    // Token grants carry single-use credentials (the authorization code and
+    // PKCE verifier are consumed server-side on the first attempt), so a
+    // retry of a failed exchange is guaranteed to fail again — often with a
+    // confusing second error — while doubling token-endpoint traffic. Token
+    // requests therefore default to no retry; a caller opts back in by
+    // passing an explicit retry policy through `options`.
+    const mergedOptions: RequestOptions = {
+        ...options,
+        timeout: options?.timeout ?? AUTH_TOKEN_TIMEOUT_MS,
+        retry: options?.retry ?? false,
+        signal: signal ?? options?.signal,
+        // Never honor a caller's exposeRawAxiosError here: the token request
+        // body carries the client secret and grant credentials.
         exposeRawAxiosError: false,
     };
     try {
         const body = new URLSearchParams(params).toString();
         return await sendRequest<AniListTokenResponse>(ANILIST_TOKEN_URL, "POST", body, undefined, {
             requiresAuth: false,
-            options,
+            options: mergedOptions,
             contentType: "application/x-www-form-urlencoded",
         });
     } catch (error) {
@@ -119,8 +131,9 @@ const requestToken = async (
  * @param clientId - The client ID of your AniList API application.
  * @param clientSecret - The client secret of your AniList API application.
  * @param code - The authorization code from the redirect URI `code` query parameter.
- * @param redirectUri - The redirect URI registered for your AniList application. This parameter is optional but must match the URI used in {@link buildAuthorizationUrl} when AniList requires it.
+ * @param redirectUri - The redirect URI registered for your AniList application. This parameter is optional but must match the URI used in {@link buildAuthorizationUrl} when AniList requires it. An empty string is treated as omitted.
  * @param signal - Optional `AbortSignal` to cancel the token exchange while it is in flight.
+ * @param options - Optional transport settings for the token call; `timeout` defaults to `AUTH_TOKEN_TIMEOUT_MS` and `retry` defaults to disabled because the authorization code is single-use. Pass an explicit `retry` policy to opt back in.
  * @returns A promise that resolves to the token response containing `access_token`.
  * @throws An {@link AniLinkApiError} when AniList rejects the exchange, for example with `invalid_grant` for an invalid or expired code, or an {@link AniLinkNetworkError} on transport failure. Errors never include the request body, so the client secret and code are not leaked.
  * @example
@@ -139,17 +152,24 @@ export const getAccessToken = async (
     clientSecret: string,
     code: string,
     redirectUri?: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    options?: RequestOptions
 ): Promise<AniListTokenResponse> =>
     requestToken(
         {
             grant_type: "authorization_code",
             client_id: clientId,
             client_secret: clientSecret,
-            redirect_uri: redirectUri ?? "",
+            // Omit the key entirely when the caller provided no usable
+            // value (undefined or blank): an empty-string value can be
+            // rejected by AniList as a mismatch against the registered
+            // redirect URI, while an omitted field is the documented
+            // optional-parameter behavior.
+            ...(redirectUri ? { redirect_uri: redirectUri } : {}),
             code,
         },
-        signal
+        signal,
+        options
     );
 
 /**
@@ -160,6 +180,7 @@ export const getAccessToken = async (
  * @param clientSecret - The client secret of your AniList API application.
  * @param refreshToken - The refresh token from a previous token response.
  * @param signal - Optional `AbortSignal` to cancel the refresh while it is in flight.
+ * @param options - Optional transport settings for the token call; `timeout` defaults to `AUTH_TOKEN_TIMEOUT_MS` and `retry` defaults to disabled because grant credentials are single-use. Pass an explicit `retry` policy to opt back in.
  * @returns A promise that resolves to the token response containing a new `access_token`. The `refresh_token` field may be absent when AniList does not rotate it.
  * @throws An {@link AniLinkApiError} when AniList rejects the refresh, for example when the refresh token is invalid or revoked, or an {@link AniLinkNetworkError} on transport failure. Errors never include the request body, so the client secret and refresh token are not leaked.
  * @example
@@ -172,7 +193,8 @@ export const refreshAccessToken = async (
     clientId: string,
     clientSecret: string,
     refreshToken: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    options?: RequestOptions
 ): Promise<AniListTokenResponse> =>
     requestToken(
         {
@@ -181,7 +203,8 @@ export const refreshAccessToken = async (
             client_secret: clientSecret,
             refresh_token: refreshToken,
         },
-        signal
+        signal,
+        options
     );
 
 /**
@@ -193,6 +216,7 @@ export const refreshAccessToken = async (
  * @param response - The token response to compute the expiry for.
  * @param now - The current time in milliseconds since the Unix epoch. Defaults to the time at which the helper is called.
  * @returns The moment the access token expires.
+ * @throws A `TypeError` when `expires_in` is not a positive finite number — `0`, negative, `NaN`, or `Infinity` values produce an already-expired or nonsensical expiry that silently breaks proactive-refresh scheduling (and is one comparison-operator slip away from a refresh loop), so they are rejected instead.
  * @example
  * ```typescript
  * const token = await getAccessToken("1234", "secret", "code-from-redirect");
@@ -201,5 +225,12 @@ export const refreshAccessToken = async (
  * }
  * ```
  */
-export const getTokenExpiry = (response: AniListTokenResponse, now: number = Date.now()): Date =>
-    new Date(now + response.expires_in * 1000);
+export const getTokenExpiry = (response: AniListTokenResponse, now: number = Date.now()): Date => {
+    const { expires_in } = response;
+    if (!Number.isFinite(expires_in) || expires_in <= 0) {
+        throw new TypeError(
+            `Invalid expires_in ${expires_in}: token lifetime must be a finite, positive number of seconds.`
+        );
+    }
+    return new Date(now + expires_in * 1000);
+};

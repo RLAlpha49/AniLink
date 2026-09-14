@@ -132,7 +132,6 @@ describe("getAccessToken", () => {
                 grant_type: "authorization_code",
                 client_id: "client-id",
                 client_secret: "client-secret",
-                redirect_uri: "",
                 code: "auth-code",
             }).toString()
         );
@@ -144,6 +143,52 @@ describe("getAccessToken", () => {
             expires_in: 31536000,
             refresh_token: "new-refresh-token",
         });
+    });
+
+    test("omits the redirect_uri key entirely when no redirect URI is provided", async () => {
+        await getAccessToken("client-id", "client-secret", "auth-code");
+
+        const [config] = mocks.request.mock.calls[0];
+        // An empty-string value can be rejected as a mismatch against the
+        // registered URI; the field must be absent, not present-but-empty.
+        expect(config.data).not.toContain("redirect_uri=");
+    });
+
+    test("treats a blank redirect URI as omitted", async () => {
+        await getAccessToken("client-id", "client-secret", "auth-code", "");
+
+        const [config] = mocks.request.mock.calls[0];
+        // A whitespace-only value is as unusable as an empty string: the
+        // field must be absent, not present-but-blank.
+        expect(config.data).not.toContain("redirect_uri=");
+    });
+
+    test("opts back into retries through the options parameter", async () => {
+        // The default is no retry (single-use grant credentials); a caller
+        // with a retryable transport (for example a flaky proxy) opts back in
+        // with an explicit policy.
+        mocks.request
+            .mockRejectedValueOnce({ isAxiosError: true, code: "ECONNREFUSED" })
+            .mockResolvedValueOnce({
+                data: {
+                    access_token: "new-access-token",
+                    token_type: "Bearer",
+                    expires_in: 31536000,
+                    refresh_token: "new-refresh-token",
+                },
+            });
+
+        const result = await getAccessToken(
+            "client-id",
+            "client-secret",
+            "auth-code",
+            undefined,
+            undefined,
+            { retry: { maxRetries: 1, retryOnNetworkError: true } }
+        );
+
+        expect(result.access_token).toBe("new-access-token");
+        expect(mocks.request).toHaveBeenCalledTimes(2);
     });
 
     test("includes the redirect uri when provided", async () => {
@@ -267,38 +312,37 @@ describe("token request failure normalization", () => {
     });
 
     test("maps a network-level rejection to AniLinkNetworkError with a stable code", async () => {
-        // Token requests inherit the default retry policy, so a persistent
-        // network failure is retried before surfacing.
-        vi.useFakeTimers();
-        try {
-            mocks.request.mockRejectedValue({ isAxiosError: true, code: "ECONNREFUSED" });
+        // Token requests default to no retry (single-use credentials), so a
+        // network failure surfaces after exactly one attempt.
+        mocks.request.mockRejectedValueOnce({ isAxiosError: true, code: "ECONNREFUSED" });
 
-            const promise = refreshAccessToken("client-id", "client-secret", "refresh-token");
-            promise.catch(() => {});
-            await vi.advanceTimersByTimeAsync(30_000);
+        await expect(
+            refreshAccessToken("client-id", "client-secret", "refresh-token")
+        ).rejects.toBeInstanceOf(AniLinkNetworkError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
 
-            await expect(promise).rejects.toBeInstanceOf(AniLinkNetworkError);
-            await expect(promise).rejects.toMatchObject({ code: AniLinkErrorCodes.NETWORK });
-            expect(mocks.request.mock.calls.length).toBeGreaterThan(1);
-        } finally {
-            vi.useRealTimers();
-        }
+    test("performs exactly one HTTP call when the exchange fails with a 500", async () => {
+        // The authorization code is single-use: a retry of a failed exchange
+        // is guaranteed to fail again while doubling token traffic, so the
+        // default policy must not retry.
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 500, data: { error: "server_error" } },
+        });
+
+        await expect(
+            getAccessToken("client-id", "client-secret", "auth-code")
+        ).rejects.toBeInstanceOf(AniLinkApiError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 
     test("maps a timeout rejection to the TIMEOUT_ERROR code", async () => {
-        vi.useFakeTimers();
-        try {
-            mocks.request.mockRejectedValue({ isAxiosError: true, code: "ECONNABORTED" });
+        mocks.request.mockRejectedValueOnce({ isAxiosError: true, code: "ECONNABORTED" });
 
-            const promise = getAccessToken("client-id", "client-secret", "auth-code");
-            promise.catch(() => {});
-            await vi.advanceTimersByTimeAsync(30_000);
-
-            await expect(promise).rejects.toBeInstanceOf(AniLinkNetworkError);
-            await expect(promise).rejects.toMatchObject({ code: AniLinkErrorCodes.TIMEOUT });
-        } finally {
-            vi.useRealTimers();
-        }
+        await expect(
+            getAccessToken("client-id", "client-secret", "auth-code")
+        ).rejects.toMatchObject({ code: AniLinkErrorCodes.TIMEOUT });
     });
 
     test("does not retry an OAuth rejection even under the default retry policy", async () => {
@@ -377,6 +421,22 @@ describe("getTokenExpiry", () => {
             expect(expiry.getTime()).toBe(50_000_000 + 60_000);
         } finally {
             vi.useRealTimers();
+        }
+    });
+
+    test("rejects expires_in of 0 as an already-expired token", () => {
+        // An expiry of "now" silently breaks proactive-refresh scheduling and
+        // is one comparison-operator slip away from a refresh loop.
+        expect(() =>
+            getTokenExpiry({ access_token: "t", token_type: "Bearer", expires_in: 0 })
+        ).toThrow(TypeError);
+    });
+
+    test("rejects negative, NaN, and Infinity lifetimes", () => {
+        for (const expires_in of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
+            expect(() =>
+                getTokenExpiry({ access_token: "t", token_type: "Bearer", expires_in })
+            ).toThrow(TypeError);
         }
     });
 });

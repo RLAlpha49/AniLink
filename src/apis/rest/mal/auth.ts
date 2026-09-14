@@ -114,13 +114,18 @@ const normalizeMalTokenError = (error: unknown): AniLinkError =>
  * Sends one MyAnimeList OAuth2 token request through the shared transport.
  *
  * Runs form-urlencoded POSTs against {@link MAL_TOKEN_URL} with the shared
- * pipeline's retry policy and hooks, defaulting to a shorter timeout than
- * REST operations (`MAL_AUTH_TIMEOUT_MS`) because a hung token exchange
- * blocks the whole login flow. Failures are re-thrown as the sanitized error
- * from `normalizeMalTokenError` so no credentials leak through error payloads.
+ * pipeline's hooks, defaulting to a shorter timeout than REST operations
+ * (`MAL_AUTH_TIMEOUT_MS`) because a hung token exchange blocks the whole
+ * login flow. Retries are disabled by default: token grants carry
+ * single-use credentials (the authorization code and PKCE verifier are
+ * consumed server-side on the first attempt), so a retry of a failed
+ * exchange is guaranteed to fail again while doubling token-endpoint
+ * traffic. A caller opts back in by passing an explicit `retry` policy in
+ * `options`. Failures are re-thrown as the sanitized error from
+ * `normalizeMalTokenError` so no credentials leak through error payloads.
  *
  * @param params - The URL-encoded grant fields (`grant_type`, `client_id`, and code, verifier, or refresh token as applicable).
- * @param options - Optional transport settings for the token call; `timeout` defaults to `MAL_AUTH_TIMEOUT_MS`.
+ * @param options - Optional transport settings for the token call; `timeout` defaults to `MAL_AUTH_TIMEOUT_MS` and `retry` defaults to disabled.
  * @returns The parsed {@link MalTokenResponse} on success.
  * @throws An {@link AniLinkApiError} when MAL rejects the grant, or an {@link AniLinkNetworkError} on timeout, cancellation, or network failure.
  */
@@ -135,6 +140,7 @@ const requestMalToken = async (
             options: {
                 ...options,
                 timeout: options?.timeout ?? MAL_AUTH_TIMEOUT_MS,
+                retry: options?.retry ?? false,
                 exposeRawAxiosError: false,
             },
             contentType: "application/x-www-form-urlencoded",
@@ -207,6 +213,7 @@ export const refreshMalAccessToken = (request: MalRefreshTokenRequest): Promise<
  * @param response - The {@link MalTokenResponse} whose `expires_in` to evaluate.
  * @param now - The current time in milliseconds since the Unix epoch.
  * @returns The moment the access token expires.
+ * @throws A `TypeError` when `expires_in` is not a positive finite number — `0`, negative, `NaN`, or `Infinity` values produce an already-expired or nonsensical expiry that silently breaks proactive-refresh scheduling (and is one comparison-operator slip away from a refresh loop), so they are rejected instead.
  * @example
  * ```typescript
  * const expiresAt = getMalTokenExpiry(token);
@@ -214,5 +221,12 @@ export const refreshMalAccessToken = (request: MalRefreshTokenRequest): Promise<
  * ```
  * @see https://myanimelist.net/apiconfig/references/authorization
  */
-export const getMalTokenExpiry = (response: MalTokenResponse, now: number = Date.now()): Date =>
-    new Date(now + response.expires_in * 1000);
+export const getMalTokenExpiry = (response: MalTokenResponse, now: number = Date.now()): Date => {
+    const { expires_in } = response;
+    if (!Number.isFinite(expires_in) || expires_in <= 0) {
+        throw new TypeError(
+            `Invalid expires_in ${expires_in}: token lifetime must be a finite, positive number of seconds.`
+        );
+    }
+    return new Date(now + expires_in * 1000);
+};

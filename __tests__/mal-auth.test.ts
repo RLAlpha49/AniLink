@@ -110,4 +110,36 @@ describe("MyAnimeList OAuth2 PKCE helpers", () => {
             )
         ).toEqual(new Date(61_000));
     });
+
+    test("performs exactly one HTTP call when the exchange fails with a 500", async () => {
+        // The authorization code and PKCE verifier are single-use: a retry of
+        // a failed exchange is guaranteed to fail again while doubling token
+        // traffic, so the default policy must not retry.
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(500));
+
+        await expect(
+            getMalAccessToken({
+                clientId: "client-id",
+                code: "auth-code",
+                codeVerifier: "verifier",
+            })
+        ).rejects.toMatchObject({ status: 500 });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+
+    test("rejects expires_in of 0 as an already-expired token", () => {
+        // An expiry of "now" silently breaks proactive-refresh scheduling and
+        // is one comparison-operator slip away from a refresh loop.
+        expect(() =>
+            getMalTokenExpiry({ access_token: "t", token_type: "Bearer", expires_in: 0 })
+        ).toThrow(TypeError);
+    });
+
+    test("rejects negative, NaN, and Infinity lifetimes", () => {
+        for (const expires_in of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
+            expect(() =>
+                getMalTokenExpiry({ access_token: "t", token_type: "Bearer", expires_in })
+            ).toThrow(TypeError);
+        }
+    });
 });
