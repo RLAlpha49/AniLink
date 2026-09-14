@@ -1,12 +1,12 @@
 ---
 title: AniList helpers
-description: "The three AniList data helpers — fuzzyDate, flattenMediaListCollection, and crossLink — as client methods on the anilist namespace."
+description: "The four AniList data helpers — fuzzyDate, fuzzyDateInt, flattenMediaListCollection, and crossLink — as client methods on the anilist namespace."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # AniList helpers
 
-Three data helpers live on the `anilist` namespace: `aniLink.anilist.fuzzyDate`, `aniLink.anilist.flattenMediaListCollection`, and `aniLink.anilist.crossLink`. They are methods on the client, not standalone imports — no extra import to remember.
+Four data helpers live on the `anilist` namespace: `aniLink.anilist.fuzzyDate`, `aniLink.anilist.fuzzyDateInt`, `aniLink.anilist.flattenMediaListCollection`, and `aniLink.anilist.crossLink`. They are methods on the client, not standalone imports — no extra import to remember.
 
 ## `fuzzyDate`
 
@@ -29,6 +29,31 @@ await aniLink.anilist.mutation.saveMediaListEntry({
 ```
 
 All three fields are optional. Pass an empty object — or omit the argument entirely — to produce an all-zero date.
+
+## `fuzzyDateInt`
+
+AniList's query arguments type fuzzy dates differently from its mutations: the query filters (`startDate`, `endDate`, `startedAt`, `completedAt` and their `_greater`/`_lesser` variants on `query.media`, `query.mediaList`, `query.mediaListCollection`, and the `page` counterparts) take the `FuzzyDateInt` scalar — an integer in `YYYYMMDD` form — while the list-entry mutations take the `FuzzyDateInput` object `fuzzyDate` builds.
+
+`fuzzyDateInt` packs optional year, month, and day parts into that integer, filling omitted parts with `0` exactly like the object form:
+
+```typescript
+const aniLink = new AniLink("anilist-token");
+
+const full = aniLink.anilist.fuzzyDateInt({ year: 2024, month: 4, day: 15 });
+// 20240415
+
+const yearOnly = aniLink.anilist.fuzzyDateInt({ year: 2024 });
+// 20240000 — omitted parts become 0
+
+const page = await aniLink.anilist.query.page.medias({
+    page: 1,
+    perPage: 50,
+    type: "ANIME",
+    startDate: full,
+});
+```
+
+Reach for `fuzzyDate` when the variable goes into a mutation (`saveMediaListEntry`, `updateMediaListEntries`); reach for `fuzzyDateInt` when it goes into a query filter.
 
 ## `flattenMediaListCollection`
 
@@ -54,17 +79,17 @@ console.log(entries.length, entries[0]?.listNames);
 
 Each entry carries the list-entry fields and its full list membership — not the embedded `media` object. Want media details? Fetch the media by `mediaId` separately.
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `id` | `number` | The list-entry id |
-| `userId` | `number` | The owning user's id |
-| `mediaId` | `number` | The media the entry refers to |
-| `status` | `string` | The entry status (e.g. `CURRENT`, `COMPLETED`) |
-| `score` | `number` | The score assigned |
-| `progress` | `number` | Episodes or chapters watched/read |
-| `listNames` | `string[]` | Every list group the entry belongs to (status list name plus any custom lists) |
-| `inCustomList` | `boolean` | `true` when the entry appears in at least one custom list group |
-| `inSplitCompletedList` | `boolean` | `true` when the entry appears in at least one split completed list group |
+| Field                  | Type       | Description                                                                    |
+| ---------------------- | ---------- | ------------------------------------------------------------------------------ |
+| `id`                   | `number`   | The list-entry id                                                              |
+| `userId`               | `number`   | The owning user's id                                                           |
+| `mediaId`              | `number`   | The media the entry refers to                                                  |
+| `status`               | `string`   | The entry status (e.g. `CURRENT`, `COMPLETED`)                                 |
+| `score`                | `number`   | The score assigned                                                             |
+| `progress`             | `number`   | Episodes or chapters watched/read                                              |
+| `listNames`            | `string[]` | Every list group the entry belongs to (status list name plus any custom lists) |
+| `inCustomList`         | `boolean`  | `true` when the entry appears in at least one custom list group                |
+| `inSplitCompletedList` | `boolean`  | `true` when the entry appears in at least one split completed list group       |
 
 ### Dedup and list-membership behavior
 
@@ -91,11 +116,11 @@ if (malId !== undefined) {
 
 ### `CrossLinkResult` shape
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `anilistToMal` | `ReadonlyMap<number, number>` | AniList media id → MyAnimeList id, for entries that carry one |
+| Field          | Type                          | Description                                                              |
+| -------------- | ----------------------------- | ------------------------------------------------------------------------ |
+| `anilistToMal` | `ReadonlyMap<number, number>` | AniList media id → MyAnimeList id, for entries that carry one            |
 | `malToAnilist` | `ReadonlyMap<number, number>` | MyAnimeList id → AniList media id; the last entry wins on shared MAL ids |
-| `unmapped` | `TMedia[]` | The input entries that carry no `idMal`, in input order |
+| `unmapped`     | `TMedia[]`                    | The input entries that carry no `idMal`, in input order                  |
 
 The helper is pure — no requests are made. Feed it the `media` array of a `page.medias` response, a one-element array around a `query.media` result, or any `Media`-shaped entries carrying `id` and `idMal`. See the [cross-provider workflow recipe](/recipes) for the full flow.
 

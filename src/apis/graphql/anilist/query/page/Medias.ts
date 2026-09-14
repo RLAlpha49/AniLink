@@ -2,7 +2,6 @@ import { AniListOperation } from "../../AniListOperation";
 import type { RequestOptions } from "../../../../../base/RequestHandler";
 
 import { type MediasPageResponse } from "../../interfaces/responses/page/Medias";
-import { FuzzyDateMappings } from "../../types/FuzzyDate";
 import { MediaSeasonMappings } from "../../types/Season";
 import { MediaTypeMappings } from "../../types/Type";
 import { MediaFormatMappings } from "../../types/Format";
@@ -50,7 +49,7 @@ export interface MediasVariables {
     idMal?: number;
 
     /**
-     * `startDate` is a number representing the start date of the media.
+     * `startDate` is a number representing the start date of the media. AniList's `FuzzyDateInt` form: a `YYYYMMDD` integer (for example `19980401`); build it with `aniLink.anilist.fuzzyDateInt`.
      */
     startDate?: number;
 
@@ -401,8 +400,8 @@ const MediasMappings = {
     perPage: "number",
     id: "number",
     idMal: "number",
-    startDate: FuzzyDateMappings,
-    endDate: FuzzyDateMappings,
+    startDate: "number",
+    endDate: "number",
     season: MediaSeasonMappings,
     seasonYear: "number",
     type: MediaTypeMappings,
@@ -432,11 +431,11 @@ const MediasMappings = {
     idMal_not: "number",
     idMal_in: "number[]",
     idMal_not_in: "number[]",
-    startDate_greater: FuzzyDateMappings,
-    startDate_lesser: FuzzyDateMappings,
+    startDate_greater: "number",
+    startDate_lesser: "number",
     startDate_like: "string",
-    endDate_greater: FuzzyDateMappings,
-    endDate_lesser: FuzzyDateMappings,
+    endDate_greater: "number",
+    endDate_lesser: "number",
     endDate_like: "string",
     format_in: MediaFormatMappings,
     format_not: MediaFormatMappings,

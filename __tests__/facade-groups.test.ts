@@ -23,6 +23,7 @@ const HELPER_MEMBERS = [
     "paginatePages",
     "paginateChunks",
     "fuzzyDate",
+    "fuzzyDateInt",
     "flattenMediaListCollection",
     "crossLink",
 ] as const;

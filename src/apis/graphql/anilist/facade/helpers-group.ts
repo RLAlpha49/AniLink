@@ -136,6 +136,26 @@ export type AniListHelpers = {
      * ```
      */
     fuzzyDate: (options?: FuzzyDateOptions) => FuzzyDateInput;
+    /**
+     * {@link fuzzyDateInt} builds the `YYYYMMDD` integer AniList's `FuzzyDateInt` query arguments expect
+     * from optional year, month, and day parts, filling omitted parts with `0`.
+     * @param options - The year, month, and day parts to pack. All fields are optional; a {@link FuzzyDateOptions}.
+     * @returns The `YYYYMMDD` integer for `startDate`/`endDate`/`startedAt`/`completedAt` query filter variables.
+     * @see https://docs.anilist.co/reference/input/fuzzydateinput
+     * @example
+     * ```typescript
+     * const startDate = aniLink.anilist.fuzzyDateInt({ year: 2024, month: 4, day: 15 });
+     * // 20240415
+     *
+     * const page = await aniLink.anilist.query.page.medias({
+     *   page: 1,
+     *   perPage: 50,
+     *   type: "ANIME",
+     *   startDate,
+     * });
+     * ```
+     */
+    fuzzyDateInt: (options?: FuzzyDateOptions) => number;
 
     /**
      * {@link flattenMediaListCollection} flattens a {@link MediaListCollectionResponse} into a single array of

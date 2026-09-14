@@ -8,8 +8,7 @@ import type {
     FieldsSelection,
 } from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
-import { type FuzzyDate } from "../interfaces/FuzzyDate";
-import { FuzzyDateMappings } from "../types/FuzzyDate";
+import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaListStatus, MediaListStatusMappings } from "../types/Status";
 import { type MediaListResponse } from "../interfaces/responses/query/MediaList";
 import { FuzzyDateSchema } from "../schemas/FuzzyDate";
@@ -80,12 +79,12 @@ export interface UpdateMediaListEntriesVariables {
     /**
      * `startedAt` is a `FuzzyDateInput` representing when the media list entries started.
      */
-    startedAt?: FuzzyDate;
+    startedAt?: FuzzyDateInput;
 
     /**
      * `completedAt` is a `FuzzyDateInput` representing when the media list entries were completed.
      */
-    completedAt?: FuzzyDate;
+    completedAt?: FuzzyDateInput;
 
     /**
      * `ids` is an array of numbers representing the ids of the media list entries.

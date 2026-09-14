@@ -1,7 +1,6 @@
 import { AniListOperation } from "../AniListOperation";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type MediaResponse } from "../interfaces/responses/query/Media";
-import { type FuzzyDateInput, FuzzyDateMappings } from "../types/FuzzyDate";
 import { type MediaType, MediaTypeMappings } from "../types/Type";
 import { type MediaSeason, MediaSeasonMappings } from "../types/Season";
 import { type MediaFormat, MediaFormatMappings } from "../types/Format";
@@ -44,14 +43,14 @@ export interface MediaVariables {
     idMal?: number;
 
     /**
-     * `startDate` is a number representing the start date of the media.
+     * `startDate` is a number representing the start date of the media. AniList's `FuzzyDateInt` form: a `YYYYMMDD` integer (for example `19980401`); build it with `aniLink.anilist.fuzzyDateInt`.
      */
-    startDate?: FuzzyDateInput;
+    startDate?: number;
 
     /**
      * `endDate` is a number representing the end date of the media.
      */
-    endDate?: FuzzyDateInput;
+    endDate?: number;
 
     /**
      * `season` is a string representing the season of the media.
@@ -393,8 +392,8 @@ export interface MediaVariables {
 const MediaMappings = {
     id: "number",
     idMal: "number",
-    startDate: FuzzyDateMappings,
-    endDate: FuzzyDateMappings,
+    startDate: "number",
+    endDate: "number",
     season: MediaSeasonMappings,
     seasonYear: "number",
     type: MediaTypeMappings,
@@ -424,11 +423,11 @@ const MediaMappings = {
     idMal_not: "number",
     idMal_in: "number[]",
     idMal_not_in: "number[]",
-    startDate_greater: FuzzyDateMappings,
-    startDate_lesser: FuzzyDateMappings,
+    startDate_greater: "number",
+    startDate_lesser: "number",
     startDate_like: "string",
-    endDate_greater: FuzzyDateMappings,
-    endDate_lesser: FuzzyDateMappings,
+    endDate_greater: "number",
+    endDate_lesser: "number",
     endDate_like: "string",
     format_in: MediaFormatMappings,
     format_not: MediaFormatMappings,

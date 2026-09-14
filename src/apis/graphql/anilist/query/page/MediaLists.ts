@@ -4,7 +4,6 @@ import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type MediaListsPageResponse } from "../../interfaces/responses/page/MediaLists";
 import { MediaTypeMappings } from "../../types/Type";
 import { MediaListStatusMappings } from "../../types/Status";
-import { FuzzyDateMappings } from "../../types/FuzzyDate";
 import { MediaListSortMappings } from "../../types/Sort";
 import { ScoreFormatMapping } from "../../types/Format";
 import { MediaListSchema } from "../../schemas/responses/query/MediaList";
@@ -78,12 +77,12 @@ export interface MediaListsVariables {
     notes?: string;
 
     /**
-     * `startedAt` is a number representing the start date of the media list.
+     * `startedAt` is a number representing the start date of the media list. AniList's `FuzzyDateInt` form: a `YYYYMMDD` integer (for example `19980401`); build it with `aniLink.anilist.fuzzyDateInt`.
      */
     startedAt?: number;
 
     /**
-     * `completedAt` is a number representing the completion date of the media list.
+     * `completedAt` is a number representing the completion date of the media list. AniList's `FuzzyDateInt` form: a `YYYYMMDD` integer (for example `19980401`); build it with `aniLink.anilist.fuzzyDateInt`.
      */
     completedAt?: number;
 
@@ -195,8 +194,8 @@ const MediaListsMappings = {
     mediaId: "number",
     isFollowing: "boolean",
     notes: "string",
-    startedAt: FuzzyDateMappings,
-    completedAt: FuzzyDateMappings,
+    startedAt: "number",
+    completedAt: "number",
     compareWithAuthList: "boolean",
     userId_in: "number[]",
     status_in: MediaListStatusMappings,
@@ -205,11 +204,11 @@ const MediaListsMappings = {
     mediaId_in: "number[]",
     mediaId_not_in: "number[]",
     notes_like: "string",
-    startedAt_greater: FuzzyDateMappings,
-    startedAt_lesser: FuzzyDateMappings,
+    startedAt_greater: "number",
+    startedAt_lesser: "number",
     startedAt_like: "string",
-    completedAt_greater: FuzzyDateMappings,
-    completedAt_lesser: FuzzyDateMappings,
+    completedAt_greater: "number",
+    completedAt_lesser: "number",
     completedAt_like: "string",
     sort: MediaListSortMappings,
     scoreFormat: ScoreFormatMapping,
