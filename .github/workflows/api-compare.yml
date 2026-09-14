@@ -63,21 +63,21 @@ jobs:
                 ...report.discrepancies.map((d) => ({ ...d, kind: "discrepancy" })),
                 ...(report.warnings ?? []).map((w) => ({ ...w, kind: "warning" }))
               ];
-              if (discrepancies.length === 0) {
-                console.log("No API discrepancies found");
-                return;
-              }
               // Report text can originate from live upstream schemas; strip
               // newlines and workflow-command characters so it cannot forge
               // annotations or commands.
               const sanitize = (text) =>
                 String(text).replace(/[\r\n]/g, " ").replace(/%/g, "%25");
-              for (const d of discrepancies) {
-                const file = d.sourcePath ? d.sourcePath.split(":")[0] : undefined;
-                const location = file ? ` file=${sanitize(file)}` : "";
-                console.log(
-                  `::warning${location}::[${d.kind}/${d.severity}] ${sanitize(d.operation ?? "api")}: ${sanitize(d.message)}`
-                );
+              if (discrepancies.length === 0) {
+                console.log("No API discrepancies found");
+              } else {
+                for (const d of discrepancies) {
+                  const file = d.sourcePath ? d.sourcePath.split(":")[0] : undefined;
+                  const location = file ? ` file=${sanitize(file)}` : "";
+                  console.log(
+                    `::warning${location}::[${d.kind}/${d.severity}] ${sanitize(d.operation ?? "api")}: ${sanitize(d.message)}`
+                  );
+                }
               }
             ' "$report"
           }
