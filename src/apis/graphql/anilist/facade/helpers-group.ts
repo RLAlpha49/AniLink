@@ -14,10 +14,19 @@ import {
 import { type PageInfo } from "../interfaces/responses/page/PageInfo";
 import { type FuzzyDateInput } from "../types/FuzzyDate";
 
-/** Callback that fetches a single {@link PageInfo}-based page. */
+/**
+ * Callback that fetches a single {@link PageInfo}-based page.
+ *
+ * The optional third parameter is the traversal's `AbortSignal`, forwarded
+ * from the `signal` option of the pagination helpers so an aborted
+ * traversal cancels the in-flight page request instead of only stopping
+ * new launches. It mirrors the fetcher signature of the exported
+ * `paginate`/`paginatePages` functions.
+ */
 type PageFetcher<TPage extends { pageInfo: PageInfo }> = (
     page: number,
-    perPage: number
+    perPage: number,
+    signal?: AbortSignal
 ) => Promise<TPage>;
 
 /**
@@ -44,10 +53,18 @@ type ChunkItem<TChunk extends { hasNextChunk: boolean }, K extends string> = K e
         : never
     : never;
 
-/** Callback that fetches a single `MediaListCollection` chunk. */
+/**
+ * Callback that fetches a single `MediaListCollection` chunk.
+ *
+ * The optional third parameter is the traversal's `AbortSignal`, forwarded
+ * from the `signal` option of `paginateChunks` so an aborted traversal
+ * cancels the in-flight chunk request. It mirrors the fetcher signature of
+ * the exported `paginateChunks` function.
+ */
 type ChunkFetcher<TChunk extends { hasNextChunk: boolean }> = (
     chunk: number,
-    perChunk: number
+    perChunk: number,
+    signal?: AbortSignal
 ) => Promise<TChunk>;
 
 /**
@@ -59,7 +76,7 @@ export type AniListHelpers = {
     /**
      * {@link paginate} walks {@link PageInfo}-based pages until `hasNextPage` is false or `maxPages` is
      * reached, collecting every item across pages.
-     * @param fetchPage - Callback that fetches a single page given its 1-based number and `perPage`.
+     * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal` (forwarded from the `signal` option so an aborted traversal cancels the in-flight request).
      * @param itemsKey - The key of the items array on the page response (e.g. `"media"`, `"users"`).
      * @param options - Optional `perPage`, `startPage`, and `maxPages` controls; a {@link PaginateOptions}.
      * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run; a {@link PaginateResult}.
@@ -82,7 +99,7 @@ export type AniListHelpers = {
     /**
      * `paginatePages` is an async generator yielding each {@link PageInfo}-based page until
      * `hasNextPage` is false or `maxPages` is reached.
-     * @param fetchPage - Callback that fetches a single page given its 1-based number and `perPage`.
+     * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal` (forwarded from the `signal` option so an aborted traversal cancels the in-flight request).
      * @param options - Optional `perPage`, `startPage`, and `maxPages` controls; a {@link PaginateOptions}.
      * @returns An async generator yielding each raw page response in turn.
      * @see https://docs.anilist.co/reference/object/pageinfo
@@ -103,7 +120,7 @@ export type AniListHelpers = {
     /**
      * {@link paginateChunks} iterates {@link MediaListCollectionResponse} chunks until `hasNextChunk` is
      * false or `maxChunks` is reached, collecting every item across chunks.
-     * @param fetchChunk - Callback that fetches a single chunk given its 1-based number and `perChunk`.
+     * @param fetchChunk - Callback that fetches a single chunk given its 1-based number, `perChunk`, and the traversal's `AbortSignal` (forwarded from the `signal` option so an aborted traversal cancels the in-flight request).
      * @param itemsKey - The key of the items array on the chunk response (e.g. `"lists"`).
      * @param options - Optional `perChunk`, `startChunk`, and `maxChunks` controls; a {@link ChunkPaginateOptions}.
      * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run; a {@link ChunkPaginateResult}.
