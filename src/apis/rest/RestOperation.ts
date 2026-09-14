@@ -1,4 +1,5 @@
 import { BaseOperation } from "../../base/BaseOperation";
+import { AniLinkValidationError } from "../../base/AniLinkError";
 import { type HttpMethod, type RequestOptions } from "../../base/RequestHandler";
 
 /**
@@ -60,10 +61,15 @@ export interface RestExecuteOptions {
  *
  * `undefined` and `null` values are skipped entirely, arrays become repeated
  * keys (the convention MyAnimeList uses for list parameters), and every value
- * is percent-encoded. An empty record produces an empty string.
+ * is percent-encoded. An empty record produces an empty string. A plain
+ * object value throws a `TypeError` instead of silently serializing as
+ * `[object Object]` — a nested parameter is a caller bug, and the wrong
+ * request it would produce is far harder to debug than the throw.
  *
  * @param params - The query parameters, with flat primitive or array values.
  * @returns A query string beginning with `?`, or an empty string.
+ * @throws A `TypeError` when a value is a plain object (nested parameters
+ * are not supported; flatten them into primitive keys at the call site).
  */
 export const buildQueryString = (params: Record<string, unknown>): string => {
     const segments: string[] = [];
@@ -78,6 +84,10 @@ export const buildQueryString = (params: Record<string, unknown>): string => {
                     segments.push(`${encodedKey}=${encodeURIComponent(String(item))}`);
                 }
             }
+        } else if (typeof value === "object") {
+            throw new TypeError(
+                `Query parameter "${key}" is an object; buildQueryString accepts flat primitive or array values only. Flatten nested parameters into primitive keys before passing them.`
+            );
         } else {
             segments.push(`${encodedKey}=${encodeURIComponent(String(value))}`);
         }
@@ -134,9 +144,16 @@ export abstract class RestOperation extends BaseOperation {
             transportOptions,
         } = options;
 
-        const interpolatedPath = path.replace(/\{(\w+)\}/g, (match, name: string) => {
+        const interpolatedPath = path.replace(/\{(\w+)\}/g, (_match, name: string) => {
             const value = pathParams[name];
-            return value === undefined ? match : encodeURIComponent(String(value));
+            if (value === undefined) {
+                // A placeholder with no value would otherwise reach the wire
+                // as a literally-braced URL (for example `/anime/{id}`), which
+                // every REST provider answers with a confusing 404/400.
+                // Fail fast with the missing parameter's name instead.
+                throw new AniLinkValidationError([`Missing path parameter: ${name}`]);
+            }
+            return encodeURIComponent(String(value));
         });
 
         const url = `${this.baseUrl}${interpolatedPath}${buildQueryString(query ?? {})}`;
