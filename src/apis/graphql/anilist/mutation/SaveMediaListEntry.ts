@@ -106,6 +106,18 @@ export interface SaveMediaListEntryVariables {
 }
 
 /**
+ * The response surface the maximal {@link SaveMediaListEntryMutation} document
+ * selects: {@link MediaListResponse} minus the keys the document never
+ * requests, so `FieldPath` cannot promise paths the composer would reject.
+ *
+ * @see https://docs.anilist.co/reference/object/medialist
+ */
+export type SaveMediaListEntryFields = Omit<
+    MediaListResponse,
+    "media" | "userId" | "updatedAt" | "createdAt"
+>;
+
+/**
  * Validation metadata maps {@link SaveMediaListEntryVariables} to runtime types for the
  * `saveMediaListEntry` operation.
  *
@@ -159,7 +171,7 @@ export class SaveMediaListEntryMutation extends AniListOperation {
         variables: SaveMediaListEntryVariables,
         options: RequestOptions & { fields: undefined }
     ): Promise<MediaListResponse>;
-    async saveMediaListEntry<K extends FieldPath<MediaListResponse>>(
+    async saveMediaListEntry<K extends FieldPath<SaveMediaListEntryFields>>(
         variables: SaveMediaListEntryVariables,
         options: RequestOptions & { fields: readonly K[] | undefined }
     ): Promise<DeepPick<MediaListResponse, K>>;

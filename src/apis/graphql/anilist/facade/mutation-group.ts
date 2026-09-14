@@ -27,7 +27,10 @@ import { type DeleteThreadCommentVariables } from "../mutation/DeleteThreadComme
 import { type RateReviewVariables } from "../mutation/RateReview";
 import { type SaveActivityReplyVariables } from "../mutation/SaveActivityReply";
 import { type SaveListActivityVariables } from "../mutation/SaveListActivity";
-import { type SaveMediaListEntryVariables } from "../mutation/SaveMediaListEntry";
+import {
+    type SaveMediaListEntryFields,
+    type SaveMediaListEntryVariables,
+} from "../mutation/SaveMediaListEntry";
 import { type SaveMessageActivityVariables } from "../mutation/SaveMessageActivity";
 import { type SaveRecommendationVariables } from "../mutation/SaveRecommendation";
 import { type SaveReviewVariables } from "../mutation/SaveReview";
@@ -168,7 +171,7 @@ export type AniListMutations = {
                 variables: SaveMediaListEntryVariables,
                 options: RequestOptions & { fields: undefined }
             ) => Promise<MediaListResponse>) &
-            (<K extends FieldPath<MediaListResponse>>(
+            (<K extends FieldPath<SaveMediaListEntryFields>>(
                 variables: SaveMediaListEntryVariables,
                 options: RequestOptions & { fields: readonly K[] | undefined }
             ) => Promise<DeepPick<MediaListResponse, K>>);

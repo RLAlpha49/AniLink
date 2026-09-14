@@ -596,6 +596,24 @@ describe("operation classes with fields", () => {
         // @ts-expect-error — a path not selected is absent from the narrowed type.
         const absent: number | undefined = slim.progress;
         expect([status, absent]).toHaveLength(2);
+
+        // The FieldPath bound is the maximal document's surface, so paths the
+        // document never selects are rejected at compile time — and would
+        // still be rejected at runtime by the composer.
+        await expect(
+            // @ts-expect-error — media is not selected by the maximal document.
+            client.anilist.mutation.saveMediaListEntry(
+                { mediaId: 21, status: "CURRENT" },
+                { fields: ["media.title.romaji"] }
+            )
+        ).rejects.toThrow(AniLinkValidationError);
+        await expect(
+            // @ts-expect-error — userId is not selected by the maximal document.
+            client.anilist.mutation.saveMediaListEntry(
+                { mediaId: 21, status: "CURRENT" },
+                { fields: ["userId"] }
+            )
+        ).rejects.toThrow(AniLinkValidationError);
     });
 
     test("a conditional fields value compiles and narrows", async () => {
