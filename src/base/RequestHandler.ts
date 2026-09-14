@@ -307,11 +307,12 @@ const buildCacheAuthKey = (
 let warnedOptionsKeyedState = false;
 
 /**
- * Emits a one-time warning when circuit-breaker or retry-budget state would
- * be keyed by the per-request options object because no `stateOwner` was
+ * Emits a one-time warning when cross-request transport state would be
+ * keyed by the per-request options object because no `stateOwner` was
  * passed. Callers that build a fresh options object per call silently get a
- * fresh state key per call, so failure streaks never accumulate and the
- * breaker/budget never engage. One warning per process avoids log spam.
+ * fresh state key per call, so failure streaks never accumulate, the
+ * breaker/budget never engage, and recorded rate-limit pacing deadlines never
+ * gate later requests. One warning per process avoids log spam.
  *
  * The diagnostic is routed through the caller's `onHookError` observer (the
  * library's established hook-failure reporting path) so it lands in the
@@ -327,7 +328,7 @@ const warnOptionsKeyedState = (onHookError: OnHookErrorHandler | undefined): voi
     }
     warnedOptionsKeyedState = true;
     const message =
-        "[AniLink] circuit-breaker/retry-budget state is keyed by the per-request options object because no stateOwner was passed. Pass a stable stateOwner (or reuse one options object across calls) so failure streaks accumulate.";
+        "[AniLink] cross-request transport state (circuit breaker, retry budget, rate-limit pacing deadlines) is keyed by the per-request options object because no stateOwner was passed. Pass a stable stateOwner (or reuse one options object across calls) so failure streaks accumulate and pacing deadlines apply.";
     if (onHookError !== undefined) {
         try {
             onHookError("stateOwner", new Error(message));
@@ -337,6 +338,188 @@ const warnOptionsKeyedState = (onHookError: OnHookErrorHandler | undefined): voi
         return;
     }
     console.warn(message);
+};
+
+/**
+ * The auth facts one request needs, resolved once from the caller's input.
+ *
+ * Extracted from {@link sendRequest} so the auth guard, the header build, and
+ * the cache-key decision each read precomputed booleans instead of
+ * re-deriving them from the raw {@link RequestAuthInput}.
+ */
+interface ResolvedAuthMaterial {
+    /** The normalized auth, or `undefined` when no material was supplied. */
+    auth: RequestAuth | undefined;
+    /** Whether a non-empty bearer token is present. */
+    hasBearerToken: boolean;
+    /** Whether an explicit `Authorization` header is present. */
+    hasAuthorizationHeader: boolean;
+    /** Whether any non-empty explicit auth header is present. */
+    hasCredentialHeaders: boolean;
+    /** Whether any auth material at all is present. */
+    hasAuthMaterial: boolean;
+}
+
+/**
+ * Normalizes the caller's auth input and derives the facts the pipeline
+ * needs: which credential shapes are present. A legacy string input becomes
+ * `{ token }`; header presence is computed once here so the auth guard, the
+ * header build, and the cache-key decision stay branch-free.
+ *
+ * @param auth - The caller-supplied auth material, when present.
+ * @returns The resolved auth facts.
+ */
+const resolveAuthMaterial = (auth: RequestAuthInput | undefined): ResolvedAuthMaterial => {
+    const normalized: RequestAuth | undefined = typeof auth === "string" ? { token: auth } : auth;
+    const hasBearerToken = normalized?.token !== undefined && normalized.token !== "";
+    // One pass over the explicit headers computes both facts the pipeline
+    // needs: whether an Authorization header overrides the bearer token, and
+    // whether any non-empty header (custom Authorization, X-API-Key, Basic,
+    // etc.) is credential material the cache key does not capture. A single
+    // loop avoids allocating two intermediate entry arrays per request on
+    // the transport's hottest path.
+    let hasAuthorizationHeader = false;
+    let hasCredentialHeaders = false;
+    if (normalized?.headers !== undefined) {
+        for (const key in normalized.headers) {
+            if (normalized.headers[key] !== "") {
+                hasCredentialHeaders = true;
+                if (key.toLowerCase() === "authorization") {
+                    hasAuthorizationHeader = true;
+                }
+            }
+        }
+    }
+    return {
+        auth: normalized,
+        hasBearerToken,
+        hasAuthorizationHeader,
+        hasCredentialHeaders,
+        hasAuthMaterial: hasBearerToken || hasAuthorizationHeader,
+    };
+};
+
+/**
+ * Builds the request headers: the content-type defaults (JSON for GraphQL
+ * calls, the caller's override for REST/form calls), the explicit auth
+ * headers, and the bearer `Authorization` header when no explicit one
+ * overrides it.
+ *
+ * @param resolvedAuth - The resolved auth facts.
+ * @param contentType - The caller's `Content-Type` override, when present.
+ * @returns The complete header map for the request.
+ */
+const buildHeaders = (
+    resolvedAuth: ResolvedAuthMaterial,
+    contentType: string | undefined
+): Record<string, string> => {
+    const headers: Record<string, string> =
+        contentType === undefined
+            ? {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+              }
+            : { "Content-Type": contentType };
+
+    Object.assign(headers, resolvedAuth.auth?.headers);
+
+    if (resolvedAuth.hasBearerToken && !resolvedAuth.hasAuthorizationHeader) {
+        headers.Authorization = `Bearer ${resolvedAuth.auth!.token}`;
+    }
+    return headers;
+};
+
+/**
+ * Computes the auth-scoping cache key for a cacheable request, or `undefined`
+ * when the request must not touch the cache.
+ *
+ * The cache applies only to `GET` calls with a configured cache. When
+ * effective credential headers are present but not captured by the cache
+ * key (for example a custom `Authorization` or `X-API-Key` header),
+ * `buildCacheAuthKey` returns `undefined` to fail closed: the cache is
+ * skipped entirely instead of risking a cross-identity disclosure.
+ *
+ * @param resolved - The resolved request options.
+ * @param method - The HTTP method.
+ * @param resolvedAuth - The resolved auth facts.
+ * @returns The cache key fragment, or `undefined` to skip the cache.
+ */
+const resolveCacheAuthKey = (
+    resolved: ResolvedRequestOptions,
+    method: HttpMethod,
+    resolvedAuth: ResolvedAuthMaterial
+): string | undefined => {
+    if (resolved.responseCache === undefined || method !== "GET") {
+        return undefined;
+    }
+    return buildCacheAuthKey(
+        resolvedAuth.hasBearerToken,
+        resolvedAuth.hasCredentialHeaders,
+        resolvedAuth.auth?.token
+    );
+};
+
+/**
+ * Reads the response cache for a request and, on a hit, fires the
+ * `onRequestStart`/`onResponse` hooks with `cacheHit: true` before returning
+ * the cached body.
+ *
+ * The correlation `requestId` is generated lazily — only when a hook is
+ * actually configured — so the cache-hit fast path of a hook-less hot loop
+ * does not pay the UUID generation cost on every call.
+ *
+ * @param resolved - The resolved request options.
+ * @param method - The HTTP method.
+ * @param url - The request URL.
+ * @param data - The request body, when present.
+ * @param cacheAuthKey - The auth-scoping cache key fragment.
+ * @returns The cached response, or `undefined` on a miss.
+ */
+const tryCacheRead = <T>(
+    resolved: ResolvedRequestOptions,
+    method: HttpMethod,
+    url: string,
+    data: object | string | undefined,
+    cacheAuthKey: string
+): T | undefined => {
+    const cached = resolved.responseCache!.get<T>(method, url, data, cacheAuthKey);
+    if (cached === undefined) {
+        return undefined;
+    }
+    if (resolved.onRequestStart !== undefined || resolved.onResponse !== undefined) {
+        const requestId = randomUUID();
+        const hookContext = { requestId, url, method, attempt: 1 };
+        safeInvoke(resolved.onRequestStart, "onRequestStart", resolved.onHookError, hookContext);
+        safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
+            ...hookContext,
+            durationMs: 0,
+            cacheHit: true,
+        });
+    }
+    return cached;
+};
+
+/**
+ * Stores a successful response in the cache. A pure pass-through wrapper so
+ * {@link sendRequest} reads as orchestration and the cache write path is
+ * unit-testable in isolation.
+ *
+ * @param resolved - The resolved request options.
+ * @param method - The HTTP method.
+ * @param url - The request URL.
+ * @param data - The request body, when present.
+ * @param cacheAuthKey - The auth-scoping cache key fragment.
+ * @param result - The response body to cache.
+ */
+const storeCacheWrite = (
+    resolved: ResolvedRequestOptions,
+    method: HttpMethod,
+    url: string,
+    data: object | string | undefined,
+    cacheAuthKey: string,
+    result: unknown
+): void => {
+    resolved.responseCache!.set(method, url, data, cacheAuthKey, result);
 };
 
 /**
@@ -384,72 +567,31 @@ export const sendRequest = async <T = unknown>(
         stateOwner,
     } = sendOptions ?? {};
     const isRestCall = protocol === "rest" || (protocol === undefined && contentType !== undefined);
-    const resolvedAuth: RequestAuth | undefined = typeof auth === "string" ? { token: auth } : auth;
-    const hasBearerToken = resolvedAuth?.token !== undefined && resolvedAuth.token !== "";
-    const hasAuthorizationHeader = Object.entries(resolvedAuth?.headers ?? {}).some(
-        ([key, value]) => key.toLowerCase() === "authorization" && value !== ""
-    );
-    // Any non-empty explicit auth header (custom Authorization, X-API-Key,
-    // Basic, etc.) is credential material the cache key does not capture.
-    const hasCredentialHeaders = Object.entries(resolvedAuth?.headers ?? {}).some(
-        ([, value]) => value !== ""
-    );
-    const hasAuthMaterial = hasBearerToken || hasAuthorizationHeader;
+    const resolvedAuth = resolveAuthMaterial(auth);
 
-    if (requiresAuth && !hasAuthMaterial) {
+    if (requiresAuth && !resolvedAuth.hasAuthMaterial) {
         throw new AniLinkAuthError(operation);
     }
 
-    const headers: Record<string, string> =
-        contentType === undefined
-            ? {
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-              }
-            : { "Content-Type": contentType };
-
-    Object.assign(headers, resolvedAuth?.headers);
-
-    if (hasBearerToken && !hasAuthorizationHeader) {
-        headers.Authorization = `Bearer ${resolvedAuth.token}`;
-    }
+    const headers = buildHeaders(resolvedAuth, contentType);
 
     const resolved = resolveRequestOptions(options);
 
     if (
         stateOwner === undefined &&
         options !== undefined &&
-        (resolved.circuitBreaker !== undefined || resolved.retryBudget !== undefined)
+        (resolved.circuitBreaker !== undefined ||
+            resolved.retryBudget !== undefined ||
+            resolved.paceWithRateLimit)
     ) {
         warnOptionsKeyedState(resolved.onHookError);
     }
 
-    const cacheEnabled = resolved.responseCache !== undefined && method === "GET";
-    const cacheAuthKey = cacheEnabled
-        ? buildCacheAuthKey(hasBearerToken, hasCredentialHeaders, resolvedAuth?.token)
-        : undefined;
-    // When effective credential headers are present but not captured by the
-    // cache key (for example a custom `Authorization` or `X-API-Key` header),
-    // `buildCacheAuthKey` returns `undefined` to fail closed: skip the cache
-    // entirely instead of risking a cross-identity disclosure.
-    const cacheActive = cacheEnabled && cacheAuthKey !== undefined;
+    const cacheAuthKey = resolveCacheAuthKey(resolved, method, resolvedAuth);
 
-    if (cacheActive) {
-        const cached = resolved.responseCache!.get<T>(method, url, data, cacheAuthKey);
+    if (cacheAuthKey !== undefined) {
+        const cached = tryCacheRead<T>(resolved, method, url, data, cacheAuthKey);
         if (cached !== undefined) {
-            const requestId = randomUUID();
-            const hookContext = { requestId, url, method, attempt: 1 };
-            safeInvoke(
-                resolved.onRequestStart,
-                "onRequestStart",
-                resolved.onHookError,
-                hookContext
-            );
-            safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
-                ...hookContext,
-                durationMs: 0,
-                cacheHit: true,
-            });
             return cached;
         }
     }
@@ -461,8 +603,8 @@ export const sendRequest = async <T = unknown>(
         isRestCall
     );
 
-    if (cacheActive) {
-        resolved.responseCache!.set(method, url, data, cacheAuthKey, result);
+    if (cacheAuthKey !== undefined) {
+        storeCacheWrite(resolved, method, url, data, cacheAuthKey, result);
     }
 
     return result as T;
