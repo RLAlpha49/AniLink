@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { execFile } from "node:child_process";
 import { join } from "node:path";
 import { ANILIST_OPERATION_REGISTRY } from "../src/apis/graphql/anilist/registry";
 import { FACADE_OPERATION_DOCS } from "../scripts/generate-facade-groups.config";
@@ -62,6 +63,20 @@ describe("facade group generation", () => {
         expect(queryGroup).toContain("export type AniListQueries = {");
     });
 
+    test("generated narrowing unions carry the class-side always-keys", async () => {
+        // The always-keys are parsed from each operation class's
+        // composeDocument argument — the single source of truth — so the
+        // generated unions must carry exactly those keys: the entity
+        // constants, the shared page constant, and nothing for an
+        // always-key-less query.
+        const generated = await generateFacadeGroupFiles();
+        const queryGroup = generated.get("src/apis/graphql/anilist/facade/query-group.ts") ?? "";
+        expect(queryGroup).toContain('DeepPick<MediaResponse, K | "id" | "idMal">');
+        expect(queryGroup).toContain('DeepPick<MediaListCollectionResponse, K | "hasNextChunk">');
+        expect(queryGroup).toContain('DeepPick<UsersPageResponse, K | "pageInfo">');
+        expect(queryGroup).toContain("DeepPick<MediaTrendResponse, K>");
+    });
+
     test("collectRegistryEntries mirrors the runtime registry shape", () => {
         const entries = collectRegistryEntries();
         const byCategory = entries.reduce<Record<string, number>>((acc, entry) => {
@@ -77,10 +92,10 @@ describe("facade group generation", () => {
     });
 
     test("every parsed registry entry resolves a runtime registry entry", () => {
-        // loadMethodInfo looks up alwaysSelected by name in the imported
-        // runtime registry; a miss must throw (a silent miss would generate a
-        // wrong DeepPick union without the always-keys). This test pins the
-        // lookup contract for the real registry: every parsed entry resolves.
+        // loadMethodInfo resolves each parsed entry in the imported runtime
+        // registry; a miss means the parsed registry source and the runtime
+        // registry have drifted. This test pins that lookup contract for the
+        // real registry: every parsed entry resolves.
         const entries = collectRegistryEntries();
         for (const entry of entries) {
             const resolved = ANILIST_OPERATION_REGISTRY[entry.category].find(
@@ -107,5 +122,75 @@ describe("facade group generation", () => {
             "} as const;",
         ].join("\n");
         expect(() => parseRegistrySource(fake)).toThrow(/parsed/);
+    });
+
+    test("generation throws when a fields operation's FieldPath bound is not recognized", async () => {
+        // A bound the strict regex cannot capture (here: a union) must fail
+        // generation loudly. The silent alternative — falling back to the
+        // wide response bound — would emit a facade promising paths the
+        // composer rejects, the exact drift this generator exists to
+        // prevent. The generator runs in a subprocess so its module-level
+        // source cache cannot serve the pre-mutation file text.
+        const classPath = join(process.cwd(), "src/apis/graphql/anilist/query/User.ts");
+        const original = readFileSync(classPath, "utf8");
+        try {
+            writeFileSync(
+                classPath,
+                original.replace(
+                    /async\s+user<K extends FieldPath<\w+>>/,
+                    "async user<K extends FieldPath<UserResponse | ViewerResponse>>"
+                )
+            );
+            const run = new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+                execFile(
+                    process.execPath,
+                    ["--import", "tsx", "scripts/generate-facade-groups.ts", "--check"],
+                    { cwd: process.cwd() },
+                    (error, stdout, stderr) => {
+                        if (error && error.code !== 1) reject(error);
+                        else resolve({ stdout: String(stdout), stderr: String(stderr) });
+                    }
+                );
+            });
+            const { stdout, stderr } = await run;
+            expect(`${stdout}${stderr}`).toMatch(/FieldPath bound/);
+        } finally {
+            writeFileSync(classPath, original);
+        }
+    });
+
+    test("generation throws when an always-keys constant uses an unsupported literal", async () => {
+        // A constant the literal parser cannot fully consume (here: single
+        // quotes) must fail generation loudly. The silent alternative —
+        // parsing zero keys — would emit DeepPick<Response, K> without the
+        // always-keys, a wrong public type with no error. The generator
+        // runs in a subprocess so its module-level source cache cannot
+        // serve the pre-mutation file text.
+        const classPath = join(process.cwd(), "src/apis/graphql/anilist/query/Media.ts");
+        const original = readFileSync(classPath, "utf8");
+        try {
+            writeFileSync(
+                classPath,
+                original.replace(
+                    'export const MEDIA_ALWAYS: readonly string[] = ["id", "idMal"];',
+                    "export const MEDIA_ALWAYS: readonly string[] = ['id', 'idMal'];"
+                )
+            );
+            const run = new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+                execFile(
+                    process.execPath,
+                    ["--import", "tsx", "scripts/generate-facade-groups.ts", "--check"],
+                    { cwd: process.cwd() },
+                    (error, stdout, stderr) => {
+                        if (error && error.code !== 1) reject(error);
+                        else resolve({ stdout: String(stdout), stderr: String(stderr) });
+                    }
+                );
+            });
+            const { stdout, stderr } = await run;
+            expect(`${stdout}${stderr}`).toMatch(/Unsupported always-keys/);
+        } finally {
+            writeFileSync(classPath, original);
+        }
     });
 });

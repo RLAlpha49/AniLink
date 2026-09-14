@@ -109,8 +109,8 @@ describe("composeDocument structure failures", () => {
             "}",
             "}",
         ].join("\n");
-        // A typo in an operation's alwaysSelected registry entry is a library
-        // bug; the error must say so instead of blaming the caller's fields.
+        // A typo in an operation's always-keys constant is a library bug;
+        // the error must say so instead of blaming the caller's fields.
         expect(() => composeDocument(maximal, ["title.romaji"], ["idma"])).toThrow(
             /always-selected/
         );

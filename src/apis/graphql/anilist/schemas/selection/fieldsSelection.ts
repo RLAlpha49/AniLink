@@ -1,6 +1,7 @@
 /**
  * The `fields` option and the type-level narrowing it drives, plus the
- * always-selected-key policy lists the composer and the registry share.
+ * always-selected-key policy lists the composer and the operation classes
+ * share.
  *
  * @see https://docs.anilist.co/reference/query
  */
@@ -12,6 +13,11 @@
  * Most entities always select `id` (the handle callers need to follow up with
  * any other call) and, for media, `idMal`. Entities whose response has no
  * `id` (e.g. `MediaTrend`, `SiteStatistics`) pass an empty list.
+ *
+ * The `_ALWAYS` constants typed by this alias are the single source of truth
+ * for the always-keys: the operation class passes its constant to the
+ * composer at runtime, and the facade generator parses the same constant
+ * for the `DeepPick` narrowing, so the two can never drift.
  */
 export type SelectionAlways = readonly string[];
 
@@ -20,8 +26,7 @@ export type SelectionAlways = readonly string[];
  * shared `paginate` helpers walk.
  *
  * Defined once here because every page query selects the same always-keys;
- * page classes and the registry import this constant instead of each
- * declaring a copy.
+ * page classes import this constant instead of each declaring a copy.
  */
 export const PAGE_ALWAYS: SelectionAlways = ["pageInfo"];
 

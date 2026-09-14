@@ -8,16 +8,20 @@
  * operation class and its entry in this registry — then run
  * `npm run facade:generate` to refresh the derived group types under
  * `facade/` (curated JSDoc prose lives in
- * `scripts/generate-facade-groups.config.ts`).
+ * `scripts/generate-facade-groups.config.ts`). The always-keys each operation
+ * selects in every composed document are declared once, by the operation
+ * class itself (its exported `_ALWAYS` constant, or the shared `PAGE_ALWAYS`
+ * for page queries); the facade generator parses them from the class, so
+ * this registry carries no duplicate of them.
  */
 import { ActivityQuery } from "./query/Activity";
 import { ActivityReplyQuery } from "./query/ActivityReply";
 import { ActivityRepliesQuery } from "./query/page/ActivityReplies";
 import { ActivitiesQuery } from "./query/page/Activities";
-import { AiringScheduleQuery, AIRING_SCHEDULE_ALWAYS } from "./query/AiringSchedule";
+import { AiringScheduleQuery } from "./query/AiringSchedule";
 import { AiringSchedulesQuery } from "./query/page/AiringSchedules";
 import { AniChartUserQuery } from "./query/AniChartUser";
-import { CharacterQuery, CHARACTER_ALWAYS } from "./query/Character";
+import { CharacterQuery } from "./query/Character";
 import { CharactersQuery } from "./query/page/Characters";
 import { ExternalLinkSourceCollectionQuery } from "./query/ExternalLinkSourceCollection";
 import { FollowerQuery } from "./query/Follower";
@@ -27,33 +31,30 @@ import { FollowingsQuery } from "./query/page/Followings";
 import { GenreCollectionQuery } from "./query/GenreCollection";
 import { LikesQuery } from "./query/page/Likes";
 import { MarkdownQuery } from "./query/Markdown";
-import {
-    MediaListCollectionQuery,
-    MEDIA_LIST_COLLECTION_ALWAYS,
-} from "./query/MediaListCollection";
-import { MediaListQuery, MEDIA_LIST_ALWAYS } from "./query/MediaList";
+import { MediaListCollectionQuery } from "./query/MediaListCollection";
+import { MediaListQuery } from "./query/MediaList";
 import { MediaListsQuery } from "./query/page/MediaLists";
-import { MediaQuery, MEDIA_ALWAYS } from "./query/Media";
+import { MediaQuery } from "./query/Media";
 import { MediaTagCollectionQuery } from "./query/MediaTagCollection";
 import { MediaTrendQuery } from "./query/MediaTrend";
 import { MediaTrendsQuery } from "./query/page/MediaTrends";
 import { MediasQuery } from "./query/page/Medias";
 import { NotificationQuery } from "./query/Notification";
 import { NotificationsQuery } from "./query/page/Notifications";
-import { RecommendationQuery, RECOMMENDATION_ALWAYS } from "./query/Recommendation";
+import { RecommendationQuery } from "./query/Recommendation";
 import { RecommendationsQuery } from "./query/page/Recommendations";
-import { ReviewQuery, REVIEW_ALWAYS } from "./query/Review";
+import { ReviewQuery } from "./query/Review";
 import { ReviewsQuery } from "./query/page/Reviews";
 import { SiteStatisticsQuery } from "./query/SiteStatistics";
-import { StaffQuery, STAFF_ALWAYS } from "./query/Staff";
+import { StaffQuery } from "./query/Staff";
 import { StaffsQuery } from "./query/page/Staffs";
-import { StudioQuery, STUDIO_ALWAYS } from "./query/Studio";
+import { StudioQuery } from "./query/Studio";
 import { StudiosQuery } from "./query/page/Studios";
-import { ThreadCommentQuery, THREAD_COMMENT_ALWAYS } from "./query/ThreadComment";
+import { ThreadCommentQuery } from "./query/ThreadComment";
 import { ThreadCommentsQuery } from "./query/page/ThreadComments";
-import { ThreadQuery, THREAD_ALWAYS } from "./query/Thread";
+import { ThreadQuery } from "./query/Thread";
 import { ThreadsQuery } from "./query/page/Threads";
-import { UserQuery, USER_ALWAYS } from "./query/User";
+import { UserQuery } from "./query/User";
 import { UsersQuery } from "./query/page/Users";
 import { ViewerQuery } from "./query/Viewer";
 import { DeleteMediaListEntryMutation } from "./mutation/DeleteMediaListEntry";
@@ -85,7 +86,6 @@ import { UpdateAniChartHighlightsMutation } from "./mutation/UpdateAniChartHighl
 import { UpdateMediaListEntriesMutation } from "./mutation/UpdateMediaListEntries";
 import { UpdateUserMutation } from "./mutation/UpdateUser";
 import { SaveMediaListEntryMutation } from "./mutation/SaveMediaListEntry";
-import { PAGE_ALWAYS } from "./schemas/selection/fieldsSelection";
 
 /**
  * The section of the facade an operation is exposed under.
@@ -131,19 +131,6 @@ export interface OperationEntry<
      * facade key, {@link opAs} carries an explicit override.
      */
     readonly methodName: string;
-
-    /**
-     * Root-level response keys the operation always selects in every composed
-     * document, regardless of the `fields` list (e.g. `["id", "idMal"]` for
-     * media entities, `["pageInfo"]` for page queries). Absent for operations
-     * without a `fields` selection surface and for entities whose response has
-     * no always-required key.
-     *
-     * This is the single source of truth for the always-keys: the operation
-     * class reads it at runtime and the facade generator reads it for the
-     * `DeepPick` narrowing, so the two can never drift.
-     */
-    readonly alwaysSelected?: readonly string[];
 }
 
 /**
@@ -152,15 +139,13 @@ export interface OperationEntry<
  *
  * @param name - The facade key the bound method is exposed under.
  * @param operationClass - The operation class implementing this entry.
- * @param alwaysSelected - Root-level keys always selected in composed documents.
  * @returns The registry entry with `methodName` defaulted to `name`.
  */
 function op<TName extends string, TOperation extends new (...args: never[]) => unknown>(
     name: TName,
-    operationClass: TOperation,
-    alwaysSelected?: readonly string[]
+    operationClass: TOperation
 ): OperationEntry<TOperation, TName> {
-    return { name, operationClass, methodName: name, alwaysSelected };
+    return { name, operationClass, methodName: name };
 }
 
 /**
@@ -170,16 +155,14 @@ function op<TName extends string, TOperation extends new (...args: never[]) => u
  * @param name - The facade key the bound method is exposed under.
  * @param operationClass - The operation class implementing this entry.
  * @param methodName - The async method on `operationClass` to bind.
- * @param alwaysSelected - Root-level keys always selected in composed documents.
  * @returns The registry entry.
  */
 function opAs<TName extends string, TOperation extends new (...args: never[]) => unknown>(
     name: TName,
     operationClass: TOperation,
-    methodName: string,
-    alwaysSelected?: readonly string[]
+    methodName: string
 ): OperationEntry<TOperation, TName> {
-    return { name, operationClass, methodName, alwaysSelected };
+    return { name, operationClass, methodName };
 }
 
 /**
@@ -199,51 +182,51 @@ type RegistryGroups = {
  */
 export const ANILIST_OPERATION_REGISTRY = {
     query: [
-        op("user", UserQuery, USER_ALWAYS),
-        op("media", MediaQuery, MEDIA_ALWAYS),
+        op("user", UserQuery),
+        op("media", MediaQuery),
         op("mediaTrend", MediaTrendQuery),
-        op("airingSchedule", AiringScheduleQuery, AIRING_SCHEDULE_ALWAYS),
-        op("character", CharacterQuery, CHARACTER_ALWAYS),
-        op("staff", StaffQuery, STAFF_ALWAYS),
-        op("mediaList", MediaListQuery, MEDIA_LIST_ALWAYS),
-        op("mediaListCollection", MediaListCollectionQuery, MEDIA_LIST_COLLECTION_ALWAYS),
+        op("airingSchedule", AiringScheduleQuery),
+        op("character", CharacterQuery),
+        op("staff", StaffQuery),
+        op("mediaList", MediaListQuery),
+        op("mediaListCollection", MediaListCollectionQuery),
         op("genreCollection", GenreCollectionQuery),
         op("mediaTagCollection", MediaTagCollectionQuery),
         op("viewer", ViewerQuery),
         op("notification", NotificationQuery),
-        op("studio", StudioQuery, STUDIO_ALWAYS),
-        op("review", ReviewQuery, REVIEW_ALWAYS),
+        op("studio", StudioQuery),
+        op("review", ReviewQuery),
         op("activity", ActivityQuery),
         op("activityReply", ActivityReplyQuery),
         op("following", FollowingQuery),
         op("follower", FollowerQuery),
-        op("thread", ThreadQuery, THREAD_ALWAYS),
-        op("threadComment", ThreadCommentQuery, THREAD_COMMENT_ALWAYS),
-        op("recommendation", RecommendationQuery, RECOMMENDATION_ALWAYS),
+        op("thread", ThreadQuery),
+        op("threadComment", ThreadCommentQuery),
+        op("recommendation", RecommendationQuery),
         op("markdown", MarkdownQuery),
         op("aniChartUser", AniChartUserQuery),
         op("siteStatistics", SiteStatisticsQuery),
         op("externalLinkSourceCollection", ExternalLinkSourceCollectionQuery),
     ],
     page: [
-        op("users", UsersQuery, PAGE_ALWAYS),
-        op("medias", MediasQuery, PAGE_ALWAYS),
-        op("characters", CharactersQuery, PAGE_ALWAYS),
-        op("staffs", StaffsQuery, PAGE_ALWAYS),
-        op("studios", StudiosQuery, PAGE_ALWAYS),
-        op("mediaLists", MediaListsQuery, PAGE_ALWAYS),
-        op("airingSchedules", AiringSchedulesQuery, PAGE_ALWAYS),
-        op("mediaTrends", MediaTrendsQuery, PAGE_ALWAYS),
+        op("users", UsersQuery),
+        op("medias", MediasQuery),
+        op("characters", CharactersQuery),
+        op("staffs", StaffsQuery),
+        op("studios", StudiosQuery),
+        op("mediaLists", MediaListsQuery),
+        op("airingSchedules", AiringSchedulesQuery),
+        op("mediaTrends", MediaTrendsQuery),
         op("notifications", NotificationsQuery),
-        op("followers", FollowersQuery, PAGE_ALWAYS),
-        opAs("following", FollowingsQuery, "followings", PAGE_ALWAYS),
+        op("followers", FollowersQuery),
+        opAs("following", FollowingsQuery, "followings"),
         op("activities", ActivitiesQuery),
-        opAs("activityReplies", ActivityRepliesQuery, "activityReplies", PAGE_ALWAYS),
-        op("threads", ThreadsQuery, PAGE_ALWAYS),
-        opAs("threadComments", ThreadCommentsQuery, "threadComments", PAGE_ALWAYS),
-        op("reviews", ReviewsQuery, PAGE_ALWAYS),
-        opAs("recommendations", RecommendationsQuery, "recommendations", PAGE_ALWAYS),
-        op("likes", LikesQuery, PAGE_ALWAYS),
+        opAs("activityReplies", ActivityRepliesQuery, "activityReplies"),
+        op("threads", ThreadsQuery),
+        opAs("threadComments", ThreadCommentsQuery, "threadComments"),
+        op("reviews", ReviewsQuery),
+        opAs("recommendations", RecommendationsQuery, "recommendations"),
+        op("likes", LikesQuery),
     ],
     mutation: [
         op("updateUser", UpdateUserMutation),

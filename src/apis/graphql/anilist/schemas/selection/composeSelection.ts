@@ -166,15 +166,15 @@ function pruneSelection(
     const wholeHeads = new Set<string>();
 
     // Always-keys are validated separately from the caller's paths: a bad
-    // entry is a library bug (the registry's `alwaysSelected` for this
-    // operation), and blaming the caller's `fields` list would send them
-    // hunting through paths they never wrote.
+    // entry is a library bug (the operation class's always-keys constant),
+    // and blaming the caller's `fields` list would send them hunting through
+    // paths they never wrote.
     for (const path of always) {
         const segments = path.split(".");
         if (!byName.has(segments[0])) {
             throw new Error(
                 `composeSelection: invalid always-selected key "${path}" — not a field of the maximal document. ` +
-                    "This is a library bug in the operation's alwaysSelected registry entry, not a caller error."
+                    "This is a library bug in the operation's always-keys constant, not a caller error."
             );
         }
     }

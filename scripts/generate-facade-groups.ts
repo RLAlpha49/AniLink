@@ -22,6 +22,44 @@ import { ANILIST_OPERATION_REGISTRY } from "../src/apis/graphql/anilist/registry
 const REPO_ROOT = resolve(import.meta.dirname, "..");
 const ANILIST_DIR = join(REPO_ROOT, "src/apis/graphql/anilist");
 
+/**
+ * Read-through cache for source files, so each file is read once per run
+ * instead of once per registry entry that touches it (registry.ts is read
+ * per entry by `classModuleFor`, fieldsSelection.ts per page class by
+ * `parseAlwaysKeys`). The generator runs once per invocation, so the cache
+ * never outlives a single generation pass.
+ */
+const sourceCache = new Map<string, string>();
+
+/**
+ * Read a UTF-8 source file through {@link sourceCache}.
+ *
+ * @param path - Absolute path of the file to read.
+ * @returns The file's text.
+ */
+function readSource(path: string): string {
+    let source = sourceCache.get(path);
+    if (source === undefined) {
+        source = readFileSync(path, "utf8");
+        sourceCache.set(path, source);
+    }
+    return source;
+}
+
+/**
+ * Escape a parsed identifier for safe interpolation into a `RegExp` body.
+ *
+ * Registry names come from `registry.ts` source text; a metacharacter in a
+ * future name would silently break the interpolated regexes instead of
+ * failing generation.
+ *
+ * @param identifier - The identifier to escape.
+ * @returns The identifier with every RegExp metacharacter backslash-escaped.
+ */
+function escapeRegExp(identifier: string): string {
+    return identifier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /** Repository-relative output paths, keyed by group kind. */
 const OUTPUTS = {
     query: "src/apis/graphql/anilist/facade/query-group.ts",
@@ -45,7 +83,7 @@ interface MethodInfo {
     see: string | null;
     /** Whether the operation accepts a `fields` selection option (imports from `schemas/selection/`). */
     hasFields: boolean;
-    /** Root-level keys the operation always selects, quoted for a type union (e.g. `"id" | "idMal"`). */
+    /** Root-level keys the operation always selects, quoted for a type union (e.g. `"id" | "idMal"`); parsed from the class's composeDocument argument. */
     alwaysKeys: string[];
     /** Identifier-to-module map of the class file's own imports (class-relative). */
     imports: Map<string, string>;
@@ -53,6 +91,12 @@ interface MethodInfo {
     declaredLocally: Set<string>;
     /** AniList-relative module path of the class (e.g. `query/page/Users`). */
     classModule: string;
+    /**
+     * The type name bounding the narrowing overload's `FieldPath`, when the
+     * class declares one beyond the response type (e.g. a document-bounded
+     * alias). `null` when the bound is the response type itself.
+     */
+    fieldPathType: string | null;
 }
 
 /**
@@ -104,7 +148,7 @@ export function collectOperationSignatures(): OperationSignature[] {
  * @throws {Error} When a category group or the registry object cannot be found.
  */
 export function collectRegistryEntries(): RegistryEntry[] {
-    return parseRegistrySource(readFileSync(join(ANILIST_DIR, "registry.ts"), "utf8"));
+    return parseRegistrySource(readSource(join(ANILIST_DIR, "registry.ts")));
 }
 
 /**
@@ -167,18 +211,95 @@ export function parseRegistrySource(registrySource: string): RegistryEntry[] {
  * @throws {Error} When the class is not imported by `registry.ts`.
  */
 function classModuleFor(className: string): string {
-    const registrySource = readFileSync(join(ANILIST_DIR, "registry.ts"), "utf8");
-    // The class may share its import line with the class's exported
-    // always-keys constant (e.g. `import { MediaQuery, MEDIA_ALWAYS } ...`),
-    // so the specifier list is matched as a whole rather than exactly.
+    const registrySource = readSource(join(ANILIST_DIR, "registry.ts"));
+    // The import specifier list is matched as a whole rather than exactly,
+    // so a multi-specifier import line still resolves the class's module.
     const importMatch = new RegExp(
-        `^import\\s*\\{[^}]*\\b${className}\\b[^}]*\\}\\s*from\\s*"([^"]+)";`,
+        `^import\\s*\\{[^}]*\\b${escapeRegExp(className)}\\b[^}]*\\}\\s*from\\s*"([^"]+)";`,
         "m"
     ).exec(registrySource);
     if (!importMatch) {
         throw new Error(`Operation class ${className} is not imported by registry.ts.`);
     }
     return importMatch[1].replace(/^\.\//, "");
+}
+
+/**
+ * Parse the always-selected keys an operation class passes to
+ * `composeDocument`.
+ *
+ * The third `composeDocument` argument is either an empty array literal
+ * (mutations and queries without always-keys) or an identifier: a constant
+ * declared in the class file itself or imported from
+ * `schemas/selection/fieldsSelection` (the page queries' shared
+ * `PAGE_ALWAYS`). Resolving the identifier through the class's own imports
+ * keeps the class file the single source of truth for the always-keys.
+ *
+ * @param source - The operation class source text.
+ * @param imports - Identifier-to-module map of the class file's imports.
+ * @param classPath - Absolute path of the class file, used to resolve
+ *   imported constant modules and in error messages.
+ * @returns The always-keys, quoted for a type union (e.g. `"id" | "idMal"`).
+ * @throws {Error} When the `composeDocument` call cannot be found, or the
+ *   referenced constant is neither declared in the class file nor imported,
+ *   or its declaration cannot be parsed.
+ */
+function parseAlwaysKeys(
+    source: string,
+    imports: Map<string, string>,
+    classPath: string
+): string[] {
+    const callMatch = /composeDocument\(\s*\w+\s*,\s*fields\s*,\s*(\[\]|[\w$]+)\s*\)/.exec(source);
+    if (!callMatch) {
+        throw new Error(
+            `No composeDocument call with an always-keys argument found in ${classPath}. ` +
+                "Expected composeDocument(<document>, fields, [] | CONSTANT_NAME)."
+        );
+    }
+    const argument = callMatch[1];
+    if (argument === "[]") return [];
+
+    const declarationRegex = new RegExp(
+        `export\\s+const\\s+${argument}\\b[^=]*=\\s*(\\[[^\\]]*\\])`
+    );
+    const localMatch = declarationRegex.exec(source);
+    if (localMatch) return parseAlwaysKeysLiteral(localMatch[1]);
+
+    const importSpecifier = imports.get(argument);
+    if (!importSpecifier) {
+        throw new Error(
+            `Always-keys constant ${argument} in ${classPath} is neither declared in the class file nor imported.`
+        );
+    }
+    const constantPath = resolve(dirname(classPath), importSpecifier) + ".ts";
+    const importedMatch = declarationRegex.exec(readSource(constantPath));
+    if (!importedMatch) {
+        throw new Error(`Always-keys constant ${argument} not found in ${constantPath}.`);
+    }
+    return parseAlwaysKeysLiteral(importedMatch[1]);
+}
+
+/**
+ * Extract the quoted strings of an array literal, re-quoted for a type
+ * union.
+ *
+ * @param literal - The array literal text (e.g. `["id", "idMal"]`).
+ * @returns The keys, quoted for a type union.
+ * @throws {Error} When the literal contains anything besides double-quoted
+ *   strings, whitespace, and commas (e.g. single quotes, a spread, or an
+ *   `as const` suffix) — a shape the parser does not understand would
+ *   otherwise parse as fewer keys than the constant holds, or as none at
+ *   all, generating a wrong public type with no error.
+ */
+function parseAlwaysKeysLiteral(literal: string): string[] {
+    const keys = [...literal.matchAll(/"([^"]*)"/g)].map((match) => `"${match[1]}"`);
+    const residue = literal.replace(/"[^"]*"/g, "").replace(/[\s,[\]]/g, "");
+    if (residue.length > 0) {
+        throw new Error(
+            `Unsupported always-keys array literal ${literal} — only double-quoted string elements are parsed.`
+        );
+    }
+    return keys;
 }
 
 /**
@@ -192,10 +313,10 @@ function classModuleFor(className: string): string {
 function loadMethodInfo(entry: RegistryEntry): MethodInfo {
     const classModule = classModuleFor(entry.className);
     const classPath = join(ANILIST_DIR, `${classModule}.ts`);
-    const source = readFileSync(classPath, "utf8");
+    const source = readSource(classPath);
 
     const signatureRegex = new RegExp(
-        `async\\s+${entry.methodName}\\s*\\(([\\s\\S]*?)\\)\\s*:\\s*Promise<([^>]+)>`
+        `async\\s+${escapeRegExp(entry.methodName)}\\s*\\(([\\s\\S]*?)\\)\\s*:\\s*Promise<([^>]+)>`
     );
     const signature = signatureRegex.exec(source);
     if (!signature) {
@@ -246,13 +367,18 @@ function loadMethodInfo(entry: RegistryEntry): MethodInfo {
     // directory (query, page, and mutation classes alike).
     const hasFields = /from\s+"[^"]*schemas\/selection\//.test(source);
 
-    // The always-selected keys come from the registry entry — the same
-    // `alwaysSelected` array the operation class passes to the composer at
-    // runtime — so the generated DeepPick union can never drift from what the
-    // runtime document actually selects. A parsed entry that does not
-    // resolve in the runtime registry must throw: a silent miss would
-    // generate `DeepPick<Response, K>` without the always-keys — a wrong
-    // public type with no error.
+    // The always-selected keys come from the operation class itself: the
+    // constant (or empty literal) the class passes to composeDocument is the
+    // single source of truth, parsed from the class source the same way
+    // `hasFields` is — so the generated DeepPick union can never drift from
+    // what the runtime document actually selects. Operations without a
+    // `fields` surface send the maximal document as-is and have no
+    // always-keys.
+    const alwaysKeys = hasFields ? parseAlwaysKeys(source, imports, classPath) : [];
+
+    // A parsed entry that does not resolve in the runtime registry must
+    // throw: the parsed registry source and the imported runtime registry
+    // would have drifted apart.
     const registryEntry = ANILIST_OPERATION_REGISTRY[entry.category].find(
         (candidate) => candidate.name === entry.name
     );
@@ -262,19 +388,42 @@ function loadMethodInfo(entry: RegistryEntry): MethodInfo {
                 "The parsed source and the imported runtime registry have drifted."
         );
     }
-    const alwaysKeys = registryEntry.alwaysSelected?.map((key) => `"${key}"`) ?? [];
+
+    // The narrowing overload may bound its `FieldPath` by a narrower type than
+    // the response (e.g. a document-bounded alias omitting keys the maximal
+    // document never selects). When the bound equals the response element
+    // type — the un-bounded case every other operation has — store `null` so
+    // the facade keeps emitting `FieldPath<Response>` unchanged. A bound the
+    // strict regex cannot capture (a union, a qualified name, different
+    // spacing) must throw rather than fall back to the wide response bound:
+    // the silent fallback would emit a facade promising paths the composer
+    // rejects — the exact drift this generator exists to prevent.
+    const responseType = signature[2].trim();
+    const fieldPathMatch = new RegExp(
+        `async\\s+${escapeRegExp(entry.methodName)}<K extends FieldPath<(\\w+)>>`
+    ).exec(source);
+    if (hasFields && !fieldPathMatch) {
+        throw new Error(
+            `Method ${entry.className}.${entry.methodName} has a fields surface but its FieldPath bound was not recognized in ${classPath}. ` +
+                "Expected async methodName<K extends FieldPath<TypeName>>; extend the generator regex for other bound shapes."
+        );
+    }
+    const responseElement = responseType.replace(/\[\]$/, "");
+    const fieldPathType =
+        fieldPathMatch && fieldPathMatch[1] !== responseElement ? fieldPathMatch[1] : null;
 
     return {
         hasVariables,
         variablesType,
         variablesOptional,
-        responseType: signature[2].trim(),
+        responseType,
         see: seeMatch ? seeMatch[1] : null,
         hasFields,
         alwaysKeys,
         imports,
         declaredLocally,
         classModule,
+        fieldPathType,
     };
 }
 
@@ -302,7 +451,7 @@ function findDeclaringModule(typeName: string): string {
                 const found = walk(entryPath);
                 if (found) return found;
             } else if (entry.name.endsWith(".ts")) {
-                const source = readFileSync(entryPath, "utf8");
+                const source = readSource(entryPath);
                 if (new RegExp(`export\\s+(?:interface|type)\\s+${typeName}\\b`).test(source)) {
                     return relative(ANILIST_DIR, entryPath)
                         .replace(/\\/g, "/")
@@ -443,7 +592,10 @@ function renderMember(
             // response, and a call with `fields` narrows to `DeepPick<Response,
             // K | Always>` — the always-selected keys join the pick because the
             // composed document always sends them. Array responses keep their
-            // element-wise pick.
+            // element-wise pick. The narrowing overload's `FieldPath` bound is
+            // the class's own bound when it declares one beyond the response
+            // type (a document-bounded alias), so the facade cannot promise
+            // paths the composer would reject.
             const response = method.responseType;
             const arrayMatch = /^(\w+)\[\]$/.exec(response);
             const element = arrayMatch ? arrayMatch[1] : response;
@@ -459,7 +611,7 @@ function renderMember(
             lines.push(
                 `${pad}    ((variables: ${variablesType}, options: RequestOptions & { fields: undefined }) => Promise<${response}>) &`
             );
-            lines.push(`${pad}    (<K extends FieldPath<${element}>>(`);
+            lines.push(`${pad}    (<K extends FieldPath<${method.fieldPathType ?? element}>>(`);
             lines.push(`${pad}        variables: ${variablesType},`);
             lines.push(
                 `${pad}        options: RequestOptions & { fields: readonly K[] | undefined }`
@@ -659,6 +811,9 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
         if (responseModule) {
             addImport(queryImports, responseModule, method.responseType.replace(/\[\]$/, ""));
         }
+        if (method.fieldPathType) {
+            addImport(queryImports, `../${method.classModule}`, method.fieldPathType);
+        }
     }
 
     const pageMemberLines: string[] = [];
@@ -678,6 +833,9 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
         if (responseModule) {
             addImport(queryImports, responseModule, method.responseType.replace(/\[\]$/, ""));
         }
+        if (method.fieldPathType) {
+            addImport(queryImports, `../${method.classModule}`, method.fieldPathType);
+        }
     }
 
     const mutationMemberLines: string[] = [];
@@ -696,6 +854,9 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
         const responseModule = resolveResponseModule(method.responseType, method);
         if (responseModule) {
             addImport(mutationImports, responseModule, method.responseType.replace(/\[\]$/, ""));
+        }
+        if (method.fieldPathType) {
+            addImport(mutationImports, `../${method.classModule}`, method.fieldPathType);
         }
     }
 
