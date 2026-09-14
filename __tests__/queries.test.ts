@@ -132,7 +132,7 @@ describe("custom() local input guards", () => {
         ["a whitespace-only string", "   \n\t  "],
         ["a number instead of a document", 42],
         ["null instead of a document", null],
-        ["a document without a query or mutation keyword", "{ Viewer { id } }"],
+        ["a fragment-only document (not executable)", "fragment ViewerFields on Viewer { id }"],
     ];
 
     test.each(rejectedInputs)(
@@ -163,6 +163,19 @@ describe("custom() local input guards", () => {
                 query: expect.stringContaining("UpdateUser"),
             })
         );
+    });
+
+    test("a document with leading # comments passes the guard unchanged", async () => {
+        const client = createTestClient("comment-token");
+
+        // A copied document that opens with a comment is valid GraphQL; the
+        // server accepts it, so the local guard must too — and must forward
+        // the document verbatim, comments included.
+        const document = "# fetch the viewer\nquery { Viewer { id } }";
+        await client.anilist.custom(document);
+
+        expect(mockSendRequest).toHaveBeenCalledTimes(1);
+        expect(getLastRequest()?.data).toEqual(expect.objectContaining({ query: document }));
     });
 });
 
@@ -216,4 +229,85 @@ test("flattenMediaListCollection helper flattens list groups from the facade", (
     expect(entries).toHaveLength(1);
     expect(entries[0].listNames).toEqual(["Completed"]);
     expect(entries[0].mediaId).toBe(100);
+});
+
+test("flattenMediaListCollection rejects malformed entries with a validation error", () => {
+    const client = createTestClient("flatten-guard-token");
+    const collection = {
+        lists: [
+            {
+                // A null entry must surface as a typed validation error, not
+                // an untyped TypeError from dereferencing it.
+                entries: [null],
+                name: "Completed",
+                isCustomList: false,
+                isSplitCompletedList: false,
+                status: "COMPLETED",
+            },
+        ],
+        hasNextChunk: false,
+    };
+
+    expect(() =>
+        client.anilist.flattenMediaListCollection(
+            collection as unknown as Parameters<typeof client.anilist.flattenMediaListCollection>[0]
+        )
+    ).toThrow(AniLinkValidationError);
+});
+
+test("flattenMediaListCollection rejects an entry without a numeric id", () => {
+    const client = createTestClient("flatten-guard-token");
+    const collection = {
+        lists: [
+            {
+                // An entry missing its id would otherwise merge unrelated
+                // rows under the key `undefined`.
+                entries: [{ userId: 5, mediaId: 100, status: "CURRENT", score: 0, progress: 0 }],
+                name: "Watching",
+                isCustomList: false,
+                isSplitCompletedList: false,
+                status: "CURRENT",
+            },
+        ],
+        hasNextChunk: false,
+    };
+
+    expect(() =>
+        client.anilist.flattenMediaListCollection(
+            collection as unknown as Parameters<typeof client.anilist.flattenMediaListCollection>[0]
+        )
+    ).toThrow(AniLinkValidationError);
+});
+
+test("flattenMediaListCollection rejects a NaN id", () => {
+    const client = createTestClient("flatten-guard-token");
+    const collection = {
+        lists: [
+            {
+                // Map keys on SameValueZero, so every NaN-id entry would
+                // collapse into one shared row under the NaN key.
+                entries: [
+                    {
+                        id: Number.NaN,
+                        userId: 5,
+                        mediaId: 100,
+                        status: "CURRENT",
+                        score: 0,
+                        progress: 0,
+                    },
+                ],
+                name: "Watching",
+                isCustomList: false,
+                isSplitCompletedList: false,
+                status: "CURRENT",
+            },
+        ],
+        hasNextChunk: false,
+    };
+
+    expect(() =>
+        client.anilist.flattenMediaListCollection(
+            collection as unknown as Parameters<typeof client.anilist.flattenMediaListCollection>[0]
+        )
+    ).toThrow(AniLinkValidationError);
 });

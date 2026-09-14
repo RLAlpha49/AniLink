@@ -1,3 +1,4 @@
+import { AniLinkValidationError } from "../../../../base/AniLinkError";
 import type { MediaListCollectionResponse } from "../interfaces/responses/query/MediaListCollectionResponse";
 
 /**
@@ -78,7 +79,20 @@ export function flattenMediaListCollection(
     return Array.from(byId.values());
 }
 
-/** Insert or merge an entry into the dedup map, accumulating its list memberships. */
+/**
+ * Insert or merge an entry into the dedup map, accumulating its list memberships.
+ *
+ * A malformed entry — `null`, or an object without a finite numeric `id` —
+ * throws an {@link AniLinkValidationError} instead of an untyped `TypeError`
+ * (a `null` entry) or silently merging unrelated rows under the key
+ * `undefined` (a missing `id`) or `NaN` (a non-finite id: `Map` keys on
+ * SameValueZero, so every `NaN`-id entry would collapse into one shared
+ * row). This matches the guard convention of the sister helper
+ * `crossLink`, which validates with `typeof` checks before dereferencing.
+ *
+ * @throws An {@link AniLinkValidationError} when the entry is not an object
+ * with a finite numeric `id`.
+ */
 function mergeEntry(
     byId: Map<number, FlattenedMediaListEntry>,
     entry: MediaListCollectionResponse["lists"][number]["entries"][number],
@@ -86,6 +100,16 @@ function mergeEntry(
     isCustomList: boolean,
     isSplitCompletedList: boolean
 ): void {
+    if (
+        typeof entry !== "object" ||
+        entry === null ||
+        typeof entry.id !== "number" ||
+        !Number.isFinite(entry.id)
+    ) {
+        throw new AniLinkValidationError([
+            `flattenMediaListCollection: a list entry in "${listName}" is malformed — every entry must be an object with a finite numeric id.`,
+        ]);
+    }
     const existing = byId.get(entry.id);
     if (existing) {
         if (!existing.listNames.includes(listName)) {
