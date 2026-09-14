@@ -11,6 +11,7 @@ import { describe, expect, test, vi } from "vitest";
 import fc from "fast-check";
 import { paginate, paginatePages, paginateChunks } from "../src/apis/graphql/anilist/Paginator";
 import type { PageInfo } from "../src/apis/graphql/anilist/interfaces/responses/page/PageInfo";
+import { microtaskLatency } from "./helpers/microtaskLatency";
 
 /** Build a {@link PageInfo} object for tests. */
 function pageInfo(overrides: Partial<PageInfo> = {}): PageInfo {
@@ -528,8 +529,8 @@ describe("look-ahead concurrency (property-based)", () => {
             fc.asyncProperty(
                 fc.integer({ min: 2, max: 8 }), // concurrency
                 fc.integer({ min: 2, max: 12 }), // pageCount
-                fc.array(fc.integer({ min: 0, max: 10 }), { minLength: 12, maxLength: 12 }), // delays
-                async (concurrency, pageCount, delays) => {
+                fc.array(fc.integer({ min: 0, max: 10 }), { minLength: 12, maxLength: 12 }), // yields
+                async (concurrency, pageCount, yields) => {
                     let inFlight = 0;
                     let peakInFlight = 0;
                     let launched = 0;
@@ -537,9 +538,9 @@ describe("look-ahead concurrency (property-based)", () => {
                         launched += 1;
                         inFlight += 1;
                         peakInFlight = Math.max(peakInFlight, inFlight);
-                        const delayMs = delays[page - 1] ?? 0;
-                        if (delayMs > 0) {
-                            await new Promise((resolve) => setTimeout(resolve, delayMs));
+                        const yieldCount = yields[page - 1] ?? 0;
+                        if (yieldCount > 0) {
+                            await microtaskLatency(yieldCount);
                         }
                         inFlight -= 1;
                         return {
@@ -569,11 +570,11 @@ describe("look-ahead concurrency (property-based)", () => {
             fc.asyncProperty(
                 fc.integer({ min: 2, max: 8 }), // concurrency
                 fc.integer({ min: 2, max: 15 }), // pageCount
-                fc.array(fc.integer({ min: 0, max: 8 }), { minLength: 15, maxLength: 15 }), // delays
-                async (concurrency, pageCount, delays) => {
+                fc.array(fc.integer({ min: 0, max: 8 }), { minLength: 15, maxLength: 15 }), // yields
+                async (concurrency, pageCount, yields) => {
                     const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
-                        const delay = delays[page - 1] ?? 0;
-                        if (delay > 0) await new Promise((r) => setTimeout(r, delay));
+                        const yieldCount = yields[page - 1] ?? 0;
+                        if (yieldCount > 0) await microtaskLatency(yieldCount);
                         return {
                             pageInfo: pageInfo({
                                 currentPage: page,
@@ -639,11 +640,11 @@ describe("look-ahead concurrency (property-based)", () => {
             fc.asyncProperty(
                 fc.integer({ min: 2, max: 6 }), // concurrency
                 fc.integer({ min: 2, max: 10 }), // chunkCount
-                fc.array(fc.integer({ min: 0, max: 8 }), { minLength: 10, maxLength: 10 }), // delays
-                async (concurrency, chunkCount, delays) => {
+                fc.array(fc.integer({ min: 0, max: 8 }), { minLength: 10, maxLength: 10 }), // yields
+                async (concurrency, chunkCount, yields) => {
                     const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => {
-                        const delay = delays[chunk - 1] ?? 0;
-                        if (delay > 0) await new Promise((r) => setTimeout(r, delay));
+                        const yieldCount = yields[chunk - 1] ?? 0;
+                        if (yieldCount > 0) await microtaskLatency(yieldCount);
                         return {
                             hasNextChunk: chunk < chunkCount,
                             lists: [{ name: `list-${chunk}` }],

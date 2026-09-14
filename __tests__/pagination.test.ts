@@ -8,6 +8,7 @@ import {
 } from "../src/apis/graphql/anilist/Paginator";
 import { AniLinkValidationError } from "../src/base/AniLinkError";
 import type { PageInfo } from "../src/apis/graphql/anilist/interfaces/responses/page/PageInfo";
+import { microtaskLatency } from "./helpers/microtaskLatency";
 import { fuzzyDate } from "../src/apis/graphql/anilist/helpers/fuzzyDate";
 import { flattenMediaListCollection } from "../src/apis/graphql/anilist/helpers/flattenMediaListCollection";
 import type { MediaListCollectionResponse } from "../src/apis/graphql/anilist/interfaces/responses/query/MediaListCollectionResponse";
@@ -165,8 +166,13 @@ describe("paginate", () => {
 
     test("returns partial results when the signal aborts mid-request", async () => {
         const controller = new AbortController();
+        let signalPage3Launched: () => void = () => {};
+        const page3Launched = new Promise<void>((resolve) => {
+            signalPage3Launched = resolve;
+        });
         const fetchPage = vi.fn(
             async (page: number, _perPage: number, signal?: AbortSignal): Promise<TestPage> => {
+                if (page === 3) signalPage3Launched();
                 // Page 1 resolves; page 2 hangs until aborted.
                 if (page === 2) {
                     return new Promise<TestPage>((_resolve, reject) => {
@@ -188,8 +194,10 @@ describe("paginate", () => {
             concurrency: 2,
             signal: controller.signal,
         });
-        // Give page 1 time to resolve and page 2 to launch and hang.
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        // Page 3 is only scheduled after page 1 is consumed, so awaiting its
+        // launch deterministically proves page 1 settled and page 2 is
+        // parked on the abort listener — no wall-clock sleep.
+        await page3Launched;
         controller.abort();
 
         const result = await promise;
@@ -226,10 +234,15 @@ describe("paginate", () => {
 
     test("cancels in-flight look-ahead requests when the signal aborts", async () => {
         const controller = new AbortController();
+        let signalPage3Launched: () => void = () => {};
+        const page3Launched = new Promise<void>((resolve) => {
+            signalPage3Launched = resolve;
+        });
         const inFlightSignals: AbortSignal[] = [];
         const fetchPage = vi.fn(
             async (page: number, _perPage: number, signal?: AbortSignal): Promise<TestPage> => {
                 inFlightSignals.push(signal ?? new AbortController().signal);
+                if (page === 3) signalPage3Launched();
                 // Page 1 resolves; page 2 hangs until the signal aborts.
                 if (page >= 2) {
                     return new Promise<TestPage>((_resolve, reject) => {
@@ -250,8 +263,10 @@ describe("paginate", () => {
             concurrency: 2,
             signal: controller.signal,
         });
-        // Let page 1 resolve and page 2 launch and hang.
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        // Page 3 is only scheduled after page 1 is consumed, so awaiting its
+        // launch deterministically proves page 1 settled and page 2 is
+        // parked on the abort listener — no wall-clock sleep.
+        await page3Launched;
         controller.abort();
 
         await promise;
@@ -375,14 +390,19 @@ describe("paginatePages", () => {
         let inFlight = 0;
         let maxObserved = 0;
         const settleOrder: number[] = [];
+        // Later pages settle sooner than earlier ones: page N parks until
+        // page N+1 has settled, so the settle order is deterministically
+        // [3, 2, 1] without racing real timer durations.
+        const settleGates = new Map<number, () => void>();
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
             inFlight += 1;
             maxObserved = Math.max(maxObserved, inFlight);
-            // Later pages settle sooner than earlier ones.
-            const delay = page === 1 ? 20 : page === 2 ? 10 : 0;
-            if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
+            if (page < 3) {
+                await new Promise<void>((resolve) => settleGates.set(page + 1, resolve));
+            }
             inFlight -= 1;
             settleOrder.push(page);
+            settleGates.get(page)?.();
             return {
                 pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 3 }),
                 media: [{ id: page }],
@@ -430,13 +450,16 @@ describe("paginatePages", () => {
         expect(second.value.pageInfo.currentPage).toBe(2);
         await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3, 4]));
 
-        // Page 3 is terminal. Release the stragglers asynchronously so the
-        // drain settles once the terminal page settles.
+        // Page 3 is terminal. Release pages 3 and 4 so the terminal page
+        // can settle; consuming it refills the window with page 5, whose
+        // gate is registered by the time page 3 is yielded. Releasing every
+        // gate then settles the terminal drain deterministically — no
+        // wall-clock timer.
         gates[2]?.();
         gates[3]?.();
-        setTimeout(() => gates.forEach((release) => release()), 0);
         const third = await generator.next();
         expect(third.value.pageInfo.hasNextPage).toBe(false);
+        gates.forEach((release) => release());
         await expect(generator.next()).resolves.toMatchObject({ done: true });
         // The window could only reach page 5 (launched before page 3 was
         // known to be terminal); nothing past the window is ever scheduled.
@@ -451,7 +474,9 @@ describe("paginatePages", () => {
             launchedPages.push(page);
             inFlight += 1;
             maxObserved = Math.max(maxObserved, inFlight);
-            await new Promise((resolve) => setTimeout(resolve, 5));
+            // A microtask yield keeps the look-ahead pages in flight when
+            // the consumer breaks, without real timer latency.
+            await microtaskLatency(1);
             inFlight -= 1;
             return {
                 pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
@@ -868,7 +893,9 @@ describe("paginate concurrency", () => {
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
             inFlight += 1;
             maxObserved = Math.max(maxObserved, inFlight);
-            await new Promise((resolve) => setTimeout(resolve, 5));
+            // A microtask yield parks the body long enough for the
+            // look-ahead window to fill, without racing real timer durations.
+            await microtaskLatency(1);
             inFlight -= 1;
             return {
                 pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 5 }),
@@ -903,7 +930,9 @@ describe("paginate concurrency", () => {
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
             inFlight += 1;
             maxObserved = Math.max(maxObserved, inFlight);
-            await new Promise((resolve) => setTimeout(resolve, 10));
+            // A microtask yield parks the body long enough for the
+            // look-ahead window to fill, without racing real timer durations.
+            await microtaskLatency(1);
             inFlight -= 1;
             return {
                 pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 4 }),
@@ -920,10 +949,14 @@ describe("paginate concurrency", () => {
     });
 
     test("collects results strictly in page order even when later pages settle first", async () => {
+        // Later pages settle sooner: page N parks until page N+1 settles, so
+        // pages resolve deterministically out of order without real timers.
+        const settleGates = new Map<number, () => void>();
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
-            // Later pages resolve sooner than earlier ones.
-            const delay = page === 1 ? 20 : page === 2 ? 10 : 0;
-            if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
+            if (page < 3) {
+                await new Promise<void>((resolve) => settleGates.set(page + 1, resolve));
+            }
+            settleGates.get(page)?.();
             return {
                 pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 3 }),
                 media: [{ id: page }],
@@ -989,7 +1022,7 @@ describe("paginate concurrency", () => {
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
             inFlight += 1;
             maxObserved = Math.max(maxObserved, inFlight);
-            await Promise.resolve();
+            await microtaskLatency(1);
             inFlight -= 1;
             return {
                 pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 3 }),
@@ -1010,7 +1043,9 @@ describe("paginate concurrency", () => {
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
             inFlight += 1;
             maxObserved = Math.max(maxObserved, inFlight);
-            await new Promise((resolve) => setTimeout(resolve, 5));
+            // A microtask yield parks the body long enough for the
+            // clamped window of eight to fill, without real timer latency.
+            await microtaskLatency(1);
             inFlight -= 1;
             return {
                 pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
@@ -1026,10 +1061,14 @@ describe("paginate concurrency", () => {
     });
 
     test("paginateChunks keeps chunks in flight and collects them in chunk order", async () => {
+        // Earlier chunks settle later: chunk N parks until chunk N+1
+        // settles, so chunks resolve deterministically out of order.
+        const settleGates = new Map<number, () => void>();
         const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => {
-            // Earlier chunks resolve later than later chunks.
-            const delay = chunk === 1 ? 15 : chunk === 2 ? 5 : 0;
-            if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
+            if (chunk < 3) {
+                await new Promise<void>((resolve) => settleGates.set(chunk + 1, resolve));
+            }
+            settleGates.get(chunk)?.();
             return { hasNextChunk: chunk < 3, lists: [{ name: `list-${chunk}` }] };
         });
 
