@@ -313,9 +313,9 @@ describe("AniList live integration — timeout and cancellation", () => {
     );
 });
 
-describe("AniList live integration — response cache (GET-only, TTL, identity scoping)", () => {
+describe("AniList live integration — response cache (reads, TTL, identity scoping)", () => {
     test.skipIf(!token)(
-        "a cached GET read is served from cache with cacheHit and zero duration",
+        "a repeated GraphQL query read is served from cache with cacheHit and zero duration",
         async () => {
             const cache = new ResponseCache({ ttlMs: 60_000 });
             const responseEvents: Array<{ cacheHit?: boolean; durationMs: number }> = [];
@@ -325,14 +325,15 @@ describe("AniList live integration — response cache (GET-only, TTL, identity s
                     responseEvents.push({ cacheHit, durationMs }),
             });
 
-            // GraphQL reads are POSTs and are never cached; this test pins
-            // that contract: two identical GraphQL reads must both hit the
-            // network (no cacheHit flag) because POST is excluded by design.
+            // GraphQL query documents dispatch as POST and are cached like
+            // reads: the second identical query must be served from cache
+            // (cacheHit: true, durationMs: 0) without a network round-trip.
             await client.anilist.query.media({ id: FIXTURES.mediaId, type: FIXTURES.animeType });
             await client.anilist.query.media({ id: FIXTURES.mediaId, type: FIXTURES.animeType });
 
             expect(responseEvents).toHaveLength(2);
-            expect(responseEvents.every((event) => event.cacheHit !== true)).toBe(true);
+            expect(responseEvents[0].cacheHit).not.toBe(true);
+            expect(responseEvents[1]).toMatchObject({ cacheHit: true, durationMs: 0 });
         }
     );
 });

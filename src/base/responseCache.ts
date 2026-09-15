@@ -2,13 +2,122 @@
  * Opt-in in-memory TTL response cache for read-heavy traversals.
  *
  * The cache is keyed by `(method, url, serialized body)` and capped by
- * `maxEntries`. It is opt-in (off by default) and never caches mutations
- * (`POST`/`PUT`/`DELETE`). Cache hits are observable through the existing
- * `onResponse` hook via a `cacheHit` flag so consumers can distinguish a
- * cached response from a network round-trip.
+ * `maxEntries`. It is opt-in (off by default) and serves two kinds of reads:
+ * `GET` requests, and GraphQL query documents dispatched as `POST` (the
+ * AniList transport's only read shape). Mutations are never cached — neither
+ * REST `POST`/`PUT`/`DELETE` calls nor GraphQL `mutation` documents. A
+ * successful mutation dispatched through the transport invalidates the
+ * cached reads of the mutated resource (REST writes, via
+ * {@link ResponseCache.deleteMatching}) or of the whole GraphQL endpoint
+ * (GraphQL writes, via {@link ResponseCache.deleteAllForUrl}). Cache hits
+ * are observable through the existing `onResponse` hook via a `cacheHit`
+ * flag so consumers can distinguish a cached response from a network
+ * round-trip.
  */
 
 import { createHash } from "node:crypto";
+
+/**
+ * Matches a GraphQL document that declares a read (query) operation: an
+ * anonymous shorthand selection (`{ Viewer { id } }`) or a document opening
+ * with the `query` keyword. Documents opening with `mutation` (or anything
+ * else) fail the test, so write documents stay excluded from the cache.
+ *
+ * This is the same deliberately lightweight shape check `CustomRequest`
+ * applies to validate executable documents — not a parser. Leading `#`
+ * comment lines are stripped before the test so a copied document that
+ * opens with a comment anchors at the first executable token.
+ */
+const GRAPHQL_QUERY_PATTERN = /^\s*(?:\{|query\b[\s\S]*\{)/;
+
+/**
+ * Strips leading `#` comment lines and blank lines from a GraphQL document
+ * so the query pattern can anchor at the first executable token. Only the
+ * document head is stripped — comments between selections are untouched.
+ */
+const stripLeadingComments = (query: string): string => {
+    let rest = query;
+    for (;;) {
+        // Consume one leading blank-or-comment line per iteration; a flat
+        // loop avoids the nested-quantifier regex the security linter flags.
+        const line = /^[^\n]*\n/.exec(rest);
+        if (line === null) {
+            return rest;
+        }
+        if (!/^\s*(#|$)/.test(line[0])) {
+            return rest;
+        }
+        rest = rest.slice(line[0].length);
+    }
+};
+
+/**
+ * Whether a request is a cacheable read: a `GET`, or a GraphQL-protocol
+ * `POST` whose `{ query, variables }` body declares a `query` operation.
+ *
+ * The AniList transport dispatches every GraphQL document — queries
+ * included — as a `POST`, so a `GET`-only gate would leave the cache
+ * structurally inert for the library's primary provider. Query documents
+ * are safe to cache for the same reason `GET`s are: they are reads whose
+ * response is fully determined by the request (the body is part of the
+ * cache key). Mutations — GraphQL `mutation` documents and REST
+ * `POST`/`PUT`/`DELETE` calls — stay excluded so no write is ever served
+ * from cache.
+ * Internal transport helper: exported for the transport module, not part
+ * of the package's public surface.
+ * @param method - The HTTP method of the request.
+ * @param data - The request body, when present.
+ * @returns `true` when the request is a cacheable read.
+ */
+export const isCacheableRequest = (method: string, data?: object | string): boolean => {
+    if (method === "GET") {
+        return true;
+    }
+    if (method !== "POST") {
+        return false;
+    }
+    // A GraphQL read POST carries the `{ query, variables }` body shape;
+    // REST POSTs (form grants, JSON writes) and pre-encoded string bodies
+    // are not GraphQL documents and stay excluded.
+    if (typeof data !== "object" || data === null || Array.isArray(data)) {
+        return false;
+    }
+    const { query } = data as { query?: unknown };
+    if (typeof query !== "string") {
+        return false;
+    }
+    return GRAPHQL_QUERY_PATTERN.test(stripLeadingComments(query));
+};
+
+/**
+ * Whether a request carries a GraphQL document body at all — a
+ * GraphQL-protocol `POST` whose body is a `{ query, variables }` object —
+ * regardless of whether the document declares a read or a write.
+ *
+ * The transport uses this to route invalidation: a GraphQL document POST
+ * that is not a cacheable read (see {@link isCacheableRequest}) is a
+ * `mutation` document, and a successful one invalidates every cached
+ * GraphQL query at the endpoint (see {@link ResponseCache.deleteAllForUrl}).
+ * REST `POST` bodies that merely happen to carry a `query` field (for
+ * example a search request) never reach this check through the transport:
+ * the caller marks them with the REST protocol first.
+ *
+ * Internal transport helper: exported for the transport module, not part
+ * of the package's public surface.
+ *
+ * @param method - The HTTP method of the request.
+ * @param data - The request body, when present.
+ * @returns `true` when the body is a GraphQL `{ query, variables }` document.
+ */
+export const isGraphQLDocumentRequest = (method: string, data?: object | string): boolean => {
+    if (method !== "POST") {
+        return false;
+    }
+    if (typeof data !== "object" || data === null || Array.isArray(data)) {
+        return false;
+    }
+    return typeof (data as { query?: unknown }).query === "string";
+};
 
 /**
  * A single cached response entry.
@@ -19,6 +128,27 @@ interface CacheEntry<T> {
     /** The epoch millisecond at which the entry expires. */
     expiresAt: number;
 }
+
+/**
+ * One recorded invalidation for the in-flight read guard (see
+ * {@link ResponseCache.setIfFresh}): the generation it landed at and a
+ * predicate telling whether a cache key falls inside its scope.
+ */
+interface InvalidationEvent {
+    /** The generation the invalidation landed at. */
+    at: number;
+    /** Whether the invalidation affects the given cache key. */
+    affects: (key: string) => boolean;
+}
+
+/**
+ * Upper bound on retained invalidation events. Invalidation is rare (one
+ * event per successful mutation), so the log stays tiny in practice; the
+ * cap only bounds memory for invalidation-heavy workloads. A read that
+ * captured a generation older than the pruned events has its write-back
+ * dropped conservatively (see {@link ResponseCache.setIfFresh}).
+ */
+const MAX_INVALIDATION_EVENTS = 64;
 
 /**
  * Configuration for the opt-in response cache.
@@ -99,12 +229,19 @@ const stableStringify = (value: unknown, seen: Set<object> = new Set()): string 
  * clones of the cached entry, so a caller that mutates the returned object
  * cannot corrupt the cached copy or affect subsequent reads.
  *
- * **Invalidation:** the cache is TTL-only. Mutations (`POST`/`PUT`/`DELETE`)
- * sent through the same client do not invalidate cached `GET` responses, so
- * a read-after-write sequence can return stale data for up to `ttlMs`. Use
- * {@link ResponseCache.delete} for targeted invalidation, or
- * {@link ResponseCache.clear} to drop everything. Keep `ttlMs` short for
- * read-after-write-sensitive workloads.
+ * **Invalidation:** entries expire after `ttlMs`, and a successful
+ * non-`GET` request dispatched through the same transport automatically
+ * invalidates the cached reads of what it mutated — REST writes drop the
+ * mutated resource's cached `GET` entries (see
+ * {@link ResponseCache.deleteMatching}) and GraphQL `mutation` documents
+ * drop every cached query at the endpoint (see
+ * {@link ResponseCache.deleteAllForUrl}) — so a read-after-write sequence
+ * refetches instead of serving the pre-mutation entry. A read whose
+ * network response was in flight when an invalidation affecting it landed
+ * does not re-cache its stale response (see
+ * {@link ResponseCache.setIfFresh}). Use
+ * {@link ResponseCache.delete} for exact-key invalidation or
+ * {@link ResponseCache.clear} to drop everything.
  *
  * **Privacy:** the cache stores the full response body of every `GET`
  * request when enabled, including authenticated user-scoped responses
@@ -122,6 +259,11 @@ export class ResponseCache {
     private readonly ttlMs: number;
     private readonly maxEntries: number;
     private nextExpiryCheckAt: number | undefined;
+    private generation = 0;
+    /** Scoped invalidation events for the in-flight read guard (see {@link setIfFresh}). */
+    private readonly invalidationEvents: InvalidationEvent[] = [];
+    /** The newest generation pruned from {@link invalidationEvents}. */
+    private prunedThrough = 0;
 
     /**
      * Creates a response cache.
@@ -205,6 +347,27 @@ export class ResponseCache {
     }
 
     /**
+     * Whether a cache key sits at `prefix` and ends it at a legal boundary
+     * character, so the prefix `/anime/21` does not match `/anime/212`.
+     * Keys embed the canonicalized URL verbatim in
+     * `${method}:${url}:${body}:${authKey}`, so prefix matching against the
+     * composed key reaches the URL without parsing it back out (the URL
+     * itself contains the `:` of `https://`).
+     *
+     * @param key - The cache key to test.
+     * @param prefix - The composed `method:url` prefix.
+     * @param boundaries - The characters that may follow the prefix.
+     * @returns `true` when the key starts with the prefix at a boundary.
+     */
+    private static keyAtPrefix(key: string, prefix: string, boundaries: string): boolean {
+        if (!key.startsWith(prefix)) {
+            return false;
+        }
+        const boundary = key.charAt(prefix.length);
+        return boundary !== "" && boundaries.includes(boundary);
+    }
+
+    /**
      * Reads a cached response for the given request, or `undefined` when the
      * entry is absent or expired. Expired entries are evicted on read. The
      * returned value is a deep clone of the cached entry, so a caller that
@@ -245,9 +408,16 @@ export class ResponseCache {
 
     /**
      * Stores a response in the cache, evicting the LRU entry when the cap is
-     * reached. Only `GET` responses are cached; other methods are no-ops.
-     * The value is deep-copied on write; the cache never aliases the
-     * caller's object.
+     * is reached. Only cacheable reads are stored — `GET` requests and
+     * GraphQL query documents dispatched as `POST`; mutations and other
+     * methods are no-ops. The value is deep-copied on write; the cache never
+     * aliases the caller's object.
+     *
+     * Note for direct callers: a `POST` body shaped like `{ query: "..." }`
+     * is treated as a GraphQL document and cached when the document declares
+     * a read. Do not use `set` for REST `POST` writes whose body merely
+     * carries a `query` field — the transport excludes those via its protocol
+     * flag, but `set` itself cannot distinguish them.
      *
      * @param method - The HTTP method.
      * @param url - The request URL.
@@ -263,7 +433,7 @@ export class ResponseCache {
         authKey: string | undefined,
         response: T
     ): void {
-        if (method !== "GET") return;
+        if (!isCacheableRequest(method, data)) return;
         // `ttlMs: 0` is the explicit "do not retain" configuration: storing
         // an already-expired entry would make `get()` a guaranteed miss while
         // still paying the clone and eviction bookkeeping, so skip the write
@@ -306,10 +476,131 @@ export class ResponseCache {
     }
 
     /**
+     * Returns the current invalidation generation, for callers that need to
+     * detect an invalidation landing between a cache-miss read and its
+     * write-back (see {@link setIfFresh}). The counter is global, but the
+     * check in {@link setIfFresh} is scoped: only invalidations affecting
+     * the read's own key drop its write-back.
+     *
+     * @returns The current generation counter value.
+     */
+    getGeneration(): number {
+        return this.generation;
+    }
+
+    /**
+     * Stores a response only when no invalidation affecting the request has
+     * landed since the caller captured the generation — the write-back half
+     * of the in-flight-read guard.
+     *
+     * The transport captures the generation right after a cache miss (before
+     * the network read starts) and hands it here on success. When a mutation
+     * invalidates the cache while that read is in flight, the generation has
+     * moved on and the stale response is dropped instead of re-cached,
+     * closing the read-after-write race a plain {@link ResponseCache.set}
+     * would reintroduce. The check is scoped to the request's own key: an
+     * invalidation of a different resource does not drop this write-back, so
+     * concurrent reads of unaffected resources keep filling the cache.
+     *
+     * @param method - The HTTP method.
+     * @param url - The request URL.
+     * @param data - The request body, when present.
+     * @param authKey - An authentication-safe credential identity, so cached
+     * responses never cross bearer-token identities.
+     * @param generationAtRead - The generation the caller captured before
+     * the read went to the network.
+     * @param response - The response body to cache.
+     */
+    setIfFresh<T>(
+        method: string,
+        url: string,
+        data: object | string | undefined,
+        authKey: string | undefined,
+        generationAtRead: number,
+        response: T
+    ): void {
+        if (this.wasInvalidatedSince(generationAtRead, method, url, data, authKey)) {
+            return;
+        }
+        this.set(method, url, data, authKey, response);
+    }
+
+    /**
+     * Whether an invalidation affecting the given request's key landed
+     * after the caller captured the generation — the decision half of the
+     * in-flight-read guard.
+     *
+     * The check is scoped, not global: an invalidation of one resource does
+     * not drop another resource's in-flight write-back, so interleaved
+     * mutate-while-reading workloads keep their unaffected entries. When
+     * the event log has been pruned past the read's generation (more than
+     * {@link MAX_INVALIDATION_EVENTS} invalidations landed during one
+     * read), the write-back is dropped conservatively: staleness can no
+     * longer be ruled out.
+     *
+     * @param generationAtRead - The generation the caller captured before
+     * the read went to the network.
+     * @param method - The HTTP method of the read.
+     * @param url - The URL of the read.
+     * @param data - The request body of the read, when present.
+     * @param authKey - The auth-scoping cache key fragment of the read.
+     * @returns `true` when an affecting invalidation landed mid-flight.
+     */
+    private wasInvalidatedSince(
+        generationAtRead: number,
+        method: string,
+        url: string,
+        data: object | string | undefined,
+        authKey: string | undefined
+    ): boolean {
+        if (generationAtRead === this.generation) {
+            // Fast path: no invalidation landed at all.
+            return false;
+        }
+        if (generationAtRead < this.prunedThrough) {
+            // Events covering the read's window were pruned: staleness can
+            // no longer be ruled out, so drop the write-back. Strict
+            // comparison: `prunedThrough` is the oldest pruned event's
+            // generation, and a read at exactly that generation still needs
+            // only events after it, which are all retained.
+            return true;
+        }
+        const key = ResponseCache.buildKey(method, url, data, authKey);
+        for (let i = this.invalidationEvents.length - 1; i >= 0; i -= 1) {
+            const event = this.invalidationEvents[i];
+            if (event.at <= generationAtRead) {
+                break;
+            }
+            if (event.affects(key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Records an invalidation: bumps the generation and logs a scoped event
+     * so an in-flight read can later tell whether the invalidation affected
+     * its key (see {@link setIfFresh}).
+     *
+     * @param affects - Whether a cache key falls inside the invalidation's
+     * scope.
+     */
+    private recordInvalidation(affects: (key: string) => boolean): void {
+        this.generation += 1;
+        this.invalidationEvents.push({ at: this.generation, affects });
+        if (this.invalidationEvents.length > MAX_INVALIDATION_EVENTS) {
+            const pruned = this.invalidationEvents.shift();
+            this.prunedThrough = Math.max(this.prunedThrough, pruned?.at ?? 0);
+        }
+    }
+
+    /**
      * Removes the cached entry for the given request, if present. Use this
      * for targeted invalidation after a mutation that changes the resource
      * (for example a `POST` that updates the entity a cached `GET` returned).
-     * Only `GET` entries are tracked, so non-`GET` methods are a no-op and
+     * Only cacheable reads are tracked — `GET` requests and GraphQL query
+     * documents dispatched as `POST` — so other methods are a no-op and
      * return `false`.
      *
      * @param method - The HTTP method.
@@ -321,9 +612,130 @@ export class ResponseCache {
      *          or the method is not cached.
      */
     delete(method: string, url: string, data?: object | string, authKey?: string): boolean {
-        if (method !== "GET") return false;
+        if (!isCacheableRequest(method, data)) return false;
         const key = ResponseCache.buildKey(method, url, data, authKey);
+        this.recordInvalidation((candidate) => candidate === key);
         return this.entries.delete(key);
+    }
+
+    /**
+     * Removes every cached `GET` entry whose URL starts with `urlPrefix` at
+     * a path-segment boundary, and returns how many entries were removed.
+     *
+     * The prefix is matched against the canonicalized URL with its query
+     * string and fragment stripped, so a cached read of
+     * `https://host/anime/21?fields=...` is invalidated by the prefix
+     * `https://host/anime/21`. The match is boundary-aware: the prefix
+     * `https://host/anime/21` does **not** match `https://host/anime/212` —
+     * the cached URL must be either exactly the prefix, continue with `/`
+     * (a child path), `?` (a query string), or `#` (a fragment). Matching
+     * spans every auth namespace, because a mutation performed by one
+     * identity changes the underlying resource for every identity that can
+     * read it.
+     *
+     * This is the invalidation primitive behind mutation-triggered cache
+     * invalidation for REST writes: after a successful write, the transport
+     * derives the mutated resource's base URL and drops every cached read
+     * of that resource. It is also usable directly for manual bulk
+     * invalidation. GraphQL `mutation` documents invalidate through
+     * {@link ResponseCache.deleteAllForUrl} instead: their cached reads are
+     * keyed at the endpoint URL, which no resource prefix can name.
+     *
+     * @param urlPrefix - The resource base URL whose cached reads should be
+     * dropped; query strings and fragments on the prefix are ignored.
+     * @returns The number of cached entries removed.
+     */
+    deleteMatching(urlPrefix: string): number {
+        // Normalize the prefix the same way cache keys are built: strip any
+        // query string and fragment so callers can pass the full read URL,
+        // and drop a trailing slash so `/anime/21/` and `/anime/21` share one
+        // prefix.
+        const fragmentIndex = urlPrefix.indexOf("#");
+        const withoutFragment =
+            fragmentIndex === -1 ? urlPrefix : urlPrefix.slice(0, fragmentIndex);
+        const queryIndex = withoutFragment.indexOf("?");
+        const base = queryIndex === -1 ? withoutFragment : withoutFragment.slice(0, queryIndex);
+        const prefix = base.endsWith("/") && base.length > 1 ? base.slice(0, -1) : base;
+
+        // An invalidation landed, whether or not an entry matches: an
+        // in-flight read of the resource is stale even when no cached copy
+        // of it existed yet.
+        this.recordInvalidation((key) => ResponseCache.keyAtPrefix(key, `GET:${prefix}`, ":/?#"));
+
+        let removed = 0;
+        // Keys embed the canonicalized URL verbatim in
+        // `${method}:${url}:${body}:${authKey}`, and only `GET` entries
+        // exist, so matching the key against `GET:${prefix}` is equivalent to
+        // matching the URL — without parsing the URL back out of the key
+        // (the URL itself contains the `:` of `https://`). The character after
+        // the prefix must be the key's `:` delimiter, a `/` (child path), a
+        // `?` (query string), or a `#` (fragment) — anything else (for
+        // example `/anime/21abc`) is a different resource and must not match.
+        const keyPrefix = `GET:${prefix}`;
+        for (const key of this.entries.keys()) {
+            if (ResponseCache.keyAtPrefix(key, keyPrefix, ":/?#")) {
+                this.entries.delete(key);
+                removed += 1;
+            }
+        }
+        return removed;
+    }
+
+    /**
+     * Removes every cached read keyed at the given URL — `GET` entries and
+     * GraphQL query `POST` entries alike, across query strings, documents,
+     * variables, and auth namespaces — and returns how many entries were
+     * removed.
+     *
+     * This is the invalidation primitive for GraphQL writes: every GraphQL
+     * operation of one provider is keyed at the same endpoint URL, and a
+     * `mutation` document can change what many different query documents
+     * return (a `SaveMediaListEntry` changes what both a `MediaList` and a
+     * `MediaListCollection` query report), so no finer-grained prefix than
+     * the endpoint can be derived. Dropping the endpoint's cached queries is
+     * deliberately conservative: the next reads refetch fresh data instead
+     * of serving pre-mutation entries for the rest of the TTL.
+     *
+     * @param url - The request URL whose cached reads should be dropped;
+     * its query string and fragment are ignored.
+     * @returns The number of cached entries removed.
+     */
+    deleteAllForUrl(url: string): number {
+        const fragmentIndex = url.indexOf("#");
+        const withoutFragment = fragmentIndex === -1 ? url : url.slice(0, fragmentIndex);
+        const queryIndex = withoutFragment.indexOf("?");
+        const base = queryIndex === -1 ? withoutFragment : withoutFragment.slice(0, queryIndex);
+        const prefix = base.endsWith("/") && base.length > 1 ? base.slice(0, -1) : base;
+
+        // An invalidation landed, whether or not an entry matches: an
+        // in-flight read at the endpoint is stale even when no cached copy
+        // of it existed yet.
+        this.recordInvalidation((key) =>
+            [`GET:${prefix}`, `POST:${prefix}`].some((methodPrefix) =>
+                ResponseCache.keyAtPrefix(key, methodPrefix, ":?#")
+            )
+        );
+
+        let removed = 0;
+        // Keys embed the canonicalized URL verbatim in
+        // `${method}:${url}:${body}:${authKey}`. Only `GET` and GraphQL query
+        // `POST` entries exist, so matching each method prefix against the
+        // base URL — without parsing the URL back out of the key (the URL
+        // itself contains the `:` of `https://`) — reaches every entry at
+        // the URL. The character after the prefix must be the key's `:`
+        // delimiter, a `?` (query string), or a `#` (fragment) — anything else
+        // (for example `/anime/21abc`) is a different URL and must not match.
+        const methodPrefixes = [`GET:${prefix}`, `POST:${prefix}`];
+        for (const key of this.entries.keys()) {
+            const matches = methodPrefixes.some((methodPrefix) =>
+                ResponseCache.keyAtPrefix(key, methodPrefix, ":?#")
+            );
+            if (matches) {
+                this.entries.delete(key);
+                removed += 1;
+            }
+        }
+        return removed;
     }
 
     /**
@@ -368,6 +780,7 @@ export class ResponseCache {
      * Clears all cached entries.
      */
     clear(): void {
+        this.recordInvalidation(() => true);
         this.entries.clear();
     }
 }

@@ -13,10 +13,99 @@ describe("ResponseCache", () => {
         expect(cache.get("GET", "https://example.com/api")).toEqual({ id: 1 });
     });
 
-    test("does not cache non-GET responses", () => {
+    test("does not cache mutation or non-read responses", () => {
         const cache = new ResponseCache({ ttlMs: 10_000 });
-        cache.set("POST", "https://example.com/api", { query: "mutation" }, undefined, { id: 1 });
-        expect(cache.get("POST", "https://example.com/api", { query: "mutation" })).toBeUndefined();
+        // A GraphQL mutation document: excluded by design.
+        cache.set(
+            "POST",
+            "https://example.com/api",
+            { query: "mutation { SaveMediaListEntry { id } }" },
+            undefined,
+            { id: 1 }
+        );
+        expect(
+            cache.get("POST", "https://example.com/api", {
+                query: "mutation { SaveMediaListEntry { id } }",
+            })
+        ).toBeUndefined();
+        // A REST POST body (no GraphQL query document): excluded.
+        cache.set("POST", "https://example.com/api", { title: "write" }, undefined, { id: 2 });
+        expect(cache.get("POST", "https://example.com/api", { title: "write" })).toBeUndefined();
+        // PUT and DELETE: excluded.
+        cache.set("PUT", "https://example.com/api", undefined, undefined, { id: 3 });
+        cache.set("DELETE", "https://example.com/api", undefined, undefined, { id: 4 });
+        expect(cache.get("PUT", "https://example.com/api")).toBeUndefined();
+        expect(cache.get("DELETE", "https://example.com/api")).toBeUndefined();
+    });
+
+    test("caches GraphQL query documents dispatched as POST", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const body = { query: "query ($id: Int) { Media (id: $id) { id } }", variables: { id: 1 } };
+        cache.set("POST", "https://graphql.anilist.co", body, undefined, { Media: { id: 1 } });
+        expect(cache.get("POST", "https://graphql.anilist.co", body)).toEqual({ Media: { id: 1 } });
+    });
+
+    test("caches anonymous shorthand GraphQL selections dispatched as POST", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const body = { query: "{ Viewer { id } }" };
+        cache.set("POST", "https://graphql.anilist.co", body, undefined, { Viewer: { id: 1 } });
+        expect(cache.get("POST", "https://graphql.anilist.co", body)).toEqual({
+            Viewer: { id: 1 },
+        });
+    });
+
+    test("caches a GraphQL query document that opens with a comment", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const body = { query: "# fetch viewer\nquery { Viewer { id } }" };
+        cache.set("POST", "https://graphql.anilist.co", body, undefined, { Viewer: { id: 1 } });
+        expect(cache.get("POST", "https://graphql.anilist.co", body)).toEqual({
+            Viewer: { id: 1 },
+        });
+    });
+
+    test("keys GraphQL query entries by the full document and variables", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set(
+            "POST",
+            "https://graphql.anilist.co",
+            { query: "query { Media (id: 1) { id } }" },
+            undefined,
+            1
+        );
+        // Different document: separate entry.
+        expect(
+            cache.get("POST", "https://graphql.anilist.co", {
+                query: "query { Media (id: 1) { id title } }",
+            })
+        ).toBeUndefined();
+        // Same document, different variables: separate entry.
+        cache.set(
+            "POST",
+            "https://graphql.anilist.co",
+            { query: "query ($id: Int) { Media (id: $id) { id } }", variables: { id: 1 } },
+            undefined,
+            2
+        );
+        expect(
+            cache.get("POST", "https://graphql.anilist.co", {
+                query: "query ($id: Int) { Media (id: $id) { id } }",
+                variables: { id: 2 },
+            })
+        ).toBeUndefined();
+        expect(
+            cache.get("POST", "https://graphql.anilist.co", {
+                query: "query ($id: Int) { Media (id: $id) { id } }",
+                variables: { id: 1 },
+            })
+        ).toBe(2);
+    });
+
+    test("delete removes a cached GraphQL query entry", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const body = { query: "query { Viewer { id } }" };
+        cache.set("POST", "https://graphql.anilist.co", body, undefined, { Viewer: { id: 1 } });
+        expect(cache.delete("POST", "https://graphql.anilist.co", body)).toBe(true);
+        expect(cache.get("POST", "https://graphql.anilist.co", body)).toBeUndefined();
     });
 
     test("expires entries after the TTL", () => {
@@ -45,15 +134,23 @@ describe("ResponseCache", () => {
 
     test("distinguishes entries by method, url, and body", () => {
         const cache = new ResponseCache({ ttlMs: 10_000 });
-        // Same URL and body, different method: separate entries.
+        // Same URL, different cacheable read shapes: separate entries.
         cache.set("GET", "https://example.com/api", undefined, undefined, 1);
-        cache.set("POST", "https://example.com/api", undefined, undefined, 2);
+        cache.set(
+            "POST",
+            "https://example.com/api",
+            { query: "query { Viewer { id } }" },
+            undefined,
+            2
+        );
         // Same URL and method, different body: separate entries.
         cache.set("GET", "https://example.com/api", { page: 1 }, undefined, 3);
         cache.set("GET", "https://example.com/api", { page: 2 }, undefined, 4);
 
         expect(cache.get("GET", "https://example.com/api")).toBe(1);
-        expect(cache.get("POST", "https://example.com/api")).toBeUndefined();
+        expect(
+            cache.get("POST", "https://example.com/api", { query: "query { Viewer { id } }" })
+        ).toBe(2);
         expect(cache.get("GET", "https://example.com/api", { page: 1 })).toBe(3);
         expect(cache.get("GET", "https://example.com/api", { page: 2 })).toBe(4);
     });
@@ -169,9 +266,285 @@ describe("ResponseCache", () => {
         expect(cache.delete("GET", "https://example.com/missing")).toBe(false);
     });
 
-    test("delete ignores non-GET methods (no-op)", () => {
+    test("delete ignores mutation and non-read methods (no-op)", () => {
         const cache = new ResponseCache({ ttlMs: 10_000 });
         expect(cache.delete("POST", "https://example.com/a")).toBe(false);
+        expect(
+            cache.delete("POST", "https://example.com/a", {
+                query: "mutation { SaveMediaListEntry { id } }",
+            })
+        ).toBe(false);
+        expect(cache.delete("PUT", "https://example.com/a")).toBe(false);
+    });
+
+    test("deleteMatching drops cached reads of the prefixed resource across query strings", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/anime/21?fields=a", undefined, undefined, 1);
+        cache.set("GET", "https://example.com/anime/21?fields=b", undefined, undefined, 2);
+        cache.set("GET", "https://example.com/anime/42", undefined, undefined, 3);
+
+        const removed = cache.deleteMatching("https://example.com/anime/21");
+
+        expect(removed).toBe(2);
+        expect(cache.get("GET", "https://example.com/anime/21?fields=a")).toBeUndefined();
+        expect(cache.get("GET", "https://example.com/anime/21?fields=b")).toBeUndefined();
+        // The unrelated resource is untouched.
+        expect(cache.get("GET", "https://example.com/anime/42")).toBe(3);
+    });
+
+    test("deleteMatching is boundary-aware so sibling ids are not swallowed", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/anime/212", undefined, undefined, 1);
+        cache.set("GET", "https://example.com/anime/21/sub", undefined, undefined, 2);
+        cache.set("GET", "https://example.com/anime/21", undefined, undefined, 3);
+
+        const removed = cache.deleteMatching("https://example.com/anime/21");
+
+        // The exact resource and its child paths go; /anime/212 stays.
+        expect(removed).toBe(2);
+        expect(cache.get("GET", "https://example.com/anime/212")).toBe(1);
+        expect(cache.get("GET", "https://example.com/anime/21/sub")).toBeUndefined();
+        expect(cache.get("GET", "https://example.com/anime/21")).toBeUndefined();
+    });
+
+    test("deleteMatching spans auth namespaces", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/anime/21", undefined, "bearer:token-a", 1);
+        cache.set("GET", "https://example.com/anime/21", undefined, "bearer:token-b", 2);
+        cache.set("GET", "https://example.com/anime/21", undefined, "none", 3);
+
+        const removed = cache.deleteMatching("https://example.com/anime/21");
+
+        expect(removed).toBe(3);
+        expect(
+            cache.get("GET", "https://example.com/anime/21", undefined, "bearer:token-a")
+        ).toBeUndefined();
+        expect(
+            cache.get("GET", "https://example.com/anime/21", undefined, "bearer:token-b")
+        ).toBeUndefined();
+        expect(cache.get("GET", "https://example.com/anime/21", undefined, "none")).toBeUndefined();
+    });
+
+    test("deleteMatching ignores the prefix's own query string and fragment", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/anime/21?fields=a", undefined, undefined, 1);
+
+        // Callers can pass the full read URL; the prefix is the base path.
+        const removed = cache.deleteMatching("https://example.com/anime/21?fields=z#frag");
+
+        expect(removed).toBe(1);
+        expect(cache.get("GET", "https://example.com/anime/21?fields=a")).toBeUndefined();
+    });
+
+    test("deleteMatching drops a fragment-bearing cached URL", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/anime/21#frag", undefined, undefined, 1);
+
+        const removed = cache.deleteMatching("https://example.com/anime/21");
+
+        expect(removed).toBe(1);
+        expect(cache.get("GET", "https://example.com/anime/21#frag")).toBeUndefined();
+    });
+
+    test("deleteMatching returns 0 when nothing matches", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/anime/42", undefined, undefined, 1);
+
+        expect(cache.deleteMatching("https://example.com/anime/21")).toBe(0);
+        expect(cache.get("GET", "https://example.com/anime/42")).toBe(1);
+    });
+
+    test("deleteAllForUrl drops every cached read keyed at a URL, GraphQL POST entries included", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        // GraphQL query entries at the endpoint, across documents, variables,
+        // and auth namespaces.
+        cache.set(
+            "POST",
+            "https://graphql.anilist.co",
+            { query: "query { Media (id: 1) { id } }" },
+            "bearer:token-a",
+            1
+        );
+        cache.set(
+            "POST",
+            "https://graphql.anilist.co",
+            { query: "query { Viewer { id } }" },
+            "bearer:token-b",
+            2
+        );
+        // A GET entry at a different URL stays untouched.
+        cache.set("GET", "https://api.myanimelist.net/v2/anime/21", undefined, undefined, 3);
+
+        const removed = cache.deleteAllForUrl("https://graphql.anilist.co");
+
+        expect(removed).toBe(2);
+        expect(
+            cache.get(
+                "POST",
+                "https://graphql.anilist.co",
+                { query: "query { Media (id: 1) { id } }" },
+                "bearer:token-a"
+            )
+        ).toBeUndefined();
+        expect(
+            cache.get(
+                "POST",
+                "https://graphql.anilist.co",
+                { query: "query { Viewer { id } }" },
+                "bearer:token-b"
+            )
+        ).toBeUndefined();
+        expect(cache.get("GET", "https://api.myanimelist.net/v2/anime/21")).toBe(3);
+    });
+
+    test("deleteAllForUrl ignores the URL's query string and fragment", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/anime/21?fields=a", undefined, undefined, 1);
+
+        const removed = cache.deleteAllForUrl("https://example.com/anime/21?fields=z#frag");
+
+        expect(removed).toBe(1);
+        expect(cache.get("GET", "https://example.com/anime/21?fields=a")).toBeUndefined();
+    });
+
+    test("deleteAllForUrl returns 0 when nothing matches", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/anime/42", undefined, undefined, 1);
+
+        expect(cache.deleteAllForUrl("https://example.com/anime/21")).toBe(0);
+        expect(cache.get("GET", "https://example.com/anime/42")).toBe(1);
+    });
+
+    test("deleteAllForUrl drops GET entries at the URL too, not only GraphQL POST entries", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/anime/21?fields=a", undefined, undefined, 1);
+        cache.set("GET", "https://example.com/anime/21?fields=b", undefined, "none", 2);
+
+        const removed = cache.deleteAllForUrl("https://example.com/anime/21");
+
+        expect(removed).toBe(2);
+        expect(cache.get("GET", "https://example.com/anime/21?fields=a")).toBeUndefined();
+        expect(
+            cache.get("GET", "https://example.com/anime/21?fields=b", undefined, "none")
+        ).toBeUndefined();
+    });
+
+    test("a read that started before an invalidation does not re-cache its stale response", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        // Capture the generation the read would have observed.
+        const generationAtRead = cache.getGeneration();
+        // A mutation lands while the read is in flight.
+        cache.deleteMatching("https://example.com/anime/21");
+        // The read completes and tries to store its (now stale) response.
+        cache.setIfFresh(
+            "GET",
+            "https://example.com/anime/21?fields=a",
+            undefined,
+            undefined,
+            generationAtRead,
+            { stale: true }
+        );
+        expect(cache.get("GET", "https://example.com/anime/21?fields=a")).toBeUndefined();
+    });
+
+    test("a read whose generation still matches stores its response", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const generationAtRead = cache.getGeneration();
+        cache.setIfFresh(
+            "GET",
+            "https://example.com/anime/21?fields=a",
+            undefined,
+            undefined,
+            generationAtRead,
+            { fresh: true }
+        );
+        expect(cache.get("GET", "https://example.com/anime/21?fields=a")).toEqual({ fresh: true });
+    });
+
+    test("clear bumps the generation so an in-flight read does not re-cache after it", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const generationAtRead = cache.getGeneration();
+        cache.clear();
+        cache.setIfFresh(
+            "GET",
+            "https://example.com/anime/21",
+            undefined,
+            undefined,
+            generationAtRead,
+            { stale: true }
+        );
+        expect(cache.get("GET", "https://example.com/anime/21")).toBeUndefined();
+    });
+
+    test("deleteAllForUrl bumps the generation so an in-flight read does not re-cache after it", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const generationAtRead = cache.getGeneration();
+        cache.deleteAllForUrl("https://graphql.anilist.co");
+        cache.setIfFresh(
+            "POST",
+            "https://graphql.anilist.co",
+            { query: "query { Viewer { id } }" },
+            undefined,
+            generationAtRead,
+            { stale: true }
+        );
+        expect(
+            cache.get("POST", "https://graphql.anilist.co", { query: "query { Viewer { id } }" })
+        ).toBeUndefined();
+    });
+
+    test("an invalidation of one resource does not drop another resource's in-flight write-back", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        // A read of /anime/21 misses and captures the generation.
+        const generationAtRead = cache.getGeneration();
+        // An invalidation of a different resource lands while the read is
+        // in flight: it must not discard /anime/21's fresh write-back.
+        cache.deleteMatching("https://example.com/anime/42");
+        cache.setIfFresh(
+            "GET",
+            "https://example.com/anime/21?fields=a",
+            undefined,
+            undefined,
+            generationAtRead,
+            { fresh: true }
+        );
+        expect(cache.get("GET", "https://example.com/anime/21?fields=a")).toEqual({
+            fresh: true,
+        });
+    });
+
+    test("an endpoint invalidation does not drop another URL's in-flight write-back", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const generationAtRead = cache.getGeneration();
+        cache.deleteAllForUrl("https://graphql.anilist.co");
+        cache.setIfFresh(
+            "GET",
+            "https://api.myanimelist.net/v2/anime/21",
+            undefined,
+            undefined,
+            generationAtRead,
+            { fresh: true }
+        );
+        expect(cache.get("GET", "https://api.myanimelist.net/v2/anime/21")).toEqual({
+            fresh: true,
+        });
+    });
+
+    test("an exact-key delete does not drop a different key's in-flight write-back", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const generationAtRead = cache.getGeneration();
+        cache.delete("GET", "https://example.com/anime/21?fields=a", undefined, undefined);
+        cache.setIfFresh(
+            "GET",
+            "https://example.com/anime/21?fields=b",
+            undefined,
+            undefined,
+            generationAtRead,
+            { fresh: true }
+        );
+        expect(cache.get("GET", "https://example.com/anime/21?fields=b")).toEqual({
+            fresh: true,
+        });
     });
 
     test("scopes cached entries by auth key", () => {

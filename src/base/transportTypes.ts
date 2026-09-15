@@ -379,13 +379,16 @@ export interface RequestOptions {
     ignorePaceDeadline?: boolean;
     /**
      * Opt-in in-memory TTL response cache for read-heavy traversals. When
-     * set, `GET` responses are cached by `(method, url, serialized body)`
+     * set, cacheable reads are cached by `(method, url, serialized body)`
      * for the cache's TTL window so repeated identical reads skip the network
-     * round-trip entirely. Mutations (`POST`/`PUT`/`DELETE`) are never cached.
-     * Off by default; pass a `ResponseCache` instance to enable.
+     * round-trip entirely. Cacheable reads are `GET` requests and GraphQL
+     * query documents (which the transport dispatches as `POST`); mutations
+     * — GraphQL `mutation` documents and REST `POST`/`PUT`/`DELETE` calls —
+     * are never cached. Off by default; pass a `ResponseCache` instance to
+     * enable.
      *
      * **Privacy:** the cache retains the full response body of every cached
-     * `GET` in plaintext for the TTL window, including authenticated
+     * read in plaintext for the TTL window, including authenticated
      * user-scoped responses. Entries are scoped by a hash of the bearer
      * token so they never cross identities, but within one identity
      * sensitive payloads are retained. Do not enable for clients that fetch

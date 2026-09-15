@@ -24,6 +24,7 @@ import {
 } from "./transportTypes";
 import { resolveRequestOptions, type ResolvedRequestOptions } from "./requestOptions";
 import { axiosClient } from "./agents";
+import { isCacheableRequest, isGraphQLDocumentRequest } from "./responseCache";
 import { unwrapGraphQLResponse } from "./envelope";
 import { getRateLimitInfo, normalizeRequestError, stampRequestId } from "./errors";
 import { computeNextRetryDelay, getRetryBudgetState } from "./retry";
@@ -436,23 +437,43 @@ const buildHeaders = (
  * Computes the auth-scoping cache key for a cacheable request, or `undefined`
  * when the request must not touch the cache.
  *
- * The cache applies only to `GET` calls with a configured cache. When
- * effective credential headers are present but not captured by the cache
- * key (for example a custom `Authorization` or `X-API-Key` header),
- * `buildCacheAuthKey` returns `undefined` to fail closed: the cache is
- * skipped entirely instead of risking a cross-identity disclosure.
+ * The cache applies only to cacheable reads with a configured cache:
+ * `GET` calls, and GraphQL query documents dispatched as `POST` (the
+ * AniList transport's only read shape — every GraphQL operation is a POST,
+ * so a `GET`-only gate would leave the cache inert for the primary
+ * provider). Mutations — GraphQL `mutation` documents and REST
+ * `POST`/`PUT`/`DELETE` calls — stay excluded. When effective credential
+ * headers are present but not captured by the cache key (for example a
+ * custom `Authorization` or `X-API-Key` header), `buildCacheAuthKey`
+ * returns `undefined` to fail closed: the cache is skipped entirely
+ * instead of risking a cross-identity disclosure.
  *
  * @param resolved - The resolved request options.
  * @param method - The HTTP method.
+ * @param data - The request body, when present.
+ * @param isRestCall - Whether the call resolved to the REST protocol; REST
+ * `POST` bodies are never treated as GraphQL query documents even when a
+ * body field is named `query`.
  * @param resolvedAuth - The resolved auth facts.
  * @returns The cache key fragment, or `undefined` to skip the cache.
  */
 const resolveCacheAuthKey = (
     resolved: ResolvedRequestOptions,
     method: HttpMethod,
+    data: object | string | undefined,
+    isRestCall: boolean,
     resolvedAuth: ResolvedAuthMaterial
 ): string | undefined => {
-    if (resolved.responseCache === undefined || method !== "GET") {
+    // Short-circuit on the cache being disabled before any body
+    // classification: cache-less clients (the default) never pay the
+    // document-shape checks on the request path.
+    if (resolved.responseCache === undefined) {
+        return undefined;
+    }
+    // REST POSTs stay excluded even when the body happens to carry a
+    // `query` field: only GraphQL-protocol POSTs are query-document reads.
+    const cacheable = method === "GET" || (!isRestCall && isCacheableRequest(method, data));
+    if (!cacheable) {
         return undefined;
     }
     return buildCacheAuthKey(
@@ -503,26 +524,122 @@ const tryCacheRead = <T>(
 };
 
 /**
- * Stores a successful response in the cache. A pure pass-through wrapper so
- * {@link sendRequest} reads as orchestration and the cache write path is
- * unit-testable in isolation.
+ * Path segments of REST sub-resources that mutate the state of their parent
+ * resource rather than being resources of their own. A write to
+ * `/anime/21/my_list_status` changes the anime entry `GET /anime/21` returns,
+ * so the invalidation prefix is the parent `/anime/21`. Each entry must
+ * correspond to a real write path the library's REST operations dispatch
+ * (see the MAL `AnimeOperation`/`MangaOperation` `my_list_status` writes);
+ * speculative entries here would silently over-invalidate.
+ */
+const MUTATION_ACTION_SEGMENTS = new Set(["my_list_status"]);
+
+/**
+ * Derives the cache-invalidation prefix for a successful non-`GET` request.
+ *
+ * The prefix is the mutated resource's base URL: query string and fragment
+ * stripped, then one trailing action segment removed when the write targets
+ * a known sub-resource (`/anime/21/my_list_status` → `/anime/21`). The
+ * derivation is conservative in both directions:
+ *
+ * - A write to a collection endpoint (`POST /anime`) or to a path with no
+ * *numeric* resource id (`/users/@me/animelist`) returns `undefined`, so it
+ * invalidates nothing — the mutated resource cannot be named, and dropping
+ * the whole collection namespace would evict unrelated entries.
+ * - A write to a plain resource URL (`PUT /resource/21`) keeps that URL as
+ * the prefix, invalidating exactly the cached reads of that resource.
+ *
+ * @param url - The mutated request URL.
+ * @returns The base URL whose cached `GET` entries should be dropped, or
+ * `undefined` when no targeted prefix can be derived.
+ */
+const deriveMutationCachePrefix = (url: string): string | undefined => {
+    const fragmentIndex = url.indexOf("#");
+    const withoutFragment = fragmentIndex === -1 ? url : url.slice(0, fragmentIndex);
+    const queryIndex = withoutFragment.indexOf("?");
+    const base = queryIndex === -1 ? withoutFragment : withoutFragment.slice(0, queryIndex);
+    const trimmed = base.endsWith("/") && base.length > 1 ? base.slice(0, -1) : base;
+    // Strip a trailing action sub-resource so the write invalidates the
+    // parent resource's cached reads. String slicing (not split/join) keeps
+    // the `https://` protocol separator intact.
+    let resourceUrl = trimmed;
+    const actionSlash = trimmed.lastIndexOf("/");
+    if (actionSlash > 0 && MUTATION_ACTION_SEGMENTS.has(trimmed.slice(actionSlash + 1))) {
+        resourceUrl = trimmed.slice(0, actionSlash);
+    }
+    // Require a numeric resource id as the final segment so collection
+    // writes (`POST /anime`) and unidentifiable paths (`/users/@me/animelist`)
+    // invalidate nothing instead of nuking a whole namespace.
+    const idSlash = resourceUrl.lastIndexOf("/");
+    if (idSlash === -1) {
+        return undefined;
+    }
+    if (!/^\d+$/.test(resourceUrl.slice(idSlash + 1))) {
+        return undefined;
+    }
+    return resourceUrl;
+};
+
+/**
+ * Invalidates the cached reads a successful non-`GET` request may have
+ * changed, so a read-after-write sequence refetches instead of serving the
+ * pre-mutation entry for the rest of the TTL.
+ *
+ * Two shapes are handled:
+ *
+ * - A REST write (`POST`/`PUT`/`PATCH`/`DELETE` on the REST protocol) drops
+ *   the cached `GET` entries of the mutated resource, derived from the
+ *   request URL (see {@link deriveMutationCachePrefix}).
+ * - A GraphQL `mutation` document drops every cached GraphQL query at the
+ *   endpoint (see {@link ResponseCache.deleteAllForUrl}): every operation
+ *   of one provider is keyed at the same URL, and a mutation can change
+ *   what many different query documents return, so no finer-grained prefix
+ *   than the endpoint can be derived.
+ *
+ * The write-ness decision comes from the request's own shape — the method,
+ * protocol, and document — never from whether the request was cache-keyed.
+ * A cacheable read can legitimately fail to be cache-keyed (the fail-closed
+ * path: credential headers the cache key does not capture), and such a
+ * read must never be mistaken for a mutation and wipe the endpoint's
+ * entries.
+ *
+ * A pure pass-through wrapper so {@link sendRequest} reads as orchestration
+ * and the invalidation path is unit-testable in isolation.
  *
  * @param resolved - The resolved request options.
- * @param method - The HTTP method.
- * @param url - The request URL.
- * @param data - The request body, when present.
- * @param cacheAuthKey - The auth-scoping cache key fragment.
- * @param result - The response body to cache.
+ * @param method - The HTTP method of the completed request.
+ * @param url - The URL of the completed request.
+ * @param data - The request body, when present; distinguishes a GraphQL
+ * `mutation` document from a REST write.
+ * @param isRestCall - Whether the call resolved to the REST protocol.
  */
-const storeCacheWrite = (
+const invalidateCacheAfterMutation = (
     resolved: ResolvedRequestOptions,
     method: HttpMethod,
     url: string,
     data: object | string | undefined,
-    cacheAuthKey: string,
-    result: unknown
+    isRestCall: boolean
 ): void => {
-    resolved.responseCache!.set(method, url, data, cacheAuthKey, result);
+    if (method === "GET" || resolved.responseCache === undefined) {
+        return;
+    }
+    // A GraphQL document POST that is not a cacheable read is a `mutation`
+    // document: invalidate the endpoint's cached queries wholesale. The
+    // cacheable-read check — not the cache key — decides write-ness, so a
+    // fail-closed read (credential headers, cache skipped) is never
+    // mistaken for a mutation.
+    if (
+        !isRestCall &&
+        isGraphQLDocumentRequest(method, data) &&
+        !isCacheableRequest(method, data)
+    ) {
+        resolved.responseCache.deleteAllForUrl(url);
+        return;
+    }
+    const prefix = deriveMutationCachePrefix(url);
+    if (prefix !== undefined) {
+        resolved.responseCache.deleteMatching(prefix);
+    }
 };
 
 /**
@@ -590,13 +707,19 @@ export const sendRequest = async <T = unknown>(
         warnOptionsKeyedState(resolved.onHookError);
     }
 
-    const cacheAuthKey = resolveCacheAuthKey(resolved, method, resolvedAuth);
+    const cacheAuthKey = resolveCacheAuthKey(resolved, method, data, isRestCall, resolvedAuth);
+
+    // Captured on a cache miss, before the read goes to the network, so the
+    // write-back can detect an invalidation that landed while the response
+    // was in flight (see ResponseCache.setIfFresh).
+    let cacheGenerationAtRead: number | undefined;
 
     if (cacheAuthKey !== undefined) {
         const cached = tryCacheRead<T>(resolved, method, url, data, cacheAuthKey);
         if (cached !== undefined) {
             return cached;
         }
+        cacheGenerationAtRead = resolved.responseCache!.getGeneration();
     }
 
     const result = await executeWithRetry<unknown>(
@@ -607,7 +730,26 @@ export const sendRequest = async <T = unknown>(
     );
 
     if (cacheAuthKey !== undefined) {
-        storeCacheWrite(resolved, method, url, data, cacheAuthKey, result);
+        // Write back only when no invalidation landed while the response was
+        // in flight: a mutation that completed during this read has already
+        // dropped the stale entries, and re-caching this response would
+        // reintroduce the pre-mutation data for the rest of the TTL.
+        resolved.responseCache!.setIfFresh(
+            method,
+            url,
+            data,
+            cacheAuthKey,
+            cacheGenerationAtRead!,
+            result
+        );
+    } else {
+        // A successful mutation invalidates the cached reads of the mutated
+        // resource even when the mutation itself is not cache-keyed
+        // (`cacheAuthKey` is read-only). Runs after the write succeeded so a
+        // failed mutation never drops fresh cached entries. The write-ness
+        // decision inside is shape-based, so a fail-closed read landing here
+        // (no cache key) is a no-op, not an invalidation.
+        invalidateCacheAfterMutation(resolved, method, url, data, isRestCall);
     }
 
     return result as T;

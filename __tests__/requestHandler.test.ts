@@ -866,6 +866,85 @@ describe("response cache integration", () => {
         expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 
+    test("serves a cached GraphQL query POST on the second call", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+        const body = { query: "query ($id: Int) { Media (id: $id) { id } }", variables: { id: 1 } };
+
+        await sendRequest("https://graphql.anilist.co", "POST", body, undefined, {
+            options,
+        });
+        await sendRequest("https://graphql.anilist.co", "POST", body, undefined, {
+            options,
+        });
+
+        // The second identical query POST is a cache hit: one network request.
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+
+    test("does not cache a GraphQL mutation POST", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+        const body = { query: "mutation { SaveMediaListEntry (mediaId: 1) { id } }" };
+
+        await sendRequest("https://graphql.anilist.co", "POST", body, undefined, {
+            options,
+        });
+        await sendRequest("https://graphql.anilist.co", "POST", body, undefined, {
+            options,
+        });
+
+        // Mutations are never cached: both calls go to the network.
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("does not cache a REST POST body", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+
+        await sendRequest(
+            "https://api.myanimelist.net/v2/anime/21",
+            "POST",
+            { status: "completed" },
+            undefined,
+            { options, protocol: "rest", contentType: "application/json" }
+        );
+        await sendRequest(
+            "https://api.myanimelist.net/v2/anime/21",
+            "POST",
+            { status: "completed" },
+            undefined,
+            { options, protocol: "rest", contentType: "application/json" }
+        );
+
+        // REST writes are never cached: both calls go to the network.
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("keys GraphQL query cache entries by variables so different variables miss", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+        const document = "query ($id: Int) { Media (id: $id) { id } }";
+
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: document, variables: { id: 1 } },
+            undefined,
+            { options }
+        );
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: document, variables: { id: 2 } },
+            undefined,
+            { options }
+        );
+
+        // Different variables: different cache key, so both go to the network.
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
     test("returns a value the caller can mutate without poisoning the cache", async () => {
         const cache = new ResponseCache({ ttlMs: 10_000 });
         const options = { responseCache: cache };
@@ -996,6 +1075,427 @@ describe("response cache integration", () => {
         // Nothing is cached.
         const entries = (cache as unknown as { entries: Map<string, unknown> }).entries;
         expect(entries.size).toBe(0);
+    });
+
+    test("a fail-closed header-auth read does not wipe the endpoint's cached queries", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+        const body = { query: "query { Viewer { id } }" };
+
+        // Prime the cache with a bearer-token query read at the endpoint.
+        await sendRequest("https://graphql.anilist.co", "POST", body, "token", {
+            options,
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        // A header-authenticated identity's identical query read fails
+        // closed (the cache is skipped for it) — but a read must never be
+        // mistaken for a mutation and invalidate the endpoint's entries.
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            body,
+            {
+                headers: { Authorization: "Basic user-a-credentials" },
+            } as never,
+            { options }
+        );
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+
+        // The bearer-token read is still a cache hit: the header-auth read
+        // left the endpoint's cached queries intact.
+        await sendRequest("https://graphql.anilist.co", "POST", body, "token", {
+            options,
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    describe("mutation-triggered invalidation", () => {
+        test("a successful mutation invalidates the cached read of the mutated resource", async () => {
+            const cache = new ResponseCache({ ttlMs: 10_000 });
+            const options = { responseCache: cache };
+
+            // Prime the cache with a read of the resource.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21?fields=list_status",
+                "GET",
+                undefined,
+                "token",
+                {
+                    options,
+                }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(1);
+
+            // Mutate the same resource through its action sub-path.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21/my_list_status",
+                "PATCH",
+                { status: "completed" },
+                "token",
+                { options, protocol: "rest" }
+            );
+
+            // The cached read was dropped: the next read refetches.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21?fields=list_status",
+                "GET",
+                undefined,
+                "token",
+                {
+                    options,
+                }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(3);
+        });
+
+        test("a mutation invalidates cached reads across auth namespaces", async () => {
+            const cache = new ResponseCache({ ttlMs: 10_000 });
+            const options = { responseCache: cache };
+
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token-a",
+                {
+                    options,
+                }
+            );
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token-b",
+                {
+                    options,
+                }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(2);
+
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21/my_list_status",
+                "DELETE",
+                undefined,
+                "token-a",
+                { options, protocol: "rest" }
+            );
+
+            // Both identities' cached reads were dropped: both refetch.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token-a",
+                {
+                    options,
+                }
+            );
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token-b",
+                {
+                    options,
+                }
+            );
+            // 2 initial reads + 1 mutation + 2 refetches.
+            expect(mocks.request).toHaveBeenCalledTimes(5);
+        });
+
+        test("a failed mutation leaves the cached read intact", async () => {
+            const cache = new ResponseCache({ ttlMs: 10_000 });
+            const options = { responseCache: cache, retry: false };
+
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token",
+                {
+                    options,
+                }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(1);
+
+            mocks.request.mockRejectedValueOnce({
+                isAxiosError: true,
+                response: { status: 500, data: { message: "boom" } },
+            });
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21/my_list_status",
+                "PATCH",
+                { status: "watching" },
+                "token",
+                { options, protocol: "rest" }
+            ).catch(() => undefined);
+
+            // The cached read survived the failed mutation: still a hit.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token",
+                {
+                    options,
+                }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(2);
+        });
+
+        test("a collection write or non-numeric path invalidates nothing", async () => {
+            const cache = new ResponseCache({ ttlMs: 10_000 });
+            const options = { responseCache: cache };
+
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token",
+                {
+                    options,
+                }
+            );
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/42",
+                "GET",
+                undefined,
+                "token",
+                {
+                    options,
+                }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(2);
+
+            // A collection write has no numeric resource id: no invalidation.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime",
+                "POST",
+                { title: "new" },
+                "token",
+                { options, protocol: "rest" }
+            );
+
+            // Both cached reads are still hits.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token",
+                {
+                    options,
+                }
+            );
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/42",
+                "GET",
+                undefined,
+                "token",
+                {
+                    options,
+                }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(3);
+        });
+
+        test("a GraphQL mutation invalidates a cached GET keyed at the endpoint URL too", async () => {
+            const cache = new ResponseCache({ ttlMs: 10_000 });
+            const options = { responseCache: cache };
+
+            await sendRequest("https://graphql.anilist.co", "GET", undefined, "token", {
+                options,
+            });
+            expect(mocks.request).toHaveBeenCalledTimes(1);
+
+            // A GraphQL mutation document invalidates every cached read at
+            // the endpoint — including a GET entry keyed at the same URL.
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "mutation {...}" },
+                "token",
+                {
+                    options,
+                }
+            );
+
+            await sendRequest("https://graphql.anilist.co", "GET", undefined, "token", {
+                options,
+            });
+            expect(mocks.request).toHaveBeenCalledTimes(3);
+        });
+
+        test("a successful GraphQL mutation invalidates the cached GraphQL queries at the endpoint", async () => {
+            const cache = new ResponseCache({ ttlMs: 10_000 });
+            const options = { responseCache: cache };
+
+            // Prime the cache with two GraphQL query reads at the endpoint.
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query { Media (id: 1) { id } }" },
+                "token",
+                { options }
+            );
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query { Viewer { id } }" },
+                "token",
+                { options }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(2);
+
+            // A GraphQL mutation through the same endpoint.
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "mutation { SaveMediaListEntry (mediaId: 1) { id } }" },
+                "token",
+                { options }
+            );
+
+            // Both cached queries were dropped: both refetch.
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query { Media (id: 1) { id } }" },
+                "token",
+                { options }
+            );
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query { Viewer { id } }" },
+                "token",
+                { options }
+            );
+            // 2 initial reads + 1 mutation + 2 refetches.
+            expect(mocks.request).toHaveBeenCalledTimes(5);
+        });
+
+        test("a failed GraphQL mutation leaves the cached queries intact", async () => {
+            const cache = new ResponseCache({ ttlMs: 10_000 });
+            const options = { responseCache: cache, retry: false };
+
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query { Viewer { id } }" },
+                "token",
+                { options }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(1);
+
+            mocks.request.mockRejectedValueOnce({
+                isAxiosError: true,
+                response: { status: 500, data: { message: "boom" } },
+            });
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "mutation { SaveMediaListEntry (mediaId: 1) { id } }" },
+                "token",
+                { options }
+            ).catch(() => undefined);
+
+            // The cached query survived the failed mutation: still a hit.
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query { Viewer { id } }" },
+                "token",
+                { options }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(2);
+        });
+
+        test("a GraphQL mutation does not drop cached reads at other URLs", async () => {
+            const cache = new ResponseCache({ ttlMs: 10_000 });
+            const options = { responseCache: cache };
+
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query { Viewer { id } }" },
+                "token",
+                { options }
+            );
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token",
+                { options }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(2);
+
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "mutation { SaveMediaListEntry (mediaId: 1) { id } }" },
+                "token",
+                { options }
+            );
+
+            // The MAL read at a different URL is untouched: still a hit.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21",
+                "GET",
+                undefined,
+                "token",
+                { options }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(3);
+        });
+
+        test("a read in flight when a mutation lands does not re-cache its stale response", async () => {
+            const cache = new ResponseCache({ ttlMs: 10_000 });
+            const options = { responseCache: cache };
+
+            // Start a read whose network response resolves after the
+            // mutation completes.
+            let resolveRead: ((value: { data: { data: unknown } }) => void) | undefined;
+            mocks.request.mockImplementationOnce(
+                () =>
+                    new Promise((resolve) => {
+                        resolveRead = resolve;
+                    })
+            );
+            const readPromise = sendRequest(
+                "https://api.myanimelist.net/v2/anime/21?fields=list_status",
+                "GET",
+                undefined,
+                "token",
+                { options }
+            );
+
+            // While the read is in flight, a mutation to the same resource
+            // completes and invalidates the (not yet written) cached read.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21/my_list_status",
+                "PATCH",
+                { status: "completed" },
+                "token",
+                { options, protocol: "rest" }
+            );
+
+            // The read completes with its pre-mutation (stale) response.
+            resolveRead?.({ data: { data: { stale: true } } });
+            await readPromise;
+
+            // The stale response was not re-cached: the next read refetches.
+            await sendRequest(
+                "https://api.myanimelist.net/v2/anime/21?fields=list_status",
+                "GET",
+                undefined,
+                "token",
+                { options }
+            );
+            // 1 in-flight read + 1 mutation + 1 refetch (the stale write was skipped).
+            expect(mocks.request).toHaveBeenCalledTimes(3);
+        });
     });
 });
 
