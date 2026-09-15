@@ -18,7 +18,7 @@
 - [Cancellation & timeouts](https://anilink.alpha49.com/cancellation-and-timeouts): Per-request timeout and AbortSignal support in AniLink, including the fail-fast validation of invalid timeout values.
 - [Per-request options](https://anilink.alpha49.com/per-request-options): Override timeouts, retries, and other instance defaults for a single call with the trailing per-request options argument every operation accepts.
 - [Observability](https://anilink.alpha49.com/observability): The seven AniLink request-lifecycle hooks plus the onHookError failure observer, configured per provider slot so they never leak between providers.
-- [Response cache](https://anilink.alpha49.com/response-cache): The opt-in in-memory TTL response cache keyed by method, url, and body: repeated identical reads skip the network and mutations are never cached.
+- [Response cache](https://anilink.alpha49.com/response-cache): The opt-in in-memory TTL response cache keyed by method, url, and body: repeated identical reads — GETs and GraphQL queries — skip the network and mutations are never cached.
 
 ## Cookbook
 
