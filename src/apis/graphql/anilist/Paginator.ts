@@ -1,5 +1,6 @@
 import type { PageInfo } from "./interfaces/responses/page/PageInfo";
 import { safeInvoke } from "../../../base/hooks";
+import type { OnHookErrorHandler } from "../../../base/transportTypes";
 import { AniLinkValidationError } from "../../../base/AniLinkError";
 import {
     bridgeAbortSignal,
@@ -36,21 +37,24 @@ const DEFAULT_MAX_CHUNKS = 100;
 /**
  * Invokes a traversal callback (`onPage`/`onChunk`) and swallows any error it
  * throws so a failing observer cannot abort a traversal after all responses
- * have already been collected. Delegates to the transport layer's
+ * have been collected. Delegates to the transport layer's
  * {@link safeInvoke} so a broken callback is reported through the same
  * mechanism and message shape as every other user-supplied callback in the
- * library.
+ * library: through the configured `onHookError` observer when provided,
+ * falling back to a `console.warn`.
  *
  * @param callback - The user-supplied callback, when provided.
- * @param name - The callback name, for the warn message.
+ * @param name - The callback name, for the failure report.
+ * @param onHookError - Consumer callback observing hook failures, when configured.
  * @param payload - The argument to hand to the callback.
  */
 const safeCallback = <T>(
     callback: ((payload: T) => void) | undefined,
     name: string,
+    onHookError: OnHookErrorHandler | undefined,
     payload: T
 ): void => {
-    safeInvoke(callback as (...args: never[]) => void, name, undefined, payload);
+    safeInvoke(callback as (...args: never[]) => void, name, onHookError, payload);
 };
 
 /**
@@ -129,10 +133,21 @@ export interface PaginateOptions {
      * stop the traversal. The callback receives the page's `pageInfo` and
      * items array; the full `PaginateResult` is still returned for callers
      * that need the collected items. Errors thrown by the callback are
-     * caught, reported via `console.warn`, and swallowed, so a failing
-     * observer cannot fail {@link paginate} or stop the traversal.
+     * caught, reported through {@link PaginateOptions.onHookError} when
+     * configured (falling back to `console.warn`), and swallowed, so a
+     * failing observer cannot fail {@link paginate} or stop the traversal.
      */
     onPage?: (page: { pageInfo: PageInfo; items: unknown[] }) => void;
+
+    /**
+     * Optional observer for failures thrown by the {@link PaginateOptions.onPage}
+     * callback. When provided, a throwing `onPage` callback is reported to
+     * this handler with the hook name (`"onPage"`) and the thrown error
+     * instead of falling back to `console.warn`. Failures thrown by the
+     * observer itself are swallowed so a broken logger cannot fail the
+     * traversal.
+     */
+    onHookError?: OnHookErrorHandler;
 }
 
 /** Options controlling a {@link paginateChunks} traversal over `hasNextChunk`-based chunks. */
@@ -184,11 +199,22 @@ export interface ChunkPaginateOptions {
      * stop the traversal. The callback receives the chunk's `hasNextChunk`
      * flag and items array; the full `ChunkPaginateResult` is still returned
      * for callers that need the collected items. Errors thrown by the
-     * callback are caught, reported via `console.warn`, and swallowed, so a
-     * failing observer cannot fail {@link paginateChunks} or stop the
-     * traversal.
+     * callback are caught, reported through
+     * {@link ChunkPaginateOptions.onHookError} when configured (falling back
+     * to `console.warn`), and swallowed, so a failing observer cannot fail
+     * {@link paginateChunks} or stop the traversal.
      */
     onChunk?: (chunk: { hasNextChunk: boolean; items: unknown[] }) => void;
+
+    /**
+     * Optional observer for failures thrown by the
+     * {@link ChunkPaginateOptions.onChunk} callback. When provided, a throwing
+     * `onChunk` callback is reported to this handler with the hook name
+     * (`"onChunk"`) and the thrown error instead of falling back to
+     * `console.warn`. Failures thrown by the observer itself are swallowed so
+     * a broken logger cannot fail the traversal.
+     */
+    onHookError?: OnHookErrorHandler;
 }
 
 /** The outcome of a {@link paginate} traversal. */
@@ -255,7 +281,7 @@ function extractHasMore(response: unknown): boolean {
  * @typeParam K - The key of the items array on `TPage`.
  * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and an optional `AbortSignal` forwarded from the traversal.
  * @param itemsKey - The key of the items array on the page response (e.g. `"media"`, `"users"`).
- * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, and `onPage` controls.
+ * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, `onPage`, and `onHookError` controls.
  * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run.
  * @throws An {@link AniLinkValidationError} when a fetched page response has no `itemsKey` key at all (a typo'd key reads `undefined`); a present non-array value at the key is the documented `never[]` case and collects nothing.
  * @see https://docs.anilist.co/reference/object/pageinfo
@@ -318,7 +344,7 @@ export async function paginate<
             const pageItems = Array.isArray(raw) ? (raw as ArrayElement<TPage, K>[]) : [];
             pages.push({ pageInfo: response.pageInfo, items: pageItems });
             items.push(...pageItems);
-            safeCallback(options?.onPage, "onPage", {
+            safeCallback(options?.onPage, "onPage", options?.onHookError, {
                 pageInfo: response.pageInfo,
                 items: pageItems,
             });
@@ -446,7 +472,7 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
  * @typeParam K - The key of the items array on `TChunk`.
  * @param fetchChunk - Callback that fetches a single chunk given its 1-based number, `perChunk`, and an optional `AbortSignal` forwarded from the traversal.
  * @param itemsKey - The key of the items array on the chunk response (e.g. `"lists"`).
- * @param options - Optional `perChunk`, `startChunk`, `maxChunks`, `concurrency`, `signal`, and `onChunk` controls.
+ * @param options - Optional `perChunk`, `startChunk`, `maxChunks`, `concurrency`, `signal`, `onChunk`, and `onHookError` controls.
  * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run.
  * @throws An {@link AniLinkValidationError} when a fetched chunk response has no `itemsKey` key at all (a typo'd key reads `undefined`); a present non-array value at the key is the documented `never[]` case and collects nothing.
  * @see https://docs.anilist.co/reference/object/medialistcollection
@@ -516,7 +542,7 @@ export async function paginateChunks<
             const chunkItems = Array.isArray(raw) ? (raw as ArrayElement<TChunk, K>[]) : [];
             chunks.push({ hasNextChunk: response.hasNextChunk, items: chunkItems });
             items.push(...chunkItems);
-            safeCallback(options?.onChunk, "onChunk", {
+            safeCallback(options?.onChunk, "onChunk", options?.onHookError, {
                 hasNextChunk: response.hasNextChunk,
                 items: chunkItems,
             });

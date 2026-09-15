@@ -658,6 +658,59 @@ describe("safeCallback error swallowing", () => {
         );
         warn.mockRestore();
     });
+
+    test("paginate routes a throwing onPage callback to onHookError instead of console.warn", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 2 }),
+            media: [{ id: page }],
+        }));
+        const thrown = new Error("observer failed");
+        const onPage = vi.fn(() => {
+            throw thrown;
+        });
+        const onHookError = vi.fn();
+
+        const result = await paginate(fetchPage, "media", {
+            concurrency: 1,
+            onPage,
+            onHookError,
+        });
+
+        // The traversal completes and the failure goes to the observer, not the warn fallback.
+        expect(result.pageCount).toBe(2);
+        expect(onPage).toHaveBeenCalledTimes(2);
+        expect(onHookError).toHaveBeenCalledTimes(2);
+        expect(onHookError).toHaveBeenCalledWith("onPage", thrown);
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+    });
+
+    test("paginateChunks routes a throwing onChunk callback to onHookError instead of console.warn", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
+            hasNextChunk: chunk < 2,
+            lists: [{ name: `list-${chunk}` }],
+        }));
+        const thrown = new Error("chunk observer failed");
+        const onChunk = vi.fn(() => {
+            throw thrown;
+        });
+        const onHookError = vi.fn();
+
+        const result = await paginateChunks(fetchChunk, "lists", {
+            concurrency: 1,
+            onChunk,
+            onHookError,
+        });
+
+        expect(result.chunkCount).toBe(2);
+        expect(onChunk).toHaveBeenCalledTimes(2);
+        expect(onHookError).toHaveBeenCalledTimes(2);
+        expect(onHookError).toHaveBeenCalledWith("onChunk", thrown);
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+    });
 });
 
 describe("paginatePages abort branches", () => {
