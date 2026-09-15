@@ -680,7 +680,7 @@ export type AniListQueries = {
          * ```typescript
          * await aniLink.anilist.query.externalLinkSourceCollection();
          * ```
-         * @see https://docs.anilist.co/reference/object/mediaexternallink
+         * @see https://docs.anilist.co/reference/query
          */
         externalLinkSourceCollection: (
             variables?: ExternalLinkSourceCollectionVariables,

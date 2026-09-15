@@ -269,6 +269,7 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
             "A promise that resolves to the {@link ExternalLinkSourceCollectionResponse} data.",
         example: "```typescript\nawait aniLink.anilist.query.externalLinkSourceCollection();\n```",
         paramVariables: "Optional `id`, `type`, or `mediaType` filters; a {@link {variables}}.",
+        see: "https://docs.anilist.co/reference/query",
     },
     "page:users": {
         brief: "Fetches users data from the AniList API.",
