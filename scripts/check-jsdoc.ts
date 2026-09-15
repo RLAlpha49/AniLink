@@ -1,5 +1,5 @@
 import { readFile, readdir } from "node:fs/promises";
-import { join, relative, resolve } from "node:path";
+import { basename, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const ANILIST_API_REFERENCE_PREFIX = "https://docs.anilist.co/reference/";
@@ -82,6 +82,30 @@ async function isActualAniListApiReference(reference: string): Promise<boolean> 
 
     const pages = await loadReferencePages();
     return pages.has(suffix);
+}
+
+const MAL_API_REFERENCE_PREFIX = "https://myanimelist.net/apiconfig/references/";
+
+/**
+ * Check whether a JSDoc link names a MyAnimeList reference page. MAL publishes
+ * one OpenAPI spec, so any anchor under the reference prefix is valid.
+ */
+function isMalApiReference(reference: string): boolean {
+    return reference.startsWith(MAL_API_REFERENCE_PREFIX);
+}
+
+/** Check whether a `@see` target is an internal `{@link ...}` cross-reference. */
+function isInternalSeeLink(reference: string): boolean {
+    return /^\{@link\s+[^}]+\}$/.test(reference);
+}
+
+/**
+ * Extract the `@see` target from a documentation block, keeping
+ * `{@link ...}` cross-references intact instead of stopping at the first
+ * space inside the braces.
+ */
+function seeReference(documentation: DocumentationBlock): string | undefined {
+    return /@see\s+(\{@link\s+[^}]+\}|\S+)/.exec(documentation.text)?.[1];
 }
 
 /** One diagnostic emitted by the repository JSDoc validator. */
@@ -387,10 +411,273 @@ export async function checkTypeSource(source: string, file: string): Promise<Jsd
 }
 
 /**
+ * Validate MyAnimeList facade operation properties and group interfaces.
+ *
+ * @param source - Source text of the MAL facade module.
+ * @param file - Repository-relative file name used in diagnostics.
+ * @returns All missing-tag and invalid-link diagnostics found in the source.
+ */
+export async function checkMalFacadeSource(source: string, file: string): Promise<JsdocIssue[]> {
+    const issues: JsdocIssue[] = [];
+    const lines = getSourceLines(source);
+
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        const line = lines[lineIndex];
+        const property = /^ {4}([A-Za-z]\w*): *\(/.exec(line.text);
+        if (property) {
+            const index = line.start + line.text.indexOf(property[1]);
+            const documentation = findDocumentation(source, index);
+            const signature = getPropertySignature(lines, lineIndex);
+
+            for (const parameter of extractParameters(signature)) {
+                requireTag(
+                    issues,
+                    source,
+                    file,
+                    index,
+                    documentation,
+                    String.raw`@param\s+(?:{[^}]+}\s+)?${parameter}`,
+                    `MyAnimeList operation ${property[1]} must document its ${parameter} parameter`
+                );
+            }
+
+            requireTag(
+                issues,
+                source,
+                file,
+                index,
+                documentation,
+                "@returns",
+                `MyAnimeList operation ${property[1]} must document its return value`
+            );
+            requireTag(
+                issues,
+                source,
+                file,
+                index,
+                documentation,
+                "@example",
+                `MyAnimeList operation ${property[1]} must include an executable usage example`
+            );
+            await requireProviderReference(
+                issues,
+                source,
+                file,
+                index,
+                documentation,
+                `MyAnimeList operation ${property[1]}`,
+                isMalApiReference,
+                "a MyAnimeList API reference page"
+            );
+            continue;
+        }
+
+        const declaration = /^export (interface|type|class) ([A-Za-z]\w*)/.exec(line.text.trim());
+        if (!declaration) continue;
+
+        const index = line.start + line.text.indexOf("export");
+        const documentation = requireDocumentation(
+            issues,
+            source,
+            file,
+            index,
+            `Export ${declaration[2]} must have JSDoc`
+        );
+        await requireProviderReference(
+            issues,
+            source,
+            file,
+            index,
+            documentation,
+            `Export ${declaration[2]}`,
+            (reference) => isMalApiReference(reference) || isInternalSeeLink(reference),
+            "a MyAnimeList API reference page or an internal link"
+        );
+    }
+
+    return issues;
+}
+
+/**
+ * Validate exported classes and async methods in a MAL operations module.
+ *
+ * @param source - Source text of the MAL operations module.
+ * @param file - Repository-relative file name used in diagnostics.
+ * @returns All documentation diagnostics found in the source.
+ */
+export async function checkMalOperationSource(source: string, file: string): Promise<JsdocIssue[]> {
+    const issues: JsdocIssue[] = [];
+    const lines = getSourceLines(source);
+
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        const line = lines[lineIndex];
+        const trimmed = line.text.trim();
+
+        const declaration = /^export (?:abstract )?class ([A-Za-z]\w*)/.exec(trimmed);
+        if (declaration) {
+            const index = line.start + line.text.indexOf("export");
+            const documentation = requireDocumentation(
+                issues,
+                source,
+                file,
+                index,
+                `Export ${declaration[1]} must have JSDoc`
+            );
+            await requireProviderReference(
+                issues,
+                source,
+                file,
+                index,
+                documentation,
+                `Export ${declaration[1]}`,
+                (reference) => isMalApiReference(reference) || isInternalSeeLink(reference),
+                "a MyAnimeList API reference page or an internal link"
+            );
+            continue;
+        }
+
+        const method = /^(?:public |private |protected )?async +([A-Za-z]\w*) *\(/.exec(trimmed);
+        if (!method) continue;
+
+        const index = line.start + line.text.indexOf("async");
+        const documentation = requireDocumentation(
+            issues,
+            source,
+            file,
+            index,
+            `Operation ${method[1]} must have JSDoc`
+        );
+        if (!documentation) continue;
+
+        await requireProviderReference(
+            issues,
+            source,
+            file,
+            index,
+            documentation,
+            `Operation ${method[1]}`,
+            isMalApiReference,
+            "a MyAnimeList API reference page"
+        );
+
+        requireTag(
+            issues,
+            source,
+            file,
+            index,
+            documentation,
+            "@returns",
+            `Operation ${method[1]} must document its return value`
+        );
+
+        const signature = getMethodSignature(lines, lineIndex);
+        for (const parameter of extractParameters(signature)) {
+            requireTag(
+                issues,
+                source,
+                file,
+                index,
+                documentation,
+                String.raw`@param\s+(?:{[^}]+}\s+)?${parameter}`,
+                `Operation ${method[1]} must document its ${parameter} parameter`
+            );
+        }
+    }
+
+    return issues;
+}
+
+/**
+ * Validate exported declarations in the MAL surface outside the facade and
+ * operations modules.
+ *
+ * @param source - Source text of the module.
+ * @param file - Repository-relative file name used in diagnostics.
+ * @returns All missing-documentation and invalid-link diagnostics found.
+ */
+export async function checkMalExportSource(source: string, file: string): Promise<JsdocIssue[]> {
+    const issues: JsdocIssue[] = [];
+    await checkExportedDeclarations(
+        source,
+        file,
+        issues,
+        (reference) => isMalApiReference(reference) || isInternalSeeLink(reference),
+        "a MyAnimeList API reference page or an internal link"
+    );
+    return issues;
+}
+
+/**
+ * Validate exported declarations in the provider-composition surface.
+ *
+ * @param source - Source text of the module.
+ * @param file - Repository-relative file name used in diagnostics.
+ * @returns All missing-documentation and invalid-link diagnostics found.
+ */
+export async function checkProviderSource(source: string, file: string): Promise<JsdocIssue[]> {
+    const issues: JsdocIssue[] = [];
+    await checkExportedDeclarations(
+        source,
+        file,
+        issues,
+        async (reference) =>
+            (await isActualAniListApiReference(reference)) ||
+            isMalApiReference(reference) ||
+            isInternalSeeLink(reference),
+        "an AniList or MyAnimeList API reference page or an internal link"
+    );
+    return issues;
+}
+
+/**
+ * Check exported declarations for JSDoc and a `@see` link the surface allows.
+ *
+ * @param source - Source text of the module.
+ * @param file - Repository-relative file name used in diagnostics.
+ * @param issues - Diagnostics accumulator for the module.
+ * @param isValidReference - Provider-specific `@see` validation.
+ * @param expected - Description of the accepted `@see` targets.
+ */
+async function checkExportedDeclarations(
+    source: string,
+    file: string,
+    issues: JsdocIssue[],
+    isValidReference: (reference: string) => boolean | Promise<boolean>,
+    expected: string
+): Promise<void> {
+    for (const line of getSourceLines(source)) {
+        const declaration =
+            /^export (?:abstract )?(interface|type|const|class|(?:async )?function) ([A-Za-z]\w*)/.exec(
+                line.text.trim()
+            );
+        if (!declaration) continue;
+
+        const index = line.start + line.text.indexOf("export");
+        const documentation = requireDocumentation(
+            issues,
+            source,
+            file,
+            index,
+            `Export ${declaration[2]} must have JSDoc`
+        );
+        await requireProviderReference(
+            issues,
+            source,
+            file,
+            index,
+            documentation,
+            `Export ${declaration[2]}`,
+            isValidReference,
+            expected
+        );
+    }
+}
+
+/**
  * Run the complete AniLink JSDoc audit against a repository root.
  *
  * @param projectRoot - Repository root containing `src/` and `scripts/`.
- * @returns All documentation diagnostics across the configured AniList source tree.
+ * @returns All documentation diagnostics across the AniList, MyAnimeList, and provider-composition source trees.
  * @throws {Error} When a configured source directory or allowlist cannot be read.
  */
 export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssue[]> {
@@ -421,6 +708,29 @@ export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssu
     for (const file of await collectTypeScriptFiles(typeDirectory)) {
         const source = await readFile(file, "utf8");
         issues.push(...(await checkTypeSource(source, relative(projectRoot, file))));
+    }
+
+    // MyAnimeList REST surface: the facade module carries the operation
+    // properties, the operations modules carry the classes and methods, and
+    // every remaining module is checked for documented exports.
+    for (const file of await collectTypeScriptFiles(join(sourceRoot, "apis/rest/mal"))) {
+        const source = await readFile(file, "utf8");
+        const sourcePath = relative(sourceRoot, file);
+        const repositoryPath = relative(projectRoot, file);
+        if (basename(sourcePath) === "facade.ts") {
+            issues.push(...(await checkMalFacadeSource(source, repositoryPath)));
+        } else if (/[\\/]operations[\\/]/.test(sourcePath)) {
+            issues.push(...(await checkMalOperationSource(source, repositoryPath)));
+        } else {
+            issues.push(...(await checkMalExportSource(source, repositoryPath)));
+        }
+    }
+
+    // Provider-composition surface: documented exports with provider or
+    // internal `@see` links.
+    for (const file of await collectTypeScriptFiles(join(sourceRoot, "providers"))) {
+        const source = await readFile(file, "utf8");
+        issues.push(...(await checkProviderSource(source, relative(projectRoot, file))));
     }
 
     return issues;
@@ -476,6 +786,35 @@ function getPropertySignature(lines: SourceLine[], lineIndex: number): string {
     }
 
     return signature;
+}
+
+/** Join a possibly multiline method signature until its parameter list closes. */
+function getMethodSignature(lines: SourceLine[], lineIndex: number): string {
+    let signature = lines[lineIndex].text;
+
+    while (!/\)\s*[:{]/.test(signature) && lineIndex + 1 < lines.length) {
+        lineIndex++;
+        signature += ` ${lines[lineIndex].text.trim()}`;
+    }
+
+    return signature;
+}
+
+/** Extract parameter names from a joined signature's parameter list. */
+function extractParameters(signature: string): string[] {
+    const openParen = signature.indexOf("(");
+    const closeParen = signature.indexOf(")", openParen + 1);
+    let parameterBlock = signature;
+    if (openParen !== -1) {
+        parameterBlock = signature.slice(
+            openParen + 1,
+            closeParen === -1 ? signature.length : closeParen
+        );
+    }
+
+    return [...parameterBlock.matchAll(/(?:^|,)\s*([A-Za-z]\w*)\s*\??\s*:/g)].map(
+        (match) => match[1]
+    );
 }
 
 /** Find the nearest preceding JSDoc block for a source position. */
@@ -541,6 +880,39 @@ async function requireApiReference(
                 "@see",
                 `${subject} must link to an actual AniList API reference page`
             )
+        );
+    }
+}
+
+/**
+ * Like {@link requireApiReference}, but for provider surfaces whose `@see`
+ * links may target either provider's reference pages or internal symbols.
+ *
+ * @param issues - Diagnostics accumulator for the module.
+ * @param source - Source text of the module.
+ * @param file - Repository-relative file name used in diagnostics.
+ * @param index - Character index of the documented declaration.
+ * @param documentation - Documentation block attached to the declaration.
+ * @param subject - Human-readable name used in the diagnostic message.
+ * @param isValidReference - Provider-specific `@see` validation.
+ * @param expected - Description of the accepted `@see` targets.
+ */
+async function requireProviderReference(
+    issues: JsdocIssue[],
+    source: string,
+    file: string,
+    index: number,
+    documentation: DocumentationBlock | undefined,
+    subject: string,
+    isValidReference: (reference: string) => boolean | Promise<boolean>,
+    expected: string
+): Promise<void> {
+    if (!documentation) return;
+
+    const reference = seeReference(documentation);
+    if (!reference || !(await isValidReference(reference))) {
+        issues.push(
+            createIssue(source, file, index, "@see", `${subject} must link to ${expected}`)
         );
     }
 }

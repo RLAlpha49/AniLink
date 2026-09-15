@@ -33,6 +33,8 @@ export type MalTokenRefreshCallback = (response: MalTokenResponse) => void;
 
 /**
  * Builds the coordinator's dependencies.
+ *
+ * @see {@link MalTokenRefresher}
  */
 export interface MalTokenRefresherOptions {
     /** The MAL application client ID, required for the refresh grant. */
@@ -63,6 +65,8 @@ export interface MalTokenRefresherOptions {
  * {@link MalTokenRefresher.executeWithRefresh}. The coordinator owns the
  * mutable refresh state (the current refresh token, honoring MAL's rotation
  * semantics) and deduplicates concurrent 401s into a single refresh call.
+ *
+ * @see https://myanimelist.net/apiconfig/references/authorization
  */
 export class MalTokenRefresher {
     private readonly clientId: string;
@@ -193,6 +197,7 @@ export class MalTokenRefresher {
  * @param auth - The auth material the operations were constructed with.
  * @param accessToken - The fresh access token from the refresh grant.
  * @returns The replacement {@link RequestAuthInput}.
+ * @see https://myanimelist.net/apiconfig/references/authorization
  */
 export const buildRefreshedAuth = (
     auth: RequestAuthInput | undefined,
