@@ -5,6 +5,7 @@
 /docs
 /docs-src/.vitepress/cache
 /dist
+/graphify-out
 /.models
 /node_modules
 .env*
