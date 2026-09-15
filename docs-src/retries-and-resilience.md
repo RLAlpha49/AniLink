@@ -72,7 +72,7 @@ Like the breaker, the budget's state is shared across every operation of one cli
 
 ## Rate-limit pacing
 
-On by default. The transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits for the window to reset instead of discovering the limit the hard way, via a `429`. And that hard way is expensive: with pacing off, every `429` costs a wasted request plus a retry wait. Pacing avoids both by tracking the window from the response headers. The optional `onPace` hook fires after each pacing wait completes with the wait length, so an intentional rate-limit wait never gets mistaken for a hung request — and an aborted wait never emits a full-delay event — see [Observability](/observability).
+On by default. The transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits for the window to reset instead of discovering the limit the hard way, via a `429`. And that hard way is expensive: with pacing off, every `429` costs a wasted request plus a retry wait. Pacing avoids both by tracking the window from the response headers. The response that tripped the floor is never held: its data returns immediately, and the recorded deadline delays the next request instead. The optional `onPace` hook fires after each pacing wait completes with the wait length, so an intentional rate-limit wait never gets mistaken for a hung request — and an aborted wait never emits a full-delay event — see [Observability](/observability).
 
 ```typescript
 // Default behavior — pacing is active with rateLimitFloor: 1.
@@ -88,7 +88,7 @@ const unpaced = new AniLink("token", { paceWithRateLimit: false });
 
 <Callout kind="warning">
 
-**Bulk traversals:** a single low-quota response pauses _every_ subsequent request to that host until the window resets — up to 5 minutes per wait. For bulk jobs (`paginate`/`paginateChunks` with default concurrency 3), this serializes throughput. Prefer `paceWithRateLimit: false` plus an explicit retry policy for bulk work, and keep pacing on for latency-sensitive user-facing calls.
+**Bulk traversals:** a single low-quota response pauses _every_ subsequent request to that host until the window resets — up to 5 minutes per wait. For bulk jobs (`paginate`/`paginateChunks` with default concurrency 3), this serializes throughput. Prefer `paceWithRateLimit: false` plus an explicit retry policy for bulk work, and keep pacing on for latency-sensitive user-facing calls. The tripping response itself still returns immediately — only later requests wait.
 
 </Callout>
 

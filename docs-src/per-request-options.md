@@ -52,26 +52,26 @@ const anime = await aniLink.mal.anime.get(
 
 ## Available options
 
-| Option                | Type                                | Default                | Description                                                                                                                   |
-| --------------------- | ----------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `timeout`             | `number`                            | instance value (30000) | Milliseconds before the request is aborted. `0` disables.                                                                     |
-| `signal`              | `AbortSignal`                       | instance value         | Signal used to cancel the in-flight request.                                                                                  |
-| `retry`               | `boolean \| Partial<RetryPolicy>`   | instance policy        | Retry policy for this call. `false` opts out.                                                                                 |
-| `exposeRawAxiosError` | `boolean`                           | `false`                | Attach the raw Axios error for debugging. Sensitive headers are redacted.                                                     |
-| `paceWithRateLimit`   | `boolean`                           | instance value         | Proactive rate-limit pacing.                                                                                                  |
-| `rateLimitFloor`      | `number`                            | instance value         | Remaining-quota threshold that triggers pacing.                                                                               |
-| `circuitBreaker`      | `{ threshold, cooldownMs }`         | instance value         | Circuit breaker configuration.                                                                                                |
-| `retryBudget`         | `{ maxRetriesPerWindow, windowMs }` | instance value         | Per-window cap on total retries across requests. Exhausted budgets surface failures without retries until the window elapses. |
-| `ignorePaceDeadline`  | `boolean`                           | `false`                | Bypass the shared rate-limit pacing deadline for this call.                                                                   |
-| `responseCache`       | `ResponseCache`                     | instance value         | Opt-in response cache for reads (`GET` requests and GraphQL query documents).                                                 |
-| `onError`             | `OnErrorHandler`                    | instance value         | Fires per failed attempt and when retries are exhausted.                                                                      |
-| `onRetry`             | `OnErrorHandler`                    | instance value         | Fires when a failed attempt will be retried.                                                                                  |
-| `onRequestStart`      | `OnRequestStartHandler`             | instance value         | Fires immediately before each attempt.                                                                                        |
-| `onResponse`          | `OnResponseHandler`                 | instance value         | Fires after each attempt with `durationMs` and `cacheHit?`.                                                                   |
-| `onPace`              | `OnPaceHandler`                     | instance value         | Fires after a rate-limit pacing wait completes; an aborted wait emits nothing (observe via `onError`).                        |
-| `onHookError`         | `OnHookErrorHandler`                | instance value         | Fires when a lifecycle hook throws.                                                                                           |
-| `onCircuitOpen`       | `OnCircuitOpenHandler`              | instance value         | Fires when the circuit breaker trips.                                                                                         |
-| `onCircuitClose`      | `OnCircuitCloseHandler`             | instance value         | Fires when the circuit breaker closes after a probe.                                                                          |
+| Option                | Type                                | Default                | Description                                                                                                                              |
+| --------------------- | ----------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `timeout`             | `number`                            | instance value (30000) | Milliseconds before the request is aborted. `0` disables.                                                                                |
+| `signal`              | `AbortSignal`                       | instance value         | Signal used to cancel the in-flight request.                                                                                             |
+| `retry`               | `boolean \| Partial<RetryPolicy>`   | instance policy        | Retry policy for this call. `false` opts out.                                                                                            |
+| `exposeRawAxiosError` | `boolean`                           | `false`                | Attach the raw Axios error for debugging. Sensitive headers are redacted.                                                                |
+| `paceWithRateLimit`   | `boolean`                           | instance value         | Proactive rate-limit pacing.                                                                                                             |
+| `rateLimitFloor`      | `number`                            | instance value         | Remaining-quota threshold that triggers pacing.                                                                                          |
+| `circuitBreaker`      | `{ threshold, cooldownMs }`         | instance value         | Circuit breaker configuration.                                                                                                           |
+| `retryBudget`         | `{ maxRetriesPerWindow, windowMs }` | instance value         | Per-window cap on total retries across requests. Exhausted budgets surface failures without retries until the window elapses.            |
+| `ignorePaceDeadline`  | `boolean`                           | `false`                | Bypass the shared rate-limit pacing deadline for this call.                                                                              |
+| `responseCache`       | `ResponseCache`                     | instance value         | Opt-in response cache for reads (`GET` requests and GraphQL query documents).                                                            |
+| `onError`             | `OnErrorHandler`                    | instance value         | Fires per failed attempt and when retries are exhausted.                                                                                 |
+| `onRetry`             | `OnErrorHandler`                    | instance value         | Fires when a failed attempt will be retried.                                                                                             |
+| `onRequestStart`      | `OnRequestStartHandler`             | instance value         | Fires immediately before each attempt.                                                                                                   |
+| `onResponse`          | `OnResponseHandler`                 | instance value         | Fires after each attempt with `durationMs` and `cacheHit?`.                                                                              |
+| `onPace`              | `OnPaceHandler`                     | instance value         | Fires after a rate-limit pacing wait completes, before the request is dispatched; an aborted wait emits nothing (observe via `onError`). |
+| `onHookError`         | `OnHookErrorHandler`                | instance value         | Fires when a lifecycle hook throws.                                                                                                      |
+| `onCircuitOpen`       | `OnCircuitOpenHandler`              | instance value         | Fires when the circuit breaker trips.                                                                                                    |
+| `onCircuitClose`      | `OnCircuitCloseHandler`             | instance value         | Fires when the circuit breaker closes after a probe.                                                                                     |
 
 ## Merge behavior
 

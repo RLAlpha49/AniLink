@@ -10,15 +10,15 @@ Seven lifecycle hooks report request lifecycle events — `onRequestStart`, `onR
 
 ## Hook contracts
 
-| Hook             | Fires                                                                                                                                                     | Payload                                                                                                                        |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `onRequestStart` | Immediately before each attempt is sent                                                                                                                   | `{ requestId, url, method, attempt }`                                                                                          |
-| `onResponse`     | After each attempt completes, success or failure. Carries `cacheHit: true` when served from the response cache                                            | `{ requestId, url, method, attempt, durationMs, rateLimit?, cacheHit? }`                                                       |
-| `onPace`         | After a proactive rate-limit pacing wait completes (an aborted wait emits nothing — observe it via `onError` with `abortedDuringPacing: true`)            | { requestId, url, method, attempt, delayMs }                                                                                   |
-| `onError`        | When an attempt fails and `onRetry` is not configured (covering retryable failures), when retries are exhausted, and when a circuit-open fast-fail occurs | `(error: AniLinkError, context)` with `context = { requestId, url, method, attempt, code, status?, nextDelayMs?, rateLimit? }` |
-| `onRetry`        | When a failed attempt is going to be retried; handles retryable failures when configured, in place of `onError` for those attempts                        | Same shape as `onError` with `nextDelayMs` set                                                                                 |
-| `onCircuitOpen`  | When the circuit breaker trips (consecutive failures reach the threshold)                                                                                  | `{ requestId, url, method, attempt, host, failures }`                                                                          |
-| `onCircuitClose` | When the circuit breaker closes after a successful post-cooldown probe                                                                                    | `{ requestId, url, method, attempt, host }`                                                                                    |
+| Hook             | Fires                                                                                                                                                                            | Payload                                                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `onRequestStart` | Immediately before each attempt is sent                                                                                                                                          | `{ requestId, url, method, attempt }`                                                                                          |
+| `onResponse`     | After each attempt completes, success or failure. Carries `cacheHit: true` when served from the response cache                                                                   | `{ requestId, url, method, attempt, durationMs, rateLimit?, cacheHit? }`                                                       |
+| `onPace`         | After a proactive rate-limit pacing wait completes, before the request is dispatched (an aborted wait emits nothing — observe it via `onError` with `abortedDuringPacing: true`) | { requestId, url, method, attempt, delayMs }                                                                                   |
+| `onError`        | When an attempt fails and `onRetry` is not configured (covering retryable failures), when retries are exhausted, and when a circuit-open fast-fail occurs                        | `(error: AniLinkError, context)` with `context = { requestId, url, method, attempt, code, status?, nextDelayMs?, rateLimit? }` |
+| `onRetry`        | When a failed attempt is going to be retried; handles retryable failures when configured, in place of `onError` for those attempts                                               | Same shape as `onError` with `nextDelayMs` set                                                                                 |
+| `onCircuitOpen`  | When the circuit breaker trips (consecutive failures reach the threshold)                                                                                                        | `{ requestId, url, method, attempt, host, failures }`                                                                          |
+| `onCircuitClose` | When the circuit breaker closes after a successful post-cooldown probe                                                                                                           | `{ requestId, url, method, attempt, host }`                                                                                    |
 
 `attempt` is 1-based. `durationMs` is the elapsed wall-clock time of the attempt, which makes `onResponse` the natural home for latency metrics. `rateLimit` carries the parsed `x-ratelimit-limit`/`-remaining`/`-reset` headers whenever the upstream includes them — use it in `onResponse` to build proactive quota dashboards instead of waiting for a `429` to spoil the mood.
 
@@ -83,10 +83,10 @@ When `paceWithRateLimit` is enabled and a successful response reports the quota 
 
 When the circuit breaker is enabled, it emits lifecycle events at state transitions, so dashboards can plot trip frequency, open duration, and recovery without scraping `CIRCUIT_OPEN_ERROR` codes:
 
-| Hook             | Fires                                                               | Payload                                                |
-| ---------------- | ------------------------------------------------------------------- | ------------------------------------------------------ |
-| `onCircuitOpen`  | When the breaker trips (consecutive failures reach the threshold)   | `{ requestId, url, method, attempt, host, failures }` |
-| `onCircuitClose` | When the breaker closes after a successful post-cooldown probe     | `{ requestId, url, method, attempt, host }`           |
+| Hook             | Fires                                                             | Payload                                               |
+| ---------------- | ----------------------------------------------------------------- | ----------------------------------------------------- |
+| `onCircuitOpen`  | When the breaker trips (consecutive failures reach the threshold) | `{ requestId, url, method, attempt, host, failures }` |
+| `onCircuitClose` | When the breaker closes after a successful post-cooldown probe    | `{ requestId, url, method, attempt, host }`           |
 
 ```typescript
 const aniLink = new AniLink("token", {
