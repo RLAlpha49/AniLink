@@ -82,6 +82,109 @@ const getRetryAfterDelay = (error: unknown): number | null => {
 };
 
 /**
+ * The un-clamped milliseconds a `Retry-After` header dictates, when the raw
+ * error carries one.
+ *
+ * Unlike {@link getRetryAfterDelay}, the delay is not capped at
+ * {@link MAX_RETRY_AFTER_MS}: the retry-budget window gate must compare the
+ * *true* server-dictated delay against the window's remaining time, so a
+ * `Retry-After: 120` against a window with 90s left surfaces immediately
+ * instead of retrying into a clamped 60-second hop that re-hits the 429 and
+ * spends another budget unit. The clamped value remains what the caller
+ * actually sleeps (see {@link getRetryDelay}).
+ *
+ * @param error - The raw thrown value, for `Retry-After` extraction.
+ * @returns The un-clamped delay in milliseconds, or `null` when the raw
+ * error carries no parseable `Retry-After` header.
+ */
+const getUnclampedRetryAfterDelay = (error: unknown): number | null => {
+    if (axios.isAxiosError(error)) {
+        const header = error.response?.headers?.["retry-after"];
+        if (typeof header === "string" || header === undefined) {
+            const seconds = Number(header);
+            if (header !== "" && Number.isFinite(seconds) && seconds >= 0) {
+                return seconds * 1000;
+            }
+            const date = Date.parse(header);
+            if (Number.isFinite(date)) {
+                return Math.max(0, date - Date.now());
+            }
+        }
+    }
+    return null;
+};
+
+/**
+ * Derives a server-dictated retry delay from an error's own rate-limit
+ * metadata.
+ *
+ * A GraphQL-envelope 429 arrives as an HTTP 200: axios resolves, the envelope
+ * unwrapper throws, and the raw thrown value is the normalized error itself —
+ * no Axios error exists to carry a `Retry-After` header. The envelope's
+ * `x-ratelimit-reset` header (threaded onto the error as `rateLimit.reset`)
+ * is the deadline `Retry-After` would have communicated, so the delay is
+ * computed from it instead: the epoch-second reset deadline converted to
+ * milliseconds, clamped to `[0, MAX_RETRY_AFTER_MS]` like
+ * {@link parseRetryAfter}.
+ *
+ * The same metadata is attached to HTTP-level 429s (parsed from the
+ * `x-ratelimit-*` response headers), so an HTTP 429 that carries the reset
+ * deadline but no `Retry-After` header waits for the window reset too,
+ * instead of retrying on short backoff against a window that may be
+ * minutes away.
+ *
+ * @param error - The normalized 429 carrying rate-limit metadata.
+ * @returns The delay until the rate-limit window resets, or `null` when the error carries no rate-limit metadata.
+ */
+const getRateLimitResetDelay = (error: AniLinkApiError): number | null => {
+    if (error.rateLimit === undefined) {
+        return null;
+    }
+    return Math.max(0, Math.min(error.rateLimit.reset * 1000 - Date.now(), MAX_RETRY_AFTER_MS));
+};
+
+/**
+ * The un-clamped milliseconds until an error's rate-limit window resets.
+ *
+ * Unlike {@link getRateLimitResetDelay}, the deadline is not capped at
+ * {@link MAX_RETRY_AFTER_MS}: the retry-budget window gate must compare the
+ * *true* reset deadline against the window's remaining time, so a reset
+ * that genuinely outlasts the window surfaces immediately instead of
+ * retrying into repeated clamped 60-second hops that each spend a budget
+ * unit.
+ *
+ * @param error - The normalized 429 carrying rate-limit metadata.
+ * @returns The un-clamped delay until the rate-limit window resets, or
+ * `null` when the error carries no rate-limit metadata.
+ */
+const getUnclampedRateLimitResetDelay = (error: AniLinkApiError): number | null => {
+    if (error.rateLimit === undefined) {
+        return null;
+    }
+    return Math.max(0, error.rateLimit.reset * 1000 - Date.now());
+};
+
+/**
+ * Computes the server-dictated delay for a 429, when one exists: the
+ * `Retry-After` header when the raw error carries one, otherwise the
+ * error's own `rateLimit.reset` metadata (present on both HTTP-level and
+ * GraphQL-envelope 429s).
+ *
+ * This is the single source of the server-dictated delay: both the
+ * retry-budget window gate in {@link computeNextRetryDelay} and the
+ * per-error-class matrix in {@link getRetryDelay} call it, so the gate can
+ * never disagree with the delay actually slept.
+ *
+ * @param error - The normalized 429.
+ * @param rawError - The raw thrown value, for `Retry-After` extraction.
+ * @returns The server-dictated delay in milliseconds, or `null` when the
+ * server dictated none (the candidate delay falls back to client-chosen
+ * backoff).
+ */
+const getServerDictatedDelay = (error: AniLinkApiError, rawError: unknown): number | null =>
+    getRetryAfterDelay(rawError) ?? getRateLimitResetDelay(error);
+
+/**
  * Computes the raw exponential backoff cap for an attempt.
  *
  * @param attempt - The zero-based index of the attempt that just failed.
@@ -114,8 +217,12 @@ export const applyJitter = (cap: number, policy: RetryPolicy): number =>
  *   `retryOnStatus` code extracted from the GraphQL error entry). A GraphQL
  *   error with no upstream status (envelope default 200) is not retried,
  *   because it represents a permanent query/validation failure, not a
- *   transient transport condition.
- * - `AniLinkApiError` (HTTP-level) retries on 429 (honoring `Retry-After`)
+ *   transient transport condition. A GraphQL 429's delay comes from the
+ *   error's own `rateLimit.reset` metadata (the envelope's
+ *   `x-ratelimit-reset` header): the raw thrown value is the error itself,
+ *   so no Axios error carries a `Retry-After` header to read.
+ * - `AniLinkApiError` (HTTP-level) retries on 429 (honoring `Retry-After`,
+ *   or the error's `rateLimit.reset` metadata when the header is absent)
  *   and on any `retryOnStatus` code.
  * - `AniLinkNetworkError` retries on network/timeout failures when
  *   `retryOnNetworkError` is set, but never on `ABORTED`.
@@ -134,7 +241,7 @@ export const getRetryDelay = (
     if (error instanceof AniLinkGraphQLError) {
         if (error.status === 429) {
             return (
-                getRetryAfterDelay(rawError) ??
+                getServerDictatedDelay(error, rawError) ??
                 applyJitter(getBackoffDelay(attempt, policy), policy)
             );
         }
@@ -149,7 +256,7 @@ export const getRetryDelay = (
     if (error instanceof AniLinkApiError) {
         if (error.status === 429) {
             return (
-                getRetryAfterDelay(rawError) ??
+                getServerDictatedDelay(error, rawError) ??
                 applyJitter(getBackoffDelay(attempt, policy), policy)
             );
         }
@@ -194,11 +301,29 @@ export interface RetryDelayInput {
 
 /**
  * Computes the delay before the next retry, or `null` when the request must
- * surface the failure instead. Three gates run before the per-error-class
+ * surface the failure instead. Four gates run before the per-error-class
  * matrix in {@link getRetryDelay}: a failed half-open probe surfaces
  * immediately (retrying would fast-fail against the still-open breaker), a
- * disabled policy never retries, and an exhausted retry budget surfaces the
- * failure without spending another retry.
+ * disabled policy never retries, an exhausted retry budget surfaces the
+ * failure without spending another retry, and a server-dictated delay (a
+ * `Retry-After` header, or the `rateLimit.reset` metadata carried by both
+ * HTTP-level and GraphQL-envelope 429s) longer than the budget window's
+ * remaining time surfaces the failure instead of sleeping past the window
+ * the budget was configured to bound.
+ *
+ * The window gate applies only to server-dictated delays — the only
+ * candidate delays that can park a caller for up to a full minute per
+ * retry. Client-chosen jittered backoff delays are never gated by the
+ * window: they are already bounded by the policy's `maxDelayMs` cap, so they
+ * cannot stretch one window's retry spend across many minutes of
+ * wall-clock waits. The gate compares the *un-clamped* server-dictated
+ * deadline (see {@link getUnclampedRetryAfterDelay} and
+ * {@link getUnclampedRateLimitResetDelay}): a delay that genuinely outlasts
+ * the window surfaces immediately, instead of retrying into repeated
+ * clamped 60-second hops that each spend a budget unit. Like the count gate,
+ * the window gate requires both halves of the budget (the live state and
+ * the configuration) and spends no budget unit when it surfaces the
+ * failure.
  *
  * @param input - The decision inputs; see {@link RetryDelayInput}.
  * @returns The delay in milliseconds, or `null` to stop retrying.
@@ -215,6 +340,36 @@ export const computeNextRetryDelay = (input: RetryDelayInput): number | null => 
     ) {
         // Budget exhausted: surface the failure without retrying.
         return null;
+    }
+    if (
+        budgetState !== undefined &&
+        budget !== undefined &&
+        normalized instanceof AniLinkApiError &&
+        normalized.status === 429
+    ) {
+        // A 429 is the only error class whose candidate delay comes from the
+        // server — via the `Retry-After` header, or via the `rateLimit.reset`
+        // metadata carried by both HTTP-level and GraphQL-envelope 429s — so
+        // it is the only delay that can be checked against the window before
+        // the matrix runs. When the server-dictated delay would still be
+        // sleeping after the window ends, it has outlasted the retry spend
+        // the budget was configured to bound: surface instead of parking
+        // the caller past the window.
+        //
+        // The comparison uses the un-clamped server-dictated deadline: the
+        // clamped delay (capped at MAX_RETRY_AFTER_MS) is what the caller
+        // actually sleeps, but a delay that genuinely outlasts the window
+        // must surface now — otherwise each clamped 60-second hop spends a
+        // budget unit and re-hits the 429, stretching one window's spend
+        // across many minutes of wall-clock waits.
+        const serverDictatedDelay =
+            getUnclampedRetryAfterDelay(rawError) ?? getUnclampedRateLimitResetDelay(normalized);
+        if (
+            serverDictatedDelay !== null &&
+            serverDictatedDelay > budgetState.windowEndsAt - Date.now()
+        ) {
+            return null;
+        }
     }
     return getRetryDelay(normalized, rawError, attempt, policy);
 };

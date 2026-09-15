@@ -36,14 +36,27 @@ export const MAX_FREE_SOCKETS = 5;
 export const MAX_SOCKETS = 20;
 
 /**
- * Per-window cap on retries across requests sharing the same transport
- * settings object.
+ * Per-window cap on the total retry spend across every request dispatched
+ * through operations sharing one state owner — per client as wired by the
+ * provider facades, so the cap spans all of a client's operations, not
+ * just one. The host-level keying inside the state maps keeps providers
+ * isolated from each other.
  *
  * The per-request `maxRetries` bounds retries for one call, but a workload
  * issuing thousands of requests during a sustained upstream outage would
  * still multiply API call volume by up to `maxRetries + 1` indefinitely.
  * This budget bounds the *total* retry spend per rolling window; when it is
  * exhausted, failures surface without retries until the window elapses.
+ * Server-dictated delays — a `Retry-After` header, or the `rateLimit.reset`
+ * metadata carried by both HTTP-level and GraphQL-envelope 429s — longer
+ * than the window's remaining time also surface immediately: without that
+ * gate, a provider returning `Retry-After: 60` on every 429 could spend
+ * each budget unit on a full minute of wall-clock wait and stretch one
+ * window's retry spend across many minutes, so the budget bounds the retry
+ * spend in time, not just the retry count. The gate compares the true
+ * (un-clamped) reset deadline, so a rate-limit window that genuinely
+ * outlasts the budget window surfaces on the first 429 instead of hopping
+ * through repeated clamped 60-second waits.
  *
  * @see {@link RequestOptions.retryBudget}
  */

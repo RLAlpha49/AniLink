@@ -511,6 +511,43 @@ describe("Retry-After handling", () => {
         expect(mocks.request).toHaveBeenCalledTimes(2);
         expect((onRetry.mock.calls[0]?.[1] as { nextDelayMs: number }).nextDelayMs).toBe(2_000);
     });
+
+    test("waits the rate-limit reset deadline on a GraphQL-envelope 429 instead of backoff", async () => {
+        // A GraphQL-level 429 arrives as HTTP 200, so no Axios error carries a
+        // Retry-After header; the server-dictated delay comes from the
+        // envelope's x-ratelimit-reset header via the error's rateLimit.
+        const resetAt = Math.ceil(startedAt / 1000) + 2;
+        mocks.request
+            .mockResolvedValueOnce({
+                data: { errors: [{ message: "rate limited", status: 429 }] },
+                headers: {
+                    "x-ratelimit-limit": "90",
+                    "x-ratelimit-remaining": "0",
+                    "x-ratelimit-reset": String(resetAt),
+                },
+            })
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        const onRetry = vi.fn();
+
+        configureRequestOptions({
+            retry: { maxRetries: 3, baseDelayMs: 250, maxDelayMs: 5_000 },
+            onRetry,
+        });
+
+        const promise = callSendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+        promise.catch(() => {});
+
+        const expectedDelay = resetAt * 1000 - startedAt;
+        await vi.advanceTimersByTimeAsync(expectedDelay - 1);
+        expect(mocks.request).toHaveBeenCalledTimes(1); // still waiting for the reset
+
+        await vi.advanceTimersByTimeAsync(1);
+        await expect(promise).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+        expect((onRetry.mock.calls[0]?.[1] as { nextDelayMs: number }).nextDelayMs).toBe(
+            expectedDelay
+        );
+    });
 });
 
 describe("requestId correlation", () => {
@@ -1539,5 +1576,356 @@ describe("computeNextRetryDelay", () => {
                 wasProbe: false,
             })
         ).toBe(1);
+    });
+
+    test("returns null when a Retry-After delay exceeds the remaining budget window", () => {
+        // A 60s server-dictated delay cannot fit inside a window with 30s
+        // left: surfacing beats parking the caller past the window the
+        // budget was configured to bound.
+        expect(
+            computeNextRetryDelay({
+                normalized: new AniLinkApiError(429, {}),
+                rawError: apiError(429, { "retry-after": "60" }),
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 30_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBeNull();
+    });
+
+    test("returns a Retry-After delay that fits inside the remaining budget window", () => {
+        expect(
+            computeNextRetryDelay({
+                normalized: new AniLinkApiError(429, {}),
+                rawError: apiError(429, { "retry-after": "30" }),
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 60_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBe(30_000);
+    });
+
+    test("returns null when an unclamped Retry-After outlasts the remaining budget window", () => {
+        // `Retry-After: 120` clamps to 60s for the sleep the caller would
+        // actually take, but the true server-dictated 120s delay outlasts a
+        // window with 90s left: surface instead of burning a budget unit
+        // on each clamped 60-second hop back into the 429.
+        expect(
+            computeNextRetryDelay({
+                normalized: new AniLinkApiError(429, {}),
+                rawError: apiError(429, { "retry-after": "120" }),
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 90_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBeNull();
+    });
+
+    test("returns the clamped Retry-After sleep when the unclamped delay fits inside the window", () => {
+        // `Retry-After: 120` against a window with 130s left: the true delay
+        // fits, so the retry proceeds — sleeping the clamped 60s maximum,
+        // not the full 120s.
+        expect(
+            computeNextRetryDelay({
+                normalized: new AniLinkApiError(429, {}),
+                rawError: apiError(429, { "retry-after": "120" }),
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 130_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBe(60_000);
+    });
+
+    test("returns null when the budget window has already elapsed", () => {
+        // Remaining time is negative, so any positive server-dictated delay
+        // outlasts the window: surface instead of sleeping past it.
+        expect(
+            computeNextRetryDelay({
+                normalized: new AniLinkApiError(429, {}),
+                rawError: apiError(429, { "retry-after": "1" }),
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() - 1_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBeNull();
+    });
+
+    test("does not gate backoff-derived delays by the remaining window", () => {
+        // A 500 falls back to jittered backoff (no Retry-After involved), so
+        // a delay longer than the remaining window is still returned: the
+        // window gate bounds only server-dictated waits.
+        const longBackoffPolicy = {
+            maxRetries: 3,
+            baseDelayMs: 120_000,
+            maxDelayMs: 120_000,
+            retryOnStatus: [429, 500, 502, 503, 504],
+            retryOnNetworkError: true,
+            jitter: false,
+        };
+        expect(
+            computeNextRetryDelay({
+                normalized: failure,
+                rawError: failure,
+                attempt: 0,
+                policy: longBackoffPolicy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 30_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBe(120_000);
+    });
+
+    test("does not gate a 429 without a Retry-After header by the remaining window", () => {
+        // Without the header the candidate delay is client-chosen backoff,
+        // which the policy's maxDelayMs already bounds.
+        const longBackoffPolicy = {
+            maxRetries: 3,
+            baseDelayMs: 120_000,
+            maxDelayMs: 120_000,
+            retryOnStatus: [429, 500, 502, 503, 504],
+            retryOnNetworkError: true,
+            jitter: false,
+        };
+        expect(
+            computeNextRetryDelay({
+                normalized: new AniLinkApiError(429, {}),
+                rawError: apiError(429),
+                attempt: 0,
+                policy: longBackoffPolicy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 30_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBe(120_000);
+    });
+
+    test("passes a Retry-After delay through unchanged when no budget is configured", () => {
+        expect(
+            computeNextRetryDelay({
+                normalized: new AniLinkApiError(429, {}),
+                rawError: apiError(429, { "retry-after": "60" }),
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBe(60_000);
+    });
+
+    test("derives a GraphQL-envelope 429 delay from the error's rateLimit reset metadata", () => {
+        // A GraphQL-envelope 429 arrives as HTTP 200: the raw thrown value is
+        // the AniLinkGraphQLError itself, so no Axios error carries a
+        // Retry-After header. The server-dictated delay must come from the
+        // error's own rateLimit metadata instead.
+        const resetAt = Math.floor(Date.now() / 1000) + 2;
+        const error = new AniLinkGraphQLError(
+            [{ message: "rate limited", status: 429 }],
+            undefined,
+            undefined,
+            { rateLimit: { limit: 90, remaining: 0, reset: resetAt } }
+        );
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: error,
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBe(resetAt * 1000 - Date.now());
+    });
+
+    test("clamps a GraphQL-envelope 429 rateLimit reset to the 60 second maximum", () => {
+        const error = new AniLinkGraphQLError(
+            [{ message: "rate limited", status: 429 }],
+            undefined,
+            undefined,
+            { rateLimit: { limit: 90, remaining: 0, reset: Math.floor(Date.now() / 1000) + 120 } }
+        );
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: error,
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBe(60_000);
+    });
+
+    test("treats a past rateLimit reset on a GraphQL-envelope 429 as a zero delay", () => {
+        const error = new AniLinkGraphQLError(
+            [{ message: "rate limited", status: 429 }],
+            undefined,
+            undefined,
+            { rateLimit: { limit: 90, remaining: 0, reset: Math.floor(Date.now() / 1000) - 5 } }
+        );
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: error,
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBe(0);
+    });
+
+    test("falls back to backoff for a GraphQL-envelope 429 without rateLimit metadata", () => {
+        const error = new AniLinkGraphQLError([{ message: "rate limited", status: 429 }]);
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: error,
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBe(1);
+    });
+
+    test("returns null when a GraphQL-envelope 429 rateLimit reset outlasts the budget window", () => {
+        // The reset deadline is 120s out (clamped to the 60s maximum), which
+        // cannot fit inside a window with 30s left: surfacing beats parking
+        // the caller past the window the budget was configured to bound.
+        const error = new AniLinkGraphQLError(
+            [{ message: "rate limited", status: 429 }],
+            undefined,
+            undefined,
+            { rateLimit: { limit: 90, remaining: 0, reset: Math.floor(Date.now() / 1000) + 120 } }
+        );
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: error,
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 30_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBeNull();
+    });
+
+    test("returns a rateLimit-derived GraphQL 429 delay that fits inside the budget window", () => {
+        const resetAt = Math.floor(Date.now() / 1000) + 30;
+        const error = new AniLinkGraphQLError(
+            [{ message: "rate limited", status: 429 }],
+            undefined,
+            undefined,
+            { rateLimit: { limit: 90, remaining: 0, reset: resetAt } }
+        );
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: error,
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 60_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBe(resetAt * 1000 - Date.now());
+    });
+
+    test("derives an HTTP-level 429 delay from the error's rateLimit reset metadata", () => {
+        // An HTTP 429 that carries x-ratelimit-reset but no Retry-After must
+        // wait for the window reset instead of retrying on short backoff
+        // against a window that may be minutes away.
+        const resetAt = Math.floor(Date.now() / 1000) + 2;
+        const error = new AniLinkApiError(429, undefined, undefined, {
+            rateLimit: { limit: 90, remaining: 0, reset: resetAt },
+        });
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: error,
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBe(resetAt * 1000 - Date.now());
+    });
+
+    test("prefers Retry-After over rateLimit reset metadata on an HTTP-level 429", () => {
+        const resetAt = Math.floor(Date.now() / 1000) + 30;
+        const error = new AniLinkApiError(429, undefined, undefined, {
+            rateLimit: { limit: 90, remaining: 0, reset: resetAt },
+        });
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: apiError(429, { "retry-after": "2" }),
+                attempt: 0,
+                policy,
+                budgetState: undefined,
+                budget: undefined,
+                wasProbe: false,
+            })
+        ).toBe(2_000);
+    });
+
+    test("returns null when an HTTP-level 429 rateLimit reset outlasts the budget window", () => {
+        // The window gate must consult the rateLimit-derived delay for
+        // HTTP-level 429s too, not only GraphQL-envelope ones.
+        const error = new AniLinkApiError(429, undefined, undefined, {
+            rateLimit: { limit: 90, remaining: 0, reset: Math.floor(Date.now() / 1000) + 120 },
+        });
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: error,
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 30_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBeNull();
+    });
+
+    test("surfaces immediately when the unclamped rateLimit reset outlasts the window even though the clamped delay fits", () => {
+        // A reset 120s out clamps to the 60s maximum for the actual wait, but
+        // the window gate must compare the true reset deadline: a window
+        // with 90s left would otherwise accept the clamped 60s wait, retry
+        // into another 429, and burn budget units on repeated 60s hops.
+        const error = new AniLinkGraphQLError(
+            [{ message: "rate limited", status: 429 }],
+            undefined,
+            undefined,
+            { rateLimit: { limit: 90, remaining: 0, reset: Math.floor(Date.now() / 1000) + 120 } }
+        );
+        expect(
+            computeNextRetryDelay({
+                normalized: error,
+                rawError: error,
+                attempt: 0,
+                policy,
+                budgetState: { retriesUsed: 0, windowEndsAt: Date.now() + 90_000 },
+                budget,
+                wasProbe: false,
+            })
+        ).toBeNull();
     });
 });

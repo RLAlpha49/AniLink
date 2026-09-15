@@ -300,6 +300,52 @@ describe("Per-window retry budget", () => {
         await expect(promise).rejects.toBeInstanceOf(AniLinkApiError);
         expect(mocks.request).toHaveBeenCalledTimes(3);
     });
+
+    test("surfaces immediately when a Retry-After delay outlasts the budget window", async () => {
+        // A 60s server-dictated delay cannot fit inside a 30s window: the
+        // failure surfaces on the first attempt instead of parking the
+        // caller past the window the budget was configured to bound.
+        mocks.request.mockRejectedValue(apiError(429, { "retry-after": "60" }));
+
+        pendingOptions = {
+            retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 },
+            retryBudget: { maxRetriesPerWindow: 2, windowMs: 30_000 },
+        };
+
+        const promise = callSendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+        promise.catch(() => {});
+        await vi.advanceTimersByTimeAsync(100);
+        await expect(promise).rejects.toBeInstanceOf(AniLinkApiError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        // Surfacing spent no budget unit: a later failure in the same window
+        // still earns its retries.
+        mocks.request
+            .mockRejectedValueOnce(apiError(500))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        const second = callSendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+        second.catch(() => {});
+        await vi.advanceTimersByTimeAsync(100);
+        await expect(second).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+    });
+
+    test("still retries a 429 whose Retry-After fits inside the budget window", async () => {
+        mocks.request
+            .mockRejectedValueOnce(apiError(429, { "retry-after": "1" }))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+
+        pendingOptions = {
+            retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 },
+            retryBudget: { maxRetriesPerWindow: 2, windowMs: 120_000 },
+        };
+
+        const promise = callSendRequest("https://graphql.anilist.co", "POST", { query: "query" });
+        promise.catch(() => {});
+        await vi.advanceTimersByTimeAsync(1_100);
+        await expect(promise).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
 });
 
 describe("Interaction: circuit breaker still fast-fails after opening", () => {

@@ -12,14 +12,14 @@ AniLink's shared transport layer carries three resilience mechanisms. All are co
 
 Transient failures retry themselves — no code from you. The default policy:
 
-| Knob | Default | Meaning |
-| --- | --- | --- |
-| `maxRetries` | `3` | Retries after the initial attempt |
-| `baseDelayMs` | `250` | First backoff delay |
-| `maxDelayMs` | `5000` | Backoff cap |
-| `retryOnStatus` | `[429, 500, 502, 503, 504]` | HTTP statuses that trigger a retry |
-| `retryOnNetworkError` | `true` | Network and timeout failures retry |
-| `jitter` | `true` | Randomize each wait within `[0, computed delay]` |
+| Knob                  | Default                     | Meaning                                          |
+| --------------------- | --------------------------- | ------------------------------------------------ |
+| `maxRetries`          | `3`                         | Retries after the initial attempt                |
+| `baseDelayMs`         | `250`                       | First backoff delay                              |
+| `maxDelayMs`          | `5000`                      | Backoff cap                                      |
+| `retryOnStatus`       | `[429, 500, 502, 503, 504]` | HTTP statuses that trigger a retry               |
+| `retryOnNetworkError` | `true`                      | Network and timeout failures retry               |
+| `jitter`              | `true`                      | Randomize each wait within `[0, computed delay]` |
 
 Backoff uses **full jitter**: every wait is a random value between `0` and the computed exponential cap, so a herd of concurrent clients never synchronizes its retries into a stampede. Server-dictated `Retry-After` waits are never jittered.
 
@@ -64,11 +64,11 @@ const budgeted = new AniLink("token", {
 });
 ```
 
-The budget complements the other two mechanisms: the retry policy bounds one request's retries, the circuit breaker fast-fails after consecutive failures, and the budget caps the aggregate retry spend — which handles chronic intermittent failures even when the breaker never trips. When the budget for the current window is exhausted, failures surface without retries until the window elapses; the window then resets and retries resume.
+The budget complements the other two mechanisms: the retry policy bounds one request's retries, the circuit breaker fast-fails after consecutive failures, and the budget caps the aggregate retry spend — which handles chronic intermittent failures even when the breaker never trips. When the budget for the current window is exhausted, failures surface without retries until the window elapses; the window then resets and retries resume. Server-dictated delays — a `Retry-After` header, or the rate-limit reset metadata carried by 429 responses — that would still be sleeping when the window ends also surface immediately, so one window's retry spend cannot be stretched across many minutes of wall-clock waits.
 
 The window is **fixed, not sliding**: it is anchored to the first failure after the previous window elapsed and resets completely when `windowMs` passes. A burst of failures at adjacent window edges can therefore spend up to `2 × maxRetriesPerWindow` retries within one `windowMs` of wall-clock time — size `maxRetriesPerWindow` for that worst-case edge burst if you need a strict bound.
 
-Like the breaker, the budget's state is keyed per operation instance, so the cap applies across every request that operation dispatches — not per call. Budget state is in-memory only and resets on restart; see [Observability](/observability) for the `stateOwner` diagnostic that fires when cross-request state would be keyed by a per-request options object.
+Like the breaker, the budget's state is shared across every operation of one client (per provider client, keyed per upstream host), so the cap applies client-wide — not per operation, and not per call. Budget state is in-memory only and resets on restart; see [Observability](/observability) for the `stateOwner` diagnostic that fires when cross-request state would be keyed by a per-request options object.
 
 ## Rate-limit pacing
 
@@ -88,7 +88,7 @@ const unpaced = new AniLink("token", { paceWithRateLimit: false });
 
 <Callout kind="warning">
 
-**Bulk traversals:** a single low-quota response pauses *every* subsequent request to that host until the window resets — up to 5 minutes per wait. For bulk jobs (`paginate`/`paginateChunks` with default concurrency 3), this serializes throughput. Prefer `paceWithRateLimit: false` plus an explicit retry policy for bulk work, and keep pacing on for latency-sensitive user-facing calls.
+**Bulk traversals:** a single low-quota response pauses _every_ subsequent request to that host until the window resets — up to 5 minutes per wait. For bulk jobs (`paginate`/`paginateChunks` with default concurrency 3), this serializes throughput. Prefer `paceWithRateLimit: false` plus an explicit retry policy for bulk work, and keep pacing on for latency-sensitive user-facing calls.
 
 </Callout>
 
