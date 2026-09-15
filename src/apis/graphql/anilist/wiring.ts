@@ -11,13 +11,16 @@
  *
  * Operations are constructed lazily: each facade property is a getter that
  * instantiates and binds its operation class on first access, then caches the
- * bound method so the same instance — and its per-instance `stateOwner`
- * (circuit breaker / retry budget state) — is reused on every subsequent
- * call. A consumer that only touches `query.media` never pays the
- * construction cost for the other registered operations. Mis-wired entries
- * (a registry key whose operation class lacks the declared method) still
- * fail fast at build time via a cheap prototype check, before any instance is
- * allocated.
+ * bound method so the same instance is reused on every subsequent call. All
+ * operations of one client share a single per-client `stateOwner` (circuit
+ * breaker / retry budget / pacing state), so failure streaks, retry budgets,
+ * and rate-limit deadlines accumulate across the whole client — a deadline
+ * recorded by `query.media` gates `query.user` too — while staying scoped
+ * per upstream host inside the state maps. A consumer that only touches
+ * `query.media` never pays the construction cost for the other registered
+ * operations. Mis-wired entries (a registry key whose operation class lacks
+ * the declared method) still fail fast at build time via a cheap prototype
+ * check, before any instance is allocated.
  */
 import { CustomRequest } from "./CustomRequest";
 import { fuzzyDate } from "./helpers/fuzzyDate";
@@ -36,8 +39,8 @@ import { ANILIST_OPERATION_REGISTRY, type OperationCategory } from "./registry";
  * This is a cheap structural check (no instantiation) run eagerly at build
  * time so a mis-wired registry entry fails fast with the exact method the
  * registry declared, rather than deferring the error to first property
- * access. The per-instance `stateOwner` and auth/options are not allocated
- * here — only the prototype is inspected.
+ * access. The shared per-client `stateOwner` and auth/options are not
+ * allocated here — only the prototype is inspected.
  *
  * @param category - The registry group to validate.
  */
@@ -59,21 +62,25 @@ function validateCategoryMethods(category: OperationCategory): void {
  *
  * Each registered key becomes an enumerable getter on the returned object.
  * The first access of a key constructs the operation instance against the
- * shared auth material and transport options, binds the declared method, and
- * caches the bound function in a closure variable; every subsequent access
- * returns the same bound function — and therefore the same instance, so the
- * per-instance `stateOwner` (circuit breaker / retry budget state) stays
- * stable for the lifetime of the facade.
+ * shared auth material, transport options, and shared per-client
+ * `stateOwner`, binds the declared method, and caches the bound function in
+ * a closure variable; every subsequent access returns the same bound
+ * function — and therefore the same instance. The resilience state itself
+ * (circuit breaker / retry budget / pacing deadlines) lives in the shared
+ * per-client owner, so it spans every operation of the client, not just this
+ * one.
  *
  * @param category - The registry group to wire.
  * @param authToken - The authentication material shared by every operation instance.
  * @param options - Timeout, cancellation, and debugging settings for API requests.
+ * @param stateOwner - The shared per-client owner of cross-request transport state (circuit breaker, retry budget, pacing deadlines), passed to every constructed operation so resilience state spans the whole client.
  * @returns A plain object whose keys are the registry entries' facade names.
  */
 function buildLazyGroup(
     category: OperationCategory,
     authToken: RequestAuthInput | undefined,
-    options: RequestOptions | undefined
+    options: RequestOptions | undefined,
+    stateOwner: object
 ): Record<string, unknown> {
     const entries = ANILIST_OPERATION_REGISTRY[category];
     const descriptors: PropertyDescriptorMap = {};
@@ -86,7 +93,8 @@ function buildLazyGroup(
                 if (bound === undefined) {
                     const instance = new entry.operationClass(
                         authToken,
-                        options
+                        options,
+                        stateOwner
                     ) as unknown as Record<string, unknown>;
                     const method = instance[entry.methodName];
                     if (typeof method !== "function") {
@@ -108,7 +116,11 @@ function buildLazyGroup(
  *
  * Operations are constructed lazily on first property access (see
  * {@link buildLazyGroup}); only the registry is validated eagerly. The
- * `custom` escape hatch is likewise constructed on first access.
+ * `custom` escape hatch is likewise constructed on first access. Every
+ * operation — including `custom` — is constructed with one shared per-client
+ * `stateOwner`, so circuit-breaker streaks, retry budgets, and rate-limit
+ * pacing deadlines span every operation of the returned client (still keyed
+ * per upstream host inside the state maps).
  *
  * @param authToken - The authentication material shared by every operation instance. A plain string is treated as a bearer token; a structured {@link RequestAuthInput} carries explicit headers for schemes such as Basic auth or a provider API key.
  * @param options - Timeout, cancellation, and debugging settings for API requests.
@@ -122,9 +134,15 @@ export function buildAniListWiring(
         validateCategoryMethods(category);
     }
 
-    const queryFacade = buildLazyGroup("query", authToken, options);
-    const pageFacade = buildLazyGroup("page", authToken, options);
-    const mutationFacade = buildLazyGroup("mutation", authToken, options);
+    // One shared owner for the whole client: every operation constructed
+    // below keys its cross-request transport state (breaker, budget, pacing)
+    // through this object, so resilience spans operations instead of being
+    // siloed per operation instance.
+    const sharedStateOwner: object = {};
+
+    const queryFacade = buildLazyGroup("query", authToken, options, sharedStateOwner);
+    const pageFacade = buildLazyGroup("page", authToken, options, sharedStateOwner);
+    const mutationFacade = buildLazyGroup("mutation", authToken, options, sharedStateOwner);
 
     // The nested `page` namespace lives on the query facade as a plain
     // enumerable value (its own lazy-getter object), so `Object.keys` on
@@ -155,7 +173,11 @@ export function buildAniListWiring(
                 configurable: false,
                 get() {
                     if (customBound === undefined) {
-                        const customInstance = new CustomRequest(authToken, options);
+                        const customInstance = new CustomRequest(
+                            authToken,
+                            options,
+                            sharedStateOwner
+                        );
                         customBound = customInstance.custom.bind(customInstance) as (
                             ...args: never[]
                         ) => unknown;

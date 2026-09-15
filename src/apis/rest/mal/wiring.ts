@@ -33,9 +33,14 @@ const isNonBlank = (value: string | undefined): value is string =>
  */
 export function buildMyAnimeListApi(credentials?: MalCredentials): MyAnimeListApi {
     const { auth, options } = resolveMalCredentials(credentials);
-    const anime = new MalAnimeOperation(auth, options);
-    const manga = new MalMangaOperation(auth, options);
-    const user = new MalUserOperation(auth, options);
+    // The three operations share one resilience state owner so the circuit
+    // breaker, retry budget, and rate-limit pacing span the whole client: a
+    // failure streak on `anime.get` advances the same breaker that gates
+    // `user.me` (still scoped per upstream host inside the state maps).
+    const sharedStateOwner: object = {};
+    const anime = new MalAnimeOperation(auth, options, sharedStateOwner);
+    const manga = new MalMangaOperation(auth, options, sharedStateOwner);
+    const user = new MalUserOperation(auth, options, sharedStateOwner);
 
     // The automatic refresh lifecycle is opt-in: it activates only when both
     // the refresh token and client ID are configured (non-blank — a

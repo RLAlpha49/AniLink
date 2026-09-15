@@ -14,6 +14,7 @@
  * for page queries); the facade generator parses them from the class, so
  * this registry carries no duplicate of them.
  */
+import type { RequestAuthInput, RequestOptions } from "../../../base/transportTypes";
 import { ActivityQuery } from "./query/Activity";
 import { ActivityReplyQuery } from "./query/ActivityReply";
 import { ActivityRepliesQuery } from "./query/page/ActivityReplies";
@@ -97,6 +98,23 @@ import { SaveMediaListEntryMutation } from "./mutation/SaveMediaListEntry";
 export type OperationCategory = "query" | "page" | "mutation";
 
 /**
+ * The constructor contract every registered operation class must satisfy:
+ * the shared `BaseOperation` constructor shape the wiring invokes with
+ * `(authToken, options, stateOwner)`.
+ *
+ * Constraining the registry to this shape (instead of an opaque
+ * `new (...args: never[]) => unknown`) makes the compiler enforce the
+ * contract at registry-definition time: an operation class whose own
+ * constructor drops the third parameter fails typecheck here instead of
+ * silently losing the shared per-client resilience state at runtime.
+ */
+export type OperationConstructor = new (
+    authToken?: RequestAuthInput,
+    options?: RequestOptions,
+    stateOwner?: object
+) => unknown;
+
+/**
  * One declarative wiring entry.
  *
  * The bound method name is always present on the entry: {@link op} copies the
@@ -105,11 +123,12 @@ export type OperationCategory = "query" | "page" | "mutation";
  * back to a stringly-typed `name` default — it reads the resolved
  * {@link OperationEntry.methodName} constant directly.
  *
- * @typeParam TOperation - The operation class implementing this entry.
+ * @typeParam TOperation - The operation class implementing this entry; must
+ * satisfy the shared {@link OperationConstructor} contract.
  * @typeParam TName - The literal facade key this entry is exposed under.
  */
 export interface OperationEntry<
-    TOperation extends new (...args: never[]) => unknown,
+    TOperation extends OperationConstructor,
     TName extends string = string,
 > {
     /**
@@ -141,7 +160,7 @@ export interface OperationEntry<
  * @param operationClass - The operation class implementing this entry.
  * @returns The registry entry with `methodName` defaulted to `name`.
  */
-function op<TName extends string, TOperation extends new (...args: never[]) => unknown>(
+function op<TName extends string, TOperation extends OperationConstructor>(
     name: TName,
     operationClass: TOperation
 ): OperationEntry<TOperation, TName> {
@@ -157,7 +176,7 @@ function op<TName extends string, TOperation extends new (...args: never[]) => u
  * @param methodName - The async method on `operationClass` to bind.
  * @returns The registry entry.
  */
-function opAs<TName extends string, TOperation extends new (...args: never[]) => unknown>(
+function opAs<TName extends string, TOperation extends OperationConstructor>(
     name: TName,
     operationClass: TOperation,
     methodName: string
@@ -170,9 +189,9 @@ function opAs<TName extends string, TOperation extends new (...args: never[]) =>
  * operation entries.
  */
 type RegistryGroups = {
-    query: readonly OperationEntry<new (...args: never[]) => unknown, string>[];
-    page: readonly OperationEntry<new (...args: never[]) => unknown, string>[];
-    mutation: readonly OperationEntry<new (...args: never[]) => unknown, string>[];
+    query: readonly OperationEntry<OperationConstructor, string>[];
+    page: readonly OperationEntry<OperationConstructor, string>[];
+    mutation: readonly OperationEntry<OperationConstructor, string>[];
 };
 
 /**

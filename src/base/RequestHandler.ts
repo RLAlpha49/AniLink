@@ -238,11 +238,14 @@ export interface SendRequestOptions {
     contentType?: string;
     /**
      * Stable per-client object used to key cross-request transport state (the
-     * circuit breaker and retry budget). Operation dispatch passes the
-     * operation instance; direct callers that reuse one transport-settings
-     * object can omit this, in which case the `circuitBreaker`/
-     * `retryBudget` configuration object itself keys the state. Passing a
-     * fresh object per request prevents breaker state from ever accumulating.
+     * circuit breaker, retry budget, and rate-limit pacing deadlines).
+     * Operation dispatch passes a per-client shared state owner threaded
+     * through the provider wiring, so breaker, budget, and pacing state span
+     * every operation of one client; direct callers that reuse one
+     * transport-settings object can omit this, in which case the
+     * `circuitBreaker`/`retryBudget` configuration object itself keys the
+     * state. Passing a fresh object per request prevents breaker state from
+     * ever accumulating.
      */
     stateOwner?: object;
 }

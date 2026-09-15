@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import {
     ANILIST_OPERATION_REGISTRY,
     type OperationCategory,
+    type OperationConstructor,
 } from "../src/apis/graphql/anilist/registry";
 import { buildAniListWiring } from "../src/apis/graphql/anilist/wiring";
 import type { AniListApi } from "../src/apis/graphql/anilist/facade";
@@ -80,6 +81,23 @@ describe("ANILIST_OPERATION_REGISTRY", () => {
         // recommendations) are wired with opAs() passing a methodName equal to
         // the key, so methodName === name and they do not "need" a rename.
         expect([...renamed].sort()).toEqual(["query.page.following"]);
+    });
+
+    test("every operation class satisfies the shared constructor contract", () => {
+        // The wiring constructs every registered class with
+        // (authToken, options, stateOwner). This assignment only compiles
+        // when the registry's constructor constraint matches that shape;
+        // a class with an incompatible constructor (for example a two-arg
+        // one that would silently drop the shared state owner) fails
+        // typecheck here instead of silently losing client-wide
+        // resilience state at runtime.
+        const constructors: OperationConstructor[] = [];
+        for (const category of ["query", "page", "mutation"] as const) {
+            for (const entry of ANILIST_OPERATION_REGISTRY[category]) {
+                constructors.push(entry.operationClass);
+            }
+        }
+        expect(constructors.length).toBe(72);
     });
 });
 

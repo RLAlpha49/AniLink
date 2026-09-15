@@ -23,9 +23,10 @@ import { stampRequestId } from "./errors";
 
 /**
  * Shared circuit-breaker state, keyed first by a stable per-client owner —
- * the {@link SendRequestOptions.stateOwner} object when supplied (for
- * example the operation instance a request dispatches through) and otherwise
- * the `circuitBreaker` configuration object itself, which stays identical
+ * the {@link SendRequestOptions.stateOwner} object when supplied (the
+ * per-client shared owner threaded through the provider wiring, so streaks
+ * accumulate across every operation of one client) and otherwise the
+ * `circuitBreaker` configuration object itself, which stays identical
  * across requests when the caller reuses one transport-settings object (the
  * instance-level pattern) — and then by the upstream host (so one provider's
  * outage cannot fast-fail another provider's requests on a multi-API client).

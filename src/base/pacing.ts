@@ -19,12 +19,14 @@ import { sleep } from "./sleep";
 
 /**
  * Shared rate-limit pacing deadlines, keyed like {@link circuitStates} by a
- * stable per-client owner and then by upstream host. When a successful
- * response reports the remaining quota below {@link ResolvedRequestOptions.rateLimitFloor},
- * the reset deadline is recorded here so independently dispatched requests
- * to the same host wait for the window to reset *before* they are sent
- * rather than only pacing the response that observed the low quota. This
- * gates concurrent/sequential requests that do not share one
+ * stable per-client owner (the shared object threaded through the provider
+ * wiring, so deadlines gate every operation of one client) and then by
+ * upstream host. When a successful response reports the remaining quota
+ * below {@link ResolvedRequestOptions.rateLimitFloor}, the reset deadline is
+ * recorded here so independently dispatched requests to the same host wait
+ * for the window to reset *before* they are sent rather than only pacing
+ * the response that observed the low quota. This gates
+ * concurrent/sequential requests that do not share one
  * {@link executeWithRetry} call, which the post-response pacing wait alone
  * cannot reach.
  */

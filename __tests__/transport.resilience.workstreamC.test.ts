@@ -3,12 +3,15 @@ import http from "node:http";
 import https from "node:https";
 import {
     AniLinkApiError,
+    AniLinkErrorCodes,
     AniLinkGraphQLError,
     AniLinkNetworkError,
     AniLinkRestError,
 } from "../src/base/AniLinkError";
 import { type RequestOptions, sendRequest } from "../src/base/RequestHandler";
 import { defaultHttpAgent, defaultHttpsAgent } from "../src/base/agents";
+import { buildAniListWiring } from "../src/apis/graphql/anilist/wiring";
+import { buildMyAnimeListApi } from "../src/apis/rest/mal/wiring";
 import { getAxiosStub, makeAxiosResponseError as apiError } from "./helpers/axiosStub";
 
 vi.mock("axios", async () => {
@@ -319,5 +322,130 @@ describe("Interaction: circuit breaker still fast-fails after opening", () => {
         await expect(second).rejects.toBeInstanceOf(AniLinkNetworkError);
         await expect(second).rejects.toMatchObject({ code: "CIRCUIT_OPEN_ERROR" });
         expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("Shared per-client state owner threaded through the provider wirings", () => {
+    test("a breaker tripped through one AniList operation fast-fails a different operation", async () => {
+        // The wiring-level regression for the shared state owner: the client
+        // is built exactly as production builds it, so the breaker state must
+        // span operations — a streak recorded by `query.media` gates
+        // `query.user` without a second HTTP attempt.
+        const client = buildAniListWiring(undefined, {
+            retry: false,
+            circuitBreaker: { threshold: 1, cooldownMs: 60_000 },
+        });
+
+        mocks.request.mockRejectedValue(apiError(500));
+
+        // One availability failure through `query.media` trips the breaker.
+        const media = client.query.media({ id: 1 });
+        media.catch(() => {});
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(media).rejects.toBeInstanceOf(AniLinkApiError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        // A different operation of the same client fast-fails with
+        // CIRCUIT_OPEN_ERROR before any request is sent.
+        const user = client.query.user({ id: 1 });
+        user.catch(() => {});
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(user).rejects.toBeInstanceOf(AniLinkNetworkError);
+        await expect(user).rejects.toMatchObject({ code: AniLinkErrorCodes.CIRCUIT });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+
+    test("a breaker tripped through one MAL operation fast-fails a different operation", async () => {
+        // MAL-side equivalent: the three REST operations share one state
+        // owner, so a streak on `anime.get` gates `user.me`.
+        const api = buildMyAnimeListApi({
+            accessToken: "mal-access-token",
+            retry: false,
+            circuitBreaker: { threshold: 1, cooldownMs: 60_000 },
+        });
+
+        mocks.request.mockRejectedValue(apiError(500));
+
+        const anime = api.anime.get({ id: 21 });
+        anime.catch(() => {});
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(anime).rejects.toBeInstanceOf(AniLinkApiError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        const me = api.user.me();
+        me.catch(() => {});
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(me).rejects.toBeInstanceOf(AniLinkNetworkError);
+        await expect(me).rejects.toMatchObject({ code: AniLinkErrorCodes.CIRCUIT });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+
+    test("a retry budget spent through one operation surfaces a different operation's failure without retry", async () => {
+        // The budget spans the client: the single retry `query.media`
+        // spends the window's only unit, so `query.user`'s 500 surfaces
+        // after one attempt instead of retrying against a fresh
+        // per-operation budget.
+        const client = buildAniListWiring(undefined, {
+            retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1, jitter: false },
+            retryBudget: { maxRetriesPerWindow: 1, windowMs: 120_000 },
+        });
+
+        // `query.media`: one retryable failure, then success.
+        mocks.request
+            .mockRejectedValueOnce(apiError(500))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        const media = client.query.media({ id: 1 });
+        media.catch(() => {});
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(media).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+
+        // `query.user`: the shared budget is exhausted, so the failure
+        // surfaces with no second attempt.
+        mocks.request.mockRejectedValue(apiError(500));
+        const user = client.query.user({ id: 1 });
+        user.catch(() => {});
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(user).rejects.toBeInstanceOf(AniLinkApiError);
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+    });
+
+    test("a rate-limit deadline recorded by one operation gates another operation's dispatch", async () => {
+        // The pacing deadline spans the client: the exhausted quota
+        // `query.media` observed gates `query.user`'s dispatch until the
+        // window resets.
+        const client = buildAniListWiring(undefined, { paceWithRateLimit: true });
+
+        mocks.request
+            .mockResolvedValueOnce({
+                data: { data: { Media: { id: 1 } } },
+                headers: {
+                    "x-ratelimit-limit": "90",
+                    "x-ratelimit-remaining": "0",
+                    "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 60),
+                },
+            })
+            .mockResolvedValueOnce({ data: { data: { User: { id: 1 } } } });
+
+        // First call: dispatches, records the 60s deadline, then paces its
+        // own response until it.
+        const media = client.query.media({ id: 1 });
+        media.catch(() => {});
+        await vi.advanceTimersByTimeAsync(1);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        // Second operation: gated by the recorded deadline well into the
+        // 60s window.
+        const user = client.query.user({ id: 1 });
+        user.catch(() => {});
+        await vi.advanceTimersByTimeAsync(30_000);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        // Past the deadline both the pace wait and the pre-dispatch gate
+        // release; the second operation dispatches and resolves.
+        await vi.advanceTimersByTimeAsync(35_000);
+        await expect(media).resolves.toEqual({ id: 1 });
+        await expect(user).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
     });
 });

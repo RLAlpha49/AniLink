@@ -4,10 +4,13 @@
  * Owns the default retry policy, the partial-policy resolver, the
  * `Retry-After` header parser, the exponential-backoff cap and full-jitter
  * helpers, the per-error-class retry-delay matrix, and the rolling
- * per-window retry-budget state machine. The budget state lives in a
- * module-level `WeakMap` keyed by a stable per-client owner so existing
- * tests construct isolated state by passing distinct owner objects, without
- * any API change.
+ * per-window retry-budget state machine (including the window gate that
+ * surfaces server-dictated delays outlasting the remaining window). The
+ * budget state lives in a module-level `WeakMap` keyed by a stable
+ * per-client owner (the shared object threaded through the provider
+ * wiring, so the budget spans every operation of one client) so existing
+ * tests construct isolated state by passing distinct owner objects,
+ * without any API change.
  */
 import { randomInt } from "node:crypto";
 import axios from "axios";

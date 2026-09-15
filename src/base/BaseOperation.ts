@@ -125,12 +125,17 @@ export const resolveOperationLabel = (operation: object): string | undefined => 
  */
 export abstract class BaseOperation {
     /**
-     * Stable per-instance object keying cross-request transport state (the
-     * circuit breaker and retry budget). One per instance so failure streaks
-     * accumulate across every request this operation dispatches, regardless
-     * of per-request option objects.
+     * Stable object keying cross-request transport state (the circuit
+     * breaker, retry budget, and rate-limit pacing deadlines). Defaults to
+     * a fresh per-instance object, so failure streaks accumulate across
+     * every request this operation dispatches regardless of per-request
+     * option objects. When a provider wiring passes one shared owner to
+     * every operation it constructs, the state instead spans the whole
+     * client: breaker streaks, retry budgets, and pacing deadlines
+     * accumulate across every operation of that client (still scoped per
+     * upstream host inside the state maps, so providers stay isolated).
      */
-    private readonly stateOwner: object = {};
+    private readonly stateOwner: object;
 
     /**
      * The authentication token shared by all operations of an instance.
@@ -151,10 +156,12 @@ export abstract class BaseOperation {
      *
      * @param authToken - The authentication material used for API requests. A string is treated as a bearer token for backwards compatibility.
      * @param options - Transport settings scoped to this instance (timeout, cancellation, retry policy, lifecycle hooks).
+     * @param stateOwner - Stable object keying cross-request transport state (circuit breaker, retry budget, pacing deadlines). Provider wirings pass one shared owner to every operation they construct so that state spans the whole client; when omitted, a fresh per-instance object is used and the state stays scoped to this operation.
      */
-    constructor(authToken?: RequestAuthInput, options?: RequestOptions) {
+    constructor(authToken?: RequestAuthInput, options?: RequestOptions, stateOwner?: object) {
         this.requestAuth = authToken;
         this.resolvedOptions = options;
+        this.stateOwner = stateOwner ?? {};
     }
 
     /**
@@ -243,9 +250,11 @@ export abstract class BaseOperation {
             operation: operation ?? resolveOperationLabel(this),
             contentType,
             protocol,
-            // The instance keys cross-request transport state (circuit
-            // breaker, retry budget) so failure streaks accumulate across
-            // requests even when each call carries fresh per-request options.
+            // The stable owner keys cross-request transport state (circuit
+            // breaker, retry budget, pacing deadlines) so failure streaks
+            // accumulate across requests even when each call carries fresh
+            // per-request options — across the whole client when the wiring
+            // shared one owner, or across this instance's requests otherwise.
             stateOwner: this.stateOwner,
         });
     }
