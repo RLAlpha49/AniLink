@@ -56,6 +56,19 @@ const axiosClient = axios.create({
  */
 const MAX_CACHED_AGENT_PAIRS = 8;
 
+/**
+ * Upper bound on the number of evicted agent pairs kept parked before the
+ * oldest parked pair is destroyed. Without this cap, a caller cycling through
+ * many distinct `maxSockets`/`maxFreeSockets` combinations would park one
+ * pair per eviction (each holding two keep-alive agents and their idle
+ * sockets) with nothing ever releasing them until an explicit
+ * {@link destroyCachedAgents} call — unbounded socket/handle growth in a
+ * long-lived process. When parking a newly evicted pair would exceed this
+ * cap, the OLDEST parked pair is destroyed first, which is safe because it
+ * was evicted long enough ago to have drained any in-flight requests.
+ */
+const MAX_PARKED_EVICTED_PAIRS = 16;
+
 interface CachedAgentPair {
     httpAgent: http.Agent;
     httpsAgent: https.Agent;
@@ -68,9 +81,12 @@ const cachedAgentPairs = new Map<string, CachedAgentPair>();
  * not `.destroy()` an agent that may still carry in-flight requests, so the
  * pair is parked here instead; {@link destroyCachedAgents} drains the list
  * so an evicted pair's idle sockets can still be released on demand. The
- * list is bounded by the cache cap (each eviction parks at most one pair,
- * and a re-requested configuration reuses or rebuilds rather than
- * duplicating), so it cannot grow without bound.
+ * list is capped at {@link MAX_PARKED_EVICTED_PAIRS}: parking a newly
+ * evicted pair beyond the cap destroys the oldest parked pair first, so
+ * the list cannot grow without bound even under unbounded
+ * `maxSockets`/`maxFreeSockets` churn. A freshly evicted pair is never
+ * destroyed at eviction time — only pairs evicted long enough ago to have
+ * drained their in-flight requests are eligible for destruction.
  */
 const parkedEvictedPairs: CachedAgentPair[] = [];
 
@@ -87,6 +103,12 @@ const buildAgentCacheKey = (maxSockets: number, maxFreeSockets: number): string 
  * timeout) or GC reclaims the now-unreachable agent. Map preserves insertion
  * order, so the first key is the least recently used after the delete+re-insert
  * refresh in {@link resolveAgents}.
+ *
+ * The parked list is capped at {@link MAX_PARKED_EVICTED_PAIRS}: when parking
+ * the newly evicted pair would exceed the cap, the OLDEST parked pair is
+ * destroyed (and removed from the list) first. That pair was evicted long
+ * enough ago to have drained its in-flight requests, so destroying it only
+ * closes idle sockets. The freshly evicted pair is never destroyed here.
  */
 const evictLruAgentPair = (): void => {
     const oldestKey = cachedAgentPairs.keys().next().value;
@@ -94,6 +116,13 @@ const evictLruAgentPair = (): void => {
         const evicted = cachedAgentPairs.get(oldestKey);
         cachedAgentPairs.delete(oldestKey);
         if (evicted !== undefined) {
+            if (parkedEvictedPairs.length >= MAX_PARKED_EVICTED_PAIRS) {
+                const oldestParked = parkedEvictedPairs.shift();
+                if (oldestParked !== undefined) {
+                    oldestParked.httpAgent.destroy();
+                    oldestParked.httpsAgent.destroy();
+                }
+            }
             parkedEvictedPairs.push(evicted);
         }
     }

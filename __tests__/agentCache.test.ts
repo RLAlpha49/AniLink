@@ -7,9 +7,13 @@ import { getAxiosStub } from "./helpers/axiosStub";
  *
  * `RequestHandler` keeps a bounded cache of custom keep-alive agent pairs so
  * repeated requests with the same `maxSockets`/`maxFreeSockets` reuse warm
- * sockets instead of leaking a fresh pair per request. The cache is capped at
- * `MAX_CACHED_AGENT_PAIRS` (8); LRU entries are evicted and `.destroy()`-ed.
- * `destroyCachedAgents` releases every cached pair for teardown.
+ * sockets instead of leaking a fresh pair per request. The cache is capped
+ * at `MAX_CACHED_AGENT_PAIRS` (8); LRU entries are evicted and parked (NOT
+ * destroyed at eviction time, since they may still carry in-flight requests)
+ * in a parked list capped at `MAX_PARKED_EVICTED_PAIRS` (16). Overflowing the
+ * parked cap destroys the OLDEST parked pair, which was evicted long enough
+ * ago to have drained its in-flight requests. `destroyCachedAgents`
+ * releases every cached and parked pair for teardown.
  */
 
 vi.mock("axios", async () => {
@@ -209,6 +213,106 @@ describe("agent cache", () => {
 
         // Explicit teardown must reach the evicted pair too: without it, an
         // evicted pair's idle sockets could never be released on demand.
+        destroyCachedAgents();
+
+        expect(httpDestroy).toHaveBeenCalledTimes(1);
+        expect(httpsDestroy).toHaveBeenCalledTimes(1);
+        httpDestroy.mockRestore();
+        httpsDestroy.mockRestore();
+    });
+
+    test("destroys the oldest parked pair once the parked list overflows its cap", async () => {
+        const { sendRequest } = await import("../src/base/RequestHandler");
+
+        // Drive 17 distinct configurations (maxSockets 1..17): configs 1..8
+        // fill the cache, configs 9..17 evict pairs 1..9, so the parked list
+        // holds 9 pairs with config 1's pair as the oldest.
+        for (let i = 1; i <= 17; i += 1) {
+            await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+                requiresAuth: false,
+                options: { retry: false, maxSockets: i, maxFreeSockets: 1 },
+            });
+        }
+
+        // Spies must be installed before the evictions that overflow the
+        // cap. `http.Agent` exposes no `destroyed` flag, so destruction is
+        // observed through spies on the `destroy` methods.
+        const oldestParkedHttp = agentsFor(0).httpAgent as { destroy: () => void };
+        const oldestParkedHttps = agentsFor(0).httpsAgent as { destroy: () => void };
+        const oldestHttpDestroy = vi.spyOn(oldestParkedHttp, "destroy");
+        const oldestHttpsDestroy = vi.spyOn(oldestParkedHttps, "destroy");
+        // Config 9's pair (call index 8) is the most recently parked pair at
+        // this point; it stays parked through the overflow trim and must not
+        // be destroyed by it.
+        const recentParkedHttp = agentsFor(8).httpAgent as { destroy: () => void };
+        const recentParkedHttps = agentsFor(8).httpsAgent as { destroy: () => void };
+        const recentHttpDestroy = vi.spyOn(recentParkedHttp, "destroy");
+        const recentHttpsDestroy = vi.spyOn(recentParkedHttps, "destroy");
+        // Config 17's pair (call index 16) is still cached; it becomes the
+        // FRESHLY evicted pair on the overflow eviction and must never be the
+        // pair destroyed by the trim.
+        const freshEvictedHttp = agentsFor(16).httpAgent as { destroy: () => void };
+        const freshEvictedHttps = agentsFor(16).httpsAgent as { destroy: () => void };
+        const freshHttpDestroy = vi.spyOn(freshEvictedHttp, "destroy");
+        const freshHttpsDestroy = vi.spyOn(freshEvictedHttps, "destroy");
+
+        // Drive configs 18..25: 8 more evictions (pairs 10..17 parked). The
+        // 17th eviction overall (config 25's) would push the parked list to
+        // 17, overflowing the cap of 16 — so the OLDEST parked pair (config
+        // 1's) is destroyed first.
+        for (let i = 18; i <= 25; i += 1) {
+            await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+                requiresAuth: false,
+                options: { retry: false, maxSockets: i, maxFreeSockets: 1 },
+            });
+        }
+
+        expect(oldestHttpDestroy).toHaveBeenCalledTimes(1);
+        expect(oldestHttpsDestroy).toHaveBeenCalledTimes(1);
+        expect(recentHttpDestroy).not.toHaveBeenCalled();
+        expect(recentHttpsDestroy).not.toHaveBeenCalled();
+        expect(freshHttpDestroy).not.toHaveBeenCalled();
+        expect(freshHttpsDestroy).not.toHaveBeenCalled();
+
+        // Explicit teardown still works after the trim: the remaining parked
+        // pairs (configs 2..17) are destroyed and the list is cleared. The
+        // already-trimmed config 1 pair is no longer parked, so its destroy
+        // count stays at exactly one.
+        destroyCachedAgents();
+
+        expect(oldestHttpDestroy).toHaveBeenCalledTimes(1);
+        expect(recentHttpDestroy).toHaveBeenCalledTimes(1);
+        expect(recentHttpsDestroy).toHaveBeenCalledTimes(1);
+        expect(freshHttpDestroy).toHaveBeenCalledTimes(1);
+        expect(freshHttpsDestroy).toHaveBeenCalledTimes(1);
+        oldestHttpDestroy.mockRestore();
+        oldestHttpsDestroy.mockRestore();
+        recentHttpDestroy.mockRestore();
+        recentHttpsDestroy.mockRestore();
+        freshHttpDestroy.mockRestore();
+        freshHttpsDestroy.mockRestore();
+    });
+
+    test("destroyCachedAgents still tears down pairs remaining in the parked list after overflow trimming", async () => {
+        const { sendRequest } = await import("../src/base/RequestHandler");
+
+        // Drive 25 distinct configurations: 17 evictions park 17 pairs, the
+        // 17th overflow destroys the oldest (config 1's pair), leaving
+        // configs 2..17 parked.
+        for (let i = 1; i <= 25; i += 1) {
+            await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+                requiresAuth: false,
+                options: { retry: false, maxSockets: i, maxFreeSockets: 1 },
+            });
+        }
+
+        // Config 2's pair (call index 1) is now the oldest remaining parked
+        // pair; it must still be reachable by explicit teardown.
+        const remainingHttp = agentsFor(1).httpAgent as { destroy: () => void };
+        const remainingHttps = agentsFor(1).httpsAgent as { destroy: () => void };
+        const httpDestroy = vi.spyOn(remainingHttp, "destroy");
+        const httpsDestroy = vi.spyOn(remainingHttps, "destroy");
+
         destroyCachedAgents();
 
         expect(httpDestroy).toHaveBeenCalledTimes(1);
