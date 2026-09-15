@@ -50,7 +50,8 @@ export class ActivityReplyQuery extends AniListOperation {
     /**
      * {@link ActivityReplyQuery.activityReply} sends a query request to get activity replies.
      *
-     * @param variables - Values from {@link ActivityReplyVariables} for the query.
+     * @param variables - Values from {@link ActivityReplyVariables} for the query; `id` or `activityId`
+     * must be set.
      * @returns The {@link ActivityReply} returned by the query.
      * @see https://docs.anilist.co/reference/object/activityreply
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.

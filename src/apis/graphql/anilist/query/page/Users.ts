@@ -54,7 +54,7 @@ export interface UsersVariables {
     search?: string;
 
     /**
-     * `sort` is an array of strings representing the sort order.
+     * `sort` is an array of strings representing the sort order; `UserSort` values.
      */
     sort?: string[];
 
@@ -74,12 +74,12 @@ export interface UsersVariables {
     mangaStatLimit?: number;
 
     /**
-     * `animeStatSort` is an array of strings representing the sort order for anime statistics.
+     * `animeStatSort` is an array of strings representing the sort order for anime statistics; `UserStatisticSort` values.
      */
     animeStatSort?: string[];
 
     /**
-     * `mangaStatSort` is an array of strings representing the sort order for manga statistics.
+     * `mangaStatSort` is an array of strings representing the sort order for manga statistics; `UserStatisticSort` values.
      */
     mangaStatSort?: string[];
 }
@@ -112,12 +112,17 @@ const UsersMappings = {
  */
 export class UsersQuery extends AniListOperation {
     /**
-     * `users` is a method that sends a query request to get users.
+     * {@link UsersQuery.users} sends a query request to get a page of users.
      *
-     * @param variables - Values from {@link UsersVariables} for the query.
-     * @returns The {@link UsersPageResponse} returned by the query.
+     * @param variables - Values from {@link UsersVariables} for the query; `page` and `perPage` select the
+     * slice of results.
+     * @returns The {@link UsersPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<UsersPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new UsersQuery().users({ search: "AniList", page: 1 });

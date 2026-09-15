@@ -5,16 +5,38 @@ import prettier from "prettier";
 
 const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
 
+/**
+ * `FetchSchemaOptions` configures a live introspection request: the endpoint
+ * to introspect, defaulting to the AniList GraphQL endpoint.
+ */
 export interface FetchSchemaOptions {
     /** GraphQL endpoint to introspect. Defaults to the AniList endpoint. */
     url?: string;
 }
 
+/**
+ * `loadSchema` reads and validates a committed introspection snapshot from
+ * disk.
+ *
+ * @param filePath - Path of the committed snapshot JSON.
+ * @returns The parsed and validated {@link IntrospectionQuery} result.
+ * @throws {Error} When the file cannot be read, parsed, or fails validation.
+ */
 export async function loadSchema(filePath: string): Promise<IntrospectionQuery> {
     const raw = await readFile(filePath, "utf8");
     return validateSchema(JSON.parse(raw));
 }
 
+/**
+ * `fetchSchema` runs a live introspection query against a GraphQL endpoint
+ * and returns the validated result.
+ *
+ * @param fetcher - Fetch implementation, injectable for tests.
+ * @param options - Endpoint override; defaults to the AniList endpoint.
+ * @returns The validated {@link IntrospectionQuery} result.
+ * @throws {Error} When the request fails, returns GraphQL errors, or the
+ *   payload fails validation.
+ */
 export async function fetchSchema(
     fetcher: typeof fetch = fetch,
     options: FetchSchemaOptions = {}
@@ -45,6 +67,18 @@ export async function fetchSchema(
     return validateSchema(payload.data);
 }
 
+/**
+ * `writeSchema` persists an introspection snapshot to disk as the committed
+ * schema artifact, formatted with the repository's Prettier configuration.
+ *
+ * The content lands in a sibling temp file that is renamed over the target,
+ * so a crash mid-write cannot leave a truncated snapshot behind.
+ *
+ * @param filePath - Destination snapshot path.
+ * @param schema - The {@link IntrospectionQuery} result to persist.
+ * @returns Nothing; writes the snapshot to disk.
+ * @throws {Error} When the directory cannot be created or the write fails.
+ */
 export async function writeSchema(filePath: string, schema: IntrospectionQuery): Promise<void> {
     await mkdir(dirname(filePath), { recursive: true });
     const options = (await prettier.resolveConfig(filePath)) ?? {

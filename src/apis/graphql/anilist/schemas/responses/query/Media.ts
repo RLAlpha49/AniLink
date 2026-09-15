@@ -13,8 +13,8 @@ import { TitleSchema } from "../../Title";
 import { TrailerSchema } from "../../Trailer";
 
 /**
- * {@link MediaStatsSchema} is a string representing the GraphQL selection set for a media's aggregate statistics.
- * It interpolates the status and score distribution selections.
+ * {@link MediaStatsSchema} is the media `stats` selection: the score and status
+ * distributions of a media's list entries, interpolated by the media fragments.
  * @see https://docs.anilist.co/reference/object/mediastats
  */
 export const MediaStatsSchema = `
@@ -23,8 +23,9 @@ export const MediaStatsSchema = `
 `;
 
 /**
- * {@link MediaWithRelationsSchema} is a constant representing the GraphQL schema for a media query with relations.
- * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, relations, characters, staff, studios, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
+ * {@link MediaWithRelationsSchema} is the maximal media document the media queries send:
+ * every media field, plus the relation connections (characters, staff, studios, related
+ * media). It is the single source of truth the `fields` option prunes.
  * @see https://docs.anilist.co/reference/object/media
  */
 export const MediaWithRelationsSchema = `
@@ -166,8 +167,9 @@ export const MediaWithRelationsSchema = `
 `;
 
 /**
- * {@link MediaSchema} is a constant representing the GraphQL schema for a media query.
- * It includes the media's id, idMal, title, type, format, status, description, startDate, endDate, season, seasonYear, seasonInt, episodes, duration, chapters, volumes, countryOfOrigin, isLicensed, source, hashtag, trailer, updatedAt, coverImage, bannerImage, genres, synonyms, averageScore, meanScore, popularity, isLocked, trending, favourites, tags, isFavourite, isAdult, nextAiringEpisode, externalLinks, streamingEpisodes, rankings, mediaListEntry, stats, siteUrl, autoCreateForumThread, isRecommendationBlocked, and modNotes.
+ * {@link MediaSchema} is the media selection without relation connections: every media
+ * field, but no characters/staff/studios/relations. Other fragments interpolate it when
+ * they need a media payload without the cost of the full relation set.
  * @see https://docs.anilist.co/reference/object/media
  */
 export const MediaSchema = `

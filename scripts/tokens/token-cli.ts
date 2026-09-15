@@ -23,6 +23,9 @@ export const ENV_PATH = ".env";
  * Hand-rolled instead of pulling in a dotenv dependency: the vitest
  * integration config already loads `.env` itself, so these scripts only need
  * enough to read their own keys and rewrite the file verbatim otherwise.
+ *
+ * @param content - Raw `.env` file text.
+ * @returns Parsed key/value pairs, quotes stripped.
  */
 export function parseEnv(content: string): Map<string, string> {
     const map = new Map<string, string>();
@@ -55,6 +58,11 @@ function stripMatchingQuotes(value: string): string {
  *
  * A missing trailing newline is normalized so appending never glues two
  * entries together on one line.
+ *
+ * @param content - Current `.env` file text.
+ * @param key - Entry key to replace or append.
+ * @param value - Entry value to write.
+ * @returns The updated file text.
  */
 export function upsertEnvEntry(content: string, key: string, value: string): string {
     const pattern = new RegExp(`^${key}=.*$`, "gm");
@@ -67,7 +75,11 @@ export function upsertEnvEntry(content: string, key: string, value: string): str
     return `${content}${prefix}${key}=${value}\n`;
 }
 
-/** Reads `.env` if present; an absent file is not an error for a first run. */
+/**
+ * Reads `.env` if present; an absent file is not an error for a first run.
+ *
+ * @returns The file text, or an empty string when the file is absent.
+ */
 export async function loadEnvFile(): Promise<string> {
     try {
         return await readFile(ENV_PATH, "utf8");
@@ -83,6 +95,10 @@ export async function loadEnvFile(): Promise<string> {
  * so a crash mid-write cannot truncate the stored credentials (including the
  * refresh tokens `--refresh` depends on) and concurrent runs cannot leave a
  * half-written file behind.
+ *
+ * @param key - Entry key to write.
+ * @param value - Entry value to persist.
+ * @returns Nothing; writes `.env` atomically.
  */
 export async function saveEnvEntry(key: string, value: string): Promise<void> {
     const content = upsertEnvEntry(await loadEnvFile(), key, value);
@@ -97,6 +113,9 @@ export async function saveEnvEntry(key: string, value: string): Promise<void> {
  * Used for values the script itself previously persisted (client ids, refresh
  * tokens) rather than user-provided ones, so a stale process environment
  * cannot shadow what the last run actually saved.
+ *
+ * @param key - The `.env` key to read.
+ * @returns The stored value, or `undefined` when the key is absent.
  */
 export async function loadStoredEnvValue(key: string): Promise<string | undefined> {
     return parseEnv(await loadEnvFile()).get(key);
@@ -139,6 +158,11 @@ export async function resolveCredential(
  *
  * Providers whose apps may or may not use a client secret (MAL web vs mobile
  * type) use this so the flag simply stays unset when no source has a value.
+ *
+ * @param flagValue - The value passed after the flag on the command line, if any.
+ * @param envVar - The process environment variable name for the credential.
+ * @param envKey - The `.env` key a previous run persisted the credential under.
+ * @returns The resolved credential, or `undefined` when no source has one.
  */
 export async function resolveOptionalCredential(
     flagValue: string | undefined,
@@ -155,6 +179,10 @@ export async function resolveOptionalCredential(
  * A value that is itself a flag (e.g. `--client-id --refresh`) or a missing
  * value resolves to undefined, so the credential falls through to the next
  * source instead of persisting a garbage value into `.env`.
+ *
+ * @param argv - The command-line arguments to scan.
+ * @param flag - The flag whose value to return.
+ * @returns The value following the flag, or `undefined` when absent.
  */
 export function flagValue(argv: string[], flag: string): string | undefined {
     const index = argv.indexOf(flag);
@@ -181,6 +209,9 @@ function safeDecode(component: string): string | undefined {
  *
  * Accepts the full redirect URL or a bare `code=...` fragment, since the
  * manual flow has no HTTP server catching the redirect.
+ *
+ * @param pasted - The pasted redirect URL or `code=...` fragment.
+ * @returns The authorization code, or `undefined` when absent or malformed.
  */
 export function extractCode(pasted: string): string | undefined {
     const trimmed = pasted.trim();
@@ -198,6 +229,9 @@ export function extractCode(pasted: string): string | undefined {
 /**
  * Extracts the `state` parameter from a pasted redirect the same way
  * {@link extractCode} extracts the code.
+ *
+ * @param pasted - The pasted redirect URL or `state=...` fragment.
+ * @returns The state parameter, or `undefined` when absent or malformed.
  */
 export function extractState(pasted: string): string | undefined {
     const trimmed = pasted.trim();
@@ -278,6 +312,7 @@ export async function promptForCode(
  * @param run - The CLI core: takes argv, returns an exit code, never calls
  * process.exit itself.
  * @param callerModuleUrl - The `import.meta.url` of the calling script.
+ * @returns Nothing; sets `process.exitCode` when the script is the entry point.
  */
 export function runCliEntry(
     run: (argv: string[]) => Promise<number>,

@@ -23,7 +23,7 @@ import { stampRequestId } from "./errors";
 
 /**
  * Shared circuit-breaker state, keyed first by a stable per-client owner —
- * the {@link SendRequestOptions.stateOwner} object when supplied (the
+ * the `SendRequestOptions.stateOwner` object when supplied (the
  * per-client shared owner threaded through the provider wiring, so streaks
  * accumulate across every operation of one client) and otherwise the
  * `circuitBreaker` configuration object itself, which stays identical
@@ -35,9 +35,20 @@ import { stampRequestId } from "./errors";
  */
 const circuitStates = new WeakMap<object, Map<string, CircuitState>>();
 
+/**
+ * The mutable breaker record for one owner-and-host scope.
+ *
+ * One entry exists per `(state owner, upstream host)` pair, tracking the
+ * consecutive availability-failure streak, when the breaker opened (epoch
+ * milliseconds, `null` while closed), and whether the single post-cooldown
+ * probe is currently reserved.
+ */
 export interface CircuitState {
+    /** Consecutive availability failures since the last success. */
     consecutiveFailures: number;
+    /** Epoch milliseconds at which the breaker opened, or `null` while closed. */
     openedAt: number | null;
+    /** Whether the reserved half-open probe is currently in flight. */
     probeInFlight: boolean;
 }
 
@@ -85,6 +96,11 @@ const MAX_CIRCUIT_SCOPES_PER_OWNER = 64;
  * would let cross-provider or cross-endpoint failures contaminate each
  * other). The error is a normalized `AniLinkError` subclass so consumers
  * catching `AniLinkError` still handle it consistently.
+ *
+ * @param url - The request URL to extract the upstream host from.
+ * @param requestId - Correlation ID stamped onto the validation error, when available.
+ * @returns The upstream host scoping the breaker.
+ * @throws An {@link AniLinkValidationError} when the URL cannot be parsed.
  */
 export const circuitScopeOf = (url: string, requestId?: string): string => {
     try {
@@ -98,6 +114,20 @@ export const circuitScopeOf = (url: string, requestId?: string): string => {
     }
 };
 
+/**
+ * Returns the live breaker state for one owner-and-host scope, creating it
+ * on first use.
+ *
+ * Access refreshes the scope's recency in the per-owner map; once an owner
+ * tracks more scopes than the LRU cap allows, the least-recently-used
+ * scope's state is evicted so dynamic-URL callers cannot grow the map
+ * without bound. Disabled configurations never reach this function, so
+ * opting out allocates nothing.
+ *
+ * @param owner - The stable per-client state owner.
+ * @param scope - The upstream host the breaker is scoped to.
+ * @returns The mutable breaker state for the scope.
+ */
 export const getCircuitState = (owner: object, scope: string): CircuitState => {
     let scopes = circuitStates.get(owner);
     if (scopes === undefined) {
@@ -173,6 +203,12 @@ export const checkCircuitOpen = (
  * Resets the failure streak after a successful attempt. When the success is
  * the reserved post-cooldown probe, clears the half-open state and closes
  * the breaker, emitting `onCircuitClose` so dashboards can plot recovery.
+ *
+ * @param circuit - The caller's breaker state, when the breaker is enabled.
+ * @param resolved - The resolved request options, for the `onCircuitClose` hook.
+ * @param hookContext - The request context, for the `onCircuitClose` hook.
+ * @param host - The upstream host scope, for the `onCircuitClose` hook.
+ * @returns Nothing; mutates the breaker state in place.
  */
 export const recordCircuitSuccess = (
     circuit: CircuitState | undefined,

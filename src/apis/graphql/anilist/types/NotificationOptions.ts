@@ -1,7 +1,6 @@
 /**
- * {@link NotificationOptions} is a type representing the notification options for a user.
- * It includes a `type` field which is a string representing the type of notification,
- * and an `enabled` field which is a boolean indicating whether the notification is enabled or not.
+ * {@link NotificationOptions} is one per-notification-type toggle: whether AniList sends that
+ * `type` of notification. `UpdateUser` accepts a list of them as `notificationOptions`.
  * @see https://docs.anilist.co/reference/object/notificationoption
  */
 export type NotificationOptions = {
@@ -34,8 +33,8 @@ export type NotificationOptions = {
 };
 
 /**
- * {@link NotificationOptionsMapping} is a constant that maps the {@link NotificationOptions} fields to their expected types.
- * The `type` field is mapped to an array of possible values, and the `enabled` field is mapped to 'boolean'.
+ * {@link NotificationOptionsMapping} is the field-shape map `UpdateUser` validates its
+ * `notificationOptions` entries against before dispatch.
  * @see https://docs.anilist.co/reference/object/notificationoption
  */
 export const NotificationOptionsMapping = {

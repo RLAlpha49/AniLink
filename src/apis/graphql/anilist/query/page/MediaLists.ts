@@ -52,12 +52,12 @@ export interface MediaListsVariables {
     userName?: string;
 
     /**
-     * `type` is a string representing the type of the media.
+     * `type` is a string representing the type of the media; a `MediaType` value.
      */
     type?: string;
 
     /**
-     * `status` is a string representing the status of the media list.
+     * `status` is a string representing the status of the media list entry; a `MediaListStatus` value.
      */
     status?: string;
 
@@ -87,7 +87,8 @@ export interface MediaListsVariables {
     completedAt?: number;
 
     /**
-     * `compareWithAuthList` is a boolean representing whether to compare with the authenticated list.
+     * `compareWithAuthList` is a boolean limiting entries to those also on the authenticated user's
+     * list; requires `userId` or `userName`.
      */
     compareWithAuthList?: boolean;
 
@@ -97,17 +98,17 @@ export interface MediaListsVariables {
     userId_in?: number[];
 
     /**
-     * `status_in` is an array of strings representing the statuses that should be included.
+     * `status_in` is an array of strings representing the statuses to include; `MediaListStatus` values.
      */
     status_in?: string[];
 
     /**
-     * `status_not_in` is an array of strings representing the statuses that should not be included.
+     * `status_not_in` is an array of strings representing the statuses to exclude; `MediaListStatus` values.
      */
     status_not_in?: string[];
 
     /**
-     * `status_not` is a string representing the status that should not be included.
+     * `status_not` is a string representing the status to exclude; a `MediaListStatus` value.
      */
     status_not?: string;
 
@@ -157,7 +158,7 @@ export interface MediaListsVariables {
     completedAt_like?: string;
 
     /**
-     * `sort` is an array of strings representing the sort order.
+     * `sort` is an array of strings representing the sort order; `MediaListSort` values.
      */
     sort?: string[];
 
@@ -223,12 +224,17 @@ const MediaListsMappings = {
  */
 export class MediaListsQuery extends AniListOperation {
     /**
-     * `mediaLists` is a method that sends a query request to get media lists.
+     * {@link MediaListsQuery.mediaLists} sends a query request to get a page of media list entries.
      *
-     * @param variables - Values from {@link MediaListsVariables} for the query.
-     * @returns The {@link MediaListsPageResponse} returned by the query.
+     * @param variables - Values from {@link MediaListsVariables} for the query; either `userId` or `userName`
+     * must be set, and `page` and `perPage` select the slice of results.
+     * @returns The {@link MediaListsPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/medialist
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<MediaListsPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new MediaListsQuery().mediaLists({ userId: 1, page: 1, perPage: 10 });

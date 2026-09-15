@@ -25,7 +25,7 @@ import type {
 /**
  * {@link MyAnimeListAnimeApi} is the anime group exposed by {@link MyAnimeListApi} under `aniLink.mal.anime`.
  *
- * It is the facade boundary for MyAnimeList anime reads and list-status writes; the {@link MalAnimeOperation.get | get} method delegates to `MalAnimeOperation` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}, the discovery reads `seasonal`, `ranking`, and `suggestions` cover the seasonal, ranking, and suggestion endpoints, while `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /anime/{id}/my_list_status` endpoints.
+ * It is the facade boundary for MyAnimeList anime reads and list-status writes: `get` delegates to `MalAnimeOperation` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}, the discovery reads `seasonal`, `ranking`, and `suggestions` cover the seasonal, ranking, and suggestion endpoints, and `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /anime/{id}/my_list_status` endpoints.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
@@ -131,7 +131,7 @@ export interface MyAnimeListAnimeApi {
     /**
      * {@link MyAnimeListAnimeApi.updateMyListStatus} updates the authenticated user's anime list status through `MalAnimeOperation.updateMyListStatus`.
      *
-     * It is the public facade for `PATCH /anime/{id}/my_list_status` and requires a MAL access token from `MalCredentials.accessToken` via `buildMyAnimeListApi`; send only the {@link MalAnimeListStatusUpdate} fields you want to change, form-encoded as MAL requires.
+     * It is the public facade for `PATCH /anime/{id}/my_list_status` and requires a MAL access token from `MalCredentials.accessToken` via `buildMyAnimeListApi`; send only the `MalAnimeListStatusUpdate` fields you want to change, form-encoded as MAL requires.
      *
      * @param params - The list-status write inputs; a {@link MalAnimeListStatusUpdateParams} carrying the anime ID plus only the fields to change.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -181,7 +181,7 @@ export interface MyAnimeListAnimeApi {
 /**
  * {@link MyAnimeListMangaApi} is the manga group exposed by {@link MyAnimeListApi} under `aniLink.mal.manga`.
  *
- * It is the facade boundary for MyAnimeList manga reads and list-status writes; the {@link MalMangaOperation.get | get} method delegates to `MalMangaOperation` and returns a {@link MalManga} shaped by {@link MalRequestOptions.fields}, while `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /manga/{id}/my_list_status` endpoints.
+ * It is the facade boundary for MyAnimeList manga reads and list-status writes: `get` delegates to `MalMangaOperation` and returns a {@link MalManga} shaped by {@link MalRequestOptions.fields}, while `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /manga/{id}/my_list_status` endpoints.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put
@@ -210,7 +210,7 @@ export interface MyAnimeListMangaApi {
     /**
      * {@link MyAnimeListMangaApi.updateMyListStatus} updates the authenticated user's manga list status through `MalMangaOperation.updateMyListStatus`.
      *
-     * It is the public facade for `PATCH /manga/{id}/my_list_status` and requires a MAL access token from `MalCredentials.accessToken` via `buildMyAnimeListApi`; send only the {@link MalMangaListStatusUpdate} fields you want to change, form-encoded as MAL requires.
+     * It is the public facade for `PATCH /manga/{id}/my_list_status` and requires a MAL access token from `MalCredentials.accessToken` via `buildMyAnimeListApi`; send only the `MalMangaListStatusUpdate` fields you want to change, form-encoded as MAL requires.
      *
      * @param params - The list-status write inputs; a {@link MalMangaListStatusUpdateParams} carrying the manga ID plus only the fields to change.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -260,7 +260,7 @@ export interface MyAnimeListMangaApi {
 /**
  * {@link MyAnimeListUserApi} is the user group exposed by {@link MyAnimeListApi} under `aniLink.mal.user`.
  *
- * It is the facade boundary for the MyAnimeList user reads; the `MalUserOperation.me | me` method delegates to `MalUserOperation` and returns a {@link MalUser} shaped by {@link MalRequestOptions.fields}, while the paginated user-list reads `animeList` and `mangaList` cover `GET /users/{user_name}/animelist` and `GET /users/{user_name}/mangalist`.
+ * It is the facade boundary for the MyAnimeList user reads: `me` delegates to `MalUserOperation` and returns a {@link MalUser} shaped by {@link MalRequestOptions.fields}, while the paginated user-list reads `animeList` and `mangaList` cover `GET /users/{user_name}/animelist` and `GET /users/{user_name}/mangalist`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
@@ -289,7 +289,7 @@ export interface MyAnimeListUserApi {
     /**
      * {@link MyAnimeListUserApi.animeList} gets a user's anime list through `MalUserOperation.animeList`.
      *
-     * It is the public facade for `GET /users/{user_name}/animelist`; `username` accepts a user name or `@me`, and public lists need no credentials while `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserAnimeListParams} to filter by status, sort, and page with `limit`/`offset`.
+     * It is the public facade for `GET /users/{user_name}/animelist`; `username` accepts a user name or `@me`. A public list needs only `MalCredentials.clientId` (or an access token) — MAL rejects unauthenticated requests — while `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserAnimeListParams} to filter by status, sort, and page with `limit`/`offset`.
      *
      * @param params - The anime-list read inputs; a {@link MalUserAnimeListParams} carrying the username plus the optional status, sort, and paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -317,7 +317,7 @@ export interface MyAnimeListUserApi {
     /**
      * {@link MyAnimeListUserApi.mangaList} gets a user's manga list through `MalUserOperation.mangaList`.
      *
-     * It is the public facade for `GET /users/{user_name}/mangalist`; `username` accepts a user name or `@me`, and public lists need no credentials while `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserMangaListParams} to filter by status, sort, and page with `limit`/`offset`.
+     * It is the public facade for `GET /users/{user_name}/mangalist`; `username` accepts a user name or `@me`. A public list needs only `MalCredentials.clientId` (or an access token) — MAL rejects unauthenticated requests — while `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserMangaListParams} to filter by status, sort, and page with `limit`/`offset`.
      *
      * @param params - The manga-list read inputs; a {@link MalUserMangaListParams} carrying the username plus the optional status, sort, and paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.

@@ -3,53 +3,55 @@ import { type Staff } from "./Staff";
 import { type Studio } from "./Studio";
 
 /**
- * {@link Favoured} is an interface representing a favoured entity.
- * It includes the genre, amount, meanScore, timeWatched, tag, staff, studio, year, and format each having their own properties.
- * @see https://docs.anilist.co/reference/object/favourites
+ * {@link Favoured} is one row of a user's favoured-entity overviews: how much of a genre,
+ * tag, staff member, studio, year, or format the user consumed, with the mean score.
+ * It is the superset union of AniList's per-category stat rows (GenreStats, TagStats,
+ * …), so only the field matching the row's category is present.
+ * @see https://docs.anilist.co/reference/object/userstats
  */
 export interface Favoured {
     /**
-     * `genre` is a string representing the genre of the favoured entity.
+     * The genre this row counts, on genre rows.
      */
     genre?: string;
 
     /**
-     * `amount` is a number representing the amount of the favoured entity.
+     * How many entries the row covers.
      */
     amount: number;
 
     /**
-     * `meanScore` is a number representing the mean score of the favoured entity.
+     * The mean score across the row's entries.
      */
     meanScore: number;
 
     /**
-     * `timeWatched` is a number representing the time watched of the favoured entity.
+     * The minutes watched across the row's entries (anime categories only).
      */
     timeWatched: number;
 
     /**
-     * `tag` is an object of type {@link Tag} representing the tag of the favoured entity.
+     * The tag this row counts, on tag rows.
      */
     tag?: Tag;
 
     /**
-     * `staff` is an object of type {@link Staff} representing the staff of the favoured entity.
+     * The staff member this row counts, on staff/actor rows.
      */
     staff?: Staff;
 
     /**
-     * `studio` is an object of type {@link Studio} representing the studio of the favoured entity.
+     * The studio this row counts, on studio rows.
      */
     studio?: Studio;
 
     /**
-     * `year` is a number representing the year of the favoured entity.
+     * The year this row counts, on year rows.
      */
     year?: number;
 
     /**
-     * `format` is a string representing the format of the favoured entity.
+     * The format this row counts, on format rows.
      */
     format?: string;
 }

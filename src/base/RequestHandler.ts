@@ -223,9 +223,9 @@ export interface SendRequestOptions {
      * The wire protocol of the request, which selects response interpretation
      * and error classification explicitly instead of inferring it from
      * `contentType`. `"graphql"` (the default) unwraps the GraphQL response
-     * envelope and classifies HTTP failures as {@link AniLinkApiError};
+     * envelope and classifies HTTP failures as `AniLinkApiError`;
      * `"rest"` returns the parsed body verbatim and classifies HTTP failures
-     * as {@link AniLinkRestError}. When omitted, the protocol is inferred from
+     * as `AniLinkRestError`. When omitted, the protocol is inferred from
      * `contentType` for backwards compatibility: a set `contentType` implies
      * `"rest"`, an unset one implies `"graphql"`.
      */
@@ -649,7 +649,7 @@ const invalidateCacheAfterMutation = (
  * envelope unwrapping by leaving `protocol` unset (or `"graphql"`); REST
  * callers pass `protocol: "rest"` (and typically a `contentType`) and
  * receive the parsed body verbatim. HTTP failures on REST calls surface as
- * {@link AniLinkRestError}; GraphQL calls surface as {@link AniLinkApiError}.
+ * `AniLinkRestError`; GraphQL calls surface as `AniLinkApiError`.
  *
  * @typeParam T - The expected response payload type.
  * @param url - The URL to send the request to.

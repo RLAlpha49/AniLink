@@ -27,7 +27,7 @@ export interface DeleteCustomListVariables {
     customList: string;
 
     /**
-     * `type` is a string representing the type of the media.
+     * `type` is a {@link MediaType} representing the media type of the custom list.
      */
     type: MediaType;
 }
@@ -63,7 +63,7 @@ export class DeleteCustomListMutation extends AniListOperation {
      * @returns The {@link DeleteResult} returned by the mutation.
      * @throws Throws if no authentication token is configured, `customList` or `type` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/deleted
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<DeleteResult, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new DeleteCustomListMutation("your-token").deleteCustomList({ customList: "watching", type: "ANIME" });

@@ -1,6 +1,6 @@
 /**
- * {@link ActivityHistorySchema} is a string representing the GraphQL selection set for a user activity history entry.
- * It includes the date, amount, and level of the activity.
+ * {@link ActivityHistorySchema} is the activity-history selection: one day of a user's
+ * activity, with the amount done and the level reached.
  * @see https://docs.anilist.co/reference/object/useractivityhistory
  */
 export const ActivityHistorySchema = `

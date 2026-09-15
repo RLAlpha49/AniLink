@@ -1,8 +1,9 @@
 import { MediaSchema } from "./Media";
 
 /**
- * {@link AiringScheduleSchema} is a constant representing the GraphQL schema for an airing schedule query.
- * It includes the id, airing time, time until airing, episode number, media id, and the media schema.
+ * {@link AiringScheduleSchema} is the airing-schedule response selection: one episode's
+ * airing time and countdown, with the media it belongs to. The airing-schedule queries
+ * send it.
  * @see https://docs.anilist.co/reference/object/airingschedule
  */
 export const AiringScheduleSchema = `

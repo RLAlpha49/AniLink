@@ -30,14 +30,16 @@ export type { AniLinkErrorCode, RateLimitInfo } from "../../../../errors";
 
 /**
  * Transport settings accepted by an {@link AniLink} client: `timeout`, `signal`,
- * automatic retries under the default policy (`retry: false` opts out), opt-in
- * `paceWithRateLimit` pacing and `circuitBreaker` fast-fail, lifecycle hooks,
- * and `exposeRawAxiosError`.
+ * automatic retries under the default policy (`retry: false` opts out),
+ * `paceWithRateLimit` pacing (on by default), opt-in `circuitBreaker` fast-fail,
+ * lifecycle hooks, and `exposeRawAxiosError`.
  *
  * Every operation method also accepts an optional trailing `options` argument
- * of this type. It is merged shallowly over the instance-level settings for
- * that one call — a field set on the per-request object wins, and unset fields
- * keep the instance value:
+ * of this type. It is merged over the instance-level settings for that one
+ * call — a field set on the per-request object wins, and unset fields keep
+ * the instance value. The nested `retry`, `circuitBreaker`, and `retryBudget`
+ * objects merge field-by-field, so a per-request `{ retry: { maxRetries: 0 } }`
+ * keeps the instance's other retry knobs:
  *
  * ```typescript
  * const aniLink = new AniLink("token", { timeout: 5_000 });

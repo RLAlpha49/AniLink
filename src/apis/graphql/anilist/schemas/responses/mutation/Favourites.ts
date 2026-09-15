@@ -1,8 +1,9 @@
 import { TitleSchema } from "../../Title";
 
 /**
- * {@link FavouritesSchema} is a constant representing the GraphQL schema for a favourites query.
- * It includes the anime, manga, characters, staff, and studios schema.
+ * {@link FavouritesSchema} is the favourites response selection: the anime, manga,
+ * characters, staff, and studios a user has favourited. The favourite mutations return
+ * it.
  * @see https://docs.anilist.co/reference/object/favourites
  */
 export const FavouritesSchema = `

@@ -45,7 +45,7 @@ export interface AiringScheduleVariables {
     episode?: number;
 
     /**
-     * `airingAt` is a number representing the airing time.
+     * `airingAt` is a number representing the airing time as a Unix timestamp.
      */
     airingAt?: number;
 
@@ -120,7 +120,7 @@ export interface AiringScheduleVariables {
     airingAt_lesser?: number;
 
     /**
-     * `sort` is an array of strings representing the sort order.
+     * `sort` is an array of {@link AiringSort} values representing the sort order.
      */
     sort?: AiringSort[];
 
@@ -168,10 +168,15 @@ export class AiringScheduleQuery extends AniListOperation {
     /**
      * {@link AiringScheduleQuery.airingSchedule} sends a query request to get airing schedules.
      *
-     * @param variables - Values from {@link AiringScheduleVariables} for the query.
+     * @param variables - Values from {@link AiringScheduleVariables} for the query; at least one variable
+     * other than `asHtml` must be set.
      * @returns The {@link AiringScheduleResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/airingschedule
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<AiringScheduleResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new AiringScheduleQuery().airingSchedule({ mediaId: 1 });

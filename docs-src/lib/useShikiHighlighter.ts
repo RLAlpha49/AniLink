@@ -16,7 +16,12 @@ import json from "shiki/langs/json.mjs";
 /** Module-scoped promise so a single highlighter is shared by every consumer. */
 let highlighterPromise: Promise<HighlighterCore> | undefined;
 
-/** Lazily create and return the shared Shiki highlighter. */
+/**
+ * Lazily create and return the shared Shiki highlighter.
+ *
+ * @returns The shared highlighter; the creation promise is memoized, so
+ * concurrent callers all await the same instance.
+ */
 export function getSharedHighlighter(): Promise<HighlighterCore> {
     if (!highlighterPromise) {
         highlighterPromise = createHighlighterCore({
@@ -33,6 +38,9 @@ export function getSharedHighlighter(): Promise<HighlighterCore> {
  *
  * Returns an empty string for empty input so the caller can render the
  * raw source as a fallback without a separate conditional.
+ *
+ * @param source TypeScript source to highlight.
+ * @returns Dual-theme (light/dark) HTML, or an empty string for empty input.
  */
 export async function highlightTypeScript(source: string): Promise<string> {
     if (!source) return "";

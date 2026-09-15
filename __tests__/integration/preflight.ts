@@ -14,6 +14,7 @@ import type { AniLink } from "../../src/AniLink";
  * even when the live integration suite is skipped (no `ANILIST_TOKEN`).
  *
  * @param client - A client built with the token under test.
+ * @returns Nothing; resolves when the viewer query succeeds.
  * @throws When the viewer query fails with an auth-classified API error.
  */
 export const preflightCredentials = async (client: AniLink): Promise<void> => {

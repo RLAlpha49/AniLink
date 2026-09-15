@@ -2,9 +2,10 @@ import { NameSchema } from "./Name";
 import { TagSchema } from "./Tag";
 
 /**
- * {@link UserAnimeStatsSchema} is a string representing the GraphQL schema for a user's anime statistics.
- * It includes the count, meanScore, minutesWatched, and mediaIds.
- * @see https://docs.anilist.co/reference/object/userstats
+ * {@link UserAnimeStatsSchema} is the per-category anime statistic row: the aggregate
+ * `count`, `meanScore`, and `minutesWatched`, plus the `mediaIds` the row covers. The
+ * user fragment interpolates it under every anime statistics category.
+ * @see https://docs.anilist.co/reference/object/userstatistics
  */
 export const UserAnimeStatsSchema = `
   count
@@ -14,9 +15,10 @@ export const UserAnimeStatsSchema = `
 `;
 
 /**
- * {@link UserMangaStatsSchema} is a string representing the GraphQL schema for a user's manga statistics.
- * It includes the count, meanScore, chaptersRead, and mediaIds.
- * @see https://docs.anilist.co/reference/object/userstats
+ * {@link UserMangaStatsSchema} is the per-category manga statistic row: the aggregate
+ * `count`, `meanScore`, and `chaptersRead`, plus the `mediaIds` the row covers. The
+ * user fragment interpolates it under every manga statistics category.
+ * @see https://docs.anilist.co/reference/object/userstatistics
  */
 export const UserMangaStatsSchema = `
   count
@@ -26,9 +28,9 @@ export const UserMangaStatsSchema = `
 `;
 
 /**
- * {@link UserStatsSectionSchema} is a string representing the GraphQL selection set for a user's aggregate stats.
- * It includes watchedTime, chaptersRead, activityHistory, status and score distributions, list scores,
- * and the favoured genres, tags, actors, staff, studios, years, and formats overviews.
+ * {@link UserStatsSectionSchema} is the `stats` block of a user response: totals, activity
+ * history, score/status distributions, list-score summaries, and the favoured-entity
+ * overviews. The user fragment interpolates it under `stats`.
  * @see https://docs.anilist.co/reference/object/userstats
  */
 export const UserStatsSectionSchema = `

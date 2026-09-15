@@ -95,6 +95,15 @@ export const buildErrorContext = (
  * Reports a failed attempt through the error hooks. A retryable failure goes
  * to `onRetry` (falling back to `onError`) with the scheduled delay; a
  * terminal failure goes to `onError` only.
+ *
+ * @param requestId - The correlation ID of the logical request.
+ * @param url - The URL the request was sent to.
+ * @param method - The HTTP method of the request.
+ * @param attempt - The 1-based attempt number.
+ * @param normalized - The normalized failure for the attempt.
+ * @param resolved - The resolved request options carrying the error hooks.
+ * @param nextDelayMs - The scheduled retry delay, when the failure will be retried.
+ * @returns Nothing; the failure is only observed, never rethrown.
  */
 export const reportFailure = (
     requestId: string,

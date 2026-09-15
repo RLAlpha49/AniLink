@@ -5,8 +5,8 @@
  * into the {@link AniLinkError} taxonomy, redacts sensitive request headers
  * from any raw Axios error attached for diagnostics, and stamps the
  * correlation `requestId` onto errors constructed before the retry loop had
- * an ID. Also owns the small header-parsing helpers (`getRateLimitInfo`,
- * `getResponseContentType`) shared with envelope unwrapping and pacing.
+ * an ID. Also owns the small header-parsing helpers ({@link getRateLimitInfo},
+ * {@link getResponseContentType}) shared with envelope unwrapping and pacing.
  */
 import axios, { type AxiosError } from "axios";
 import {
@@ -24,7 +24,7 @@ const SENSITIVE_HEADER_KEYS =
 
 /**
  * Returns a shallow-cloned copy of an Axios error with sensitive request
- * headers redacted, so opting into {@link RequestOptions.exposeRawAxiosError}
+ * headers redacted, so opting into `RequestOptions.exposeRawAxiosError`
  * for diagnostics cannot leak the bearer token or cookies the request was
  * sent with. The `config.headers` (and nested `common`/per-method) maps, the
  * response's back-reference to the request config (`response.config`), the
@@ -132,6 +132,17 @@ const getRawAxiosError = (resolved: ResolvedRequestOptions, error: unknown): unk
             : error
         : undefined;
 
+/**
+ * Parses the `x-ratelimit-limit`, `x-ratelimit-remaining`, and
+ * `x-ratelimit-reset` response headers into a {@link RateLimitInfo}.
+ *
+ * Returns `undefined` unless all three values are present and finite, so a
+ * partial or malformed header set reads as no rate-limit information
+ * rather than half-accounted quota.
+ *
+ * @param headers - The response headers, when available.
+ * @returns The parsed rate-limit accounting, or `undefined` when the required headers are missing or non-numeric.
+ */
 export const getRateLimitInfo = (
     headers: Record<string, unknown> | undefined
 ): RateLimitInfo | undefined => {
@@ -150,6 +161,18 @@ export const getRateLimitInfo = (
     return { limit, remaining, reset };
 };
 
+/**
+ * Reads the `Content-Type` of a response, trying the lowercase
+ * `content-type` header key first and the canonical `Content-Type`
+ * spelling second.
+ *
+ * The value stamps {@link AniLinkApiError.contentType} so consumers can
+ * tell a structured JSON failure payload from an HTML or plain-text one
+ * without guessing.
+ *
+ * @param headers - The response headers, when available.
+ * @returns The raw `Content-Type` value, or `undefined` when absent or not a string.
+ */
 export const getResponseContentType = (
     headers: Record<string, unknown> | undefined
 ): string | undefined => {
@@ -226,6 +249,23 @@ export const stampRequestId = (error: AniLinkError, requestId: string | undefine
     });
 };
 
+/**
+ * Normalizes any value thrown during a request into the {@link AniLinkError}
+ * taxonomy — the single funnel every transport failure flows through.
+ *
+ * Already-normalized errors pass through with a missing `requestId` stamped;
+ * Axios errors are classified into {@link AniLinkApiError} (or
+ * {@link AniLinkRestError} on REST calls) for HTTP failures, and
+ * {@link AniLinkNetworkError} for timeouts, network faults, and
+ * cancellations; anything else is wrapped in a generic unknown-code
+ * {@link AniLinkError}.
+ *
+ * @param resolved - The resolved request options, for the timeout duration and the raw-error opt-in.
+ * @param error - The thrown value to normalize.
+ * @param isRestCall - Whether the failing call used the REST protocol, selecting {@link AniLinkRestError} over {@link AniLinkApiError} for HTTP failures.
+ * @param requestId - The correlation ID to stamp onto the error, when available.
+ * @returns The normalized error, always safe to catch as an {@link AniLinkError}.
+ */
 export const normalizeRequestError = (
     resolved: ResolvedRequestOptions,
     error: unknown,

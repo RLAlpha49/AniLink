@@ -33,7 +33,7 @@ export interface MediaTrendVariables {
     mediaId?: number;
 
     /**
-     * `date` is a number representing the date of the media trend.
+     * `date` is a number representing the date of the media trend as a Unix timestamp.
      */
     date?: number;
 
@@ -148,7 +148,7 @@ export interface MediaTrendVariables {
     episode_not?: number;
 
     /**
-     * `sort` is an array of strings representing the sort order of the media.
+     * `sort` is an array of {@link MediaTrendSort} values representing the sort order of the media trend.
      */
     sort?: MediaTrendSort[];
 
@@ -202,10 +202,14 @@ export class MediaTrendQuery extends AniListOperation {
     /**
      * {@link MediaTrendQuery.mediaTrend} sends a query request to get media trend data.
      *
-     * @param variables - Values from {@link MediaTrendVariables} for the query.
+     * @param variables - Values from {@link MediaTrendVariables} for the query; at least one variable other
+     * than `asHtml` must be set.
      * @returns The {@link MediaTrendResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/mediatrend
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<MediaTrendResponse, K>`. Omit
+     * `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new MediaTrendQuery().mediaTrend({ mediaId: 1 });

@@ -9,7 +9,7 @@ const MAL_AUTH_TIMEOUT_MS = 10_000;
 /**
  * {@link MalTokenResponse} is the successful MyAnimeList OAuth2 token response returned by {@link getMalAccessToken} and {@link refreshMalAccessToken}.
  *
- * It carries the bearer token consumed by `MalAnimeOperation` and `MalUserOperation` through `MalCredentials`.
+ * It carries the bearer token consumed by the MAL operation classes (`MalAnimeOperation`, `MalMangaOperation`, and `MalUserOperation`) through `MalCredentials`.
  *
  * @see https://myanimelist.net/apiconfig/references/authorization
  */
@@ -127,7 +127,7 @@ const normalizeMalTokenError = (error: unknown): AniLinkError =>
  * @param params - The URL-encoded grant fields (`grant_type`, `client_id`, and code, verifier, or refresh token as applicable).
  * @param options - Optional transport settings for the token call; `timeout` defaults to `MAL_AUTH_TIMEOUT_MS` and `retry` defaults to disabled.
  * @returns The parsed {@link MalTokenResponse} on success.
- * @throws An {@link AniLinkApiError} when MAL rejects the grant, or an {@link AniLinkNetworkError} on timeout, cancellation, or network failure.
+ * @throws `AniLinkApiError` when MAL rejects the grant, or `AniLinkNetworkError` on timeout, cancellation, or network failure.
  */
 const requestMalToken = async (
     params: Record<string, string>,
@@ -157,7 +157,7 @@ const requestMalToken = async (
  *
  * @param request - The authorization-code fields and optional transport settings; a {@link MalAuthorizationCodeRequest}.
  * @returns The {@link MalTokenResponse} for the authenticated session.
- * @throws An {@link AniLinkApiError} or {@link AniLinkNetworkError} with sanitized token-request details.
+ * @throws `AniLinkApiError` when MAL rejects the grant, or `AniLinkNetworkError` on timeout, cancellation, or network failure; both carry sanitized token-request details.
  * @example
  * ```typescript
  * const token = await getMalAccessToken({ clientId, code, codeVerifier });
@@ -186,7 +186,7 @@ export const getMalAccessToken = (
  *
  * @param request - The refresh-token fields and optional transport settings; a {@link MalRefreshTokenRequest}.
  * @returns The refreshed {@link MalTokenResponse}.
- * @throws An {@link AniLinkApiError} or {@link AniLinkNetworkError} with sanitized token-request details.
+ * @throws `AniLinkApiError` when MAL rejects the grant, or `AniLinkNetworkError` on timeout, cancellation, or network failure; both carry sanitized token-request details.
  * @example
  * ```typescript
  * const token = await refreshMalAccessToken({ clientId, refreshToken });

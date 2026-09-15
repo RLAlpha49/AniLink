@@ -1,7 +1,7 @@
 /**
  * Shared transport mock for AniLink test suites.
  *
- * Replaces {@link sendRequest} from `src/base/RequestHandler` with a `vi.fn`
+ * Replaces `sendRequest` from `src/base/RequestHandler` with a `vi.fn`
  * so suites assert on the request arguments and drive responses through
  * {@link setMockResponse} instead of touching the network. The mock is
  * hoisted so it is installed before any suite imports {@link AniLink}.
@@ -13,7 +13,7 @@ import type { SendRequestOptions } from "../../src/base/RequestHandler";
 
 /**
  * The request arguments captured by {@link mockSendRequest}, mirroring the
- * parameters of {@link sendRequest}.
+ * parameters of `sendRequest`.
  */
 export interface RecordedRequest {
     /** The absolute endpoint URL passed to the transport. */
@@ -53,7 +53,7 @@ vi.mock("../../src/base/RequestHandler", async () => {
 });
 
 /**
- * The mocked {@link sendRequest} transport. Inspect {@link mockSendRequest.mock.calls}
+ * The mocked `sendRequest` transport. Inspect {@link mockSendRequest.mock.calls}
  * directly, or use {@link getLastRequest} for the most recent call as a
  * {@link RecordedRequest}.
  */

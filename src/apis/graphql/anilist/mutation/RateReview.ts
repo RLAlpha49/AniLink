@@ -55,11 +55,14 @@ export class RateReviewMutation extends AniListOperation {
     /**
      * {@link RateReviewMutation.rateReview} sends a mutation request to rate a review.
      *
+     * Applies the authenticated user's vote (`UP_VOTE`, `DOWN_VOTE`, or `NO_VOTE` to clear it)
+     * and returns the updated review with its new `rating` tally.
+     *
      * @param variables - Values from {@link RateReviewVariables} for the mutation.
      * @returns The {@link ReviewResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `reviewId` or `rating` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/review
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<ReviewResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new RateReviewMutation("your-token").rateReview({ reviewId: 1, rating: "UP_VOTE" });

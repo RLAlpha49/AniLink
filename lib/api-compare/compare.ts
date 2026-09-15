@@ -27,6 +27,9 @@ export const REVIEW_NOTE_PATTERN = /review:\s*(\d{4}-Q[1-4])/;
  * Extracts the review notes documented for ignored operations from the
  * compare module source. Returns entries that lack a dated note so the CLI
  * can warn before the ignore list grows silently.
+ *
+ * @param source - Full text of this module, where the review notes live.
+ * @returns Ignored operations whose dated note is missing from `source`.
  */
 export function findIgnoredOperationsMissingReviewNote(source: string): string[] {
     const missing: string[] = [];
@@ -39,6 +42,21 @@ export function findIgnoredOperationsMissingReviewNote(source: string): string[]
     return missing;
 }
 
+/**
+ * `comparePackageToSchema` compares the package's GraphQL operations against
+ * the introspection snapshot and returns every drift finding.
+ *
+ * It verifies each operation's root field, arguments, variable types, and
+ * selection against the schema, then checks the variables/response interfaces
+ * against the extracted TypeScript contracts. Schema operations the package
+ * does not wrap are reported as warnings unless listed in
+ * {@link IGNORED_UNIMPLEMENTED_OPERATIONS}.
+ *
+ * @param input - The {@link Schema} snapshot, discovered {@link PackageOperation}s, and optional
+ *   extracted {@link TypeScriptContracts}.
+ * @returns All findings plus the implemented/unimplemented/removed/deprecated
+ *   coverage lists.
+ */
 export function comparePackageToSchema(input: {
     schema: Schema;
     operations: PackageOperation[];

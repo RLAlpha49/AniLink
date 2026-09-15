@@ -42,12 +42,12 @@ export interface MediaListCollectionVariables {
     userName?: string;
 
     /**
-     * `type` is a string representing the type of the media.
+     * `type` is a {@link MediaType} representing the type of the media. Required.
      */
     type: MediaType;
 
     /**
-     * `status` is a string representing the status of the media.
+     * `status` is a {@link MediaListStatus} representing the status of the media list entries.
      */
     status?: MediaListStatus;
 
@@ -84,17 +84,17 @@ export interface MediaListCollectionVariables {
     perChunk?: number;
 
     /**
-     * `status_in` is an array of strings representing the statuses of the media.
+     * `status_in` is an array of {@link MediaListStatus} values representing the statuses to include.
      */
     status_in?: MediaListStatus[];
 
     /**
-     * `status_not_in` is an array of strings representing the statuses not included in the media.
+     * `status_not_in` is an array of {@link MediaListStatus} values representing the statuses to exclude.
      */
     status_not_in?: MediaListStatus[];
 
     /**
-     * `status_not` is a string representing the status not included in the media.
+     * `status_not` is a {@link MediaListStatus} representing the status to exclude.
      */
     status_not?: MediaListStatus;
 
@@ -134,12 +134,12 @@ export interface MediaListCollectionVariables {
     completedAt_like?: string;
 
     /**
-     * `sort` is an array of strings representing the sort order of the media.
+     * `sort` is an array of {@link MediaListSort} values representing the sort order of the media list.
      */
     sort?: MediaListSort[];
 
     /**
-     * `scoreFormat` is a string representing the format of the score of the media.
+     * `scoreFormat` is a {@link ScoreFormat} representing the score format of the media list entries.
      */
     scoreFormat?: ScoreFormat;
 
@@ -212,10 +212,15 @@ export class MediaListCollectionQuery extends AniListOperation {
      * );
      * ```
      *
-     * @param variables - Values from {@link MediaListCollectionVariables} for the query.
+     * @param variables - Values from {@link MediaListCollectionVariables} for the query; `type` must be
+     * set, plus either `userId` or `userName`.
      * @returns The {@link MediaListCollectionResponse} from the query request, including `lists` and `hasNextChunk`.
      * @see https://docs.anilist.co/reference/object/medialistcollection
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<MediaListCollectionResponse, K | "hasNextChunk">`:
+     * the always-selected `hasNextChunk` is part of the narrowed type because the composed document always
+     * sends it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new MediaListCollectionQuery().mediaListCollection({

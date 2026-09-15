@@ -1,5 +1,5 @@
 /**
- * {@link MAL_API_BASE_URL} is the base URL for the MyAnimeList API v2 consumed by `MalAnimeOperation` and `MalUserOperation`.
+ * {@link MAL_API_BASE_URL} is the base URL for the MyAnimeList API v2 consumed by the MAL operation classes (`MalAnimeOperation`, `MalMangaOperation`, and `MalUserOperation`).
  *
  * It is the prefix for the built-in REST calls exposed through `MyAnimeListApi`.
  *
@@ -35,9 +35,9 @@ export const MAL_TOKEN_URL = "https://myanimelist.net/v1/oauth2/token";
 export const MAL_API_REFERENCE = "https://myanimelist.net/apiconfig/references/api/v2";
 
 /**
- * {@link DEFAULT_MAL_ANIME_FIELDS} is the default field selection sent by `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get` when {@link MalRequestOptions.fields} is omitted.
+ * {@link DEFAULT_MAL_ANIME_FIELDS} is the default field selection sent by `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get` when the `fields` request option is omitted.
  *
- * It mirrors the fields declared on {@link MalAnime}, so `GET /anime/{id}` works out of the box without an explicit `fields` query parameter.
+ * It mirrors the fields declared on `MalAnime`, so `GET /anime/{id}` works out of the box without an explicit `fields` query parameter.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  */

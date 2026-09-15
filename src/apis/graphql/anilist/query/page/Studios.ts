@@ -59,7 +59,7 @@ export interface StudiosVariables {
     id_not_in?: number[];
 
     /**
-     * `sort` is an array of strings representing the sort order.
+     * `sort` is an array of strings representing the sort order; `StudioSort` values.
      */
     sort?: string[];
 
@@ -69,7 +69,7 @@ export interface StudiosVariables {
     asHtml?: boolean;
 
     /**
-     * `mediaSort` is an array of strings representing the sort order for media.
+     * `mediaSort` is an array of strings representing the sort order for media; `MediaSort` values.
      */
     mediaSort?: string[];
 
@@ -94,7 +94,7 @@ export interface StudiosVariables {
     mediaPerPage?: number;
 
     /**
-     * `staffMediaSort` is an array of strings representing the sort order for staff media.
+     * `staffMediaSort` is an array of strings representing the sort order for staff media; `MediaSort` values.
      */
     staffMediaSort?: string[];
 
@@ -119,7 +119,7 @@ export interface StudiosVariables {
     staffMediaPerPage?: number;
 
     /**
-     * `charactersSort` is an array of strings representing the sort order for characters.
+     * `charactersSort` is an array of strings representing the sort order for characters; `CharacterSort` values.
      */
     charactersSort?: string[];
 
@@ -134,7 +134,7 @@ export interface StudiosVariables {
     charactersPerPage?: number;
 
     /**
-     * `characterMediaSort` is an array of strings representing the sort order for character media.
+     * `characterMediaSort` is an array of strings representing the sort order for character media; `MediaSort` values.
      */
     characterMediaSort?: string[];
 
@@ -196,12 +196,17 @@ const StudiosMappings = {
  */
 export class StudiosQuery extends AniListOperation {
     /**
-     * `studios` is a method that sends a query request to get studios.
+     * {@link StudiosQuery.studios} sends a query request to get a page of studios.
      *
-     * @param variables - Values from {@link StudiosVariables} for the query.
-     * @returns The {@link StudiosPageResponse} returned by the query.
+     * @param variables - Values from {@link StudiosVariables} for the query; `page` and `perPage` select the
+     * slice of results.
+     * @returns The {@link StudiosPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/studio
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<StudiosPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new StudiosQuery().studios({ search: "Bones", page: 1 });

@@ -17,7 +17,9 @@
  * The `_ALWAYS` constants typed by this alias are the single source of truth
  * for the always-keys: the operation class passes its constant to the
  * composer at runtime, and the facade generator parses the same constant
- * for the `DeepPick` narrowing, so the two can never drift.
+ * for the {@link DeepPick} narrowing, so the two can never drift.
+ *
+ * @see https://docs.anilist.co/reference/query
  */
 export type SelectionAlways = readonly string[];
 
@@ -27,6 +29,8 @@ export type SelectionAlways = readonly string[];
  *
  * Defined once here because every page query selects the same always-keys;
  * page classes import this constant instead of each declaring a copy.
+ *
+ * @see https://docs.anilist.co/reference/object/pageinfo
  */
 export const PAGE_ALWAYS: SelectionAlways = ["pageInfo"];
 
@@ -129,6 +133,8 @@ export type FieldsResult<Response, Always extends string = never> = Promise<
 
 /**
  * The result of stripping the `fields` option off a per-call options object.
+ *
+ * @see https://docs.anilist.co/reference/query
  */
 export interface SplitFieldsOption<Options extends object> {
     /** The caller-requested paths, or `undefined` for the maximal selection. */
@@ -156,6 +162,7 @@ type AnyFieldsSelection = {
  *
  * @param options - The per-call options object, or `undefined`.
  * @returns The `fields` value and the transport options without it.
+ * @see https://docs.anilist.co/reference/query
  */
 export function splitFieldsOption<Options extends object>(
     options: (Options & AnyFieldsSelection) | null | undefined

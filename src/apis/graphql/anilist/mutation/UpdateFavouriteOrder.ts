@@ -103,11 +103,14 @@ export class UpdateFavouriteOrderMutation extends AniListOperation {
     /**
      * {@link UpdateFavouriteOrderMutation.updateFavouriteOrder} sends a mutation request to update the order of favourites.
      *
+     * Reorders the authenticated user's favourites: each `*Order` array lists IDs in the new
+     * order and requires its matching `*Ids` array to be present. Returns the updated favourites.
+     *
      * @param variables - Values from {@link UpdateFavouriteOrderVariables} for the mutation.
      * @returns The {@link Favourites} returned by the mutation.
      * @throws Throws if no authentication token is configured, an order array lacks its corresponding ID array, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/favourites
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<Favourites, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new UpdateFavouriteOrderMutation("your-token").updateFavouriteOrder({ animeIds: [1], mangaIds: [], characterIds: [], staffIds: [], studioIds: [], animeOrder: [1], mangaOrder: [], characterOrder: [], staffOrder: [], studioOrder: [] });

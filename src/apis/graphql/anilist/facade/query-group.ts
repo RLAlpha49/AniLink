@@ -146,7 +146,7 @@ export type AniListQueries = {
      */
     query: {
         /**
-         * `UserQuery` fetches a single user by `id` or `userName`. Returns a {@link UserResponse}.
+         * `UserQuery` fetches a single user by `id` or `name`. Returns a {@link UserResponse}.
          * @param {UserVariables} variables - The {@link UserVariables} for the query.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<UserResponse>} A promise that resolves to the user's {@link UserResponse} data.
@@ -190,15 +190,16 @@ export type AniListQueries = {
             ) => Promise<DeepPick<MediaResponse, K | "id" | "idMal">>);
 
         /**
-         * `MediaTrendQuery` fetches the trend entry for a single airing media. Returns a {@link MediaTrendResponse}.
+         * `MediaTrendQuery` fetches a single daily trend entry for one media by `mediaId` or a date/stat filter. Returns a {@link MediaTrendResponse}.
          * @param {MediaTrendVariables} variables - The {@link MediaTrendVariables} for the query.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<MediaTrendResponse>} A promise that resolves to the {@link MediaTrendResponse} data.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.query.mediaTrend({mediaId: 1, type: 'ANIME'});
+         * await aniLink.anilist.query.mediaTrend({mediaId: 1});
          * ```
+         * A trend entry is one media's statistics for a single day.
          * @see https://docs.anilist.co/reference/object/mediatrend
          */
         mediaTrend: ((
@@ -224,7 +225,7 @@ export type AniListQueries = {
          * ```typescript
          * await aniLink.anilist.query.airingSchedule({mediaId: 130590});
          * ```
-         * Must be querying an airing anime. Returns error if not.
+         * At least one variable other than `asHtml` must be set. AniList only guarantees that future airing data is present and accurate.
          * @see https://docs.anilist.co/reference/object/airingschedule
          */
         airingSchedule: ((
@@ -241,7 +242,7 @@ export type AniListQueries = {
             ) => Promise<DeepPick<AiringScheduleResponse, K | "id">>);
 
         /**
-         * `CharacterQuery` fetches a single character by `id`. Returns a {@link CharacterResponse}.
+         * `CharacterQuery` fetches a single character by `id` or `search`. Returns a {@link CharacterResponse}.
          * @param {CharacterVariables} variables - The {@link CharacterVariables} for the query.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<CharacterResponse>} A promise that resolves to the {@link CharacterResponse} data.
@@ -252,7 +253,6 @@ export type AniListQueries = {
          *   id: 1,
          *   asHtml: true,
          *   mediaSort: ['POPULARITY_DESC'],
-         *   mediaType: 'ANIME',
          *   mediaOnList: true,
          *   mediaPage: 1,
          *   mediaPerPage: 10
@@ -274,7 +274,7 @@ export type AniListQueries = {
             ) => Promise<DeepPick<CharacterResponse, K | "id">>);
 
         /**
-         * `StaffQuery` fetches a single staff member by `id`. Returns a {@link StaffResponse}.
+         * `StaffQuery` fetches a single staff member by `id` or `search`. Returns a {@link StaffResponse}.
          * @param {StaffVariables} variables - The {@link StaffVariables} for the query.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<StaffResponse>} A promise that resolves to the {@link StaffResponse} data.
@@ -318,7 +318,7 @@ export type AniListQueries = {
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.query.mediaList({userId: 542244});
+         * await aniLink.anilist.query.mediaList({userId: 542244, mediaId: 1});
          * ```
          * @see https://docs.anilist.co/reference/object/medialist
          */
@@ -336,7 +336,7 @@ export type AniListQueries = {
             ) => Promise<DeepPick<MediaListResponse, K | "id">>);
 
         /**
-         * `MediaListCollectionQuery` fetches a user's full list collection, chunked via `chunk`/`perChunk`. Returns a {@link MediaListCollectionResponse}; flatten it with `AniListHelpers.flattenMediaListCollection`.
+         * `MediaListCollectionQuery` fetches a user's full list collection, chunked via `chunk`/`perChunk`. Returns a {@link MediaListCollectionResponse}; flatten it with `aniLink.anilist.flattenMediaListCollection`.
          * @param {MediaListCollectionVariables} variables - The {@link MediaListCollectionVariables} for the query.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<MediaListCollectionResponse>} A promise that resolves to the {@link MediaListCollectionResponse} data.
@@ -380,8 +380,8 @@ export type AniListQueries = {
         genreCollection: (options?: RequestOptions) => Promise<string[]>;
 
         /**
-         * `MediaTagCollectionQuery` returns all media tags recognized by AniList, optionally filtered by `variables`. Returns a {@link MediaTagCollectionResponse}.
-         * @param {MediaTagCollectionVariables} variables - Optional {@link MediaTagCollectionVariables} filters for the query.
+         * `MediaTagCollectionQuery` returns all media tags recognized by AniList, optionally filtered by media `status` (mod-only). Returns a {@link MediaTagCollectionResponse}.
+         * @param {MediaTagCollectionVariables} variables - Optional media `status` filter, honored for moderator accounts; a {@link MediaTagCollectionVariables}.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<MediaTagCollectionResponse>} A promise that resolves to the {@link MediaTagCollectionResponse} data.
          *
@@ -412,14 +412,14 @@ export type AniListQueries = {
         viewer: (variables?: UserVariables, options?: RequestOptions) => Promise<UserResponse>;
 
         /**
-         * `NotificationQuery` fetches a single notification by `id`. Returns a {@link NotificationResponse}. Must be authenticated.
+         * `NotificationQuery` fetches a single notification for the authenticated user, optionally filtered by `type`/`type_in`; `resetNotificationCount` resets the unread count. Returns a {@link NotificationResponse}. Must be authenticated.
          * @param {NotificationVariables} variables - The {@link NotificationVariables} for the query.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<NotificationResponse>} A promise that resolves to the {@link NotificationResponse} data.
          *
          * @example
          * ```typescript
-         * await aniLink.anilist.query.notification({asHtml: true});
+         * await aniLink.anilist.query.notification({type: 'AIRING', resetNotificationCount: true});
          * ```
          * Must be authenticated.
          * @see https://docs.anilist.co/reference/union/notificationunion
@@ -430,7 +430,7 @@ export type AniListQueries = {
         ) => Promise<NotificationResponse>;
 
         /**
-         * `StudioQuery` fetches a single studio by `id`. Returns a {@link StudioResponse}.
+         * `StudioQuery` fetches a single studio by `id` or `search`. Returns a {@link StudioResponse}.
          * @param {StudioVariables} variables - The {@link StudioVariables} for the query.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<StudioResponse>} A promise that resolves to the {@link StudioResponse} data.
@@ -567,7 +567,7 @@ export type AniListQueries = {
             ) => Promise<DeepPick<ThreadResponse, K | "id">>);
 
         /**
-         * `ThreadCommentQuery` fetches a single thread comment by `id`. Returns a {@link ThreadCommentResponse}.
+         * `ThreadCommentQuery` fetches thread comments filtered by `id`, `threadId`, or `userId`; at least one variable other than `asHtml` must be set. AniList types the field as a list, so the resolved value is an array even when the filters match one comment. Returns a {@link ThreadCommentResponse}.
          * @param {ThreadCommentVariables} variables - The {@link ThreadCommentVariables} for the query.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the {@link ThreadCommentResponse} data.
@@ -617,21 +617,22 @@ export type AniListQueries = {
             ) => Promise<DeepPick<RecommendationResponse, K | "id">>);
 
         /**
-         * `MarkdownQuery` parses AniList markdown into HTML. Returns the rendered HTML string.
+         * `MarkdownQuery` parses AniList markdown into HTML. Returns the rendered HTML string. Must be authenticated.
          * @param {MarkdownVariables} variables - The {@link MarkdownVariables} for the query.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
-         * @returns {Promise<string>} A promise that resolves to the markdown data.
+         * @returns {Promise<string>} A promise that resolves to the rendered HTML string.
          *
          * @example
          * ```typescript
          * await aniLink.anilist.query.markdown({markdown: 'Hello, world!'});
          * ```
+         * Must be authenticated.
          * @see https://docs.anilist.co/reference/object/parsedmarkdown
          */
         markdown: (variables: MarkdownVariables, options?: RequestOptions) => Promise<string>;
 
         /**
-         * `AniChartUserQuery` fetches the AniChart settings for the authenticated user. Returns an {@link AniChartUserResponse}. Must be authenticated.
+         * `AniChartUserQuery` fetches the authenticated user's AniChart profile — `user`, `settings`, and `highlights`. Returns an {@link AniChartUserResponse}. Must be authenticated.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<AniChartUserResponse>} A promise that resolves to the {@link AniChartUserResponse} data.
          *
@@ -645,8 +646,8 @@ export type AniListQueries = {
         aniChartUser: (options?: RequestOptions) => Promise<AniChartUserResponse>;
 
         /**
-         * `SiteStatisticsQuery` fetches aggregate AniList site statistics, optionally filtered by `variables`. Returns a {@link SiteStatisticsResponse}.
-         * @param {SiteStatisticsVariables} variables - Optional {@link SiteStatisticsVariables} filters for the query.
+         * `SiteStatisticsQuery` fetches aggregate AniList site statistics with optional per-entity sort and pagination controls. Returns a {@link SiteStatisticsResponse}.
+         * @param {SiteStatisticsVariables} variables - Optional per-entity sort and pagination controls; a {@link SiteStatisticsVariables}.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<SiteStatisticsResponse>} A promise that resolves to the {@link SiteStatisticsResponse} data.
          *
@@ -670,8 +671,8 @@ export type AniListQueries = {
             ) => Promise<DeepPick<SiteStatisticsResponse, K>>);
 
         /**
-         * `ExternalLinkSourceCollectionQuery` returns the available external link sources, optionally filtered by `variables`. Returns an {@link ExternalLinkSourceCollectionResponse}.
-         * @param {ExternalLinkSourceCollectionVariables} variables - Optional {@link ExternalLinkSourceCollectionVariables} filters for the query.
+         * `ExternalLinkSourceCollectionQuery` returns the available external link sources, optionally filtered by `id`, `type`, or `mediaType`. Returns an {@link ExternalLinkSourceCollectionResponse}.
+         * @param {ExternalLinkSourceCollectionVariables} variables - Optional `id`, `type`, or `mediaType` filters; a {@link ExternalLinkSourceCollectionVariables}.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<ExternalLinkSourceCollectionResponse>} A promise that resolves to the {@link ExternalLinkSourceCollectionResponse} data.
          *
@@ -679,7 +680,7 @@ export type AniListQueries = {
          * ```typescript
          * await aniLink.anilist.query.externalLinkSourceCollection();
          * ```
-         * @see https://docs.anilist.co/reference/query
+         * @see https://docs.anilist.co/reference/object/mediaexternallink
          */
         externalLinkSourceCollection: (
             variables?: ExternalLinkSourceCollectionVariables,
@@ -896,9 +897,9 @@ export type AniListQueries = {
              *
              * @example
              * ```typescript
-             * await aniLink.anilist.query.page.mediaTrends({page: 1, perPage: 10, type: 'ANIME'});
+             * await aniLink.anilist.query.page.mediaTrends({page: 1, perPage: 10, mediaId: 1});
              * ```
-             * Must be querying an airing anime. Returns error if not.
+             * Each entry is one media's statistics for a single day.
              * @see https://docs.anilist.co/reference/object/mediatrend
              */
             mediaTrends: ((
@@ -1131,8 +1132,9 @@ export type AniListQueries = {
              *
              * @example
              * ```typescript
-             * await aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeAbleId: 1});
+             * await aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeableId: 1, type: 'ACTIVITY'});
              * ```
+             * Both `likeableId` and `type` are required.
              * @see https://docs.anilist.co/reference/union/likeableunion
              */
             likes: ((

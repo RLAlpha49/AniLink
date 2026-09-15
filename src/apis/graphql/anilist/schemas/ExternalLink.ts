@@ -1,6 +1,6 @@
 /**
- * {@link ExternalLinkSchema} is a string representing the GraphQL schema for an external link.
- * It includes the id, url, and site.
+ * {@link ExternalLinkSchema} is the external-link selection (`id`/`url`/`site`),
+ * interpolated wherever a response lists a media's off-site links.
  * @see https://docs.anilist.co/reference/object/mediaexternallink
  */
 export const ExternalLinkSchema = `

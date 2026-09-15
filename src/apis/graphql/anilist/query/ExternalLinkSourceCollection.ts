@@ -10,21 +10,21 @@ import { type MediaType, MediaTypeMappings } from "../types/Type";
  *
  * Values are validated before dispatch.
  *
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/mediaexternallink
  */
 export interface ExternalLinkSourceCollectionVariables {
     /**
-     * `id` is a number representing the id of the external link source collection.
+     * `id` is a number filtering the collection by the id of the external link source.
      */
     id?: number;
 
     /**
-     * `type` is a string representing the type of the external link source collection.
+     * `type` is a string filtering by the type of the external link; an `ExternalLinkType` value.
      */
     type?: string;
 
     /**
-     * `mediaType` is a string representing the media type of the external link source collection.
+     * `mediaType` is a {@link MediaType} filtering the collection by the media type of the links.
      */
     mediaType?: MediaType;
 }
@@ -44,15 +44,18 @@ const ExternalLinkSourceCollectionMappings = {
 /**
  * {@link ExternalLinkSourceCollectionQuery} executes the AniList external-link-source query through {@link AniListOperation}.
  * Its public operation is {@link ExternalLinkSourceCollectionQuery.externalLinkSourceCollection}.
- * @see https://docs.anilist.co/reference/query
+ * @see https://docs.anilist.co/reference/object/mediaexternallink
  */
 export class ExternalLinkSourceCollectionQuery extends AniListOperation {
     /**
-     * {@link ExternalLinkSourceCollectionQuery.externalLinkSourceCollection} sends a query request to get external link source collections.
+     * {@link ExternalLinkSourceCollectionQuery.externalLinkSourceCollection} sends a query request to get
+     * the external link sources. AniList types the field as a list, so the resolved value is an array
+     * of link sources.
      *
      * @param variables - Optional values from {@link ExternalLinkSourceCollectionVariables}; defaults to an empty object.
-     * @returns The {@link ExternalLinkSourceCollectionResponse} returned by the query.
-     * @see https://docs.anilist.co/reference/query
+     * @returns The {@link ExternalLinkSourceCollectionResponse} data; the resolved value is an array
+     * of link sources at runtime.
+     * @see https://docs.anilist.co/reference/object/mediaexternallink
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
      * @example
      * ```typescript

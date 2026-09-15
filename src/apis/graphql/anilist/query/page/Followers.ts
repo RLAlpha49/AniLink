@@ -44,7 +44,7 @@ export interface FollowersVariables {
     asHtml?: boolean;
 
     /**
-     * `sort` is a string representing the sort order.
+     * `sort` is a string representing the sort order; a `UserSort` value.
      */
     sort?: string;
 
@@ -59,12 +59,12 @@ export interface FollowersVariables {
     mangaStatLimit?: number;
 
     /**
-     * `animeStatSort` is an array of strings representing the sort order for anime statistics.
+     * `animeStatSort` is an array of strings representing the sort order for anime statistics; `UserStatisticSort` values.
      */
     animeStatSort?: string[];
 
     /**
-     * `mangaStatSort` is an array of strings representing the sort order for manga statistics.
+     * `mangaStatSort` is an array of strings representing the sort order for manga statistics; `UserStatisticSort` values.
      */
     mangaStatSort?: string[];
 }
@@ -94,12 +94,17 @@ const FollowersMappings = {
  */
 export class FollowersQuery extends AniListOperation {
     /**
-     * `followers` is a method that sends a query request to get followers.
+     * {@link FollowersQuery.followers} sends a query request to get a page of a user's followers.
      *
-     * @param variables - Values from {@link FollowersVariables} for the query.
-     * @returns The {@link FollowersPageResponse} returned by the query.
+     * @param variables - Values from {@link FollowersVariables} for the query; `userId` must be set, and
+     * `page` and `perPage` select the slice of results.
+     * @returns The {@link FollowersPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<FollowersPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new FollowersQuery().followers({ userId: 1, page: 1, perPage: 10 });

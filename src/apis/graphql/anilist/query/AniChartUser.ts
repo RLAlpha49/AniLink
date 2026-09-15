@@ -4,19 +4,16 @@ import { type AniChartUserResponse } from "../interfaces/responses/query/AniChar
 import { BasicUserSchema } from "../schemas/Basic";
 
 /**
- * Fetches the authenticated user's AniChart data.
- *
- * Requires authentication.
- *
- * @param options - Optional per-request transport settings merged over the instance-level ones for this call only; see {@link RequestOptions}.
- * @returns The {@link AniChartUserResponse} for the viewer.
+ * {@link AniChartUserQuery} executes the authenticated AniChart-user query through {@link AniListOperation}.
+ * Its public operation is {@link AniChartUserQuery.aniChartUser}.
  * @see https://docs.anilist.co/reference/object/anichartuser
  */
 export class AniChartUserQuery extends AniListOperation {
     /**
-     * {@link AniChartUserQuery.aniChartUser} sends a query request to get AniChart users.
+     * {@link AniChartUserQuery.aniChartUser} sends a query request to get the authenticated user's AniChart
+     * data. Requires an auth token.
      *
-     * @returns The {@link AniChartUserResponse} returned by the query.
+     * @returns The {@link AniChartUserResponse} with the viewer's AniChart settings and highlights.
      * @see https://docs.anilist.co/reference/object/anichartuser
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
      * @example

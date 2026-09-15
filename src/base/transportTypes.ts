@@ -19,7 +19,10 @@ import { type AniLinkErrorCode, type RateLimitInfo } from "./AniLinkError";
  */
 export const DEFAULT_REQUEST_TIMEOUT = 30_000;
 
-/** Socket bounds for the shared keep-alive agents (see {@link MAX_SOCKETS}). */
+/**
+ * Upper bound on idle keep-alive sockets retained by the shared agents; see
+ * {@link MAX_SOCKETS} for the concurrent-socket bound.
+ */
 export const MAX_FREE_SOCKETS = 5;
 
 /**
@@ -99,7 +102,7 @@ export interface RetryPolicy {
  * `PUT`, `PATCH`, and `DELETE`. The union is shared so hooks and error
  * contexts stay provider-agnostic.
  *
- * @see {@link sendRequest}
+ * @see {@link RequestOptions}
  */
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -258,10 +261,10 @@ export type OnCircuitCloseHandler = (context: RequestContext & { host: string })
  * Pass these as the second argument of the {@link AniLink} constructor; they apply
  * per instance and never leak across clients.
  *
- * @see {@link sendRequest}
+ * @see {@link RetryPolicy}
  */
 export interface RequestOptions {
-    /** Milliseconds before a request is aborted. `0` disables the Axios timeout. Defaults to {@link DEFAULT_REQUEST_TIMEOUT}; timeout errors carry the effective duration as {@link AniLinkNetworkError.timeoutMs}. */
+    /** Milliseconds before a request is aborted. `0` disables the Axios timeout. Defaults to {@link DEFAULT_REQUEST_TIMEOUT}; timeout errors carry the effective duration as `AniLinkNetworkError.timeoutMs`. */
     timeout?: number;
     /** Signal used to cancel in-flight requests. */
     signal?: AbortSignal;

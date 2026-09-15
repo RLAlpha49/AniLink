@@ -1,14 +1,14 @@
 /**
- * {@link UserTitleLanguage} is a type representing the language of a user's title.
- * It can be one of the following: 'ROMAJI', 'ENGLISH', 'NATIVE', 'ROMAJI_STYLISED', 'ENGLISH_STYLISED', 'NATIVE_STYLISED'.
+ * {@link UserTitleLanguage} is the AniList UserTitleLanguage enum: the language a user
+ * prefers media titles in. The `_STYLISED` variants keep the site's stylised rendering.
  * @see https://docs.anilist.co/reference/enum/usertitlelanguage
  */
 export type UserTitleLanguage =
     "ROMAJI" | "ENGLISH" | "NATIVE" | "ROMAJI_STYLISED" | "ENGLISH_STYLISED" | "NATIVE_STYLISED";
 
 /**
- * {@link UserTitleLanguageMapping} is an object that maps each {@link UserTitleLanguage} to its corresponding string value.
- * It can be one of the following: 'ROMAJI', 'ENGLISH', 'NATIVE', 'ROMAJI_STYLISED', 'ENGLISH_STYLISED', 'NATIVE_STYLISED'.
+ * {@link UserTitleLanguageMapping} is the allowlist of {@link UserTitleLanguage} values
+ * accepted by the `titleLanguage` variable of the `UpdateUser` mutation.
  * @see https://docs.anilist.co/reference/enum/usertitlelanguage
  */
 export const UserTitleLanguageMapping: readonly UserTitleLanguage[] = [

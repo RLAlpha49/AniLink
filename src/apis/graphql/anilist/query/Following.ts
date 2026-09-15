@@ -25,7 +25,7 @@ export interface FollowingVariables {
     userId: number;
 
     /**
-     * `sort` is a string representing the sort order.
+     * `sort` is a {@link UserSort} representing the sort order.
      */
     sort?: UserSort;
 
@@ -45,12 +45,12 @@ export interface FollowingVariables {
     mangaStatLimit?: number;
 
     /**
-     * `animeStatSort` is an array of strings representing the sort order for anime statistics.
+     * `animeStatSort` is an array of {@link UserStatisticSort} values representing the sort order for anime statistics.
      */
     animeStatSort?: UserStatisticSort[];
 
     /**
-     * `mangaStatSort` is an array of strings representing the sort order for manga statistics.
+     * `mangaStatSort` is an array of {@link UserStatisticSort} values representing the sort order for manga statistics.
      */
     mangaStatSort?: UserStatisticSort[];
 }
@@ -78,10 +78,12 @@ const FollowingMappings = {
  */
 export class FollowingQuery extends AniListOperation {
     /**
-     * {@link FollowingQuery.following} sends a query request to get following users.
+     * {@link FollowingQuery.following} sends a query request to get a user the given user follows.
+     * AniList resolves the field to a single {@link UserResponse}, not a list.
      *
-     * @param variables - Values from {@link FollowingVariables} for the query.
-     * @returns The {@link UserResponse} returned by the query.
+     * @param variables - Values from {@link FollowingVariables} for the query; `userId` must be set.
+     * @returns The single {@link UserResponse} for one followed user; use the paginated `following`
+     * query for the full list.
      * @see https://docs.anilist.co/reference/object/user
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
      * @example

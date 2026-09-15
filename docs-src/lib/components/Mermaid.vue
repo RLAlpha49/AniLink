@@ -30,6 +30,13 @@ function isDark(): boolean {
     return document.documentElement.classList.contains("dark");
 }
 
+/**
+ * Render the diagram source with a lazily imported Mermaid, themed for
+ * the active light/dark mode. A malformed diagram falls back to the
+ * escaped raw source in a `<pre>` so the page never shows a blank hole;
+ * the label contrast fixup runs on the next frame once the SVG is in
+ * the DOM.
+ */
 async function render(): Promise<void> {
     if (typeof window === "undefined" || !container.value) return;
     const mermaid = (await import("mermaid")).default;

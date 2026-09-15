@@ -30,12 +30,12 @@ export interface ViewerVariables {
     mangaStatLimit?: number;
 
     /**
-     * `animeStatSort` is an array of strings representing the sort order of the anime statistics.
+     * `animeStatSort` is an array of {@link UserStatisticSort} values representing the sort order of the anime statistics.
      */
     animeStatSort?: UserStatisticSort[];
 
     /**
-     * `mangaStatSort` is an array of strings representing the sort order of the manga statistics.
+     * `mangaStatSort` is an array of {@link UserStatisticSort} values representing the sort order of the manga statistics.
      */
     mangaStatSort?: UserStatisticSort[];
 }

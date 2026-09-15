@@ -15,7 +15,8 @@ import { TagSchema } from "../schemas/Tag";
  */
 export interface MediaTagCollectionVariables {
     /**
-     * `status` is a number representing the status of the media tag.
+     * `status` is a number filtering the returned tags by media status; AniList documents this
+     * filter as mod-only.
      */
     status?: number;
 }
@@ -37,10 +38,12 @@ const MediaTagCollectionMappings = {
  */
 export class MediaTagCollectionQuery extends AniListOperation {
     /**
-     * {@link MediaTagCollectionQuery.mediaTagCollection} sends a query request to get media tag collection data.
+     * {@link MediaTagCollectionQuery.mediaTagCollection} sends a query request to get AniList's media
+     * tag collection. AniList types the field as a list, so the resolved value is an array of tags.
      *
      * @param variables - Optional values from {@link MediaTagCollectionVariables}; defaults to an empty object.
-     * @returns The {@link MediaTagCollectionResponse} returned by the query.
+     * @returns The {@link MediaTagCollectionResponse} data; the resolved value is an array of tags
+     * at runtime.
      * @see https://docs.anilist.co/reference/object/mediatag
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
      * @example

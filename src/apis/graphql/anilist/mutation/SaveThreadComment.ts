@@ -22,12 +22,12 @@ import { ThreadCommentSchema } from "../schemas/responses/query/ThreadComment";
  */
 export interface SaveThreadCommentVariables {
     /**
-     * `id` is the ID of the thread.
+     * `id` is the ID of the thread comment to update.
      */
     id: number;
 
     /**
-     * `threadId` is the ID of the thread.
+     * `threadId` is the ID of the thread to post or update the comment on.
      */
     threadId: number;
 
@@ -42,12 +42,12 @@ export interface SaveThreadCommentVariables {
     comment: string;
 
     /**
-     * `locked` is a boolean that determines if the thread is locked.
+     * `locked` is a boolean that determines if the comment is locked.
      */
     locked: boolean;
 
     /**
-     * `asHtml` is a boolean that determines if the response is in HTML format.
+     * `asHtml` is a boolean that determines whether the comment text is returned rendered as HTML.
      */
     asHtml: boolean;
 }
@@ -78,11 +78,15 @@ export class SaveThreadCommentMutation extends AniListOperation {
     /**
      * {@link SaveThreadCommentMutation.saveThreadComment} sends a mutation request to save a thread comment.
      *
+     * Updates the thread comment named by `id` and returns the saved comment. The upstream
+     * mutation also posts a comment on `threadId` when `id` is omitted, but
+     * {@link SaveThreadCommentVariables} requires `id`, so the typed surface is update-only.
+     *
      * @param variables - Values from {@link SaveThreadCommentVariables} for the mutation.
      * @returns The {@link ThreadCommentResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `threadId` is missing, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/threadcomment
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<ThreadCommentResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveThreadCommentMutation("your-token").saveThreadComment({ id: 1, threadId: 1, parentCommentId: 0, comment: "Hello, world!", locked: false, asHtml: true });

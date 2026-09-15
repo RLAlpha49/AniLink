@@ -1,5 +1,5 @@
 /**
- * The complete set of {@link RequestOptions} keys, used by the credential
+ * The complete set of `RequestOptions` keys, used by the credential
  * seam to allowlist transport fields and reject mistyped credential keys
  * (for example `accesstoken` instead of `accessToken`) at client
  * construction instead of silently ignoring them.

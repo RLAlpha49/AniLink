@@ -39,7 +39,7 @@ export interface MediaTrendsVariables {
     mediaId?: number;
 
     /**
-     * `date` is a number representing the date.
+     * `date` is a number representing the date as a Unix timestamp.
      */
     date?: number;
 
@@ -154,7 +154,7 @@ export interface MediaTrendsVariables {
     episode_not?: number;
 
     /**
-     * `sort` is an array of strings representing the sort order.
+     * `sort` is an array of strings representing the sort order; `MediaTrendSort` values.
      */
     sort?: string[];
 
@@ -208,12 +208,17 @@ const MediaTrendsMappings = {
  */
 export class MediaTrendsQuery extends AniListOperation {
     /**
-     * `mediaTrends` is a method that sends a query request to get media trends.
+     * {@link MediaTrendsQuery.mediaTrends} sends a query request to get a page of media trend points.
      *
-     * @param variables - Values from {@link MediaTrendsVariables} for the query.
-     * @returns The {@link MediaTrendsPageResponse} returned by the query.
+     * @param variables - Values from {@link MediaTrendsVariables} for the query; `page` and `perPage` select
+     * the slice of results.
+     * @returns The {@link MediaTrendsPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/mediatrend
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<MediaTrendsPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new MediaTrendsQuery().mediaTrends({ mediaId: 1, page: 1, perPage: 10 });

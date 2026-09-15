@@ -65,7 +65,7 @@ export interface StaffsVariables {
     id_not_in?: number[];
 
     /**
-     * `sort` is an array of strings representing the sort order.
+     * `sort` is an array of strings representing the sort order; `StaffSort` values.
      */
     sort?: string[];
 
@@ -75,12 +75,12 @@ export interface StaffsVariables {
     asHtml?: boolean;
 
     /**
-     * `staffMediaSort` is an array of strings representing the sort order for staff media.
+     * `staffMediaSort` is an array of strings representing the sort order for staff media; `MediaSort` values.
      */
     staffMediaSort?: string[];
 
     /**
-     * `staffMediaType` is a string representing the type of the staff media.
+     * `staffMediaType` is a string representing the type of the staff media; a `MediaType` value.
      */
     staffMediaType?: string;
 
@@ -100,7 +100,7 @@ export interface StaffsVariables {
     staffMediaPerPage?: number;
 
     /**
-     * `charactersSort` is an array of strings representing the sort order for characters.
+     * `charactersSort` is an array of strings representing the sort order for characters; `CharacterSort` values.
      */
     charactersSort?: string[];
 
@@ -115,7 +115,7 @@ export interface StaffsVariables {
     charactersPerPage?: number;
 
     /**
-     * `characterMediaSort` is an array of strings representing the sort order for character media.
+     * `characterMediaSort` is an array of strings representing the sort order for character media; `MediaSort` values.
      */
     characterMediaSort?: string[];
 
@@ -173,12 +173,17 @@ const StaffsMappings = {
  */
 export class StaffsQuery extends AniListOperation {
     /**
-     * `staffs` is a method that sends a query request to get staffs.
+     * {@link StaffsQuery.staffs} sends a query request to get a page of staff.
      *
-     * @param variables - Values from {@link StaffsVariables} for the query.
-     * @returns The {@link StaffsPageResponse} returned by the query.
+     * @param variables - Values from {@link StaffsVariables} for the query; `page` and `perPage` select the
+     * slice of results.
+     * @returns The {@link StaffsPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/staff
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<StaffsPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new StaffsQuery().staffs({ search: "Hayao Miyazaki", page: 1 });

@@ -114,6 +114,20 @@ export interface ResolvedProviderCredentials {
     options?: RequestOptions;
 }
 
+/**
+ * Splits a provider credential slot into plain transport options, dropping
+ * the provider's own auth fields and rejecting unknown keys.
+ *
+ * An unknown key is usually a mistyped credential field (for example
+ * `accesstoken` instead of `accessToken`), so it throws a `TypeError` naming
+ * the valid transport and provider fields instead of silently ignoring the
+ * value.
+ *
+ * @param credentials - The provider credential slot to split.
+ * @param providerFields - The provider's own auth field names, excluded from the transport options.
+ * @returns The transport options, or `undefined` when the slot carried none.
+ * @throws A `TypeError` when the slot carries an unknown credential key.
+ */
 const resolveTransportOptions = (
     credentials: ProviderCredentials,
     providerFields: readonly string[]
@@ -137,8 +151,13 @@ const resolveTransportOptions = (
 /**
  * Splits AniList authentication from the shared transport settings.
  *
+ * Unknown keys are rejected with a `TypeError` at client construction so a
+ * mistyped credential field (for example `accesstoken` instead of
+ * `authToken`) fails immediately instead of being silently ignored.
+ *
  * @param credentials - The AniList credential slot.
  * @returns Provider authentication and transport settings, or empty values when omitted.
+ * @throws A `TypeError` when the slot carries an unknown credential key.
  *
  * @see {@link AniListCredentials}
  */
@@ -161,8 +180,13 @@ export function resolveAniListCredentials(
  * `Authorization: Bearer` is the authentication and the extra header would
  * only widen client-ID exposure to intermediaries that log request headers.
  *
+ * Unknown keys are rejected with a `TypeError` at client construction so a
+ * mistyped credential field fails immediately instead of being silently
+ * ignored.
+ *
  * @param credentials - The MAL credential slot.
  * @returns Provider authentication and transport settings, or empty values when omitted.
+ * @throws A `TypeError` when the slot carries an unknown credential key.
  *
  * @see {@link MalCredentials}
  */

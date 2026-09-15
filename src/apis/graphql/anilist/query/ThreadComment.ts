@@ -45,7 +45,7 @@ export interface ThreadCommentVariables {
     userId?: number;
 
     /**
-     * `sort` is an array of strings representing the sort order of the thread comment.
+     * `sort` is an array of {@link ThreadSort} values representing the sort order of the thread comment.
      */
     sort?: ThreadSort[];
 
@@ -77,11 +77,19 @@ const ThreadCommentMappings = {
 export class ThreadCommentQuery extends AniListOperation {
     /**
      * {@link ThreadCommentQuery.threadComment} sends a query request to get thread comment data.
+     * AniList types the field as a list, so the resolved value is an array even when the filters
+     * match one comment.
      *
-     * @param variables - Values from {@link ThreadCommentVariables} for the query.
-     * @returns The {@link ThreadCommentResponse} returned by the query.
+     * @param variables - Values from {@link ThreadCommentVariables} for the query; at least one variable other
+     * than `asHtml` must be set.
+     * @returns The {@link ThreadCommentResponse} data; the resolved value is an array of comments
+     * at runtime.
      * @see https://docs.anilist.co/reference/object/threadcomment
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<ThreadCommentResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new ThreadCommentQuery().threadComment({ threadId: 1 });

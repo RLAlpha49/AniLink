@@ -36,7 +36,7 @@ export interface ActivityVariables {
     mediaId?: number;
 
     /**
-     * `type` is a string representing the type of the activity.
+     * `type` is an {@link ActivityType} representing the type of the activity.
      */
     type?: ActivityType;
 
@@ -56,7 +56,7 @@ export interface ActivityVariables {
     hasRepliesOrTypeText?: boolean;
 
     /**
-     * `createdAt` is a number representing the creation time of the activity.
+     * `createdAt` is a number representing the creation time of the activity as a Unix timestamp.
      */
     createdAt?: number;
 
@@ -121,17 +121,17 @@ export interface ActivityVariables {
     mediaId_not_in?: number[];
 
     /**
-     * `type_not` is a string representing the type of the activity that should not be included.
+     * `type_not` is an {@link ActivityType} representing the type of activity to exclude.
      */
     type_not?: ActivityType;
 
     /**
-     * `type_in` is an array of strings representing the types of the activities that should be included.
+     * `type_in` is an array of {@link ActivityType} values representing the types of activities to include.
      */
     type_in?: ActivityType[];
 
     /**
-     * `type_not_in` is an array of strings representing the types of the activities that should not be included.
+     * `type_not_in` is an array of {@link ActivityType} values representing the types of activities to exclude.
      */
     type_not_in?: ActivityType[];
 
@@ -196,7 +196,8 @@ export class ActivityQuery extends AniListOperation {
     /**
      * {@link ActivityQuery.activity} sends a query request to get activities.
      *
-     * @param variables - Values from {@link ActivityVariables} for the query.
+     * @param variables - Values from {@link ActivityVariables} for the query; at least one variable other
+     * than `asHtml` must be set.
      * @returns The {@link Activity} returned by the query.
      * @see https://docs.anilist.co/reference/union/activityunion
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.

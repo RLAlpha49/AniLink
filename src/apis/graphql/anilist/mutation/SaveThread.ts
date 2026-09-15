@@ -57,7 +57,7 @@ export interface SaveThreadVariables {
     locked: boolean;
 
     /**
-     * `asHtml` is a boolean that determines if the response is in HTML format.
+     * `asHtml` is a boolean that determines whether the thread body is returned rendered as HTML.
      */
     asHtml: boolean;
 }
@@ -90,11 +90,15 @@ export class SaveThreadMutation extends AniListOperation {
     /**
      * {@link SaveThreadMutation.saveThread} sends a mutation request to save a thread.
      *
+     * Updates the forum thread named by `id` and returns the saved thread. The upstream
+     * mutation also creates a new thread when `id` is omitted, but
+     * {@link SaveThreadVariables} requires `id`, so the typed surface is update-only.
+     *
      * @param variables - Values from {@link SaveThreadVariables} for the mutation.
      * @returns The {@link ThreadResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `title` is missing, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/thread
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<ThreadResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveThreadMutation("your-token").saveThread({ id: 1, title: "Example thread", body: "Hello, world!", categories: [], mediaCategories: [], sticky: false, locked: false, asHtml: true });

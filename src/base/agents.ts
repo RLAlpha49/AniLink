@@ -14,12 +14,20 @@ import https from "node:https";
 import axios from "axios";
 import { DEFAULT_REQUEST_TIMEOUT, MAX_FREE_SOCKETS, MAX_SOCKETS } from "./transportTypes";
 
+/**
+ * Shared keep-alive agent for plain-HTTP requests, reused by every request
+ * that does not customize socket bounds.
+ */
 const defaultHttpAgent = new http.Agent({
     keepAlive: true,
     maxSockets: MAX_SOCKETS,
     maxFreeSockets: MAX_FREE_SOCKETS,
     scheduling: "lifo",
 });
+/**
+ * Shared keep-alive agent for HTTPS requests, reused by every request that
+ * does not customize socket bounds.
+ */
 const defaultHttpsAgent = new https.Agent({
     keepAlive: true,
     maxSockets: MAX_SOCKETS,
@@ -27,6 +35,10 @@ const defaultHttpsAgent = new https.Agent({
     scheduling: "lifo",
 });
 
+/**
+ * The Axios client every transport request is dispatched through, bound
+ * to the shared keep-alive agents.
+ */
 const axiosClient = axios.create({
     timeout: DEFAULT_REQUEST_TIMEOUT,
     httpAgent: defaultHttpAgent,
@@ -122,7 +134,7 @@ export const destroyCachedAgents = (): void => {
  * module-level agents are reused, so the default path allocates nothing and
  * every instance keeps competing for the same warm pool. Supplying either
  * bound constructs dedicated agents, but identical configurations now share
- * one cached agent pair (bounded by {@link MAX_CACHED_AGENT_PAIRS}) so
+ * one cached agent pair (bounded by `MAX_CACHED_AGENT_PAIRS`) so
  * repeated requests with the same socket settings reuse warm sockets instead
  * of leaking a fresh agent pair per request. LRU entries are evicted
  * (dropped from the cache without destroying their agents, which may still

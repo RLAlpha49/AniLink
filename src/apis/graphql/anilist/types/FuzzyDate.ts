@@ -1,28 +1,29 @@
 /**
- * {@link FuzzyDateInput} is a type representing a fuzzy date input.
- * It includes the year, month, and day each having their own optional properties.
+ * {@link FuzzyDateInput} is the AniList FuzzyDateInput object: a date whose unknown parts
+ * are `0` rather than omitted. All three fields are required — `19980000` means "April 1998
+ * or later, day unknown". Build one with the `fuzzyDate` helper.
  * @see https://docs.anilist.co/reference/input/fuzzydateinput
  */
 export type FuzzyDateInput = {
     /**
-     * `year` is an optional number representing the year of the fuzzy date input.
+     * The year, `0` when unknown.
      */
     year: number;
 
     /**
-     * `month` is an optional number representing the month of the fuzzy date input.
+     * The 1-based month, `0` when unknown.
      */
     month: number;
 
     /**
-     * `day` is an optional number representing the day of the fuzzy date input.
+     * The day of the month, `0` when unknown.
      */
     day: number;
 };
 
 /**
- * {@link FuzzyDateMappings} is a constant that maps the {@link FuzzyDateInput} fields to their expected types.
- * The `year`, `month`, and `day` fields are mapped to 'number'.
+ * {@link FuzzyDateMappings} is the field-shape map the list-entry mutations validate their
+ * `startedAt`/`completedAt` {@link FuzzyDateInput} values against before dispatch.
  * @see https://docs.anilist.co/reference/input/fuzzydateinput
  */
 export const FuzzyDateMappings = {

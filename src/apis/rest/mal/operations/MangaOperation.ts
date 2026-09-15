@@ -104,12 +104,12 @@ export class MalMangaOperation extends RestOperation {
     /**
      * {@link MalMangaOperation.updateMyListStatus} updates the authenticated user's manga list status.
      *
-     * It calls `PATCH /manga/{id}/my_list_status` through `RestOperation.execute` with `requiresAuth` and a form-urlencoded {@link MalMangaListStatusUpdate} body (MAL rejects JSON on this endpoint), returning the updated {@link MalMangaListStatus}. The facade alias is `MyAnimeListMangaApi.updateMyListStatus` and it requires `MalCredentials.accessToken`.
+     * It calls `PATCH /manga/{id}/my_list_status` through `RestOperation.execute` with `requiresAuth` and a form-urlencoded {@link MalMangaListStatusUpdate} body (the endpoint's documented request format), returning the updated {@link MalMangaListStatus}. The facade alias is `MyAnimeListMangaApi.updateMyListStatus` and it requires `MalCredentials.accessToken`.
      *
      * @param params - The list-status write inputs; a {@link MalMangaListStatusUpdateParams} carrying the manga ID plus only the fields to change.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The updated {@link MalMangaListStatus}.
-     * @throws An `AniLinkAuthError` without an access token, an `AniLinkValidationError` when params carries no list-status field to change, or a normalized request error.
+     * @throws An `AniLinkAuthError` without an access token, an {@link AniLinkValidationError} when params carries no list-status field to change, or a normalized request error.
      * @example
      * ```typescript
      * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;

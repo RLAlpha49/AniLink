@@ -6,12 +6,13 @@ import { defineBuildConfig } from "unbuild";
  * unbuild bundles each entry with Rollup and emits:
  *   - `dist/AniLink.mjs`   (root entry: `anilink`)
  *   - `dist/anilist.mjs`   (provider barrel: `anilink/anilist`)
+ *   - `dist/mal.mjs`       (provider barrel: `anilink/mal`)
  *   - matching `.d.ts` declaration files, external types resolved via
  *     @rollup/plugin-typescript
  *
- * Both entries share the same module graph, so Rollup deduplicates the shared
- * chunks; the subpath barrel exists so consumers can scope imports to one
- * provider. `axios` (the sole runtime dependency) stays external
+ * All three entries share the same module graph, so Rollup deduplicates the
+ * shared chunks; the subpath barrels exist so consumers can scope imports
+ * to one provider. `axios` (the sole runtime dependency) stays external
  * automatically via unbuild's package.json inference; `inlineDependencies:
  * false` keeps it that way. `rollup.emitCJS: false` ensures no CommonJS
  * output is produced.

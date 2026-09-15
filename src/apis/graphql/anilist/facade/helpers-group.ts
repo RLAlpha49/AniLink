@@ -78,7 +78,7 @@ export type AniListHelpers = {
      * reached, collecting every item across pages.
      * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal` (forwarded from the `signal` option so an aborted traversal cancels the in-flight request).
      * @param itemsKey - The key of the items array on the page response (e.g. `"media"`, `"users"`).
-     * @param options - Optional `perPage`, `startPage`, and `maxPages` controls; a {@link PaginateOptions}.
+     * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, and `onPage` controls; a {@link PaginateOptions}.
      * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run; a {@link PaginateResult}.
      * @see https://docs.anilist.co/reference/object/pageinfo
      * @example
@@ -100,7 +100,7 @@ export type AniListHelpers = {
      * `paginatePages` is an async generator yielding each {@link PageInfo}-based page until
      * `hasNextPage` is false or `maxPages` is reached.
      * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal` (forwarded from the `signal` option so an aborted traversal cancels the in-flight request).
-     * @param options - Optional `perPage`, `startPage`, and `maxPages` controls; a {@link PaginateOptions}.
+     * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, and `signal` controls; a {@link PaginateOptions}.
      * @returns An async generator yielding each raw page response in turn.
      * @see https://docs.anilist.co/reference/object/pageinfo
      * @example
@@ -122,7 +122,7 @@ export type AniListHelpers = {
      * false or `maxChunks` is reached, collecting every item across chunks.
      * @param fetchChunk - Callback that fetches a single chunk given its 1-based number, `perChunk`, and the traversal's `AbortSignal` (forwarded from the `signal` option so an aborted traversal cancels the in-flight request).
      * @param itemsKey - The key of the items array on the chunk response (e.g. `"lists"`).
-     * @param options - Optional `perChunk`, `startChunk`, and `maxChunks` controls; a {@link ChunkPaginateOptions}.
+     * @param options - Optional `perChunk`, `startChunk`, `maxChunks`, `concurrency`, `signal`, and `onChunk` controls; a {@link ChunkPaginateOptions}.
      * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run; a {@link ChunkPaginateResult}.
      * @see https://docs.anilist.co/reference/object/medialistcollection
      * @example
@@ -145,7 +145,7 @@ export type AniListHelpers = {
     /**
      * {@link fuzzyDate} builds an AniList {@link FuzzyDateInput} from optional year, month, and day parts.
      * @param options - The year, month, and day to include; a {@link FuzzyDateOptions}. All fields are optional.
-     * @returns A {@link FuzzyDateInput} object containing only the provided parts.
+     * @returns A {@link FuzzyDateInput} object with omitted parts set to `0`, the value AniList uses for an unknown date part.
      * @see https://docs.anilist.co/reference/input/fuzzydateinput
      * @example
      * ```typescript
@@ -184,7 +184,7 @@ export type AniListHelpers = {
      * ```typescript
      * const collection = await aniLink.anilist.query.mediaListCollection({ userId: 542244, type: "ANIME" });
      * const entries = aniLink.anilist.flattenMediaListCollection(collection);
-     * console.log(entries.length, entries[0].listName);
+     * console.log(entries.length, entries[0].listNames);
      * ```
      */
     flattenMediaListCollection: (
@@ -203,7 +203,7 @@ export type AniListHelpers = {
      *
      * const malId = anilistToMal.get(21);
      * if (malId !== undefined) {
-     *   const malAnime = await aniLink.mal.anime.get(malId, { fields: ["id", "title"] });
+     *   const malAnime = await aniLink.mal.anime.get({ id: malId }, { fields: ["id", "title"] });
      * }
      * ```
      */

@@ -36,12 +36,13 @@ export interface SaveRecommendationVariables {
     mediaRecommendationId: number;
 
     /**
-     * `rating` is the rating of the recommendation.
+     * `rating` is a {@link RecommendationRating} representing the vote to apply to the recommendation.
      */
     rating: RecommendationRating;
 
     /**
-     * `asHtml` is a boolean that determines if the review is in HTML format.
+     * `asHtml` is a boolean that determines whether HTML-renderable fields in the response
+     * (the media description, the user about) are returned as HTML.
      */
     asHtml?: boolean;
 }
@@ -70,11 +71,15 @@ export class SaveRecommendationMutation extends AniListOperation {
     /**
      * {@link SaveRecommendationMutation.saveRecommendation} sends a mutation request to save a recommendation.
      *
+     * Applies the authenticated user's rating (`RATE_UP`, `RATE_DOWN`, or `NO_RATING` to clear
+     * it) to the recommendation linking `mediaId` and `mediaRecommendationId`. Returns the
+     * updated recommendation.
+     *
      * @param variables - Values from {@link SaveRecommendationVariables} for the mutation.
      * @returns The {@link RecommendationResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `mediaId`, `mediaRecommendationId`, or `rating` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/recommendation
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<RecommendationResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveRecommendationMutation("your-token").saveRecommendation({ mediaId: 1, mediaRecommendationId: 2, rating: "RATE_UP" });

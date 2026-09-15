@@ -23,9 +23,9 @@
  * - `Staff.ts` / `Studio.ts` — shared sub-shapes referenced by the supersets
  *   above and by generated responses; they correspond to no single fragment.
  *
- * Operation-derived outputs (`responses/page/*`, {@link AniChartUserResponse},
- * {@link ExternalLinkSourceCollectionResponse}, {@link MediaTagCollectionResponse},
- * {@link DeleteMediaListEntryResponse}, and the {@link Thread} aliases) are generated from
+ * Operation-derived outputs (`responses/page/*`, `AniChartUserResponse`,
+ * `ExternalLinkSourceCollectionResponse`, `MediaTagCollectionResponse`,
+ * `DeleteMediaListEntryResponse`, and the `Thread` aliases) are generated from
  * the operation files' inline documents, so they always mirror what the client
  * actually sends.
  */

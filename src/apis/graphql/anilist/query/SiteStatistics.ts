@@ -28,7 +28,7 @@ export const SITE_STATISTICS_ALWAYS: readonly string[] = [];
  */
 export interface SiteStatisticsVariables {
     /**
-     * `usersSort` is a string representing the sort order of the users.
+     * `usersSort` is an array of {@link SiteTrendSort} values representing the sort order of the users trend.
      */
     usersSort?: SiteTrendSort[];
 
@@ -43,7 +43,7 @@ export interface SiteStatisticsVariables {
     usersPerPage?: number;
 
     /**
-     * `animeSort` is a string representing the sort order of the anime.
+     * `animeSort` is an array of {@link SiteTrendSort} values representing the sort order of the anime trend.
      */
     animeSort?: SiteTrendSort[];
 
@@ -58,7 +58,7 @@ export interface SiteStatisticsVariables {
     animePerPage?: number;
 
     /**
-     * `mangaSort` is a string representing the sort order of the manga.
+     * `mangaSort` is an array of {@link SiteTrendSort} values representing the sort order of the manga trend.
      */
     mangaSort?: SiteTrendSort[];
 
@@ -73,7 +73,7 @@ export interface SiteStatisticsVariables {
     mangaPerPage?: number;
 
     /**
-     * `charactersSort` is a string representing the sort order of the characters.
+     * `charactersSort` is an array of {@link SiteTrendSort} values representing the sort order of the characters trend.
      */
     charactersSort?: SiteTrendSort[];
 
@@ -88,7 +88,7 @@ export interface SiteStatisticsVariables {
     charactersPerPage?: number;
 
     /**
-     * `staffSort` is a string representing the sort order of the staff.
+     * `staffSort` is an array of {@link SiteTrendSort} values representing the sort order of the staff trend.
      */
     staffSort?: SiteTrendSort[];
 
@@ -103,7 +103,7 @@ export interface SiteStatisticsVariables {
     staffPerPage?: number;
 
     /**
-     * `studiosSort` is a string representing the sort order of the studios.
+     * `studiosSort` is an array of {@link SiteTrendSort} values representing the sort order of the studios trend.
      */
     studiosSort?: SiteTrendSort[];
 
@@ -118,7 +118,7 @@ export interface SiteStatisticsVariables {
     studiosPerPage?: number;
 
     /**
-     * `reviewsSort` is a string representing the sort order of the reviews.
+     * `reviewsSort` is an array of {@link SiteTrendSort} values representing the sort order of the reviews trend.
      */
     reviewsSort?: SiteTrendSort[];
 
@@ -175,7 +175,10 @@ export class SiteStatisticsQuery extends AniListOperation {
      * @param variables - Optional values from {@link SiteStatisticsVariables}; defaults to an empty object.
      * @returns The {@link SiteStatisticsResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/sitestatistics
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<SiteStatisticsResponse, K>`. Omit
+     * `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SiteStatisticsQuery().siteStatistics({});

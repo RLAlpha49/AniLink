@@ -27,12 +27,12 @@ export interface ToggleThreadSubscriptionVariables {
     threadId: number;
 
     /**
-     * `subscribe` is a boolean representing whether the activity is subscribed.
+     * `subscribe` is a boolean representing whether to subscribe to the thread's comments.
      */
     subscribe: boolean;
 
     /**
-     * `asHtml` is a boolean representing whether the activity descriptions is in HTML format.
+     * `asHtml` is a boolean representing whether the thread body is returned rendered as HTML.
      */
     asHtml?: boolean;
 }
@@ -60,11 +60,14 @@ export class ToggleThreadSubscriptionMutation extends AniListOperation {
     /**
      * {@link ToggleThreadSubscriptionMutation.toggleThreadSubscription} sends a mutation request to subscribe to a thread.
      *
+     * Subscribes or unsubscribes the authenticated user from notifications about the thread
+     * named by `threadId`. Returns the updated thread.
+     *
      * @param variables - Values from {@link ToggleThreadSubscriptionVariables} for the mutation.
      * @returns The {@link ThreadResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `threadId` or `subscribe` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/thread
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<ThreadResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new ToggleThreadSubscriptionMutation("your-token").toggleThreadSubscription({ threadId: 1, subscribe: true });

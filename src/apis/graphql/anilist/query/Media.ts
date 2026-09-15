@@ -48,12 +48,12 @@ export interface MediaVariables {
     startDate?: number;
 
     /**
-     * `endDate` is a number representing the end date of the media.
+     * `endDate` is a number representing the end date of the media. AniList's `FuzzyDateInt` form: a `YYYYMMDD` integer (for example `19980401`); build it with `aniLink.anilist.fuzzyDateInt`.
      */
     endDate?: number;
 
     /**
-     * `season` is a string representing the season of the media.
+     * `season` is a {@link MediaSeason} representing the season of the media.
      */
     season?: MediaSeason;
 
@@ -63,17 +63,17 @@ export interface MediaVariables {
     seasonYear?: number;
 
     /**
-     * `type` is a string representing the type of the media. It can be either 'ANIME' or 'MANGA'.
+     * `type` is a {@link MediaType} representing the type of the media.
      */
     type?: MediaType;
 
     /**
-     * `format` is a string representing the format of the media.
+     * `format` is a {@link MediaFormat} representing the format of the media.
      */
     format?: MediaFormat;
 
     /**
-     * `status` is a string representing the status of the media.
+     * `status` is a {@link MediaStatus} representing the status of the media.
      */
     status?: MediaStatus;
 
@@ -148,7 +148,7 @@ export interface MediaVariables {
     popularity?: number;
 
     /**
-     * `source` is a string representing the source of the media.
+     * `source` is a {@link MediaSource} representing the source of the media.
      */
     source?: MediaSource;
 
@@ -228,32 +228,32 @@ export interface MediaVariables {
     endDate_like?: string;
 
     /**
-     * `format_in` is an array of strings representing the formats of the media that should be included.
+     * `format_in` is an array of {@link MediaFormat} values representing the formats of media to include.
      */
     format_in?: MediaFormat[];
 
     /**
-     * `format_not` is a string representing the format of the media that should not be included.
+     * `format_not` is a {@link MediaFormat} representing the format of media to exclude.
      */
     format_not?: MediaFormat;
 
     /**
-     * `format_not_in` is an array of strings representing the formats of the media that should not be included.
+     * `format_not_in` is an array of {@link MediaFormat} values representing the formats of media to exclude.
      */
     format_not_in?: MediaFormat[];
 
     /**
-     * `status_in` is an array of strings representing the statuses of the media that should be included.
+     * `status_in` is an array of {@link MediaStatus} values representing the statuses of media to include.
      */
     status_in?: MediaStatus[];
 
     /**
-     * `status_not` is a string representing the status of the media that should not be included.
+     * `status_not` is a {@link MediaStatus} representing the status of media to exclude.
      */
     status_not?: MediaStatus;
 
     /**
-     * `status_not_in` is an array of strings representing the statuses of the media that should not be included.
+     * `status_not_in` is an array of {@link MediaStatus} values representing the statuses of media to exclude.
      */
     status_not_in?: MediaStatus[];
 
@@ -368,12 +368,12 @@ export interface MediaVariables {
     popularity_lesser?: number;
 
     /**
-     * `source_in` is an array of strings representing the sources of the media that should be included.
+     * `source_in` is an array of {@link MediaSource} values representing the sources of media to include.
      */
     source_in?: MediaSource[];
 
     /**
-     * `sort` is an array of strings representing the sorting of the media.
+     * `sort` is an array of {@link MediaSort} values representing the sort order of the media.
      */
     sort?: MediaSort[];
 
@@ -471,7 +471,8 @@ export class MediaQuery extends AniListOperation {
     /**
      * {@link MediaQuery.media} sends a query request to get media data.
      *
-     * @param variables - Values from {@link MediaVariables} for the query.
+     * @param variables - Values from {@link MediaVariables} for the query; at least one variable other
+     * than `asHtml` must be set.
      * @returns The {@link MediaResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/media
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<MediaResponse, K | "id" | "idMal">`: the always-selected `id` and `idMal` are part of the narrowed type because the composed document always sends them. Omit `fields` for the maximal selection and the full response.

@@ -29,7 +29,8 @@ export interface ProviderGenerationConfig {
 /**
  * Build-time configuration for the existing AniList GraphQL provider.
  *
- * @see {@link AniLink} for the runtime client this provider configures.
+ * @see `AniLink` (src/AniLink.ts) for the runtime client this provider
+ * configures.
  */
 export const ANILIST_PROVIDER_CONFIG: ProviderGenerationConfig = {
     id: "anilist",
@@ -41,8 +42,8 @@ export const ANILIST_PROVIDER_CONFIG: ProviderGenerationConfig = {
 /**
  * Build-time configuration for the MyAnimeList REST provider.
  *
- * @see {@link buildMalAuthorizationUrl} for the runtime auth helper this
- * provider's source tree ships.
+ * @see `buildMalAuthorizationUrl` (src/apis/rest/mal/auth.ts) for the runtime
+ * auth helper this provider's source tree ships.
  */
 export const MAL_PROVIDER_CONFIG: ProviderGenerationConfig = {
     id: "mal",

@@ -2,7 +2,7 @@
  * Branch-coverage tests for {@link BaseOperation} and {@link resolveOperationLabel}.
  *
  * These pin the uncovered branches reported by the lcov: the `token` getter
- * branch where `requestAuth` is a structured {@link RequestAuthInput} object
+ * branch where `requestAuth` is a structured `RequestAuthInput` object
  * (not a string), and the `resolveOperationLabel` branch where the constructor
  * name is empty or not a string.
  */

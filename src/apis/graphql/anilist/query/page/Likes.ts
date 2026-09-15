@@ -28,7 +28,7 @@ export interface LikesVariables {
     likeableId?: number;
 
     /**
-     * `type` is a string representing the type of the likeable item.
+     * `type` is a {@link LikeableType} representing the type of the likeable item.
      */
     type?: LikeableType;
 
@@ -63,12 +63,18 @@ const LikesMappings = {
  */
 export class LikesQuery extends AniListOperation {
     /**
-     * `likes` is a method that sends a query request to get likes.
+     * {@link LikesQuery.likes} sends a query request to get a page of users who liked an activity or
+     * thread comment.
      *
-     * @param variables - Values from {@link LikesVariables} for the query.
+     * @param variables - Values from {@link LikesVariables} for the query; both `likeableId` and `type` must
+     * be set, and `page` and `perPage` select the slice of results.
      * @returns The {@link LikesPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/union/likeableunion
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<LikesPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new LikesQuery().likes({ likeableId: 1, type: "ACTIVITY" });

@@ -2,8 +2,9 @@ import { TitleSchema } from "./Title";
 import { BasicUserSchema } from "./Basic";
 
 /**
- * {@link ActivityReplySchema} is a constant representing the GraphQL schema for an activity reply query.
- * It includes the id of the reply, the user id, the activity id, the text of the reply, the like count, the like status, the creation date, the user details, and the likes details.
+ * {@link ActivityReplySchema} is the activity-reply selection: the reply's text and
+ * author, its like state, and the users who liked it. Activity fragments interpolate it
+ * under `replies`.
  * @see https://docs.anilist.co/reference/object/activityreply
  */
 export const ActivityReplySchema = `
@@ -23,8 +24,9 @@ export const ActivityReplySchema = `
 `;
 
 /**
- * {@link ActivitySchema} is a constant representing the GraphQL schema for an activity query.
- * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties.
+ * {@link ActivitySchema} is the inline selection of the ActivityUnion: the shared fields of
+ * every activity variant, with the variant-specific fields selected inline. Activity
+ * queries and notifications interpolate it for their `activity` payloads.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
 export const ActivitySchema = `
@@ -84,8 +86,8 @@ export const ActivitySchema = `
 `;
 
 /**
- * {@link ActivityWithRepliesSchema} is a constant representing the GraphQL schema for an activity query with replies.
- * It includes the TextActivity, ListActivity, and MessageActivity each having their own properties and replies.
+ * {@link ActivityWithRepliesSchema} is the ActivityUnion selection with each variant's
+ * `replies` included, used by the activity queries that surface reply threads.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
 export const ActivityWithRepliesSchema = `
@@ -173,8 +175,8 @@ export const ActivityWithRepliesSchema = `
 `;
 
 /**
- * `TextActivity` is an object representing a text activity.
- * It includes the id, user id, type, reply count, text, site url, lock status, subscription status, like count, like status, pin status, creation date, user details, replies, and likes.
+ * {@link TextActivitySchema} is the text-activity selection: a user-written status post,
+ * with its author, text, like state, and replies. `SaveTextActivity` sends it.
  * @see https://docs.anilist.co/reference/object/textactivity
  */
 export const TextActivitySchema = `
@@ -202,8 +204,9 @@ export const TextActivitySchema = `
 `;
 
 /**
- * {@link ListActivitySchema} is an object representing a list activity.
- * It includes the id, user id, type, reply count, status, progress, lock status, subscription status, like count, like status, pin status, site url, creation date, media details, user details, replies, and likes.
+ * {@link ListActivitySchema} is the list-activity selection: the auto-generated feed entry
+ * a list update produces, with the media, the status/progress change, and the acting user.
+ * `SaveListActivity` sends it.
  * @see https://docs.anilist.co/reference/object/listactivity
  */
 export const ListActivitySchema = `
@@ -239,8 +242,9 @@ export const ListActivitySchema = `
 `;
 
 /**
- * {@link MessageActivitySchema} is an object representing a message activity.
- * It includes the id, recipient id, messenger id, type, reply count, message, lock status, subscription status, like count, like status, privacy status, site url, creation date, recipient details, messenger details, replies, and likes.
+ * {@link MessageActivitySchema} is the message-activity selection: a private message
+ * thread between two users, with both parties and its replies. `SaveMessageActivity`
+ * sends it.
  * @see https://docs.anilist.co/reference/object/messageactivity
  */
 export const MessageActivitySchema = `
@@ -272,8 +276,9 @@ export const MessageActivitySchema = `
 `;
 
 /**
- * {@link ActivityNotificationSchema} is a constant representing the GraphQL schema for an activity notification query.
- * It includes the id of the notification, the user id, the type of the notification, the activity id, the context, the creation date, the activity details, and the user details.
+ * {@link ActivityNotificationSchema} is the activity-notification selection: the shared
+ * fields of every activity-variant notification, with the triggering activity and its
+ * acting user expanded.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export const ActivityNotificationSchema = `

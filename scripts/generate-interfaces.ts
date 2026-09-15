@@ -1,7 +1,8 @@
 /**
- * Generates the response interfaces under `src/apis/anilist/interfaces/` from
- * the handwritten schema-fragment constants under `src/apis/anilist/schemas/`
- * and the committed AniList introspection snapshot.
+ * Generates the response interfaces under `src/apis/graphql/anilist/interfaces/`
+ * from the handwritten schema-fragment constants under
+ * `src/apis/graphql/anilist/schemas/` and the committed AniList introspection
+ * snapshot.
  *
  * The manifest in `generate-interfaces.config.ts` pairs every generated export
  * with its fragment constant and typing overrides. Files marked `mode: "file"`

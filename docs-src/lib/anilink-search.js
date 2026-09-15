@@ -61,6 +61,11 @@
 
     var overlay, modal, input, statusEl, listEl, filtersEl;
 
+    /**
+     * Active theme for the page: TypeDoc stores its choice as a
+     * `data-theme` attribute on `<html>`, and the literal `"os"` resolves
+     * to the OS preference. Used to theme the modal overlay's palette.
+     */
     function theme() {
         var t = document.documentElement.getAttribute("data-theme") || "os";
         if (t === "os") {
@@ -109,6 +114,11 @@
         return dot / (Math.sqrt(na) * Math.sqrt(nb));
     }
 
+    /**
+     * Keyword relevance of a doc to a query: each query term scores +3
+     * when it appears in the title and +1 when it appears anywhere in
+     * the title-plus-body text, so title hits dominate the ranking.
+     */
     function keywordScore(doc, q) {
         var title = doc.title.toLowerCase();
         var text = (doc.title + " " + doc.text).toLowerCase();
@@ -122,6 +132,12 @@
         return score;
     }
 
+    /**
+     * Merge the two result passes: normalize each list to 0..1 against
+     * its own score range, dedupe by url keeping the higher score, and
+     * sort descending. A url matched by both passes is tagged "both"
+     * so the result badge can show the keyword reinforcement.
+     */
     function mergeResults(semantic, keyword) {
         function norm(arr) {
             if (!arr.length) return arr;
@@ -165,6 +181,13 @@
             });
     }
 
+    /**
+     * Fetch and cache `/search-index.json` once per page load. Warns but
+     * continues when the index carries a format this runtime predates:
+     * per-doc field sniffing ranks either known format, but an unknown
+     * future format cannot be ranked, and a visible warning beats
+     * silently degraded semantic results.
+     */
     async function loadIndex() {
         if (index.length) return;
         var res = await fetch(INDEX_URL);
@@ -182,6 +205,12 @@
         index = json.docs;
     }
 
+    /**
+     * Lazily import the transformers library from the CDN and build the
+     * feature-extraction pipeline. Any failure is sticky (`semanticError`)
+     * so the session degrades to keyword-only results instead of
+     * retrying the large download on every keystroke.
+     */
     async function loadModel() {
         if (extractor || semanticError) return;
         semanticLoading = true;
@@ -200,6 +229,15 @@
         }
     }
 
+    /**
+     * Two-phase search for the current input value: the keyword phase
+     * runs first (index-only, so results appear instantly), then the
+     * semantic phase embeds the query and merges cosine-ranked results
+     * over them. Both phases capture `searchToken` before awaiting and
+     * drop their results when a newer keystroke has superseded them, so
+     * a slow phase never clobbers newer results or leaves stale loading
+     * flags behind.
+     */
     async function runSearch() {
         var q = input.value.trim();
         var token = ++searchToken;

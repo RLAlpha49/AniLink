@@ -4,7 +4,7 @@ import type { RequestOptions } from "../../../../base/RequestHandler";
 /**
  * {@link MarkdownVariables} contains variables for the {@link MarkdownQuery} operation.
  *
- * See {@link MarkdownQuery}; it returns the converted HTML string.
+ * See {@link MarkdownQuery}; the resolved value carries the rendered `html` field.
  *
  * @see https://docs.anilist.co/reference/object/parsedmarkdown
  */
@@ -24,13 +24,15 @@ export class MarkdownQuery extends AniListOperation {
     /**
      * {@link MarkdownQuery.markdown} sends a query request to convert Markdown text to HTML.
      *
-     * @param variables - Values from {@link MarkdownVariables} for the query.
-     * @returns The converted HTML string returned by AniList.
+     * @param variables - Values from {@link MarkdownVariables} for the query; `markdown` must be set.
+     * @returns The rendered result. AniList resolves the field to a `ParsedMarkdown` object with
+     * a `html` property; the declared `string` return type does not match that runtime shape.
      * @see https://docs.anilist.co/reference/object/parsedmarkdown
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
      * @example
      * ```typescript
-     * const html = await new MarkdownQuery().markdown({ markdown: "# AniList" });
+     * const result = await new MarkdownQuery().markdown({ markdown: "# AniList" });
+     * // AniList resolves the field to `{ html }` at runtime; cast `result` to read it.
      * ```
      */
     async markdown(variables: MarkdownVariables, options?: RequestOptions): Promise<string> {

@@ -1,16 +1,39 @@
 import ts from "typescript";
 
+/**
+ * `TypeScriptProperty` is one property of an extracted interface, reduced to
+ * the comparison's normalized shape: type name, optionality, and listness.
+ */
 export interface TypeScriptProperty {
+    /** Normalized type name, e.g. `string` or `MediaTitle`. */
     type: string;
+    /** Whether the property is optional (`?`). */
     optional: boolean;
+    /** Whether the property is an array. */
     array: boolean;
 }
 
+/**
+ * `TypeScriptContracts` is the extracted type-contract index of a source
+ * tree: every interface and object-literal type alias by name, plus the
+ * warnings collected while normalizing unsupported types.
+ */
 export interface TypeScriptContracts {
+    /** Property maps keyed by type name, then property name. */
     types: Record<string, Record<string, TypeScriptProperty>>;
+    /** Normalization warnings, e.g. unsupported type syntax. */
     warnings: string[];
 }
 
+/**
+ * `extractTypeScriptContracts` parses a TypeScript source file and extracts
+ * every interface and object-literal type alias into the normalized
+ * {@link TypeScriptContracts} shape the comparison consumes.
+ *
+ * @param sourcePath - Repo-relative path, used in warnings.
+ * @param sourceText - Full source text to parse.
+ * @returns The extracted contracts and any normalization warnings.
+ */
 export function extractTypeScriptContracts(
     sourcePath: string,
     sourceText: string

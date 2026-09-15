@@ -54,12 +54,12 @@ export interface MediasVariables {
     startDate?: number;
 
     /**
-     * `endDate` is a number representing the end date of the media.
+     * `endDate` is a number representing the end date of the media. AniList's `FuzzyDateInt` form: a `YYYYMMDD` integer (for example `19980401`); build it with `aniLink.anilist.fuzzyDateInt`.
      */
     endDate?: number;
 
     /**
-     * `season` is a string representing the season of the media.
+     * `season` is a string representing the season of the media; a `MediaSeason` value.
      */
     season?: string;
 
@@ -69,17 +69,17 @@ export interface MediasVariables {
     seasonYear?: number;
 
     /**
-     * `type` is a string representing the type of the media. It can be either 'ANIME' or 'MANGA'.
+     * `type` is a string representing the type of the media: either 'ANIME' or 'MANGA'.
      */
     type?: "ANIME" | "MANGA";
 
     /**
-     * `format` is a string representing the format of the media.
+     * `format` is a string representing the format of the media; a `MediaFormat` value.
      */
     format?: string;
 
     /**
-     * `status` is a string representing the status of the media.
+     * `status` is a string representing the status of the media; a `MediaStatus` value.
      */
     status?: string;
 
@@ -154,7 +154,7 @@ export interface MediasVariables {
     popularity?: number;
 
     /**
-     * `source` is a string representing the source of the media.
+     * `source` is a string representing the source of the media; a `MediaSource` value.
      */
     source?: string;
 
@@ -234,32 +234,32 @@ export interface MediasVariables {
     endDate_like?: string;
 
     /**
-     * `format_in` is an array of strings representing the formats of the media that should be included.
+     * `format_in` is an array of strings representing the formats of media to include; `MediaFormat` values.
      */
     format_in?: string[];
 
     /**
-     * `format_not` is a string representing the format of the media that should not be included.
+     * `format_not` is a string representing the format of media to exclude; a `MediaFormat` value.
      */
     format_not?: string;
 
     /**
-     * `format_not_in` is an array of strings representing the formats of the media that should not be included.
+     * `format_not_in` is an array of strings representing the formats of media to exclude; `MediaFormat` values.
      */
     format_not_in?: string[];
 
     /**
-     * `status_in` is an array of strings representing the statuses of the media that should be included.
+     * `status_in` is an array of strings representing the statuses of media to include; `MediaStatus` values.
      */
     status_in?: string[];
 
     /**
-     * `status_not` is a string representing the status of the media that should not be included.
+     * `status_not` is a string representing the status of media to exclude; a `MediaStatus` value.
      */
     status_not?: string;
 
     /**
-     * `status_not_in` is an array of strings representing the statuses of the media that should not be included.
+     * `status_not_in` is an array of strings representing the statuses of media to exclude; `MediaStatus` values.
      */
     status_not_in?: string[];
 
@@ -374,12 +374,12 @@ export interface MediasVariables {
     popularity_lesser?: number;
 
     /**
-     * `source_in` is an array of strings representing the sources of the media that should be included.
+     * `source_in` is an array of strings representing the sources of media to include; `MediaSource` values.
      */
     source_in?: string[];
 
     /**
-     * `sort` is an array of strings representing the sorting order of the media.
+     * `sort` is an array of strings representing the sort order of the media; `MediaSort` values.
      */
     sort?: string[];
 
@@ -477,11 +477,17 @@ const MediasMappings = {
  */
 export class MediasQuery extends AniListOperation {
     /**
-     * Returns a {@link MediasPageResponse} object.
-     * @param variables - Values from {@link MediasVariables} for the query.
-     * @returns The {@link MediasPageResponse} returned by the query.
+     * {@link MediasQuery.medias} sends a query request to get a page of media.
+     *
+     * @param variables - Values from {@link MediasVariables} for the query; `page` and `perPage` select the
+     * slice of results.
+     * @returns The {@link MediasPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/media
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<MediasPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new MediasQuery().medias({ search: "Cowboy Bebop", page: 1 });

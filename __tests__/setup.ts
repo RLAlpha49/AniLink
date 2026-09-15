@@ -3,9 +3,10 @@
  *
  * Hard-fails any accidental real network access: both `global.fetch` and the
  * `axios` module are replaced with a function that throws. Suites that need
- * HTTP behavior must mock the AniLink transport (see
- * {@link mockSendRequest}) or the axios double (see {@link createAxiosStub})
- * instead of letting a stray call escape to the network.
+ * HTTP behavior must mock the AniLink transport (see `mockSendRequest` in
+ * `__tests__/helpers/mockRequestHandler.ts`) or the axios double (see
+ * `createAxiosStub` in `__tests__/helpers/axiosStub.ts`) instead of letting
+ * a stray call escape to the network.
  */
 import { vi } from "vitest";
 

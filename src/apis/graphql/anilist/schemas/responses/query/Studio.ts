@@ -5,8 +5,8 @@ import { MediaSchema } from "./Media";
 import { StaffSchema } from "./Staff";
 
 /**
- * {@link StudioSchema} is a constant representing the GraphQL schema for a studio query.
- * It includes the studio's id, name, animation studio status, media, site url, favourite status, and favourites count.
+ * {@link StudioSchema} is the studio response selection: the studio's name, its produced
+ * media, and its favourite state. The studio queries send it.
  * @see https://docs.anilist.co/reference/object/studio
  */
 export const StudioSchema = `

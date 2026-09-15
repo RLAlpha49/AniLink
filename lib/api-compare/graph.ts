@@ -8,6 +8,19 @@ import {
 } from "graphql";
 import { INLINE_FRAGMENT_NAME, type SelectionNode, type VariableDefinition } from "./types";
 
+/**
+ * `normalizeSelectionSet` parses a GraphQL document into the comparison's
+ * {@link SelectionNode} tree, resolving named fragment spreads against their
+ * definitions in the same document.
+ *
+ * Interpolated selection constants (`${Constant}`) are replaced with a
+ * `...PackageSelection` spread that carries no definition, so their fields
+ * stay skipped — the same behavior the pre-fragment comparison had.
+ *
+ * @param document - Full GraphQL document text, including fragment definitions.
+ * @returns The normalized {@link SelectionNode} tree of the first operation.
+ * @throws {Error} When the document contains no operation.
+ */
 export function normalizeSelectionSet(document: string): SelectionNode[] {
     const parsed = parse(normalizeTemplateDocument(document));
     const operation = parsed.definitions.find(
@@ -20,6 +33,15 @@ export function normalizeSelectionSet(document: string): SelectionNode[] {
     return normalizeSelectionNodes(operation.selectionSet.selections, fragmentDefinitions);
 }
 
+/**
+ * `extractOperationMetadata` reduces a GraphQL document to the operation
+ * facts the comparison needs: its kind, declared {@link VariableDefinition}s,
+ * and normalized selection.
+ *
+ * @param document - Full GraphQL document text, including fragment definitions.
+ * @returns The operation kind, variable definitions, and selection tree.
+ * @throws {Error} When the document has no query or mutation operation.
+ */
 export function extractOperationMetadata(document: string): {
     kind: "query" | "mutation";
     variables: VariableDefinition[];

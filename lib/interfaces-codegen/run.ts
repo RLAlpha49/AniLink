@@ -14,8 +14,13 @@ import {
     type SchemaIndex,
 } from "./model";
 
+/**
+ * `OutputSpec` declares one generated output file: its path, whether it owns
+ * the whole file or splices a region, and the {@link ExportSpec} exports it
+ * contains.
+ */
 export interface OutputSpec {
-    /** Repo-relative output path, e.g. `src/apis/anilist/interfaces/Title.ts`. */
+    /** Repo-relative output path, e.g. `src/apis/graphql/anilist/interfaces/Title.ts`. */
     path: string;
     /**
      * `file` replaces the entire file with generated content (for outputs that
@@ -23,9 +28,15 @@ export interface OutputSpec {
      * into the existing file, preserving handwritten sections around it.
      */
     mode: "file" | "region";
+    /** Exports the output declares. */
     exports: ExportSpec[];
 }
 
+/**
+ * `BuildInput` is the complete input to interface generation: the schema
+ * fragments, operation documents, introspection snapshot, manifest outputs,
+ * and the on-disk state region-mode files need.
+ */
 export interface BuildInput {
     /** Schema-fragment constant name -> raw template-literal document. */
     schemas: Record<string, string>;
@@ -33,12 +44,13 @@ export interface BuildInput {
     operations?: Record<string, string>;
     /** Raw introspection JSON (`{ __schema }` or `{ data: { __schema } }`). */
     schemaJson: unknown;
+    /** Output files to generate. */
     outputs: OutputSpec[];
     /** Current on-disk contents per output path, for region-mode files. */
     existingContents?: Map<string, string>;
     /** Exported type name -> repo-relative declaring module (with extension). */
     typeLocations?: Map<string, string>;
-    /** Extra scalar mappings merged over {@link DEFAULT_SCALAR_TYPES}. */
+    /** Extra scalar mappings merged over the codegen scalar defaults. */
     scalarTypes?: Record<string, string>;
 }
 
@@ -46,6 +58,12 @@ export interface BuildInput {
  * Computes the final file contents keyed by output path. Throws with a precise
  * message when a selection cannot be resolved against the snapshot, so drift
  * surfaces at generation time instead of at compile time.
+ *
+ * @param input - The complete {@link BuildInput}: fragments, operations,
+ *   snapshot, outputs, and on-disk state.
+ * @returns Final file contents keyed by repo-relative output path.
+ * @throws {Error} When a selection cannot be resolved against the snapshot
+ *   or a fragment constant is claimed by two exports.
  */
 export function buildGeneratedFiles(input: BuildInput): Map<string, string> {
     const constants = new Map(Object.entries(input.schemas));
@@ -118,6 +136,11 @@ function collectExportsByConstant(outputs: OutputSpec[]): Map<string, string> {
  * Plans import statements for a generated file from the referenced type names.
  * Same-file references need no import; everything else groups by module
  * specifier in stable order.
+ *
+ * @param referencedTypes - Type names the generated file mentions.
+ * @param outputPath - Repo-relative path of the file being generated.
+ * @param typeLocations - Exported type name -> declaring module path.
+ * @returns Import statements grouped by module specifier, in stable order.
  */
 export function planImportsWithLocations(
     referencedTypes: Set<string>,
@@ -138,7 +161,13 @@ export function planImportsWithLocations(
         .map(([from, names]) => ({ names: [...names], from }));
 }
 
-/** POSIX-style relative import specifier between two repo-relative modules. */
+/**
+ * POSIX-style relative import specifier between two repo-relative modules.
+ *
+ * @param fromPath - Repo-relative path of the importing module.
+ * @param toPath - Repo-relative path of the imported module.
+ * @returns The relative import specifier, e.g. `./Title` or `../types/Format`.
+ */
 export function relativeSpecifier(fromPath: string, toPath: string): string {
     const fromParts = fromPath.split(/[/\\]/).slice(0, -1);
     const toParts = toPath.split(/[/\\]/);

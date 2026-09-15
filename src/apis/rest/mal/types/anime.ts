@@ -9,7 +9,7 @@ import type { MalPaging, MalPicture } from "./common";
 /**
  * {@link MalBroadcast} is the broadcast schedule node of a MyAnimeList anime.
  *
- * It is the `broadcast` field inside {@link MalAnime}, selected via {@link MalRequestOptions.fields} through `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get`.
+ * It is the `broadcast` field inside {@link MalAnime}, selected via the `fields` request option through `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  */
@@ -23,7 +23,7 @@ export interface MalBroadcast {
 /**
  * {@link MalAnime} is the typed portion of a MyAnimeList anime response returned by `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get`.
  *
- * It always carries `id` and `title`; additional fields appear when requested via {@link MalRequestOptions.fields} — or, when `fields` is omitted, via the {@link DEFAULT_MAL_ANIME_FIELDS} fallback — and are exposed through the index signature without narrowing.
+ * It always carries `id` and `title`; additional fields appear when requested via the `fields` request option — or, when `fields` is omitted, via the `DEFAULT_MAL_ANIME_FIELDS` fallback — and are exposed through the index signature without narrowing.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  */
@@ -199,7 +199,7 @@ export type MalAnimeListStatusValue =
 /**
  * {@link MalAnimeListStatusUpdate} is the form-urlencoded PATCH request body for updating a user's anime list status.
  *
- * Every field is optional: callers send only the fields they want to change. It is consumed by `MalAnimeOperation.updateMyListStatus` and `MyAnimeListAnimeApi.updateMyListStatus` against `PATCH /anime/{anime_id}/my_list_status`, which encodes it as `application/x-www-form-urlencoded` (MAL rejects JSON on this endpoint).
+ * Every field is optional: callers send only the fields they want to change. It is consumed by `MalAnimeOperation.updateMyListStatus` and `MyAnimeListAnimeApi.updateMyListStatus` against `PATCH /anime/{anime_id}/my_list_status`, which encodes it as `application/x-www-form-urlencoded` — the endpoint's only documented request format.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put
  */
@@ -269,7 +269,7 @@ export interface MalAnimeListStatus {
  *
  * These are the fixed `sort` query values accepted by
  * `GET /users/{user_name}/animelist`, consumed as the `sort` field of
- * {@link MalUserAnimeListParams} on `MalUserOperation.animeList` and
+ * `MalUserAnimeListParams` on `MalUserOperation.animeList` and
  * `MyAnimeListUserApi.animeList`. `list_score`, `list_updated_at`, and
  * `anime_start_date` sort descending; `anime_title` and `anime_id` sort
  * ascending (`anime_id` is listed as under development by MyAnimeList).
@@ -360,7 +360,7 @@ export interface MalAnimeDeleteParams {
  * status, and is the element type of {@link MalUserAnimeListResponse} returned
  * by `MalUserOperation.animeList` and `MyAnimeListUserApi.animeList`. The
  * `list_status` wrapper appears when requested via
- * {@link MalRequestOptions.fields} (for example `list_status{priority,comments}`).
+ * the `fields` request option (for example `fields=list_status`).
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
  */

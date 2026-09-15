@@ -4,8 +4,9 @@ import { NameSchema } from "../../Name";
 import { TitleSchema } from "../../Title";
 
 /**
- * {@link CharacterSchema} is a constant representing the GraphQL schema for a character query.
- * It includes the character's id, name, image, description, gender, date of birth, age, blood type, favourite status, site URL, associated media, number of favourites, and moderator notes.
+ * {@link CharacterSchema} is the character response selection: identity, biography, and
+ * the media the character appears in. The character queries send it, and the staff and
+ * studio fragments interpolate it for their `characters` fields.
  * @see https://docs.anilist.co/reference/object/character
  */
 export const CharacterSchema = `

@@ -1,6 +1,6 @@
 /**
- * {@link StreamingEpisodeSchema} is a string representing the GraphQL schema for a streaming episode.
- * It includes the title, thumbnail, url, and site.
+ * {@link StreamingEpisodeSchema} is the streaming-episode selection of a media: where each
+ * episode can be watched, with its title and thumbnail.
  * @see https://docs.anilist.co/reference/object/mediastreamingepisode
  */
 export const StreamingEpisodeSchema = `

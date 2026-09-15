@@ -1,16 +1,17 @@
 /**
- * {@link Studio} is an interface representing a studio.
- * It includes the id and name each having their own properties.
+ * {@link Studio} is the minimal studio shape used inside favoured-entity stat rows: the
+ * `id` and `name` of the studio a row counts. The full studio response is
+ * `StudioResponse`.
  * @see https://docs.anilist.co/reference/object/studio
  */
 export interface Studio {
     /**
-     * `id` is a number representing the id of the studio.
+     * The AniList id of the studio.
      */
     id: number;
 
     /**
-     * `name` is a string representing the name of the studio.
+     * The studio's name.
      */
     name: string;
 }

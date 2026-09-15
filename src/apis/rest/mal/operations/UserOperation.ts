@@ -13,7 +13,7 @@ import type {
 /**
  * {@link MalUserOperation} is the REST operation adapter for the MyAnimeList user endpoints.
  *
- * It extends `RestOperation` and is composed into `MyAnimeListApi` via `buildMyAnimeListApi`, exposing {@link MalUser} through {@link MalRequestOptions} and `MyAnimeListUserApi.me`, plus the paginated user-list reads `animeList` and `mangaList` for `GET /users/{user_name}/animelist` and `GET /users/{user_name}/mangalist`.
+ * It extends {@link RestOperation} and is composed into `MyAnimeListApi` via `buildMyAnimeListApi`, exposing {@link MalUser} through {@link MalRequestOptions} and `MyAnimeListUserApi.me`, plus the paginated user-list reads `animeList` and `mangaList` for `GET /users/{user_name}/animelist` and `GET /users/{user_name}/mangalist`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
@@ -75,13 +75,13 @@ export class MalUserOperation extends RestOperation {
     /**
      * {@link MalUserOperation.animeList} gets a user's anime list, one page at a time.
      *
-     * It calls `GET /users/{username}/animelist` through `RestOperation.execute` and returns a {@link MalUserAnimeListResponse} page of {@link MalUserAnimeListEntry} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListUserApi.animeList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
+     * It calls `GET /users/{username}/animelist` through `RestOperation.execute` and returns a {@link MalUserAnimeListResponse} page of `MalUserAnimeListEntry` entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListUserApi.animeList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
      *
      * @param params - The anime-list read inputs; a {@link MalUserAnimeListParams} carrying the username plus the optional status, sort, and paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The anime list page, a {@link MalUserAnimeListResponse}.
      * @throws An `AniLinkAuthError` when `username` is `@me` and no access token is configured.
-     * @throws An `AniLinkValidationError` when `username` is empty or only whitespace.
+     * @throws An {@link AniLinkValidationError} when `username` is empty or only whitespace.
      * @throws A normalized `AniLinkError` when the request fails.
      * @example
      * ```typescript
@@ -126,13 +126,13 @@ export class MalUserOperation extends RestOperation {
     /**
      * {@link MalUserOperation.mangaList} gets a user's manga list, one page at a time.
      *
-     * It calls `GET /users/{username}/mangalist` through `RestOperation.execute` and returns a {@link MalUserMangaListResponse} page of {@link MalUserMangaListEntry} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListUserApi.mangaList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
+     * It calls `GET /users/{username}/mangalist` through `RestOperation.execute` and returns a {@link MalUserMangaListResponse} page of `MalUserMangaListEntry` entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListUserApi.mangaList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
      *
      * @param params - The manga-list read inputs; a {@link MalUserMangaListParams} carrying the username plus the optional status, sort, and paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The manga list page, a {@link MalUserMangaListResponse}.
      * @throws An `AniLinkAuthError` when `username` is `@me` and no access token is configured.
-     * @throws An `AniLinkValidationError` when `username` is empty or only whitespace.
+     * @throws An {@link AniLinkValidationError} when `username` is empty or only whitespace.
      * @throws A normalized `AniLinkError` when the request fails.
      * @example
      * ```typescript

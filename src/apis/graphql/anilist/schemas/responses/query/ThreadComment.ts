@@ -2,8 +2,9 @@ import { BasicUserSchema } from "../../Basic";
 import { ThreadSchema } from "./Thread";
 
 /**
- * {@link ThreadCommentSchema} is a constant representing the GraphQL schema for a thread comment query.
- * It includes the comment's id, userId, threadId, comment, likeCount, isLiked status, siteUrl, createdAt, updatedAt, thread of type `ThreadResponse`, user of type `BasicUser`, likes of type `BasicUser[]`, childComments, and isLocked status.
+ * {@link ThreadCommentSchema} is the thread-comment response selection: the comment's
+ * text, its author, its like state, and the thread it belongs to. The thread-comment
+ * queries send it.
  * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export const ThreadCommentSchema = `

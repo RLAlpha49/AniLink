@@ -71,7 +71,7 @@ const buildMalClient: ProviderFactory<MalCredentials, MyAnimeListApi> = (credent
 /**
  * {@link PROVIDER_FACTORIES} is the provider factories used by the composition seam.
  *
- * It maps each {@link ProviderId} to a {@link ProviderFactory} that builds the AniList surface (`AniListApi`) or the MyAnimeList surface (`MyAnimeListApi`) from isolated {@link AniLinkCredentials} slots via {@link buildProviderClients} and {@link AniLink}.
+ * It maps each {@link ProviderId} to a {@link ProviderFactory} that builds the AniList surface ({@link AniListApi}) or the MyAnimeList surface ({@link MyAnimeListApi}) from isolated {@link AniLinkCredentials} slots via {@link buildProviderClients} and {@link AniLink}.
  *
  * @see {@link ProviderId}
  * @see {@link buildProviderClients}
@@ -84,7 +84,7 @@ export const PROVIDER_FACTORIES = {
 /**
  * {@link buildProviderClients} builds every public provider client from isolated credential slots.
  *
- * It invokes each {@link ProviderFactory} in {@link PROVIDER_FACTORIES} with its own {@link AniLinkCredentials} slot, producing {@link ProviderClients} with the AniList surface (`AniListApi`) and the MyAnimeList surface (`MyAnimeListApi`). The optional `legacyOptions` argument exists only for the positional `new AniLink(token, options)` constructor form; provider-scoped credentials carry their own {@link RequestOptions} and never share them with another slot.
+ * It invokes each {@link ProviderFactory} in {@link PROVIDER_FACTORIES} with its own {@link AniLinkCredentials} slot, producing {@link ProviderClients} with the AniList surface ({@link AniListApi}) and the MyAnimeList surface ({@link MyAnimeListApi}). The optional `legacyOptions` argument exists only for the positional `new AniLink(token, options)` constructor form; provider-scoped credentials carry their own {@link RequestOptions} and never share them with another slot.
  *
  * @param credentials - Per-provider credential slots; an {@link AniLinkCredentials} object.
  * @param legacyOptions - Transport settings for the legacy AniList form; forwarded only to the AniList factory.

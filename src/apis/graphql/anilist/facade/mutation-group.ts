@@ -74,33 +74,33 @@ export type AniListMutations = {
      * Mutation methods for updating data on the AniList API.
      * @public
      * @type {Object}
-     * @property {Function} updateUser - Updates a user on the AniList API.
+     * @property {Function} updateUser - Updates the authenticated user on the AniList API.
      * @property {Function} saveMediaListEntry - Saves a media list entry on the AniList API.
      * @property {Function} updateMediaListEntries - Updates media list entries on the AniList API.
-     * @property {Function} deleteMediaListEntry - Deletes a media list entry on the AniList API.
-     * @property {Function} deleteCustomList - Deletes a custom list on the AniList API.
+     * @property {Function} deleteMediaListEntry - Deletes a media list entry.
+     * @property {Function} deleteCustomList - Deletes a custom list.
      * @property {Function} saveTextActivity - Saves a text activity on the AniList API.
      * @property {Function} saveMessageActivity - Saves a message activity on the AniList API.
      * @property {Function} saveListActivity - Saves a list activity on the AniList API.
      * @property {Function} deleteActivity - Deletes an activity on the AniList API.
      * @property {Function} toggleActivityPin - Toggles an activity's pin status on the AniList API.
-     * @property {Function} toggleActivitySubscription - Toggles an activity's subscription status on the AniList API.
+     * @property {Function} toggleActivitySubscription - Toggles an activity's subscription status.
      * @property {Function} saveActivityReply - Saves an activity reply on the AniList API.
-     * @property {Function} deleteActivityReply - Deletes an activity reply on the AniList API.
-     * @property {Function} toggleLike - Toggles a like on the AniList API.
+     * @property {Function} deleteActivityReply - Deletes an activity reply.
+     * @property {Function} toggleLike - Toggles a like.
      * @property {Function} toggleLikeV2 - Toggles a like on the AniList API.
      * @property {Function} toggleFollow - Toggles a follow on the AniList API.
      * @property {Function} toggleFavourite - Toggles a favourite on the AniList API.
-     * @property {Function} updateFavouriteOrder - Updates a favourite order on the AniList API.
+     * @property {Function} updateFavouriteOrder - Updates a favourite order.
      * @property {Function} saveReview - Saves a review on the AniList API.
-     * @property {Function} rateReview - Rates a review on the AniList API.
-     * @property {Function} deleteReview - Deletes a review on the AniList API.
+     * @property {Function} rateReview - Rates a review.
+     * @property {Function} deleteReview - Deletes a review.
      * @property {Function} saveRecommendation - Saves a recommendation on the AniList API.
      * @property {Function} saveThread - Saves a thread on the AniList API.
-     * @property {Function} deleteThread - Deletes a thread on the AniList API.
-     * @property {Function} toggleThreadSubscription - Toggles a thread's subscription status on the AniList API.
+     * @property {Function} deleteThread - Deletes a thread.
+     * @property {Function} toggleThreadSubscription - Toggles a thread's subscription status.
      * @property {Function} saveThreadComment - Saves a thread comment on the AniList API.
-     * @property {Function} deleteThreadComment - Deletes a thread comment on the AniList API.
+     * @property {Function} deleteThreadComment - Deletes a thread comment.
      * @property {Function} updateAniChartSettings - Updates AniChart settings on the AniList API.
      * @property {Function} updateAniChartHighlights - Updates AniChart highlights on the AniList API.
      *
@@ -108,7 +108,7 @@ export type AniListMutations = {
      */
     mutation: {
         /**
-         * `UpdateUserMutation` updates a user on the AniList API.
+         * `UpdateUserMutation` updates the authenticated user's profile and list settings.
          * @param {UpdateUserVariables} variables - The {@link UpdateUserVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<UpdateUserResponse>} A promise that resolves to the {@link UpdateUserResponse} data.
@@ -151,7 +151,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<UpdateUserResponse, K>>);
 
         /**
-         * `SaveMediaListEntryMutation` saves a media list entry on the AniList API.
+         * `SaveMediaListEntryMutation` creates or updates the authenticated user's list entry for one media; `mediaId` is required, `id` only when updating.
          * @param {SaveMediaListEntryVariables} variables - The {@link SaveMediaListEntryVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<MediaListResponse>} A promise that resolves to the {@link MediaListResponse} data.
@@ -177,10 +177,10 @@ export type AniListMutations = {
             ) => Promise<DeepPick<MediaListResponse, K>>);
 
         /**
-         * `UpdateMediaListEntriesMutation` updates media list entries on the AniList API.
+         * `UpdateMediaListEntriesMutation` applies one set of changes to every list entry in `ids`.
          * @param {UpdateMediaListEntriesVariables} variables - The {@link UpdateMediaListEntriesVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
-         * @returns {Promise<MediaListResponse[]>} A promise that resolves to the {@link MediaListResponse} entries.
+         * @returns {Promise<MediaListResponse[]>} A promise that resolves to an array of {@link MediaListResponse} entries, one per id.
          * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
@@ -208,10 +208,10 @@ export type AniListMutations = {
             ) => Promise<DeepPick<MediaListResponse, K>[]>);
 
         /**
-         * `DeleteMediaListEntryMutation` deletes a media list entry on the AniList API.
+         * `DeleteMediaListEntryMutation` deletes one of the authenticated user's list entries by entry `id`.
          * @param {DeleteMediaListEntryVariables} variables - The {@link DeleteMediaListEntryVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
-         * @returns {Promise<DeleteMediaListEntryResponse>} A promise that resolves to the {@link DeleteMediaListEntryResponse} result.
+         * @returns {Promise<DeleteMediaListEntryResponse>} A promise that resolves to a {@link DeleteMediaListEntryResponse} — `{ deleted }`, where `deleted` is `true` when the entry was deleted by this call and `false` when it was already absent.
          * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example
@@ -235,7 +235,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<DeleteMediaListEntryResponse, K>>);
 
         /**
-         * `DeleteCustomListMutation` deletes a custom list on the AniList API. There is no mutation specifically for creating a custom list; create one through `UpdateUserMutation` under the `animeListOptions` or `mangaListOptions` variables.
+         * `DeleteCustomListMutation` deletes a custom list and removes its entries. There is no mutation for creating a custom list; create one through `UpdateUserMutation` under the `animeListOptions` or `mangaListOptions` variables.
          * @param {DeleteCustomListVariables} variables - The {@link DeleteCustomListVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the custom list was deleted by this call and `false` when it was already absent.
@@ -261,7 +261,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
-         * `SaveTextActivityMutation` saves a text activity on the AniList API.
+         * `SaveTextActivityMutation` creates or updates the authenticated user's text activity; `id` is required only when updating.
          * @param {SaveTextActivityVariables} variables - The {@link SaveTextActivityVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<Activity>} A promise that resolves to the saved {@link Activity}.
@@ -287,7 +287,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<Activity, K>>);
 
         /**
-         * `SaveMessageActivityMutation` saves a message activity on the AniList API.
+         * `SaveMessageActivityMutation` creates or updates a message activity for the authenticated user; `id` is required only when updating.
          * @param {SaveMessageActivityVariables} variables - The {@link SaveMessageActivityVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<Activity>} A promise that resolves to the saved {@link Activity}.
@@ -340,8 +340,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<Activity, K>>);
 
         /**
-         * `DeleteActivityMutation` deletes an activity on the AniList API.
-         * Mod Only
+         * `DeleteActivityMutation` deletes one of the authenticated user's own activities.
          * @param {DeleteActivityVariables} variables - The {@link DeleteActivityVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the activity was deleted by this call and `false` when it was already absent.
@@ -367,7 +366,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
-         * `ToggleActivityPinMutation` toggles the pin status of an activity on the AniList API.
+         * `ToggleActivityPinMutation` pins or unpins an activity on the authenticated user's activity feed.
          *
          * @param {ToggleActivityPinVariables} variables - The {@link ToggleActivityPinVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
@@ -386,7 +385,7 @@ export type AniListMutations = {
         ) => Promise<Activity>;
 
         /**
-         * `ToggleActivitySubscriptionMutation` toggles the subscription status of an activity on the AniList API.
+         * `ToggleActivitySubscriptionMutation` subscribes or unsubscribes the authenticated user from an activity.
          *
          * @param {ToggleActivitySubscriptionVariables} variables - The {@link ToggleActivitySubscriptionVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
@@ -405,7 +404,7 @@ export type AniListMutations = {
         ) => Promise<Activity>;
 
         /**
-         * `SaveActivityReplyMutation` saves an activity reply on the AniList API.
+         * `SaveActivityReplyMutation` creates or updates a reply on an activity; `id` is required only when updating.
          * @param {SaveActivityReplyVariables} variables - The {@link SaveActivityReplyVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<ActivityReply>} A promise that resolves to the saved {@link ActivityReply}.
@@ -431,7 +430,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<ActivityReply, K>>);
 
         /**
-         * `DeleteActivityReplyMutation` deletes an activity reply on the AniList API.
+         * `DeleteActivityReplyMutation` deletes one of the authenticated user's activity replies by `id`.
          * @param {DeleteActivityReplyVariables} variables - The {@link DeleteActivityReplyVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the reply was deleted by this call and `false` when it was already absent.
@@ -457,7 +456,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
-         * `ToggleLikeMutation` toggles a like on the AniList API.
+         * `ToggleLikeMutation` toggles the authenticated user's like on a likeable entity.
          * @param {ToggleLikeVariables} variables - The {@link ToggleLikeVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<BasicUser>} A promise that resolves to the {@link BasicUser} who performed the like toggle.
@@ -484,8 +483,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<BasicUser, K>>);
 
         /**
-         * `ToggleLikeV2Mutation` toggles a like on the AniList API.
-         * Returns a different response than the `toggleLike` mutation.
+         * `ToggleLikeV2Mutation` toggles the authenticated user's like on a likeable entity, returning the liked entity itself.
          * @param {ToggleLikeVariables} variables - The {@link ToggleLikeVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<Likeable>} A promise that resolves to the liked {@link Likeable} entity: an activity,
@@ -504,7 +502,7 @@ export type AniListMutations = {
         ) => Promise<Likeable>;
 
         /**
-         * `ToggleFollowMutation` toggles a follow on the AniList API.
+         * `ToggleFollowMutation` toggles the authenticated user's follow of the user named by `userId`.
          * @param {ToggleFollowVariables} variables - The {@link ToggleFollowVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<UserResponse>} A promise that resolves to the updated {@link UserResponse}.
@@ -530,7 +528,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<UserResponse, K>>);
 
         /**
-         * `ToggleFavouriteMutation` toggles a favourite on the AniList API.
+         * `ToggleFavouriteMutation` toggles the authenticated user's favourite on an anime, manga, character, staff member, or studio; pass the id of the entity to toggle.
          * @param {ToggleFavouriteVariables} variables - The {@link ToggleFavouriteVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<Favourites>} A promise that resolves to the updated {@link Favourites}.
@@ -556,7 +554,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<Favourites, K>>);
 
         /**
-         * `UpdateFavouriteOrderMutation` updates the order of favourites on the AniList API.
+         * `UpdateFavouriteOrderMutation` rewrites the display order of the authenticated user's favourites in every category.
          * @param {UpdateFavouriteOrderVariables} variables - The {@link UpdateFavouriteOrderVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<Favourites>} A promise that resolves to the updated {@link Favourites}.
@@ -593,7 +591,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<Favourites, K>>);
 
         /**
-         * `SaveReviewMutation` saves a review on the AniList API.
+         * `SaveReviewMutation` creates or updates a review.
          * @param {SaveReviewVariables} variables - The {@link SaveReviewVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<ReviewResponse>} A promise that resolves to the saved {@link ReviewResponse}.
@@ -619,7 +617,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<ReviewResponse, K>>);
 
         /**
-         * `RateReviewMutation` rates a review on the AniList API.
+         * `RateReviewMutation` sets the authenticated user's rating (`UP_VOTE`/`DOWN_VOTE`) on a review.
          * @param {RateReviewVariables} variables - The {@link RateReviewVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<ReviewResponse>} A promise that resolves to the rated {@link ReviewResponse}.
@@ -645,7 +643,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<ReviewResponse, K>>);
 
         /**
-         * `DeleteReviewMutation` deletes a review on the AniList API.
+         * `DeleteReviewMutation` deletes one of the authenticated user's reviews by `id`.
          * @param {DeleteReviewVariables} variables - The {@link DeleteReviewVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the review was deleted by this call and `false` when it was already absent.
@@ -671,7 +669,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
-         * `SaveRecommendationMutation` saves a recommendation on the AniList API.
+         * `SaveRecommendationMutation` creates or updates the authenticated user's rating recommending one media for another.
          * @param {SaveRecommendationVariables} variables - The {@link SaveRecommendationVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<RecommendationResponse>} A promise that resolves to the saved {@link RecommendationResponse}.
@@ -697,7 +695,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<RecommendationResponse, K>>);
 
         /**
-         * `SaveThreadMutation` saves a thread on the AniList API.
+         * `SaveThreadMutation` creates or updates a forum thread.
          * @param {SaveThreadVariables} variables - The {@link SaveThreadVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<ThreadResponse>} A promise that resolves to the saved {@link ThreadResponse}.
@@ -732,7 +730,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<ThreadResponse, K>>);
 
         /**
-         * `DeleteThreadMutation` deletes a thread on the AniList API.
+         * `DeleteThreadMutation` deletes a forum thread by `id`.
          * @param {DeleteThreadVariables} variables - The {@link DeleteThreadVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the thread was deleted by this call and `false` when it was already absent.
@@ -758,7 +756,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
-         * `ToggleThreadSubscriptionMutation` toggles a thread subscription on the AniList API.
+         * `ToggleThreadSubscriptionMutation` subscribes or unsubscribes the authenticated user from a thread.
          * @param {ToggleThreadSubscriptionVariables} variables - The {@link ToggleThreadSubscriptionVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<ThreadResponse>} A promise that resolves to the updated {@link ThreadResponse}.
@@ -784,7 +782,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<ThreadResponse, K>>);
 
         /**
-         * `SaveThreadCommentMutation` saves a thread comment on the AniList API.
+         * `SaveThreadCommentMutation` creates or updates a comment on a thread.
          * @param {SaveThreadCommentVariables} variables - The {@link SaveThreadCommentVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<ThreadCommentResponse>} A promise that resolves to the saved {@link ThreadCommentResponse}.
@@ -817,7 +815,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<ThreadCommentResponse, K>>);
 
         /**
-         * `DeleteThreadCommentMutation` deletes a thread comment on the AniList API.
+         * `DeleteThreadCommentMutation` deletes a thread comment by `id`.
          * @param {DeleteThreadCommentVariables} variables - The {@link DeleteThreadCommentVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<DeleteResult>} A promise that resolves to `{ deleted }`, where `deleted` is `true` when the comment was deleted by this call and `false` when it was already absent.
@@ -843,7 +841,7 @@ export type AniListMutations = {
             ) => Promise<DeepPick<DeleteResult, K>>);
 
         /**
-         * `UpdateAniChartSettingsMutation` updates the AniChart settings for a user on the AniList API.
+         * `UpdateAniChartSettingsMutation` updates the authenticated user's AniChart display settings.
          * @param {UpdateAniChartSettingsVariables} variables - The {@link UpdateAniChartSettingsVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<string>} A promise that resolves to the updated AniChart settings string.
@@ -866,7 +864,7 @@ export type AniListMutations = {
         ) => Promise<string>;
 
         /**
-         * `UpdateAniChartHighlightsMutation` updates the AniChart highlights for a user on the AniList API.
+         * `UpdateAniChartHighlightsMutation` sets or clears the authenticated user's AniChart highlights.
          * @param {UpdateAniChartHighlightsVariables} variables - The {@link UpdateAniChartHighlightsVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<string>} A promise that resolves to the updated AniChart highlights string.

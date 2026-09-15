@@ -1,8 +1,8 @@
 import { MediaSchema } from "./Media";
 
 /**
- * {@link MediaTrendSchema} is a constant representing the GraphQL schema for a media trend query.
- * It includes the media's id, date, trending status, average score, popularity, in progress status, releasing status, episode number, and media of type `Media`.
+ * {@link MediaTrendSchema} is the media-trend response selection: one day of a media's
+ * trending snapshot, with the media it describes. The media-trend queries send it.
  * @see https://docs.anilist.co/reference/object/mediatrend
  */
 export const MediaTrendSchema = `

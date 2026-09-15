@@ -7,12 +7,12 @@ import {
 } from "../../base/ValidateVariables";
 
 /**
- * Named trailing options for {@link GraphQLOperation.request}, replacing the
+ * Named trailing options for `GraphQLOperation.request`, replacing the
  * former positional tail so call sites name their arguments and new options
- * can be added without reordering. Mirrors the {@link DispatchOptions} pattern
- * used by {@link BaseOperation.dispatch}.
+ * can be added without reordering. Mirrors the `DispatchOptions` pattern
+ * used by {@link BaseOperation}'s `dispatch` method.
  *
- * @see {@link GraphQLOperation.request}
+ * @see {@link GraphQLOperation}
  */
 export interface GraphQLRequestOptions {
     /** Whether the operation requires an authentication token. Defaults to `false` (public queries). */
@@ -90,7 +90,7 @@ export abstract class GraphQLOperation extends BaseOperation {
     protected abstract readonly graphqlUrl: string;
 
     /**
-     * Sends a GraphQL document to the configured endpoint.
+     * Sends a GraphQL document to the configured endpoint. {@link ZZZProtectedTest}
      *
      * The token guard, Authorization header, timeout, retry policy, and error
      * normalization are handled by the shared request pipeline; this method

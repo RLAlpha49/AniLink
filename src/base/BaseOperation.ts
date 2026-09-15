@@ -34,7 +34,7 @@ const assignDeepMergedOption = <K extends (typeof DEEP_MERGED_OPTION_KEYS)[numbe
  *
  * The merge mirrors `resolveRequestOptions` precedence in `RequestHandler`: a
  * field set on `overrides` wins; every other field keeps the instance value.
- * The nested configuration objects ({@link DEEP_MERGED_OPTION_KEYS} — `retry`,
+ * The nested configuration objects (`DEEP_MERGED_OPTION_KEYS` — `retry`,
  * `circuitBreaker`, `retryBudget`) are merged field-by-field, so a per-request
  * `{ retry: { maxRetries: 0 } }` keeps the instance's `retryOnStatus` and
  * `baseDelayMs` instead of silently falling back to library defaults. Passing
@@ -76,15 +76,15 @@ export const mergeOptions = (
 };
 
 /**
- * Named trailing options for {@link BaseOperation.dispatch}, replacing the
+ * Named trailing options for `BaseOperation.dispatch`, replacing the
  * former positional tail so call sites name their arguments and new options
- * can be added without reordering. Mirrors the {@link SendRequestOptions}
+ * can be added without reordering. Mirrors the `SendRequestOptions`
  * pattern already used by {@link sendRequest}.
  *
- * @see {@link BaseOperation.dispatch}
+ * @see {@link BaseOperation}
  */
 export interface DispatchOptions {
-    /** Whether the operation requires an authentication token; the request fails fast with an {@link AniLinkAuthError} when set and no auth material is configured. Defaults to `false`. */
+    /** Whether the operation requires an authentication token; the request fails fast with an `AniLinkAuthError` when set and no auth material is configured. Defaults to `false`. */
     requiresAuth?: boolean;
     /** Human-readable operation name included in missing-token auth errors. Defaults to the concrete subclass name. */
     operation?: string;

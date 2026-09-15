@@ -32,6 +32,7 @@ export type OperationSection = ReferenceOperation["category"];
  * @param baseDir Repository root containing `lib/operation-reference`.
  * Defaults to the current working directory so the docs data loaders
  * resolve the generated shards without extra configuration.
+ * @returns The provider's operations grouped by `domain`, in manifest order.
  */
 export async function loadOperations(
     provider: ReferenceOperation["provider"],

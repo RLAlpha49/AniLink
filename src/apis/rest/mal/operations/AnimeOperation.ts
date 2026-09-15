@@ -84,7 +84,7 @@ export class MalAnimeOperation extends RestOperation {
     /**
      * {@link MalAnimeOperation.seasonal} gets the anime of one broadcast season.
      *
-     * It calls `GET /anime/season/{year}/{season}` through `RestOperation.execute` and returns a {@link MalSeasonalAnimeResponse} page of {@link MalSeasonalAnime} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.seasonal` and it is a public read.
+     * It calls `GET /anime/season/{year}/{season}` through `RestOperation.execute` and returns a {@link MalSeasonalAnimeResponse} page of `MalSeasonalAnime` entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.seasonal` and it is a public read.
      *
      * @param params - The seasonal read inputs; a {@link MalSeasonalParams} carrying the year and broadcast window.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -119,7 +119,7 @@ export class MalAnimeOperation extends RestOperation {
     /**
      * {@link MalAnimeOperation.ranking} gets one of MyAnimeList's anime ranking lists.
      *
-     * It calls `GET /anime/ranking` through `RestOperation.execute` with the `ranking_type` query parameter and returns a {@link MalAnimeRankingResponse} page of {@link MalRankingEntry} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.ranking` and it is a public read.
+     * It calls `GET /anime/ranking` through `RestOperation.execute` with the `ranking_type` query parameter and returns a {@link MalAnimeRankingResponse} page of `MalRankingEntry` entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.ranking` and it is a public read.
      *
      * @param params - The ranking read inputs; a {@link MalRankingParams} carrying the ranking list to fetch.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -156,7 +156,7 @@ export class MalAnimeOperation extends RestOperation {
     /**
      * {@link MalAnimeOperation.suggestions} gets MyAnimeList's anime suggestions for the authenticated user.
      *
-     * It calls `GET /anime/suggestions` through `RestOperation.execute` with `requiresAuth` and returns a {@link MalAnimeSuggestionsResponse} page of {@link MalSuggestion} entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.suggestions` and it requires `MalCredentials.accessToken`.
+     * It calls `GET /anime/suggestions` through `RestOperation.execute` with `requiresAuth` and returns a {@link MalAnimeSuggestionsResponse} page of `MalSuggestion` entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.suggestions` and it requires `MalCredentials.accessToken`.
      *
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The suggestions page, a {@link MalAnimeSuggestionsResponse}.
@@ -215,12 +215,12 @@ export class MalAnimeOperation extends RestOperation {
     /**
      * {@link MalAnimeOperation.updateMyListStatus} updates the authenticated user's anime list status.
      *
-     * It calls `PATCH /anime/{id}/my_list_status` through `RestOperation.execute` with `requiresAuth` and a form-urlencoded {@link MalAnimeListStatusUpdate} body (MAL rejects JSON on this endpoint), returning the updated {@link MalAnimeListStatus}. The facade alias is `MyAnimeListAnimeApi.updateMyListStatus` and it requires `MalCredentials.accessToken`.
+     * It calls `PATCH /anime/{id}/my_list_status` through `RestOperation.execute` with `requiresAuth` and a form-urlencoded {@link MalAnimeListStatusUpdate} body (the endpoint's documented request format), returning the updated {@link MalAnimeListStatus}. The facade alias is `MyAnimeListAnimeApi.updateMyListStatus` and it requires `MalCredentials.accessToken`.
      *
      * @param params - The list-status write inputs; a {@link MalAnimeListStatusUpdateParams} carrying the anime ID plus only the fields to change.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The updated {@link MalAnimeListStatus}.
-     * @throws An `AniLinkAuthError` without an access token, an `AniLinkValidationError` when params carries no list-status field to change, or a normalized request error.
+     * @throws An `AniLinkAuthError` without an access token, an {@link AniLinkValidationError} when params carries no list-status field to change, or a normalized request error.
      * @example
      * ```typescript
      * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;

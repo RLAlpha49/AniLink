@@ -48,12 +48,12 @@ export interface MediaListVariables {
     userName?: string;
 
     /**
-     * `type` is a string representing the type of the media.
+     * `type` is a {@link MediaType} representing the type of the media.
      */
     type?: MediaType;
 
     /**
-     * `status` is a string representing the status of the media.
+     * `status` is a {@link MediaListStatus} representing the status of the media list entry.
      */
     status?: MediaListStatus;
 
@@ -83,7 +83,8 @@ export interface MediaListVariables {
     completedAt?: number;
 
     /**
-     * `compareWithAuthList` is a boolean indicating whether to compare with the authenticated list.
+     * `compareWithAuthList` is a boolean limiting entries to those also on the authenticated user's
+     * list; requires `userId` or `userName`.
      */
     compareWithAuthList?: boolean;
 
@@ -93,17 +94,17 @@ export interface MediaListVariables {
     userId_in?: number[];
 
     /**
-     * `status_in` is an array of strings representing the statuses of the media.
+     * `status_in` is an array of {@link MediaListStatus} values representing the statuses to include.
      */
     status_in?: MediaListStatus[];
 
     /**
-     * `status_not_in` is an array of strings representing the statuses not included in the media.
+     * `status_not_in` is an array of {@link MediaListStatus} values representing the statuses to exclude.
      */
     status_not_in?: MediaListStatus[];
 
     /**
-     * `status_not` is a string representing the status not included in the media.
+     * `status_not` is a {@link MediaListStatus} representing the status to exclude.
      */
     status_not?: MediaListStatus;
 
@@ -153,12 +154,12 @@ export interface MediaListVariables {
     completedAt_like?: string;
 
     /**
-     * `sort` is an array of strings representing the sort order of the media.
+     * `sort` is an array of {@link MediaListSort} values representing the sort order of the media list.
      */
     sort?: MediaListSort[];
 
     /**
-     * `scoreFormat` is a string representing the format of the score of the media.
+     * `scoreFormat` is a {@link ScoreFormat} representing the score format of the media list entry.
      */
     scoreFormat?: ScoreFormat;
 
@@ -222,7 +223,11 @@ export class MediaListQuery extends AniListOperation {
      * @param variables - Values from {@link MediaListVariables} for the query.
      * @returns The {@link MediaListResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/medialist
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<MediaListResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new MediaListQuery().mediaList({ id: 1 });

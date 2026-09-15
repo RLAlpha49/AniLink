@@ -115,7 +115,7 @@ function buildLazyGroup(
  * Builds the AniList facade from the operation classes.
  *
  * Operations are constructed lazily on first property access (see
- * {@link buildLazyGroup}); only the registry is validated eagerly. The
+ * `buildLazyGroup`); only the registry is validated eagerly. The
  * `custom` escape hatch is likewise constructed on first access. Every
  * operation — including `custom` — is constructed with one shared per-client
  * `stateOwner`, so circuit-breaker streaks, retry budgets, and rate-limit

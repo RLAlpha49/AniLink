@@ -2,8 +2,8 @@ import { BasicUserSchema } from "../../Basic";
 import { MediaSchema } from "./Media";
 
 /**
- * {@link ReviewSchema} is a constant representing the GraphQL schema for a review query.
- * It includes the id, mediaId, userId, mediaType, summary, body, rating, ratingAmount, score, private status, siteUrl, createdAt, updatedAt, user of type `BasicUser`, and media of type `Media`.
+ * {@link ReviewSchema} is the review response selection: the review's summary, body, and
+ * scores, with its author and media. The review queries send it.
  * @see https://docs.anilist.co/reference/object/review
  */
 export const ReviewSchema = `

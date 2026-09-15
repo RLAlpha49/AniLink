@@ -13,6 +13,7 @@
  */
 import { onBeforeUnmount, onMounted, ref, type Ref } from "vue";
 
+/** The two visual themes the docs site switches between. */
 export type DocsTheme = "light" | "dark";
 
 const STORAGE_KEY = "anilink-docs-theme";

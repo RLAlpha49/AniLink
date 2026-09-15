@@ -1,18 +1,19 @@
 import { type Name } from "./Name";
 
 /**
- * {@link Staff} is an interface representing a staff member.
- * It includes the id and name each having their own properties.
+ * {@link Staff} is the minimal staff shape used inside favoured-entity stat rows: the
+ * `id` and `name` of the person a row counts. The full staff response is
+ * `StaffResponse`.
  * @see https://docs.anilist.co/reference/object/staff
  */
 export interface Staff {
     /**
-     * `id` is a number representing the id of the staff member.
+     * The AniList id of the staff member.
      */
     id: number;
 
     /**
-     * `name` is an instance of {@link Name} representing the name of the staff member.
+     * The staff member's name.
      */
     name: Name;
 }

@@ -9,8 +9,9 @@
  * across four modules. The core transport types (`RequestAuth`,
  * `RequestAuthInput`, `RequestOptions`) are re-exported here too so the two
  * provider barrels expose the same transport-type surface from a single
- * source — a consumer importing from `anilink/anilist` and `anilink/mal` no
- * longer sees a different transport surface for no documented reason.
+ * source — a consumer importing from `anilink-api-wrapper/anilist` and
+ * `anilink-api-wrapper/mal` no longer sees a different transport surface for
+ * no documented reason.
  */
 export {
     AniLinkApiError,

@@ -1,7 +1,7 @@
 /**
- * {@link MediaListOptions} is a type representing the media list options for a user.
- * It includes fields for section order, split completed section by format, custom lists, advanced scoring,
- * advanced scoring enabled, and theme.
+ * {@link MediaListOptions} is the per-type list layout a user configures: section order,
+ * custom lists, and scoring display. `UpdateUser` accepts it as `animeListOptions`/
+ * `mangaListOptions`.
  * @see https://docs.anilist.co/reference/object/medialistoptions
  */
 export type MediaListOptions = {
@@ -37,9 +37,8 @@ export type MediaListOptions = {
 };
 
 /**
- * {@link MediaListOptionsMapping} is a constant that maps the {@link MediaListOptions} fields to their expected types.
- * The `sectionOrder`, `customLists`, `advancedScoring`, and `theme` fields are mapped to 'string',
- * and the `splitCompletedSectionByFormat` and `advancedScoringEnabled` fields are mapped to 'boolean'.
+ * {@link MediaListOptionsMapping} is the field-shape map `UpdateUser` validates its
+ * `animeListOptions`/`mangaListOptions` values against before dispatch.
  * @see https://docs.anilist.co/reference/object/medialistoptions
  */
 export const MediaListOptionsMapping = {

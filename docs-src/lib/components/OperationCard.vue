@@ -58,6 +58,8 @@ const props = defineProps<OperationCardProps>();
 const signatureHtml = ref("");
 const exampleHtml = ref("");
 
+// Re-highlight whenever `op` changes; the async highlighter fills the
+// refs when it resolves, and CodeBlock shows the plain source until then.
 watchEffect(async () => {
     signatureHtml.value = await highlightTypeScript(props.op.signature);
     exampleHtml.value = await highlightTypeScript(props.op.example);

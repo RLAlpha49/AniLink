@@ -70,7 +70,7 @@ export interface ThreadVariables {
     id_in?: number[];
 
     /**
-     * `sort` is an array of strings representing the sort order of the thread.
+     * `sort` is an array of {@link ThreadSort} values representing the sort order of the thread.
      */
     sort?: ThreadSort[];
 
@@ -108,10 +108,15 @@ export class ThreadQuery extends AniListOperation {
     /**
      * {@link ThreadQuery.thread} sends a query request to get thread data.
      *
-     * @param variables - Values from {@link ThreadVariables} for the query.
+     * @param variables - Values from {@link ThreadVariables} for the query; at least one variable other
+     * than `asHtml` must be set.
      * @returns The {@link ThreadResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/thread
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<ThreadResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new ThreadQuery().thread({ id: 1 });

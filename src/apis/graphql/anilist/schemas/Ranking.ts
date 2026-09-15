@@ -1,6 +1,6 @@
 /**
- * {@link RankingSchema} is a string representing the GraphQL schema for a ranking.
- * It includes the id, rank, type, format, year, season, all-time status, and context.
+ * {@link RankingSchema} is the media-ranking selection: a rank's position, the type of
+ * ranking it is, and the scope (format, year, season, all-time) it was computed over.
  * @see https://docs.anilist.co/reference/object/mediarank
  */
 export const RankingSchema = `

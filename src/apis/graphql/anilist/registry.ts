@@ -117,9 +117,9 @@ export type OperationConstructor = new (
 /**
  * One declarative wiring entry.
  *
- * The bound method name is always present on the entry: {@link op} copies the
+ * The bound method name is always present on the entry: `op` copies the
  * facade key (the common case where the method shares the key's name) and
- * {@link opAs} carries an explicit override. Wiring therefore never falls
+ * `opAs` carries an explicit override. Wiring therefore never falls
  * back to a stringly-typed `name` default — it reads the resolved
  * {@link OperationEntry.methodName} constant directly.
  *
@@ -146,8 +146,8 @@ export interface OperationEntry<
 
     /**
      * The async method on {@link OperationEntry.operationClass} that is bound
-     * and exposed on the facade. Always set: {@link op} defaults it to the
-     * facade key, {@link opAs} carries an explicit override.
+     * and exposed on the facade. Always set: `op` defaults it to the
+     * facade key, `opAs` carries an explicit override.
      */
     readonly methodName: string;
 }
@@ -281,15 +281,35 @@ export const ANILIST_OPERATION_REGISTRY = {
 } as const satisfies RegistryGroups;
 
 /**
- * The literal facade keys each registry group exposes, derived from
+ * The literal facade keys the `query` registry group exposes, derived from
  * {@link ANILIST_OPERATION_REGISTRY} so the registry stays the single source
  * of truth for which operations exist.
  *
  * The facade group types under `facade/` declare the matching typed surface;
- * each group module asserts parity with a `Record<RegistryXxxKeys, true>`
- * constant so a key present in one but not the other fails `tsc` at compile
- * time, rather than only surfacing at test time.
+ * each group module asserts bidirectional parity between this union and its
+ * facade keys, so a key present in one but not the other fails `tsc` at
+ * compile time, rather than only surfacing at test time.
  */
 export type RegistryQueryKeys = (typeof ANILIST_OPERATION_REGISTRY)["query"][number]["name"];
+/**
+ * The literal facade keys the `page` registry group exposes, derived from
+ * {@link ANILIST_OPERATION_REGISTRY} so the registry stays the single source
+ * of truth for which operations exist.
+ *
+ * The `query-group` facade module asserts bidirectional parity between this
+ * union and `keyof AniListQueries["query"]["page"]`, so a key present in
+ * one but not the other fails `tsc` at compile time, rather than only
+ * surfacing at test time.
+ */
 export type RegistryPageKeys = (typeof ANILIST_OPERATION_REGISTRY)["page"][number]["name"];
+/**
+ * The literal facade keys the `mutation` registry group exposes, derived
+ * from {@link ANILIST_OPERATION_REGISTRY} so the registry stays the single
+ * source of truth for which operations exist.
+ *
+ * The `mutation-group` facade module asserts bidirectional parity between
+ * this union and `keyof AniListMutations["mutation"]`, so a key present in
+ * one but not the other fails `tsc` at compile time, rather than only
+ * surfacing at test time.
+ */
 export type RegistryMutationKeys = (typeof ANILIST_OPERATION_REGISTRY)["mutation"][number]["name"];

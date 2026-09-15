@@ -44,13 +44,16 @@ const stripLeadingComments = (query: string): string => {
 };
 
 /**
- * {@link CustomRequest} is a class representing a custom query or mutation by the user.
+ * `CustomRequest` sends caller-authored GraphQL documents to AniList — the
+ * escape hatch for queries and mutations the typed operation surface does
+ * not cover.
+ *
  * @see https://docs.anilist.co/reference/query
  * @see https://docs.anilist.co/reference/mutation
  */
 export class CustomRequest extends AniListOperation {
     /**
-     * `custom` is a method that sends a custom query or mutation by the user.
+     * `custom` sends a caller-authored GraphQL query or mutation document.
      *
      * The response follows the same unwrapping rule as every other operation:
      * a document with a single root field resolves to the bare field value,

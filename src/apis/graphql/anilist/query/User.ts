@@ -55,7 +55,7 @@ export interface UserVariables {
     search?: string;
 
     /**
-     * `sort` is an array of strings representing the sort order of the user.
+     * `sort` is an array of {@link UserSort} values representing the sort order of the user.
      */
     sort?: UserSort[];
 
@@ -75,12 +75,12 @@ export interface UserVariables {
     mangaStatLimit?: number;
 
     /**
-     * `animeStatSort` is an array of strings representing the sort order of the anime statistics.
+     * `animeStatSort` is an array of {@link UserStatisticSort} values representing the sort order of the anime statistics.
      */
     animeStatSort?: UserStatisticSort[];
 
     /**
-     * `mangaStatSort` is an array of strings representing the sort order of the manga statistics.
+     * `mangaStatSort` is an array of {@link UserStatisticSort} values representing the sort order of the manga statistics.
      */
     mangaStatSort?: UserStatisticSort[];
 }
@@ -116,7 +116,11 @@ export class UserQuery extends AniListOperation {
      * @param variables - Values from {@link UserVariables} for the query.
      * @returns The {@link UserResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<UserResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new UserQuery().user({ id: 1 });

@@ -37,7 +37,7 @@ interface SelectionNode {
 const parseCache = new Map<string, SelectionNode[]>();
 
 /**
- * Parse a GraphQL selection body into a tree of {@link SelectionNode}s.
+ * Parse a GraphQL selection body into a tree of `SelectionNode`s.
  *
  * Tracks brace depth so nested selections attach to their parent field.
  * Blank lines are skipped. Lines that carry no field (lone closing braces)
@@ -58,7 +58,7 @@ function parseSelection(body: string): SelectionNode[] {
     return parsed;
 }
 
-/** Uncached parse pass behind {@link parseSelection}. */
+/** Uncached parse pass behind `parseSelection`. */
 function parseSelectionUncached(body: string): SelectionNode[] {
     const roots: SelectionNode[] = [];
     const stack: SelectionNode[] = [];

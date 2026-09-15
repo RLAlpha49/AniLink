@@ -10,8 +10,9 @@ import {
 } from "../../UserStats";
 
 /**
- * {@link StatisticsAnimeSchema} is a string representing the GraphQL selection set for a user's anime statistics.
- * It includes the count, meanScore, standardDeviation, minutesWatched, episodesWatched, formats, statuses, scores, lengths, releaseYears, startYears, genres, tags, countries, voiceActors, staff, and studios.
+ * {@link StatisticsAnimeSchema} is the anime half of a user's `statistics`: the totals
+ * plus one per-category breakdown (formats, genres, voice actors, …), each paginated
+ * and sortable through its own variables.
  * @see https://docs.anilist.co/reference/object/userstatistics
  */
 export const StatisticsAnimeSchema = `
@@ -85,8 +86,9 @@ export const StatisticsAnimeSchema = `
 `;
 
 /**
- * {@link StatisticsMangaSchema} is a string representing the GraphQL selection set for a user's manga statistics.
- * It includes the count, meanScore, standardDeviation, chaptersRead, volumesRead, formats, statuses, scores, lengths, releaseYears, startYears, genres, tags, countries, staff, and studios.
+ * {@link StatisticsMangaSchema} is the manga half of a user's `statistics`: the totals
+ * plus one per-category breakdown (formats, genres, staff, …), each paginated and
+ * sortable through its own variables.
  * @see https://docs.anilist.co/reference/object/userstatistics
  */
 export const StatisticsMangaSchema = `
@@ -152,8 +154,8 @@ export const StatisticsMangaSchema = `
 `;
 
 /**
- * {@link StatisticsSchema} is a string representing the wrapped statistics selection used to derive
- * the `Statistics` response interface. It interpolates the anime and manga statistic blocks.
+ * {@link StatisticsSchema} is the wrapped `statistics` block of a user response: the
+ * anime and manga halves side by side, each interpolated from its own fragment.
  * @see https://docs.anilist.co/reference/object/userstatistictypes
  */
 export const StatisticsSchema = `
@@ -164,8 +166,9 @@ export const StatisticsSchema = `
 `;
 
 /**
- * {@link UserSchema} is a constant representing the GraphQL schema for a user query.
- * It includes the user's id, name, about, avatar, bannerImage, isFollowing status, isFollower status, isBlocked status, bans, options, mediaListOptions, favourites, statistics, stats, unreadNotificationCount, siteUrl, donatorTier, donatorBadge, moderatorRoles, createdAt, updatedAt, and previousNames.
+ * {@link UserSchema} is the maximal user document the user queries send: profile, options,
+ * favourites, both statistics blocks, and the aggregate `stats` section. It is the
+ * single source of truth the `fields` option prunes.
  * @see https://docs.anilist.co/reference/object/user
  */
 export const UserSchema = `

@@ -65,7 +65,7 @@ export interface CharacterVariables {
     id_not_in?: number[];
 
     /**
-     * `sort` is an array of strings representing the sort order.
+     * `sort` is an array of {@link CharacterSort} values representing the sort order.
      */
     sort?: CharacterSort[];
 
@@ -75,7 +75,7 @@ export interface CharacterVariables {
     asHtml?: boolean;
 
     /**
-     * `mediaSort` is an array of strings representing the sort order for media.
+     * `mediaSort` is an array of {@link MediaSort} values representing the sort order for media.
      */
     mediaSort?: MediaSort[];
 
@@ -128,7 +128,11 @@ export class CharacterQuery extends AniListOperation {
      * @param variables - Values from {@link CharacterVariables} for the query.
      * @returns The {@link CharacterResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/character
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<CharacterResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new CharacterQuery().character({ id: 1 });

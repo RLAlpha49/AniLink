@@ -1,6 +1,6 @@
 /**
- * {@link TitleSchema} is a string representing the GraphQL schema for a title.
- * It includes the romaji, english, native, and userPreferred.
+ * {@link TitleSchema} is the media-title selection: the title in romaji, English, the
+ * native language, and the user's preferred language.
  * @see https://docs.anilist.co/reference/object/mediatitle
  */
 export const TitleSchema = `

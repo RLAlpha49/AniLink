@@ -1,6 +1,6 @@
 /**
- * {@link ScoreDistributionSchema} is a string representing the GraphQL schema for a score distribution.
- * It includes the score and the amount.
+ * {@link ScoreDistributionSchema} is the score-distribution selection: how many entries
+ * were given each score value.
  * @see https://docs.anilist.co/reference/object/scoredistribution
  */
 export const ScoreDistributionSchema = `
@@ -11,8 +11,8 @@ export const ScoreDistributionSchema = `
 `;
 
 /**
- * {@link StatusDistributionSchema} is a string representing the GraphQL schema for a status distribution.
- * It includes the status and amount.
+ * {@link StatusDistributionSchema} is the status-distribution selection: how many
+ * entries hold each list status.
  * @see https://docs.anilist.co/reference/object/statusdistribution
  */
 export const StatusDistributionSchema = `

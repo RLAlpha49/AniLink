@@ -72,11 +72,16 @@ export class ToggleFavouriteMutation extends AniListOperation {
     /**
      * {@link ToggleFavouriteMutation.toggleFavourite} sends a mutation request to toggle a favourite.
      *
+     * Toggles the authenticated user's favourites for the anime, manga, character, staff, and
+     * studio named by the five ID variables and returns the updated favourites list.
+     * {@link ToggleFavouriteVariables} requires all five IDs; the upstream mutation and the
+     * runtime validation accept any one of them.
+     *
      * @param variables - Values from {@link ToggleFavouriteVariables} for the mutation.
      * @returns The {@link Favourites} returned by the mutation.
      * @throws Throws if no authentication token is configured, at least one favourite ID is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/favourites
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<Favourites, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new ToggleFavouriteMutation("your-token").toggleFavourite({ animeId: 1, mangaId: 1, characterId: 1, staffId: 1, studioId: 1 });

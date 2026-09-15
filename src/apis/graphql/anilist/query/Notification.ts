@@ -15,17 +15,17 @@ import { NotificationSchema } from "../schemas/responses/query/Notification";
  */
 export interface NotificationVariables {
     /**
-     * `type` is a string representing the type of the notification.
+     * `type` is a {@link NotificationType} representing the type of the notification.
      */
     type?: NotificationType;
 
     /**
-     * `resetNotificationCount` is a boolean indicating whether to reset the notification count.
+     * `resetNotificationCount` is a boolean that resets the unread notification count to 0.
      */
     resetNotificationCount?: boolean;
 
     /**
-     * `type_in` is an array of strings representing the types of the notifications.
+     * `type_in` is an array of {@link NotificationType} values representing the types of notifications to include.
      */
     type_in?: NotificationType[];
 
@@ -55,7 +55,8 @@ const NotificationMappings = {
  */
 export class NotificationQuery extends AniListOperation {
     /**
-     * {@link NotificationQuery.notification} sends a query request to get notification data.
+     * {@link NotificationQuery.notification} sends a query request to get notification data for the
+     * authenticated user. Requires an auth token.
      *
      * @param variables - Values from {@link NotificationVariables} for the query.
      * @returns The {@link NotificationResponse} returned by the query.

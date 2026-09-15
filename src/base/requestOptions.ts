@@ -30,26 +30,60 @@ import {
 import { resolveAgents } from "./agents";
 import { resolveRetryPolicy } from "./retry";
 
+/**
+ * The complete, validated transport settings one request pipeline runs
+ * with — the output of {@link resolveRequestOptions}.
+ *
+ * Every resilience module (error normalization, pacing, circuit breaker,
+ * retry loop) reads from this shape instead of re-deriving defaults, so a
+ * request never branches on missing fields. Unlike the public
+ * {@link RequestOptions}, the defaults are already applied: `timeout`,
+ * `exposeRawAxiosError`, `paceWithRateLimit`, `rateLimitFloor`, and
+ * `ignorePaceDeadline` are always present, `retry` is a complete policy or
+ * `null`, and the keep-alive agents are resolved.
+ *
+ * @see {@link RequestOptions}
+ */
 export interface ResolvedRequestOptions {
+    /** Per-attempt timeout in milliseconds; `0` disables the Axios timeout. */
     timeout: number;
+    /** Signal used to cancel in-flight requests and retry waits. */
     signal?: AbortSignal;
+    /** Whether raw Axios errors are attached to thrown errors for diagnostics. */
     exposeRawAxiosError: boolean;
+    /** The complete retry policy, or `null` when retries are disabled. */
     retry: RetryPolicy | null;
+    /** Whether proactive rate-limit pacing is enabled. */
     paceWithRateLimit: boolean;
+    /** Remaining-quota threshold below which pacing delays the next request. */
     rateLimitFloor: number;
+    /** Circuit-breaker configuration, when opted in. */
     circuitBreaker?: { threshold: number; cooldownMs: number };
+    /** Retry-budget configuration, when opted in. */
     retryBudget?: RetryBudget;
+    /** The resolved keep-alive agent for plain-HTTP requests. */
     httpAgent: http.Agent;
+    /** The resolved keep-alive agent for HTTPS requests. */
     httpsAgent: https.Agent;
+    /** Invoked when an attempt fails and once more when retries are exhausted. */
     onError?: OnErrorHandler;
+    /** Invoked before each retry wait with the scheduled delay. */
     onRetry?: OnErrorHandler;
+    /** Invoked just before each attempt is sent. */
     onRequestStart?: OnRequestStartHandler;
+    /** Invoked after each attempt completes. */
     onResponse?: OnResponseHandler;
+    /** Invoked when proactive pacing delays the next request. */
     onPace?: OnPaceHandler;
+    /** Invoked when a user-supplied lifecycle hook throws. */
     onHookError?: OnHookErrorHandler;
+    /** Invoked when the circuit breaker opens. */
     onCircuitOpen?: OnCircuitOpenHandler;
+    /** Invoked when the circuit breaker closes. */
     onCircuitClose?: OnCircuitCloseHandler;
+    /** Whether the shared rate-limit pacing deadline is bypassed for this request. */
     ignorePaceDeadline: boolean;
+    /** The opt-in response cache, when configured. */
     responseCache?: ResponseCache;
 }
 

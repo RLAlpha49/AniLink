@@ -8,7 +8,7 @@ import type { MalPaging, MalPicture } from "./common";
 /**
  * {@link MalManga} is the typed portion of a MyAnimeList manga response returned by `MalMangaOperation.get` and `MyAnimeListMangaApi.get`.
  *
- * It always carries `id` and `title`; additional fields appear when requested via {@link MalRequestOptions.fields} and are exposed through the index signature without narrowing. Manga-specific fields such as `num_chapters` and `num_volumes` mirror the MyAnimeList manga endpoint shape.
+ * It always carries `id` and `title`; additional fields appear when requested via the `fields` request option and are exposed through the index signature without narrowing. Manga-specific fields such as `num_chapters` and `num_volumes` mirror the MyAnimeList manga endpoint shape.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get
  */
@@ -29,7 +29,7 @@ export interface MalManga {
     num_chapters?: number;
     /** The total number of volumes, when requested via the `fields` query parameter. */
     num_volumes?: number;
-    /** The media type, when requested (for example `manga`, `novel`, or `oneshot`). */
+    /** The media type, when requested (for example `manga`, `novel`, or `one_shot`). */
     media_type?: string;
     /** The first publication date in ISO 8601 format, when requested via the `fields` query parameter. */
     start_date?: string;
@@ -53,7 +53,7 @@ export type MalMangaListStatusValue =
 /**
  * {@link MalMangaListStatusUpdate} is the form-urlencoded PATCH request body for updating a user's manga list status.
  *
- * Every field is optional: callers send only the fields they want to change. It is consumed by `MalMangaOperation.updateMyListStatus` and `MyAnimeListMangaApi.updateMyListStatus` against `PATCH /manga/{manga_id}/my_list_status`, which encodes it as `application/x-www-form-urlencoded` (MAL rejects JSON on this endpoint).
+ * Every field is optional: callers send only the fields they want to change. It is consumed by `MalMangaOperation.updateMyListStatus` and `MyAnimeListMangaApi.updateMyListStatus` against `PATCH /manga/{manga_id}/my_list_status`, which encodes it as `application/x-www-form-urlencoded` — the endpoint's only documented request format.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put
  */
@@ -127,7 +127,7 @@ export interface MalMangaListStatus {
  *
  * These are the fixed `sort` query values accepted by
  * `GET /users/{user_name}/mangalist`, consumed as the `sort` field of
- * {@link MalUserMangaListParams} on `MalUserOperation.mangaList` and
+ * `MalUserMangaListParams` on `MalUserOperation.mangaList` and
  * `MyAnimeListUserApi.mangaList`. `list_score`, `list_updated_at`, and
  * `manga_start_date` sort descending; `manga_title` and `manga_id` sort
  * ascending (`manga_id` is listed as under development by MyAnimeList).
@@ -188,7 +188,7 @@ export interface MalMangaDeleteParams {
  * status, and is the element type of {@link MalUserMangaListResponse} returned
  * by `MalUserOperation.mangaList` and `MyAnimeListUserApi.mangaList`. The
  * `list_status` wrapper appears when requested via
- * {@link MalRequestOptions.fields} (for example `list_status{priority,comments}`).
+ * the `fields` request option (for example `fields=list_status`).
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
  */

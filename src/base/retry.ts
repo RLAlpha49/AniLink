@@ -35,6 +35,18 @@ const DEFAULT_RETRY_POLICY: Required<Pick<RetryPolicy, "jitter">> & RetryPolicy 
     jitter: true,
 };
 
+/**
+ * Merges a caller's partial retry setting over the built-in default policy.
+ *
+ * `false` disables retries entirely (`null`); `undefined` and `true` return
+ * a copy of the defaults; a partial object fills only the fields it sets,
+ * with `undefined`-valued fields dropped so they cannot shadow a default.
+ * The returned {@link RetryPolicy} is always complete, so the retry loop
+ * never branches on missing fields.
+ *
+ * @param retry - The caller's retry setting: disabled, default, or a partial policy.
+ * @returns The complete policy, or `null` when retries are disabled.
+ */
 export const resolveRetryPolicy = (
     retry: boolean | Partial<RetryPolicy> | undefined
 ): RetryPolicy | null => {
@@ -53,6 +65,19 @@ export const resolveRetryPolicy = (
     return { ...DEFAULT_RETRY_POLICY, ...filtered };
 };
 
+/**
+ * Parses a `Retry-After` header into the delay to wait, in milliseconds.
+ *
+ * Both documented formats are supported: delay-seconds (`"120"`) and
+ * HTTP-date (resolved against `now`, which is injectable for tests). The
+ * result is clamped to `[0, MAX_RETRY_AFTER_MS]` so a hostile value cannot
+ * park a caller indefinitely; absent, empty, and unparseable headers return
+ * `null` so the caller falls back to client-chosen backoff.
+ *
+ * @param header - The raw `Retry-After` header value, when present.
+ * @param now - The current time in milliseconds, for HTTP-date values.
+ * @returns The clamped delay in milliseconds, or `null` when the header is absent or unparseable.
+ */
 export const parseRetryAfter = (header: string | undefined, now: number): number | null => {
     if (header === undefined || header === null || header === "") {
         return null;
@@ -227,6 +252,12 @@ export const applyJitter = (cap: number, policy: RetryPolicy): number =>
  * - `AniLinkNetworkError` retries on network/timeout failures when
  *   `retryOnNetworkError` is set, but never on `ABORTED`.
  * - `AniLinkAuthError` and `AniLinkValidationError` are never retried.
+ *
+ * @param error - The normalized failure for the attempt.
+ * @param rawError - The raw thrown value, for `Retry-After` extraction.
+ * @param attempt - The zero-based index of the attempt that just failed.
+ * @param policy - The active retry policy.
+ * @returns The delay to wait in milliseconds, or `null` when the failure must not be retried.
  */
 export const getRetryDelay = (
     error: AniLinkError,
@@ -317,8 +348,8 @@ export interface RetryDelayInput {
  * window: they are already bounded by the policy's `maxDelayMs` cap, so they
  * cannot stretch one window's retry spend across many minutes of
  * wall-clock waits. The gate compares the *un-clamped* server-dictated
- * deadline (see {@link getUnclampedRetryAfterDelay} and
- * {@link getUnclampedRateLimitResetDelay}): a delay that genuinely outlasts
+ * deadline (see `getUnclampedRetryAfterDelay` and
+ * `getUnclampedRateLimitResetDelay`): a delay that genuinely outlasts
  * the window surfaces immediately, instead of retrying into repeated
  * clamped 60-second hops that each spend a budget unit. Like the count gate,
  * the window gate requires both halves of the budget (the live state and
@@ -375,9 +406,9 @@ export const computeNextRetryDelay = (input: RetryDelayInput): number | null => 
 };
 
 /**
- * Shared retry-budget state, keyed on a stable per-client owner like
- * {@link circuitStates}. Only populated when a request opts in via
- * `retryBudget`.
+ * Shared retry-budget state, keyed on a stable per-client owner like the
+ * circuit breaker's `circuitStates` map. Only populated when a request opts
+ * in via `retryBudget`.
  *
  * @see {@link RetryBudget}
  */

@@ -52,7 +52,7 @@ export interface SaveMessageActivityVariables {
     asMod?: boolean;
 
     /**
-     * `asHtml` is a boolean representing whether the description in the return response is in HTML format.
+     * `asHtml` is a boolean representing whether the message text is returned rendered as HTML.
      */
     asHtml?: boolean;
 }
@@ -84,11 +84,15 @@ export class SaveMessageActivityMutation extends AniListOperation {
     /**
      * {@link SaveMessageActivityMutation.saveMessageActivity} sends a mutation request to save a message activity.
      *
+     * Updates the private message activity named by `id` and returns the saved activity. The
+     * upstream mutation also sends a new message from `recipientId` when `id` is omitted, but
+     * {@link SaveMessageActivityVariables} requires `id`, so the typed surface is update-only.
+     *
      * @param variables - Values from {@link SaveMessageActivityVariables} for the mutation.
      * @returns The {@link Activity} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `message` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/union/activityunion
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<Activity, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveMessageActivityMutation("your-token").saveMessageActivity({ id: 1, message: "Hello, world!" });

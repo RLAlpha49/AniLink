@@ -11,6 +11,19 @@
 import { AniLinkErrorCodes, AniLinkNetworkError } from "./AniLinkError";
 import { stampRequestId } from "./errors";
 
+/**
+ * Resolves after `ms`, or rejects with an `ABORTED`
+ * {@link AniLinkNetworkError} stamped with `requestId` when the supplied
+ * `AbortSignal` fires first (including one that aborted before the call).
+ *
+ * The timer is `unref`-ed so it never keeps the event loop alive on its own.
+ *
+ * @param ms - The duration to wait in milliseconds.
+ * @param signal - Optional signal that cancels the wait.
+ * @param requestId - Correlation ID stamped onto the abort error, when available.
+ * @returns A promise that resolves after the delay, or rejects on abort.
+ */
+
 export const sleep = (ms: number, signal?: AbortSignal, requestId?: string): Promise<void> =>
     new Promise((resolve, reject) => {
         const timeout: NodeJS.Timeout = setTimeout(() => {

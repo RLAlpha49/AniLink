@@ -20,12 +20,12 @@ export interface ToggleLikeV2Variables {
     id: number;
 
     /**
-     * `type` is a string representing the type of the likeable object.
+     * `type` is a {@link LikeableType} representing the type of the likeable object.
      */
     type: LikeableType;
 
     /**
-     * `asHtml` is a boolean representing whether the response should be in HTML format.
+     * `asHtml` is a boolean representing whether HTML-renderable fields in the response are returned as HTML.
      */
     asHtml?: boolean;
 }
@@ -46,12 +46,15 @@ const ToggleLikeV2Mappings = {
 /**
  * {@link ToggleLikeV2Mutation} executes the AniList mutation through {@link AniListOperation}.
  * Its public operation is {@link ToggleLikeV2Mutation.toggleLikeV2}; variables use
- * {@link ToggleLikeV2Variables} and validation uses `ToggleLikeV2Mappings`.
+ * {@link ToggleLikeV2Variables}; validation metadata is kept local to the operation.
  * @see https://docs.anilist.co/reference/union/likeableunion
  */
 export class ToggleLikeV2Mutation extends AniListOperation {
     /**
      * {@link ToggleLikeV2Mutation.toggleLikeV2} sends a mutation request to toggle a like.
+     *
+     * Toggles the authenticated user's like on the entity named by `id` and `type`. Returns
+     * the updated likeable entity.
      *
      * @param variables - Values from {@link ToggleLikeV2Variables} for the mutation.
      * @returns The {@link Likeable} returned by the mutation: an activity, activity reply, thread, or thread comment.

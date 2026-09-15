@@ -46,12 +46,12 @@ export interface ReviewVariables {
     userId?: number;
 
     /**
-     * `mediaType` is a string representing the type of the media.
+     * `mediaType` is a {@link MediaType} representing the type of the media.
      */
     mediaType?: MediaType;
 
     /**
-     * `sort` is an array of strings representing the sort order of the review.
+     * `sort` is an array of {@link ReviewSort} values representing the sort order of the review.
      */
     sort?: ReviewSort[];
 
@@ -85,10 +85,15 @@ export class ReviewQuery extends AniListOperation {
     /**
      * {@link ReviewQuery.review} sends a query request to get review data.
      *
-     * @param variables - Values from {@link ReviewVariables} for the query.
+     * @param variables - Values from {@link ReviewVariables} for the query; at least one variable other
+     * than `asHtml` must be set.
      * @returns The {@link ReviewResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/review
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<ReviewResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new ReviewQuery().review({ mediaId: 1 });

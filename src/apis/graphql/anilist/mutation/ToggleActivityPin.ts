@@ -24,7 +24,7 @@ export interface ToggleActivityPinVariables {
     pinned?: boolean;
 
     /**
-     * `asHtml` is a boolean representing whether the activity descriptions is in HTML format.
+     * `asHtml` is a boolean representing whether HTML-renderable fields in the response are returned as HTML.
      */
     asHtml?: boolean;
 }
@@ -51,6 +51,9 @@ const ToggleActivityPinMappings = {
 export class ToggleActivityPinMutation extends AniListOperation {
     /**
      * {@link ToggleActivityPinMutation.toggleActivityPin} sends a mutation request to pin an activity.
+     *
+     * Sets or clears the pinned state of the activity named by `id` — only the activity's
+     * owner can pin it. Returns the updated activity.
      *
      * @param variables - Values from {@link ToggleActivityPinVariables} for the mutation.
      * @returns The {@link Activity} returned by the mutation.

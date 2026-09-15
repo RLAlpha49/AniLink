@@ -1,7 +1,9 @@
 /**
- * {@link NameSchema} is a string representing the GraphQL schema for a name.
- * It includes the first name, last name, full name, and native name.
+ * {@link NameSchema} is the shared name selection (`first`/`last`/`full`/`native`) used for
+ * the `name` field of characters, staff, and their nested entities. AniList types the
+ * field per entity (`CharacterName`, `StaffName`); the selected keys are the same.
  * @see https://docs.anilist.co/reference/object/charactername
+ * @see https://docs.anilist.co/reference/object/staffname
  */
 export const NameSchema = `
   name {

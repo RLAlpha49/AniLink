@@ -68,7 +68,7 @@ export interface StaffVariables {
     id_not_in?: number[];
 
     /**
-     * `sort` is an array of strings representing the sort order of the staff.
+     * `sort` is an array of {@link StaffSort} values representing the sort order of the staff.
      */
     sort?: StaffSort[];
 
@@ -78,12 +78,12 @@ export interface StaffVariables {
     asHtml?: boolean;
 
     /**
-     * `staffMediaSort` is an array of strings representing the sort order of the staff media.
+     * `staffMediaSort` is an array of {@link MediaSort} values representing the sort order of the staff media.
      */
     staffMediaSort?: MediaSort[];
 
     /**
-     * `staffMediaType` is a string representing the type of the staff media.
+     * `staffMediaType` is a {@link MediaType} representing the type of the staff media.
      */
     staffMediaType?: MediaType;
 
@@ -103,7 +103,7 @@ export interface StaffVariables {
     staffMediaPerPage?: number;
 
     /**
-     * `charactersSort` is an array of strings representing the sort order of the characters.
+     * `charactersSort` is an array of {@link CharacterSort} values representing the sort order of the characters.
      */
     charactersSort?: CharacterSort[];
 
@@ -118,7 +118,7 @@ export interface StaffVariables {
     charactersPerPage?: number;
 
     /**
-     * `characterMediaSort` is an array of strings representing the sort order of the character media.
+     * `characterMediaSort` is an array of {@link MediaSort} values representing the sort order of the character media.
      */
     characterMediaSort?: MediaSort[];
 
@@ -179,7 +179,11 @@ export class StaffQuery extends AniListOperation {
      * @param variables - Values from {@link StaffVariables} for the query.
      * @returns The {@link StaffResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/staff
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<StaffResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new StaffQuery().staff({ id: 1 });

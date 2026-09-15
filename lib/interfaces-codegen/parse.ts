@@ -1,6 +1,6 @@
 /**
  * Structural parser for the handwritten GraphQL selection-set constants under
- * `src/apis/anilist/schemas/`.
+ * `src/apis/graphql/anilist/schemas/`.
  *
  * Unlike textual expansion, interpolation placeholders (`${Constant}`) are
  * preserved as dedicated nodes so downstream tooling can detect which
@@ -8,8 +8,13 @@
  * references for them.
  */
 
+/**
+ * `FieldNode` is one selected field with its nested selection. Aliases are
+ * recorded under the field's response property name (the alias when present).
+ */
 export interface FieldNode {
     kind: "field";
+    /** Field name, or the alias when the selection uses one. */
     name: string;
     children: SelectionNode[];
     /**
@@ -19,23 +24,42 @@ export interface FieldNode {
     sourceConstant?: string;
 }
 
+/**
+ * `FragmentNode` is one inline fragment (`... on TypeCondition`) with its
+ * member-specific selection.
+ */
 export interface FragmentNode {
     kind: "fragment";
+    /** Type condition the fragment narrows to. */
     typeCondition: string;
     children: SelectionNode[];
 }
 
+/**
+ * `InterpolationNode` is a preserved `${Constant}` placeholder, kept as a
+ * dedicated node so downstream tooling can detect shared sub-selections.
+ */
 export interface InterpolationNode {
     kind: "interpolation";
+    /** Referenced schema-fragment constant name. */
     constant: string;
 }
 
+/**
+ * `SelectionNode` is one node of a parsed selection tree: a {@link FieldNode},
+ * a {@link FragmentNode}, or a preserved {@link InterpolationNode}.
+ */
 export type SelectionNode = FieldNode | FragmentNode | InterpolationNode;
 
 /**
  * Parses a selection-set body into a tree of fields, inline fragments, and
  * interpolation placeholders. Handles aliases, parenthesised arguments, and
  * arbitrarily nested selections.
+ *
+ * @param document - The selection-set body to parse.
+ * @returns The parsed selection tree.
+ * @throws {Error} On unbalanced braces, unterminated interpolations, or
+ *   unexpected characters.
  */
 export function parseSelectionSet(document: string): SelectionNode[] {
     const { nodes } = parseBody(document);
@@ -131,6 +155,12 @@ function matchingBrace(text: string, openingBrace: number): number {
  * their referenced constants, recursively. Interpolations that sit inside a
  * field's braces are KEPT as marker nodes so the resolver can collapse them to
  * named TypeScript type references.
+ *
+ * @param nodes - The parsed selection tree to splice.
+ * @param constantsByName - Fragment constant name -> raw document text.
+ * @param visited - Constants already being spliced, cycle detection.
+ * @returns The spliced selection tree.
+ * @throws {Error} On unresolvable or cyclic interpolations.
  */
 export function spliceBareInterpolations(
     nodes: SelectionNode[],
@@ -182,7 +212,14 @@ function spliceNode(
     ];
 }
 
-/** Strips a `query`/`mutation` wrapper, keeping the root operation selection body. */
+/**
+ * Strips a `query`/`mutation` wrapper, keeping the root operation selection
+ * body.
+ *
+ * @param expandedText - The wrapped operation document.
+ * @returns The selection body without the operation wrapper.
+ * @throws {Error} When the wrapper is malformed.
+ */
 export function stripOperationWrapper(expandedText: string): string {
     const trimmed = expandedText.trim();
     if (!/^(query|mutation|subscription)\b/.test(trimmed)) return trimmed;

@@ -369,6 +369,13 @@ export function useHeadingScrollSpy(pageHeaders: Readonly<Ref<readonly PageHeadi
         }
     }
 
+    /**
+     * Tear the spy down and rebuild it against the live DOM: reset all
+     * state, re-collect rendered headings, re-attach listeners, and
+     * resume content observation. Runs whenever the page's heading list
+     * changes (route change or asynchronously mounted content) so
+     * positions always match what is currently rendered.
+     */
     async function refreshHeadings(): Promise<void> {
         if (!mounted || typeof window === "undefined") {
             return;

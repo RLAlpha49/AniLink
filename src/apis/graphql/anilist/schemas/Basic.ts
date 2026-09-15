@@ -1,6 +1,7 @@
 /**
- * {@link BasicUserSchema} is a string representing the GraphQL schema for a basic user.
- * It includes the id, name, and avatar with a large size.
+ * {@link BasicUserSchema} is the minimal user selection: `id`, `name`, and the large
+ * avatar. Response fragments interpolate it wherever only the acting user is needed
+ * (authors, reply users, notification users).
  * @see https://docs.anilist.co/reference/object/user
  */
 export const BasicUserSchema = `
@@ -12,8 +13,9 @@ export const BasicUserSchema = `
 `;
 
 /**
- * {@link BasicThreadSchema} is a string representing the GraphQL schema for a basic thread.
- * It includes the id, title, body, and site url.
+ * {@link BasicThreadSchema} is the minimal thread selection: `id`, `title`, `body`, and
+ * `siteUrl`. Notification and comment fragments interpolate it for the thread a payload
+ * refers to.
  * @see https://docs.anilist.co/reference/object/thread
  */
 export const BasicThreadSchema = `
@@ -24,8 +26,8 @@ export const BasicThreadSchema = `
 `;
 
 /**
- * {@link BasicCommentSchema} is a string representing the GraphQL schema for a basic comment.
- * It includes the id, user id, and thread id.
+ * {@link BasicCommentSchema} is the minimal thread-comment selection: `id`, `userId`, and
+ * `threadId`. Notification fragments interpolate it for the comment a payload refers to.
  * @see https://docs.anilist.co/reference/object/threadcomment
  */
 export const BasicCommentSchema = `

@@ -1,6 +1,6 @@
 /**
  * Response interfaces generated from the schema fragments under
- * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.
+ * `src/apis/graphql/anilist/schemas/` and the committed AniList schema snapshot.
  * Run `npm run interfaces:generate` after changing a fragment;
  * do not edit the generated block by hand.
  */

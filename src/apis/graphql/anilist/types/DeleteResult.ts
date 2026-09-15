@@ -6,7 +6,7 @@
  */
 export type DeleteResult = {
     /**
-     * `deleted` is a boolean indicating whether the target was deleted by this call.
+     * Whether the target was deleted by this call (`false` when it was already absent).
      */
     deleted: boolean;
 };

@@ -52,7 +52,7 @@ export interface SaveReviewVariables {
     private: boolean;
 
     /**
-     * `asHtml` is a boolean that determines if the review is in HTML format.
+     * `asHtml` is a boolean that determines whether the review body is returned rendered as HTML.
      */
     asHtml?: boolean;
 }
@@ -84,11 +84,15 @@ export class SaveReviewMutation extends AniListOperation {
     /**
      * {@link SaveReviewMutation.saveReview} sends a mutation request to save a review.
      *
+     * Updates the review named by `id` and returns the saved review. The upstream mutation
+     * also creates a review for `mediaId` when `id` is omitted, but
+     * {@link SaveReviewVariables} requires `id`, so the typed surface is update-only.
+     *
      * @param variables - Values from {@link SaveReviewVariables} for the mutation.
      * @returns The {@link ReviewResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `mediaId` is missing, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/review
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<ReviewResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveReviewMutation("your-token").saveReview({ id: 1, mediaId: 1, body: "Example review", summary: "Example", score: 8, private: false });

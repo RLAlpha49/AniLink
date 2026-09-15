@@ -1,6 +1,6 @@
 /**
- * {@link SiteTrendSchema} is a string representing the GraphQL schema for a site trend.
- * It includes the date, count, and change.
+ * {@link SiteTrendSchema} is the site-trend selection: one day of a site-statistics
+ * category, with its total count and the change since the previous day.
  * @see https://docs.anilist.co/reference/object/sitetrend
  */
 export const SiteTrendSchema = `
@@ -10,8 +10,9 @@ export const SiteTrendSchema = `
 `;
 
 /**
- * {@link SiteTrendConnectionSchema} is a string representing the GraphQL schema for a site trend connection.
- * It includes the page information and the edges and nodes of the site trends.
+ * {@link SiteTrendConnectionSchema} is the paginated site-trend connection: `pageInfo`
+ * plus the trend rows in both `edges` and `nodes` form. The site-statistics fragment
+ * interpolates it once per category.
  * @see https://docs.anilist.co/reference/object/sitetrendconnection
  */
 export const SiteTrendConnectionSchema = `

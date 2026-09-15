@@ -19,12 +19,12 @@ export interface ToggleActivitySubscriptionVariables {
     activityId: number;
 
     /**
-     * `subscribe` is a boolean representing whether the activity is subscribed.
+     * `subscribe` is a boolean representing whether to subscribe to the activity's replies.
      */
     subscribe: boolean;
 
     /**
-     * `asHtml` is a boolean representing whether the activity descriptions is in HTML format.
+     * `asHtml` is a boolean representing whether HTML-renderable fields in the response are returned as HTML.
      */
     asHtml?: boolean;
 }
@@ -51,6 +51,9 @@ const ToggleActivitySubscriptionMappings = {
 export class ToggleActivitySubscriptionMutation extends AniListOperation {
     /**
      * {@link ToggleActivitySubscriptionMutation.toggleActivitySubscription} sends a mutation request to subscribe to an activity.
+     *
+     * Subscribes or unsubscribes the authenticated user from notifications about the activity
+     * named by `activityId`. Returns the updated activity.
      *
      * @param variables - Values from {@link ToggleActivitySubscriptionVariables} for the mutation.
      * @returns The {@link Activity} returned by the mutation.

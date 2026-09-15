@@ -1551,6 +1551,7 @@ export function buildReferenceSections(manifest: ReferenceManifest): ReferenceSe
  *
  * @param manifest Complete operation-reference manifest.
  * @param outDir Directory containing the complete manifest.
+ * @returns Nothing; writes one `<provider>/<category>.json` shard per section.
  */
 export function writeReferenceSections(manifest: ReferenceManifest, outDir: string): void {
     for (const section of buildReferenceSections(manifest)) {

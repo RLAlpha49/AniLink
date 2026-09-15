@@ -4,8 +4,9 @@ import { ThreadNotificationSchema } from "../../Notification";
 import { TitleSchema } from "../../Title";
 
 /**
- * {@link NotificationSchema} is a constant representing the GraphQL schema for a notification query.
- * It includes various types of notifications such as AiringNotification, FollowingNotification, ActivityMessageNotification, ActivityMentionNotification, ActivityReplyNotification, ActivityReplySubscribedNotification, ActivityLikeNotification, ActivityReplyLikeNotification, ThreadCommentMentionNotification, ThreadCommentReplyNotification, ThreadCommentSubscribedNotification, ThreadCommentLikeNotification, ThreadLikeNotification, RelatedMediaAdditionNotification, MediaDataChangeNotification, MediaMergeNotification, and MediaDeletionNotification.
+ * {@link NotificationSchema} is the notification response selection: the shared fields of
+ * every NotificationUnion variant, with the variant-specific payloads selected inline.
+ * The notification queries send it.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export const NotificationSchema = `

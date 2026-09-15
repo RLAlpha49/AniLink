@@ -76,7 +76,7 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "query:user": {
         brief: "Fetches user data from the AniList API.",
         summary:
-            "`UserQuery` fetches a single user by `id` or `userName`. Returns a {@link UserResponse}.",
+            "`UserQuery` fetches a single user by `id` or `name`. Returns a {@link UserResponse}.",
         returns: "A promise that resolves to the user's {@link UserResponse} data.",
         example:
             "```typescript\nawait aniLink.anilist.query.user({id: 542244, asHtml: true});\n```",
@@ -91,10 +91,10 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "query:mediaTrend": {
         brief: "Fetches media trend data from the AniList API.",
         summary:
-            "`MediaTrendQuery` fetches the trend entry for a single airing media. Returns a {@link MediaTrendResponse}.",
+            "`MediaTrendQuery` fetches a single daily trend entry for one media by `mediaId` or a date/stat filter. Returns a {@link MediaTrendResponse}.",
         returns: "A promise that resolves to the {@link MediaTrendResponse} data.",
         example:
-            "```typescript\nawait aniLink.anilist.query.mediaTrend({mediaId: 1, type: 'ANIME'});\n```",
+            "```typescript\nawait aniLink.anilist.query.mediaTrend({mediaId: 1});\n```\nA trend entry is one media's statistics for a single day.",
     },
     "query:airingSchedule": {
         brief: "Fetches airing schedule data from the AniList API.",
@@ -102,20 +102,20 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
             "`AiringScheduleQuery` fetches a single airing schedule entry by `id` or `mediaId`. Returns an {@link AiringScheduleResponse}.",
         returns: "A promise that resolves to the {@link AiringScheduleResponse} data.",
         example:
-            "```typescript\nawait aniLink.anilist.query.airingSchedule({mediaId: 130590});\n```\nMust be querying an airing anime. Returns error if not.",
+            "```typescript\nawait aniLink.anilist.query.airingSchedule({mediaId: 130590});\n```\nAt least one variable other than `asHtml` must be set. AniList only guarantees that future airing data is present and accurate.",
     },
     "query:character": {
         brief: "Fetches character data from the AniList API.",
         summary:
-            "`CharacterQuery` fetches a single character by `id`. Returns a {@link CharacterResponse}.",
+            "`CharacterQuery` fetches a single character by `id` or `search`. Returns a {@link CharacterResponse}.",
         returns: "A promise that resolves to the {@link CharacterResponse} data.",
         example:
-            "```typescript\nawait aniLink.anilist.query.character({\n  id: 1,\n  asHtml: true,\n  mediaSort: ['POPULARITY_DESC'],\n  mediaType: 'ANIME',\n  mediaOnList: true,\n  mediaPage: 1,\n  mediaPerPage: 10\n});\n```",
+            "```typescript\nawait aniLink.anilist.query.character({\n  id: 1,\n  asHtml: true,\n  mediaSort: ['POPULARITY_DESC'],\n  mediaOnList: true,\n  mediaPage: 1,\n  mediaPerPage: 10\n});\n```",
     },
     "query:staff": {
         brief: "Fetches staff data from the AniList API.",
         summary:
-            "`StaffQuery` fetches a single staff member by `id`. Returns a {@link StaffResponse}.",
+            "`StaffQuery` fetches a single staff member by `id` or `search`. Returns a {@link StaffResponse}.",
         returns: "A promise that resolves to the {@link StaffResponse} data.",
         example:
             "```typescript\nawait aniLink.anilist.query.staff({\n  id: 132186,\n  asHtml: true,\n  staffMediaSort: ['POPULARITY_DESC'],\n  staffMediaType: 'ANIME',\n  staffMediaOnList: true,\n  staffMediaPage: 1,\n  staffMediaPerPage: 10,\n  charactersSort: ['ID'],\n  charactersPage: 1,\n  charactersPerPage: 10,\n  characterMediaSort: ['POPULARITY_DESC'],\n  characterMediaOnList: true,\n  characterMediaPage: 1,\n  characterMediaPerPage: 10\n});\n```",
@@ -125,12 +125,13 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
         summary:
             "`MediaListQuery` fetches a single media list entry by `id`, or by `userName`/`userId` plus `mediaId`. Returns a {@link MediaListResponse}.",
         returns: "A promise that resolves to the {@link MediaListResponse} data.",
-        example: "```typescript\nawait aniLink.anilist.query.mediaList({userId: 542244});\n```",
+        example:
+            "```typescript\nawait aniLink.anilist.query.mediaList({userId: 542244, mediaId: 1});\n```",
     },
     "query:mediaListCollection": {
         brief: "Fetches media list collection data from the AniList API.",
         summary:
-            "`MediaListCollectionQuery` fetches a user's full list collection, chunked via `chunk`/`perChunk`. Returns a {@link MediaListCollectionResponse}; flatten it with `AniListHelpers.flattenMediaListCollection`.",
+            "`MediaListCollectionQuery` fetches a user's full list collection, chunked via `chunk`/`perChunk`. Returns a {@link MediaListCollectionResponse}; flatten it with `aniLink.anilist.flattenMediaListCollection`.",
         returns: "A promise that resolves to the {@link MediaListCollectionResponse} data.",
         example:
             "```typescript\nawait aniLink.anilist.query.mediaListCollection({\n  userId: 542244,\n  type: 'ANIME',\n  status: 'COMPLETED',\n  chunk: 1,\n  perChunk: 10000\n});\n```",
@@ -145,10 +146,11 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "query:mediaTagCollection": {
         brief: "Fetches media tag collection data from the AniList API.",
         summary:
-            "`MediaTagCollectionQuery` returns all media tags recognized by AniList, optionally filtered by `variables`. Returns a {@link MediaTagCollectionResponse}.",
+            "`MediaTagCollectionQuery` returns all media tags recognized by AniList, optionally filtered by media `status` (mod-only). Returns a {@link MediaTagCollectionResponse}.",
         returns: "A promise that resolves to the {@link MediaTagCollectionResponse} data.",
         example: "```typescript\nawait aniLink.anilist.query.mediaTagCollection()\n```",
-        paramVariables: "Optional {@link {variables}} filters for the query.",
+        paramVariables:
+            "Optional media `status` filter, honored for moderator accounts; a {@link {variables}}.",
     },
     "query:viewer": {
         brief: "Fetches viewer data from the AniList API.",
@@ -162,14 +164,15 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "query:notification": {
         brief: "Fetches notification data from the AniList API.",
         summary:
-            "`NotificationQuery` fetches a single notification by `id`. Returns a {@link NotificationResponse}. Must be authenticated.",
+            "`NotificationQuery` fetches a single notification for the authenticated user, optionally filtered by `type`/`type_in`; `resetNotificationCount` resets the unread count. Returns a {@link NotificationResponse}. Must be authenticated.",
         returns: "A promise that resolves to the {@link NotificationResponse} data.",
         example:
-            "```typescript\nawait aniLink.anilist.query.notification({asHtml: true});\n```\nMust be authenticated.",
+            "```typescript\nawait aniLink.anilist.query.notification({type: 'AIRING', resetNotificationCount: true});\n```\nMust be authenticated.",
     },
     "query:studio": {
         brief: "Fetches studio data from the AniList API.",
-        summary: "`StudioQuery` fetches a single studio by `id`. Returns a {@link StudioResponse}.",
+        summary:
+            "`StudioQuery` fetches a single studio by `id` or `search`. Returns a {@link StudioResponse}.",
         returns: "A promise that resolves to the {@link StudioResponse} data.",
         example: "```typescript\nawait aniLink.anilist.query.studio({id: 561, asHtml: true});\n```",
     },
@@ -221,7 +224,7 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "query:threadComment": {
         brief: "Fetches thread comment data from the AniList API.",
         summary:
-            "`ThreadCommentQuery` fetches a single thread comment by `id`. Returns a {@link ThreadCommentResponse}.",
+            "`ThreadCommentQuery` fetches thread comments filtered by `id`, `threadId`, or `userId`; at least one variable other than `asHtml` must be set. AniList types the field as a list, so the resolved value is an array even when the filters match one comment. Returns a {@link ThreadCommentResponse}.",
         returns: "A promise that resolves to the {@link ThreadCommentResponse} data.",
         example:
             "```typescript\nawait aniLink.anilist.query.threadComment({id: 2555166, asHtml: true});\n```",
@@ -237,15 +240,15 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "query:markdown": {
         brief: "Fetches markdown data from the AniList API.",
         summary:
-            "`MarkdownQuery` parses AniList markdown into HTML. Returns the rendered HTML string.",
-        returns: "A promise that resolves to the markdown data.",
+            "`MarkdownQuery` parses AniList markdown into HTML. Returns the rendered HTML string. Must be authenticated.",
+        returns: "A promise that resolves to the rendered HTML string.",
         example:
-            "```typescript\nawait aniLink.anilist.query.markdown({markdown: 'Hello, world!'});\n```",
+            "```typescript\nawait aniLink.anilist.query.markdown({markdown: 'Hello, world!'});\n```\nMust be authenticated.",
     },
     "query:aniChartUser": {
         brief: "Fetches AniChart user data from the AniList API.",
         summary:
-            "`AniChartUserQuery` fetches the AniChart settings for the authenticated user. Returns an {@link AniChartUserResponse}. Must be authenticated.",
+            "`AniChartUserQuery` fetches the authenticated user's AniChart profile — `user`, `settings`, and `highlights`. Returns an {@link AniChartUserResponse}. Must be authenticated.",
         returns: "A promise that resolves to the {@link AniChartUserResponse} data.",
         example:
             "```typescript\nawait aniLink.anilist.query.aniChartUser();\n```\nMust be authenticated.",
@@ -253,19 +256,19 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "query:siteStatistics": {
         brief: "Fetches site statistics data from the AniList API.",
         summary:
-            "`SiteStatisticsQuery` fetches aggregate AniList site statistics, optionally filtered by `variables`. Returns a {@link SiteStatisticsResponse}.",
+            "`SiteStatisticsQuery` fetches aggregate AniList site statistics with optional per-entity sort and pagination controls. Returns a {@link SiteStatisticsResponse}.",
         returns: "A promise that resolves to the {@link SiteStatisticsResponse} data.",
         example: "```typescript\nawait aniLink.anilist.query.siteStatistics();\n```",
-        paramVariables: "Optional {@link {variables}} filters for the query.",
+        paramVariables: "Optional per-entity sort and pagination controls; a {@link {variables}}.",
     },
     "query:externalLinkSourceCollection": {
         brief: "Fetches external link source collection data from the AniList API.",
         summary:
-            "`ExternalLinkSourceCollectionQuery` returns the available external link sources, optionally filtered by `variables`. Returns an {@link ExternalLinkSourceCollectionResponse}.",
+            "`ExternalLinkSourceCollectionQuery` returns the available external link sources, optionally filtered by `id`, `type`, or `mediaType`. Returns an {@link ExternalLinkSourceCollectionResponse}.",
         returns:
             "A promise that resolves to the {@link ExternalLinkSourceCollectionResponse} data.",
         example: "```typescript\nawait aniLink.anilist.query.externalLinkSourceCollection();\n```",
-        paramVariables: "Optional {@link {variables}} filters for the query.",
+        paramVariables: "Optional `id`, `type`, or `mediaType` filters; a {@link {variables}}.",
     },
     "page:users": {
         brief: "Fetches users data from the AniList API.",
@@ -337,7 +340,7 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
         returns:
             "A promise that resolves to the {@link MediaTrendsPageResponse} data and pagination metadata.",
         example:
-            "```typescript\nawait aniLink.anilist.query.page.mediaTrends({page: 1, perPage: 10, type: 'ANIME'});\n```\nMust be querying an airing anime. Returns error if not.",
+            "```typescript\nawait aniLink.anilist.query.page.mediaTrends({page: 1, perPage: 10, mediaId: 1});\n```\nEach entry is one media's statistics for a single day.",
     },
     "page:notifications": {
         brief: "Fetches notifications data from the AniList API.",
@@ -427,40 +430,45 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
         returns:
             "A promise that resolves to the {@link LikesPageResponse} data and pagination metadata.",
         example:
-            "```typescript\nawait aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeAbleId: 1});\n```",
+            "```typescript\nawait aniLink.anilist.query.page.likes({page: 1, perPage: 10, likeableId: 1, type: 'ACTIVITY'});\n```\nBoth `likeableId` and `type` are required.",
     },
     "mutation:updateUser": {
-        brief: "Updates a user on the AniList API.",
-        summary: "`UpdateUserMutation` updates a user on the AniList API.",
+        brief: "Updates the authenticated user on the AniList API.",
+        summary: "`UpdateUserMutation` updates the authenticated user's profile and list settings.",
         returns: "A promise that resolves to the {@link UpdateUserResponse} data.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.updateUser({\n  about: 'New about text',\n  titleLanguage: 'ENGLISH',\n  displayAdultContent: true,\n  airingNotifications: true,\n  scoreFormat: 'POINT_10',\n  rowOrder: 'title',\n  profileColor: 'blue',\n  donatorBadge: 'Supporter',\n  notificationOptions: [{type: 'AIRING', enabled: true}],\n  timezone: '-06:00',\n  activityMergeTime: 30,\n  animeListOptions: {sectionOrder: ['title'], customLists: ['test'], advancedScoring: [], advancedScoringEnabled: false},\n  mangaListOptions: {sectionOrder: ['title'], customLists: ['test'], advancedScoring: [], advancedScoringEnabled: false},\n  staffNameLanguage: 'ROMAJI',\n  restrictMessagesToFollowing: false,\n  disabledListActivity: [{type: 'CURRENT', disabled: false}]\n});\n```",
     },
     "mutation:saveMediaListEntry": {
         brief: "Saves a media list entry on the AniList API.",
-        summary: "`SaveMediaListEntryMutation` saves a media list entry on the AniList API.",
+        summary:
+            "`SaveMediaListEntryMutation` creates or updates the authenticated user's list entry for one media; `mediaId` is required, `id` only when updating.",
         returns: "A promise that resolves to the {@link MediaListResponse} data.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.saveMediaListEntry({mediaId: 1, status: 'COMPLETED'});\n```",
     },
     "mutation:updateMediaListEntries": {
         brief: "Updates media list entries on the AniList API.",
-        summary: "`UpdateMediaListEntriesMutation` updates media list entries on the AniList API.",
-        returns: "A promise that resolves to the {@link MediaListResponse} entries.",
+        summary:
+            "`UpdateMediaListEntriesMutation` applies one set of changes to every list entry in `ids`.",
+        returns:
+            "A promise that resolves to an array of {@link MediaListResponse} entries, one per id.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.updateMediaListEntries({\n  status: 'CURRENT',\n  score: 8.5,\n  progress: 3,\n  ids: [143271, 156822, 170890],\n});\n```",
     },
     "mutation:deleteMediaListEntry": {
-        brief: "Deletes a media list entry on the AniList API.",
-        summary: "`DeleteMediaListEntryMutation` deletes a media list entry on the AniList API.",
-        returns: "A promise that resolves to the {@link DeleteMediaListEntryResponse} result.",
+        brief: "Deletes a media list entry.",
+        summary:
+            "`DeleteMediaListEntryMutation` deletes one of the authenticated user's list entries by entry `id`.",
+        returns:
+            "A promise that resolves to a {@link DeleteMediaListEntryResponse} — `{ deleted }`, where `deleted` is `true` when the entry was deleted by this call and `false` when it was already absent.",
         example:
             "You cannot delete a media list entry without first fetching the entry's id. The entry's id is not the same as the mediaId. It is specific to each user and media.\n```typescript\nawait aniLink.anilist.mutation.deleteMediaListEntry({id: 1});\n```",
     },
     "mutation:deleteCustomList": {
-        brief: "Deletes a custom list on the AniList API.",
+        brief: "Deletes a custom list.",
         summary:
-            "`DeleteCustomListMutation` deletes a custom list on the AniList API. There is no mutation specifically for creating a custom list; create one through `UpdateUserMutation` under the `animeListOptions` or `mangaListOptions` variables.",
+            "`DeleteCustomListMutation` deletes a custom list and removes its entries. There is no mutation for creating a custom list; create one through `UpdateUserMutation` under the `animeListOptions` or `mangaListOptions` variables.",
         returns:
             "A promise that resolves to `{ deleted }`, where `deleted` is `true` when the custom list was deleted by this call and `false` when it was already absent.",
         example:
@@ -468,14 +476,16 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     },
     "mutation:saveTextActivity": {
         brief: "Saves a text activity on the AniList API.",
-        summary: "`SaveTextActivityMutation` saves a text activity on the AniList API.",
+        summary:
+            "`SaveTextActivityMutation` creates or updates the authenticated user's text activity; `id` is required only when updating.",
         returns: "A promise that resolves to the saved {@link Activity}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.saveTextActivity({id: 1, text: 'Hello, world!'});\n```",
     },
     "mutation:saveMessageActivity": {
         brief: "Saves a message activity on the AniList API.",
-        summary: "`SaveMessageActivityMutation` saves a message activity on the AniList API.",
+        summary:
+            "`SaveMessageActivityMutation` creates or updates a message activity for the authenticated user; `id` is required only when updating.",
         returns: "A promise that resolves to the saved {@link Activity}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.saveMessageActivity({id: 1, message: 'Hello, world!'});\n```",
@@ -488,7 +498,7 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     },
     "mutation:deleteActivity": {
         brief: "Deletes an activity on the AniList API.",
-        summary: "`DeleteActivityMutation` deletes an activity on the AniList API.\nMod Only",
+        summary: "`DeleteActivityMutation` deletes one of the authenticated user's own activities.",
         returns:
             "A promise that resolves to `{ deleted }`, where `deleted` is `true` when the activity was deleted by this call and `false` when it was already absent.",
         example: "```typescript\nawait aniLink.anilist.mutation.deleteActivity({id: 1});\n```",
@@ -496,16 +506,16 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "mutation:toggleActivityPin": {
         brief: "Toggles an activity's pin status on the AniList API.",
         summary:
-            "`ToggleActivityPinMutation` toggles the pin status of an activity on the AniList API.",
+            "`ToggleActivityPinMutation` pins or unpins an activity on the authenticated user's activity feed.",
         returns: "A promise that resolves to the updated {@link Activity}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.toggleActivityPin({id: 1, pinned: true});\n```",
         blankAfterSummary: true,
     },
     "mutation:toggleActivitySubscription": {
-        brief: "Toggles an activity's subscription status on the AniList API.",
+        brief: "Toggles an activity's subscription status.",
         summary:
-            "`ToggleActivitySubscriptionMutation` toggles the subscription status of an activity on the AniList API.",
+            "`ToggleActivitySubscriptionMutation` subscribes or unsubscribes the authenticated user from an activity.",
         returns: "A promise that resolves to the updated {@link Activity}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.toggleActivitySubscription({activityId: 1, subscribe: true});\n```",
@@ -513,21 +523,23 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     },
     "mutation:saveActivityReply": {
         brief: "Saves an activity reply on the AniList API.",
-        summary: "`SaveActivityReplyMutation` saves an activity reply on the AniList API.",
+        summary:
+            "`SaveActivityReplyMutation` creates or updates a reply on an activity; `id` is required only when updating.",
         returns: "A promise that resolves to the saved {@link ActivityReply}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.saveActivityReply({id: 1, activityId: 2, text: 'Hello, world!'});\n```",
     },
     "mutation:deleteActivityReply": {
-        brief: "Deletes an activity reply on the AniList API.",
-        summary: "`DeleteActivityReplyMutation` deletes an activity reply on the AniList API.",
+        brief: "Deletes an activity reply.",
+        summary:
+            "`DeleteActivityReplyMutation` deletes one of the authenticated user's activity replies by `id`.",
         returns:
             "A promise that resolves to `{ deleted }`, where `deleted` is `true` when the reply was deleted by this call and `false` when it was already absent.",
         example: "```typescript\nawait aniLink.anilist.mutation.deleteActivityReply({id: 1});\n```",
     },
     "mutation:toggleLike": {
-        brief: "Toggles a like on the AniList API.",
-        summary: "`ToggleLikeMutation` toggles a like on the AniList API.",
+        brief: "Toggles a like.",
+        summary: "`ToggleLikeMutation` toggles the authenticated user's like on a likeable entity.",
         returns: "A promise that resolves to the {@link BasicUser} who performed the like toggle.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.toggleLike({id: 1, type: 'ACTIVITY'});\n```",
@@ -537,7 +549,7 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "mutation:toggleLikeV2": {
         brief: "Toggles a like on the AniList API.",
         summary:
-            "`ToggleLikeV2Mutation` toggles a like on the AniList API.\nReturns a different response than the `toggleLike` mutation.",
+            "`ToggleLikeV2Mutation` toggles the authenticated user's like on a likeable entity, returning the liked entity itself.",
         returns:
             "A promise that resolves to the liked {@link Likeable} entity: an activity,\nactivity reply, thread, or thread comment depending on the likeable type.",
         example:
@@ -546,86 +558,90 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     },
     "mutation:toggleFollow": {
         brief: "Toggles a follow on the AniList API.",
-        summary: "`ToggleFollowMutation` toggles a follow on the AniList API.",
+        summary:
+            "`ToggleFollowMutation` toggles the authenticated user's follow of the user named by `userId`.",
         returns: "A promise that resolves to the updated {@link UserResponse}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.toggleFollow({userId: 542244});\n```",
     },
     "mutation:toggleFavourite": {
         brief: "Toggles a favourite on the AniList API.",
-        summary: "`ToggleFavouriteMutation` toggles a favourite on the AniList API.",
+        summary:
+            "`ToggleFavouriteMutation` toggles the authenticated user's favourite on an anime, manga, character, staff member, or studio; pass the id of the entity to toggle.",
         returns: "A promise that resolves to the updated {@link Favourites}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.toggleFavourite({studioId: 561});\n```",
     },
     "mutation:updateFavouriteOrder": {
-        brief: "Updates a favourite order on the AniList API.",
+        brief: "Updates a favourite order.",
         summary:
-            "`UpdateFavouriteOrderMutation` updates the order of favourites on the AniList API.",
+            "`UpdateFavouriteOrderMutation` rewrites the display order of the authenticated user's favourites in every category.",
         returns: "A promise that resolves to the updated {@link Favourites}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.updateFavouriteOrder({\n  animeIds: [1],\n  mangaIds: [],\n  characterIds: [],\n  staffIds: [],\n  studioIds: [],\n  animeOrder: [1],\n  mangaOrder: [],\n  characterOrder: [],\n  staffOrder: [],\n  studioOrder: [],\n});\n```",
     },
     "mutation:saveReview": {
         brief: "Saves a review on the AniList API.",
-        summary: "`SaveReviewMutation` saves a review on the AniList API.",
+        summary: "`SaveReviewMutation` creates or updates a review.",
         returns: "A promise that resolves to the saved {@link ReviewResponse}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.saveReview({id: 1, mediaId: 1, body: 'testing', summary: 'testing', score: 8, private: true});\n```",
     },
     "mutation:rateReview": {
-        brief: "Rates a review on the AniList API.",
-        summary: "`RateReviewMutation` rates a review on the AniList API.",
+        brief: "Rates a review.",
+        summary:
+            "`RateReviewMutation` sets the authenticated user's rating (`UP_VOTE`/`DOWN_VOTE`) on a review.",
         returns: "A promise that resolves to the rated {@link ReviewResponse}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.rateReview({reviewId: 8008, rating: 'UP_VOTE'});\n```",
     },
     "mutation:deleteReview": {
-        brief: "Deletes a review on the AniList API.",
-        summary: "`DeleteReviewMutation` deletes a review on the AniList API.",
+        brief: "Deletes a review.",
+        summary: "`DeleteReviewMutation` deletes one of the authenticated user's reviews by `id`.",
         returns:
             "A promise that resolves to `{ deleted }`, where `deleted` is `true` when the review was deleted by this call and `false` when it was already absent.",
         example: "```typescript\nawait aniLink.anilist.mutation.deleteReview({id: 1});\n```",
     },
     "mutation:saveRecommendation": {
         brief: "Saves a recommendation on the AniList API.",
-        summary: "`SaveRecommendationMutation` saves a recommendation on the AniList API.",
+        summary:
+            "`SaveRecommendationMutation` creates or updates the authenticated user's rating recommending one media for another.",
         returns: "A promise that resolves to the saved {@link RecommendationResponse}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.saveRecommendation({mediaId: 1, mediaRecommendationId: 2, rating: 'RATE_UP'});\n```",
     },
     "mutation:saveThread": {
         brief: "Saves a thread on the AniList API.",
-        summary: "`SaveThreadMutation` saves a thread on the AniList API.",
+        summary: "`SaveThreadMutation` creates or updates a forum thread.",
         returns: "A promise that resolves to the saved {@link ThreadResponse}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.saveThread({\n  id: 1,\n  title: 'Hello, world!',\n  body: 'Hello, world!',\n  categories: [],\n  mediaCategories: [],\n  sticky: false,\n  locked: false,\n  asHtml: true,\n});\n```",
     },
     "mutation:deleteThread": {
-        brief: "Deletes a thread on the AniList API.",
-        summary: "`DeleteThreadMutation` deletes a thread on the AniList API.",
+        brief: "Deletes a thread.",
+        summary: "`DeleteThreadMutation` deletes a forum thread by `id`.",
         returns:
             "A promise that resolves to `{ deleted }`, where `deleted` is `true` when the thread was deleted by this call and `false` when it was already absent.",
         example: "```typescript\nawait aniLink.anilist.mutation.deleteThread({id: 1});\n```",
     },
     "mutation:toggleThreadSubscription": {
-        brief: "Toggles a thread's subscription status on the AniList API.",
+        brief: "Toggles a thread's subscription status.",
         summary:
-            "`ToggleThreadSubscriptionMutation` toggles a thread subscription on the AniList API.",
+            "`ToggleThreadSubscriptionMutation` subscribes or unsubscribes the authenticated user from a thread.",
         returns: "A promise that resolves to the updated {@link ThreadResponse}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.toggleThreadSubscription({threadId: 1, subscribe: true});\n```",
     },
     "mutation:saveThreadComment": {
         brief: "Saves a thread comment on the AniList API.",
-        summary: "`SaveThreadCommentMutation` saves a thread comment on the AniList API.",
+        summary: "`SaveThreadCommentMutation` creates or updates a comment on a thread.",
         returns: "A promise that resolves to the saved {@link ThreadCommentResponse}.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.saveThreadComment({\n  id: 1,\n  threadId: 1,\n  parentCommentId: 0,\n  comment: 'Hello, world!',\n  locked: false,\n  asHtml: true,\n});\n```",
     },
     "mutation:deleteThreadComment": {
-        brief: "Deletes a thread comment on the AniList API.",
-        summary: "`DeleteThreadCommentMutation` deletes a thread comment on the AniList API.",
+        brief: "Deletes a thread comment.",
+        summary: "`DeleteThreadCommentMutation` deletes a thread comment by `id`.",
         returns:
             "A promise that resolves to `{ deleted }`, where `deleted` is `true` when the comment was deleted by this call and `false` when it was already absent.",
         example: "```typescript\nawait aniLink.anilist.mutation.deleteThreadComment({id: 1});\n```",
@@ -633,7 +649,7 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "mutation:updateAniChartSettings": {
         brief: "Updates AniChart settings on the AniList API.",
         summary:
-            "`UpdateAniChartSettingsMutation` updates the AniChart settings for a user on the AniList API.",
+            "`UpdateAniChartSettingsMutation` updates the authenticated user's AniChart display settings.",
         returns: "A promise that resolves to the updated AniChart settings string.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.updateAniChartSettings({\n  titleLanguage: 'romaji',\n  outgoingLinkProvider: 'ANILIST',\n  theme: 'dark',\n  sort: 'POPULARITY',\n});\n```",
@@ -641,7 +657,7 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
     "mutation:updateAniChartHighlights": {
         brief: "Updates AniChart highlights on the AniList API.",
         summary:
-            "`UpdateAniChartHighlightsMutation` updates the AniChart highlights for a user on the AniList API.",
+            "`UpdateAniChartHighlightsMutation` sets or clears the authenticated user's AniChart highlights.",
         returns: "A promise that resolves to the updated AniChart highlights string.",
         example:
             "```typescript\nawait aniLink.anilist.mutation.updateAniChartHighlights({\n  highlights: {mediaId: 1, highlight: true},\n});\n```",

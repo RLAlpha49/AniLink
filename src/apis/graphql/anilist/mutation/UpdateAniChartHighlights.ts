@@ -14,12 +14,12 @@ export interface UpdateAniChartHighlightsVariables {
      */
     highlights: {
         /**
-         * `mediaId` is a number representing the media ID.
+         * `mediaId` is a number representing the media ID to highlight.
          */
         mediaId: number;
 
         /**
-         * `highlight` is a boolean representing the highlight status.
+         * `highlight` is a boolean representing whether the media is highlighted on AniChart.
          */
         highlight: boolean;
     };
@@ -48,6 +48,9 @@ const UpdateAniChartHighlightsMappings = {
 export class UpdateAniChartHighlightsMutation extends AniListOperation {
     /**
      * {@link UpdateAniChartHighlightsMutation.updateAniChartHighlights} sends a mutation request to update the AniChart highlights.
+     *
+     * Sets or clears the AniChart highlight for the media named by `mediaId`. Returns the
+     * updated highlights string.
      *
      * @param variables - Values from {@link UpdateAniChartHighlightsVariables} for the mutation.
      * @returns The updated AniChart highlights string returned by the mutation.

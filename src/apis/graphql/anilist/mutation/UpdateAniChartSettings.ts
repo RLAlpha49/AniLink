@@ -54,6 +54,9 @@ export class UpdateAniChartSettingsMutation extends AniListOperation {
     /**
      * {@link UpdateAniChartSettingsMutation.updateAniChartSettings} sends a mutation request to update the AniChart settings.
      *
+     * Updates the authenticated user's AniChart display settings (title language, theme,
+     * sort order, outgoing link provider). Returns the updated settings string.
+     *
      * @param variables - Values from {@link UpdateAniChartSettingsVariables} for the mutation.
      * @returns The updated AniChart settings string returned by the mutation.
      * @throws Throws if no authentication token is configured, a setting has an invalid type, or the mutation request fails.

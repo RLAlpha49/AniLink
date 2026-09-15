@@ -22,27 +22,59 @@ import {
     type SelectionNode,
 } from "./parse";
 
+/**
+ * `IntrospectionTypeRef` is one node of a GraphQL type reference from the
+ * introspection snapshot: its kind (`SCALAR`, `OBJECT`, `NON_NULL`, `LIST`,
+ * …) plus the wrapped `ofType` chain for non-null and list wrappers.
+ */
 export interface IntrospectionTypeRef {
+    /** GraphQL kind, e.g. `SCALAR`, `OBJECT`, `NON_NULL`, `LIST`. */
     kind: string;
+    /** Type name, absent for wrapper kinds. */
     name?: string | null;
+    /** Wrapped type for `NON_NULL` and `LIST` references. */
     ofType?: IntrospectionTypeRef | null;
 }
 
+/**
+ * `IntrospectionField` is one field of an introspected GraphQL object type:
+ * its name, upstream description, and type reference.
+ */
 export interface IntrospectionField {
+    /** Field name. */
     name: string;
+    /** Upstream field description, used for generated property docs. */
     description?: string | null;
+    /** Field type reference. */
     type: IntrospectionTypeRef;
 }
 
+/**
+ * `IntrospectionType` is one type from the introspection snapshot: its kind,
+ * name, and fields or enum values depending on the kind.
+ */
 export interface IntrospectionType {
+    /** GraphQL kind, e.g. `OBJECT`, `INTERFACE`, `UNION`, `ENUM`, `SCALAR`. */
     kind: string;
+    /** Type name. */
     name: string;
+    /** Fields, present for object-like kinds. */
     fields?: IntrospectionField[] | null;
+    /** Enum value names, present for `ENUM` kinds. */
     enumValues?: Array<{ name: string }> | null;
 }
 
+/**
+ * `SchemaIndex` maps introspected type names to their type objects, giving
+ * the resolver O(1) lookup while walking selections.
+ */
 export type SchemaIndex = Map<string, IntrospectionType>;
 
+/**
+ * `DEFAULT_SCALAR_TYPES` maps the snapshot's scalar names to the TypeScript
+ * types generated for them. Custom scalars beyond this map must be added via
+ * the manifest's `scalarTypes` entry or resolution throws.
+ */
 export const DEFAULT_SCALAR_TYPES: Record<string, string> = {
     Int: "number",
     Float: "number",
@@ -58,9 +90,17 @@ export interface FieldTypeOverride {
     refType?: string;
 }
 
+/**
+ * `ExportSpec` declares one generated export in the manifest: its name,
+ * upstream reference, summary, and how to reduce a source document to the
+ * selection it resolves.
+ */
 export interface ExportSpec {
+    /** Generated export name. */
     exportedName: string;
+    /** Verified upstream reference URL emitted as the `@see` link. */
     see: string;
+    /** Summary sentence emitted as the generated doc's first line. */
     summary: string;
     /** GraphQL object/interface type the selection is resolved against. */
     graphqlType: string;
@@ -81,11 +121,14 @@ export interface ExportSpec {
          * reduction.
          */
         unwrappedOperation?: boolean;
+        /** Inline-fragment type condition selecting the member to resolve. */
         condition?: string;
     };
     /** Union alias members (rendered as `type X = A | B`). */
     unionMembers?: string[];
+    /** Per-field typing overrides keyed by dotted property path. */
     fieldTypes?: Record<string, FieldTypeOverride>;
+    /** Selected fields rendered as optional. */
     optionalFields?: string[];
     /**
      * Additional properties appended after the resolved selection, for
@@ -96,29 +139,58 @@ export interface ExportSpec {
     extraProperties?: Array<{ name: string; tsType: string }>;
 }
 
+/**
+ * `ResolveContext` bundles everything the resolver needs to resolve one
+ * manifest: the schema-fragment constants, operation documents, snapshot
+ * index, and the constant-to-export claims.
+ */
 export interface ResolveContext {
+    /** Schema-fragment constant name -> raw template-literal document. */
     constants: Map<string, string>;
     /** Operation file path -> inline document text (for `source.operation`). */
     operations: Map<string, string>;
+    /** Fragment constant -> generated export that claims it. */
     exportsByConstant: Map<string, string>;
+    /** Introspection snapshot indexed by type name. */
     schema: SchemaIndex;
+    /** Extra scalar mappings merged over {@link DEFAULT_SCALAR_TYPES}. */
     scalarTypes?: Record<string, string>;
 }
 
+/**
+ * `PropertyModel` is one rendered property of a generated interface: name,
+ * TypeScript type, optionality, and doc description.
+ */
 export interface PropertyModel {
+    /** Property name. */
     name: string;
+    /** Rendered TypeScript type text. */
     tsType: string;
+    /** Whether the property is rendered optional. */
     optional: boolean;
+    /** Property doc description. */
     description?: string;
 }
 
+/**
+ * `GeneratedType` is one fully resolved export ready for rendering: either
+ * an interface with its properties or a union with its member names, plus
+ * the referenced types that drive import planning.
+ */
 export interface GeneratedType {
+    /** Generated export name. */
     name: string;
+    /** Verified upstream reference URL emitted as the `@see` link. */
     see: string;
+    /** Summary sentence emitted as the generated doc's first line. */
     summary: string;
+    /** Whether this export renders as an interface or a union alias. */
     kind: "interface" | "union";
+    /** Resolved properties, for the `interface` kind. */
     properties?: PropertyModel[];
+    /** Union member names, for the `union` kind. */
     members?: string[];
+    /** Type names referenced by this export, driving import planning. */
     referencedTypes: Set<string>;
 }
 
@@ -180,6 +252,17 @@ interface RenderedSelection {
     referencedTypes: Set<string>;
 }
 
+/**
+ * `resolveExportSpec` resolves one manifest entry into a renderable type:
+ * it reduces the source document, validates override keys against the
+ * selection, and resolves every property against the snapshot.
+ *
+ * @param spec - The {@link ExportSpec} manifest entry to resolve.
+ * @param context - Constants, operations, snapshot index, and export claims.
+ * @returns The resolved {@link GeneratedType} interface or union model.
+ * @throws {Error} When the source cannot be reduced, an override key matches
+ *   no selected property, or a selected field is missing from the snapshot.
+ */
 export function resolveExportSpec(spec: ExportSpec, context: ResolveContext): GeneratedType {
     if (spec.unionMembers?.length) {
         return {

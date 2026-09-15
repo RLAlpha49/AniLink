@@ -49,7 +49,7 @@ export interface AiringSchedulesVariables {
     episode?: number;
 
     /**
-     * `airingAt` is a number representing the airing time of the airing schedule.
+     * `airingAt` is a number representing the airing time as a Unix timestamp.
      */
     airingAt?: number;
 
@@ -124,7 +124,7 @@ export interface AiringSchedulesVariables {
     airingAt_lesser?: number;
 
     /**
-     * `sort` is an array of strings representing the sort order.
+     * `sort` is an array of strings representing the sort order; `AiringSort` values.
      */
     sort?: string[];
 
@@ -172,12 +172,17 @@ const AiringSchedulesMappings = {
  */
 export class AiringSchedulesQuery extends AniListOperation {
     /**
-     * `airingSchedules` is a method that sends a query request to get airing schedules.
+     * {@link AiringSchedulesQuery.airingSchedules} sends a query request to get a page of airing schedules.
      *
-     * @param variables - Values from {@link AiringSchedulesVariables} for the query.
-     * @returns The {@link AiringSchedulesPageResponse} returned by the query.
+     * @param variables - Values from {@link AiringSchedulesVariables} for the query; `page` and `perPage`
+     * select the slice of results.
+     * @returns The {@link AiringSchedulesPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/airingschedule
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<AiringSchedulesPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new AiringSchedulesQuery().airingSchedules({ page: 1, perPage: 10 });

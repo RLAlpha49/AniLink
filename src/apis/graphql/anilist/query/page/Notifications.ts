@@ -26,17 +26,17 @@ export interface NotificationsVariables {
     perPage?: number;
 
     /**
-     * `type` is a string representing the type of the notification.
+     * `type` is a string representing the type of the notification; a `NotificationType` value.
      */
     type?: string;
 
     /**
-     * `resetNotificationCount` is a boolean representing whether to reset the notification count.
+     * `resetNotificationCount` is a boolean that resets the unread notification count to 0.
      */
     resetNotificationCount?: boolean;
 
     /**
-     * `type_in` is an array of strings representing the types of notifications that should be included.
+     * `type_in` is an array of strings representing the types of notifications to include; `NotificationType` values.
      */
     type_in?: string[];
 
@@ -68,10 +68,12 @@ const NotificationsMappings = {
  */
 export class NotificationsQuery extends AniListOperation {
     /**
-     * `notifications` is a method that sends a query request to get notifications.
+     * {@link NotificationsQuery.notifications} sends a query request to get a page of the authenticated
+     * user's notifications. Requires an auth token.
      *
-     * @param variables - Values from {@link NotificationsVariables} for the query.
-     * @returns The {@link NotificationsPageResponse} returned by the query.
+     * @param variables - Values from {@link NotificationsVariables} for the query; `page` and `perPage`
+     * select the slice of results.
+     * @returns The {@link NotificationsPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/union/notificationunion
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
      * @example

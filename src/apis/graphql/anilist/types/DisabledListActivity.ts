@@ -1,25 +1,25 @@
 /**
- * {@link DisabledListActivity} is a type representing the disabled list activity options for a user.
- * It includes a `disabled` field which is a boolean indicating whether the activity is disabled or not,
- * and a `type` field which is a string representing the type of the activity.
- * @see https://docs.anilist.co/reference/object/medialisttypeoptions
+ * {@link DisabledListActivity} is one list-status activity toggle: whether list updates with
+ * this `MediaListStatus` generate an activity feed entry. `UpdateUser` accepts a list
+ * of them as `disabledListActivity`.
+ * @see https://docs.anilist.co/reference/object/listactivityoption
  */
 export type DisabledListActivity = {
     /**
-     * A boolean indicating whether the activity is disabled or not.
+     * Whether activity feed entries are suppressed for this status.
      */
     disabled: boolean;
 
     /**
-     * A string representing the type of the activity.
+     * The list status whose activity generation is toggled.
      */
     type: "CURRENT" | "PLANNING" | "COMPLETED" | "DROPPED" | "PAUSED" | "REPEATING";
 };
 
 /**
- * {@link DisabledListActivityMapping} is a constant that maps the {@link DisabledListActivity} fields to their expected types.
- * The `disabled` field is mapped to 'boolean', and the `type` field is mapped to an array of possible values.
- * @see https://docs.anilist.co/reference/object/medialisttypeoptions
+ * {@link DisabledListActivityMapping} is the field-shape map `UpdateUser` validates its
+ * `disabledListActivity` entries against before dispatch.
+ * @see https://docs.anilist.co/reference/object/listactivityoption
  */
 export const DisabledListActivityMapping = {
     disabled: "boolean",

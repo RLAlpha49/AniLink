@@ -9,7 +9,7 @@ import type { MalMangaListSort, MalMangaListStatusValue } from "./manga";
 /**
  * {@link MalUser} is the typed portion of the authenticated MyAnimeList user response returned by `MalUserOperation.me` and `MyAnimeListUserApi.me`.
  *
- * It always carries `id` and `name`; additional fields appear when requested via {@link MalRequestOptions.fields} and are exposed through the index signature without narrowing.
+ * It always carries `id` and `name`; additional fields appear when requested via the `fields` request option and are exposed through the index signature without narrowing.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
  */

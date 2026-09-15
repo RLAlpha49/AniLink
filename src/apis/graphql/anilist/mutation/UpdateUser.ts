@@ -370,11 +370,14 @@ export class UpdateUserMutation extends AniListOperation {
     /**
      * {@link UpdateUserMutation.updateUser} sends a mutation request to update a user.
      *
+     * Updates the authenticated user's profile and preference settings; every variable is
+     * optional, so pass only the fields to change. Returns the updated user.
+     *
      * @param variables - Values from {@link UpdateUserVariables} for the mutation.
      * @returns The {@link UpdateUserResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<UpdateUserResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new UpdateUserMutation("your-token").updateUser({ about: "Updated profile" });

@@ -8,23 +8,34 @@ import ts from "typescript";
 
 import type { GeneratedType } from "./model";
 
+/** Marker comment opening a generated region inside an interface file. */
 export const GENERATED_START = "// @generated-start";
+/** Do-not-edit instruction emitted between the generation markers. */
 export const GENERATED_INSTRUCTION =
     "// Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.";
 
+/** Marker comment closing a generated region inside an interface file. */
 export const GENERATED_END = "// @generated-end";
 
 /** Header comment placed above the generated region in file-mode outputs. */
 export const GENERATED_FILE_HEADER = [
     "/**",
     " * Response interfaces generated from the schema fragments under",
-    " * `src/apis/anilist/schemas/` and the committed AniList schema snapshot.",
+    " * `src/apis/graphql/anilist/schemas/` and the committed AniList schema snapshot.",
     " * Run `npm run interfaces:generate` after changing a fragment;",
     " * do not edit the generated block by hand.",
     " */",
     "",
 ].join("\n");
 
+/**
+ * `renderTypeDeclaration` renders one generated export as source text: the
+ * house-style JSDoc (summary, generated note, `@see`) followed by the
+ * interface or union declaration with per-property doc comments.
+ *
+ * @param type - The resolved {@link GeneratedType} model to render.
+ * @returns The declaration text, ending with a trailing blank line.
+ */
 export function renderTypeDeclaration(type: GeneratedType): string {
     const doc = [
         "/**",
@@ -61,6 +72,11 @@ function sanitizeDescription(description: string): string {
 /**
  * Renders the inner generated-region content: an import statement group for
  * referenced types followed by every type declaration.
+ *
+ * @param types - The resolved {@link GeneratedType} models to render, in
+ *   declaration order.
+ * @param imports - Import statements for referenced types, grouped by module.
+ * @returns The region content, ready for marker wrapping.
  */
 export function renderRegion(
     types: GeneratedType[],
@@ -80,6 +96,9 @@ export function renderRegion(
  * markers) from a source file, returning only the handwritten content. Used
  * before inserting a fresh region so regeneration converges regardless of any
  * previous marker layout.
+ *
+ * @param source - The file content to strip.
+ * @returns The handwritten content with all generated spans removed.
  */
 export function stripGeneratedRegions(source: string): string {
     let result = "";
@@ -107,6 +126,11 @@ export function stripGeneratedRegions(source: string): string {
  * the generated region (including their attached JSDoc), plus import
  * statements whose specifiers are no longer used by the surviving handwritten
  * content. Uses the TypeScript compiler API for precise ranges.
+ *
+ * @param source - The file content to prune.
+ * @param generatedNames - Export names the generated region now owns.
+ * @returns The pruned content with superseded declarations and unused imports
+ *   removed.
  */
 export function pruneSupersededContent(source: string, generatedNames: Set<string>): string {
     if (!generatedNames.size) return source;
@@ -158,6 +182,11 @@ export function pruneSupersededContent(source: string, generatedNames: Set<strin
  * placement. Existing marker spans are replaced in place; otherwise the region
  * is prepended above the preserved handwritten content (or stands alone when
  * there is none).
+ *
+ * @param existingSource - The current file content, with or without markers.
+ * @param regionContent - The bare generated content to wrap in markers.
+ * @returns The file content with the region inserted between fresh markers.
+ * @throws {Error} When the file carries only one of the two markers.
  */
 export function applyGeneratedRegion(existingSource: string, regionContent: string): string {
     const startIndex = existingSource.indexOf(GENERATED_START);

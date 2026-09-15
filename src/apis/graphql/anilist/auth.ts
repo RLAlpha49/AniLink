@@ -90,7 +90,7 @@ const normalizeTokenRequestError = (error: unknown): AniLinkError =>
  * @param signal - Optional `AbortSignal` to cancel the token request while it is in flight. Takes precedence over `options.signal` when both are given.
  * @param options - Optional transport settings for the token call; `timeout` defaults to `AUTH_TOKEN_TIMEOUT_MS` and `retry` defaults to disabled because grant credentials are single-use. Pass an explicit `retry` policy to opt back in.
  * @returns The parsed {@link AniListTokenResponse} on success.
- * @throws An {@link AniLinkApiError} when AniList rejects the grant, or an {@link AniLinkNetworkError} on transport failure; both are sanitized by `normalizeTokenRequestError`.
+ * @throws An `AniLinkApiError` when AniList rejects the grant, or an `AniLinkNetworkError` on transport failure; both are sanitized by `normalizeTokenRequestError`.
  */
 const requestToken = async (
     params: Record<string, string>,
@@ -135,7 +135,7 @@ const requestToken = async (
  * @param signal - Optional `AbortSignal` to cancel the token exchange while it is in flight.
  * @param options - Optional transport settings for the token call; `timeout` defaults to `AUTH_TOKEN_TIMEOUT_MS` and `retry` defaults to disabled because the authorization code is single-use. Pass an explicit `retry` policy to opt back in.
  * @returns A promise that resolves to the token response containing `access_token`.
- * @throws An {@link AniLinkApiError} when AniList rejects the exchange, for example with `invalid_grant` for an invalid or expired code, or an {@link AniLinkNetworkError} on transport failure. Errors never include the request body, so the client secret and code are not leaked.
+ * @throws An `AniLinkApiError` when AniList rejects the exchange, for example with `invalid_grant` for an invalid or expired code, or an `AniLinkNetworkError` on transport failure. Errors never include the request body, so the client secret and code are not leaked.
  * @example
  * ```typescript
  * const { access_token } = await getAccessToken(
@@ -182,7 +182,7 @@ export const getAccessToken = async (
  * @param signal - Optional `AbortSignal` to cancel the refresh while it is in flight.
  * @param options - Optional transport settings for the token call; `timeout` defaults to `AUTH_TOKEN_TIMEOUT_MS` and `retry` defaults to disabled because grant credentials are single-use. Pass an explicit `retry` policy to opt back in.
  * @returns A promise that resolves to the token response containing a new `access_token`. The `refresh_token` field may be absent when AniList does not rotate it.
- * @throws An {@link AniLinkApiError} when AniList rejects the refresh, for example when the refresh token is invalid or revoked, or an {@link AniLinkNetworkError} on transport failure. Errors never include the request body, so the client secret and refresh token are not leaked.
+ * @throws An `AniLinkApiError` when AniList rejects the refresh, for example when the refresh token is invalid or revoked, or an `AniLinkNetworkError` on transport failure. Errors never include the request body, so the client secret and refresh token are not leaked.
  * @example
  * ```typescript
  * const { access_token } = await refreshAccessToken("1234", "secret", "stored-refresh-token");

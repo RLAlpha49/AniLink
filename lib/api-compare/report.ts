@@ -1,9 +1,23 @@
 import type { ComparisonResult } from "./types";
 
+/**
+ * `ReportMetadata` carries the provenance stamped into every rendered report:
+ * where the compared schema snapshot came from.
+ */
 export interface ReportMetadata {
+    /** Human-readable description of the schema source. */
     schemaSource: string;
 }
 
+/**
+ * `renderMarkdown` renders a {@link ComparisonResult} as the human-readable
+ * `report.md` document: a summary header followed by one section per
+ * discrepancy.
+ *
+ * @param result - The comparison outcome to render.
+ * @param metadata - Provenance stamped into the report header.
+ * @returns The complete markdown document.
+ */
 export function renderMarkdown(result: ComparisonResult, metadata: ReportMetadata): string {
     const lines = [
         "# AniList API Comparison",
@@ -44,8 +58,12 @@ export function renderMarkdown(result: ComparisonResult, metadata: ReportMetadat
 
 /**
  * Renders the upstream-coverage lists (unimplemented, removed, deprecated
- * operations) as visible markdown sections so consumers can see what the
- * package does and does not wrap without opening the JSON artifact.
+ * operations) of a {@link ComparisonResult} as visible markdown sections so
+ * consumers can see what the package does and does not wrap without opening
+ * the JSON artifact.
+ *
+ * @param result - The comparison outcome whose coverage lists to render.
+ * @returns The markdown sections, one per coverage list.
  */
 export function renderCoverageSections(result: ComparisonResult): string {
     const lines: string[] = [];
@@ -80,6 +98,15 @@ export function renderCoverageSections(result: ComparisonResult): string {
     return `${lines.join("\n")}\n`;
 }
 
+/**
+ * `renderJson` renders a {@link ComparisonResult} as the machine-readable
+ * `report.json` artifact: metadata and result merged into one pretty-printed
+ * object.
+ *
+ * @param result - The comparison outcome to render.
+ * @param metadata - Provenance merged into the JSON object.
+ * @returns The pretty-printed JSON document.
+ */
 export function renderJson(result: ComparisonResult, metadata: ReportMetadata): string {
     return `${JSON.stringify({ ...metadata, ...result }, null, 2)}\n`;
 }

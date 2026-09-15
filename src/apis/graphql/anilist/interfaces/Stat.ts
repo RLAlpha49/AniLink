@@ -3,98 +3,101 @@ import { type Staff } from "./Staff";
 import { type Studio } from "./Studio";
 
 /**
- * {@link Stat} is an interface representing the statistics of a media.
- * It includes the count, mean score, minutes watched, chapters read, media ids, format, status, score, length, release year, start year, genre, tag, country, voice actor, character ids, staff, and studio each having their own properties.
- * @see https://docs.anilist.co/reference/object/userstatistictypes
+ * {@link Stat} is one row of a user's per-category media statistics: how many entries of
+ * one format, status, score, length, year, genre, tag, country, voice actor, staff
+ * member, or studio the user has, with the mean score. It is the superset union of
+ * AniList's per-category `User*Statistic` rows, so only the field matching the row's
+ * category is present. `MediaStatistics` uses it for every breakdown field.
+ * @see https://docs.anilist.co/reference/object/userstatistics
  */
 export interface Stat {
     /**
-     * `count` is a number representing the count of the media.
+     * How many entries the row covers.
      */
     count: number;
 
     /**
-     * `meanScore` is a number representing the mean score of the media.
+     * The mean score across the row's entries.
      */
     meanScore: number;
 
     /**
-     * `minutesWatched` is a number representing the minutes watched of the media.
+     * The minutes watched across the row's entries (anime statistics only).
      */
     minutesWatched?: number;
 
     /**
-     * `chaptersRead` is a number representing the chapters read of the media.
+     * The chapters read across the row's entries (manga statistics only).
      */
     chaptersRead?: number;
 
     /**
-     * `mediaIds` is an array of numbers representing the ids of the media.
+     * The ids of the media the row covers.
      */
     mediaIds: number[];
 
     /**
-     * `format` is a string representing the format of the media.
+     * The format this row counts, on format rows.
      */
     format?: string;
 
     /**
-     * `status` is a string representing the status of the media.
+     * The status this row counts, on status rows.
      */
     status?: string;
 
     /**
-     * `score` is a number representing the score of the media.
+     * The score this row counts, on score rows.
      */
     score?: number;
 
     /**
-     * `length` is a number representing the length of the media.
+     * The length bucket this row counts, on length rows.
      */
     length?: number;
 
     /**
-     * `releaseYear` is a number representing the release year of the media.
+     * The release year this row counts, on release-year rows.
      */
     releaseYear?: number;
 
     /**
-     * `startYear` is a number representing the start year of the media.
+     * The start year this row counts, on start-year rows.
      */
     startYear?: number;
 
     /**
-     * `genre` is a string representing the genre of the media.
+     * The genre this row counts, on genre rows.
      */
     genre?: string;
 
     /**
-     * `tag` is an instance of {@link Tag} representing the tag of the media.
+     * The tag this row counts, on tag rows.
      */
     tag?: Tag;
 
     /**
-     * `country` is a string representing the country of the media.
+     * The country this row counts, on country rows.
      */
     country?: string;
 
     /**
-     * `voiceActor` is an instance of {@link Staff} representing the voice actor of the media.
+     * The voice actor this row counts, on voice-actor rows.
      */
     voiceActor?: Staff;
 
     /**
-     * `characterIds` is an array of numbers representing the ids of the characters in the media.
+     * The characters voiced by the row's voice actor, on voice-actor rows.
      */
     characterIds?: number[];
 
     /**
-     * `staff` is an instance of {@link Staff} representing the staff of the media.
+     * The staff member this row counts, on staff rows.
      */
     staff?: Staff;
 
     /**
-     * `studio` is an instance of {@link Studio} representing the studio of the media.
+     * The studio this row counts, on studio rows.
      */
     studio?: Studio;
 }

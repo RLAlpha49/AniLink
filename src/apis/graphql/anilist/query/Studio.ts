@@ -62,7 +62,7 @@ export interface StudioVariables {
     id_not_in?: number[];
 
     /**
-     * `sort` is an array of strings representing the sort order of the studio.
+     * `sort` is an array of {@link StudioSort} values representing the sort order of the studio.
      */
     sort?: StudioSort[];
 
@@ -72,7 +72,7 @@ export interface StudioVariables {
     asHtml?: boolean;
 
     /**
-     * `mediaSort` is an array of strings representing the sort order of the media.
+     * `mediaSort` is an array of {@link MediaSort} values representing the sort order of the media.
      */
     mediaSort?: MediaSort[];
 
@@ -97,7 +97,7 @@ export interface StudioVariables {
     mediaPerPage?: number;
 
     /**
-     * `staffMediaSort` is an array of strings representing the sort order of the staff media.
+     * `staffMediaSort` is an array of {@link MediaSort} values representing the sort order of the staff media.
      */
     staffMediaSort?: MediaSort[];
 
@@ -122,7 +122,7 @@ export interface StudioVariables {
     staffMediaPerPage?: number;
 
     /**
-     * `charactersSort` is an array of strings representing the sort order of the characters.
+     * `charactersSort` is an array of {@link CharacterSort} values representing the sort order of the characters.
      */
     charactersSort?: CharacterSort[];
 
@@ -137,7 +137,7 @@ export interface StudioVariables {
     charactersPerPage?: number;
 
     /**
-     * `characterMediaSort` is an array of strings representing the sort order of the character media.
+     * `characterMediaSort` is an array of {@link MediaSort} values representing the sort order of the character media.
      */
     characterMediaSort?: MediaSort[];
 
@@ -202,7 +202,11 @@ export class StudioQuery extends AniListOperation {
      * @param variables - Values from {@link StudioVariables} for the query.
      * @returns The {@link StudioResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/studio
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<StudioResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new StudioQuery().studio({ id: 1 });

@@ -46,7 +46,7 @@ export interface ActivitiesVariables {
     mediaId?: number;
 
     /**
-     * `type` is a string representing the type of the activity.
+     * `type` is a string representing the type of the activity; one of the `ActivityType` values.
      */
     type?: string;
 
@@ -66,7 +66,7 @@ export interface ActivitiesVariables {
     hasRepliesOrTypeText?: boolean;
 
     /**
-     * `createdAt` is a number representing the creation time of the activity.
+     * `createdAt` is a number representing the creation time of the activity as a Unix timestamp.
      */
     createdAt?: number;
 
@@ -131,17 +131,17 @@ export interface ActivitiesVariables {
     mediaId_not_in?: number[];
 
     /**
-     * `type_not` is a string representing the type that should not be included.
+     * `type_not` is a string representing the type of activity to exclude; an `ActivityType` value.
      */
     type_not?: string;
 
     /**
-     * `type_in` is an array of strings representing the types that should be included.
+     * `type_in` is an array of strings representing the types of activities to include; `ActivityType` values.
      */
     type_in?: string[];
 
     /**
-     * `type_not_in` is an array of strings representing the types that should not be included.
+     * `type_not_in` is an array of strings representing the types of activities to exclude; `ActivityType` values.
      */
     type_not_in?: string[];
 
@@ -151,7 +151,7 @@ export interface ActivitiesVariables {
     createdAt_greater?: number;
 
     /**
-     * `sort` is an array of strings representing the sort order.
+     * `sort` is an array of strings representing the sort order; `ActivitySort` values.
      */
     sort?: string[];
 
@@ -206,9 +206,10 @@ const ActivitiesMappings = {
  */
 export class ActivitiesQuery extends AniListOperation {
     /**
-     * `activities` is a method that sends a query request to get activities.
+     * {@link ActivitiesQuery.activities} sends a query request to get a page of activities.
      *
-     * @param variables - Values from {@link ActivitiesVariables} for the query.
+     * @param variables - Values from {@link ActivitiesVariables} for the query; `page` and `perPage` select
+     * the slice of results.
      * @returns The {@link ActivitiesPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/union/activityunion
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.

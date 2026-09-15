@@ -70,7 +70,7 @@ export interface RecommendationVariables {
     rating_lesser?: number;
 
     /**
-     * `sort` is an array of strings representing the sort order of the recommendation.
+     * `sort` is an array of {@link RecommendationSort} values representing the sort order of the recommendation.
      */
     sort?: RecommendationSort[];
 
@@ -108,10 +108,15 @@ export class RecommendationQuery extends AniListOperation {
     /**
      * {@link RecommendationQuery.recommendation} sends a query request to get recommendation data.
      *
-     * @param variables - Values from {@link RecommendationVariables} for the query.
+     * @param variables - Values from {@link RecommendationVariables} for the query; at least one variable
+     * other than `asHtml` must be set.
      * @returns The {@link RecommendationResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/recommendation
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<RecommendationResponse, K | "id">`:
+     * the always-selected `id` is part of the narrowed type because the composed document always sends it.
+     * Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new RecommendationQuery().recommendation({ mediaId: 1 });

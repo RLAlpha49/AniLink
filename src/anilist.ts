@@ -4,8 +4,8 @@
  * This barrel is the canonical import point for everything AniList-specific:
  * the composed facade type, the transport options shared by every provider,
  * the AniList OAuth helpers, and the AniList pagination contracts. The root
- * entry (`anilink`) re-exports all of it for convenience; this subpath exists
- * so consumers can scope their imports to one provider.
+ * entry (`anilink-api-wrapper`) re-exports all of it for convenience; this
+ * subpath exists so consumers can scope their imports to one provider.
  */
 export {
     ANILIST_AUTHORIZE_URL,

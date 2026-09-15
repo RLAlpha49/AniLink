@@ -68,12 +68,17 @@ const ActivityRepliesMappings = {
  */
 export class ActivityRepliesQuery extends AniListOperation {
     /**
-     * `activityReplies` is a method that sends a query request to get activity replies.
+     * {@link ActivityRepliesQuery.activityReplies} sends a query request to get a page of activity replies.
      *
-     * @param variables - Values from {@link ActivityRepliesVariables} for the query.
+     * @param variables - Values from {@link ActivityRepliesVariables} for the query; `id` or `activityId`
+     * must be set, and `page` and `perPage` select the slice of results.
      * @returns The {@link ActivityRepliesPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/activityreply
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
+     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * corresponding selections and the return type narrows to `DeepPick<ActivityRepliesPageResponse, K | "pageInfo">`:
+     * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
+     * it. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new ActivityRepliesQuery().activityReplies({ page: 1, perPage: 10 });

@@ -11,11 +11,11 @@ import type { FuzzyDateOptions } from "./fuzzyDate";
  * `19980000`, `fuzzyDateInt({ year: 1998, month: 4 })` is `19980400`, and
  * `fuzzyDateInt()` is `0` (the all-zero date).
  *
- * Use it for the `startDate`/`endDate`/`startedAt`/`completedAt` filter
- * variables of the query operations (`query.media`, `query.mediaList`,
- * `query.mediaListCollection`, and their `page` counterparts); use
- * {@link fuzzyDate} for the `startedAt`/`completedAt` inputs of the
- * list-entry mutations.
+ * Use it for the `FuzzyDateInt` filter variables of the query operations —
+ * `startDate`/`endDate` on `query.media` and `page.medias`, and
+ * `startedAt`/`completedAt` on `query.mediaList`,
+ * `query.mediaListCollection`, and `page.mediaLists`; use `fuzzyDate` for
+ * the `startedAt`/`completedAt` inputs of the list-entry mutations.
  *
  * @param options - The {@link FuzzyDateOptions} values to include. All fields are optional.
  * @returns The `YYYYMMDD` integer AniList's `FuzzyDateInt` query arguments expect.

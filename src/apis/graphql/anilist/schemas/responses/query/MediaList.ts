@@ -2,8 +2,8 @@ import { FuzzyDateSchema } from "../../FuzzyDate";
 import { MediaSchema } from "./Media";
 
 /**
- * {@link MediaListSchema} is a constant representing the GraphQL schema for a media list query.
- * It includes the id, user id, media id, status, score, progress, progress volumes, repeat, priority, private status, notes, hidden from status lists status, custom lists, advanced scores, started at date, completed at date, updated at timestamp, created at timestamp, media, and user.
+ * {@link MediaListSchema} is the list-entry response selection: the viewer's status,
+ * score, and progress on one media, with the media itself. The list queries send it.
  * @see https://docs.anilist.co/reference/object/medialist
  */
 export const MediaListSchema = `

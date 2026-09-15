@@ -2,8 +2,9 @@ import { BasicUserSchema } from "../../Basic";
 import { MediaSchema } from "./Media";
 
 /**
- * {@link ThreadSchema} is a constant representing the GraphQL schema for a thread query.
- * It includes the thread's id, title, body, userId, replyUserId, replyCommentId, replyCount, viewCount, isLocked status, isSticky status, isSubscribed status, likeCount, isLiked status, repliedAt, createdAt, updatedAt, user of type `BasicUser`, replyUser of type `BasicUser`, likes of type `BasicUser[]`, siteUrl, categories, and mediaCategories of type `MediaResponse[]`.
+ * {@link ThreadSchema} is the thread response selection: a forum thread's content, its
+ * author and last replier, and its categories. The thread queries send it, and the
+ * thread-comment fragment interpolates it for the thread a comment belongs to.
  * @see https://docs.anilist.co/reference/object/thread
  */
 export const ThreadSchema = `
