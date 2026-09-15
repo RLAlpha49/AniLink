@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { AxiosResponse, AxiosStatic } from "axios";
-import { AniLinkErrorCodes, AniLinkNetworkError } from "../src/base/AniLinkError";
+import { AniLinkErrorCodes } from "../src/base/AniLinkError";
 import type { ResolvedRequestOptions } from "../src/base/requestOptions";
 import type { RequestContext } from "../src/base/transportTypes";
 
@@ -30,13 +30,7 @@ const { axiosStub } = vi.hoisted(() => {
 
 vi.mock("axios", () => ({ __esModule: true, default: axiosStub }));
 
-import {
-    awaitPaceDeadline,
-    isPacingAbort,
-    paceAfterSuccess,
-    recordPaceDeadline,
-    rethrowIfPacingAbort,
-} from "../src/base/pacing";
+import { awaitPaceDeadline, paceAfterSuccess, recordPaceDeadline } from "../src/base/pacing";
 
 const hookContext: RequestContext = {
     requestId: "req-pace-1",
@@ -222,25 +216,38 @@ describe("awaitPaceDeadline", () => {
         controller.abort();
         await expect(wait).rejects.toMatchObject({
             code: AniLinkErrorCodes.ABORTED,
+            abortedDuringPacing: true,
         });
     });
 });
 
 describe("paceAfterSuccess", () => {
-    test("paces when the remaining quota is below the floor", async () => {
-        const onPace = vi.fn();
+    test("records the deadline without waiting: the response returns immediately", async () => {
+        const owner = {};
         const reset = Math.ceil((Date.now() + 3000) / 1000);
-        const wait = paceAfterSuccess(
+        // Synchronous call — no await, no timer advance: the successful
+        // response is never held for the window reset.
+        paceAfterSuccess(
             response({
                 "x-ratelimit-limit": "90",
                 "x-ratelimit-remaining": "5",
                 "x-ratelimit-reset": String(reset),
             }),
-            { ...resolvedBase, onPace },
-            hookContext,
-            undefined
+            resolvedBase,
+            undefined,
+            owner,
+            "graphql.anilist.co"
         );
-        // The wait is still pending; onPace fires after it completes.
+        // The deadline is already recorded: a subsequently dispatched request
+        // to the same host waits for it, and onPace fires only from that
+        // pre-dispatch wait.
+        const onPace = vi.fn();
+        const wait = awaitPaceDeadline(
+            owner,
+            "graphql.anilist.co",
+            { ...resolvedBase, onPace },
+            hookContext
+        );
         expect(onPace).not.toHaveBeenCalled();
         vi.advanceTimersByTime(3000);
         await expect(wait).resolves.toBeUndefined();
@@ -248,112 +255,118 @@ describe("paceAfterSuccess", () => {
         expect(onPace.mock.calls[0][0].delayMs).toBe(3000);
     });
 
-    test("does not pace when the remaining quota is at or above the floor", async () => {
-        const onPace = vi.fn();
-        await paceAfterSuccess(
-            response({
-                "x-ratelimit-limit": "90",
-                "x-ratelimit-remaining": "90",
-                "x-ratelimit-reset": String(Math.ceil((Date.now() + 3000) / 1000)),
-            }),
-            { ...resolvedBase, onPace },
-            hookContext,
-            undefined
-        );
-        expect(onPace).not.toHaveBeenCalled();
-    });
-
-    test("does not pace when pacing is disabled", async () => {
-        const onPace = vi.fn();
-        await paceAfterSuccess(
-            response({
-                "x-ratelimit-limit": "90",
-                "x-ratelimit-remaining": "5",
-                "x-ratelimit-reset": String(Math.ceil((Date.now() + 3000) / 1000)),
-            }),
-            { ...resolvedBase, onPace, paceWithRateLimit: false },
-            hookContext,
-            undefined
-        );
-        expect(onPace).not.toHaveBeenCalled();
-    });
-
-    test("does not pace when the rate-limit headers are incomplete", async () => {
-        const onPace = vi.fn();
-        await paceAfterSuccess(
-            response({ "x-ratelimit-remaining": "5" }),
-            { ...resolvedBase, onPace },
-            hookContext,
-            undefined
-        );
-        expect(onPace).not.toHaveBeenCalled();
-    });
-
-    test("prefers the provided rateLimit info over the response headers", async () => {
-        const onPace = vi.fn();
-        const reset = Math.ceil((Date.now() + 3000) / 1000);
-        const wait = paceAfterSuccess(
-            response({
-                "x-ratelimit-limit": "90",
-                "x-ratelimit-remaining": "90",
-                "x-ratelimit-reset": String(reset),
-            }),
-            { ...resolvedBase, onPace },
-            hookContext,
-            { limit: 90, remaining: 5, reset }
-        );
-        expect(onPace).not.toHaveBeenCalled();
-        vi.advanceTimersByTime(3000);
-        await expect(wait).resolves.toBeUndefined();
-        expect(onPace).toHaveBeenCalledTimes(1);
-    });
-
-    test("records the deadline for the owner and host when both are given", async () => {
+    test("does not record a deadline when the remaining quota is at or above the floor", async () => {
         const owner = {};
-        const reset = Math.ceil((Date.now() + 3000) / 1000);
-        const wait = paceAfterSuccess(
+        paceAfterSuccess(
             response({
                 "x-ratelimit-limit": "90",
-                "x-ratelimit-remaining": "5",
-                "x-ratelimit-reset": String(reset),
+                "x-ratelimit-remaining": "90",
+                "x-ratelimit-reset": String(Math.ceil((Date.now() + 3000) / 1000)),
             }),
             resolvedBase,
-            hookContext,
             undefined,
             owner,
             "graphql.anilist.co"
         );
-        // While the post-success wait is still pending, the deadline is already
-        // recorded: a concurrently dispatched request to the same host must see it.
         const onPace = vi.fn();
-        const second = awaitPaceDeadline(
+        await awaitPaceDeadline(
             owner,
             "graphql.anilist.co",
             { ...resolvedBase, onPace },
             hookContext
         );
-        // Both waits are pending; both onPace emissions fire after they
-        // complete.
+        expect(onPace).not.toHaveBeenCalled();
+    });
+
+    test("does not record a deadline when pacing is disabled", async () => {
+        const owner = {};
+        paceAfterSuccess(
+            response({
+                "x-ratelimit-limit": "90",
+                "x-ratelimit-remaining": "5",
+                "x-ratelimit-reset": String(Math.ceil((Date.now() + 3000) / 1000)),
+            }),
+            { ...resolvedBase, paceWithRateLimit: false },
+            undefined,
+            owner,
+            "graphql.anilist.co"
+        );
+        const onPace = vi.fn();
+        await awaitPaceDeadline(
+            owner,
+            "graphql.anilist.co",
+            { ...resolvedBase, onPace },
+            hookContext
+        );
+        expect(onPace).not.toHaveBeenCalled();
+    });
+
+    test("does not record a deadline when the rate-limit headers are incomplete", async () => {
+        const owner = {};
+        paceAfterSuccess(
+            response({ "x-ratelimit-remaining": "5" }),
+            resolvedBase,
+            undefined,
+            owner,
+            "graphql.anilist.co"
+        );
+        const onPace = vi.fn();
+        await awaitPaceDeadline(
+            owner,
+            "graphql.anilist.co",
+            { ...resolvedBase, onPace },
+            hookContext
+        );
+        expect(onPace).not.toHaveBeenCalled();
+    });
+
+    test("prefers the provided rateLimit info over the response headers", async () => {
+        const owner = {};
+        const reset = Math.ceil((Date.now() + 3000) / 1000);
+        paceAfterSuccess(
+            response({
+                "x-ratelimit-limit": "90",
+                "x-ratelimit-remaining": "90",
+                "x-ratelimit-reset": String(reset),
+            }),
+            resolvedBase,
+            { limit: 90, remaining: 5, reset },
+            owner,
+            "graphql.anilist.co"
+        );
+        const onPace = vi.fn();
+        const wait = awaitPaceDeadline(
+            owner,
+            "graphql.anilist.co",
+            { ...resolvedBase, onPace },
+            hookContext
+        );
         expect(onPace).not.toHaveBeenCalled();
         vi.advanceTimersByTime(3000);
         await expect(wait).resolves.toBeUndefined();
-        await expect(second).resolves.toBeUndefined();
         expect(onPace).toHaveBeenCalledTimes(1);
-        expect(onPace.mock.calls[0][0].delayMs).toBeGreaterThan(0);
     });
 
-    test("caps the wait at the maximum pacing window", async () => {
-        const onPace = vi.fn();
+    test("caps the recorded deadline at the maximum pacing window", async () => {
+        const owner = {};
         const farFutureReset = Math.ceil((Date.now() + 60 * 60 * 1000) / 1000);
-        const wait = paceAfterSuccess(
+        paceAfterSuccess(
             response({
                 "x-ratelimit-limit": "90",
                 "x-ratelimit-remaining": "5",
                 "x-ratelimit-reset": String(farFutureReset),
             }),
+            resolvedBase,
+            undefined,
+            owner,
+            "graphql.anilist.co"
+        );
+        const onPace = vi.fn();
+        const wait = awaitPaceDeadline(
+            owner,
+            "graphql.anilist.co",
             { ...resolvedBase, onPace },
-            hookContext,
-            undefined
+            hookContext
         );
         expect(onPace).not.toHaveBeenCalled();
         // The cap is 5 minutes; advance past it so the wait settles.
@@ -362,45 +375,5 @@ describe("paceAfterSuccess", () => {
         const delay = onPace.mock.calls[0][0].delayMs;
         expect(delay).toBeGreaterThan(0);
         expect(delay).toBeLessThan(60 * 60 * 1000);
-    });
-});
-
-describe("isPacingAbort and rethrowIfPacingAbort", () => {
-    const pacingError = () =>
-        new AniLinkNetworkError(AniLinkErrorCodes.ABORTED, "cancelled while pacing", undefined, {
-            abortedDuringPacing: true,
-        });
-
-    test("recognizes a network abort raised while pacing is enabled", () => {
-        expect(isPacingAbort(resolvedBase, pacingError())).toBe(true);
-    });
-
-    test("rejects an abort when pacing is disabled", () => {
-        expect(isPacingAbort({ ...resolvedBase, paceWithRateLimit: false }, pacingError())).toBe(
-            false
-        );
-    });
-
-    test("rejects a non-network error", () => {
-        expect(isPacingAbort(resolvedBase, new Error("unrelated"))).toBe(false);
-    });
-
-    test("rejects a network error with a different code", () => {
-        const timeout = new AniLinkNetworkError(AniLinkErrorCodes.TIMEOUT, "timed out");
-        expect(isPacingAbort(resolvedBase, timeout)).toBe(false);
-    });
-
-    test("rejects an axios cancellation", () => {
-        const cancel = { isCanceled: true, message: "cancelled" };
-        expect(isPacingAbort(resolvedBase, cancel)).toBe(false);
-    });
-
-    test("rethrowIfPacingAbort rethrows a pacing abort", () => {
-        const error = pacingError();
-        expect(() => rethrowIfPacingAbort(resolvedBase, error)).toThrow(error);
-    });
-
-    test("rethrowIfPacingAbort swallows unrelated errors", () => {
-        expect(() => rethrowIfPacingAbort(resolvedBase, new Error("unrelated"))).not.toThrow();
     });
 });

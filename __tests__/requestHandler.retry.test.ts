@@ -1198,9 +1198,8 @@ describe("circuit breaker", () => {
         });
 
         // A successful paced response records the shared 60s reset deadline
-        // for the host (failures never record pace deadlines) and enters its
-        // own post-success pace wait. The call stays in flight: its recorded
-        // deadline is what gates the probe below.
+        // for the host (failures never record pace deadlines) and returns
+        // immediately — the recorded deadline is what gates the probe below.
         mocks.request.mockResolvedValueOnce({
             data: { data: { Media: { id: 1 } } },
             headers: {
@@ -1211,7 +1210,7 @@ describe("circuit breaker", () => {
         });
         const paced = callSendRequest(url, "POST", { query: "query" });
         paced.catch(() => {});
-        await vi.advanceTimersByTimeAsync(0); // response settles into its pace wait
+        await vi.advanceTimersByTimeAsync(0); // response settles; deadline recorded
 
         // Trip the breaker with two server faults. These calls bypass the
         // recorded pace deadline (they must fail fast, not wait out the
@@ -1243,11 +1242,11 @@ describe("circuit breaker", () => {
         // deadline.
         expect(mocks.request).toHaveBeenCalledTimes(3);
 
-        // The caller aborts during the pacing wait. Both the probe's
-        // pre-dispatch wait and the paced call's post-success wait reject.
+        // The caller aborts during the pacing wait. The probe's pre-dispatch
+        // wait rejects; the paced call already returned its data.
         controller.abort();
         await expect(probe).rejects.toMatchObject({ code: "ABORTED_ERROR" });
-        await expect(paced).rejects.toMatchObject({ code: "ABORTED_ERROR" });
+        await expect(paced).resolves.toEqual({ id: 1 });
 
         // The breaker must be closed (not re-opened): the next request
         // reaches the network instead of fast-failing with CIRCUIT_OPEN_ERROR.
@@ -1294,18 +1293,29 @@ describe("rate-limit pacing", () => {
         expect(Date.now() - startedAt).toBeLessThan(1_000);
     });
 
-    test("paces by default once the reported quota is exhausted", async () => {
+    test("returns a paced successful response immediately and delays the next request until the window resets", async () => {
         mocks.request.mockResolvedValue(pacedResponse(0, 5));
 
         configureRequestOptions({});
 
+        // The first response reports an exhausted quota but its data is in
+        // hand: it resolves immediately, without waiting out the window.
         const first = callSendRequest(url, "POST", { query: "query" });
-        first.catch(() => {});
-        await vi.advanceTimersByTimeAsync(4_999);
+        await expect(first).resolves.toEqual({ id: 1 });
+        expect(Date.now() - startedAt).toBeLessThan(1_000);
+
+        // The next request is paced by the recorded deadline: it stays
+        // undipatched until the window resets. The header's second-granularity
+        // reset lands somewhere in (4s, 5s] from now, so 4s in the gate must
+        // still hold; 6s total is past every possible deadline.
+        const second = callSendRequest(url, "POST", { query: "query" });
+        second.catch(() => {});
+        await vi.advanceTimersByTimeAsync(4_000);
         expect(mocks.request).toHaveBeenCalledTimes(1); // still waiting for the reset
 
-        await vi.advanceTimersByTimeAsync(1);
-        await expect(first).resolves.toEqual({ id: 1 });
+        await vi.advanceTimersByTimeAsync(2_000);
+        await expect(second).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
     });
 
     test("delays the next request until the window resets once remaining drops below the floor", async () => {
@@ -1313,14 +1323,10 @@ describe("rate-limit pacing", () => {
 
         configureRequestOptions({ paceWithRateLimit: true });
 
-        // The first response already reports an exhausted quota, so even this
-        // first caller waits for the reset before its result settles.
+        // The first response already reports an exhausted quota; its data is
+        // in hand, so it resolves immediately rather than waiting out the
+        // window.
         const first = callSendRequest(url, "POST", { query: "query" });
-        first.catch(() => {});
-        await vi.advanceTimersByTimeAsync(4_999);
-        expect(mocks.request).toHaveBeenCalledTimes(1); // still waiting for the reset
-
-        await vi.advanceTimersByTimeAsync(1);
         await expect(first).resolves.toEqual({ id: 1 });
 
         // The next request is paced again by the refreshed headers.
@@ -1348,9 +1354,9 @@ describe("rate-limit pacing", () => {
 
         configureRequestOptions({ paceWithRateLimit: true, rateLimitFloor: 5 });
 
+        // The tripping response returns immediately; the next request waits
+        // out the recorded window before it dispatches.
         const first = callSendRequest(url, "POST", { query: "query" });
-        first.catch(() => {});
-        await vi.advanceTimersByTimeAsync(4_000);
         await expect(first).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(1);
 
@@ -1362,10 +1368,13 @@ describe("rate-limit pacing", () => {
         expect(mocks.request).toHaveBeenCalledTimes(2);
     });
 
-    test("propagates an abort during the pacing wait without re-reporting the finished attempt", async () => {
+    test("propagates an abort during the pre-dispatch pacing wait without re-reporting the finished attempt", async () => {
         const controller = new AbortController();
         const onResponse = vi.fn();
-        mocks.request.mockResolvedValue(pacedResponse(0, 60));
+        // Only the first call's response is queued: the second call is
+        // aborted before it dispatches, so a second queued value would leak
+        // into the next test (clearAllMocks does not clear the once-queue).
+        mocks.request.mockResolvedValueOnce(pacedResponse(0, 60));
 
         configureRequestOptions({
             paceWithRateLimit: true,
@@ -1373,11 +1382,17 @@ describe("rate-limit pacing", () => {
             onResponse,
         });
 
+        // The first call reports an exhausted quota, records the 60s
+        // deadline, and returns immediately.
+        const first = callSendRequest(url, "POST", { query: "query" });
+        await expect(first).resolves.toEqual({ id: 1 });
+        expect(onResponse).toHaveBeenCalledTimes(1);
+
+        // The second call enters the pre-dispatch pacing wait for the
+        // recorded deadline; the caller aborts during it.
         const promise = callSendRequest(url, "POST", { query: "query" });
         promise.catch(() => {});
-
-        await vi.advanceTimersByTimeAsync(0); // attempt done, pacing wait scheduled
-        expect(onResponse).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(0); // second call parked in the pace wait
         controller.abort();
         await vi.advanceTimersByTimeAsync(60_000);
 
@@ -1390,10 +1405,10 @@ describe("rate-limit pacing", () => {
 
     test("gates an independently dispatched request on the shared reset deadline", async () => {
         // The first response reports an exhausted quota with a reset 60s out,
-        // recording that deadline and pacing its own response until it. A
-        // second, independently dispatched call to the same host must wait for
-        // the shared recorded deadline before it is sent; once it dispatches
-        // it gets a healthy response and resolves immediately.
+        // recording that deadline and returning immediately. A second,
+        // independently dispatched call to the same host must wait for the
+        // shared recorded deadline before it is sent; once it dispatches it
+        // gets a healthy response and resolves immediately.
         mocks.request
             .mockResolvedValueOnce({
                 data: { data: { Media: { id: 1 } } },
@@ -1407,14 +1422,10 @@ describe("rate-limit pacing", () => {
 
         configureRequestOptions({ paceWithRateLimit: true });
 
-        // First call: dispatches immediately, then records the 60s deadline
-        // and paces its own response until it.
+        // First call: dispatches immediately, records the 60s deadline, and
+        // resolves with its data in hand.
         const first = callSendRequest(url, "POST", { query: "query" });
-        first.catch(() => {});
-        // Advance 1ms to flush the first response microtask so it records the
-        // shared deadline; the first call remains in its post-success pace
-        // wait (60s out).
-        await vi.advanceTimersByTimeAsync(1);
+        await expect(first).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(1);
 
         // Second independent call: must wait for the recorded deadline before
@@ -1424,11 +1435,10 @@ describe("rate-limit pacing", () => {
         await vi.advanceTimersByTimeAsync(30_000);
         expect(mocks.request).toHaveBeenCalledTimes(1); // second still gated
 
-        // Advancing past the 60s deadline releases both the first call's
-        // pace wait and the second call's pre-dispatch wait; the second then
-        // dispatches and resolves on its healthy response.
+        // Advancing past the 60s deadline releases the second call's
+        // pre-dispatch wait; it then dispatches and resolves on its healthy
+        // response.
         await vi.advanceTimersByTimeAsync(35_000);
-        await expect(first).resolves.toEqual({ id: 1 });
         await expect(second).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(2);
     });
@@ -1447,10 +1457,10 @@ describe("rate-limit pacing", () => {
 
         configureRequestOptions({ paceWithRateLimit: true });
 
-        // First call: dispatches immediately, then records the 60s deadline.
+        // First call: dispatches immediately, records the 60s deadline, and
+        // returns with its data in hand.
         const first = callSendRequest(url, "POST", { query: "query" });
-        first.catch(() => {});
-        await vi.advanceTimersByTimeAsync(1);
+        await expect(first).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(1);
 
         // Second call with ignorePaceDeadline bypasses the recorded deadline

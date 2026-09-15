@@ -473,11 +473,10 @@ describe("Shared per-client state owner threaded through the provider wirings", 
             })
             .mockResolvedValueOnce({ data: { data: { User: { id: 1 } } } });
 
-        // First call: dispatches, records the 60s deadline, then paces its
-        // own response until it.
+        // First call: dispatches, records the 60s deadline, and returns its
+        // data immediately — the response is never held for the window.
         const media = client.query.media({ id: 1 });
-        media.catch(() => {});
-        await vi.advanceTimersByTimeAsync(1);
+        await expect(media).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(1);
 
         // Second operation: gated by the recorded deadline well into the
@@ -487,10 +486,9 @@ describe("Shared per-client state owner threaded through the provider wirings", 
         await vi.advanceTimersByTimeAsync(30_000);
         expect(mocks.request).toHaveBeenCalledTimes(1);
 
-        // Past the deadline both the pace wait and the pre-dispatch gate
-        // release; the second operation dispatches and resolves.
+        // Past the deadline the pre-dispatch gate releases; the second
+        // operation dispatches and resolves.
         await vi.advanceTimersByTimeAsync(35_000);
-        await expect(media).resolves.toEqual({ id: 1 });
         await expect(user).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(2);
     });

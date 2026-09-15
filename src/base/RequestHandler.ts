@@ -35,7 +35,7 @@ import {
     recordCircuitFailure,
     recordCircuitSuccess,
 } from "./circuitBreaker";
-import { awaitPaceDeadline, paceAfterSuccess, rethrowIfPacingAbort } from "./pacing";
+import { awaitPaceDeadline, paceAfterSuccess } from "./pacing";
 import { buildErrorContext, reportFailure, safeInvoke } from "./hooks";
 import { sleep } from "./sleep";
 
@@ -155,10 +155,9 @@ const executeWithRetry = async <T>(
                       response.headers as Record<string, unknown>
                   );
             recordCircuitSuccess(circuit, resolved, hookContext, host);
-            await paceAfterSuccess(response, resolved, hookContext, rateLimit, stateOwner, host);
+            paceAfterSuccess(response, resolved, rateLimit, stateOwner, host);
             return result;
         } catch (error: unknown) {
-            rethrowIfPacingAbort(resolved, error);
             if (!responseReported) {
                 safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
                     ...hookContext,
