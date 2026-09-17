@@ -237,60 +237,79 @@ export async function fetchWithLookAhead<TEntry, TKey>(
 /**
  * Implementation signature for {@link fetchWithLookAhead}. Not directly
  * callable — callers resolve to one of the two public overloads above. The
- * third argument dispatches the mode: a function (or `undefined`) selects
- * cursor paging; a number selects numeric paging. Because the two overloads
- * have different arities (6 vs 7 params), the numeric overload's optional
- * `signal` lands in the sixth implementation slot. The body only routes to
- * {@link fetchNumericWithLookAhead} or {@link fetchCursorChain}; all
- * scheduling logic lives in those drivers.
+ * rest parameter carries each call shape as its own labeled tuple, so the
+ * mode is selected structurally: a function in the third slot routes to
+ * {@link fetchCursorChain}; a number (or the legacy `undefined` extractor)
+ * routes to {@link fetchNumericWithLookAhead}. All scheduling logic lives
+ * in those drivers.
  */
 export async function fetchWithLookAhead<TEntry, TKey = number>(
-    fetch: (key: TKey) => Promise<TEntry>,
-    extractHasMore: (response: TEntry) => boolean,
-    extractNextKeyOrStartNumber: ((response: TEntry) => TKey) | undefined | number,
-    firstKeyOrMaxEntries: TKey | number,
-    maxEntriesOrConcurrency: number,
-    concurrencyOrSignal: number | AbortSignal | undefined,
-    maybeSignal?: AbortSignal
+    ...args:
+        | [
+              fetch: (key: number) => Promise<TEntry>,
+              extractHasMore: (response: TEntry) => boolean,
+              startNumber: number,
+              maxEntries: number,
+              concurrency: number,
+              signal?: AbortSignal,
+          ]
+        | [
+              fetch: (key: number) => Promise<TEntry>,
+              extractHasMore: (response: TEntry) => boolean,
+              extractNextKey: undefined,
+              startNumber: number,
+              maxEntries: number,
+              concurrency: number,
+              signal?: AbortSignal,
+          ]
+        | [
+              fetch: (key: TKey) => Promise<TEntry>,
+              extractHasMore: (response: TEntry) => boolean,
+              extractNextKey: (response: TEntry) => TKey,
+              firstKey: TKey,
+              maxEntries: number,
+              concurrency: number,
+              signal?: AbortSignal,
+          ]
 ): Promise<LookAheadResult<TEntry>> {
-    if (extractNextKeyOrStartNumber === undefined) {
-        // Legacy numeric call shape:
-        // (fetch, extractHasMore, undefined, startNumber, maxEntries, concurrency)
-        // The legacy shape has no signal slot, so the sixth argument is
-        // always the concurrency.
-        return fetchNumericWithLookAhead(
-            fetch as (page: number) => Promise<TEntry>,
-            extractHasMore,
-            firstKeyOrMaxEntries as number,
-            maxEntriesOrConcurrency,
-            concurrencyOrSignal as number,
-            maybeSignal
-        );
-    }
-    if (typeof extractNextKeyOrStartNumber === "function") {
+    if (typeof args[2] === "function") {
         // Cursor shape: (fetch, extractHasMore, extractNextKey, firstKey,
         // maxEntries, concurrency, signal?) — concurrency is structurally
         // impossible in a dependency chain, so it is dropped here.
+        const [fetch, extractHasMore, extractNextKey, firstKey, maxEntries, , signal] = args;
         return fetchCursorChain(
             fetch,
             extractHasMore,
-            extractNextKeyOrStartNumber,
-            firstKeyOrMaxEntries as TKey,
-            maxEntriesOrConcurrency,
-            maybeSignal
+            extractNextKey,
+            firstKey,
+            maxEntries,
+            signal
+        );
+    }
+    if (args[2] === undefined) {
+        // Legacy numeric call shape:
+        // (fetch, extractHasMore, undefined, startNumber, maxEntries,
+        // concurrency, signal?)
+        const [fetch, extractHasMore, , startNumber, maxEntries, concurrency, signal] = args;
+        return fetchNumericWithLookAhead(
+            fetch,
+            extractHasMore,
+            startNumber,
+            maxEntries,
+            concurrency,
+            signal
         );
     }
     // Numeric overload: (fetch, extractHasMore, startNumber, maxEntries,
-    // concurrency, signal?) — the 6-param overload maps positionally onto
-    // the 7-param implementation, so its optional `signal` lands in the
-    // sixth implementation slot and the seventh is unused.
+    // concurrency, signal?)
+    const [fetch, extractHasMore, startNumber, maxEntries, concurrency, signal] = args;
     return fetchNumericWithLookAhead(
-        fetch as (page: number) => Promise<TEntry>,
+        fetch,
         extractHasMore,
-        extractNextKeyOrStartNumber,
-        firstKeyOrMaxEntries as number,
-        maxEntriesOrConcurrency,
-        typeof concurrencyOrSignal === "number" ? undefined : concurrencyOrSignal
+        startNumber,
+        maxEntries,
+        concurrency,
+        signal
     );
 }
 
