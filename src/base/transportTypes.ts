@@ -389,8 +389,11 @@ export interface RequestOptions {
      * after `threshold` consecutive failed attempts, further requests fail
      * fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has
      * elapsed since the last failure, after which the next request is allowed
-     * through as a probe. Off by default; when unset, no failure accounting
-     * happens across requests.
+     * through as a probe. Each consecutive failed probe doubles the next
+     * cooldown (capped at eight times `cooldownMs`), so a recovering-but-slow
+     * upstream is probed on a widening schedule instead of being starved at
+     * one request per cooldown; a successful probe resets the scale. Off by
+     * default; when unset, no failure accounting happens across requests.
      */
     circuitBreaker?: { threshold: number; cooldownMs: number };
     /**

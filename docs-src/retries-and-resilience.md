@@ -137,6 +137,8 @@ The same classification applies to partial-success envelopes resolved by [`allow
 
 After the cooldown elapses, one request is let through as a probe. A successful probe closes the breaker. A probe that fails with an availability failure re-opens it for another cooldown. A probe that fails with a caller-side error (or is aborted by the caller) **closes** the breaker — the upstream answered, so it is reachable — instead of wedging the half-open state.
 
+Each consecutive failed probe doubles the next cooldown, capped at eight times the configured `cooldownMs`, and a successful probe resets the scale. Without this backoff, an upstream that recovers just slower than `cooldownMs` — or a probe that is unlucky enough to land on a still-restarting instance behind a load balancer — locks the breaker into an open→probe→open oscillation where exactly one request per cooldown ever reaches the upstream. With it, a recovering upstream is probed on a widening schedule and starts serving traffic after a bounded number of cooldowns instead of requiring a clean single-probe success.
+
 ### Breaker lifecycle events
 
 The breaker emits `onCircuitOpen` and `onCircuitClose` hooks at state transitions so dashboards can plot trip frequency, open duration, and recovery without scraping `CIRCUIT_OPEN_ERROR` codes. See [Observability](/observability) for the event payloads.

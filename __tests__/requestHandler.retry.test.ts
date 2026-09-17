@@ -1271,6 +1271,143 @@ describe("circuit breaker", () => {
         ).rejects.toMatchObject({ code: "API_ERROR" });
         expect(mocks.request).toHaveBeenCalledTimes(4);
     });
+
+    test("scales the cooldown after each consecutive failed probe", async () => {
+        // A failed probe must not simply restart the configured cooldown:
+        // each consecutive failed probe doubles the next cooldown (capped
+        // at 8x), so a recovering-but-slow upstream is probed on a widening
+        // schedule instead of being starved at one request per cooldown.
+        mocks.request.mockRejectedValue(apiError(500));
+
+        configureRequestOptions({ retry: false, circuitBreaker: breaker });
+
+        // Trip the breaker (threshold 2).
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+
+        // First cooldown is the configured value: the probe after it fails.
+        await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+
+        // Second cooldown is scaled to 2x: still fast-failing at 1x elapsed.
+        await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "CIRCUIT_OPEN_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+
+        // At 2x elapsed the next probe is let through and fails again.
+        await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(4);
+
+        // Third cooldown is scaled to 4x: still fast-failing at 2x elapsed.
+        await vi.advanceTimersByTimeAsync(2 * breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "CIRCUIT_OPEN_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(4);
+
+        // At 4x elapsed the next probe is let through.
+        await vi.advanceTimersByTimeAsync(2 * breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(5);
+    });
+
+    test("caps the scaled cooldown at eight times the configured value", async () => {
+        // After three consecutive failed probes the scale reaches its cap
+        // (2 ** 3 = 8x) and stops growing, so the wait stays bounded.
+        mocks.request.mockRejectedValue(apiError(500));
+
+        configureRequestOptions({ retry: false, circuitBreaker: breaker });
+
+        // Trip the breaker, then fail three consecutive probes.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        for (let probe = 0; probe < 3; probe += 1) {
+            await vi.advanceTimersByTimeAsync(breaker.cooldownMs * 2 ** probe);
+            await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+                code: "API_ERROR",
+            });
+        }
+        expect(mocks.request).toHaveBeenCalledTimes(5);
+
+        // Fourth failed probe: the cooldown stays at the 8x cap, not 16x.
+        await vi.advanceTimersByTimeAsync(8 * breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(6);
+
+        // Still at the cap after the fourth failure: fast-fail at 8x, not 16x.
+        await vi.advanceTimersByTimeAsync(8 * breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(7);
+    });
+
+    test("resets the cooldown scale when a probe succeeds", async () => {
+        // A successful probe closes the breaker and resets the probe-failure
+        // counter, so the next open period starts from the configured
+        // cooldown again instead of inheriting the previous period's scale.
+        mocks.request.mockRejectedValue(apiError(500));
+
+        configureRequestOptions({ retry: false, circuitBreaker: breaker });
+
+        // Trip the breaker, then fail one probe (cooldown scale now 2x).
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+
+        // The next probe (after the scaled 2x cooldown) succeeds.
+        await vi.advanceTimersByTimeAsync(2 * breaker.cooldownMs);
+        mocks.request.mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        await expect(callSendRequest(url, "POST", { query: "query" })).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(4);
+
+        // Trip the breaker again: the fresh open period must use the
+        // configured cooldown, not the inherited 2x scale.
+        mocks.request.mockRejectedValue(apiError(500));
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(6);
+
+        // At the configured cooldown the next probe is already let through.
+        await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(7);
+    });
 });
 
 describe("rate-limit pacing", () => {

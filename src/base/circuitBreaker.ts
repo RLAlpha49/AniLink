@@ -7,7 +7,10 @@
  * (`checkCircuitOpen`), reset on success (`recordCircuitSuccess`), and
  * count-and-trip on failure (`recordCircuitFailure`). The half-open
  * `probeInFlight` flag reserves a single post-cooldown probe so concurrent
- * requests fast-fail until the probe settles.
+ * requests fast-fail until the probe settles. Repeated failed probes scale
+ * the next cooldown exponentially (capped), so a recovering-but-slow
+ * upstream is probed on a widening schedule instead of being starved at
+ * exactly one request per cooldown.
  */
 import {
     AniLinkApiError,
@@ -40,8 +43,10 @@ const circuitStates = new WeakMap<object, Map<string, CircuitState>>();
  *
  * One entry exists per `(state owner, upstream host)` pair, tracking the
  * consecutive availability-failure streak, when the breaker opened (epoch
- * milliseconds, `null` while closed), and whether the single post-cooldown
- * probe is currently reserved.
+ * milliseconds, `null` while closed), whether the single post-cooldown
+ * probe is currently reserved, and how many consecutive probes have failed
+ * (which scales the next cooldown, so a recovering-but-slow upstream is
+ * probed on a widening schedule instead of being starved).
  */
 export interface CircuitState {
     /** Consecutive availability failures since the last success. */
@@ -50,7 +55,40 @@ export interface CircuitState {
     openedAt: number | null;
     /** Whether the reserved half-open probe is currently in flight. */
     probeInFlight: boolean;
+    /** Consecutive failed half-open probes since the breaker last opened; scales the next cooldown. */
+    failedProbes: number;
 }
+
+/**
+ * Upper bound on the probe-failure exponent used for cooldown scaling. The
+ * cooldown after a failed probe grows as `cooldownMs * 2 ** failedProbes`
+ * (capped at this exponent), so repeated probe failures back off
+ * geometrically without the wait becoming unbounded.
+ */
+const MAX_PROBE_BACKOFF_EXPONENT = 3;
+
+/**
+ * Computes the cooldown that gates the next half-open probe.
+ *
+ * After the first trip the cooldown is the configured `cooldownMs` itself.
+ * Each consecutive failed probe doubles it (capped at
+ * `2 ** MAX_PROBE_BACKOFF_EXPONENT` times the configured value), so a
+ * recovering-but-slow upstream — one that needs several cooldowns before
+ * it can serve a probe — is retried on a widening schedule instead of
+ * being probed at exactly one request per cooldown forever. A successful
+ * probe resets the scale via {@link recordCircuitSuccess}.
+ *
+ * @param breaker - The breaker configuration, when enabled.
+ * @param failedProbes - Consecutive failed probes since the breaker last opened.
+ * @returns The effective cooldown in milliseconds.
+ */
+const scaledCooldownMs = (
+    breaker: { threshold: number; cooldownMs: number },
+    failedProbes: number
+): number => {
+    const exponent = Math.min(failedProbes, MAX_PROBE_BACKOFF_EXPONENT);
+    return breaker.cooldownMs * 2 ** exponent;
+};
 
 /**
  * Classifies a normalized failure as an availability failure — the only
@@ -154,10 +192,26 @@ export const getCircuitState = (owner: object, scope: string): CircuitState => {
         consecutiveFailures: 0,
         openedAt: null,
         probeInFlight: false,
+        failedProbes: 0,
     };
     scopes.set(scope, state);
     return state;
 };
+
+/**
+ * Returns the breaker scopes recorded for one owner without creating or
+ * refreshing anything — the read-only counterpart of {@link getCircuitState}
+ * used by transport-state snapshots. Unlike {@link getCircuitState},
+ * calling this with an owner that has no recorded state allocates nothing,
+ * never fabricates an entry for an unseen host, and does not refresh scope
+ * recency (so it can never trigger an LRU eviction), which is what makes a
+ * monitoring poll safe to run against the live state.
+ *
+ * @param owner - The stable per-client state owner.
+ * @returns The recorded host-scoped breaker states, when any exist.
+ */
+export const peekCircuitStates = (owner: object): ReadonlyMap<string, CircuitState> | undefined =>
+    circuitStates.get(owner);
 
 /**
  * Fast-fails while the circuit is open. Once the cooldown has elapsed,
@@ -166,7 +220,10 @@ export const getCircuitState = (owner: object, scope: string): CircuitState => {
  * while the probe is pending fast-fail so only the probe reaches the
  * upstream. The probe's own success or failure clears the half-open state
  * (closing or re-opening the breaker) via {@link recordCircuitSuccess} /
- * {@link recordCircuitFailure}.
+ * {@link recordCircuitFailure}. The cooldown scales with the number of
+ * consecutive failed probes (see {@link scaledCooldownMs}), so repeated
+ * probe failures back off geometrically instead of probing at exactly one
+ * request per configured cooldown forever.
  *
  * @param circuit - The caller's breaker state, when the breaker is enabled.
  * @param breaker - The breaker configuration, when enabled.
@@ -188,7 +245,7 @@ export const checkCircuitOpen = (
     if (circuit.openedAt === null) {
         return undefined;
     }
-    if (Date.now() - circuit.openedAt < breaker.cooldownMs) {
+    if (Date.now() - circuit.openedAt < scaledCooldownMs(breaker, circuit.failedProbes)) {
         return new AniLinkNetworkError(
             AniLinkErrorCodes.CIRCUIT,
             `The request failed fast: the circuit breaker is open after ${breaker.threshold} consecutive failures. Retrying is possible after the cooldown elapses.`
@@ -203,6 +260,9 @@ export const checkCircuitOpen = (
  * Resets the failure streak after a successful attempt. When the success is
  * the reserved post-cooldown probe, clears the half-open state and closes
  * the breaker, emitting `onCircuitClose` so dashboards can plot recovery.
+ * Closing also resets the failed-probe counter, so the next open period
+ * starts from the configured cooldown again instead of inheriting the
+ * previous period's probe backoff.
  *
  * @param circuit - The caller's breaker state, when the breaker is enabled.
  * @param resolved - The resolved request options, for the `onCircuitClose` hook.
@@ -223,6 +283,7 @@ export const recordCircuitSuccess = (
     circuit.probeInFlight = false;
     circuit.consecutiveFailures = 0;
     circuit.openedAt = null;
+    circuit.failedProbes = 0;
     if (wasOpen && resolved.onCircuitClose !== undefined) {
         safeInvoke(
             resolved.onCircuitClose,
@@ -250,9 +311,12 @@ export const recordCircuitSuccess = (
  * upstream answered, so it is reachable) instead of wedging the half-open
  * state. When an *availability* failure is the reserved post-cooldown probe,
  * it clears the half-open state and re-opens the breaker immediately so the
- * next request fast-fails until the cooldown elapses again. Emits
- * `onCircuitOpen` on the first trip into open (not on re-opens from a failed
- * probe, which are a continuation of the same open period).
+ * next request fast-fails until the cooldown elapses again — and the
+ * failed probe advances the probe-failure counter, which scales the next
+ * cooldown (see {@link scaledCooldownMs}) so repeated probe failures back
+ * off instead of starving the half-open state at one request per cooldown.
+ * Emits `onCircuitOpen` on the first trip into open (not on re-opens from a
+ * failed probe, which are a continuation of the same open period).
  *
  * @param circuit - The caller's breaker state, when the breaker is enabled.
  * @param breaker - The breaker configuration, when enabled.
@@ -284,6 +348,7 @@ export const recordCircuitFailure = (
     }
     if (circuit.probeInFlight) {
         circuit.probeInFlight = false;
+        circuit.failedProbes += 1;
         circuit.openedAt = Date.now();
         return;
     }
