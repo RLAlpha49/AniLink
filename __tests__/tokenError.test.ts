@@ -69,6 +69,35 @@ describe("sanitizeTokenError", () => {
         expect(result.rawAxiosError).toBeUndefined();
     });
 
+    test("relabeled AniLinkRestError carries the original sanitized error as cause", () => {
+        // The original carries no raw Axios error (raw diagnostics off), so
+        // the relabeled error can safely chain it as the cause.
+        const original = new AniLinkRestError(500, { message: "upstream failure" });
+
+        const result = sanitizeTokenError(original, LABEL) as AniLinkRestError;
+
+        expect((result as AniLinkError).cause).toBe(original);
+        expect(result.rawAxiosError).toBeUndefined();
+    });
+
+    test("relabeled AniLinkRestError omits the cause when the original carries a raw Axios error", () => {
+        // A raw error on the cause chain would let cause-walking loggers
+        // reach the token grant's credentials, so the cause is dropped when
+        // the original opted into raw diagnostics.
+        const original = new AniLinkRestError(
+            500,
+            { message: "upstream failure" },
+            {
+                isAxiosError: true,
+                config: { data: { client_secret: "grant-secret", refresh_token: "r" } },
+            }
+        );
+
+        const result = sanitizeTokenError(original, LABEL) as AniLinkRestError;
+
+        expect((result as AniLinkError).cause).toBeUndefined();
+    });
+
     test("relabeled AniLinkApiError keeps status, data, rateLimit, and contentType", () => {
         const rateLimit = { limit: 90, remaining: 0, reset: 1_000 };
         const original = new AniLinkApiError(
@@ -102,6 +131,34 @@ describe("sanitizeTokenError", () => {
         const result = sanitizeTokenError(original, LABEL) as AniLinkApiError;
 
         expect(result.rawAxiosError).toBeUndefined();
+    });
+
+    test("relabeled AniLinkApiError carries the original sanitized error as cause", () => {
+        // The original carries no raw Axios error (raw diagnostics off), so
+        // the relabeled error can safely chain it as the cause.
+        const original = new AniLinkApiError(500, { error: "upstream failure" });
+
+        const result = sanitizeTokenError(original, LABEL) as AniLinkApiError;
+
+        expect((result as AniLinkError).cause).toBe(original);
+        expect(result.rawAxiosError).toBeUndefined();
+    });
+
+    test("relabeled AniLinkApiError omits the cause when the original carries a raw Axios error", () => {
+        // Same guard as the AniLinkRestError branch: no raw error may reach
+        // the cause chain of the relabeled token-request error.
+        const original = new AniLinkApiError(
+            500,
+            { error: "upstream failure" },
+            {
+                isAxiosError: true,
+                config: { data: { client_secret: "grant-secret", refresh_token: "r" } },
+            }
+        );
+
+        const result = sanitizeTokenError(original, LABEL) as AniLinkApiError;
+
+        expect((result as AniLinkError).cause).toBeUndefined();
     });
 
     test("forwards requestId from a relabeled AniLinkApiError", () => {

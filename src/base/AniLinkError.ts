@@ -301,12 +301,14 @@ export class AniLinkValidationError extends AniLinkError {
      * Creates a validation error for invalid operation variables.
      *
      * @param details - The individual validation problems.
+     * @param messagePrefix - The sentence prefix joining the details;
+     * defaults to `"Request variables are invalid"`. Failure classes that
+     * are not about the caller's variables (for example a GraphQL document
+     * whose structure cannot be parsed) pass their own prefix so the
+     * message points at the actual problem.
      */
-    constructor(details: readonly string[]) {
-        super(
-            `Request variables are invalid:\n${details.join("\n")}`,
-            AniLinkErrorCodes.VALIDATION
-        );
+    constructor(details: readonly string[], messagePrefix = "Request variables are invalid") {
+        super(`${messagePrefix}:\n${details.join("\n")}`, AniLinkErrorCodes.VALIDATION);
         this.name = "AniLinkValidationError";
         this.details = details;
     }

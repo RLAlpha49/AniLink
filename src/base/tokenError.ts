@@ -33,9 +33,11 @@ import {
  * their specific classification intact; API failures are relabeled with the
  * `label` prefix so logs still identify the failing token exchange. A *new*
  * error is constructed for the relabel path (carrying the original as
- * `cause`) instead of mutating the existing instance's `message` in place,
- * so consumers comparing messages across the same error instance are not
- * surprised by mid-flight mutation.
+ * `cause` when the original carries no raw Axios error — a raw error on
+ * the cause chain would let cause-walking loggers reach the token grant's
+ * credentials) instead of mutating the existing instance's `message` in
+ * place, so consumers comparing messages across the same error instance
+ * are not surprised by mid-flight mutation.
  *
  * @param error - The value thrown by the token request transport.
  * @param label - A context label prefixed to the safe message (for example `"AniList token request"` or `"MAL token request"`).
@@ -48,6 +50,15 @@ export const sanitizeTokenError = (error: unknown, label: string): AniLinkError 
             contentType: error.contentType,
             requestId: error.requestId,
         });
+        // The relabeled error carries the original as `cause` for
+        // debugging — but only when the original itself carries no raw
+        // Axios error. A cause-walking logger (pino, etc.) would otherwise
+        // reach the raw error's request config, which holds the token
+        // grant's `client_secret` and `refresh_token` — exactly the leak
+        // this sanitizer exists to close.
+        if (error.rawAxiosError === undefined) {
+            relabeled.cause = error;
+        }
         relabeled.message = `${label} failed with status ${error.status}.`;
         return relabeled;
     }
@@ -58,6 +69,10 @@ export const sanitizeTokenError = (error: unknown, label: string): AniLinkError 
             contentType: error.contentType,
             requestId: error.requestId,
         });
+        // Same raw-error guard as the AniLinkRestError branch above.
+        if (error.rawAxiosError === undefined) {
+            relabeled.cause = error;
+        }
         relabeled.message = `${label} failed with status ${error.status}.`;
         return relabeled;
     }

@@ -1,4 +1,4 @@
-import { BaseOperation } from "../../base/BaseOperation";
+import { BaseOperation, resolveOperationLabel } from "../../base/BaseOperation";
 import { AniLinkValidationError } from "../../base/AniLinkError";
 import { type HttpMethod, type RequestOptions } from "../../base/RequestHandler";
 
@@ -128,7 +128,7 @@ export abstract class RestOperation extends BaseOperation {
      * @param path - The endpoint path beginning with `/` (for example `/anime/{id}`); placeholders are substituted from `pathParams` before interpolation into the URL.
      * @param options - The declarative request contract: method, auth requirement, content type, query/body/pathParams, and per-request transport settings.
      * @returns The parsed response body as-is.
-     * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, or a normalized {@link AniLinkError} (typically `AniLinkRestError`) when the request fails.
+     * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, an {@link AniLinkValidationError} when a `{placeholder}` in `path` has no matching `pathParams` entry, or a normalized {@link AniLinkError} (typically `AniLinkRestError`) when the request fails.
      */
     protected async execute<T = unknown>(
         path: string,
@@ -150,8 +150,15 @@ export abstract class RestOperation extends BaseOperation {
                 // A placeholder with no value would otherwise reach the wire
                 // as a literally-braced URL (for example `/anime/{id}`), which
                 // every REST provider answers with a confusing 404/400.
-                // Fail fast with the missing parameter's name instead.
-                throw new AniLinkValidationError([`Missing path parameter: ${name}`]);
+                // Fail fast with the missing parameter's name, plus the
+                // operation label when one is available, so the caller knows
+                // which call failed before anything is dispatched.
+                const details = [`Missing path parameter: ${name}`];
+                const operationLabel = resolveOperationLabel(this);
+                if (operationLabel !== undefined) {
+                    details.push(`Operation: ${operationLabel}`);
+                }
+                throw new AniLinkValidationError(details);
             }
             return encodeURIComponent(String(value));
         });

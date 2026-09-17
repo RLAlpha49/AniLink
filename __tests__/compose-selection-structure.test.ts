@@ -5,13 +5,13 @@ import { AniLinkValidationError } from "../src/base/AniLinkError";
 describe("composeDocument structure failures", () => {
     test("throws when fields is set but the document has no braces", () => {
         const malformed = "not a graphql document";
-        expect(() => composeDocument(malformed, ["id"], [])).toThrow();
+        expect(() => composeDocument(malformed, ["id"], [])).toThrow(AniLinkValidationError);
     });
 
     test("throws when fields is set but the root field selection cannot be located", () => {
         // A single brace pair: the operation definition with no root field body.
         const malformed = "query { Media(id: $id) }";
-        expect(() => composeDocument(malformed, ["id"], [])).toThrow();
+        expect(() => composeDocument(malformed, ["id"], [])).toThrow(AniLinkValidationError);
     });
 
     test("returns the maximal document unchanged when fields is undefined, even for malformed input", () => {
@@ -31,6 +31,7 @@ describe("composeDocument structure failures", () => {
         // attaches, silently rendering `title` as a scalar. The parser must
         // reject the shape loudly.
         const malformed = ["query { Media (id: $id) {", "  title { romaji }", "}", "}"].join("\n");
+        expect(() => composeDocument(malformed, ["title"], [])).toThrow(AniLinkValidationError);
         expect(() => composeDocument(malformed, ["title"], [])).toThrow(
             /cannot parse the document line/
         );
@@ -99,6 +100,26 @@ describe("composeDocument structure failures", () => {
         );
     });
 
+    test("structure failures do not claim the request variables are invalid", () => {
+        // A document-structure failure (unparseable line, unlocatable root
+        // selection) has nothing to do with the caller's variables; the
+        // generic `AniLinkValidationError` prefix — "Request variables are
+        // invalid" — would send them hunting through variables they never
+        // misused. The structure errors carry their own prefix.
+        const malformed = ["query { Media (id: $id) {", "  title { romaji }", "}", "}"].join("\n");
+        expect(() => composeDocument(malformed, ["title"], [])).toThrow(
+            /The GraphQL document is invalid/
+        );
+        expect(() => composeDocument(malformed, ["title"], [])).not.toThrow(
+            /Request variables are invalid/
+        );
+
+        const noBraces = "not a graphql document";
+        expect(() => composeDocument(noBraces, ["id"], [])).toThrow(
+            /The GraphQL document is invalid/
+        );
+    });
+
     test("reports an invalid always-selected key as an internal error, not a caller error", () => {
         const maximal = [
             "query ($id: Int) { Media (id: $id) {",
@@ -110,12 +131,24 @@ describe("composeDocument structure failures", () => {
             "}",
         ].join("\n");
         // A typo in an operation's always-keys constant is a library bug;
-        // the error must say so instead of blaming the caller's fields.
+        // the error must say so instead of blaming the caller's fields. It
+        // still surfaces as an AniLinkValidationError so the documented
+        // `instanceof AniLinkError` classifier catches it.
+        expect(() => composeDocument(maximal, ["title.romaji"], ["idma"])).toThrow(
+            AniLinkValidationError
+        );
         expect(() => composeDocument(maximal, ["title.romaji"], ["idma"])).toThrow(
             /always-selected/
         );
+        expect(() => composeDocument(maximal, ["title.romaji"], ["idma"])).toThrow(/library bug/);
+        // The prefix must not blame the caller's variables: the detail text
+        // exonerates them, so the header contradicting it would misroute
+        // triage toward a variables bug.
+        expect(() => composeDocument(maximal, ["title.romaji"], ["idma"])).toThrow(
+            /The operation's always-selected fields are invalid/
+        );
         expect(() => composeDocument(maximal, ["title.romaji"], ["idma"])).not.toThrow(
-            AniLinkValidationError
+            /Request variables are invalid/
         );
     });
 });

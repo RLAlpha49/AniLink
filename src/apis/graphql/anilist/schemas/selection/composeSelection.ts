@@ -48,7 +48,7 @@ const parseCache = new Map<string, SelectionNode[]>();
  *
  * @param body - The selection text to parse (e.g. a root field's selection).
  * @returns The top-level selection nodes, in document order.
- * @throws {Error} When a line is neither blank, a lone closing-brace run, nor a field.
+ * @throws {AniLinkValidationError} When a line is neither blank, a lone closing-brace run, nor a field.
  */
 function parseSelection(body: string): SelectionNode[] {
     const cached = parseCache.get(body);
@@ -74,10 +74,13 @@ function parseSelectionUncached(body: string): SelectionNode[] {
         // maximal documents are strictly one-field-per-line, so reject the
         // shape instead of mis-parsing it.
         if (closeCount > 0 && line.includes("{")) {
-            throw new Error(
-                `composeSelection cannot parse the document line: "${line}". ` +
-                    "The maximal document must use one field per line, without aliases, " +
-                    "comments, or inline fragments."
+            throw new AniLinkValidationError(
+                [
+                    `composeSelection cannot parse the document line: "${line}". ` +
+                        "The maximal document must use one field per line, without aliases, " +
+                        "comments, or inline fragments.",
+                ],
+                "The GraphQL document is invalid"
             );
         }
 
@@ -101,10 +104,13 @@ function parseSelectionUncached(body: string): SelectionNode[] {
             continue;
         }
         if (/^\}+$/.test(line)) continue;
-        throw new Error(
-            `composeSelection cannot parse the document line: "${line}". ` +
-                "The maximal document must use one field per line, without aliases, " +
-                "comments, or inline fragments."
+        throw new AniLinkValidationError(
+            [
+                `composeSelection cannot parse the document line: "${line}". ` +
+                    "The maximal document must use one field per line, without aliases, " +
+                    "comments, or inline fragments.",
+            ],
+            "The GraphQL document is invalid"
         );
     }
     return roots;
@@ -172,9 +178,12 @@ function pruneSelection(
     for (const path of always) {
         const segments = path.split(".");
         if (!byName.has(segments[0])) {
-            throw new Error(
-                `composeSelection: invalid always-selected key "${path}" — not a field of the maximal document. ` +
-                    "This is a library bug in the operation's always-keys constant, not a caller error."
+            throw new AniLinkValidationError(
+                [
+                    `composeSelection: invalid always-selected key "${path}" — not a field of the maximal document. ` +
+                        "This is a library bug in the operation's always-keys constant, not a caller error.",
+                ],
+                "The operation's always-selected fields are invalid"
             );
         }
     }
@@ -360,7 +369,8 @@ function pruneVariableDeclarations(header: string, document: string): string {
  *   (a {@link SelectionAlways} policy list; see `fieldsSelection.ts`).
  * @returns The composed document; the maximal document unchanged when `fields` is `undefined`.
  * @throws An {@link AniLinkValidationError} listing every unknown field path, when
- *   `fields` is `null`, or when the requested paths (plus always keys) select nothing.
+ *   `fields` is `null`, when the requested paths (plus always keys) select nothing,
+ *   or when the maximal document's structure cannot be parsed or located.
  * @see https://docs.anilist.co/reference/query
  */
 export function composeDocument(
@@ -396,11 +406,17 @@ export function composeDocument(
     // caller's selection and over-fetch, so fail loudly instead.
     const opOpen = maximalDocument.indexOf("{");
     if (opOpen === -1) {
-        throw new Error("composeSelection cannot locate the operation definition's opening brace.");
+        throw new AniLinkValidationError(
+            ["composeSelection cannot locate the operation definition's opening brace."],
+            "The GraphQL document is invalid"
+        );
     }
     const rootOpen = maximalDocument.indexOf("{", opOpen + 1);
     if (rootOpen === -1) {
-        throw new Error("composeSelection cannot locate the root field's selection.");
+        throw new AniLinkValidationError(
+            ["composeSelection cannot locate the root field's selection."],
+            "The GraphQL document is invalid"
+        );
     }
     let depth = 0;
     let rootClose = -1;
@@ -416,7 +432,10 @@ export function composeDocument(
         }
     }
     if (rootClose === -1) {
-        throw new Error("composeSelection cannot locate the root field's closing brace.");
+        throw new AniLinkValidationError(
+            ["composeSelection cannot locate the root field's closing brace."],
+            "The GraphQL document is invalid"
+        );
     }
 
     const tree = parseSelection(maximalDocument.slice(rootOpen + 1, rootClose));
