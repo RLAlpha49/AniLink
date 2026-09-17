@@ -2,6 +2,7 @@ import { type AniLinkOptions, type AniListApi } from "./apis/graphql/anilist/fac
 import { buildProviderClients } from "./providers/registry";
 import type { MyAnimeListApi } from "./apis/rest/mal/facade";
 import type { AniLinkCredentials } from "./base/credentials";
+import { snapshotTransportState, type TransportStateSnapshot } from "./base/transportState";
 
 export type { AniListApi, AniLinkOptions } from "./apis/graphql/anilist/facade";
 
@@ -64,7 +65,14 @@ export type {
 } from "./base/RequestHandler";
 export { destroyCachedAgents } from "./base/RequestHandler";
 export { ResponseCache } from "./base/responseCache";
-export type { ResponseCacheOptions } from "./base/responseCache";
+export type { ResponseCacheOptions, ResponseCacheStats } from "./base/responseCache";
+export { snapshotTransportState } from "./base/transportState";
+export type {
+    CircuitStateSnapshot,
+    PaceDeadlineSnapshot,
+    RetryBudgetSnapshot,
+    TransportStateSnapshot,
+} from "./base/transportState";
 export { buildProviderClients } from "./providers/registry";
 export type { ProviderClients, ProviderFactory, ProviderId } from "./providers/registry";
 export {
@@ -104,6 +112,9 @@ export class AniLink {
 
     /** The MyAnimeList REST API methods, a {@link MyAnimeListApi} exposed under the `mal` namespace. */
     public mal: MyAnimeListApi;
+
+    /** The per-provider state owners the clients key their shared transport state (breaker, budget, pacing) through. */
+    private stateOwners: { anilist: object; mal: object };
 
     /**
      * Creates a new {@link AniLink} instance. The `authToken` parameter is optional and only
@@ -154,5 +165,52 @@ export class AniLink {
         }
         this.anilist = clients.anilist;
         this.mal = clients.mal;
+        this.stateOwners = clients.stateOwners;
+    }
+
+    /**
+     * Returns a read-only, point-in-time snapshot of each provider client's
+     * shared transport state — the circuit-breaker scopes, retry-budget
+     * window, and rate-limit pacing deadlines keyed through that client's
+     * state owner — so "is the breaker open right now?", "how many budget
+     * retries are spent?", and "when does the pacing deadline elapse?" can
+     * be answered without pre-wiring lifecycle hooks.
+     *
+     * Each provider's snapshot is built by {@link snapshotTransportState},
+     * which owns the read-only contract: deep-frozen copies that never
+     * alias the live mutable state, and a build step that never mutates
+     * the state it observes. Polling on a schedule is therefore safe
+     * alongside live traffic.
+     *
+     * @returns A frozen per-provider {@link TransportStateSnapshot} pair:
+     * `{ anilist: {...}, mal: {...} }`.
+     * @example
+     * ```typescript
+     * const aniLink = new AniLink("token", {
+     *     circuitBreaker: { threshold: 5, cooldownMs: 30_000 },
+     * });
+     *
+     * // After some traffic:
+     * const state = aniLink.getTransportState();
+     * for (const breaker of state.anilist.circuit) {
+     *     console.log(
+     *         breaker.host,
+     *         breaker.openedAt === null ? "closed" : `open since ${breaker.openedAt}`,
+     *         `failures: ${breaker.consecutiveFailures}`
+     *     );
+     * }
+     * if (state.anilist.retryBudget) {
+     *     console.log("budget retries spent:", state.anilist.retryBudget.retriesUsed);
+     * }
+     * for (const deadline of state.anilist.paceDeadlines) {
+     *     console.log("pacing until", new Date(deadline.deadlineMs).toISOString(), "for", deadline.host);
+     * }
+     * ```
+     */
+    public getTransportState(): { anilist: TransportStateSnapshot; mal: TransportStateSnapshot } {
+        return Object.freeze({
+            anilist: snapshotTransportState(this.stateOwners.anilist),
+            mal: snapshotTransportState(this.stateOwners.mal),
+        });
     }
 }

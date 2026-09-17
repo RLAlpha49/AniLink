@@ -176,3 +176,19 @@ export const paceAfterSuccess = (
         }
     }
 };
+
+/**
+ * Returns the recorded rate-limit pacing deadlines for one owner without
+ * waiting for them or clearing stale entries — the read-only counterpart of
+ * {@link awaitPaceDeadline} used by transport-state snapshots. Reading
+ * through this helper never mutates the deadline map: a stale
+ * (already-elapsed) deadline is reported as-is instead of being cleared,
+ * and an owner with no recorded deadlines yields `undefined` without
+ * allocating a scope map, so snapshotting can never perturb the pacing
+ * behavior it observes.
+ *
+ * @param owner - The caller's stable transport-settings object.
+ * @returns The recorded host-scoped deadlines, when any exist.
+ */
+export const peekPaceDeadlines = (owner: object): ReadonlyMap<string, number> | undefined =>
+    paceDeadlines.get(owner);

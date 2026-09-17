@@ -456,3 +456,18 @@ export const getRetryBudgetState = (
     }
     return state;
 };
+
+/**
+ * Returns the recorded retry-budget window for one owner without rolling
+ * it forward — the read-only counterpart of {@link getRetryBudgetState} used
+ * by transport-state snapshots. Unlike {@link getRetryBudgetState}, reading
+ * through this helper never resets `retriesUsed` or re-anchors
+ * `windowEndsAt`, so snapshotting an elapsed window reports the spent state
+ * as-is instead of silently granting a fresh window; an owner with no
+ * recorded state yields `undefined` without allocating one.
+ *
+ * @param owner - The caller's transport-settings object.
+ * @returns The recorded budget state, or `undefined` when none exists.
+ */
+export const peekRetryBudgetState = (owner: object): RetryBudgetState | undefined =>
+    retryBudgetStates.get(owner);

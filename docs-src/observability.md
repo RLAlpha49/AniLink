@@ -154,13 +154,73 @@ The full precedence chain, most specific first:
 
 When unset at every level, hook failures fall back to `console.warn`.
 
-On the MAL slot, the slot-level `onHookError` does double duty: besides request-hook failures, it also observes the automatic token-refresh lifecycle — a failed refresh grant is reported under the `malTokenRefresh` hook name, and a throwing `onTokenRefresh` persistence callback under the `onTokenRefresh` hook name. The client-level default covers both when the slot defines no observer of its own.
+On the MAL slot, the slot-level `onHookError` does double duty: besides request-hook failures, it also observes the automatic token-refresh lifecycle — a failed refresh grant is reported under the `malTokenRefresh` hook name (with the sanitized refresh error as `error.cause`, so its `status` and `code` stay inspectable), and a throwing `onTokenRefresh` persistence callback under the `onTokenRefresh` hook name. The client-level default covers both when the slot defines no observer of its own.
 
 The `stateOwner` diagnostic (below) follows the same resolution: it is emitted through the triggering request's resolved observer — the per-request one when set, otherwise the slot's, otherwise the client-level default.
 
 ### The `stateOwner` diagnostic
 
-`onHookError` also carries one diagnostic that is not a hook failure: when cross-request transport state (circuit breaker, retry budget, or rate-limit pacing deadlines) would be keyed by a per-request options object (no `stateOwner` was passed), the transport emits a one-time `onHookError("stateOwner", Error)` event — or falls back to `console.warn` when no observer is configured. Callers that build a fresh options object per call silently get a fresh state key per call, so failure streaks never accumulate, the breaker never engages, and recorded pacing deadlines never gate later requests; the warning points at the fix (pass a stable `stateOwner`, or reuse one options object across calls). Consumers switching on `hookName` for metrics should expect the reserved name `"stateOwner"` alongside real hook names.
+`onHookError` also carries one diagnostic that is not a hook failure: when cross-request transport state (circuit breaker, retry budget, or rate-limit pacing deadlines) would be keyed by a per-request options object (no `stateOwner` was passed), the transport emits a one-time `onHookError("stateOwner", Error)` event — or falls back to a structured `console.warn` record when no observer is configured. Callers that build a fresh options object per call silently get a fresh state key per call, so failure streaks never accumulate, the breaker never engages, and recorded pacing deadlines never gate later requests; the warning points at the fix (pass a stable `stateOwner`, or reuse one options object across calls). Consumers switching on `hookName` for metrics should expect the reserved name `"stateOwner"` alongside real hook names.
+
+### Structured diagnostics and the `diagnostics` option
+
+The library's only unsolicited output — the hook-failure fallback and the `stateOwner` warning above — is routed through a single structured emit path. Every diagnostic is a machine-readable record:
+
+```json
+{
+    "source": "anilink",
+    "kind": "hook-failure",
+    "hookName": "onResponse",
+    "requestId": "0d2d91d7-fb66-4e11-9af6-c1d80587163c",
+    "message": "The onResponse hook threw and was ignored: metrics down"
+}
+```
+
+Three `kind` values exist: `"hook-failure"` (a lifecycle hook threw), `"state-owner"` (the one-time `stateOwner` keying warning), and `"token-refresh"` (a MAL refresh grant failed — a real upstream failure, not a hook failure, so grant-failure metrics do not corrupt hook-health dashboards). `kind` is the sole machine key to switch on; `hookName` names the specific hook (or reserved diagnostic name) for display and correlation, not for branching. When an observer is configured, the `Error` handed to `onHookError` carries the structured record — for a throwing hook, the raw thrown value rides behind it as `error.cause`, so the original exception stays inspectable; for the `stateOwner` warning, the record itself is the `cause`; for a failed refresh grant, the sanitized refresh error (an `AniLinkError` with `status`/`code`) is the `cause`. When no observer is configured, the fallback `console.warn` receives the JSON-serialized record as a single argument — platform log collectors get filterable `source`/`kind`/`hookName`/`requestId` fields instead of prose to parse. One exception: a failed refresh grant is rethrown to the caller, so it never also hits the console fallback — the caller receives that failure once, as the rejection they already handle.
+
+The `diagnostics` option (per-request, per-slot, or client-level on the credentials object — `"warn"` | `"hook"` | `"silent"`, default `"warn"`) controls emission. The client-level value applies to every provider slot that does not define its own, exactly like the client-level `onHookError`:
+
+| Mode       | Behavior                                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------------------------- |
+| `"warn"`   | Route through `onHookError` when configured; otherwise emit the serialized record via `console.warn`.           |
+| `"hook"`   | Route through `onHookError` only — the console is never touched, so captured-console environments get no noise. |
+| `"silent"` | Suppress both diagnostics entirely.                                                                             |
+
+`"silent"` and `"hook"` never silence real failures observed by a configured `onHookError` — a throwing hook, or a failed MAL refresh grant — they only control the unsolicited fallback output. The pagination helpers (`paginate`, `paginateChunks`) and the MAL token-refresh lifecycle accept the same `diagnostics` option for their callback-failure reports.
+
+The one-time `stateOwner` warning is spent only when an emission actually happened: a first trigger under `"silent"` (or `"hook"` with no observer) suppresses its own emission without consuming the warning — a later `"warn"`-mode request still emits it.
+
+## Transport state snapshot
+
+The hooks report events as they happen; `getTransportState()` answers the state questions in between — "is the breaker open right now?", "how many budget retries are spent?", "when does the pacing deadline elapse?" — without pre-wiring any hook:
+
+```typescript
+const state = aniLink.getTransportState();
+
+// Per-host circuit-breaker records for the AniList client:
+for (const breaker of state.anilist.circuit) {
+    console.log(
+        breaker.host,
+        breaker.openedAt === null ? "closed" : `open since ${new Date(breaker.openedAt).toISOString()}`,
+        `failures: ${breaker.consecutiveFailures}`
+    );
+}
+
+// The client's retry-budget window, present once a budget-configured
+// client has dispatched at least one request:
+if (state.anilist.retryBudget) {
+    console.log("budget retries spent:", state.anilist.retryBudget.retriesUsed);
+}
+
+// Recorded rate-limit pacing deadlines, one per host:
+for (const deadline of state.anilist.paceDeadlines) {
+    console.log("pacing until", new Date(deadline.deadlineMs).toISOString(), "for", deadline.host);
+}
+```
+
+The snapshot is strictly read-only in both directions. Every nested object and array is deep-frozen — mutating one throws in strict mode instead of silently succeeding — and the copies never alias the live mutable state, so a consumer cannot perturb transport behavior through the snapshot. Building it never mutates the state it observes either: no circuit entry is created for an unseen host, an elapsed retry-budget window is reported as spent instead of rolled forward, and a stale pacing deadline is not cleared. Polling `getTransportState()` on a schedule is therefore safe alongside live traffic.
+
+Each call returns a fresh, point-in-time copy — fields reflect the values observed when the snapshot was taken. `circuit` and `paceDeadlines` list one entry per host the client has recorded state for; `retryBudget` is present only when the client has a recorded budget window. The `mal` key carries the same shape for the MyAnimeList client, and the two providers' states are always isolated from each other.
 
 ## Next steps
 
