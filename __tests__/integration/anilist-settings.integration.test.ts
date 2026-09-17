@@ -202,7 +202,9 @@ describe("AniList live integration — hook lifecycles over real requests", () =
             expect(genres.length).toBeGreaterThan(0);
             expect(hookErrors).toHaveLength(1);
             expect(hookErrors[0].hookName).toBe("onResponse");
-            expect(hookErrors[0].message).toBe("observer bug");
+            expect(hookErrors[0].message).toBe(
+                "The onResponse hook threw and was ignored: observer bug"
+            );
         }
     );
 

@@ -137,6 +137,7 @@ jobs:
         env:
           ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
           MAL_TOKEN: ${{ secrets.MAL_TOKEN }}
+          MAL_CLIENT_ID: ${{ secrets.MAL_CLIENT_ID }}
         run: npm run test:integration
 
   package-smoke:

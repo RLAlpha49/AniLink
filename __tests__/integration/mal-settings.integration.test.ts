@@ -173,7 +173,7 @@ describe("MyAnimeList live integration — discovery reads with settings", () =>
         }
     });
 
-    test.skipIf(!token)(
+    test.skipIf(!token || !process.env.MAL_CLIENT_ID)(
         "a public username resolves with the client-ID-only credential form",
         async () => {
             // A named user's list is public; MAL's documented client-ID-only

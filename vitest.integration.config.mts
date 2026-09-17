@@ -14,7 +14,11 @@ export default defineConfig(({ mode }) => {
     return {
         test: {
             include: ["__tests__/integration/**/*.test.ts"],
-            testTimeout: 30000,
+            // A rate-limited request legitimately waits out the provider's
+            // rate-limit window before dispatch (pacing) or between attempts
+            // (server-dictated 429 delays); AniList's window is a full minute.
+            // The budget therefore covers one window reset plus the request.
+            testTimeout: 90_000,
             // The live suites pace themselves with a per-test delay to stay
             // under the providers' rate ceilings. Running test files in
             // parallel multiplies the request rate by the file count and
