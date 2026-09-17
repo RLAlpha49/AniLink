@@ -29,7 +29,7 @@ describe("AniLinkRestError", () => {
         const error = new AniLinkRestError(404, { message: "not found" });
         expect(error.status).toBe(404);
         expect(error.data).toEqual({ message: "not found" });
-        expect(error.code).toBe("API_ERROR");
+        expect(error.code).toBe("REST_ERROR");
         expect(error.name).toBe("AniLinkRestError");
         expect(error).toBeInstanceOf(AniLinkRestError);
     });

@@ -15,6 +15,7 @@
 export const AniLinkErrorCodes = {
     API: "API_ERROR",
     GRAPHQL: "GRAPHQL_ERROR",
+    REST: "REST_ERROR",
     NETWORK: "NETWORK_ERROR",
     TIMEOUT: "TIMEOUT_ERROR",
     ABORTED: "ABORTED_ERROR",
@@ -318,9 +319,12 @@ export class AniLinkValidationError extends AniLinkError {
  * body rather than inside a GraphQL envelope, so this subclass exists to give
  * consumers a stable type to branch on without inspecting status codes. It
  * carries no additional fields beyond {@link AniLinkApiError}; its value is
- * the named type itself.
+ * the named type itself plus the distinct {@link AniLinkErrorCodes.REST}
+ * code, so consumers can classify REST-provider failures by `code` alone,
+ * without an `instanceof` check.
  *
  * @see {@link AniLinkApiError}
+ * @see {@link AniLinkErrorCodes.REST}
  */
 export class AniLinkRestError extends AniLinkApiError {
     /**
@@ -339,6 +343,7 @@ export class AniLinkRestError extends AniLinkApiError {
     ) {
         super(status, data, rawAxiosError, options);
         this.name = "AniLinkRestError";
+        this.code = AniLinkErrorCodes.REST;
     }
 }
 

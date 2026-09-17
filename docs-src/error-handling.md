@@ -11,22 +11,22 @@ Every transport failure comes out of AniLink as an `AniLinkError` subclass with 
 ## Error hierarchy
 
 <Mermaid
-    :code="`flowchart TB\n    base([AniLinkError\ncode: varies]):::base\n\n    api[AniLinkApiError\ncode: API_ERROR]:::leaf\n    gql[AniLinkGraphQLError\ncode: GRAPHQL_ERROR]:::leaf\n    rest[AniLinkRestError\ncode: API_ERROR]:::leaf\n    net[AniLinkNetworkError\ncode: NETWORK_ERROR / TIMEOUT_ERROR / ABORTED_ERROR / CIRCUIT_OPEN_ERROR]:::leaf\n    auth[AniLinkAuthError\ncode: AUTH_ERROR]:::leaf\n    val[AniLinkValidationError\ncode: VALIDATION_ERROR]:::leaf\n\n    base --> api\n    base --> gql\n    base --> rest\n    base --> net\n    base --> auth\n    base --> val\n\n    classDef base fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c,font-weight:bold;\n    classDef leaf fill:#f5f5f5,stroke:#666666,color:#333333;`"
+    :code="`flowchart TB\n    base([AniLinkError\ncode: varies]):::base\n\n    api[AniLinkApiError\ncode: API_ERROR]:::leaf\n    gql[AniLinkGraphQLError\ncode: GRAPHQL_ERROR]:::leaf\n    rest[AniLinkRestError\ncode: REST_ERROR]:::leaf\n    net[AniLinkNetworkError\ncode: NETWORK_ERROR / TIMEOUT_ERROR / ABORTED_ERROR / CIRCUIT_OPEN_ERROR]:::leaf\n    auth[AniLinkAuthError\ncode: AUTH_ERROR]:::leaf\n    val[AniLinkValidationError\ncode: VALIDATION_ERROR]:::leaf\n\n    base --> api\n    base --> gql\n    base --> rest\n    base --> net\n    base --> auth\n    base --> val\n\n    classDef base fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c,font-weight:bold;\n    classDef leaf fill:#f5f5f5,stroke:#666666,color:#333333;`"
 />
 
-| Class | Code | When it is thrown |
-| --- | --- | --- |
-| `AniLinkError` | varies | Base class for all normalized failures. Carries `requestId` |
-| `AniLinkApiError` | `API_ERROR` | Non-success HTTP response. Exposes `status`, `data`, `rateLimit`, `contentType` |
-| `AniLinkGraphQLError` | `GRAPHQL_ERROR` | AniList returned HTTP 200 with GraphQL errors. Exposes `graphqlErrors` and any partial `data` |
-| `AniLinkRestError` | `API_ERROR` | REST-specific API failure (MAL surface). Exposes `contentType` |
-| `AniLinkNetworkError` | `NETWORK_ERROR`, `TIMEOUT_ERROR`, `ABORTED_ERROR`, `CIRCUIT_OPEN_ERROR` | Transport failures. Timeout errors carry `timeoutMs` |
-| `AniLinkAuthError` | `AUTH_ERROR` | Calling an authenticated operation without a token, or the provider rejecting the token |
-| `AniLinkValidationError` | `VALIDATION_ERROR` | Invalid variables or options before a request is sent |
+| Class                    | Code                                                                    | When it is thrown                                                                             |
+| ------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `AniLinkError`           | varies                                                                  | Base class for all normalized failures. Carries `requestId`                                   |
+| `AniLinkApiError`        | `API_ERROR`                                                             | Non-success HTTP response. Exposes `status`, `data`, `rateLimit`, `contentType`               |
+| `AniLinkGraphQLError`    | `GRAPHQL_ERROR`                                                         | AniList returned HTTP 200 with GraphQL errors. Exposes `graphqlErrors` and any partial `data` |
+| `AniLinkRestError`       | `REST_ERROR`                                                            | REST-specific API failure (MAL surface). Exposes `contentType`                                |
+| `AniLinkNetworkError`    | `NETWORK_ERROR`, `TIMEOUT_ERROR`, `ABORTED_ERROR`, `CIRCUIT_OPEN_ERROR` | Transport failures. Timeout errors carry `timeoutMs`                                          |
+| `AniLinkAuthError`       | `AUTH_ERROR`                                                            | Calling an authenticated operation without a token, or the provider rejecting the token       |
+| `AniLinkValidationError` | `VALIDATION_ERROR`                                                      | Invalid variables or options before a request is sent                                         |
 
 ## Stable codes
 
-`AniLinkErrorCodes` maps every code: `API_ERROR`, `GRAPHQL_ERROR`, `NETWORK_ERROR`, `TIMEOUT_ERROR`, `ABORTED_ERROR`, `CIRCUIT_OPEN_ERROR`, `AUTH_ERROR`, `VALIDATION_ERROR`, `UNKNOWN_ERROR`.
+`AniLinkErrorCodes` maps every code: `API_ERROR`, `GRAPHQL_ERROR`, `REST_ERROR`, `NETWORK_ERROR`, `TIMEOUT_ERROR`, `ABORTED_ERROR`, `CIRCUIT_OPEN_ERROR`, `AUTH_ERROR`, `VALIDATION_ERROR`, `UNKNOWN_ERROR`.
 
 ## Canonical catch-and-classify recipe
 

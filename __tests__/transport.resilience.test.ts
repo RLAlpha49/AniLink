@@ -133,7 +133,7 @@ describe("REST failures surface as AniLinkRestError", () => {
 
         expect(error).toBeInstanceOf(AniLinkRestError);
         expect(error).toBeInstanceOf(AniLinkApiError);
-        expect(error).toMatchObject({ name: "AniLinkRestError", code: "API_ERROR", status: 404 });
+        expect(error).toMatchObject({ name: "AniLinkRestError", code: "REST_ERROR", status: 404 });
     });
 
     test("still produces a plain AniLinkApiError for a GraphQL (no content-type) call", async () => {

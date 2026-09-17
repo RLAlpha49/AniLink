@@ -275,7 +275,9 @@ describe("token request failure normalization", () => {
         expect(error).toBeInstanceOf(AniLinkApiError);
         const apiError = error as AniLinkApiError;
         expect(apiError.status).toBe(400);
-        expect(apiError.code).toBe(AniLinkErrorCodes.API);
+        // Token requests are form-encoded REST-style calls, so they surface
+        // as AniLinkRestError carrying the distinct REST code.
+        expect(apiError.code).toBe(AniLinkErrorCodes.REST);
         expect(apiError.data).toEqual({
             error: "invalid_grant",
             error_description: "Invalid authorization code.",
@@ -307,7 +309,7 @@ describe("token request failure normalization", () => {
         expect(error).toBeInstanceOf(AniLinkApiError);
         const apiError = error as AniLinkApiError;
         expect(apiError.status).toBe(401);
-        expect(apiError.code).toBe(AniLinkErrorCodes.API);
+        expect(apiError.code).toBe(AniLinkErrorCodes.REST);
         expect(apiError.data).toEqual({ error: "unauthorized" });
     });
 

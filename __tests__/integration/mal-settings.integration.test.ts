@@ -239,7 +239,7 @@ describe("MyAnimeList live integration — hooks and errors", () => {
             } catch (error) {
                 const restError = error as AniLinkRestError;
                 expect(restError.status).toBe(404);
-                expect(restError.code).toBe(AniLinkErrorCodes.API);
+                expect(restError.code).toBe(AniLinkErrorCodes.REST);
                 // The upstream body is preserved verbatim for REST calls.
                 expect(restError.data).toBeDefined();
             }
