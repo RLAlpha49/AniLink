@@ -48,6 +48,8 @@ const resolvedBase = {
     httpAgent: {} as never,
     httpsAgent: {} as never,
     ignorePaceDeadline: false,
+    allowPartialData: false,
+    diagnostics: "warn",
 } satisfies Partial<ResolvedRequestOptions> as ResolvedRequestOptions;
 
 const response = (headers: Record<string, string>) => ({ headers }) as unknown as AxiosResponse;

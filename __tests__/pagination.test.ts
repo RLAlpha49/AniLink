@@ -628,10 +628,16 @@ describe("safeCallback error swallowing", () => {
         // The traversal completes despite the throwing callback.
         expect(result.pageCount).toBe(2);
         expect(onPage).toHaveBeenCalledTimes(2);
-        expect(warn).toHaveBeenCalledWith(
-            expect.stringContaining("onPage"),
-            expect.stringContaining("observer failed")
-        );
+        expect(warn).toHaveBeenCalledTimes(2);
+        for (const call of warn.mock.calls) {
+            const record = JSON.parse(call[0] as string);
+            expect(record).toEqual({
+                source: "anilink",
+                kind: "hook-failure",
+                hookName: "onPage",
+                message: "The onPage hook threw and was ignored: observer failed",
+            });
+        }
         warn.mockRestore();
     });
 
@@ -652,10 +658,16 @@ describe("safeCallback error swallowing", () => {
 
         expect(result.chunkCount).toBe(2);
         expect(onChunk).toHaveBeenCalledTimes(2);
-        expect(warn).toHaveBeenCalledWith(
-            expect.stringContaining("onChunk"),
-            expect.stringContaining("chunk observer failed")
-        );
+        expect(warn).toHaveBeenCalledTimes(2);
+        for (const call of warn.mock.calls) {
+            const record = JSON.parse(call[0] as string);
+            expect(record).toEqual({
+                source: "anilink",
+                kind: "hook-failure",
+                hookName: "onChunk",
+                message: "The onChunk hook threw and was ignored: chunk observer failed",
+            });
+        }
         warn.mockRestore();
     });
 
@@ -681,7 +693,62 @@ describe("safeCallback error swallowing", () => {
         expect(result.pageCount).toBe(2);
         expect(onPage).toHaveBeenCalledTimes(2);
         expect(onHookError).toHaveBeenCalledTimes(2);
-        expect(onHookError).toHaveBeenCalledWith("onPage", thrown);
+        // The observer receives the structured diagnostic: the raw thrown
+        // value rides behind it as the cause.
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("onPage");
+        expect((error as Error).cause).toBe(thrown);
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+    });
+
+    test("paginate rejects an invalid diagnostics value with a TypeError", async () => {
+        // The traversal helpers read `diagnostics` straight from their own
+        // options object, which never passes through resolveRequestOptions
+        // — so they must validate through the same shared resolver.
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
+            media: [{ id: page }],
+        }));
+
+        await expect(
+            paginate(fetchPage, "media", {
+                diagnostics: "verbose" as never,
+            })
+        ).rejects.toThrow(TypeError);
+    });
+
+    test("paginateChunks rejects an invalid diagnostics value with a TypeError", async () => {
+        const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => ({
+            hasNextChunk: false,
+            lists: [{ name: `list-${chunk}` }],
+        }));
+
+        await expect(
+            paginateChunks(fetchChunk, "lists", {
+                diagnostics: "verbose" as never,
+            })
+        ).rejects.toThrow(TypeError);
+    });
+
+    test("paginate suppresses the callback-failure report in diagnostics mode silent", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
+            pageInfo: pageInfo({ currentPage: page, hasNextPage: page < 2 }),
+            media: [{ id: page }],
+        }));
+        const onPage = vi.fn(() => {
+            throw new Error("observer failed");
+        });
+
+        const result = await paginate(fetchPage, "media", {
+            concurrency: 1,
+            onPage,
+            diagnostics: "silent",
+        });
+
+        expect(result.pageCount).toBe(2);
+        expect(onPage).toHaveBeenCalledTimes(2);
         expect(warn).not.toHaveBeenCalled();
         warn.mockRestore();
     });
@@ -707,7 +774,11 @@ describe("safeCallback error swallowing", () => {
         expect(result.chunkCount).toBe(2);
         expect(onChunk).toHaveBeenCalledTimes(2);
         expect(onHookError).toHaveBeenCalledTimes(2);
-        expect(onHookError).toHaveBeenCalledWith("onChunk", thrown);
+        // The observer receives the structured diagnostic: the raw thrown
+        // value rides behind it as the cause.
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("onChunk");
+        expect((error as Error).cause).toBe(thrown);
         expect(warn).not.toHaveBeenCalled();
         warn.mockRestore();
     });

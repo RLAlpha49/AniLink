@@ -138,7 +138,10 @@ export const awaitPaceDeadline = async (
     // Emitted after the wait completes so an observer never receives a
     // full-delay event for a wait that was aborted partway through —
     // pacing-time metrics would otherwise over-count aborted waits.
-    safeInvoke(resolved.onPace, "onPace", resolved.onHookError, { ...hookContext, delayMs });
+    safeInvoke(resolved.onPace, "onPace", resolved.onHookError, resolved.diagnostics, {
+        ...hookContext,
+        delayMs,
+    });
 };
 
 /**

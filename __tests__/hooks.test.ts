@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { AniLinkApiError, AniLinkError, AniLinkErrorCodes } from "../src/base/AniLinkError";
-import { buildErrorContext, reportFailure, safeInvoke } from "../src/base/hooks";
+import { buildErrorContext, reportDiagnostic, reportFailure, safeInvoke } from "../src/base/hooks";
 import type { ResolvedRequestOptions } from "../src/base/requestOptions";
 import type { HttpMethod } from "../src/base/transportTypes";
 
@@ -21,6 +21,8 @@ const baseOptions = {
     httpAgent: {} as never,
     httpsAgent: {} as never,
     ignorePaceDeadline: false,
+    allowPartialData: false,
+    diagnostics: "warn",
 } satisfies Partial<ResolvedRequestOptions> as ResolvedRequestOptions;
 
 afterEach(() => {
@@ -30,24 +32,33 @@ afterEach(() => {
 describe("safeInvoke", () => {
     test("does nothing when the hook is undefined", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-        expect(() => safeInvoke(undefined, "onError", undefined, 1, 2)).not.toThrow();
+        expect(() => safeInvoke(undefined, "onError", undefined, "warn", 1, 2)).not.toThrow();
         expect(warn).not.toHaveBeenCalled();
     });
 
     test("forwards arguments verbatim to the hook", () => {
         const hook = vi.fn();
-        safeInvoke(hook as never, "onResponse", undefined, "a", { b: 1 });
+        safeInvoke(hook as never, "onResponse", undefined, "warn", "a", { b: 1 });
         expect(hook).toHaveBeenCalledWith("a", { b: 1 });
     });
 
-    test("reports a throwing hook to onHookError with the hook name and error", () => {
+    test("reports a throwing hook to onHookError with the hook name and a structured record", () => {
         const onHookError = vi.fn();
         const thrown = new Error("hook exploded");
         const hook = () => {
             throw thrown;
         };
-        safeInvoke(hook as never, "onPace", onHookError);
-        expect(onHookError).toHaveBeenCalledWith("onPace", thrown);
+        safeInvoke(hook as never, "onPace", onHookError, "warn");
+        expect(onHookError).toHaveBeenCalledTimes(1);
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("onPace");
+        expect(error).toBeInstanceOf(Error);
+        // The raw thrown value rides behind the structured record as the
+        // cause, so one observer contract covers every diagnostic.
+        expect((error as Error).message).toBe(
+            "The onPace hook threw and was ignored: hook exploded"
+        );
+        expect((error as Error).cause).toBe(thrown);
     });
 
     test("swallows an exception from onHookError itself", () => {
@@ -57,31 +68,40 @@ describe("safeInvoke", () => {
         const hook = () => {
             throw new Error("hook exploded");
         };
-        expect(() => safeInvoke(hook as never, "onPace", onHookError)).not.toThrow();
+        expect(() => safeInvoke(hook as never, "onPace", onHookError, "warn")).not.toThrow();
     });
 
-    test("warns on the console with the hook name and message when no onHookError is set", () => {
+    test("warns a structured record on the console when no onHookError is set", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
         const hook = () => {
             throw new Error("telemetry exploded");
         };
-        safeInvoke(hook as never, "onRequestStart", undefined);
-        expect(warn).toHaveBeenCalledWith(
-            "[AniLink] onRequestStart hook threw and was ignored:",
-            "telemetry exploded"
-        );
+        safeInvoke(hook as never, "onRequestStart", undefined, "warn");
+        expect(warn).toHaveBeenCalledTimes(1);
+        const record = JSON.parse(warn.mock.calls[0][0] as string);
+        expect(record).toEqual({
+            source: "anilink",
+            kind: "hook-failure",
+            hookName: "onRequestStart",
+            message: "The onRequestStart hook threw and was ignored: telemetry exploded",
+        });
     });
 
-    test("includes the requestId in the console warning when the first argument carries one", () => {
+    test("includes the requestId in the structured record when the first argument carries one", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
         const hook = () => {
             throw new Error("boom");
         };
-        safeInvoke(hook as never, "onResponse", undefined, { requestId: "req-42" });
-        expect(warn).toHaveBeenCalledWith(
-            "[AniLink] onResponse hook threw and was ignored (requestId: req-42):",
-            "boom"
-        );
+        safeInvoke(hook as never, "onResponse", undefined, "warn", { requestId: "req-42" });
+        expect(warn).toHaveBeenCalledTimes(1);
+        const record = JSON.parse(warn.mock.calls[0][0] as string);
+        expect(record).toEqual({
+            source: "anilink",
+            kind: "hook-failure",
+            hookName: "onResponse",
+            requestId: "req-42",
+            message: "The onResponse hook threw and was ignored: boom",
+        });
     });
 
     test("omits the requestId correlation when the first argument has none", () => {
@@ -89,23 +109,221 @@ describe("safeInvoke", () => {
         const hook = () => {
             throw new Error("boom");
         };
-        safeInvoke(hook as never, "onResponse", undefined, { requestId: 42 });
-        expect(warn).toHaveBeenCalledWith(
-            "[AniLink] onResponse hook threw and was ignored:",
-            "boom"
-        );
+        safeInvoke(hook as never, "onResponse", undefined, "warn", { requestId: 42 });
+        expect(warn).toHaveBeenCalledTimes(1);
+        const record = JSON.parse(warn.mock.calls[0][0] as string);
+        expect(record.requestId).toBeUndefined();
+        expect(record.hookName).toBe("onResponse");
     });
 
-    test("stringifies a non-Error thrown value in the console warning", () => {
+    test("stringifies a non-Error thrown value in the structured record", () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
         const hook = () => {
             throw "plain string";
         };
-        safeInvoke(hook as never, "onError", undefined);
-        expect(warn).toHaveBeenCalledWith(
-            "[AniLink] onError hook threw and was ignored:",
-            "plain string"
-        );
+        safeInvoke(hook as never, "onError", undefined, "warn");
+        expect(warn).toHaveBeenCalledTimes(1);
+        const record = JSON.parse(warn.mock.calls[0][0] as string);
+        expect(record.message).toBe("The onError hook threw and was ignored: plain string");
+    });
+
+    test("stays silent in diagnostics mode silent with no observer", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const hook = () => {
+            throw new Error("boom");
+        };
+        safeInvoke(hook as never, "onError", undefined, "silent");
+        expect(warn).not.toHaveBeenCalled();
+    });
+
+    test("never touches the console in diagnostics mode hook with no observer", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const hook = () => {
+            throw new Error("boom");
+        };
+        safeInvoke(hook as never, "onError", undefined, "hook");
+        expect(warn).not.toHaveBeenCalled();
+    });
+
+    test("still routes to onHookError in diagnostics mode hook", () => {
+        const onHookError = vi.fn();
+        const thrown = new Error("hook exploded");
+        const hook = () => {
+            throw thrown;
+        };
+        safeInvoke(hook as never, "onPace", onHookError, "hook");
+        expect(onHookError).toHaveBeenCalledTimes(1);
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("onPace");
+        expect((error as Error).cause).toBe(thrown);
+    });
+});
+
+describe("reportDiagnostic", () => {
+    test("passes a structured record as the error cause to the observer", () => {
+        const onHookError = vi.fn();
+        reportDiagnostic({
+            kind: "state-owner",
+            hookName: "stateOwner",
+            message: "state keyed by per-request options",
+            requestId: "req-1",
+            onHookError,
+            diagnostics: "warn",
+        });
+        expect(onHookError).toHaveBeenCalledTimes(1);
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("stateOwner");
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).cause).toEqual({
+            source: "anilink",
+            kind: "state-owner",
+            hookName: "stateOwner",
+            requestId: "req-1",
+            message: "state keyed by per-request options",
+        });
+    });
+
+    test("prefers the raw error as the cause when one is provided", () => {
+        const onHookError = vi.fn();
+        const thrown = new Error("hook exploded");
+        reportDiagnostic({
+            kind: "hook-failure",
+            hookName: "onPace",
+            message: "The onPace hook threw and was ignored: hook exploded",
+            onHookError,
+            diagnostics: "warn",
+            rawError: thrown,
+        });
+        expect(onHookError).toHaveBeenCalledTimes(1);
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("onPace");
+        expect((error as Error).cause).toBe(thrown);
+    });
+
+    test("emits the serialized record to console.warn in mode warn with no observer", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        reportDiagnostic({
+            kind: "hook-failure",
+            hookName: "onPace",
+            message: "hook threw",
+            diagnostics: "warn",
+        });
+        expect(warn).toHaveBeenCalledTimes(1);
+        const record = JSON.parse(warn.mock.calls[0][0] as string);
+        expect(record).toEqual({
+            source: "anilink",
+            kind: "hook-failure",
+            hookName: "onPace",
+            message: "hook threw",
+        });
+    });
+
+    test("emits nothing in mode silent", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const onHookError = vi.fn();
+        reportDiagnostic({
+            kind: "hook-failure",
+            hookName: "onPace",
+            message: "hook threw",
+            onHookError,
+            diagnostics: "silent",
+        });
+        expect(warn).not.toHaveBeenCalled();
+        expect(onHookError).not.toHaveBeenCalled();
+    });
+
+    test("emits nothing to the console in mode hook with no observer", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        reportDiagnostic({
+            kind: "hook-failure",
+            hookName: "onPace",
+            message: "hook threw",
+            diagnostics: "hook",
+        });
+        expect(warn).not.toHaveBeenCalled();
+    });
+
+    test("swallows a throwing observer", () => {
+        const onHookError = () => {
+            throw new Error("observer exploded");
+        };
+        expect(() =>
+            reportDiagnostic({
+                kind: "state-owner",
+                hookName: "stateOwner",
+                message: "msg",
+                onHookError,
+                diagnostics: "warn",
+            })
+        ).not.toThrow();
+    });
+
+    test("reports whether an emission actually happened", () => {
+        // The boolean return is the one-shot contract: warnOptionsKeyedState
+        // keys on it instead of re-deriving the routing, so the gate can
+        // never drift from the emit logic.
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const onHookError = vi.fn();
+
+        // Observer invoked: emitted.
+        expect(
+            reportDiagnostic({
+                kind: "state-owner",
+                hookName: "stateOwner",
+                message: "msg",
+                onHookError,
+                diagnostics: "warn",
+            })
+        ).toBe(true);
+
+        // Console fallback: emitted.
+        expect(
+            reportDiagnostic({
+                kind: "state-owner",
+                hookName: "stateOwner",
+                message: "msg",
+                diagnostics: "warn",
+            })
+        ).toBe(true);
+
+        // Silent mode with an observer: the state-owner record is
+        // unsolicited, so the observer is gated — nothing emitted.
+        expect(
+            reportDiagnostic({
+                kind: "state-owner",
+                hookName: "stateOwner",
+                message: "msg",
+                onHookError,
+                diagnostics: "silent",
+            })
+        ).toBe(false);
+
+        // Hook mode with no observer: nothing to route to.
+        expect(
+            reportDiagnostic({
+                kind: "state-owner",
+                hookName: "stateOwner",
+                message: "msg",
+                diagnostics: "hook",
+            })
+        ).toBe(false);
+
+        // A rethrown failure skips the console fallback: the caller
+        // receives it once, as the rejection.
+        expect(
+            reportDiagnostic({
+                kind: "token-refresh",
+                hookName: "malTokenRefresh",
+                message: "msg",
+                diagnostics: "warn",
+                rethrown: true,
+            })
+        ).toBe(false);
+
+        // Only the second call reached the console: the first went to the
+        // observer, and the rethrown one skips the fallback by design.
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
     });
 });
 

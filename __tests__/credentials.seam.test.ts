@@ -172,3 +172,85 @@ describe("strict credential-key validation", () => {
         ).toThrow(TypeError);
     });
 });
+describe("client-level diagnostics default", () => {
+    test("applies the client-level diagnostics to every slot that does not define its own", async () => {
+        // The docs promise instance-level `diagnostics`; the credentials
+        // form must honor that: the client-level value reaches both
+        // provider slots unless a slot overrides it.
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const client = new AniLink({
+            anilist: { authToken: "anilist-token" },
+            mal: { accessToken: "mal-token" },
+            diagnostics: "silent",
+        });
+
+        // A throwing onResponse hook on each provider would emit the
+        // hook-failure fallback in warn mode; the client-level `silent`
+        // default must suppress it for both slots.
+        await client.anilist.query.media(
+            { id: 1, type: "ANIME" },
+            {
+                onResponse: () => {
+                    throw new Error("telemetry exploded");
+                },
+            }
+        );
+        await client.mal.user.me({
+            onResponse: () => {
+                throw new Error("metrics down");
+            },
+        });
+
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+    });
+
+    test("a slot-level diagnostics value overrides the client-level default", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const client = new AniLink({
+            anilist: { authToken: "anilist-token", diagnostics: "warn" },
+            mal: { accessToken: "mal-token" },
+            diagnostics: "silent",
+        });
+
+        // The anilist slot keeps its own warn mode, so its hook failure
+        // still reaches the console.
+        await client.anilist.query.media(
+            { id: 1, type: "ANIME" },
+            {
+                onResponse: () => {
+                    throw new Error("telemetry exploded");
+                },
+            }
+        );
+        expect(warn).toHaveBeenCalledTimes(1);
+
+        // The mal slot inherits the client-level silent default.
+        await client.mal.user.me({
+            onResponse: () => {
+                throw new Error("metrics down");
+            },
+        });
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
+    });
+});
+
+describe("credentials form rejects a second options argument", () => {
+    test("throws a TypeError naming the per-provider rule instead of silently dropping options", () => {
+        expect(() => new AniLink({ anilist: { authToken: "t" } }, { timeout: 5_000 })).toThrow(
+            TypeError
+        );
+    });
+
+    test("the TypeError message points at the provider credentials slots", () => {
+        expect(() => new AniLink({ anilist: { authToken: "t" } }, { timeout: 5_000 })).toThrow(
+            /transport settings belong inside each provider's credentials slot/
+        );
+    });
+
+    test("the credentials form without options and the legacy token form still construct", () => {
+        expect(() => new AniLink({ anilist: { authToken: "t" } })).not.toThrow();
+        expect(() => new AniLink("legacy-token", { timeout: 5_000 })).not.toThrow();
+    });
+});

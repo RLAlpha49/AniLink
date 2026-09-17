@@ -48,7 +48,9 @@ export type {
     ResolvedProviderCredentials,
 } from "./base/credentials";
 export type {
+    AniLinkDiagnostic,
     CircuitOpenContext,
+    DiagnosticsMode,
     OnCircuitCloseHandler,
     OnCircuitOpenHandler,
     OnHookErrorHandler,

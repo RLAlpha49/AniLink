@@ -1,9 +1,10 @@
 /**
  * Public type and constant surface for the shared transport.
  *
- * This module owns the transport's exported option/hook type declarations and
+ * This module owns the transport's exported option/hook type declarations,
  * the small, dependency-free default constants (`DEFAULT_REQUEST_TIMEOUT`,
- * `MAX_SOCKETS`, `MAX_FREE_SOCKETS`). It is a leaf module: it only depends on
+ * `MAX_SOCKETS`, `MAX_FREE_SOCKETS`), and the shared diagnostics-mode resolver
+ * (`resolveDiagnosticsMode`). It is a leaf module: it only depends on
  * the error taxonomy (`./AniLinkError`) and the opt-in {@link ResponseCache}
  * type, so every other transport module can import these symbols without
  * forming a cycle. {@link RequestHandler} re-exports everything here so
@@ -199,12 +200,24 @@ export type OnRequestStartHandler = (context: RequestContext) => void;
  * A callback invoked after each attempt completes with the elapsed
  * `durationMs` and parsed `rateLimit` headers when present. When the response
  * was served from the opt-in response cache, `cacheHit` is `true` and
- * `durationMs` is `0`.
+ * `durationMs` is `0`; when a cacheable read was served from the network
+ * after a cache miss, `cacheHit` is `false`. Responses unrelated to the
+ * cache (mutations, cache-less clients) carry no `cacheHit` at all. When the
+ * request waited for rate-limit pacing before dispatch, `pacedMs` carries
+ * the total time spent waiting across the request's attempts — cumulative,
+ * so on a retried request it can exceed the final attempt's `durationMs`
+ * (which measures only that attempt); requests that never waited carry no
+ * `pacedMs` at all.
  *
  * @see {@link RequestOptions.onResponse}
  */
 export type OnResponseHandler = (
-    context: RequestContext & { durationMs: number; rateLimit?: RateLimitInfo; cacheHit?: boolean }
+    context: RequestContext & {
+        durationMs: number;
+        rateLimit?: RateLimitInfo;
+        cacheHit?: boolean;
+        pacedMs?: number;
+    }
 ) => void;
 
 /**
@@ -219,11 +232,83 @@ export type OnPaceHandler = (context: RequestContext & { delayMs: number }) => v
  * A callback invoked when a user-supplied lifecycle hook throws. Throwing
  * hooks never affect the request pipeline; this callback only observes the
  * failure so it can be routed to a logger or metrics backend. When unset,
- * hook failures fall back to a `console.warn`.
+ * hook failures fall back to a `console.warn` carrying a structured
+ * {@link AniLinkDiagnostic} record.
  *
  * @see {@link RequestOptions.onHookError}
  */
 export type OnHookErrorHandler = (hookName: string, error: unknown) => void;
+
+/**
+ * The structured record every library diagnostic is emitted through — the
+ * shape `reportDiagnostic` hands to {@link OnHookErrorHandler} observers and
+ * serializes into the `console.warn` fallback. Machine-readable fields
+ * (`source`, `kind`, `requestId`) replace prose parsing so platform log
+ * collectors can filter and route the library's only unsolicited output.
+ * `kind` is the sole machine key to switch on; `hookName` names the
+ * specific hook (or reserved diagnostic name) for display and correlation,
+ * not for branching.
+ */
+export interface AniLinkDiagnostic {
+    /** Fixed marker `"anilink"` identifying the library as the emit source. */
+    source: "anilink";
+    /** Which diagnostic fired: `"hook-failure"`, `"state-owner"`, or `"token-refresh"`. */
+    kind: "hook-failure" | "state-owner" | "token-refresh";
+    /** The hook or diagnostic name the failure is attributed to, for display and correlation. */
+    hookName: string;
+    /** The correlation ID of the affected request, when one is in scope. */
+    requestId?: string;
+    /** Human-readable description of the failure. */
+    message: string;
+}
+
+/**
+ * How the library's two unsolicited diagnostics (a throwing lifecycle hook
+ * with no {@link RequestOptions.onHookError} observer, and the one-time
+ * `stateOwner` keying warning) are emitted.
+ *
+ * - `"warn"` (default): route through `onHookError` when configured, falling
+ *   back to a `console.warn` carrying a structured {@link AniLinkDiagnostic}.
+ * - `"hook"`: route through `onHookError` only; the console is never touched,
+ *   so environments that capture `console.warn` get zero noise.
+ * - `"silent"`: suppress both diagnostics entirely.
+ *
+ * The modes gate only unsolicited fallback output. A diagnostic carrying a
+ * real failure (a throwing hook, a failed MAL refresh grant) always reaches
+ * a configured observer in every mode — the consumer asked to observe
+ * failures, so the mode never silences the observer itself.
+ *
+ * @see {@link RequestOptions.diagnostics}
+ */
+export type DiagnosticsMode = "warn" | "hook" | "silent";
+
+/**
+ * Resolves a caller-supplied diagnostics mode, defaulting to `"warn"` and
+ * throwing on any other value.
+ *
+ * Every entry path for the option — per-request options
+ * ({@link RequestOptions.diagnostics}), the MAL refresh lifecycle, and the
+ * pagination helpers — validates through this one helper so a typo like
+ * `"verbose"` fails fast with the received value in the message, matching
+ * the fail-fast convention of `resolveRequestOptions`, instead of behaving
+ * as an accidental quasi-`"hook"` mode deep inside the emit path.
+ *
+ * @param diagnostics - The caller-supplied mode, when provided.
+ * @returns The resolved mode, or `"warn"` when the input is `undefined` or `null`.
+ * @throws A `TypeError` when the value is defined but not one of the three modes.
+ * @see {@link DiagnosticsMode}
+ */
+export const resolveDiagnosticsMode = (
+    diagnostics: DiagnosticsMode | undefined
+): DiagnosticsMode => {
+    const resolved = diagnostics ?? "warn";
+    if (resolved !== "warn" && resolved !== "hook" && resolved !== "silent") {
+        throw new TypeError(
+            `Invalid diagnostics ${JSON.stringify(resolved)}: it must be one of "warn", "hook", or "silent".`
+        );
+    }
+    return resolved;
+};
 
 /**
  * Context passed to the `onCircuitOpen` hook when the circuit breaker trips.
@@ -353,6 +438,15 @@ export interface RequestOptions {
      */
     onHookError?: OnHookErrorHandler;
     /**
+     * Controls how the library's two unsolicited diagnostics (a throwing
+     * lifecycle hook with no `onHookError` observer, and the one-time
+     * `stateOwner` keying warning) are emitted. `"warn"` (default) keeps the
+     * `onHookError`-with-console-fallback behavior; `"hook"` routes through
+     * `onHookError` only and never touches the console; `"silent"` suppresses
+     * both. See {@link DiagnosticsMode}.
+     */
+    diagnostics?: DiagnosticsMode;
+    /**
      * Invoked when the circuit breaker opens (trips) after the
      * consecutive-failure threshold is reached. Carries the host scope and
      * the failure count so consumers can plot trip frequency and alert on
@@ -380,6 +474,25 @@ export interface RequestOptions {
      * @see {@link RequestOptions.paceWithRateLimit}
      */
     ignorePaceDeadline?: boolean;
+    /**
+     * Opt-in partial-success mode for multi-field GraphQL documents. When
+     * set, a GraphQL envelope that carries both a non-null `data` object and
+     * a non-empty `errors` array resolves with the data instead of throwing
+     * `AniLinkGraphQLError`: the resolved fields are returned inline and the
+     * error entries are reported through the `onError` hook (with the
+     * normalized `AniLinkGraphQLError` as the hook's error argument) so
+     * failures stay observable. Envelopes with errors and no usable `data`
+     * still throw — "usable" means at least one resolved (non-null) root
+     * field, so `data: {}` and `data: { Media: null }` (the GraphQL shape for
+     * a failed nullable root field) both throw. The resolution is terminal —
+     * the data is returned, never retried — but availability-class partial
+     * errors (429/5xx) still advance the circuit breaker exactly as the
+     * strict mode's throw would. Off by default: every operation keeps the
+     * strict all-or-nothing behavior unless the caller opts in per request.
+     *
+     * @see {@link RequestOptions.onError}
+     */
+    allowPartialData?: boolean;
     /**
      * Opt-in in-memory TTL response cache for read-heavy traversals. When
      * set, cacheable reads are cached by `(method, url, serialized body)`

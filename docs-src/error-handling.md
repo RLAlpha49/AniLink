@@ -98,6 +98,40 @@ if (error instanceof AniLinkRestError) {
 }
 ```
 
+## Partial data
+
+GraphQL permits partial success: a document selecting several root fields can resolve most of them while one fails. By default AniLink is strict — an envelope carrying any `errors` entry throws `AniLinkGraphQLError`, and the resolved portion survives on the error's `partialData` (and `data`) field so you can recover it from the catch path:
+
+```typescript
+try {
+    const result = await aniLink.anilist.custom(
+        `query { User(id: 1) { name } Page { mediaList { id } } }`
+    );
+} catch (error: unknown) {
+    if (error instanceof AniLinkGraphQLError) {
+        console.error(error.graphqlErrors.map((e) => e.message));
+        console.error(error.partialData); // the fields that did resolve
+    }
+}
+```
+
+For multi-field documents where you want the resolved fields inline, pass `allowPartialData: true` as a per-request option. The transport then resolves with the data instead of throwing, and reports the error entries through the `onError` hook with the same `AniLinkGraphQLError` the strict mode would have thrown — so failures stay observable without a try/catch:
+
+```typescript
+const result = await aniLink.anilist.custom(
+    `query { User(id: 1) { name } Page { mediaList { id } } }`,
+    { allowPartialData: true, onError: (error) => logger.warn(error.graphqlErrors) }
+);
+```
+
+Envelopes with errors and no usable `data` still throw regardless of the flag — there is nothing to return. "Usable" means a `data` object with at least one resolved (non-null) root field: an empty `data: {}` means every root field failed, and so does `data: { Media: null }` — the GraphQL shape for a failed nullable root field — so both throw like the strict mode. Typed single-root-field operations are unaffected in practice: their documents resolve one root field, so a partial envelope for them carries either `data: null` or a lone `null` root field, and throws as before.
+
+Partial-success results are never stored in the [response cache](/response-cache): a later cache hit would replay the degraded data without the `onError` reporting that accompanied the original fetch, silently hiding the failures. Every read of a partial envelope goes back to the network (and reports its errors through `onError` again).
+
+The circuit breaker still sees the upstream-health signal: when a partial envelope's error entries carry an availability-class status (429 or 5xx), the breaker counts the attempt exactly as the strict mode's throw would, instead of resetting the failure streak — so a persistently degraded upstream trips the breaker under `allowPartialData` too. Partial envelopes whose errors are caller-side (validation failures with no upstream status) reset the streak like a success, matching the strict mode's classification.
+
+The resolution is terminal where the strict mode's throw is retryable: a partial envelope is never retried (the data is already in hand), so a 429-class partial error surfaces once through `onError` while the strict mode would have re-dispatched the request under the retry policy. Under sustained rate limiting, a client switched to `allowPartialData` therefore retries less and trips the breaker sooner for identical upstream conditions — the breaker accounting is identical, the retry accounting is not.
+
 ## Raw error debugging
 
 Pass `exposeRawAxiosError: true` and the original Axios error rides along as `rawAxiosError` (and `cause`) on thrown errors.

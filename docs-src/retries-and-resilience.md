@@ -131,6 +131,8 @@ When unset, no failure accounting happens across requests.
 
 AniList has a habit of reporting failures as HTTP 200 with a GraphQL `errors` array rather than as an HTTP error status. The breaker counts GraphQL-level 429 and 5xx envelopes as availability failures: a sustained run trips it just like HTTP-level failures, so the common AniList overload signature is covered. GraphQL validation errors (an envelope 200 with no upstream error status) are caller-side: they neither trip the breaker nor reset the streak.
 
+The same classification applies to partial-success envelopes resolved by [`allowPartialData`](/error-handling#partial-data): when the envelope's error entries carry an availability-class status, the breaker counts the attempt exactly as the strict mode's throw would — the failure streak advances instead of resetting — so a persistently degraded upstream trips the breaker under the opt-in too. Partial envelopes whose errors are caller-side reset the streak like a success, matching the strict mode's classification.
+
 ### Probe outcomes
 
 After the cooldown elapses, one request is let through as a probe. A successful probe closes the breaker. A probe that fails with an availability failure re-opens it for another cooldown. A probe that fails with a caller-side error (or is aborted by the caller) **closes** the breaker — the upstream answered, so it is reachable — instead of wedging the half-open state.

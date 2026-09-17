@@ -13,7 +13,7 @@ Seven lifecycle hooks report request lifecycle events — `onRequestStart`, `onR
 | Hook             | Fires                                                                                                                                                                            | Payload                                                                                                                        |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `onRequestStart` | Immediately before each attempt is sent                                                                                                                                          | `{ requestId, url, method, attempt }`                                                                                          |
-| `onResponse`     | After each attempt completes, success or failure. Carries `cacheHit: true` when served from the response cache                                                                   | `{ requestId, url, method, attempt, durationMs, rateLimit?, cacheHit? }`                                                       |
+| `onResponse`     | After each attempt completes, success or failure. Carries `cacheHit: true` when served from the response cache, and `pacedMs` when the request waited for rate-limit pacing      | `{ requestId, url, method, attempt, durationMs, rateLimit?, cacheHit?, pacedMs? }`                                             |
 | `onPace`         | After a proactive rate-limit pacing wait completes, before the request is dispatched (an aborted wait emits nothing — observe it via `onError` with `abortedDuringPacing: true`) | { requestId, url, method, attempt, delayMs }                                                                                   |
 | `onError`        | When an attempt fails and `onRetry` is not configured (covering retryable failures), when retries are exhausted, and when a circuit-open fast-fail occurs                        | `(error: AniLinkError, context)` with `context = { requestId, url, method, attempt, code, status?, nextDelayMs?, rateLimit? }` |
 | `onRetry`        | When a failed attempt is going to be retried; handles retryable failures when configured, in place of `onError` for those attempts                                               | Same shape as `onError` with `nextDelayMs` set                                                                                 |
@@ -78,6 +78,14 @@ const aniLink = new AniLink("token", {
 ## Pacing signal
 
 When `paceWithRateLimit` is enabled and a successful response reports the quota below `rateLimitFloor`, the next request waits for the window to reset. The `onPace` hook fires with the wait length (`delayMs`) after the wait completes, so a deliberate rate-limit wait never gets mistaken for a hung request in hook-based metrics — and an aborted wait never emits a full-delay event that would over-count pacing time. See [Retries & resilience](/retries-and-resilience) for the pacing configuration.
+
+Paced requests are also identifiable without `onPace` pre-wired: `onResponse` carries `pacedMs` — the total time the request spent waiting for rate-limit pacing across its attempts — whenever a wait occurred. The counter is cumulative: on a retried request it can exceed the final attempt's `durationMs`, which measures only that attempt (a wait before a failed attempt is still stamped on the retried attempt's emission). Requests that never waited carry no `pacedMs` at all, mirroring the optional-presence convention of `cacheHit`, so latency dashboards built on `onResponse` can split paced from unpaced traffic:
+
+```typescript
+onResponse: ({ durationMs, pacedMs }) => {
+    metrics.observe(pacedMs === undefined ? "latency" : "paced-latency", durationMs);
+},
+```
 
 ## Circuit breaker events
 

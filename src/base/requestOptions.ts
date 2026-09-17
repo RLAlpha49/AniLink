@@ -15,6 +15,7 @@ import type http from "node:http";
 import type https from "node:https";
 import type { ResponseCache } from "./responseCache";
 import {
+    type DiagnosticsMode,
     type OnCircuitCloseHandler,
     type OnCircuitOpenHandler,
     type OnErrorHandler,
@@ -26,6 +27,7 @@ import {
     type RetryBudget,
     type RetryPolicy,
     DEFAULT_REQUEST_TIMEOUT,
+    resolveDiagnosticsMode,
 } from "./transportTypes";
 import { resolveAgents } from "./agents";
 import { resolveRetryPolicy } from "./retry";
@@ -38,9 +40,9 @@ import { resolveRetryPolicy } from "./retry";
  * retry loop) reads from this shape instead of re-deriving defaults, so a
  * request never branches on missing fields. Unlike the public
  * {@link RequestOptions}, the defaults are already applied: `timeout`,
- * `exposeRawAxiosError`, `paceWithRateLimit`, `rateLimitFloor`, and
- * `ignorePaceDeadline` are always present, `retry` is a complete policy or
- * `null`, and the keep-alive agents are resolved.
+ * `exposeRawAxiosError`, `paceWithRateLimit`, `rateLimitFloor`,
+ * `ignorePaceDeadline`, and `diagnostics` are always present, `retry` is a
+ * complete policy or `null`, and the keep-alive agents are resolved.
  *
  * @see {@link RequestOptions}
  */
@@ -77,12 +79,16 @@ export interface ResolvedRequestOptions {
     onPace?: OnPaceHandler;
     /** Invoked when a user-supplied lifecycle hook throws. */
     onHookError?: OnHookErrorHandler;
+    /** How the library's unsolicited diagnostics are emitted; see {@link DiagnosticsMode}. */
+    diagnostics: DiagnosticsMode;
     /** Invoked when the circuit breaker opens. */
     onCircuitOpen?: OnCircuitOpenHandler;
     /** Invoked when the circuit breaker closes. */
     onCircuitClose?: OnCircuitCloseHandler;
     /** Whether the shared rate-limit pacing deadline is bypassed for this request. */
     ignorePaceDeadline: boolean;
+    /** Whether GraphQL envelopes carrying both data and errors resolve with the data instead of throwing. */
+    allowPartialData: boolean;
     /** The opt-in response cache, when configured. */
     responseCache?: ResponseCache;
 }
@@ -118,6 +124,8 @@ export const resolveRequestOptions = (options: RequestOptions = {}): ResolvedReq
 
     const agents = resolveAgents(options.maxSockets, options.maxFreeSockets);
 
+    const diagnostics = resolveDiagnosticsMode(options.diagnostics);
+
     return {
         timeout,
         signal: options.signal,
@@ -135,9 +143,11 @@ export const resolveRequestOptions = (options: RequestOptions = {}): ResolvedReq
         onResponse: options.onResponse,
         onPace: options.onPace,
         onHookError: options.onHookError,
+        diagnostics,
         onCircuitOpen: options.onCircuitOpen,
         onCircuitClose: options.onCircuitClose,
         ignorePaceDeadline: options.ignorePaceDeadline ?? false,
+        allowPartialData: options.allowPartialData ?? false,
         responseCache: options.responseCache,
     };
 };

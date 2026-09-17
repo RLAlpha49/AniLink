@@ -321,12 +321,15 @@ describe("retry hooks", () => {
         await vi.advanceTimersByTimeAsync(10);
         await expect(promise).resolves.toEqual({ id: 9 });
         expect(mocks.request).toHaveBeenCalledTimes(2);
-        expect(warn).toHaveBeenCalledWith(
-            expect.stringMatching(
-                /^\[AniLink\] onRetry hook threw and was ignored \(requestId: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\):$/
-            ),
-            "retry sink failed"
+        expect(warn).toHaveBeenCalledTimes(1);
+        const record = JSON.parse(warn.mock.calls[0][0] as string);
+        expect(record.source).toBe("anilink");
+        expect(record.kind).toBe("hook-failure");
+        expect(record.hookName).toBe("onRetry");
+        expect(record.requestId).toMatch(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
         );
+        expect(record.message).toBe("The onRetry hook threw and was ignored: retry sink failed");
         warn.mockRestore();
     });
 

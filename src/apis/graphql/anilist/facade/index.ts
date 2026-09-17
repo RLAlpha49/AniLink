@@ -61,13 +61,15 @@ export type AniLinkOptions = RequestOptions;
  *
  * @param authToken - The authentication material shared by every operation instance. A plain string is treated as a bearer token; a structured {@link RequestAuthInput} carries explicit headers for schemes such as Basic auth or a provider API key.
  * @param options - Timeout, cancellation, and debugging settings; an {@link AniLinkOptions} merged over the defaults.
+ * @param stateOwner - Stable per-client object keying the shared transport state (breaker, budget, pacing); when omitted, a fresh one is allocated for this client.
  * @returns The composed {@link AniListApi}.
  */
 export function buildAniListApi(
     authToken?: RequestAuthInput,
-    options?: AniLinkOptions
+    options?: AniLinkOptions,
+    stateOwner?: object
 ): AniListApi {
-    return buildAniListWiring(authToken, options);
+    return buildAniListWiring(authToken, options, stateOwner);
 }
 
 /**

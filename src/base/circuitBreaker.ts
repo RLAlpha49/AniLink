@@ -224,10 +224,16 @@ export const recordCircuitSuccess = (
     circuit.consecutiveFailures = 0;
     circuit.openedAt = null;
     if (wasOpen && resolved.onCircuitClose !== undefined) {
-        safeInvoke(resolved.onCircuitClose, "onCircuitClose", resolved.onHookError, {
-            ...hookContext,
-            host,
-        });
+        safeInvoke(
+            resolved.onCircuitClose,
+            "onCircuitClose",
+            resolved.onHookError,
+            resolved.diagnostics,
+            {
+                ...hookContext,
+                host,
+            }
+        );
     }
 };
 
@@ -285,11 +291,17 @@ export const recordCircuitFailure = (
     if (circuit.consecutiveFailures >= breaker.threshold && circuit.openedAt === null) {
         circuit.openedAt = Date.now();
         if (resolved.onCircuitOpen !== undefined) {
-            safeInvoke(resolved.onCircuitOpen, "onCircuitOpen", resolved.onHookError, {
-                ...hookContext,
-                host,
-                failures: circuit.consecutiveFailures,
-            });
+            safeInvoke(
+                resolved.onCircuitOpen,
+                "onCircuitOpen",
+                resolved.onHookError,
+                resolved.diagnostics,
+                {
+                    ...hookContext,
+                    host,
+                    failures: circuit.consecutiveFailures,
+                }
+            );
         }
     }
 };

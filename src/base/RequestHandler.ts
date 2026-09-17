@@ -14,8 +14,9 @@
  */
 import { createHash, randomUUID } from "node:crypto";
 import type { AxiosResponse } from "axios";
-import { AniLinkAuthError } from "./AniLinkError";
+import { AniLinkAuthError, AniLinkGraphQLError } from "./AniLinkError";
 import {
+    type DiagnosticsMode,
     type HttpMethod,
     type OnHookErrorHandler,
     type RequestAuth,
@@ -32,11 +33,12 @@ import {
     checkCircuitOpen,
     circuitScopeOf,
     getCircuitState,
+    isAvailabilityFailure,
     recordCircuitFailure,
     recordCircuitSuccess,
 } from "./circuitBreaker";
 import { awaitPaceDeadline, paceAfterSuccess } from "./pacing";
-import { buildErrorContext, reportFailure, safeInvoke } from "./hooks";
+import { buildErrorContext, reportDiagnostic, reportFailure, safeInvoke } from "./hooks";
 import { sleep } from "./sleep";
 
 // --- Public type and constant re-exports -----------
@@ -54,13 +56,15 @@ export type {
     OnResponseHandler,
     OnPaceHandler,
     OnHookErrorHandler,
+    AniLinkDiagnostic,
+    DiagnosticsMode,
     CircuitOpenContext,
     OnCircuitOpenHandler,
     OnCircuitCloseHandler,
     RequestOptions,
 } from "./transportTypes";
 export { destroyCachedAgents } from "./agents";
-export type { GraphQLResponseEnvelope } from "./envelope";
+export type { GraphQLResponseEnvelope, UnwrapOptions } from "./envelope";
 export { unwrapSingleRootField, unwrapGraphQLResponse } from "./envelope";
 export { parseRetryAfter, getBackoffDelay, applyJitter } from "./retry";
 
@@ -71,12 +75,120 @@ interface ExecuteOptions {
     headers: Record<string, string>;
 }
 
+/**
+ * Execution modifiers for {@link executeWithRetry}, replacing the former
+ * positional trailing booleans so call sites name their arguments.
+ *
+ * @see {@link executeWithRetry}
+ */
+interface ExecuteModifiers {
+    /** Whether the response body is returned verbatim (REST) instead of unwrapped (GraphQL). */
+    rawPassthrough?: boolean;
+    /**
+     * Whether this request was a cacheable read that missed the response
+     * cache: its network-served onResponse emission then carries
+     * `cacheHit: false` so consumers can count misses directly instead of
+     * subtracting hits from total response counts.
+     */
+    cacheMiss?: boolean;
+}
+
+/**
+ * The outcome of one {@link executeWithRetry} dispatch: the resolved value
+ * plus whether it came from a partial-success envelope resolved by
+ * `allowPartialData`. The partial flag lets {@link sendRequest} keep the
+ * degraded result out of the response cache — a later cache hit would
+ * replay the data without the `onError` reporting that accompanied the
+ * original fetch.
+ *
+ * @see {@link executeWithRetry}
+ */
+interface ExecuteOutcome<T> {
+    /** The resolved response value. */
+    result: T;
+    /** Whether the value was resolved from a partial-success GraphQL envelope. */
+    resolvedPartial: boolean;
+}
+
+/**
+ * Resolves one successful attempt's response body into the value the
+ * pipeline returns — the raw body for REST passthrough, or the unwrapped
+ * GraphQL envelope — accounting for the `allowPartialData` opt-in.
+ *
+ * When the envelope is a partial success resolved by `allowPartialData`,
+ * the error entries surface through the `onError` hook with a fully
+ * populated attempt context (a partial resolution is terminal — the data
+ * is returned, not retried — so the hook is the only place the failures
+ * appear), and the returned `partialAvailabilityFailure` carries the error
+ * when its class counts toward the circuit breaker: the caller must
+ * account for the degraded upstream exactly as the strict mode's throw
+ * would, instead of letting the success path reset the failure streak —
+ * otherwise a persistently degraded upstream that always fails one root
+ * field keeps the breaker permanently closed under the opt-in while
+ * tripping it under strict mode.
+ *
+ * @param response - The successful Axios response for the attempt.
+ * @param resolved - The resolved request options.
+ * @param rawPassthrough - Whether the body is returned verbatim (REST)
+ * instead of unwrapped (GraphQL).
+ * @param requestId - The correlation ID of the logical request.
+ * @param url - The request URL, for the error-hook context.
+ * @param method - The HTTP method, for the error-hook context.
+ * @param attempt - The zero-based attempt index.
+ * @returns The resolved value, whether it came from a partial-success
+ * envelope, and the availability-class partial error for breaker accounting.
+ */
+const resolveEnvelopeOutcome = <T>(
+    response: AxiosResponse,
+    resolved: ResolvedRequestOptions,
+    rawPassthrough: boolean,
+    requestId: string,
+    url: string,
+    method: HttpMethod,
+    attempt: number
+): {
+    result: T;
+    resolvedPartial: boolean;
+    partialAvailabilityFailure: AniLinkGraphQLError | undefined;
+} => {
+    let resolvedPartial = false;
+    let partialAvailabilityFailure: AniLinkGraphQLError | undefined;
+    const result = rawPassthrough
+        ? (response.data as T)
+        : unwrapGraphQLResponse<T>(
+              response.data,
+              response.headers as Record<string, unknown>,
+              resolved.allowPartialData
+                  ? {
+                        allowPartialData: true,
+                        onPartialData: (partialError) => {
+                            resolvedPartial = true;
+                            if (isAvailabilityFailure(partialError)) {
+                                partialAvailabilityFailure = partialError;
+                            }
+                            stampRequestId(partialError, requestId);
+                            safeInvoke(
+                                resolved.onError,
+                                "onError",
+                                resolved.onHookError,
+                                resolved.diagnostics,
+                                partialError,
+                                buildErrorContext(requestId, url, method, attempt + 1, partialError)
+                            );
+                        },
+                    }
+                  : undefined
+          );
+    return { result, resolvedPartial, partialAvailabilityFailure };
+};
+
 const executeWithRetry = async <T>(
     options: ExecuteOptions,
     resolved: ResolvedRequestOptions,
-    stateOwner?: object,
-    rawPassthrough = false
-): Promise<T> => {
+    stateOwner: object | undefined,
+    modifiers: ExecuteModifiers = {}
+): Promise<ExecuteOutcome<T>> => {
+    const { rawPassthrough = false, cacheMiss = false } = modifiers;
     const { url, method, data, headers } = options;
     const policy = resolved.retry;
     // Correlation ID joining every lifecycle hook emission for this logical
@@ -91,6 +203,12 @@ const executeWithRetry = async <T>(
             : undefined;
     const budgetState = getRetryBudgetState(stateOwner, resolved.retryBudget);
     let attempt = 0;
+    // Total time this logical request has spent waiting for rate-limit
+    // pacing across its attempts: stamped on the onResponse emission so a
+    // paced request stays identifiable in latency dashboards without the
+    // onPace hook being pre-wired. Declared outside the attempt loop so a
+    // wait before a retried attempt is not lost when that attempt fails.
+    let pacedWaitMs = 0;
 
     for (;;) {
         const startedAt = Date.now();
@@ -101,6 +219,7 @@ const executeWithRetry = async <T>(
                 resolved.onRequestStart,
                 "onRequestStart",
                 resolved.onHookError,
+                resolved.diagnostics,
                 hookContext
             );
             stampRequestId(circuitError, requestId);
@@ -108,13 +227,16 @@ const executeWithRetry = async <T>(
                 resolved.onError,
                 "onError",
                 resolved.onHookError,
+                resolved.diagnostics,
                 circuitError,
                 buildErrorContext(requestId, url, method, attempt + 1, circuitError)
             );
             throw circuitError;
         }
+        const paceStartedAt = Date.now();
         try {
             await awaitPaceDeadline(stateOwner, host, resolved, hookContext);
+            pacedWaitMs += Date.now() - paceStartedAt;
         } catch (paceError) {
             // A caller abort during the pre-dispatch pacing wait carries no
             // upstream-health signal. When the reserved half-open probe is
@@ -128,7 +250,13 @@ const executeWithRetry = async <T>(
             }
             throw paceError;
         }
-        safeInvoke(resolved.onRequestStart, "onRequestStart", resolved.onHookError, hookContext);
+        safeInvoke(
+            resolved.onRequestStart,
+            "onRequestStart",
+            resolved.onHookError,
+            resolved.diagnostics,
+            hookContext
+        );
         let responseReported = false;
         try {
             const response: AxiosResponse = await axiosClient({
@@ -142,27 +270,62 @@ const executeWithRetry = async <T>(
                 httpsAgent: resolved.httpsAgent,
             });
             const rateLimit = getRateLimitInfo(response.headers as Record<string, unknown>);
-            safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
-                ...hookContext,
-                durationMs: Date.now() - startedAt,
-                ...(rateLimit !== undefined ? { rateLimit } : {}),
-            });
-            responseReported = true;
-            const result = rawPassthrough
-                ? (response.data as T)
-                : unwrapGraphQLResponse<T>(
-                      response.data,
-                      response.headers as Record<string, unknown>
-                  );
-            recordCircuitSuccess(circuit, resolved, hookContext, host);
-            paceAfterSuccess(response, resolved, rateLimit, stateOwner, host);
-            return result;
-        } catch (error: unknown) {
-            if (!responseReported) {
-                safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
+            safeInvoke(
+                resolved.onResponse,
+                "onResponse",
+                resolved.onHookError,
+                resolved.diagnostics,
+                {
                     ...hookContext,
                     durationMs: Date.now() - startedAt,
-                });
+                    ...(rateLimit !== undefined ? { rateLimit } : {}),
+                    ...(cacheMiss ? { cacheHit: false } : {}),
+                    ...(pacedWaitMs > 0 ? { pacedMs: pacedWaitMs } : {}),
+                }
+            );
+            responseReported = true;
+            const { result, resolvedPartial, partialAvailabilityFailure } =
+                resolveEnvelopeOutcome<T>(
+                    response,
+                    resolved,
+                    rawPassthrough,
+                    requestId,
+                    url,
+                    method,
+                    attempt
+                );
+            if (partialAvailabilityFailure !== undefined) {
+                // The partial envelope's error entries carry upstream-health
+                // signal, so the breaker counts the attempt like the strict
+                // mode's throw would — the same normalized error, the same
+                // probe bookkeeping (a failed half-open probe re-opens with
+                // a scaled cooldown).
+                recordCircuitFailure(
+                    circuit,
+                    resolved.circuitBreaker,
+                    partialAvailabilityFailure,
+                    resolved,
+                    hookContext,
+                    host
+                );
+            } else {
+                recordCircuitSuccess(circuit, resolved, hookContext, host);
+            }
+            paceAfterSuccess(response, resolved, rateLimit, stateOwner, host);
+            return { result, resolvedPartial };
+        } catch (error: unknown) {
+            if (!responseReported) {
+                safeInvoke(
+                    resolved.onResponse,
+                    "onResponse",
+                    resolved.onHookError,
+                    resolved.diagnostics,
+                    {
+                        ...hookContext,
+                        durationMs: Date.now() - startedAt,
+                        ...(pacedWaitMs > 0 ? { pacedMs: pacedWaitMs } : {}),
+                    }
+                );
             }
             const normalized = normalizeRequestError(resolved, error, rawPassthrough, requestId);
             const wasProbe = circuit?.probeInFlight === true;
@@ -317,30 +480,47 @@ let warnedOptionsKeyedState = false;
  * breaker/budget never engage, and recorded rate-limit pacing deadlines never
  * gate later requests. One warning per process avoids log spam.
  *
- * The diagnostic is routed through the caller's `onHookError` observer (the
- * library's established hook-failure reporting path) so it lands in the
- * consumer's logger instead of the console; `console.warn` remains the
- * fallback when no observer is configured, matching {@link safeInvoke}.
+ * The one-shot is consumed only when an emission actually happened: a
+ * first trigger under `diagnostics: "silent"` (or `"hook"` with no
+ * observer) suppresses its own emission without burning the warning for
+ * later requests that would emit.
+ *
+ * The diagnostic is routed through the structured {@link reportDiagnostic}
+ * emit path (the library's single diagnostics surface) so it lands in the
+ * consumer's `onHookError` observer as a structured record, falling back to
+ * a `console.warn` of the serialized record when no observer is configured —
+ * and fully suppressible via `diagnostics: "silent"`.
  *
  * @param onHookError - Consumer callback observing hook failures, when
  * configured on the triggering request's options.
+ * @param diagnostics - The resolved diagnostics mode for the triggering request.
  */
-const warnOptionsKeyedState = (onHookError: OnHookErrorHandler | undefined): void => {
+const warnOptionsKeyedState = (
+    onHookError: OnHookErrorHandler | undefined,
+    diagnostics: DiagnosticsMode
+): void => {
     if (warnedOptionsKeyedState) {
         return;
     }
-    warnedOptionsKeyedState = true;
-    const message =
-        "[AniLink] cross-request transport state (circuit breaker, retry budget, rate-limit pacing deadlines) is keyed by the per-request options object because no stateOwner was passed. Pass a stable stateOwner (or reuse one options object across calls) so failure streaks accumulate and pacing deadlines apply.";
-    if (onHookError !== undefined) {
-        try {
-            onHookError("stateOwner", new Error(message));
-        } catch {
-            // A failing observer must never break the request pipeline.
-        }
-        return;
+    // The one-shot is consumed only when reportDiagnostic actually emitted:
+    // it alone owns the routing truth (observer presence, mode, rawError),
+    // so a trigger whose configuration suppresses the emission — silent
+    // mode, or hook mode with no observer — leaves the warning available
+    // for a later request that would emit. Re-deriving "would emit" here
+    // once duplicated that truth and drifted: a silent-mode trigger with an
+    // observer consumed the one-shot while emitting nothing.
+    if (
+        reportDiagnostic({
+            kind: "state-owner",
+            hookName: "stateOwner",
+            message:
+                "cross-request transport state (circuit breaker, retry budget, rate-limit pacing deadlines) is keyed by the per-request options object because no stateOwner was passed. Pass a stable stateOwner (or reuse one options object across calls) so failure streaks accumulate and pacing deadlines apply.",
+            onHookError,
+            diagnostics,
+        })
+    ) {
+        warnedOptionsKeyedState = true;
     }
-    console.warn(message);
 };
 
 /**
@@ -512,8 +692,14 @@ const tryCacheRead = <T>(
     if (resolved.onRequestStart !== undefined || resolved.onResponse !== undefined) {
         const requestId = randomUUID();
         const hookContext = { requestId, url, method, attempt: 1 };
-        safeInvoke(resolved.onRequestStart, "onRequestStart", resolved.onHookError, hookContext);
-        safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, {
+        safeInvoke(
+            resolved.onRequestStart,
+            "onRequestStart",
+            resolved.onHookError,
+            resolved.diagnostics,
+            hookContext
+        );
+        safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, resolved.diagnostics, {
             ...hookContext,
             durationMs: 0,
             cacheHit: true,
@@ -703,7 +889,7 @@ export const sendRequest = async <T = unknown>(
             resolved.retryBudget !== undefined ||
             resolved.paceWithRateLimit)
     ) {
-        warnOptionsKeyedState(resolved.onHookError);
+        warnOptionsKeyedState(resolved.onHookError, resolved.diagnostics);
     }
 
     const cacheAuthKey = resolveCacheAuthKey(resolved, method, data, isRestCall, resolvedAuth);
@@ -721,26 +907,40 @@ export const sendRequest = async <T = unknown>(
         cacheGenerationAtRead = resolved.responseCache!.getGeneration();
     }
 
-    const result = await executeWithRetry<unknown>(
+    const { result, resolvedPartial } = await executeWithRetry<unknown>(
         { url, method, data, headers },
         resolved,
         stateOwner ?? options,
-        isRestCall
+        {
+            rawPassthrough: isRestCall,
+            // A cacheable read that missed the cache: its network response
+            // carries cacheHit: false so consumers can count misses without
+            // subtracting hits from total response counts. Fail-closed reads
+            // (no cache key) and mutations stay unmarked.
+            cacheMiss: cacheAuthKey !== undefined,
+        }
     );
 
     if (cacheAuthKey !== undefined) {
-        // Write back only when no invalidation landed while the response was
-        // in flight: a mutation that completed during this read has already
-        // dropped the stale entries, and re-caching this response would
-        // reintroduce the pre-mutation data for the rest of the TTL.
-        resolved.responseCache!.setIfFresh(
-            method,
-            url,
-            data,
-            cacheAuthKey,
-            cacheGenerationAtRead!,
-            result
-        );
+        // Partial-success envelopes resolved by `allowPartialData` are
+        // never cached: a later cache hit would replay the degraded data
+        // without the onError reporting that accompanied the original
+        // fetch, silently hiding the failures.
+        if (!resolvedPartial) {
+            // Write back only when no invalidation landed while the response
+            // was in flight: a mutation that completed during this read has
+            // already dropped the stale entries, and re-caching this
+            // response would reintroduce the pre-mutation data for the rest
+            // of the TTL.
+            resolved.responseCache!.setIfFresh(
+                method,
+                url,
+                data,
+                cacheAuthKey,
+                cacheGenerationAtRead!,
+                result
+            );
+        }
     } else {
         // A successful mutation invalidates the cached reads of the mutated
         // resource even when the mutation itself is not cache-keyed

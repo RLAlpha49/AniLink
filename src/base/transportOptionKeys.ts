@@ -21,8 +21,10 @@ export const TRANSPORT_OPTION_KEYS = [
     "onResponse",
     "onPace",
     "onHookError",
+    "diagnostics",
     "onCircuitOpen",
     "onCircuitClose",
     "ignorePaceDeadline",
+    "allowPartialData",
     "responseCache",
 ] as const;

@@ -12,7 +12,8 @@
  */
 import { AniLinkApiError, AniLinkAuthError } from "../../../base/AniLinkError";
 import type { OnHookErrorHandler, RequestAuthInput } from "../../../base/RequestHandler";
-import { safeInvoke } from "../../../base/hooks";
+import { type DiagnosticsMode, resolveDiagnosticsMode } from "../../../base/transportTypes";
+import { reportDiagnostic, safeInvoke } from "../../../base/hooks";
 import { refreshMalAccessToken, type MalTokenResponse } from "./auth";
 
 /**
@@ -47,6 +48,8 @@ export interface MalTokenRefresherOptions {
     onTokenRefresh?: MalTokenRefreshCallback;
     /** Optional observer for `onTokenRefresh` failures, mirroring the transport hooks. */
     onHookError?: OnHookErrorHandler;
+    /** How a throwing `onTokenRefresh` callback with no observer is reported; defaults to `"warn"`. */
+    diagnostics?: DiagnosticsMode;
     /**
      * Swaps the fresh access token onto the operation instances. Called
      * between the refresh and the replay so the replayed request carries the
@@ -74,13 +77,15 @@ export class MalTokenRefresher {
     private refreshToken: string;
     private readonly onTokenRefresh?: MalTokenRefreshCallback;
     private readonly onHookError: OnHookErrorHandler | undefined;
+    private readonly diagnostics: DiagnosticsMode;
     private readonly applyAccessToken: (accessToken: string) => void;
     private refreshInFlight: Promise<MalTokenResponse> | undefined;
 
     /**
      * Constructs a refresh coordinator from the credential slot fields.
      *
-     * @param options - The refresh grant fields, the auth-swap callback, and the optional persistence callback.
+     * @param options - The refresh grant fields, the auth-swap callback, the optional persistence callback, and the diagnostics mode.
+     * @throws A `TypeError` when `options.diagnostics` is defined but not one of `"warn"`, `"hook"`, or `"silent"`.
      */
     constructor(options: MalTokenRefresherOptions) {
         this.clientId = options.clientId;
@@ -88,6 +93,7 @@ export class MalTokenRefresher {
         this.refreshToken = options.refreshToken;
         this.onTokenRefresh = options.onTokenRefresh;
         this.onHookError = options.onHookError;
+        this.diagnostics = resolveDiagnosticsMode(options.diagnostics);
         this.applyAccessToken = options.applyAccessToken;
     }
 
@@ -126,15 +132,26 @@ export class MalTokenRefresher {
             } catch (refreshError) {
                 // The refresh grant runs outside the transport pipeline, so
                 // its failure would otherwise bypass the onError/onRetry
-                // observability entirely. Report it through the hook-error
-                // channel before rethrowing the sanitized error.
-                if (this.onHookError !== undefined) {
-                    try {
-                        this.onHookError("malTokenRefresh", refreshError);
-                    } catch {
-                        // A failing observer must never break the rethrow path.
-                    }
-                }
+                // observability entirely. Report it through the structured
+                // diagnostic emit path before rethrowing the sanitized
+                // error. The diagnostic carries its own `token-refresh`
+                // kind — a failed grant is not a hook failure, and `kind` is
+                // the machine key consumers switch on — and the observer
+                // receives the sanitized refresh error itself as the
+                // `cause`, so its `status`/`code` stay inspectable. The
+                // console fallback is skipped: the caller receives the
+                // failure once, as the rejection they already handle.
+                reportDiagnostic({
+                    kind: "token-refresh",
+                    hookName: "malTokenRefresh",
+                    message: `The MAL token refresh failed: ${
+                        refreshError instanceof Error ? refreshError.message : String(refreshError)
+                    }`,
+                    onHookError: this.onHookError,
+                    diagnostics: this.diagnostics,
+                    rawError: refreshError,
+                    rethrown: true,
+                });
                 throw refreshError;
             }
             return await operation();
@@ -158,7 +175,13 @@ export class MalTokenRefresher {
             this.refreshInFlight = this.performRefresh()
                 .then((response) => {
                     this.applyAccessToken(response.access_token);
-                    safeInvoke(this.onTokenRefresh, "onTokenRefresh", this.onHookError, response);
+                    safeInvoke(
+                        this.onTokenRefresh,
+                        "onTokenRefresh",
+                        this.onHookError,
+                        this.diagnostics,
+                        response
+                    );
                     return response;
                 })
                 .finally(() => {

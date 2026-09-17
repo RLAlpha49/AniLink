@@ -9,25 +9,153 @@
  * loop stay free of hook-wiring branching.
  */
 import { AniLinkApiError, type AniLinkError } from "./AniLinkError";
-import type { HttpMethod, OnHookErrorHandler, RequestErrorContext } from "./transportTypes";
+import type {
+    AniLinkDiagnostic,
+    DiagnosticsMode,
+    HttpMethod,
+    OnHookErrorHandler,
+    RequestErrorContext,
+} from "./transportTypes";
 import type { ResolvedRequestOptions } from "./requestOptions";
+
+/**
+ * Builds the structured record for one diagnostic. The `requestId` key is
+ * omitted entirely when no correlation ID is in scope so serialized records
+ * stay minimal for hook failures outside a request context.
+ *
+ * @param kind - Which diagnostic fired.
+ * @param hookName - The hook or diagnostic name the failure is attributed to.
+ * @param message - Human-readable description of the failure.
+ * @param requestId - The correlation ID of the affected request, when in scope.
+ * @returns The populated diagnostic record.
+ */
+const buildDiagnostic = (
+    kind: AniLinkDiagnostic["kind"],
+    hookName: string,
+    message: string,
+    requestId: string | undefined
+): AniLinkDiagnostic => ({
+    source: "anilink",
+    kind,
+    hookName,
+    ...(requestId === undefined ? {} : { requestId }),
+    message,
+});
+
+/**
+ * Options controlling how {@link reportDiagnostic} emits one diagnostic.
+ *
+ * @see {@link reportDiagnostic}
+ */
+export interface ReportDiagnosticOptions {
+    /** Which diagnostic fired. */
+    kind: AniLinkDiagnostic["kind"];
+    /** The hook or diagnostic name the failure is attributed to. */
+    hookName: string;
+    /** Human-readable description of the failure. */
+    message: string;
+    /** The correlation ID of the affected request, when in scope. */
+    requestId?: string;
+    /** Consumer callback observing hook failures, when configured. */
+    onHookError?: OnHookErrorHandler;
+    /** The resolved diagnostics mode for the request. */
+    diagnostics: DiagnosticsMode;
+    /**
+     * The raw thrown value when the diagnostic reports a throwing hook, so
+     * the observer can inspect the original error. Attached as the `cause`
+     * of the `Error` handed to `onHookError`. A diagnostic carrying a
+     * `rawError` always reaches a configured observer — the diagnostics
+     * modes gate only the unsolicited fallback output, never the
+     * consumer's own observer.
+     */
+    rawError?: unknown;
+    /**
+     * Whether the reported failure is rethrown to the caller after the
+     * diagnostic is emitted. When `true`, the `console.warn` fallback is
+     * skipped entirely: the caller receives the failure once, as the
+     * rejection they already handle, instead of twice — once as console
+     * noise and once as the error. A configured observer still receives
+     * the diagnostic in every mode.
+     */
+    rethrown?: boolean;
+}
+
+/**
+ * The single emit path for the library's unsolicited diagnostics — the
+ * hook-failure fallback and the `stateOwner` keying warning. Both produce a
+ * structured {@link AniLinkDiagnostic} record so platform log collectors get
+ * filterable `source`/`kind`/`hookName`/`requestId` fields instead of prose.
+ *
+ * Emission follows the configured {@link DiagnosticsMode}: `"silent"`
+ * suppresses the unsolicited output entirely; `"hook"` routes through
+ * `onHookError` only and never touches the console; `"warn"` routes through
+ * `onHookError` when configured, falling back to a `console.warn` of the
+ * JSON-serialized record. One exception: a diagnostic carrying a
+ * `rawError` (a real hook failure) always reaches a configured observer,
+ * in every mode — the consumer asked to observe hook failures, so the
+ * modes only control the fallback, never the observer itself. A throwing
+ * observer is swallowed — a broken logger must never break the request
+ * pipeline.
+ *
+ * @param options - The diagnostic to emit and how to route it.
+ * @returns Whether an emission actually happened: `true` when a configured
+ * observer was invoked or the record reached the console, `false` when the
+ * configuration suppressed the diagnostic entirely. One-shot emitters key
+ * on this result instead of re-deriving the routing — a duplicate of this
+ * function's truth can drift from it (a silent-mode trigger with an
+ * observer once consumed a one-shot warning while emitting nothing).
+ */
+export const reportDiagnostic = (options: ReportDiagnosticOptions): boolean => {
+    const { kind, hookName, message, requestId, onHookError, diagnostics, rawError, rethrown } =
+        options;
+    if (onHookError !== undefined && (rawError !== undefined || diagnostics !== "silent")) {
+        const record = buildDiagnostic(kind, hookName, message, requestId);
+        try {
+            onHookError(
+                hookName,
+                new Error(message, {
+                    cause: rawError !== undefined ? rawError : record,
+                })
+            );
+        } catch {
+            // A failing observer must never break the request pipeline.
+        }
+        return true;
+    }
+    // A rethrown failure reaches the caller as the rejection they already
+    // handle; the console fallback would report the same failure twice.
+    if (rethrown === true || diagnostics !== "warn") {
+        return false;
+    }
+    console.warn(JSON.stringify(buildDiagnostic(kind, hookName, message, requestId)));
+    return true;
+};
 
 /**
  * Invokes a user-supplied lifecycle hook without letting its exceptions
  * escape into the request pipeline. A throwing hook is reported through the
- * configured `onHookError` callback (falling back to a console warning) and
- * otherwise ignored: it must not crash the request, be counted as an attempt,
- * or distort retry and error classification.
+ * structured {@link reportDiagnostic} emit path — whether or not an
+ * `onHookError` observer is configured — and otherwise ignored: it must not
+ * crash the request, be counted as an attempt, or distort retry and error
+ * classification.
+ *
+ * Routing the observer path through {@link reportDiagnostic} too keeps one
+ * diagnostic contract: the `Error` handed to `onHookError` always carries
+ * the structured {@link AniLinkDiagnostic} record (with the raw thrown
+ * value as its `cause` when one exists), so an observer never has to handle
+ * both a bare user error and a structured record.
  *
  * @param hook - The hook callback, if configured.
  * @param name - The hook's option name, used in the report.
  * @param onHookError - Consumer callback observing hook failures, when configured.
+ * @param diagnostics - The resolved diagnostics mode for the request.
  * @param args - Arguments forwarded verbatim to the hook.
  */
 export const safeInvoke = (
     hook: ((...args: never[]) => void) | undefined,
     name: string,
     onHookError: OnHookErrorHandler | undefined,
+    diagnostics: DiagnosticsMode,
     ...args: unknown[]
 ): void => {
     if (hook === undefined) {
@@ -36,14 +164,6 @@ export const safeInvoke = (
     try {
         (hook as (...hookArgs: unknown[]) => void)(...args);
     } catch (hookError: unknown) {
-        if (onHookError !== undefined) {
-            try {
-                onHookError(name, hookError);
-            } catch {
-                // A failing observer must never break the request pipeline.
-            }
-            return;
-        }
         const firstArg = args[0];
         const requestId =
             firstArg !== null &&
@@ -52,11 +172,16 @@ export const safeInvoke = (
             typeof (firstArg as { requestId?: unknown }).requestId === "string"
                 ? (firstArg as { requestId: string }).requestId
                 : undefined;
-        const correlation = requestId === undefined ? "" : ` (requestId: ${requestId})`;
-        console.warn(
-            `[AniLink] ${name} hook threw and was ignored${correlation}:`,
-            hookError instanceof Error ? hookError.message : hookError
-        );
+        const detail = hookError instanceof Error ? hookError.message : String(hookError);
+        reportDiagnostic({
+            kind: "hook-failure",
+            hookName: name,
+            message: `The ${name} hook threw and was ignored: ${detail}`,
+            requestId,
+            onHookError,
+            diagnostics,
+            rawError: hookError,
+        });
     }
 };
 
@@ -120,10 +245,18 @@ export const reportFailure = (
             resolved.onRetry ?? resolved.onError,
             resolved.onRetry === undefined ? "onError" : "onRetry",
             resolved.onHookError,
+            resolved.diagnostics,
             normalized,
             context
         );
         return;
     }
-    safeInvoke(resolved.onError, "onError", resolved.onHookError, normalized, context);
+    safeInvoke(
+        resolved.onError,
+        "onError",
+        resolved.onHookError,
+        resolved.diagnostics,
+        normalized,
+        context
+    );
 };

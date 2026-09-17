@@ -120,15 +120,21 @@ function buildLazyGroup(
  * operation — including `custom` — is constructed with one shared per-client
  * `stateOwner`, so circuit-breaker streaks, retry budgets, and rate-limit
  * pacing deadlines span every operation of the returned client (still keyed
- * per upstream host inside the state maps).
+ * per upstream host inside the state maps). When the caller supplies a
+ * `stateOwner` (the composition seam does, so `AniLink#getTransportState`
+ * can snapshot the client's resilience state), that object is used; a
+ * direct `buildAniListApi` call without one allocates a fresh owner exactly
+ * as before.
  *
  * @param authToken - The authentication material shared by every operation instance. A plain string is treated as a bearer token; a structured {@link RequestAuthInput} carries explicit headers for schemes such as Basic auth or a provider API key.
  * @param options - Timeout, cancellation, and debugging settings for API requests.
+ * @param stateOwner - Stable per-client object keying the shared transport state (breaker, budget, pacing); when omitted, a fresh one is allocated for this client.
  * @returns The composed AniList API surface.
  */
 export function buildAniListWiring(
     authToken?: RequestAuthInput,
-    options?: RequestOptions
+    options?: RequestOptions,
+    stateOwner?: object
 ): AniListApi {
     for (const category of ["query", "page", "mutation"] as const) {
         validateCategoryMethods(category);
@@ -138,7 +144,7 @@ export function buildAniListWiring(
     // below keys its cross-request transport state (breaker, budget, pacing)
     // through this object, so resilience spans operations instead of being
     // siloed per operation instance.
-    const sharedStateOwner: object = {};
+    const sharedStateOwner: object = stateOwner ?? {};
 
     const queryFacade = buildLazyGroup("query", authToken, options, sharedStateOwner);
     const pageFacade = buildLazyGroup("page", authToken, options, sharedStateOwner);

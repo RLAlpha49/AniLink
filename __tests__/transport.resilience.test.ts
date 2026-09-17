@@ -493,3 +493,249 @@ describe("Shared per-client state owner threaded through the provider wirings", 
         expect(mocks.request).toHaveBeenCalledTimes(2);
     });
 });
+
+describe("Circuit accounting for partial-success envelopes", () => {
+    test("an availability-class partial envelope advances the breaker instead of resetting it", async () => {
+        // A partial envelope resolved by allowPartialData is a success for
+        // the caller, but its error entries still carry upstream-health
+        // signal. When an entry is availability-class (429/5xx), the
+        // breaker must account for it like the strict mode's throw would:
+        // the failure streak advances instead of resetting. Otherwise a
+        // persistently degraded upstream that always fails one root field
+        // keeps the breaker permanently closed under the opt-in while
+        // tripping it under strict mode.
+        pendingOptions = {
+            retry: false,
+            circuitBreaker: { threshold: 2, cooldownMs: 60_000 },
+            allowPartialData: true,
+        };
+
+        // Two partial envelopes whose error entries carry status 500 —
+        // the same upstream fault the strict mode would count.
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { User: { id: 1 }, Page: { id: 2 } },
+                errors: [{ message: "favourite failed", status: 500 }],
+            },
+        });
+        const first = callSendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        });
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(first).resolves.toEqual({
+            data: { User: { id: 1 }, Page: { id: 2 } },
+            errors: [{ message: "favourite failed", status: 500 }],
+        });
+
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { User: { id: 3 }, Page: { id: 4 } },
+                errors: [{ message: "favourite failed", status: 500 }],
+            },
+        });
+        const second = callSendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        });
+        second.catch(() => {});
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(second).resolves.toEqual({
+            data: { User: { id: 3 }, Page: { id: 4 } },
+            errors: [{ message: "favourite failed", status: 500 }],
+        });
+
+        // The third request fast-fails: the two availability-class
+        // partial envelopes advanced the streak to the threshold.
+        const third = callSendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        });
+        third.catch(() => {});
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(third).rejects.toMatchObject({ code: "CIRCUIT_OPEN_ERROR" });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("a caller-side partial envelope resets the breaker streak like a success", async () => {
+        // A partial envelope whose error entries carry no availability
+        // signal (a caller-side GraphQL failure, e.g. a validation error
+        // with no upstream status) proves the upstream answered, so the
+        // streak resets exactly as a success or a strict-mode throw of the
+        // same class would.
+        pendingOptions = {
+            retry: false,
+            circuitBreaker: { threshold: 2, cooldownMs: 60_000 },
+            allowPartialData: true,
+        };
+
+        // One availability-class partial envelope advances the streak.
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { User: { id: 1 }, Page: { id: 2 } },
+                errors: [{ message: "favourite failed", status: 500 }],
+            },
+        });
+        const first = callSendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        });
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(first).resolves.toBeDefined();
+
+        // A caller-side partial envelope (no status on the error entry)
+        // resets the streak.
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { User: { id: 3 }, Page: { id: 4 } },
+                errors: [{ message: "invalid argument" }],
+            },
+        });
+        const second = callSendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        });
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(second).resolves.toBeDefined();
+
+        // The streak was reset, so one more availability-class partial
+        // envelope does not reach the threshold of 2.
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { User: { id: 5 }, Page: { id: 6 } },
+                errors: [{ message: "favourite failed", status: 500 }],
+            },
+        });
+        const third = callSendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        });
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(third).resolves.toBeDefined();
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+    });
+});
+
+describe("onResponse pacedMs stamping", () => {
+    // Aligned to a whole second so `floor(now/1000) + N` reset headers
+    // produce exactly N-second waits (a mid-second start would truncate
+    // up to a second off the deadline).
+    beforeEach(() => {
+        vi.setSystemTime(new Date("2026-01-01T00:00:00Z"));
+    });
+
+    test("a paced request carries pacedMs matching the pacing wait on onResponse", async () => {
+        // R-030: without onPace pre-wired, a paced request must still be
+        // identifiable in onResponse-based latency dashboards — the wait
+        // length is stamped as pacedMs on the emission.
+        const client = buildAniListWiring(undefined, { paceWithRateLimit: true });
+
+        // First response reports an exhausted quota with a 2s reset window.
+        mocks.request.mockResolvedValueOnce({
+            data: { data: { Media: { id: 1 } } },
+            headers: {
+                "x-ratelimit-limit": "90",
+                "x-ratelimit-remaining": "0",
+                "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 2),
+            },
+        });
+        const first = client.query.media({ id: 1 });
+        await expect(first).resolves.toEqual({ id: 1 });
+
+        // The next request waits the full 2s window before dispatching.
+        mocks.request.mockResolvedValueOnce({ data: { data: { User: { id: 1 } } } });
+        const onResponse = vi.fn();
+        const second = client.query.user({ id: 1 }, { onResponse });
+        second.catch(() => {});
+        await vi.advanceTimersByTimeAsync(1_000);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+        await vi.advanceTimersByTimeAsync(1_100);
+        await expect(second).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+
+        // The paced emission carries the wait length; a non-paced
+        // emission (the first response) carries no pacedMs at all.
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onResponse.mock.calls[0][0]).toMatchObject({ pacedMs: 2_000 });
+    });
+
+    test("a request that never waits carries no pacedMs on onResponse", async () => {
+        const client = buildAniListWiring(undefined, { paceWithRateLimit: true });
+
+        const onResponse = vi.fn();
+        const media = client.query.media({ id: 1 }, { onResponse });
+        await expect(media).resolves.toEqual({ id: 1 });
+
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onResponse.mock.calls[0][0]).not.toHaveProperty("pacedMs");
+    });
+
+    test("a failed attempt after a pacing wait carries pacedMs on the error-path onResponse", async () => {
+        // The wait happened before dispatch; the attempt then failed. The
+        // error-path onResponse emission must still show how long the
+        // request waited so the failure report is not mistaken for a hung
+        // upstream.
+        const client = buildAniListWiring(undefined, { paceWithRateLimit: true });
+
+        mocks.request.mockResolvedValueOnce({
+            data: { data: { Media: { id: 1 } } },
+            headers: {
+                "x-ratelimit-limit": "90",
+                "x-ratelimit-remaining": "0",
+                "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 2),
+            },
+        });
+        const first = client.query.media({ id: 1 });
+        await expect(first).resolves.toEqual({ id: 1 });
+
+        mocks.request.mockRejectedValueOnce(apiError(500));
+        const onResponse = vi.fn();
+        const second = client.query.user({ id: 1 }, { onResponse, retry: false });
+        second.catch(() => {});
+        await vi.advanceTimersByTimeAsync(2_100);
+        await expect(second).rejects.toBeInstanceOf(AniLinkApiError);
+
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onResponse.mock.calls[0][0]).toMatchObject({ pacedMs: 2_000 });
+    });
+
+    test("a pacing wait before a failed attempt is stamped on the retried attempt's onResponse", async () => {
+        // The wait counter is accumulated across the attempts of one
+        // logical request: attempt 1 waits the recorded deadline, then
+        // fails; attempt 2 finds the deadline elapsed (it was consumed by
+        // attempt 1's wait) and dispatches immediately. The successful
+        // retry's onResponse must still carry attempt 1's wait — without
+        // the cross-attempt accumulation, the paced request would look
+        // unpaced in the final emission.
+        const client = buildAniListWiring(undefined, {
+            paceWithRateLimit: true,
+            retry: { maxRetries: 1, baseDelayMs: 1, maxDelayMs: 1, jitter: false },
+        });
+
+        // Prime a 1s deadline for the host.
+        mocks.request.mockResolvedValueOnce({
+            data: { data: { Media: { id: 1 } } },
+            headers: {
+                "x-ratelimit-limit": "90",
+                "x-ratelimit-remaining": "0",
+                "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 1),
+            },
+        });
+        const primer = client.query.media({ id: 1 });
+        await expect(primer).resolves.toEqual({ id: 1 });
+
+        // Attempt 1: waits the 1s deadline, then fails with a 500.
+        mocks.request.mockRejectedValueOnce(apiError(500));
+        mocks.request.mockResolvedValueOnce({ data: { data: { User: { id: 1 } } } });
+
+        const onResponse = vi.fn();
+        const request = client.query.user({ id: 1 }, { onResponse });
+        request.catch(() => {});
+        // Attempt 1's 1s pacing wait + 1ms retry backoff; attempt 2
+        // dispatches immediately (the deadline elapsed during attempt
+        // 1's wait) and resolves.
+        await vi.advanceTimersByTimeAsync(1_100);
+        await expect(request).resolves.toEqual({ id: 1 });
+
+        // Both attempts emitted onResponse, and both carry the wait:
+        // attempt 1's own error-path emission reports the 1s it waited,
+        // and the retry's emission reports the accumulated total.
+        expect(onResponse).toHaveBeenCalledTimes(2);
+        expect(onResponse.mock.calls[0][0]).toMatchObject({ pacedMs: 1_000 });
+        expect(onResponse.mock.calls[1][0]).toMatchObject({ pacedMs: 1_000 });
+    });
+});

@@ -96,6 +96,14 @@ export interface AniLinkCredentials {
      * `console.warn` noise.
      */
     onHookError?: import("./RequestHandler").OnHookErrorHandler;
+    /**
+     * Client-level default for the `diagnostics` mode, applied to every
+     * provider slot that does not define its own `diagnostics`. Lets
+     * consumers silence the library's unsolicited diagnostics for the whole
+     * client (for example `"silent"` in captured-console environments)
+     * instead of repeating the setting on every slot.
+     */
+    diagnostics?: import("./transportTypes").DiagnosticsMode;
 }
 
 /**

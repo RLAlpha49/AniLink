@@ -200,10 +200,15 @@ describe("MAL automatic token refresh", () => {
         expect(mocks.request).toHaveBeenCalledTimes(3);
         expect(onTokenRefresh).toHaveBeenCalledTimes(1);
         expect(onHookError).toHaveBeenCalledTimes(1);
-        expect(onHookError).toHaveBeenCalledWith(
-            "onTokenRefresh",
-            expect.objectContaining({ message: "persistence failed" })
+        // The observer receives the structured diagnostic: the raw thrown
+        // value rides behind it as the cause.
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("onTokenRefresh");
+        expect((error as Error).message).toBe(
+            "The onTokenRefresh hook threw and was ignored: persistence failed"
         );
+        expect((error as Error).cause).toBeInstanceOf(Error);
+        expect(((error as Error).cause as Error).message).toBe("persistence failed");
     });
 
     test("does not send the X-MAL-CLIENT-ID header on the replayed request when a bearer token is present", async () => {
@@ -310,6 +315,101 @@ describe("MAL automatic token refresh", () => {
         );
 
         expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("reports a failed refresh grant under the token-refresh kind with the sanitized error as the cause", async () => {
+        // A failed refresh grant is not a hook failure: `kind` is the sole
+        // machine key consumers switch on, so counting grant failures as
+        // `hook-failure` corrupts hook-health metrics. The diagnostic
+        // carries its own `token-refresh` kind, and the observer receives
+        // the sanitized refresh error itself as the cause — the same
+        // AniLinkError (with status/code) the caller is about to catch,
+        // not a plain wrapper that hides them.
+        const onHookError = vi.fn();
+        const api = buildMyAnimeListApi({
+            accessToken: "expired-access-token",
+            refreshToken: "stored-refresh-token",
+            clientId: "mal-client-id",
+            onHookError,
+        });
+
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(401));
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(400));
+
+        const surfaced = await api.user.me().catch((error: unknown) => error);
+
+        expect(onHookError).toHaveBeenCalledTimes(1);
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("malTokenRefresh");
+        expect((error as Error).message).toBe(
+            "The MAL token refresh failed: MAL token request failed with status 400."
+        );
+        // The cause is the sanitized refresh error the caller catches —
+        // an AniLinkApiError carrying the upstream status and code.
+        const cause = (error as Error).cause;
+        expect(cause).toBe(surfaced);
+        expect(cause).toBeInstanceOf(AniLinkApiError);
+        expect((cause as AniLinkApiError).status).toBe(400);
+    });
+
+    test("does not console.warn a failed refresh grant that is rethrown to the caller", async () => {
+        // The refresh failure is rethrown to the caller, who handles it
+        // from the rejection. A console.warn fallback on top of the
+        // rethrow would report the same failure twice — once as noise,
+        // once as the error the caller already catches.
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const api = buildMyAnimeListApi({
+            accessToken: "expired-access-token",
+            refreshToken: "stored-refresh-token",
+            clientId: "mal-client-id",
+        });
+
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(401));
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(400));
+
+        await expect(api.user.me()).rejects.toBeInstanceOf(AniLinkApiError);
+
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+    });
+
+    test("routes a failed refresh grant to the observer even in diagnostics mode silent", async () => {
+        // The refresh-grant diagnostic is a real failure the consumer
+        // asked to observe (mirroring the rawError rule for hook
+        // failures): `silent` suppresses only unsolicited fallback
+        // output, never a configured observer.
+        const onHookError = vi.fn();
+        const api = buildMyAnimeListApi({
+            accessToken: "expired-access-token",
+            refreshToken: "stored-refresh-token",
+            clientId: "mal-client-id",
+            onHookError,
+            diagnostics: "silent",
+        });
+
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(401));
+        mocks.request.mockRejectedValueOnce(makeAxiosResponseError(400));
+
+        await expect(api.user.me()).rejects.toBeInstanceOf(AniLinkApiError);
+
+        expect(onHookError).toHaveBeenCalledTimes(1);
+        const [name] = onHookError.mock.calls[0];
+        expect(name).toBe("malTokenRefresh");
+    });
+
+    test("rejects an invalid diagnostics value with a TypeError at construction", () => {
+        // The refresher reads `diagnostics` straight from the credential
+        // slot, which never passes through resolveRequestOptions — so it
+        // must validate through the same shared resolver or a typo like
+        // "verbose" would behave as an accidental quasi-"hook" mode.
+        expect(() =>
+            buildMyAnimeListApi({
+                accessToken: "expired-access-token",
+                refreshToken: "stored-refresh-token",
+                clientId: "mal-client-id",
+                diagnostics: "verbose" as never,
+            })
+        ).toThrow(TypeError);
     });
 
     test("passes non-401 failures through without refreshing", async () => {

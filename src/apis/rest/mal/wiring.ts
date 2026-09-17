@@ -23,6 +23,7 @@ const isNonBlank = (value: string | undefined): value is string =>
  * It resolves credentials through {@link resolveMalCredentials} and composes {@link MalAnimeOperation}, {@link MalMangaOperation}, and {@link MalUserOperation} into the {@link MyAnimeListApi} facade exposed as `aniLink.mal`. Transport settings from {@link MalCredentials} flow to `MalRequestOptions` without leaking between providers.
  *
  * @param credentials - MAL access and OAuth credentials plus transport settings; a {@link MalCredentials} slot.
+ * @param stateOwner - Stable per-client object keying the shared transport state (breaker, budget, pacing); when omitted, a fresh one is allocated for this client.
  * @returns The composed {@link MyAnimeListApi} surface.
  * @example
  * ```typescript
@@ -31,13 +32,16 @@ const isNonBlank = (value: string | undefined): value is string =>
  * ```
  * @see https://myanimelist.net/apiconfig/references/api/v2
  */
-export function buildMyAnimeListApi(credentials?: MalCredentials): MyAnimeListApi {
+export function buildMyAnimeListApi(
+    credentials?: MalCredentials,
+    stateOwner?: object
+): MyAnimeListApi {
     const { auth, options } = resolveMalCredentials(credentials);
     // The three operations share one resilience state owner so the circuit
     // breaker, retry budget, and rate-limit pacing span the whole client: a
     // failure streak on `anime.get` advances the same breaker that gates
     // `user.me` (still scoped per upstream host inside the state maps).
-    const sharedStateOwner: object = {};
+    const sharedStateOwner: object = stateOwner ?? {};
     const anime = new MalAnimeOperation(auth, options, sharedStateOwner);
     const manga = new MalMangaOperation(auth, options, sharedStateOwner);
     const user = new MalUserOperation(auth, options, sharedStateOwner);
@@ -55,6 +59,7 @@ export function buildMyAnimeListApi(credentials?: MalCredentials): MyAnimeListAp
                   clientSecret: credentials.clientSecret,
                   onTokenRefresh: credentials.onTokenRefresh,
                   onHookError: credentials.onHookError,
+                  diagnostics: credentials.diagnostics,
                   applyAccessToken: (accessToken) => {
                       for (const operation of [anime, manga, user]) {
                           operation.updateAuth(

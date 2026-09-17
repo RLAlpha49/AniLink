@@ -1,6 +1,10 @@
 import type { PageInfo } from "./interfaces/responses/page/PageInfo";
 import { safeInvoke } from "../../../base/hooks";
-import type { OnHookErrorHandler } from "../../../base/transportTypes";
+import {
+    type DiagnosticsMode,
+    type OnHookErrorHandler,
+    resolveDiagnosticsMode,
+} from "../../../base/transportTypes";
 import { AniLinkValidationError } from "../../../base/AniLinkError";
 import {
     bridgeAbortSignal,
@@ -41,20 +45,22 @@ const DEFAULT_MAX_CHUNKS = 100;
  * {@link safeInvoke} so a broken callback is reported through the same
  * mechanism and message shape as every other user-supplied callback in the
  * library: through the configured `onHookError` observer when provided,
- * falling back to a `console.warn`.
+ * falling back to the structured diagnostics emit path.
  *
  * @param callback - The user-supplied callback, when provided.
  * @param name - The callback name, for the failure report.
  * @param onHookError - Consumer callback observing hook failures, when configured.
+ * @param diagnostics - The diagnostics mode for the traversal, defaulting to `"warn"`.
  * @param payload - The argument to hand to the callback.
  */
 const safeCallback = <T>(
     callback: ((payload: T) => void) | undefined,
     name: string,
     onHookError: OnHookErrorHandler | undefined,
+    diagnostics: DiagnosticsMode,
     payload: T
 ): void => {
-    safeInvoke(callback as (...args: never[]) => void, name, onHookError, payload);
+    safeInvoke(callback as (...args: never[]) => void, name, onHookError, diagnostics, payload);
 };
 
 /**
@@ -148,6 +154,13 @@ export interface PaginateOptions {
      * traversal.
      */
     onHookError?: OnHookErrorHandler;
+    /**
+     * Controls how a throwing `onPage` callback with no `onHookError` observer
+     * is reported: `"warn"` (default) emits a structured `console.warn`
+     * record, `"hook"` requires the observer and never touches the console,
+     * and `"silent"` suppresses the report entirely.
+     */
+    diagnostics?: DiagnosticsMode;
 }
 
 /** Options controlling a {@link paginateChunks} traversal over `hasNextChunk`-based chunks. */
@@ -215,6 +228,13 @@ export interface ChunkPaginateOptions {
      * a broken logger cannot fail the traversal.
      */
     onHookError?: OnHookErrorHandler;
+    /**
+     * Controls how a throwing `onChunk` callback with no `onHookError` observer
+     * is reported: `"warn"` (default) emits a structured `console.warn`
+     * record, `"hook"` requires the observer and never touches the console,
+     * and `"silent"` suppresses the report entirely.
+     */
+    diagnostics?: DiagnosticsMode;
 }
 
 /** The outcome of a {@link paginate} traversal. */
@@ -312,6 +332,7 @@ export async function paginate<
         DEFAULT_CONCURRENCY,
         "concurrency"
     );
+    const diagnostics = resolveDiagnosticsMode(options?.diagnostics);
 
     const { signal, dispose } = bridgeAbortSignal(options?.signal);
 
@@ -344,7 +365,7 @@ export async function paginate<
             const pageItems = Array.isArray(raw) ? (raw as ArrayElement<TPage, K>[]) : [];
             pages.push({ pageInfo: response.pageInfo, items: pageItems });
             items.push(...pageItems);
-            safeCallback(options?.onPage, "onPage", options?.onHookError, {
+            safeCallback(options?.onPage, "onPage", options?.onHookError, diagnostics, {
                 pageInfo: response.pageInfo,
                 items: pageItems,
             });
@@ -510,6 +531,7 @@ export async function paginateChunks<
         DEFAULT_CONCURRENCY,
         "concurrency"
     );
+    const diagnostics = resolveDiagnosticsMode(options?.diagnostics);
 
     const { signal, dispose } = bridgeAbortSignal(options?.signal);
 
@@ -542,7 +564,7 @@ export async function paginateChunks<
             const chunkItems = Array.isArray(raw) ? (raw as ArrayElement<TChunk, K>[]) : [];
             chunks.push({ hasNextChunk: response.hasNextChunk, items: chunkItems });
             items.push(...chunkItems);
-            safeCallback(options?.onChunk, "onChunk", options?.onHookError, {
+            safeCallback(options?.onChunk, "onChunk", options?.onHookError, diagnostics, {
                 hasNextChunk: response.hasNextChunk,
                 items: chunkItems,
             });

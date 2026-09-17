@@ -418,6 +418,23 @@ test("unwrapGraphQLResponse unwraps the single root field through the strict hel
     expect(unwrapGraphQLResponse(envelope)).toEqual({ id: 5 });
 });
 
+test("unwrapGraphQLResponse isolates a throwing onPartialData observer", () => {
+    // `unwrapGraphQLResponse` is exported: a direct consumer passing a
+    // throwing `onPartialData` callback must not have that throw treated
+    // as the request failure — the resolved data wins, mirroring how the
+    // request pipeline routes the observer through its failure reporter.
+    const envelope = { data: { Media: { id: 5 } }, errors: [{ message: "field failed" }] };
+
+    expect(
+        unwrapGraphQLResponse(envelope, undefined, {
+            allowPartialData: true,
+            onPartialData: () => {
+                throw new Error("observer exploded");
+            },
+        })
+    ).toEqual({ id: 5 });
+});
+
 test("propagates the normalized error when the transport rejects", async () => {
     mocks.request.mockRejectedValueOnce({
         isAxiosError: true,
@@ -685,11 +702,16 @@ describe("hook exception isolation", () => {
             })
         ).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(1);
-        expect(warn).toHaveBeenCalledWith(
-            expect.stringMatching(
-                /^\[AniLink\] onRequestStart hook threw and was ignored \(requestId: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\):$/
-            ),
-            "telemetry exploded"
+        expect(warn).toHaveBeenCalledTimes(1);
+        const record = JSON.parse(warn.mock.calls[0][0] as string);
+        expect(record.source).toBe("anilink");
+        expect(record.kind).toBe("hook-failure");
+        expect(record.hookName).toBe("onRequestStart");
+        expect(record.requestId).toMatch(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+        );
+        expect(record.message).toBe(
+            "The onRequestStart hook threw and was ignored: telemetry exploded"
         );
         warn.mockRestore();
     });
@@ -710,12 +732,15 @@ describe("hook exception isolation", () => {
         ).resolves.toEqual({ id: 1 });
         // The hook failure must not be counted as a transport failure.
         expect(mocks.request).toHaveBeenCalledTimes(1);
-        expect(warn).toHaveBeenCalledWith(
-            expect.stringMatching(
-                /^\[AniLink\] onResponse hook threw and was ignored \(requestId: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\):$/
-            ),
-            "metrics down"
+        expect(warn).toHaveBeenCalledTimes(1);
+        const record = JSON.parse(warn.mock.calls[0][0] as string);
+        expect(record.source).toBe("anilink");
+        expect(record.kind).toBe("hook-failure");
+        expect(record.hookName).toBe("onResponse");
+        expect(record.requestId).toMatch(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
         );
+        expect(record.message).toBe("The onResponse hook threw and was ignored: metrics down");
         warn.mockRestore();
     });
 
@@ -740,10 +765,10 @@ describe("hook exception isolation", () => {
         // normalized as the request failure.
         expect(error).toBeInstanceOf(AniLinkApiError);
         expect((error as AniLinkApiError).status).toBe(404);
-        expect(warn).toHaveBeenCalledWith(
-            expect.stringMatching(/^\[AniLink\] onResponse hook threw and was ignored/),
-            "boom"
-        );
+        expect(warn).toHaveBeenCalledTimes(1);
+        const record = JSON.parse(warn.mock.calls[0][0] as string);
+        expect(record.hookName).toBe("onResponse");
+        expect(record.message).toBe("The onResponse hook threw and was ignored: boom");
         warn.mockRestore();
     });
 });
@@ -824,6 +849,222 @@ describe("GraphQL error metadata preservation", () => {
 
         expect(error).toBeInstanceOf(AniLinkGraphQLError);
         expect((error as AniLinkGraphQLError).partialData).toBeUndefined();
+    });
+
+    test("allowPartialData resolves the data and reports the errors through onError", async () => {
+        const partialData = { User: { id: 1 }, Page: { id: 2 } };
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: partialData,
+                errors: [{ message: "favourite failed", status: 500 }],
+            },
+        });
+
+        const onError = vi.fn();
+        const result = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false, allowPartialData: true, onError },
+            }
+        );
+
+        // A multi-root-field document resolves with the full envelope.
+        expect(result).toEqual({
+            data: partialData,
+            errors: [{ message: "favourite failed", status: 500 }],
+        });
+        expect(onError).toHaveBeenCalledTimes(1);
+        const [reportedError, context] = onError.mock.calls[0];
+        expect(reportedError).toBeInstanceOf(AniLinkGraphQLError);
+        expect((reportedError as AniLinkGraphQLError).graphqlErrors).toEqual([
+            { message: "favourite failed", status: 500 },
+        ]);
+        expect((reportedError as AniLinkGraphQLError).partialData).toEqual(partialData);
+        expect(context).toMatchObject({
+            url: "https://graphql.anilist.co",
+            method: "POST",
+            attempt: 1,
+            code: "GRAPHQL_ERROR",
+            status: 500,
+        });
+        expect(typeof context.requestId).toBe("string");
+        expect((reportedError as AniLinkError).requestId).toBe(context.requestId);
+    });
+
+    test("allowPartialData unwraps a single-root-field partial envelope to the bare value", async () => {
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { Media: { id: 1 } },
+                errors: [{ message: "field failed" }],
+            },
+        });
+
+        const result = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false, allowPartialData: true },
+            }
+        );
+
+        expect(result).toEqual({ id: 1 });
+    });
+
+    test("allowPartialData still throws when no usable data accompanies the errors", async () => {
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "Not authenticated." }], data: null },
+        });
+
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false, allowPartialData: true },
+            }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+    });
+
+    test("allowPartialData still throws when every root field failed (empty data object)", async () => {
+        // `data: {}` with errors means no root field resolved: returning the
+        // raw envelope as the result would hand the caller a shape its
+        // types do not predict, so the envelope must throw like the strict
+        // mode.
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "everything failed" }], data: {} },
+        });
+
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false, allowPartialData: true },
+            }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+    });
+
+    test("allowPartialData still throws when the only root field resolved to null", async () => {
+        // Per GraphQL semantics, a nullable root field that errors comes
+        // back inside `data` as `null` — not as `data: null`. A single-root
+        // field document whose root field failed therefore carries
+        // `data: { Media: null }`: one key, but nothing usable. Resolving
+        // that envelope with `null` would hand the caller a value its
+        // types do not predict (and one indistinguishable from a
+        // legitimate null), so it must throw like the strict mode.
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "field failed" }], data: { Media: null } },
+        });
+
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false, allowPartialData: true },
+            }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+    });
+
+    test("allowPartialData still throws when every root field resolved to null", async () => {
+        // Multi-field variant: every root field failed, each surfacing as
+        // a null member of `data`. No usable field resolved, so the
+        // envelope throws regardless of the opt-in.
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                errors: [{ message: "everything failed" }],
+                data: { User: null, Page: null },
+            },
+        });
+
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false, allowPartialData: true },
+            }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkGraphQLError);
+    });
+
+    test("allowPartialData resolves a mixed envelope where at least one root field is non-null", async () => {
+        // The guard is per-field usability, not per-envelope: one resolved
+        // root field is enough to resolve, even when its siblings failed
+        // to null.
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                errors: [{ message: "favourite failed", status: 500 }],
+                data: { User: { id: 1 }, Page: null },
+            },
+        });
+
+        const result = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false, allowPartialData: true },
+            }
+        );
+
+        // Multi-root-field document: the full envelope resolves.
+        expect(result).toEqual({
+            errors: [{ message: "favourite failed", status: 500 }],
+            data: { User: { id: 1 }, Page: null },
+        });
+    });
+
+    test("allowPartialData does not retry a partial envelope", async () => {
+        // The partial data is a terminal outcome for the attempt: the
+        // resolved fields are returned, not retried, even under the default
+        // retry policy where a status-500 GraphQL error would retry.
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { User: { id: 1 } },
+                errors: [{ message: "favourite failed", status: 500 }],
+            },
+        });
+
+        const result = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query" },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { allowPartialData: true },
+            }
+        );
+
+        // Single-root-field document: the partial envelope unwraps to the
+        // bare User value, and the attempt is not retried.
+        expect(result).toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -1035,13 +1276,114 @@ describe("response cache integration", () => {
         // The hit's onResponse context carries cacheHit: true and durationMs: 0.
         const hitContext = onResponse.mock.calls[1][0];
         expect(hitContext).toMatchObject({ cacheHit: true, durationMs: 0 });
-        // The network attempt's context must NOT carry cacheHit.
+        // The network attempt's context carries cacheHit: false: the read
+        // was cacheable but the cache was empty, so consumers can count
+        // misses directly instead of subtracting hits from totals.
         const networkContext = onResponse.mock.calls[0][0];
-        expect(networkContext).not.toHaveProperty("cacheHit");
+        expect(networkContext).toMatchObject({ cacheHit: false });
 
         // The hit's onRequestStart context carries a fresh requestId.
         expect(hitContext.requestId).toEqual(expect.any(String));
         expect(hitContext.requestId).toBe(onRequestStart.mock.calls[1][0].requestId);
+    });
+
+    test("marks a cacheable read's network response with cacheHit: false", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const onResponse = vi.fn();
+        const options = { responseCache: cache, onResponse };
+
+        // A cacheable GET read that misses the cache: the network-served
+        // response must carry cacheHit: false.
+        await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
+            options,
+        });
+
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onResponse.mock.calls[0][0]).toMatchObject({ cacheHit: false });
+    });
+
+    test("does not cache a partial-success envelope resolved by allowPartialData", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const onError = vi.fn();
+        const options = { responseCache: cache, allowPartialData: true, onError };
+        const body = { query: "query { User { id } Page { id } }" };
+
+        // First call: a partial envelope resolves with the data and reports
+        // the errors through onError.
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { User: { id: 1 }, Page: { id: 2 } },
+                errors: [{ message: "favourite failed", status: 500 }],
+            },
+        });
+        const first = await sendRequest("https://graphql.anilist.co", "POST", body, undefined, {
+            requiresAuth: false,
+            options,
+        });
+        expect(first).toEqual({
+            data: { User: { id: 1 }, Page: { id: 2 } },
+            errors: [{ message: "favourite failed", status: 500 }],
+        });
+        expect(onError).toHaveBeenCalledTimes(1);
+
+        // Second identical call: the degraded result must NOT be served from
+        // the cache — a cache hit would replay the partial data without the
+        // onError reporting that accompanied the original fetch.
+        mocks.request.mockResolvedValueOnce({
+            data: { data: { User: { id: 1 }, Page: { id: 2 } } },
+        });
+        const second = await sendRequest("https://graphql.anilist.co", "POST", body, undefined, {
+            requiresAuth: false,
+            options,
+        });
+
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+        // A two-root-field document resolves with the full envelope.
+        expect(second).toEqual({ data: { User: { id: 1 }, Page: { id: 2 } } });
+        // The second call's clean envelope carries no errors, so onError
+        // fired only for the first call's partial data.
+        expect(onError).toHaveBeenCalledTimes(1);
+    });
+
+    test("does not mark a mutation's response with cacheHit", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const onResponse = vi.fn();
+        const options = { responseCache: cache, onResponse };
+
+        // A GraphQL mutation is never cache-keyed, so its response carries
+        // no cacheHit marker at all — not a miss, just cache-unrelated.
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "mutation { SaveMediaListEntry { id } }" },
+            undefined,
+            { options }
+        );
+
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onResponse.mock.calls[0][0]).not.toHaveProperty("cacheHit");
+    });
+
+    test("does not mark a fail-closed header-auth read with cacheHit", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const onResponse = vi.fn();
+        const options = { responseCache: cache, onResponse };
+
+        // A read whose credentials the cache key cannot capture skips the
+        // cache entirely (fail closed): no cacheHit marker, because the
+        // request never consulted the cache.
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "GET",
+            undefined,
+            {
+                headers: { Authorization: "Basic user-a-credentials" },
+            } as never,
+            { options }
+        );
+
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onResponse.mock.calls[0][0]).not.toHaveProperty("cacheHit");
     });
 
     test("skips the cache when auth is supplied via a custom Authorization header", async () => {
@@ -1691,5 +2033,127 @@ describe("raw error redaction", () => {
                 }),
             })
         );
+    });
+});
+
+describe("diagnostics option", () => {
+    test("defaults to warn mode", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: {
+                retry: false,
+                onResponse: () => {
+                    throw new Error("boom");
+                },
+            },
+        });
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(JSON.parse(warn.mock.calls[0][0] as string).kind).toBe("hook-failure");
+        warn.mockRestore();
+    });
+
+    test("silent mode suppresses the hook-failure fallback", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: {
+                retry: false,
+                diagnostics: "silent",
+                onResponse: () => {
+                    throw new Error("boom");
+                },
+            },
+        });
+
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+    });
+
+    test("hook mode never touches the console without an observer", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: {
+                retry: false,
+                diagnostics: "hook",
+                onResponse: () => {
+                    throw new Error("boom");
+                },
+            },
+        });
+
+        expect(warn).not.toHaveBeenCalled();
+        warn.mockRestore();
+    });
+
+    test("hook mode still routes to a configured onHookError", async () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const onHookError = vi.fn();
+        const thrown = new Error("boom");
+
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: {
+                retry: false,
+                diagnostics: "hook",
+                onHookError,
+                onResponse: () => {
+                    throw thrown;
+                },
+            },
+        });
+
+        expect(warn).not.toHaveBeenCalled();
+        expect(onHookError).toHaveBeenCalledTimes(1);
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("onResponse");
+        // The observer receives the structured diagnostic: the raw thrown
+        // value rides behind it as the cause.
+        expect((error as Error).cause).toBe(thrown);
+        warn.mockRestore();
+    });
+
+    test("silent mode still routes a real hook failure to a configured onHookError", async () => {
+        // The diagnostics modes gate only the unsolicited fallback output —
+        // never the consumer's own observer. A configured onHookError sees
+        // real hook failures even in silent mode.
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const onHookError = vi.fn();
+        const thrown = new Error("boom");
+
+        await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+            requiresAuth: false,
+            options: {
+                retry: false,
+                diagnostics: "silent",
+                onHookError,
+                onResponse: () => {
+                    throw thrown;
+                },
+            },
+        });
+
+        expect(warn).not.toHaveBeenCalled();
+        expect(onHookError).toHaveBeenCalledTimes(1);
+        const [name, error] = onHookError.mock.calls[0];
+        expect(name).toBe("onResponse");
+        expect((error as Error).cause).toBe(thrown);
+        warn.mockRestore();
+    });
+
+    test("rejects an invalid diagnostics value with a TypeError", async () => {
+        await expect(
+            sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
+                requiresAuth: false,
+                options: {
+                    diagnostics: "loud" as never,
+                },
+            })
+        ).rejects.toThrow(TypeError);
     });
 });
