@@ -22,10 +22,11 @@ The cache is per-instance: one `ResponseCache` belongs to the `AniLink` client i
 
 ## Configuration
 
-| Option       | Type     | Default             | Description                                                                                |
-| ------------ | -------- | ------------------- | ------------------------------------------------------------------------------------------ |
-| `ttlMs`      | `number` | `60_000` (1 minute) | Time-to-live for cached entries, in milliseconds                                           |
-| `maxEntries` | `number` | `128`               | Maximum number of entries. Least-recently-used entries are evicted when the cap is reached |
+| Option        | Type      | Default             | Description                                                                                                                                                                        |
+| ------------- | --------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ttlMs`       | `number`  | `60_000` (1 minute) | Time-to-live for cached entries, in milliseconds                                                                                                                                   |
+| `maxEntries`  | `number`  | `128`               | Maximum number of entries. Least-recently-used entries are evicted when the cap is reached                                                                                         |
+| `cloneOnRead` | `boolean` | `true`              | Whether `get()` deep-clones the cached entry before returning it. Set to `false` only when cached responses are treated as immutable — see [Read-side cloning](#read-side-cloning) |
 
 ```typescript
 // Short TTL for near-fresh data, small footprint.
@@ -44,11 +45,24 @@ Two kinds of reads are cached:
 
 Mutations are never cached: a GraphQL document opening with `mutation` is excluded, as are REST `POST`/`PUT`/`DELETE` calls. There is no `GET` path through the GraphQL layer — `custom()` POSTs like every other GraphQL operation — so query-document caching is the way to cache AniList reads.
 
-Values are deep-copied on write and on read: the cache never shares a reference with the caller, so mutating an object after `set` (or after receiving it from `get`) cannot poison later hits. Cache keys hash the request body, so a credential-bearing `GET` body is never duplicated into the key in plaintext. The URL's query string is canonicalized (parameters sorted) before keying, so the same resource requested with a different parameter order (`?a=1&b=2` vs `?b=2&a=1`) hits the same entry.
+Values are deep-copied on write and — by default — on read: the cache never shares a reference with the caller, so mutating an object after `set` (or after receiving it from `get`) cannot poison later hits. Cache keys hash the request body, so a credential-bearing `GET` body is never duplicated into the key in plaintext. The URL's query string is canonicalized (parameters sorted) before keying, so the same resource requested with a different parameter order (`?a=1&b=2` vs `?b=2&a=1`) hits the same entry.
+
+### Read-side cloning
+
+Every cache hit pays a full deep clone of the cached payload so a caller that mutates the returned object cannot poison later hits. For large cached bodies — a 50-item MAL page or a big fields-narrowed response — that clone can consume a meaningful fraction of the network round-trip the cache exists to save, and it repeats on every hit.
+
+Consumers that treat cached responses as immutable can disable the read-side clone with `cloneOnRead: false`:
+
+```typescript
+// Read-heavy workload with large payloads and immutable-response discipline.
+const cache = new ResponseCache({ ttlMs: 120_000, maxEntries: 256, cloneOnRead: false });
+```
+
+With `cloneOnRead: false`, `get()` returns the cached object itself instead of a copy — every hit skips the clone entirely. The trade-off is strict: mutating the returned value mutates the cached entry, so every later hit observes the mutation. Disable it only when your code (and every consumer of the returned value) treats responses as immutable. The write-side copy is unaffected either way: the cache never aliases the object you passed to `set()`, so mutating the original after storing it cannot poison the cache.
 
 ## Cache hits and observability
 
-Cache hits are observable through the existing `onResponse` hook. When a response is served from cache, the hook fires with `cacheHit: true` and `durationMs: 0` — hard to miss in a dashboard:
+Cache hits and misses are observable through the existing `onResponse` hook. When a response is served from cache, the hook fires with `cacheHit: true` and `durationMs: 0`; when a cacheable read is served from the network after a cache miss, it fires with `cacheHit: false` — hard to miss in a dashboard:
 
 ```typescript
 const aniLink = new AniLink("token", {
@@ -64,7 +78,7 @@ const aniLink = new AniLink("token", {
 });
 ```
 
-The `onRequestStart` hook also fires for cache hits so request-volume counters stay accurate.
+Responses unrelated to the cache — mutations, reads of cache-less clients, and partial-success envelopes resolved by `allowPartialData` (their degraded data is never cached) — carry no `cacheHit` at all, so `cacheHit === false` means precisely "cacheable read that missed". The `onRequestStart` hook also fires for cache hits so request-volume counters stay accurate.
 
 ## Manual cache management
 
@@ -74,6 +88,28 @@ cache.clear();
 ```
 
 Expired entries are evicted lazily on read — a `get` call for an expired entry removes it and returns `undefined` — and opportunistically on write, so never-re-read entries do not linger past their TTL. No background sweeper required.
+
+### Cache statistics
+
+`stats()` returns a frozen snapshot of the cache's current size and its lifetime counters, so tuning `ttlMs` and `maxEntries` can be data-driven instead of guesswork:
+
+```typescript
+const { entries, hits, misses, expirations, evictions } = cache.stats();
+
+// A full cache that keeps evicting: raise maxEntries.
+if (entries === 256 && evictions > hits) {
+    /* the cache is too small for the workload */
+}
+
+// Entries expiring before they are read again: raise ttlMs.
+if (expirations > hits) {
+    /* the TTL is too short for the read pattern */
+}
+
+const hitRate = hits / (hits + misses + expirations);
+```
+
+The counters are cumulative for the cache instance's lifetime — `delete`, `deleteMatching`, `deleteAllForUrl`, and `clear` drop entries but never reset or increment the counters — while `entries` reflects the current live entry count. Every `get()` call partitions into exactly one of `hits`, `misses`, or `expirations`: a read that finds a live entry counts as a hit, a read of an absent key counts as a miss, and a read that finds an expired entry counts as an expiration (the entry is evicted, not merely missed). `evictions` counts live entries dropped by `set()` under `maxEntries` pressure. The returned object is frozen, so a caller cannot mutate the cache's internal state through it.
 
 ### Read-after-write freshness
 

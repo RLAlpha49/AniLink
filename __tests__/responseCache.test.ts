@@ -250,6 +250,92 @@ describe("ResponseCache", () => {
         expect(second).not.toBe(original);
     });
 
+    test("cloneOnRead: false returns the cached object itself without copying", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000, cloneOnRead: false });
+        const original = { id: 1, nested: { value: "a" }, list: [1, 2] };
+        cache.set("GET", "https://example.com/api", undefined, undefined, original);
+
+        const first = cache.get<{ id: number; nested: { value: string }; list: number[] }>(
+            "GET",
+            "https://example.com/api"
+        )!;
+        const second = cache.get<{ id: number; nested: { value: string }; list: number[] }>(
+            "GET",
+            "https://example.com/api"
+        )!;
+
+        // Both reads observe the same cached object: no per-hit clone.
+        expect(first).toBe(second);
+        // The cached copy is still isolated from the caller's original: the
+        // write-side clone in set() is unaffected by the read-side opt-out.
+        expect(first).not.toBe(original);
+        expect(first).toEqual(original);
+    });
+
+    test("cloneOnRead: false makes caller mutations observable on later hits", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000, cloneOnRead: false });
+        cache.set("GET", "https://example.com/api", undefined, undefined, {
+            id: 1,
+            nested: { value: "a" },
+        });
+
+        const first = cache.get<{ id: number; nested: { value: string } }>(
+            "GET",
+            "https://example.com/api"
+        )!;
+        first.id = 999;
+        first.nested.value = "poisoned";
+
+        // The documented trade-off: with the read-side clone disabled, a
+        // mutating caller poisons later hits — this is the behavior opting
+        // in to cloneOnRead: false accepts.
+        const second = cache.get<{ id: number; nested: { value: string } }>(
+            "GET",
+            "https://example.com/api"
+        )!;
+        expect(second.id).toBe(999);
+        expect(second.nested.value).toBe("poisoned");
+    });
+
+    test("cloneOnRead: false still isolates the cache from the caller's original object", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000, cloneOnRead: false });
+        const original = { id: 1, nested: { value: "a" } };
+        cache.set("GET", "https://example.com/api", undefined, undefined, original);
+
+        // Mutating the object handed to set() must not poison the cache: the
+        // write-side clone stays on regardless of the read-side opt-out.
+        original.id = 999;
+        original.nested.value = "poisoned";
+
+        const read = cache.get<{ id: number; nested: { value: string } }>(
+            "GET",
+            "https://example.com/api"
+        )!;
+        expect(read).toEqual({ id: 1, nested: { value: "a" } });
+    });
+
+    test("cloneOnRead defaults to true, preserving the mutation-safety guarantee", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/api", undefined, undefined, { id: 1 });
+
+        const first = cache.get<{ id: number }>("GET", "https://example.com/api")!;
+        const second = cache.get<{ id: number }>("GET", "https://example.com/api")!;
+
+        // Default configuration: each read is a fresh clone.
+        expect(first).not.toBe(second);
+        expect(first).toEqual(second);
+    });
+
+    test("rejects non-boolean cloneOnRead", () => {
+        expect(() => new ResponseCache({ cloneOnRead: 1 as unknown as boolean })).toThrow(
+            TypeError
+        );
+        expect(() => new ResponseCache({ cloneOnRead: "true" as unknown as boolean })).toThrow(
+            TypeError
+        );
+        expect(() => new ResponseCache({ cloneOnRead: undefined })).not.toThrow();
+    });
+
     test("delete removes a single cached entry by key", () => {
         const cache = new ResponseCache({ ttlMs: 10_000 });
         cache.set("GET", "https://example.com/a", undefined, undefined, 1);
@@ -712,5 +798,166 @@ describe("ResponseCache", () => {
         again.self = again;
         const hit = cache.get("GET", "https://example.test/q", again, "none");
         expect(hit).toEqual({ ok: true });
+    });
+
+    test("stats starts zeroed on a fresh cache", () => {
+        const cache = new ResponseCache();
+        expect(cache.stats()).toEqual({
+            entries: 0,
+            hits: 0,
+            misses: 0,
+            expirations: 0,
+            evictions: 0,
+        });
+    });
+
+    test("stats counts hits and misses across get calls", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/a", undefined, undefined, 1);
+
+        cache.get("GET", "https://example.com/a"); // hit
+        cache.get("GET", "https://example.com/missing"); // miss
+        cache.get("GET", "https://example.com/a"); // hit
+
+        expect(cache.stats()).toEqual({
+            entries: 1,
+            hits: 2,
+            misses: 1,
+            expirations: 0,
+            evictions: 0,
+        });
+    });
+
+    test("stats counts an expired-on-read entry as an expiration, not a miss", () => {
+        const cache = new ResponseCache({ ttlMs: 1 });
+        cache.set("GET", "https://example.com/a", undefined, undefined, 1);
+
+        return new Promise<void>((resolve) => {
+            setTimeout(() => {
+                // The expired entry is evicted on read and counted as an
+                // expiration; hits + misses + expirations partition every
+                // get() call, so this read is not also a miss.
+                expect(cache.get("GET", "https://example.com/a")).toBeUndefined();
+                expect(cache.stats()).toEqual({
+                    entries: 0,
+                    hits: 0,
+                    misses: 0,
+                    expirations: 1,
+                    evictions: 0,
+                });
+                resolve();
+            }, 10);
+        });
+    });
+
+    test("stats counts evictions under maxEntries pressure", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000, maxEntries: 2 });
+        cache.set("GET", "https://example.com/a", undefined, undefined, 1);
+        cache.set("GET", "https://example.com/b", undefined, undefined, 2);
+        // The cap is reached: inserting "c" evicts the LRU entry ("a").
+        cache.set("GET", "https://example.com/c", undefined, undefined, 3);
+
+        expect(cache.stats()).toEqual({
+            entries: 2,
+            hits: 0,
+            misses: 0,
+            expirations: 0,
+            evictions: 1,
+        });
+    });
+
+    test("stats does not count an in-place key update as an eviction", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000, maxEntries: 1 });
+        cache.set("GET", "https://example.com/a", undefined, undefined, 1);
+        // Re-writing the same key refreshes it in place: no eviction.
+        cache.set("GET", "https://example.com/a", undefined, undefined, 2);
+
+        expect(cache.stats()).toEqual({
+            entries: 1,
+            hits: 0,
+            misses: 0,
+            expirations: 0,
+            evictions: 0,
+        });
+    });
+
+    test("stats keeps entries accurate across delete and clear without touching counters", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/a", undefined, undefined, 1);
+        cache.set("GET", "https://example.com/b", undefined, undefined, 2);
+        cache.get("GET", "https://example.com/a"); // one hit
+
+        // delete drops an entry but increments no counter.
+        cache.delete("GET", "https://example.com/a");
+        expect(cache.stats()).toEqual({
+            entries: 1,
+            hits: 1,
+            misses: 0,
+            expirations: 0,
+            evictions: 0,
+        });
+
+        // clear drops the rest, counters untouched.
+        cache.clear();
+        expect(cache.stats()).toEqual({
+            entries: 0,
+            hits: 1,
+            misses: 0,
+            expirations: 0,
+            evictions: 0,
+        });
+    });
+
+    test("stats counts write-time sweep expirations for never-re-read entries", () => {
+        const cache = new ResponseCache({ ttlMs: 1 });
+        cache.set("GET", "https://example.com/a", undefined, undefined, 1);
+
+        return new Promise<void>((resolve) => {
+            setTimeout(() => {
+                // The opportunistic purge inside set() drops the expired
+                // "a" entry even though nothing read it: an expiration.
+                cache.set("GET", "https://example.com/b", undefined, undefined, 2);
+                expect(cache.stats()).toEqual({
+                    entries: 1,
+                    hits: 0,
+                    misses: 0,
+                    expirations: 1,
+                    evictions: 0,
+                });
+                resolve();
+            }, 10);
+        });
+    });
+
+    test("stats returns a frozen read-only snapshot", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/a", undefined, undefined, 1);
+
+        const snapshot = cache.stats();
+        expect(Object.isFrozen(snapshot)).toBe(true);
+        // Mutating the snapshot must neither throw silently through the
+        // cache nor corrupt later snapshots (frozen in strict mode).
+        expect(() => {
+            (snapshot as { hits: number }).hits = 999;
+        }).toThrow(TypeError);
+        expect(cache.stats().hits).toBe(0);
+    });
+
+    test("stats counters are cumulative for the cache instance's lifetime", () => {
+        const cache = new ResponseCache({ ttlMs: 10_000, maxEntries: 1 });
+        cache.set("GET", "https://example.com/a", undefined, undefined, 1);
+        cache.get("GET", "https://example.com/a"); // hit
+        cache.get("GET", "https://example.com/missing"); // miss
+        cache.set("GET", "https://example.com/b", undefined, undefined, 2); // evicts "a"
+        cache.clear();
+
+        // clear() resets entries but never the lifetime counters.
+        expect(cache.stats()).toEqual({
+            entries: 0,
+            hits: 1,
+            misses: 1,
+            expirations: 0,
+            evictions: 1,
+        });
     });
 });

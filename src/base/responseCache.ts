@@ -12,7 +12,9 @@
  * (GraphQL writes, via {@link ResponseCache.deleteAllForUrl}). Cache hits
  * are observable through the existing `onResponse` hook via a `cacheHit`
  * flag so consumers can distinguish a cached response from a network
- * round-trip.
+ * round-trip, and lifetime size and hit/miss/expiration/eviction counters
+ * are available through {@link ResponseCache.stats} for data-driven
+ * `ttlMs`/`maxEntries` tuning.
  */
 
 import { createHash } from "node:crypto";
@@ -164,6 +166,49 @@ export interface ResponseCacheOptions {
     ttlMs?: number;
     /** The maximum number of entries to retain. Defaults to 128. Entries are evicted LRU when the cap is reached. */
     maxEntries?: number;
+    /**
+     * Whether `get()` deep-clones the cached entry before returning it.
+     * Defaults to `true`, which preserves the mutation-safety guarantee: a
+     * caller that mutates the returned object cannot corrupt the cached
+     * copy or affect subsequent reads. Set to `false` to skip the read-side
+     * clone — every cache hit then returns the cached object itself, so a
+     * caller that mutates it poisons later hits. Disable only when cached
+     * responses are treated as immutable. The write-side clone in `set()`
+     * is unaffected: the cache never aliases the caller's object either
+     * way.
+     */
+    cloneOnRead?: boolean;
+}
+
+/**
+ * A point-in-time snapshot of the cache's size and lifetime counters,
+ * returned by {@link ResponseCache.stats}.
+ *
+ * The counters are cumulative for the cache instance's lifetime and never
+ * reset — `delete()`, `deleteMatching()`, `deleteAllForUrl()`, and `clear()`
+ * drop entries but keep the counters, so a dashboard graphing hit rate over
+ * time stays monotonic — while `entries` reflects the current live entry
+ * count. The snapshot is frozen: a caller cannot mutate the cache's internal
+ * state through it.
+ */
+export interface ResponseCacheStats {
+    /** The number of entries currently live in the cache. */
+    entries: number;
+    /** How many `get()` calls returned a live entry. */
+    hits: number;
+    /**
+     * How many `get()` calls found no entry for the key — an absent key, or
+     * a live entry that degraded to a miss because its payload could not
+     * be cloned on read.
+     */
+    misses: number;
+    /**
+     * How many expired entries were evicted — encountered on read, or
+     * removed by the opportunistic write-time sweep.
+     */
+    expirations: number;
+    /** How many live entries were evicted by `set()` under `maxEntries` pressure. */
+    evictions: number;
 }
 
 /**
@@ -227,7 +272,11 @@ const stableStringify = (value: unknown, seen: Set<object> = new Set()): string 
  *
  * **Aliasing:** values returned from {@link ResponseCache.get} are deep
  * clones of the cached entry, so a caller that mutates the returned object
- * cannot corrupt the cached copy or affect subsequent reads.
+ * cannot corrupt the cached copy or affect subsequent reads. Consumers
+ * that treat cached responses as immutable can disable the read-side clone
+ * with `cloneOnRead: false` (see {@link ResponseCacheOptions.cloneOnRead});
+ * the write-side clone in {@link ResponseCache.set} still guarantees the
+ * cache never aliases the caller's object.
  *
  * **Invalidation:** entries expire after `ttlMs`, and a successful
  * non-`GET` request dispatched through the same transport automatically
@@ -242,6 +291,11 @@ const stableStringify = (value: unknown, seen: Set<object> = new Set()): string 
  * {@link ResponseCache.setIfFresh}). Use
  * {@link ResponseCache.delete} for exact-key invalidation or
  * {@link ResponseCache.clear} to drop everything.
+ *
+ * **Observability:** {@link ResponseCache.stats} returns a frozen snapshot
+ * of the live entry count and the lifetime hit/miss/expiration/eviction
+ * counters, so tuning can distinguish a too-small cache (rising evictions)
+ * from a too-short TTL (rising expirations).
  *
  * **Privacy:** the cache stores the full response body of every `GET`
  * request when enabled, including authenticated user-scoped responses
@@ -258,17 +312,28 @@ export class ResponseCache {
     private readonly entries = new Map<string, CacheEntry<unknown>>();
     private readonly ttlMs: number;
     private readonly maxEntries: number;
+    /** Whether `get()` deep-clones the cached entry (see {@link ResponseCacheOptions.cloneOnRead}). */
+    private readonly cloneOnRead: boolean;
     private nextExpiryCheckAt: number | undefined;
     private generation = 0;
     /** Scoped invalidation events for the in-flight read guard (see {@link setIfFresh}). */
     private readonly invalidationEvents: InvalidationEvent[] = [];
     /** The newest generation pruned from {@link invalidationEvents}. */
     private prunedThrough = 0;
+    /** Lifetime count of `get()` calls that returned a live entry. */
+    private hits = 0;
+    /** Lifetime count of `get()` calls that found no entry for the key. */
+    private misses = 0;
+    /** Lifetime count of expired entries evicted on read or by the write-time sweep. */
+    private expirations = 0;
+    /** Lifetime count of live entries evicted by `set()` under `maxEntries` pressure. */
+    private evictions = 0;
 
     /**
      * Creates a response cache.
      *
-     * @param options - Cache configuration; `ttlMs` defaults to 60_000, `maxEntries` to 128.
+     * @param options - Cache configuration; `ttlMs` defaults to 60_000,
+     * `maxEntries` to 128, and `cloneOnRead` to `true`.
      */
     constructor(options?: ResponseCacheOptions) {
         const rawTtl = options?.ttlMs ?? 60_000;
@@ -282,6 +347,12 @@ export class ResponseCache {
             throw new TypeError("maxEntries must be a finite, positive integer");
         }
         this.maxEntries = rawMax;
+
+        const rawCloneOnRead = options?.cloneOnRead ?? true;
+        if (typeof rawCloneOnRead !== "boolean") {
+            throw new TypeError("cloneOnRead must be a boolean");
+        }
+        this.cloneOnRead = rawCloneOnRead;
     }
 
     /**
@@ -369,39 +440,56 @@ export class ResponseCache {
 
     /**
      * Reads a cached response for the given request, or `undefined` when the
-     * entry is absent or expired. Expired entries are evicted on read. The
-     * returned value is a deep clone of the cached entry, so a caller that
-     * mutates it cannot corrupt the cached copy or affect subsequent reads.
+     * entry is absent or expired. Expired entries are evicted on read. By
+     * default the returned value is a deep clone of the cached entry, so a
+     * caller that mutates it cannot corrupt the cached copy or affect
+     * subsequent reads; with `cloneOnRead: false` the cached object itself is
+     * returned and callers must treat it as immutable.
      *
      * @param method - The HTTP method.
      * @param url - The request URL.
      * @param data - The request body, when present.
      * @param authKey - An authentication-safe credential identity, so cached
      * responses never cross bearer-token identities.
-     * @returns A deep clone of the cached response body, or `undefined`.
+     * @returns A deep clone of the cached response body (or the cached object
+     * itself when `cloneOnRead` is disabled), or `undefined`.
      */
     get<T>(method: string, url: string, data?: object | string, authKey?: string): T | undefined {
         const key = ResponseCache.buildKey(method, url, data, authKey);
         const entry = this.entries.get(key);
         if (entry === undefined) {
+            this.misses += 1;
             return undefined;
         }
         if (Date.now() >= entry.expiresAt) {
             this.entries.delete(key);
+            this.expirations += 1;
             return undefined;
         }
         // Refresh recency: delete + re-insert moves the entry to the end.
         this.entries.delete(key);
         this.entries.set(key, entry);
+        if (!this.cloneOnRead) {
+            // Opt-out: return the cached object itself. The write-side clone
+            // in set() still guarantees the cache never aliases the
+            // caller's object; the caller must not mutate the returned value.
+            this.hits += 1;
+            return entry.data as T;
+        }
         try {
-            return structuredClone(entry.data) as T;
+            const clone = structuredClone(entry.data) as T;
+            this.hits += 1;
+            return clone;
         } catch {
             // Read-side defensive guard, mirroring set(): a payload that
             // cannot be cloned (for example one stored through a future
             // unguarded path) degrades to a cache miss instead of throwing
             // on a hit. The entry is dropped so later reads do not retry
-            // the same failing clone.
+            // the same failing clone. The degraded read counts as a miss
+            // (the caller observed one), keeping hits + misses +
+            // expirations equal to the total number of get() calls.
             this.entries.delete(key);
+            this.misses += 1;
             return undefined;
         }
     }
@@ -747,6 +835,7 @@ export class ResponseCache {
         const oldestKey = this.entries.keys().next().value;
         if (oldestKey !== undefined) {
             this.entries.delete(oldestKey);
+            this.evictions += 1;
         }
     }
 
@@ -766,6 +855,7 @@ export class ResponseCache {
         for (const [key, entry] of this.entries) {
             if (now >= entry.expiresAt) {
                 this.entries.delete(key);
+                this.expirations += 1;
             } else {
                 nextCheck =
                     nextCheck === undefined
@@ -782,5 +872,34 @@ export class ResponseCache {
     clear(): void {
         this.recordInvalidation(() => true);
         this.entries.clear();
+    }
+
+    /**
+     * Returns a read-only snapshot of the cache's size and lifetime
+     * counters, so cache tuning (`ttlMs`/`maxEntries`) can be data-driven:
+     * entry counts and eviction/expiration counters distinguish a too-small
+     * cache (rising `evictions`) from a too-short TTL (rising
+     * `expirations`), and hit-rate dashboards can read `hits`/`misses`
+     * directly instead of inferring misses by subtracting hits from total
+     * response counts.
+     *
+     * The counters are cumulative for the cache instance's lifetime —
+     * `delete()`, `deleteMatching()`, `deleteAllForUrl()`, and `clear()`
+     * drop entries but never reset or increment the counters — and
+     * `entries` reflects the current live entry count. The returned object
+     * is frozen, so a caller cannot mutate the cache's internal state
+     * through it.
+     *
+     * @returns A frozen `{ entries, hits, misses, expirations, evictions }`
+     * snapshot of the cache's current size and lifetime counters.
+     */
+    stats(): ResponseCacheStats {
+        return Object.freeze({
+            entries: this.entries.size,
+            hits: this.hits,
+            misses: this.misses,
+            expirations: this.expirations,
+            evictions: this.evictions,
+        });
     }
 }
