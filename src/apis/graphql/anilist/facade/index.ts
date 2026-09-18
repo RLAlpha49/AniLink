@@ -25,8 +25,8 @@ export {
     AniLinkNetworkError,
     AniLinkRestError,
     AniLinkValidationError,
-} from "../../../../errors";
-export type { AniLinkErrorCode, RateLimitInfo } from "../../../../errors";
+} from "../../../../base/AniLinkError";
+export type { AniLinkErrorCode, RateLimitInfo } from "../../../../base/AniLinkError";
 
 /**
  * Transport settings accepted by an {@link AniLink} client: `timeout`, `signal`,
