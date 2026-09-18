@@ -11,7 +11,7 @@
 [![CodeQL](https://github.com/RLAlpha49/AniLink/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/RLAlpha49/AniLink/actions/workflows/codeql.yml)
 [![Documentation](https://img.shields.io/website?url=https%3A%2F%2Fanilink.alpha49.com%2F&label=docs)](https://anilink.alpha49.com/)
 
-A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co/) and the [MyAnimeList REST API](https://myanimelist.net/apiconfig/references/api/v2). One class, two isolated provider surfaces — and one calling convention: every operation with inputs takes a single typed params object plus an optional trailing options object, while the parameterless reads — `mal.user.me(options?)` and `mal.anime.suggestions(options?)` — take the options object alone. Normalized errors, retries, pacing, and caching work identically on both.
+A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co/) and the [MyAnimeList REST API](https://myanimelist.net/apiconfig/references/api/v2). One class exposes two isolated provider namespaces. Every operation with inputs takes a single typed params object plus an optional trailing options object. The parameterless reads, `mal.user.me(options?)` and `mal.anime.suggestions(options?)`, take the options object alone. Normalized errors, retries, pacing, and caching work identically on both.
 
 ## Quickstart
 
@@ -19,38 +19,41 @@ A typed TypeScript wrapper for the [AniList GraphQL API](https://docs.anilist.co
 npm install anilink-api-wrapper
 ```
 
-Requires Node.js >= 22; the package is ESM-only (`import` syntax only, no CommonJS `require`).
+Requires Node.js 22 or later. The package is ESM-only, so use `import` syntax, not CommonJS `require`.
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
 
-// AniList (GraphQL) — public queries need no token
+// AniList (GraphQL) needs no token for public queries
 const aniLink = new AniLink();
 const anime = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
 
-// MyAnimeList (REST) — isolated credential slot
+// MyAnimeList (REST) has its own credential slot
 const client = new AniLink({ mal: { accessToken: "mal-token" } });
-const malAnime = await client.mal.anime.get({ id: 21 }, { fields: ["id", "title", "main_picture"] });
+const malAnime = await client.mal.anime.get(
+    { id: 21 },
+    { fields: ["id", "title", "main_picture"] }
+);
 ```
 
 ## What you can do
 
 | Provider        | Namespace         | Capabilities                                                                                                                                                                                                                                                                          |
 | --------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **AniList**     | `aniLink.anilist` | Queries, page queries, mutations, pagination helpers, `custom()`, data helpers, and the `crossLink` AniList↔MAL id mapping                                                                                                                                                            |
+| **AniList**     | `aniLink.anilist` | Queries, page queries, mutations, pagination helpers, `custom()`, data helpers, and the `crossLink` AniList to MAL id mapping                                                                                                                                                         |
 | **MyAnimeList** | `aniLink.mal`     | `anime.get`, `manga.get`, and `user.me` REST reads with field selection, the `seasonal`, `ranking`, and `suggestions` discovery reads, paginated `user.animeList`/`user.mangaList` user-list reads, plus `anime`/`manga` `updateMyListStatus` and `deleteFromList` list-status writes |
 
-Both surfaces share one transport layer (timeouts, retries, pacing, circuit breaker, hooks) while keeping credentials and transport settings isolated per provider slot.
+Both namespaces share one transport layer, which handles timeouts, retries, pacing, circuit breaking, and hooks. Each provider slot has its own credentials and transport settings.
 
 ## Documentation
 
-| Surface                     | Start here                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Docs                        | Start here                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Guides**                  | [Introduction](https://anilink.alpha49.com/introduction) · [Getting started](https://anilink.alpha49.com/getting-started) · [Provider configuration](https://anilink.alpha49.com/provider-configuration) · [Per-request options](https://anilink.alpha49.com/per-request-options) · [Error handling](https://anilink.alpha49.com/error-handling) · [Retries & resilience](https://anilink.alpha49.com/retries-and-resilience) · [Cancellation & timeouts](https://anilink.alpha49.com/cancellation-and-timeouts) · [Observability](https://anilink.alpha49.com/observability) · [Recipes](https://anilink.alpha49.com/recipes) · [TypeScript patterns](https://anilink.alpha49.com/typescript-patterns) · [Troubleshooting](https://anilink.alpha49.com/troubleshooting) |
 | **AniList guides**          | [Authentication](https://anilink.alpha49.com/guides/anilist/authentication) · [Client configuration](https://anilink.alpha49.com/guides/anilist/configuration) · [Querying](https://anilink.alpha49.com/guides/anilist/querying) · [Page queries](https://anilink.alpha49.com/guides/anilist/page-queries) · [Pagination](https://anilink.alpha49.com/guides/anilist/pagination) · [Mutations](https://anilink.alpha49.com/guides/anilist/mutations) · [Custom queries](https://anilink.alpha49.com/guides/anilist/custom-queries) · [Helpers](https://anilink.alpha49.com/guides/anilist/helpers)                                                                                                                                                                       |
 | **MAL guides**              | [Authentication](https://anilink.alpha49.com/guides/mal/authentication) · [Client configuration](https://anilink.alpha49.com/guides/mal/configuration) · [Operations](https://anilink.alpha49.com/guides/mal/operations)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | **Operation reference**     | [Overview](https://anilink.alpha49.com/operations/) · [AniList catalog](https://anilink.alpha49.com/operations/anilist) · [MAL catalog](https://anilink.alpha49.com/operations/mal)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| **API reference (TypeDoc)** | [AniLink](https://anilink.alpha49.com/classes/AniLink.AniLink.html) — full generated reference at the [docs root](https://anilink.alpha49.com/)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **API reference (TypeDoc)** | [AniLink](https://anilink.alpha49.com/classes/AniLink.AniLink.html) class; the full generated reference is at the [docs root](https://anilink.alpha49.com/)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ## Development
 
