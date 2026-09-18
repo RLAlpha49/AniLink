@@ -34,7 +34,13 @@ export type VariableRequirement =
     | { readonly kind: "one"; readonly message: string }
     | { readonly kind: "all"; readonly names: readonly string[]; readonly message: string }
     | { readonly kind: "any"; readonly names: readonly string[]; readonly message: string }
-    | { readonly kind: "notOnly"; readonly names: readonly string[]; readonly message: string };
+    | { readonly kind: "notOnly"; readonly names: readonly string[]; readonly message: string }
+    | {
+          readonly kind: "implies";
+          /** Each `[antecedent, consequent]` pair: when the antecedent variable is set, the consequent must be set too. */
+          readonly pairs: readonly (readonly [string, string])[];
+          readonly message: string;
+      };
 
 /**
  * The declarative contract an operation passes to

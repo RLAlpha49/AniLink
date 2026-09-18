@@ -268,6 +268,8 @@ export function validateVariables(
  * - `"any"`: at least one of the listed variables must be set.
  * - `"notOnly"`: at least one variable must be set, and at least one set
  *   variable must not appear in `names`.
+ * - `"implies"`: for every `[antecedent, consequent]` pair, when the
+ *   antecedent variable is set the consequent variable must be set too.
  *
  * @param variables - The variables the caller passed to the operation.
  * @param requirements - The requirement description for the operation.
@@ -282,7 +284,8 @@ export function requireVariables(
         | { kind: "one" }
         | { kind: "all"; names: readonly string[] }
         | { kind: "any"; names: readonly string[] }
-        | { kind: "notOnly"; names: readonly string[] },
+        | { kind: "notOnly"; names: readonly string[] }
+        | { kind: "implies"; pairs: readonly (readonly [string, string])[] },
     message: string
 ): void {
     const entries = Object.entries(variables);
@@ -308,6 +311,13 @@ export function requireVariables(
             satisfied = entries.some(([name, value]) => isSet(value) && !excluded.has(name));
             break;
         }
+        case "implies":
+            satisfied = requirements.pairs.every(
+                ([antecedent, consequent]) =>
+                    !isSet((variables as Record<string, unknown>)[antecedent]) ||
+                    isSet((variables as Record<string, unknown>)[consequent])
+            );
+            break;
     }
 
     if (!satisfied) {
