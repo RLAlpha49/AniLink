@@ -40,6 +40,10 @@ Run `npm run check` before you push. It chains every gate CI enforces on a pull 
 
 For a quicker pre-push signal, `npm run check:fast` runs the fast-feedback subset — typecheck (source and tests), lint, and the unit tests without coverage — while the full `npm run check` chain remains the CI contract that a pull request must pass.
 
+### Patched dependencies
+
+One patch-package patch ships in this repo: `patches/@stryker-mutator+vitest-runner+10.0.0.patch`, applied on install by the `postinstall` script. It adapts `@stryker-mutator/vitest-runner` to Vitest 5: `collectTestName` must join suite parts with `" > "` because Vitest 5 matches `testNamePattern` against the full chain (with the upstream space-joined names, the per-test filter matched zero tests and every covered mutant was reported Survived), and the debug log of the final Vitest config needs a try/catch guard for non-serializable configs. The fix is tracked upstream in [stryker-js#6210](https://github.com/stryker-mutator/stryker-js/issues/6210) with open pull requests [#6214](https://github.com/stryker-mutator/stryker-js/pull/6214) and [#6220](https://github.com/stryker-mutator/stryker-js/pull/6220); drop the patch once a release ships it. The patch file's header comment records the same details.
+
 The `graphql` devDependency is used by the API-drift tooling (`lib/api-compare/`) to parse AniList's introspection schema; do not remove it even though `src/` never imports it. The `typescript` compiler API used by the MAL contract extraction comes from the same `typescript` devDependency that powers `tsc`.
 
 The response-shape codegen pipeline and its artifacts are documented in [OWNERSHIP.md](OWNERSHIP.md), which also records the project's [design decisions](OWNERSHIP.md#design-decisions) — ESM-only distribution, axios as the sole runtime dependency, hooks and correlation IDs over a telemetry SDK, and in-memory-only state.
