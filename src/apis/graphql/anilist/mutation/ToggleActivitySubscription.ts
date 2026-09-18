@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type Activity } from "../interfaces/Activity";
 import { ActivityWithRepliesSchema } from "../schemas/Activity";
@@ -67,8 +75,20 @@ export class ToggleActivitySubscriptionMutation extends AniListOperation {
      */
     async toggleActivitySubscription(
         variables: ToggleActivitySubscriptionVariables,
-        options?: RequestOptions
-    ): Promise<Activity> {
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<Activity>;
+    async toggleActivitySubscription(
+        variables: ToggleActivitySubscriptionVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<Activity>;
+    async toggleActivitySubscription<K extends FieldPath<Activity>>(
+        variables: ToggleActivitySubscriptionVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<Activity, K>>;
+    async toggleActivitySubscription(
+        variables: ToggleActivitySubscriptionVariables,
+        options?: RequestOptions & FieldsSelection<Activity>
+    ): FieldsResult<Activity> {
         const mutation = `
       mutation ($activityId: Int, $subscribe: Boolean, $asHtml: Boolean) {
         ToggleActivitySubscription(activityId: $activityId, subscribe: $subscribe) {
@@ -76,7 +96,8 @@ export class ToggleActivitySubscriptionMutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<Activity>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<Activity>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "all",
@@ -87,7 +108,7 @@ export class ToggleActivitySubscriptionMutation extends AniListOperation {
             ],
             mappings: ToggleActivitySubscriptionMappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

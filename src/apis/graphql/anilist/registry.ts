@@ -8,11 +8,15 @@
  * operation class and its entry in this registry — then run
  * `npm run facade:generate` to refresh the derived group types under
  * `facade/` (curated JSDoc prose lives in
- * `scripts/generate-facade-groups.config.ts`). The always-keys each operation
- * selects in every composed document are declared once, by the operation
- * class itself (its exported `_ALWAYS` constant, or the shared `PAGE_ALWAYS`
- * for page queries); the facade generator parses them from the class, so
- * this registry carries no duplicate of them.
+ * `scripts/generate-facade-groups.config.ts`). Whether an operation accepts
+ * a `fields` selection option is declared per entry (`fieldsEnabled`); the
+ * facade generator cross-checks the flag against the class's
+ * `schemas/selection/` imports and fails generation on disagreement. The
+ * always-keys each operation selects in every composed document are
+ * declared once, by the operation class itself (its exported `_ALWAYS`
+ * constant, or the shared `PAGE_ALWAYS` for page queries); the facade
+ * generator parses them from the class, so this registry carries no
+ * duplicate of them.
  */
 import type { RequestAuthInput, RequestOptions } from "../../../base/transportTypes";
 import { ActivityQuery } from "./query/Activity";
@@ -150,6 +154,27 @@ export interface OperationEntry<
      * facade key, `opAs` carries an explicit override.
      */
     readonly methodName: string;
+
+    /**
+     * Whether the operation accepts a `fields` selection option and therefore
+     * gets the three-overload treatment in the generated facade groups.
+     *
+     * Declared here instead of inferred from the operation class's imports so
+     * the fields-enabled set is discoverable from the registry itself; the
+     * facade generator cross-checks the flag against the class's
+     * `schemas/selection/` imports and fails generation on disagreement.
+     */
+    readonly fieldsEnabled: boolean;
+}
+
+/** The per-entry options {@link op} and {@link opAs} accept beyond the required arguments. */
+interface OperationEntryOptions {
+    /**
+     * Whether the operation accepts a `fields` selection option. Defaults to
+     * `false`; set `true` on every entry whose class composes its document
+     * through `schemas/selection/`.
+     */
+    readonly fieldsEnabled?: boolean;
 }
 
 /**
@@ -158,13 +183,20 @@ export interface OperationEntry<
  *
  * @param name - The facade key the bound method is exposed under.
  * @param operationClass - The operation class implementing this entry.
+ * @param options - Per-entry options; `options.fieldsEnabled` defaults to `false`.
  * @returns The registry entry with `methodName` defaulted to `name`.
  */
 function op<TName extends string, TOperation extends OperationConstructor>(
     name: TName,
-    operationClass: TOperation
+    operationClass: TOperation,
+    options?: OperationEntryOptions
 ): OperationEntry<TOperation, TName> {
-    return { name, operationClass, methodName: name };
+    return {
+        name,
+        operationClass,
+        methodName: name,
+        fieldsEnabled: options?.fieldsEnabled ?? false,
+    };
 }
 
 /**
@@ -174,14 +206,21 @@ function op<TName extends string, TOperation extends OperationConstructor>(
  * @param name - The facade key the bound method is exposed under.
  * @param operationClass - The operation class implementing this entry.
  * @param methodName - The async method on `operationClass` to bind.
+ * @param options - Per-entry options; `options.fieldsEnabled` defaults to `false`.
  * @returns The registry entry.
  */
 function opAs<TName extends string, TOperation extends OperationConstructor>(
     name: TName,
     operationClass: TOperation,
-    methodName: string
+    methodName: string,
+    options?: OperationEntryOptions
 ): OperationEntry<TOperation, TName> {
-    return { name, operationClass, methodName };
+    return {
+        name,
+        operationClass,
+        methodName,
+        fieldsEnabled: options?.fieldsEnabled ?? false,
+    };
 }
 
 /**
@@ -201,80 +240,82 @@ type RegistryGroups = {
  */
 export const ANILIST_OPERATION_REGISTRY = {
     query: [
-        op("user", UserQuery),
-        op("media", MediaQuery),
-        op("mediaTrend", MediaTrendQuery),
-        op("airingSchedule", AiringScheduleQuery),
-        op("character", CharacterQuery),
-        op("staff", StaffQuery),
-        op("mediaList", MediaListQuery),
-        op("mediaListCollection", MediaListCollectionQuery),
+        op("user", UserQuery, { fieldsEnabled: true }),
+        op("media", MediaQuery, { fieldsEnabled: true }),
+        op("mediaTrend", MediaTrendQuery, { fieldsEnabled: true }),
+        op("airingSchedule", AiringScheduleQuery, { fieldsEnabled: true }),
+        op("character", CharacterQuery, { fieldsEnabled: true }),
+        op("staff", StaffQuery, { fieldsEnabled: true }),
+        op("mediaList", MediaListQuery, { fieldsEnabled: true }),
+        op("mediaListCollection", MediaListCollectionQuery, { fieldsEnabled: true }),
         op("genreCollection", GenreCollectionQuery),
         op("mediaTagCollection", MediaTagCollectionQuery),
         op("viewer", ViewerQuery),
-        op("notification", NotificationQuery),
-        op("studio", StudioQuery),
-        op("review", ReviewQuery),
-        op("activity", ActivityQuery),
+        op("notification", NotificationQuery, { fieldsEnabled: true }),
+        op("studio", StudioQuery, { fieldsEnabled: true }),
+        op("review", ReviewQuery, { fieldsEnabled: true }),
+        op("activity", ActivityQuery, { fieldsEnabled: true }),
         op("activityReply", ActivityReplyQuery),
         op("following", FollowingQuery),
         op("follower", FollowerQuery),
-        op("thread", ThreadQuery),
-        op("threadComment", ThreadCommentQuery),
-        op("recommendation", RecommendationQuery),
+        op("thread", ThreadQuery, { fieldsEnabled: true }),
+        op("threadComment", ThreadCommentQuery, { fieldsEnabled: true }),
+        op("recommendation", RecommendationQuery, { fieldsEnabled: true }),
         op("markdown", MarkdownQuery),
         op("aniChartUser", AniChartUserQuery),
-        op("siteStatistics", SiteStatisticsQuery),
+        op("siteStatistics", SiteStatisticsQuery, { fieldsEnabled: true }),
         op("externalLinkSourceCollection", ExternalLinkSourceCollectionQuery),
     ],
     page: [
-        op("users", UsersQuery),
-        op("medias", MediasQuery),
-        op("characters", CharactersQuery),
-        op("staffs", StaffsQuery),
-        op("studios", StudiosQuery),
-        op("mediaLists", MediaListsQuery),
-        op("airingSchedules", AiringSchedulesQuery),
-        op("mediaTrends", MediaTrendsQuery),
-        op("notifications", NotificationsQuery),
-        op("followers", FollowersQuery),
-        opAs("following", FollowingsQuery, "followings"),
-        op("activities", ActivitiesQuery),
-        opAs("activityReplies", ActivityRepliesQuery, "activityReplies"),
-        op("threads", ThreadsQuery),
-        opAs("threadComments", ThreadCommentsQuery, "threadComments"),
-        op("reviews", ReviewsQuery),
-        opAs("recommendations", RecommendationsQuery, "recommendations"),
-        op("likes", LikesQuery),
+        op("users", UsersQuery, { fieldsEnabled: true }),
+        op("medias", MediasQuery, { fieldsEnabled: true }),
+        op("characters", CharactersQuery, { fieldsEnabled: true }),
+        op("staffs", StaffsQuery, { fieldsEnabled: true }),
+        op("studios", StudiosQuery, { fieldsEnabled: true }),
+        op("mediaLists", MediaListsQuery, { fieldsEnabled: true }),
+        op("airingSchedules", AiringSchedulesQuery, { fieldsEnabled: true }),
+        op("mediaTrends", MediaTrendsQuery, { fieldsEnabled: true }),
+        op("notifications", NotificationsQuery, { fieldsEnabled: true }),
+        op("followers", FollowersQuery, { fieldsEnabled: true }),
+        opAs("following", FollowingsQuery, "followings", { fieldsEnabled: true }),
+        op("activities", ActivitiesQuery, { fieldsEnabled: true }),
+        opAs("activityReplies", ActivityRepliesQuery, "activityReplies", { fieldsEnabled: true }),
+        op("threads", ThreadsQuery, { fieldsEnabled: true }),
+        opAs("threadComments", ThreadCommentsQuery, "threadComments", { fieldsEnabled: true }),
+        op("reviews", ReviewsQuery, { fieldsEnabled: true }),
+        opAs("recommendations", RecommendationsQuery, "recommendations", { fieldsEnabled: true }),
+        op("likes", LikesQuery, { fieldsEnabled: true }),
     ],
     mutation: [
-        op("updateUser", UpdateUserMutation),
-        op("saveMediaListEntry", SaveMediaListEntryMutation),
-        op("updateMediaListEntries", UpdateMediaListEntriesMutation),
-        op("deleteMediaListEntry", DeleteMediaListEntryMutation),
-        op("deleteCustomList", DeleteCustomListMutation),
-        op("saveTextActivity", SaveTextActivityMutation),
-        op("saveMessageActivity", SaveMessageActivityMutation),
-        op("saveListActivity", SaveListActivityMutation),
-        op("deleteActivity", DeleteActivityMutation),
-        op("toggleActivityPin", ToggleActivityPinMutation),
-        op("toggleActivitySubscription", ToggleActivitySubscriptionMutation),
-        op("saveActivityReply", SaveActivityReplyMutation),
-        op("deleteActivityReply", DeleteActivityReplyMutation),
-        op("toggleLike", ToggleLikeMutation),
-        op("toggleLikeV2", ToggleLikeV2Mutation),
-        op("toggleFollow", ToggleFollowMutation),
-        op("toggleFavourite", ToggleFavouriteMutation),
-        op("updateFavouriteOrder", UpdateFavouriteOrderMutation),
-        op("saveReview", SaveReviewMutation),
-        op("rateReview", RateReviewMutation),
-        op("deleteReview", DeleteReviewMutation),
-        op("saveRecommendation", SaveRecommendationMutation),
-        op("saveThread", SaveThreadMutation),
-        op("deleteThread", DeleteThreadMutation),
-        op("toggleThreadSubscription", ToggleThreadSubscriptionMutation),
-        op("saveThreadComment", SaveThreadCommentMutation),
-        op("deleteThreadComment", DeleteThreadCommentMutation),
+        op("updateUser", UpdateUserMutation, { fieldsEnabled: true }),
+        op("saveMediaListEntry", SaveMediaListEntryMutation, { fieldsEnabled: true }),
+        op("updateMediaListEntries", UpdateMediaListEntriesMutation, { fieldsEnabled: true }),
+        op("deleteMediaListEntry", DeleteMediaListEntryMutation, { fieldsEnabled: true }),
+        op("deleteCustomList", DeleteCustomListMutation, { fieldsEnabled: true }),
+        op("saveTextActivity", SaveTextActivityMutation, { fieldsEnabled: true }),
+        op("saveMessageActivity", SaveMessageActivityMutation, { fieldsEnabled: true }),
+        op("saveListActivity", SaveListActivityMutation, { fieldsEnabled: true }),
+        op("deleteActivity", DeleteActivityMutation, { fieldsEnabled: true }),
+        op("toggleActivityPin", ToggleActivityPinMutation, { fieldsEnabled: true }),
+        op("toggleActivitySubscription", ToggleActivitySubscriptionMutation, {
+            fieldsEnabled: true,
+        }),
+        op("saveActivityReply", SaveActivityReplyMutation, { fieldsEnabled: true }),
+        op("deleteActivityReply", DeleteActivityReplyMutation, { fieldsEnabled: true }),
+        op("toggleLike", ToggleLikeMutation, { fieldsEnabled: true }),
+        op("toggleLikeV2", ToggleLikeV2Mutation, { fieldsEnabled: true }),
+        op("toggleFollow", ToggleFollowMutation, { fieldsEnabled: true }),
+        op("toggleFavourite", ToggleFavouriteMutation, { fieldsEnabled: true }),
+        op("updateFavouriteOrder", UpdateFavouriteOrderMutation, { fieldsEnabled: true }),
+        op("saveReview", SaveReviewMutation, { fieldsEnabled: true }),
+        op("rateReview", RateReviewMutation, { fieldsEnabled: true }),
+        op("deleteReview", DeleteReviewMutation, { fieldsEnabled: true }),
+        op("saveRecommendation", SaveRecommendationMutation, { fieldsEnabled: true }),
+        op("saveThread", SaveThreadMutation, { fieldsEnabled: true }),
+        op("deleteThread", DeleteThreadMutation, { fieldsEnabled: true }),
+        op("toggleThreadSubscription", ToggleThreadSubscriptionMutation, { fieldsEnabled: true }),
+        op("saveThreadComment", SaveThreadCommentMutation, { fieldsEnabled: true }),
+        op("deleteThreadComment", DeleteThreadCommentMutation, { fieldsEnabled: true }),
         op("updateAniChartSettings", UpdateAniChartSettingsMutation),
         op("updateAniChartHighlights", UpdateAniChartHighlightsMutation),
     ],

@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type Activity } from "../interfaces/Activity";
 import { type ActivitySort, ActivitySortMappings } from "../types/Sort";
@@ -206,7 +214,22 @@ export class ActivityQuery extends AniListOperation {
      * const result = await new ActivityQuery().activity({ userId: 1 });
      * ```
      */
-    async activity(variables: ActivityVariables, options?: RequestOptions): Promise<Activity> {
+    async activity(
+        variables: ActivityVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<Activity>;
+    async activity(
+        variables: ActivityVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<Activity>;
+    async activity<K extends FieldPath<Activity>>(
+        variables: ActivityVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<Activity, K>>;
+    async activity(
+        variables: ActivityVariables,
+        options?: RequestOptions & FieldsSelection<Activity>
+    ): FieldsResult<Activity> {
         const query = `
       query ($id: Int, $userId: Int, $messengerId: Int, $mediaId: Int, $type: ActivityType, $isFollowing: Boolean, $hasReplies: Boolean, $hasRepliesOrTypeText: Boolean, $createdAt: Int, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $userId_not: Int, $userId_in: [Int], $userId_not_in: [Int], $messengerId_not: Int, $messengerId_in: [Int], $messengerId_not_in: [Int], $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $type_not: ActivityType, $type_in: [ActivityType], $type_not_in: [ActivityType], $createdAt_greater: Int, $sort: [ActivitySort], $asHtml: Boolean) {
         Activity (id: $id, userId: $userId, messengerId: $messengerId, mediaId: $mediaId, type: $type, isFollowing: $isFollowing, hasReplies: $hasReplies, hasRepliesOrTypeText: $hasRepliesOrTypeText, createdAt: $createdAt, id_not: $id_not, id_in: $id_in, id_not_in: $id_not_in, userId_not: $userId_not, userId_in: $userId_in, userId_not_in: $userId_not_in, messengerId_not: $messengerId_not, messengerId_in: $messengerId_in, messengerId_not_in: $messengerId_not_in, mediaId_not: $mediaId_not, mediaId_in: $mediaId_in, mediaId_not_in: $mediaId_not_in, type_not: $type_not, type_in: $type_in, type_not_in: $type_not_in, createdAt_greater: $createdAt_greater, sort: $sort) {
@@ -214,7 +237,8 @@ export class ActivityQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<Activity>(query, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<Activity>(composeDocument(query, fields, []), variables, {
             requirements: [
                 {
                     kind: "notOnly",
@@ -223,7 +247,7 @@ export class ActivityQuery extends AniListOperation {
                 },
             ],
             mappings: ActivityMappings,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type LikeableType, LikeableTypeMappings } from "../types/Type";
 import { type Likeable } from "../interfaces/Likeable";
@@ -68,8 +76,20 @@ export class ToggleLikeV2Mutation extends AniListOperation {
      */
     async toggleLikeV2(
         variables: ToggleLikeV2Variables,
-        options?: RequestOptions
-    ): Promise<Likeable> {
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<Likeable>;
+    async toggleLikeV2(
+        variables: ToggleLikeV2Variables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<Likeable>;
+    async toggleLikeV2<K extends FieldPath<Likeable>>(
+        variables: ToggleLikeV2Variables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<Likeable, K>>;
+    async toggleLikeV2(
+        variables: ToggleLikeV2Variables,
+        options?: RequestOptions & FieldsSelection<Likeable>
+    ): FieldsResult<Likeable> {
         const mutation = `
       mutation ($id: Int, $type: LikeableType, $asHtml: Boolean) {
         ToggleLikeV2 (id: $id, type: $type) {
@@ -77,7 +97,8 @@ export class ToggleLikeV2Mutation extends AniListOperation {
         }
       }
     `;
-        return await this.execute<Likeable>(mutation, variables, {
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<Likeable>(composeDocument(mutation, fields, []), variables, {
             requirements: [
                 {
                     kind: "all",
@@ -87,7 +108,7 @@ export class ToggleLikeV2Mutation extends AniListOperation {
             ],
             mappings: ToggleLikeV2Mappings,
             requiresAuth: true,
-            transportOptions: options,
+            transportOptions,
         });
     }
 }

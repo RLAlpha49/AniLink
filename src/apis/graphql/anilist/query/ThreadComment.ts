@@ -97,7 +97,7 @@ export class ThreadCommentQuery extends AniListOperation {
      */
     async threadComment(
         variables: ThreadCommentVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ThreadCommentResponse>;
     async threadComment(
         variables: ThreadCommentVariables,

@@ -130,7 +130,7 @@ export class RecommendationsQuery extends AniListOperation {
      */
     async recommendations(
         variables: RecommendationsVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<RecommendationsPageResponse>;
     async recommendations(
         variables: RecommendationsVariables,

@@ -214,7 +214,7 @@ export class StudiosQuery extends AniListOperation {
      */
     async studios(
         variables: StudiosVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<StudiosPageResponse>;
     async studios(
         variables: StudiosVariables,

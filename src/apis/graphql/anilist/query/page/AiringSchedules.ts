@@ -190,7 +190,7 @@ export class AiringSchedulesQuery extends AniListOperation {
      */
     async airingSchedules(
         variables: AiringSchedulesVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<AiringSchedulesPageResponse>;
     async airingSchedules(
         variables: AiringSchedulesVariables,

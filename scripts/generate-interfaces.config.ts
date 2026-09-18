@@ -476,7 +476,15 @@ export const generatorConfig: GeneratorConfig = {
                         type: {
                             tsType: '"ACTIVITY_MENTION" | "ACTIVITY_REPLY" | "ACTIVITY_LIKE" | "ACTIVITY_REPLY_LIKE" | "ACTIVITY_REPLY_SUBSCRIBED"',
                         },
-                        activity: { refType: "Activity" },
+                        // ActivitySchema omits the author, replies, and likes selected by
+                        // the standalone activity fragments. Preserve its member shapes.
+                        // Drift between these Omit lists and the fragment is caught by
+                        // `npm run anilist:api:compare -- --strict` (package contracts
+                        // vs. the schema snapshot), which runs in both `npm run check`
+                        // and CI.
+                        activity: {
+                            tsType: 'Omit<TextActivity, "user" | "replies" | "likes"> | Omit<ListActivity, "user" | "replies" | "likes"> | Omit<MessageActivity, "recipient" | "messenger" | "replies" | "likes">',
+                        },
                     },
                 },
             ],
@@ -493,6 +501,26 @@ export const generatorConfig: GeneratorConfig = {
                     graphqlType: "LikeableUnion",
                     source: {},
                     unionMembers: ["Activity", "ActivityReply", "Thread", "ThreadComment"],
+                },
+                {
+                    exportedName: "LikeableThread",
+                    see: SEE.thread,
+                    summary:
+                        "the thread fragment selected by ToggleLikeV2, including its aliased keys.",
+                    graphqlType: "Thread",
+                    source: { constant: "ActivitySchemaV2", condition: "Thread" },
+                    fieldTypes: {
+                        ThreadUserId: { tsType: "number" },
+                        ThreadReplyCount: { tsType: "number" },
+                    },
+                },
+                {
+                    exportedName: "LikeableThreadComment",
+                    see: SEE.threadComment,
+                    summary:
+                        "the thread-comment fragment selected by ToggleLikeV2 with its minimal parent thread.",
+                    graphqlType: "ThreadComment",
+                    source: { constant: "ActivitySchemaV2", condition: "ThreadComment" },
                 },
             ],
         },

@@ -157,7 +157,10 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/user
          */
-        user: ((variables: UserVariables, options?: RequestOptions) => Promise<UserResponse>) &
+        user: ((
+            variables: UserVariables,
+            options?: RequestOptions & { fields?: undefined }
+        ) => Promise<UserResponse>) &
             ((
                 variables: UserVariables,
                 options: RequestOptions & { fields: undefined }
@@ -179,7 +182,10 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/media
          */
-        media: ((variables: MediaVariables, options?: RequestOptions) => Promise<MediaResponse>) &
+        media: ((
+            variables: MediaVariables,
+            options?: RequestOptions & { fields?: undefined }
+        ) => Promise<MediaResponse>) &
             ((
                 variables: MediaVariables,
                 options: RequestOptions & { fields: undefined }
@@ -204,7 +210,7 @@ export type AniListQueries = {
          */
         mediaTrend: ((
             variables: MediaTrendVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<MediaTrendResponse>) &
             ((
                 variables: MediaTrendVariables,
@@ -230,7 +236,7 @@ export type AniListQueries = {
          */
         airingSchedule: ((
             variables: AiringScheduleVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<AiringScheduleResponse>) &
             ((
                 variables: AiringScheduleVariables,
@@ -262,7 +268,7 @@ export type AniListQueries = {
          */
         character: ((
             variables: CharacterVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<CharacterResponse>) &
             ((
                 variables: CharacterVariables,
@@ -300,7 +306,10 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/object/staff
          */
-        staff: ((variables: StaffVariables, options?: RequestOptions) => Promise<StaffResponse>) &
+        staff: ((
+            variables: StaffVariables,
+            options?: RequestOptions & { fields?: undefined }
+        ) => Promise<StaffResponse>) &
             ((
                 variables: StaffVariables,
                 options: RequestOptions & { fields: undefined }
@@ -324,7 +333,7 @@ export type AniListQueries = {
          */
         mediaList: ((
             variables: MediaListVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<MediaListResponse>) &
             ((
                 variables: MediaListVariables,
@@ -355,7 +364,7 @@ export type AniListQueries = {
          */
         mediaListCollection: ((
             variables: MediaListCollectionVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<MediaListCollectionResponse>) &
             ((
                 variables: MediaListCollectionVariables,
@@ -424,10 +433,18 @@ export type AniListQueries = {
          * Must be authenticated.
          * @see https://docs.anilist.co/reference/union/notificationunion
          */
-        notification: (
+        notification: ((
             variables: NotificationVariables,
-            options?: RequestOptions
-        ) => Promise<NotificationResponse>;
+            options?: RequestOptions & { fields?: undefined }
+        ) => Promise<NotificationResponse>) &
+            ((
+                variables: NotificationVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<NotificationResponse>) &
+            (<K extends FieldPath<NotificationResponse>>(
+                variables: NotificationVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<NotificationResponse, K>>);
 
         /**
          * `StudioQuery` fetches a single studio by `id` or `search`. Returns a {@link StudioResponse}.
@@ -443,7 +460,7 @@ export type AniListQueries = {
          */
         studio: ((
             variables: StudioVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<StudioResponse>) &
             ((
                 variables: StudioVariables,
@@ -468,7 +485,7 @@ export type AniListQueries = {
          */
         review: ((
             variables: ReviewVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<ReviewResponse>) &
             ((
                 variables: ReviewVariables,
@@ -491,7 +508,18 @@ export type AniListQueries = {
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
          */
-        activity: (variables: ActivityVariables, options?: RequestOptions) => Promise<Activity>;
+        activity: ((
+            variables: ActivityVariables,
+            options?: RequestOptions & { fields?: undefined }
+        ) => Promise<Activity>) &
+            ((
+                variables: ActivityVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<Activity>) &
+            (<K extends FieldPath<Activity>>(
+                variables: ActivityVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<Activity, K>>);
 
         /**
          * `ActivityReplyQuery` fetches a single activity reply by `id`. Returns an {@link ActivityReply}.
@@ -555,7 +583,7 @@ export type AniListQueries = {
          */
         thread: ((
             variables: ThreadVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<ThreadResponse>) &
             ((
                 variables: ThreadVariables,
@@ -580,7 +608,7 @@ export type AniListQueries = {
          */
         threadComment: ((
             variables: ThreadCommentVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<ThreadCommentResponse>) &
             ((
                 variables: ThreadCommentVariables,
@@ -605,7 +633,7 @@ export type AniListQueries = {
          */
         recommendation: ((
             variables: RecommendationVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<RecommendationResponse>) &
             ((
                 variables: RecommendationVariables,
@@ -659,7 +687,7 @@ export type AniListQueries = {
          */
         siteStatistics: ((
             variables?: SiteStatisticsVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<SiteStatisticsResponse>) &
             ((
                 variables: SiteStatisticsVariables,
@@ -728,7 +756,7 @@ export type AniListQueries = {
              */
             users: ((
                 variables: UsersVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<UsersPageResponse>) &
                 ((
                     variables: UsersVariables,
@@ -753,7 +781,7 @@ export type AniListQueries = {
              */
             medias: ((
                 variables: MediasVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<MediasPageResponse>) &
                 ((
                     variables: MediasVariables,
@@ -778,7 +806,7 @@ export type AniListQueries = {
              */
             characters: ((
                 variables: CharactersVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<CharactersPageResponse>) &
                 ((
                     variables: CharactersVariables,
@@ -803,7 +831,7 @@ export type AniListQueries = {
              */
             staffs: ((
                 variables: StaffsVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<StaffsPageResponse>) &
                 ((
                     variables: StaffsVariables,
@@ -828,7 +856,7 @@ export type AniListQueries = {
              */
             studios: ((
                 variables: StudiosVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<StudiosPageResponse>) &
                 ((
                     variables: StudiosVariables,
@@ -853,7 +881,7 @@ export type AniListQueries = {
              */
             mediaLists: ((
                 variables: MediaListsVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<MediaListsPageResponse>) &
                 ((
                     variables: MediaListsVariables,
@@ -878,7 +906,7 @@ export type AniListQueries = {
              */
             airingSchedules: ((
                 variables: AiringSchedulesVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<AiringSchedulesPageResponse>) &
                 ((
                     variables: AiringSchedulesVariables,
@@ -904,7 +932,7 @@ export type AniListQueries = {
              */
             mediaTrends: ((
                 variables: MediaTrendsVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<MediaTrendsPageResponse>) &
                 ((
                     variables: MediaTrendsVariables,
@@ -927,10 +955,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/union/notificationunion
              */
-            notifications: (
+            notifications: ((
                 variables: NotificationsVariables,
-                options?: RequestOptions
-            ) => Promise<NotificationsPageResponse>;
+                options?: RequestOptions & { fields?: undefined }
+            ) => Promise<NotificationsPageResponse>) &
+                ((
+                    variables: NotificationsVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<NotificationsPageResponse>) &
+                (<K extends FieldPath<NotificationsPageResponse>>(
+                    variables: NotificationsVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<NotificationsPageResponse, K | "pageInfo">>);
 
             /**
              * `FollowersQuery` fetches a page of a user's followers. Returns a {@link FollowersPageResponse} with the items and `PageInfo`.
@@ -946,7 +982,7 @@ export type AniListQueries = {
              */
             followers: ((
                 variables: FollowersVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<FollowersPageResponse>) &
                 ((
                     variables: FollowersVariables,
@@ -971,7 +1007,7 @@ export type AniListQueries = {
              */
             following: ((
                 variables: FollowingsVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<FollowingsPageResponse>) &
                 ((
                     variables: FollowingsVariables,
@@ -994,10 +1030,18 @@ export type AniListQueries = {
              * ```
              * @see https://docs.anilist.co/reference/union/activityunion
              */
-            activities: (
+            activities: ((
                 variables: ActivitiesVariables,
-                options?: RequestOptions
-            ) => Promise<ActivitiesPageResponse>;
+                options?: RequestOptions & { fields?: undefined }
+            ) => Promise<ActivitiesPageResponse>) &
+                ((
+                    variables: ActivitiesVariables,
+                    options: RequestOptions & { fields: undefined }
+                ) => Promise<ActivitiesPageResponse>) &
+                (<K extends FieldPath<ActivitiesPageResponse>>(
+                    variables: ActivitiesVariables,
+                    options: RequestOptions & { fields: readonly K[] | undefined }
+                ) => Promise<DeepPick<ActivitiesPageResponse, K | "pageInfo">>);
 
             /**
              * `ActivityRepliesQuery` fetches a page of replies for an activity. Returns an {@link ActivityRepliesPageResponse} with the items and `PageInfo`.
@@ -1013,7 +1057,7 @@ export type AniListQueries = {
              */
             activityReplies: ((
                 variables: ActivityRepliesVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<ActivityRepliesPageResponse>) &
                 ((
                     variables: ActivityRepliesVariables,
@@ -1038,7 +1082,7 @@ export type AniListQueries = {
              */
             threads: ((
                 variables: ThreadsVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<ThreadsPageResponse>) &
                 ((
                     variables: ThreadsVariables,
@@ -1063,7 +1107,7 @@ export type AniListQueries = {
              */
             threadComments: ((
                 variables: ThreadCommentsVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<ThreadCommentsPageResponse>) &
                 ((
                     variables: ThreadCommentsVariables,
@@ -1088,7 +1132,7 @@ export type AniListQueries = {
              */
             reviews: ((
                 variables: ReviewsVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<ReviewsPageResponse>) &
                 ((
                     variables: ReviewsVariables,
@@ -1113,7 +1157,7 @@ export type AniListQueries = {
              */
             recommendations: ((
                 variables: RecommendationsVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<RecommendationsPageResponse>) &
                 ((
                     variables: RecommendationsVariables,
@@ -1139,7 +1183,7 @@ export type AniListQueries = {
              */
             likes: ((
                 variables: LikesVariables,
-                options?: RequestOptions
+                options?: RequestOptions & { fields?: undefined }
             ) => Promise<LikesPageResponse>) &
                 ((
                     variables: LikesVariables,

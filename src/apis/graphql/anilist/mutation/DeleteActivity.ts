@@ -63,7 +63,7 @@ export class DeleteActivityMutation extends AniListOperation {
      */
     async deleteActivity(
         variables: DeleteActivityVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<DeleteResult>;
     async deleteActivity(
         variables: DeleteActivityVariables,

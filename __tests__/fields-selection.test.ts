@@ -1,13 +1,18 @@
-import { describe, expect, test } from "vitest";
-import { buildSchema, parse, validate } from "graphql";
+import { describe, expect, test, vi } from "vitest";
+import { buildSchema, Kind, parse, validate, type SelectionNode } from "graphql";
 import { AniLinkValidationError } from "../src/base/AniLinkError";
 import { createTestClient, getLastRequest } from "./helpers/mockRequestHandler";
+import { ANILIST_OPERATION_REGISTRY } from "../src/apis/graphql/anilist/registry";
+import * as selectionComposer from "../src/apis/graphql/anilist/schemas/selection/composeSelection";
 import type {
     DeepPick,
     FieldPath,
 } from "../src/apis/graphql/anilist/schemas/selection/fieldsSelection";
 import type { MediaResponse } from "../src/apis/graphql/anilist/interfaces/responses/query/Media";
 import type { MediasPageResponse } from "../src/apis/graphql/anilist/interfaces/responses/page/Medias";
+import type { Activity } from "../src/apis/graphql/anilist/interfaces/Activity";
+import { composeDocument } from "../src/apis/graphql/anilist/schemas/selection/composeSelection";
+import { ActivityWithRepliesSchema } from "../src/apis/graphql/anilist/schemas/Activity";
 
 /**
  * Field-selection tests for the AniList surface.
@@ -78,6 +83,174 @@ const topLevelLinesOf = (body: string): string[] => {
 };
 
 describe("composeDocument", () => {
+    const activityDocument = `query ($asHtml: Boolean) {
+        Activity {
+            ${ActivityWithRepliesSchema}
+        }
+    }`;
+
+    test("keeps a whole fragment and does not mutate the cached maximal selection", () => {
+        const whole = composeDocument(activityDocument, ["TextActivity"], []);
+        expectParses(whole);
+        expect(whole).toContain("... on TextActivity {");
+        expect(whole).toContain("replies {");
+        expect(whole).not.toContain("... on ListActivity");
+        composeDocument(activityDocument, ["TextActivity.text"], []);
+        expect(composeDocument(activityDocument, ["TextActivity"], [])).toBe(whole);
+        expect(composeDocument(activityDocument, undefined, [])).toBe(activityDocument);
+    });
+
+    test("prunes and merges fields inside type-qualified fragments", () => {
+        const fields: FieldPath<Activity>[] = [
+            "TextActivity.text",
+            "TextActivity.id",
+            "ListActivity.media.title.romaji",
+        ];
+        const document = composeDocument(activityDocument, fields, []);
+        expectParses(document);
+        expectNoUnusedVariables(document);
+        expect(document.match(/\.\.\. on TextActivity/g)).toHaveLength(1);
+        expect(document).toContain("text(asHtml: $asHtml)");
+        expect(document).toContain("romaji");
+        expect(document).not.toContain("english");
+        expect(document).not.toContain("replies");
+        expect(document).not.toContain("... on MessageActivity");
+        type Slim = DeepPick<Activity, "TextActivity.text" | "TextActivity.id">;
+        const value: Slim = { text: "selected", id: 1 };
+        const unmatched: Slim = {};
+        // @ts-expect-error Type conditions are scopes, not bare union response fields.
+        const unqualified: FieldPath<Activity> = "text";
+        // @ts-expect-error A valid fragment still rejects an unknown leaf.
+        const invalid: FieldPath<Activity> = "TextActivity.nope";
+        expect([value, unmatched, unqualified, invalid]).toHaveLength(4);
+    });
+
+    test("narrows a union pick by the selected field's presence", () => {
+        // The union result keeps every member possible; a selected field is
+        // read only after narrowing on its presence.
+        type Slim = DeepPick<Activity, "TextActivity.text">;
+        const value: Slim = { text: "selected" };
+        const read: string | undefined = "text" in value ? value.text : undefined;
+        expect(read).toBe("selected");
+    });
+
+    test("narrows a union pick by the `type` discriminant when it is selected", () => {
+        // Selecting `type` on every member gives the union a discriminant;
+        // narrowing on it exposes the matching member's picked fields.
+        type Tagged = DeepPick<
+            Activity,
+            "TextActivity.type" | "TextActivity.text" | "ListActivity.type" | "MessageActivity.type"
+        >;
+        const text: Tagged = { type: "TEXT", text: "selected" };
+        const read: string | undefined = text.type === "TEXT" ? text.text : undefined;
+        expect(read).toBe("selected");
+    });
+
+    test.each([
+        "UnknownActivity.text",
+        "TextActivity.nope",
+        "ListActivity.media.nope",
+        "TextActivity.id.nope",
+    ])("reports the full unknown type-qualified caller path %s", (path) => {
+        const page = `query { Page {\nactivities {\n${ActivityWithRepliesSchema}\n}\n} }`;
+        expect(() => composeDocument(page, [`activities.${path}`], [])).toThrow(
+            `activities.${path}`
+        );
+    });
+
+    test("retains whole always-selected fragments and rejects invalid always keys", () => {
+        const document = composeDocument(activityDocument, ["TextActivity.text"], ["TextActivity"]);
+        expect(document).toContain("replies {");
+        expect(() => composeDocument(activityDocument, [], ["MissingActivity"])).toThrow(
+            "The operation's always-selected fields are invalid"
+        );
+        expect(() =>
+            composeDocument(
+                "query { Activity {\n... on TextActivity { id }\n} }",
+                ["TextActivity"],
+                []
+            )
+        ).toThrow(AniLinkValidationError);
+    });
+
+    test("selects union fields through query and page facades", async () => {
+        const client = createTestClient("fragment-query-token");
+        await client.anilist.query.activity({ id: 1 }, { fields: ["TextActivity.text"] });
+        expectParses(lastDocumentOf());
+        expect(lastDocumentOf()).toContain("text(asHtml: $asHtml)");
+        expect(lastDocumentOf()).not.toContain("... on ListActivity");
+
+        await client.anilist.query.notification({}, { fields: ["AiringNotification.id"] });
+        expectParses(lastDocumentOf());
+        expectNoUnusedVariables(lastDocumentOf());
+        expect(lastDocumentOf()).toContain("... on AiringNotification");
+        expect(lastDocumentOf()).not.toContain("... on FollowingNotification");
+
+        await client.anilist.query.page.activities(
+            {},
+            { fields: ["activities.TextActivity.text"] }
+        );
+        expectParses(lastDocumentOf());
+        expect(lastDocumentOf()).toContain("pageInfo {");
+        expect(lastDocumentOf()).not.toContain("... on ListActivity");
+
+        await client.anilist.query.page.notifications(
+            {},
+            {
+                fields: ["notifications.ActivityMentionNotification.activity.TextActivity.id"],
+            }
+        );
+        expectParses(lastDocumentOf());
+        expectNoUnusedVariables(lastDocumentOf());
+        expect(lastDocumentOf()).toContain("pageInfo {");
+        expect(lastDocumentOf()).toContain("... on ActivityMentionNotification");
+        expect(lastDocumentOf()).toContain("... on TextActivity");
+        expect(lastDocumentOf()).not.toContain("... on ListActivity");
+    });
+
+    test("selects activity and non-activity union fields through mutation facades", async () => {
+        const client = createTestClient("fragment-mutation-token");
+        await client.anilist.mutation.toggleActivityPin(
+            { id: 1, pinned: true },
+            {
+                fields: ["TextActivity.text"],
+            }
+        );
+        expectParses(lastDocumentOf());
+        expect(lastDocumentOf()).toContain("... on TextActivity");
+        expect(lastDocumentOf()).not.toContain("... on ListActivity");
+
+        await client.anilist.mutation.toggleActivitySubscription(
+            { activityId: 1, subscribe: true },
+            {
+                fields: ["ListActivity.media.title.romaji"],
+            }
+        );
+        expectParses(lastDocumentOf());
+        expectNoUnusedVariables(lastDocumentOf());
+        expect(lastDocumentOf()).toContain("romaji");
+        expect(lastDocumentOf()).not.toContain("... on TextActivity");
+
+        await client.anilist.mutation.toggleLikeV2(
+            { id: 1, type: "THREAD" },
+            {
+                fields: [
+                    "Thread.title",
+                    "Thread.ThreadUserId",
+                    "Thread.ThreadReplyCount",
+                    "ActivityReply.text",
+                ],
+            }
+        );
+        expectParses(lastDocumentOf());
+        expectNoUnusedVariables(lastDocumentOf());
+        expect(lastDocumentOf()).toContain("... on Thread {");
+        expect(lastDocumentOf()).toContain("ThreadUserId: userId");
+        expect(lastDocumentOf()).toContain("ThreadReplyCount: replyCount");
+        expect(lastDocumentOf()).toContain("... on ActivityReply {");
+        expect(lastDocumentOf()).not.toContain("... on TextActivity");
+    });
+
     test("returns the maximal document unchanged when fields is undefined", async () => {
         const sent: string[] = [];
         const client = createTestClient("maximal-token");
@@ -256,6 +429,73 @@ describe("composeDocument", () => {
 });
 
 describe("composed documents are valid GraphQL", () => {
+    const fieldsEnabledOperations = Object.entries(ANILIST_OPERATION_REGISTRY).flatMap(
+        ([group, entries]) =>
+            entries
+                .filter((entry) => entry.fieldsEnabled === true)
+                .map((entry) => ({ ...entry, group }))
+    );
+
+    test.each(fieldsEnabledOperations)(
+        "$group / $name composes parseable selections from the registry",
+        async ({ operationClass, methodName }) => {
+            // Only execution is stubbed: the real method supplies its document and always-keys.
+            // Variable requirements and auth checks run during execution, not composition.
+            const operation = new operationClass() as unknown as Record<
+                string,
+                (
+                    variables: Record<string, unknown>,
+                    options?: { fields: string[] }
+                ) => Promise<unknown>
+            >;
+            const execute = vi.fn<(document: string) => Promise<unknown>>().mockResolvedValue({});
+            Object.defineProperty(operation, "execute", { value: execute });
+            const composer = vi.spyOn(selectionComposer, "composeDocument");
+
+            try {
+                await operation[methodName]({});
+                expect(composer).toHaveBeenCalledTimes(1);
+                expect(execute).toHaveBeenCalledTimes(1);
+                const [maximalDocument, , always] = composer.mock.calls[0];
+                const definition = parse(maximalDocument).definitions[0];
+                if (definition.kind !== Kind.OPERATION_DEFINITION) {
+                    throw new Error("Expected an operation definition.");
+                }
+                expect(definition.selectionSet.selections).toHaveLength(1);
+                const root = definition.selectionSet.selections[0];
+                if (root.kind !== Kind.FIELD || !root.selectionSet) {
+                    throw new Error("Expected a root field with a selection set.");
+                }
+
+                // Follow one leaf per branch, retaining aliases and inline-fragment type scopes.
+                const firstLeafPath = (selection: SelectionNode): string => {
+                    if (selection.kind === Kind.FRAGMENT_SPREAD) {
+                        throw new Error(
+                            "Named fragments need an explicit selection-path resolver."
+                        );
+                    }
+                    const head =
+                        selection.kind === Kind.INLINE_FRAGMENT
+                            ? selection.typeCondition?.name.value
+                            : (selection.alias ?? selection.name).value;
+                    if (!head) throw new Error("Expected a named selection scope.");
+                    const child = selection.selectionSet?.selections[0];
+                    return child ? `${head}.${firstLeafPath(child)}` : head;
+                };
+                const paths = root.selectionSet.selections.map(firstLeafPath);
+                const minimalFields = always.length > 0 ? [] : [paths[0]];
+                for (const fields of [minimalFields, ...paths.map((path) => [path])]) {
+                    execute.mockClear();
+                    await operation[methodName]({}, { fields });
+                    expect(execute).toHaveBeenCalledTimes(1);
+                    expectParses(execute.mock.calls[0][0]);
+                }
+            } finally {
+                composer.mockRestore();
+            }
+        }
+    );
+
     test("every composed query document parses", async () => {
         const client = createTestClient("parse-query-token");
 

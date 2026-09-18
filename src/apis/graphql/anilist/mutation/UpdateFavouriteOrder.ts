@@ -9,7 +9,6 @@ import type {
 } from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type Favourites } from "../interfaces/responses/mutation/Favourites";
-import { AniLinkValidationError } from "../../../../base/AniLinkError";
 import { FavouritesSchema } from "../schemas/responses/mutation/Favourites";
 
 /**
@@ -103,12 +102,13 @@ export class UpdateFavouriteOrderMutation extends AniListOperation {
     /**
      * {@link UpdateFavouriteOrderMutation.updateFavouriteOrder} sends a mutation request to update the order of favourites.
      *
-     * Reorders the authenticated user's favourites: each `*Order` array lists IDs in the new
-     * order and requires its matching `*Ids` array to be present. Returns the updated favourites.
+     * Reorders the authenticated user's favourites: at least one id or order array must be
+     * provided, and each `*Order` array requires its matching `*Ids` array to be present.
+     * Returns the updated favourites.
      *
      * @param variables - Values from {@link UpdateFavouriteOrderVariables} for the mutation.
      * @returns The {@link Favourites} returned by the mutation.
-     * @throws Throws if no authentication token is configured, an order array lacks its corresponding ID array, a variable has an invalid type, or the mutation request fails.
+     * @throws Throws if no authentication token is configured, no id or order array is provided, an order array lacks its corresponding ID array, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/favourites
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<Favourites, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
@@ -118,7 +118,7 @@ export class UpdateFavouriteOrderMutation extends AniListOperation {
      */
     async updateFavouriteOrder(
         variables: UpdateFavouriteOrderVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<Favourites>;
     async updateFavouriteOrder(
         variables: UpdateFavouriteOrderVariables,
@@ -132,17 +132,6 @@ export class UpdateFavouriteOrderMutation extends AniListOperation {
         variables: UpdateFavouriteOrderVariables,
         options?: RequestOptions & FieldsSelection<Favourites>
     ): FieldsResult<Favourites> {
-        if (
-            (!variables.animeIds && variables.animeOrder) ||
-            (!variables.mangaIds && variables.mangaOrder) ||
-            (!variables.characterIds && variables.characterOrder) ||
-            (!variables.staffIds && variables.staffOrder) ||
-            (!variables.studioIds && variables.studioOrder)
-        ) {
-            throw new AniLinkValidationError([
-                "The order array requires the corresponding id array to be present.",
-            ]);
-        }
         const mutation = `
       mutation ($animeIds: [Int], $mangaIds: [Int], $characterIds: [Int], $staffIds: [Int], $studioIds: [Int], $animeOrder: [Int], $mangaOrder: [Int], $characterOrder: [Int], $staffOrder: [Int], $studioOrder: [Int]) {
         UpdateFavouriteOrder (animeIds: $animeIds, mangaIds: $mangaIds, characterIds: $characterIds, staffIds: $staffIds, studioIds: $studioIds, animeOrder: $animeOrder, mangaOrder: $mangaOrder, characterOrder: $characterOrder, staffOrder: $staffOrder, studioOrder: $studioOrder) {
@@ -152,6 +141,23 @@ export class UpdateFavouriteOrderMutation extends AniListOperation {
     `;
         const { fields, transportOptions } = splitFieldsOption(options);
         return await this.execute<Favourites>(composeDocument(mutation, fields, []), variables, {
+            requirements: [
+                {
+                    kind: "one",
+                    message: "At least one id or order array must be provided.",
+                },
+                {
+                    kind: "implies",
+                    pairs: [
+                        ["animeOrder", "animeIds"],
+                        ["mangaOrder", "mangaIds"],
+                        ["characterOrder", "characterIds"],
+                        ["staffOrder", "staffIds"],
+                        ["studioOrder", "studioIds"],
+                    ],
+                    message: "The order array requires the corresponding id array to be present.",
+                },
+            ],
             mappings: UpdateFavouriteOrderMappings,
             requiresAuth: true,
             transportOptions,

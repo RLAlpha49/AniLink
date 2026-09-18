@@ -130,7 +130,7 @@ export class ThreadsQuery extends AniListOperation {
      */
     async threads(
         variables: ThreadsVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ThreadsPageResponse>;
     async threads(
         variables: ThreadsVariables,

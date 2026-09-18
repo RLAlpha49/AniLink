@@ -217,7 +217,7 @@ export class MediaTrendQuery extends AniListOperation {
      */
     async mediaTrend(
         variables: MediaTrendVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<MediaTrendResponse>;
     async mediaTrend(
         variables: MediaTrendVariables,

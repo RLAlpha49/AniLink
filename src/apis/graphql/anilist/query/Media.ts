@@ -481,7 +481,10 @@ export class MediaQuery extends AniListOperation {
      * const result = await new MediaQuery().media({ id: 1 });
      * ```
      */
-    async media(variables: MediaVariables, options?: RequestOptions): Promise<MediaResponse>;
+    async media(
+        variables: MediaVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<MediaResponse>;
     async media(
         variables: MediaVariables,
         options: RequestOptions & { fields: undefined }

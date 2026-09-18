@@ -106,7 +106,7 @@ export class ReviewsQuery extends AniListOperation {
      */
     async reviews(
         variables: ReviewsVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ReviewsPageResponse>;
     async reviews(
         variables: ReviewsVariables,

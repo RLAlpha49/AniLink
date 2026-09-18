@@ -3,8 +3,80 @@
  * always-selected-key policy lists the composer and the operation classes
  * share.
  *
+ * ## How a union path resolves
+ *
+ * A response union (e.g. `Activity`) is routed through
+ * `NamedUnionMembers`, which maps each member to its selection-scope name:
+ * the three activity discriminants via `ActivityKinds`, the notification
+ * variants via `NotificationKinds`, and the `Likeable` members structurally.
+ * `FieldPathInto` then offers `QualifiedFieldPath` — paths qualified by the
+ * scope name (`"TextActivity.text"`) — instead of the members' bare keys,
+ * because a bare key like `"text"` is ambiguous across members. The same
+ * scope name is a scope, not a field: it never renders as a property in the
+ * composed document, and `DeepPickUnion` re-bases paths that continue past it
+ * onto the member's own fields.
+ *
+ * Worked example — `"notifications.ActivityMentionNotification.activity.TextActivity.id"`
+ * on a page query: `Page.notifications` resolves to the notification union;
+ * `ActivityMentionNotification` selects that member's scope; its `activity`
+ * field is the activity union, so `TextActivity` selects that member's
+ * scope; `id` is then an ordinary field of `TextActivity`. The composed
+ * document keeps only the two matching inline fragments, and `DeepPick`
+ * yields `{ activity: { id: number } }` for that member.
+ *
  * @see https://docs.anilist.co/reference/query
  */
+
+import type { Activity, ActivityReply } from "../../interfaces/Activity";
+import type { Likeable, LikeableThread, LikeableThreadComment } from "../../interfaces/Likeable";
+import type { NotificationResponse } from "../../interfaces/responses/query/Notification";
+import type { Thread, ThreadComment } from "../../interfaces/Thread";
+
+/**
+ * Compile-time drift guards for the selection-scope maps below.
+ *
+ * The maps hand-duplicate knowledge that also lives in the generated
+ * interfaces; these asserts make disagreement a build failure instead of a
+ * silent capability gap (a member missing from a map simply stops being
+ * offered by `FieldPath`, with no error anywhere). Each guard holds only
+ * while the map's values exactly cover the union's `type` values.
+ */
+type AssertCovers<Values extends string, Expected extends Values> = [Expected] extends [Values]
+    ? [Values] extends [Expected]
+        ? true
+        : never
+    : never;
+
+/** `ActivityKinds` must cover exactly the `type` values of the `Activity` union. */
+type ActivityKindsCovers = AssertCovers<Activity["type"], ActivityKinds[keyof ActivityKinds]>;
+
+/** `NotificationKinds` must cover exactly the `type` values of the notification union. */
+type NotificationKindsCovers = AssertCovers<
+    NotificationResponse["type"],
+    NotificationKinds[keyof NotificationKinds]
+>;
+
+/**
+ * The `Likeable` member map must match the `Likeable` union exactly: the
+ * activity discriminants through `ActivityKinds`, the other three members
+ * structurally. A member added to `Likeable` without a map entry stops being
+ * selectable; a map entry without a union member offers paths the runtime
+ * document cannot select. `Likeable` carries no shared `type` field (only
+ * the activity members have one), so the guard asserts mutual assignability
+ * against the union the map assumes instead.
+ */
+type LikeableMembersCover = [Likeable] extends [Activity | ActivityReply | Thread | ThreadComment]
+    ? [Activity | ActivityReply | Thread | ThreadComment] extends [Likeable]
+        ? true
+        : never
+    : never;
+
+// The guards are type-level only; these bindings exist so a violation fails
+// with the guard's name in the error message instead of an unused-type hint.
+// The underscore prefix matches the repo's unused-vars ignore pattern.
+const _activityKindsCovers: ActivityKindsCovers = true;
+const _notificationKindsCovers: NotificationKindsCovers = true;
+const _likeableMembersCover: LikeableMembersCover = true;
 
 /**
  * Keys selected in every composed document for an entity, regardless of the
@@ -35,19 +107,83 @@ export type SelectionAlways = readonly string[];
 export const PAGE_ALWAYS: SelectionAlways = ["pageInfo"];
 
 /**
- * Collapses a union of object types into their intersection.
- *
- * Maps each union member to a contravariant function parameter, then infers
- * the parameter type back out: inference from contravariant positions
- * intersects the candidates instead of unioning them. The condition must
- * distribute over `unknown` — checking `extends never` collapses every
- * member to `never` and the whole type resolves to `unknown`.
+ * Generated responses omit `__typename`; these names belong to selection
+ * scopes only. The compile-time guards above fail the build when this map
+ * drifts from the generated `Activity` union's `type` values.
  */
-type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (
-    k: infer I
-) => void
-    ? I
+type ActivityKinds = {
+    TextActivity: "TEXT";
+    ListActivity: "ANIME_LIST" | "MANGA_LIST";
+    MessageActivity: "MESSAGE";
+};
+
+/**
+ * The notification scope map; guarded against drift from the generated
+ * `NotificationResponse` union by the compile-time guards above.
+ */
+type NotificationKinds = {
+    AiringNotification: "AIRING";
+    FollowingNotification: "FOLLOWING";
+    ActivityMessageNotification: "ACTIVITY_MESSAGE";
+    ActivityMentionNotification: "ACTIVITY_MENTION";
+    ActivityReplyNotification: "ACTIVITY_REPLY";
+    ActivityLikeNotification: "ACTIVITY_LIKE";
+    ActivityReplyLikeNotification: "ACTIVITY_REPLY_LIKE";
+    ActivityReplySubscribedNotification: "ACTIVITY_REPLY_SUBSCRIBED";
+    ThreadCommentMentionNotification: "THREAD_COMMENT_MENTION";
+    ThreadCommentReplyNotification: "THREAD_COMMENT_REPLY";
+    ThreadCommentSubscribedNotification: "THREAD_SUBSCRIBED";
+    ThreadCommentLikeNotification: "THREAD_COMMENT_LIKE";
+    ThreadLikeNotification: "THREAD_LIKE";
+    RelatedMediaAdditionNotification: "RELATED_MEDIA_ADDITION";
+    MediaDataChangeNotification: "MEDIA_DATA_CHANGE";
+    MediaMergeNotification: "MEDIA_MERGE";
+    MediaDeletionNotification: "MEDIA_DELETION";
+};
+
+/** Keep nested schema shapes rather than replacing them with full response interfaces. */
+type DiscriminantMember<Response, Kind> = Response extends { type: infer Values }
+    ? [Extract<Values, Kind>] extends [never]
+        ? never
+        : [Values] extends [Kind]
+          ? Response
+          : Omit<Response, "type"> & { type: Extract<Values, Kind> }
     : never;
+
+type DiscriminantMembers<Response, Kinds> = {
+    [
+        Name in keyof Kinds as [DiscriminantMember<Response, Kinds[Name]>] extends [never]
+            ? never
+            : Name
+    ]: DiscriminantMember<Response, Kinds[Name]>;
+};
+
+/** A standalone object with a grouped `type` property is not a fragment-only union. */
+type IsUnion<T, Whole = T> = T extends Whole ? ([Whole] extends [T] ? false : true) : never;
+
+type DiscriminatedUnionMembers<T> =
+    true extends IsUnion<T>
+        ? [T] extends [{ type: ActivityKinds[keyof ActivityKinds] }]
+            ? DiscriminantMembers<T, ActivityKinds>
+            : [T] extends [{ type: NotificationKinds[keyof NotificationKinds] }]
+              ? DiscriminantMembers<T, NotificationKinds>
+              : never
+        : never;
+
+/**
+ * Likeable also contains objects without a discriminant, so match that union
+ * exactly. The member map is guarded against drift from the generated
+ * `Likeable` union by the compile-time guards above.
+ */
+type NamedUnionMembers<T> = [Likeable] extends [T]
+    ? [T] extends [Likeable]
+        ? DiscriminantMembers<Activity, ActivityKinds> & {
+              ActivityReply: ActivityReply;
+              Thread: LikeableThread;
+              ThreadComment: LikeableThreadComment;
+          }
+        : DiscriminatedUnionMembers<T>
+    : DiscriminatedUnionMembers<T>;
 
 /** Unwraps `T` when it is an array type, so paths address the element shape. */
 type UnwrapArray<T> = T extends readonly (infer E)[] ? E : T;
@@ -63,6 +199,10 @@ type UnwrapArray<T> = T extends readonly (infer E)[] ? E : T;
  * unknown key or a step through a scalar is a compile-time error. The
  * composer validates paths again at runtime, so JavaScript callers get the
  * same rejections as `AniLinkValidationError`s.
+ *
+ * Known fragment-only response unions require type scopes such as `"TextActivity.text"`
+ * and `"activities.ListActivity.media.title.romaji"`. Standalone member objects
+ * do not accept a type prefix.
  *
  * @see https://docs.anilist.co/reference/query
  */
@@ -85,19 +225,24 @@ type IsDrillable<Value> =
             : true
         : false;
 
-/**
- * The valid paths into an object type: each of its string keys, plus — for
- * keys whose value is a drillable object — that key followed by a valid path
- * into the value. `true extends` widens union-valued fields (a field whose
- * type is a union of objects drills into every member's keys).
- */
-type FieldPathInto<T> = T extends object
+/** Fragment-only unions expose qualified paths; standalone objects keep ordinary keys. */
+type FieldPathInto<T> = [NamedUnionMembers<NonNullable<T>>] extends [never]
+    ? ObjectFieldPath<T>
+    : QualifiedFieldPath<NamedUnionMembers<NonNullable<T>>>;
+
+type ObjectFieldPath<T> = T extends object
     ? {
           [K in keyof T & string]: true extends IsDrillable<T[K]>
               ? K | `${K}.${FieldPathInto<DrillInto<T[K]>>}`
               : K;
       }[keyof T & string]
     : never;
+
+type QualifiedFieldPath<Members> = [Members] extends [never]
+    ? never
+    : {
+          [Name in keyof Members & string]: Name | `${Name}.${ObjectFieldPath<Members[Name]>}`;
+      }[keyof Members & string];
 
 /**
  * The `fields` option accepted by operations with a selection surface.
@@ -178,10 +323,36 @@ export function splitFieldsOption<Options extends object>(
     return { fields, transportOptions: transportOptions as Options };
 }
 
-/** Picks `K` out of `V`, unwrapping arrays so the pick addresses the element. */
-type DeepPickValue<V, K extends string> = V extends readonly (infer E)[]
+/** Gather sibling paths before recursing, so nested union selections stay correlated. */
+type PathHead<K extends string> = K extends `${infer Head}.${string}` ? Head : K;
+
+type PathTail<K extends string, Head extends string> = K extends `${Head}.${infer Rest}`
+    ? Rest
+    : never;
+
+type DeepPickObject<Response, K extends string> = {
+    [Head in PathHead<K> & keyof Response]: Head extends K
+        ? Response[Head]
+        : DeepPick<Response[Head], PathTail<K, Head>>;
+};
+
+/** Fragment names select members but never become response wrapper properties. */
+type DeepPickUnion<Members, K extends string> = {
+    [Name in keyof Members & string]: Name extends K
+        ? Members[Name]
+        : DeepPickObject<
+              Members[Name],
+              | Exclude<K, (keyof Members & string) | `${keyof Members & string}.${string}`>
+              | PathTail<K, Name>
+          >;
+}[keyof Members & string];
+
+/** Preserve the existing non-object fallback while keeping union detection nondistributive. */
+type DeepPickResponse<Response, K extends string> = Response extends readonly (infer E)[]
     ? DeepPick<E, K>[]
-    : DeepPick<V, K>;
+    : Response extends object
+      ? DeepPickObject<Response, K>
+      : unknown;
 
 /**
  * Narrow a response type by the `fields` paths actually passed.
@@ -192,16 +363,33 @@ type DeepPickValue<V, K extends string> = V extends readonly (infer E)[]
  * `{ tags: { name: string }[] }`). Paths sharing a head merge into one
  * selection, and so one key of the result.
  *
+ * For a union response, type scopes select fields on their matching member
+ * without adding a wrapper property. The result is a union: the member(s)
+ * whose fields were selected contribute their picked shape, and every other
+ * member contributes an empty object. Read a selected field by narrowing
+ * first — either on the field's presence (`"text" in result`) or, when the
+ * `type` discriminant is selected on every member, on it
+ * (`result.type === "TEXT"`):
+ *
+ * ```typescript
+ * const result = await client.anilist.query.activity(
+ *     { id: 1 },
+ *     {
+ *         fields: [
+ *             "TextActivity.type",
+ *             "TextActivity.text",
+ *             "ListActivity.type",
+ *             "MessageActivity.type",
+ *         ],
+ *     }
+ * );
+ * if (result.type === "TEXT") {
+ *     console.log(result.text);
+ * }
+ * ```
+ *
  * @see https://docs.anilist.co/reference/query
  */
-export type DeepPick<Response, K extends string> = Response extends readonly (infer E)[]
-    ? DeepPick<E, K>[]
-    : UnionToIntersection<
-          K extends `${infer Head}.${infer Rest}`
-              ? Head extends keyof Response
-                  ? { [P in Head]: DeepPickValue<Response[Head], Rest> }
-                  : never
-              : K extends keyof Response
-                ? { [P in K]: Response[K] }
-                : never
-      >;
+export type DeepPick<Response, K extends string> = [NamedUnionMembers<Response>] extends [never]
+    ? DeepPickResponse<Response, K>
+    : DeepPickUnion<NamedUnionMembers<Response>, K>;

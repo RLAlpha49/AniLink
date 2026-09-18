@@ -242,7 +242,7 @@ export class MediaListsQuery extends AniListOperation {
      */
     async mediaLists(
         variables: MediaListsVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<MediaListsPageResponse>;
     async mediaLists(
         variables: MediaListsVariables,

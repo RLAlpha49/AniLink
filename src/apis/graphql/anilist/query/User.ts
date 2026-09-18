@@ -126,7 +126,10 @@ export class UserQuery extends AniListOperation {
      * const result = await new UserQuery().user({ id: 1 });
      * ```
      */
-    async user(variables: UserVariables, options?: RequestOptions): Promise<UserResponse>;
+    async user(
+        variables: UserVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<UserResponse>;
     async user(
         variables: UserVariables,
         options: RequestOptions & { fields: undefined }

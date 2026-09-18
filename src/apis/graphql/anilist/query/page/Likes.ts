@@ -80,7 +80,10 @@ export class LikesQuery extends AniListOperation {
      * const result = await new LikesQuery().likes({ likeableId: 1, type: "ACTIVITY" });
      * ```
      */
-    async likes(variables: LikesVariables, options?: RequestOptions): Promise<LikesPageResponse>;
+    async likes(
+        variables: LikesVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<LikesPageResponse>;
     async likes(
         variables: LikesVariables,
         options: RequestOptions & { fields: undefined }

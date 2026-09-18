@@ -16,10 +16,14 @@ import type { SelectionAlways } from "./fieldsSelection";
  * @see https://docs.anilist.co/reference/query
  */
 
-/** One parsed selection node: a field, with its arguments and nested selection. */
+/** A field or inline fragment, addressed by its field name or type condition. */
 interface SelectionNode {
-    /** The field name as it appears in the document. */
+    /** Fragments render their name as a GraphQL type condition. */
+    kind: "field" | "fragment";
+    /** The response key or fragment type condition used by selection paths. */
     name: string;
+    /** The underlying field name when the response key is an alias. */
+    fieldName?: string;
     /** The field's argument list, verbatim (e.g. `(asHtml: $asHtml)`), or `""`. */
     args: string;
     /** Nested selection nodes, in document order. */
@@ -35,6 +39,19 @@ interface SelectionNode {
  * of distinct maximal documents (one per operation class).
  */
 const parseCache = new Map<string, SelectionNode[]>();
+
+/**
+ * One field line of a maximal document: a response key, an optional
+ * `alias:` prefix naming the underlying field, an optional argument list,
+ * and an optional selection-set opener.
+ *
+ * The security rule flags the nested quantifiers in the optional alias and
+ * argument groups; every inner class is a single-character negated or
+ * bounded set, so the pattern is linear and cannot backtrack catastrophically.
+ */
+const FIELD_LINE_PATTERN =
+    // eslint-disable-next-line security/detect-unsafe-regex -- bounded single-char classes; no nested unbounded quantifiers
+    /^([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*([A-Za-z_][A-Za-z0-9_]*)\s*)?(\([^()]*\))?\s*(\{)?$/;
 
 /**
  * Parse a GraphQL selection body into a tree of `SelectionNode`s.
@@ -77,8 +94,8 @@ function parseSelectionUncached(body: string): SelectionNode[] {
             throw new AniLinkValidationError(
                 [
                     `composeSelection cannot parse the document line: "${line}". ` +
-                        "The maximal document must use one field per line, without aliases, " +
-                        "comments, or inline fragments.",
+                        "The maximal document must use one field per line, without " +
+                        "comments or single-line selection blocks.",
                 ],
                 "The GraphQL document is invalid"
             );
@@ -87,33 +104,70 @@ function parseSelectionUncached(body: string): SelectionNode[] {
         // Closing braces pop the stack before the line's own field is parsed.
         for (let i = 0; i < closeCount; i++) stack.pop();
 
-        // The rule flags the nested quantifier in `(\([^()]*\))?`; the inner
-        // class is a single-character negated set, so the pattern is linear
-        // and cannot backtrack catastrophically.
-        // eslint-disable-next-line security/detect-unsafe-regex -- bounded single-char class; no nested unbounded quantifiers
-        const fieldMatch = /^([A-Za-z_][A-Za-z0-9_]*)\s*(\([^()]*\))?\s*(\{)?$/.exec(line);
-        if (fieldMatch) {
+        const fragmentMatch = /^\.\.\.\s+on\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$/.exec(line);
+        if (fragmentMatch) {
             const node: SelectionNode = {
-                name: fieldMatch[1],
-                args: fieldMatch[2] ?? "",
+                kind: "fragment",
+                name: fragmentMatch[1],
+                args: "",
                 children: [],
             };
             if (stack.length === 0) roots.push(node);
             else stack[stack.length - 1].children.push(node);
-            if (fieldMatch[3]) stack.push(node);
+            stack.push(node);
+            continue;
+        }
+
+        const fieldMatch = FIELD_LINE_PATTERN.exec(line);
+        if (fieldMatch) {
+            const node: SelectionNode = {
+                kind: "field",
+                name: fieldMatch[1],
+                fieldName: fieldMatch[2],
+                args: fieldMatch[3] ?? "",
+                children: [],
+            };
+            if (stack.length === 0) roots.push(node);
+            else stack[stack.length - 1].children.push(node);
+            if (fieldMatch[4]) stack.push(node);
             continue;
         }
         if (/^\}+$/.test(line)) continue;
         throw new AniLinkValidationError(
             [
                 `composeSelection cannot parse the document line: "${line}". ` +
-                    "The maximal document must use one field per line, without aliases, " +
-                    "comments, or inline fragments.",
+                    "The maximal document must use one field per line, without " +
+                    "comments or single-line selection blocks.",
             ],
             "The GraphQL document is invalid"
         );
     }
+    assertNoEmptyFragments(roots);
     return roots;
+}
+
+/**
+ * Reject inline fragments that select no fields.
+ *
+ * A childless fragment would re-render as an empty selection set — invalid
+ * GraphQL — so a malformed maximal document fails at parse time, with the
+ * fragment named, instead of producing a document the server rejects with a
+ * less actionable message. This also keeps the invariant the prune step
+ * relies on: a childless node in a parsed tree is always a scalar field.
+ */
+function assertNoEmptyFragments(nodes: SelectionNode[]): void {
+    for (const node of nodes) {
+        if (node.kind === "fragment" && node.children.length === 0) {
+            throw new AniLinkValidationError(
+                [
+                    `composeSelection cannot parse the document: the inline fragment ` +
+                        `"... on ${node.name}" selects no fields.`,
+                ],
+                "The GraphQL document is invalid"
+            );
+        }
+        assertNoEmptyFragments(node.children);
+    }
 }
 
 /**
@@ -126,10 +180,12 @@ function parseSelectionUncached(body: string): SelectionNode[] {
 function renderSelection(nodes: SelectionNode[], indent: string): string {
     const lines: string[] = [];
     for (const node of nodes) {
-        if (node.children.length === 0) {
-            lines.push(`${indent}${node.name}${node.args}`);
+        const field = node.fieldName === undefined ? node.name : `${node.name}: ${node.fieldName}`;
+        const head = node.kind === "fragment" ? `... on ${node.name}` : `${field}${node.args}`;
+        if (node.kind === "field" && node.children.length === 0) {
+            lines.push(`${indent}${head}`);
         } else {
-            lines.push(`${indent}${node.name}${node.args} {`);
+            lines.push(`${indent}${head} {`);
             lines.push(renderSelection(node.children, `${indent}  `));
             lines.push(`${indent}}`);
         }
@@ -146,6 +202,13 @@ function renderSelection(nodes: SelectionNode[], indent: string): string {
  * into one selection of that head. Paths are validated against the tree as
  * they walk: an unknown segment fails with every other invalid path listed,
  * reported with the full caller-provided path (not just the failing segment).
+ *
+ * Union members are addressed by type-qualified paths: a first segment that
+ * names an inline fragment's type condition (`"TextActivity.text"`) selects
+ * inside that spread, and the bare type name (`"TextActivity"`) keeps the
+ * whole spread. The type name is a scope, not a field: it never renders as a
+ * property, and paths that continue past it are re-based onto the spread's
+ * children.
  *
  * @param nodes - The maximal selection tree.
  * @param paths - The caller-requested dot paths.
@@ -199,7 +262,7 @@ function pruneSelection(
         const segments = path.split(".");
         const head = segments[0];
         if (!byName.has(head)) {
-            unknown.push(path);
+            unknown.push(prefix === "" ? path : `${prefix}.${path}`);
             continue;
         }
         if (segments.length === 1) {
@@ -229,8 +292,9 @@ function pruneSelection(
         }
         if (subs === undefined) continue;
         // Prune this node's children by the requested sub-paths. A node with
-        // no children (a scalar) cannot be drilled into; requesting a sub-path
-        // under it is an unknown field.
+        // no children cannot be drilled into; requesting a sub-path under it
+        // is an unknown field. The parser rejects empty inline fragments, so
+        // a childless node here is always a scalar field.
         if (node.children.length === 0) {
             const full = (s: string): string =>
                 prefix === "" ? `${node.name}.${s}` : `${prefix}.${node.name}.${s}`;
@@ -240,7 +304,9 @@ function pruneSelection(
             ]);
         }
         out.push({
+            kind: node.kind,
             name: node.name,
+            fieldName: node.fieldName,
             args: node.args,
             children: pruneSelection(
                 node.children,

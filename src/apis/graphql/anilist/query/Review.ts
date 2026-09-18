@@ -99,7 +99,10 @@ export class ReviewQuery extends AniListOperation {
      * const result = await new ReviewQuery().review({ mediaId: 1 });
      * ```
      */
-    async review(variables: ReviewVariables, options?: RequestOptions): Promise<ReviewResponse>;
+    async review(
+        variables: ReviewVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<ReviewResponse>;
     async review(
         variables: ReviewVariables,
         options: RequestOptions & { fields: undefined }

@@ -493,7 +493,10 @@ export class MediasQuery extends AniListOperation {
      * const result = await new MediasQuery().medias({ search: "Cowboy Bebop", page: 1 });
      * ```
      */
-    async medias(variables: MediasVariables, options?: RequestOptions): Promise<MediasPageResponse>;
+    async medias(
+        variables: MediasVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<MediasPageResponse>;
     async medias(
         variables: MediasVariables,
         options: RequestOptions & { fields: undefined }

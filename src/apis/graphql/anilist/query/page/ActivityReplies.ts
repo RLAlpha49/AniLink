@@ -86,7 +86,7 @@ export class ActivityRepliesQuery extends AniListOperation {
      */
     async activityReplies(
         variables: ActivityRepliesVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ActivityRepliesPageResponse>;
     async activityReplies(
         variables: ActivityRepliesVariables,

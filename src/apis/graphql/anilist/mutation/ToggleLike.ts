@@ -66,7 +66,10 @@ export class ToggleLikeMutation extends AniListOperation {
      * const result = await new ToggleLikeMutation("your-token").toggleLike({ id: 1, type: "ACTIVITY" });
      * ```
      */
-    async toggleLike(variables: ToggleLikeVariables, options?: RequestOptions): Promise<BasicUser>;
+    async toggleLike(
+        variables: ToggleLikeVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<BasicUser>;
     async toggleLike(
         variables: ToggleLikeVariables,
         options: RequestOptions & { fields: undefined }

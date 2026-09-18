@@ -87,7 +87,7 @@ export class SaveRecommendationMutation extends AniListOperation {
      */
     async saveRecommendation(
         variables: SaveRecommendationVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<RecommendationResponse>;
     async saveRecommendation(
         variables: SaveRecommendationVariables,

@@ -385,7 +385,7 @@ export class UpdateUserMutation extends AniListOperation {
      */
     async updateUser(
         variables: UpdateUserVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<UpdateUserResponse>;
     async updateUser(
         variables: UpdateUserVariables,

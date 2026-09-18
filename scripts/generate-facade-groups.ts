@@ -72,6 +72,8 @@ interface RegistryEntry {
     name: string;
     className: string;
     methodName: string;
+    /** The declared `fieldsEnabled` flag on the registry entry (defaults to `false`). */
+    fieldsEnabled: boolean;
 }
 
 /** The derived signature facts for one bound operation method. */
@@ -81,7 +83,7 @@ interface MethodInfo {
     variablesOptional: boolean;
     responseType: string;
     see: string | null;
-    /** Whether the operation accepts a `fields` selection option (imports from `schemas/selection/`). */
+    /** Whether the operation accepts a `fields` selection option, as declared by the registry entry's `fieldsEnabled` flag. */
     hasFields: boolean;
     /** Root-level keys the operation always selects, quoted for a type union (e.g. `"id" | "idMal"`); parsed from the class's composeDocument argument. */
     alwaysKeys: string[];
@@ -97,6 +99,8 @@ interface MethodInfo {
      * alias). `null` when the bound is the response type itself.
      */
     fieldPathType: string | null;
+    /** The response element type selected by the narrowing overload's `DeepPick`. */
+    selectionType: string;
 }
 
 /**
@@ -180,17 +184,18 @@ export function parseRegistrySource(registrySource: string): RegistryEntry[] {
             throw new Error(`Could not locate the "${category}" group in registry.ts.`);
         }
         const entryRegex =
-            /\b(?:opAs|op)\(\s*"([^"]+)"\s*,\s*(\w+)\s*(?:,\s*"([^"]+)"\s*)?(?:,\s*\w+\s*)?\)/g;
+            /\b(?:opAs|op)\(\s*"([^"]+)"\s*,\s*(\w+)\s*(?:,\s*"([^"]+)"\s*)?(?:,\s*\{\s*fieldsEnabled:\s*(true|false)\s*,?\s*\}\s*)?\)/g;
         const parsed = [...categoryMatch[1].matchAll(entryRegex)].map((entry) => ({
             category,
             name: entry[1],
             className: entry[2],
             methodName: entry[3] ?? entry[1],
+            fieldsEnabled: entry[4] === "true",
         }));
         // Count guard: every op/opAs call in the block must be parsed. A call
-        // shape the regex does not cover (e.g. a fifth argument) would
-        // otherwise be silently dropped from generation — a wrong public
-        // facade with no error.
+        // shape the regex does not cover (e.g. an options object the
+        // fieldsEnabled regex does not match) would otherwise be silently
+        // dropped from generation — a wrong public facade with no error.
         const rawCalls = categoryMatch[1].match(/\b(?:opAs|op)\(/g) ?? [];
         if (parsed.length !== rawCalls.length) {
             throw new Error(
@@ -362,15 +367,27 @@ function loadMethodInfo(entry: RegistryEntry): MethodInfo {
         declaredLocally.add(declaration[1]);
     }
 
-    // A `fields` operation composes its document from the selection
-    // composer under schemas/selection/; the class file imports from that
-    // directory (query, page, and mutation classes alike).
-    const hasFields = /from\s+"[^"]*schemas\/selection\//.test(source);
+    // The registry entry declares whether the operation has a `fields`
+    // surface (the flag added in R-043, replacing the old import heuristic).
+    // The class file's `schemas/selection/` imports are kept as a consistency
+    // assert: a flag that disagrees with the import style means the registry
+    // declaration and the operation class have drifted — fail loudly instead
+    // of silently emitting a facade whose surface does not match the runtime.
+    const importsFromSelection = /from\s+"[^"]*schemas\/selection\//.test(source);
+    if (entry.fieldsEnabled !== importsFromSelection) {
+        throw new Error(
+            `Registry entry "${entry.category}:${entry.name}" declares fieldsEnabled: ${entry.fieldsEnabled} ` +
+                `but its class ${entry.className} ${importsFromSelection ? "imports from" : "does not import from"} schemas/selection/ ` +
+                `in ${classPath}. Fix the registry flag or the operation class so they agree.`
+        );
+    }
+    const hasFields = entry.fieldsEnabled;
 
     // The always-selected keys come from the operation class itself: the
     // constant (or empty literal) the class passes to composeDocument is the
-    // single source of truth, parsed from the class source the same way
-    // `hasFields` is — so the generated DeepPick union can never drift from
+    // single source of truth, parsed from the class source (the same class
+    // file the `fieldsEnabled` consistency assert reads) — so the generated
+    // DeepPick union can never drift from
     // what the runtime document actually selects. Operations without a
     // `fields` surface send the maximal document as-is and have no
     // always-keys.
@@ -411,6 +428,15 @@ function loadMethodInfo(entry: RegistryEntry): MethodInfo {
     const responseElement = responseType.replace(/\[\]$/, "");
     const fieldPathType =
         fieldPathMatch && fieldPathMatch[1] !== responseElement ? fieldPathMatch[1] : null;
+    const selectionMatch = new RegExp(
+        `async\\s+${escapeRegExp(entry.methodName)}<K extends FieldPath<\\w+>>[\\s\\S]*?Promise<DeepPick<(\\w+),`
+    ).exec(source);
+    if (hasFields && !selectionMatch) {
+        throw new Error(
+            `Method ${entry.className}.${entry.methodName} has an unrecognized DeepPick response in ${classPath}.`
+        );
+    }
+    const selectionType = selectionMatch?.[1] ?? responseElement;
 
     return {
         hasVariables,
@@ -424,6 +450,7 @@ function loadMethodInfo(entry: RegistryEntry): MethodInfo {
         declaredLocally,
         classModule,
         fieldPathType,
+        selectionType,
     };
 }
 
@@ -603,10 +630,10 @@ function renderMember(
                 ? ` | ${method.alwaysKeys.join(" | ")}`
                 : "";
             const narrow = arrayMatch
-                ? `DeepPick<${element}, K${alwaysUnion}>[]`
-                : `DeepPick<${element}, K${alwaysUnion}>`;
+                ? `DeepPick<${method.selectionType}, K${alwaysUnion}>[]`
+                : `DeepPick<${method.selectionType}, K${alwaysUnion}>`;
             lines.push(
-                `${pad}${entry.name}: ((variables${optionalMarker}: ${variablesType}, options?: RequestOptions) => Promise<${response}>) &`
+                `${pad}${entry.name}: ((variables${optionalMarker}: ${variablesType}, options?: RequestOptions & { fields?: undefined }) => Promise<${response}>) &`
             );
             lines.push(
                 `${pad}    ((variables: ${variablesType}, options: RequestOptions & { fields: undefined }) => Promise<${response}>) &`
@@ -811,8 +838,10 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
         if (responseModule) {
             addImport(queryImports, responseModule, method.responseType.replace(/\[\]$/, ""));
         }
-        if (method.fieldPathType) {
-            addImport(queryImports, `../${method.classModule}`, method.fieldPathType);
+        for (const type of [method.fieldPathType, method.selectionType]) {
+            if (type === null) continue;
+            const modulePath = resolveResponseModule(type, method);
+            if (modulePath) addImport(queryImports, modulePath, type);
         }
     }
 
@@ -833,8 +862,10 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
         if (responseModule) {
             addImport(queryImports, responseModule, method.responseType.replace(/\[\]$/, ""));
         }
-        if (method.fieldPathType) {
-            addImport(queryImports, `../${method.classModule}`, method.fieldPathType);
+        for (const type of [method.fieldPathType, method.selectionType]) {
+            if (type === null) continue;
+            const modulePath = resolveResponseModule(type, method);
+            if (modulePath) addImport(queryImports, modulePath, type);
         }
     }
 
@@ -855,8 +886,10 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
         if (responseModule) {
             addImport(mutationImports, responseModule, method.responseType.replace(/\[\]$/, ""));
         }
-        if (method.fieldPathType) {
-            addImport(mutationImports, `../${method.classModule}`, method.fieldPathType);
+        for (const type of [method.fieldPathType, method.selectionType]) {
+            if (type === null) continue;
+            const modulePath = resolveResponseModule(type, method);
+            if (modulePath) addImport(mutationImports, modulePath, type);
         }
     }
 

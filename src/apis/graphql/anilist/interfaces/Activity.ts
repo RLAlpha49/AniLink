@@ -402,7 +402,10 @@ export interface ActivityNotification {
     /**
      * The liked activity
      */
-    activity: Activity;
+    activity:
+        | Omit<TextActivity, "user" | "replies" | "likes">
+        | Omit<ListActivity, "user" | "replies" | "likes">
+        | Omit<MessageActivity, "recipient" | "messenger" | "replies" | "likes">;
 
     /**
      * The user who mentioned the authenticated user

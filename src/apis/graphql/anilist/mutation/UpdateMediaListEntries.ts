@@ -141,7 +141,7 @@ export class UpdateMediaListEntriesMutation extends AniListOperation {
      */
     async updateMediaListEntries(
         variables: UpdateMediaListEntriesVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<MediaListResponse[]>;
     async updateMediaListEntries(
         variables: UpdateMediaListEntriesVariables,

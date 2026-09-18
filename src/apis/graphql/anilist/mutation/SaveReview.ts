@@ -100,7 +100,7 @@ export class SaveReviewMutation extends AniListOperation {
      */
     async saveReview(
         variables: SaveReviewVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ReviewResponse>;
     async saveReview(
         variables: SaveReviewVariables,

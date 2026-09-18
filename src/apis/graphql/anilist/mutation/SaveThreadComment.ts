@@ -94,7 +94,7 @@ export class SaveThreadCommentMutation extends AniListOperation {
      */
     async saveThreadComment(
         variables: SaveThreadCommentVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ThreadCommentResponse>;
     async saveThreadComment(
         variables: SaveThreadCommentVariables,

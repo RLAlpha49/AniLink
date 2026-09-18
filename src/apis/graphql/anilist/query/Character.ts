@@ -140,7 +140,7 @@ export class CharacterQuery extends AniListOperation {
      */
     async character(
         variables: CharacterVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<CharacterResponse>;
     async character(
         variables: CharacterVariables,

@@ -70,6 +70,18 @@ test.each([
     expect(mockSendRequest).not.toHaveBeenCalled();
 });
 
+test("rejects an empty updateFavouriteOrder call before dispatch", async () => {
+    // `implies` alone is vacuously satisfied when nothing is set; the
+    // companion `one` requirement rejects the empty call locally instead
+    // of leaving it to the server.
+    const client = createTestClient("validation-token");
+
+    await expect(client.anilist.mutation.updateFavouriteOrder({} as never)).rejects.toBeInstanceOf(
+        AniLinkValidationError
+    );
+    expect(mockSendRequest).not.toHaveBeenCalled();
+});
+
 const transportContractCases: Array<{
     /** Human-readable row label shown by the test runner. */
     name: string;

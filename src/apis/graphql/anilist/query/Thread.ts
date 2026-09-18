@@ -122,7 +122,10 @@ export class ThreadQuery extends AniListOperation {
      * const result = await new ThreadQuery().thread({ id: 1 });
      * ```
      */
-    async thread(variables: ThreadVariables, options?: RequestOptions): Promise<ThreadResponse>;
+    async thread(
+        variables: ThreadVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<ThreadResponse>;
     async thread(
         variables: ThreadVariables,
         options: RequestOptions & { fields: undefined }

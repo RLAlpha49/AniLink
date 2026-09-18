@@ -70,7 +70,7 @@ export class RateReviewMutation extends AniListOperation {
      */
     async rateReview(
         variables: RateReviewVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ReviewResponse>;
     async rateReview(
         variables: RateReviewVariables,

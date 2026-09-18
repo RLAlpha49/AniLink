@@ -189,7 +189,10 @@ export class StaffQuery extends AniListOperation {
      * const result = await new StaffQuery().staff({ id: 1 });
      * ```
      */
-    async staff(variables: StaffVariables, options?: RequestOptions): Promise<StaffResponse>;
+    async staff(
+        variables: StaffVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<StaffResponse>;
     async staff(
         variables: StaffVariables,
         options: RequestOptions & { fields: undefined }

@@ -88,7 +88,7 @@ export class SaveActivityReplyMutation extends AniListOperation {
      */
     async saveActivityReply(
         variables: SaveActivityReplyVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ActivityReply>;
     async saveActivityReply(
         variables: SaveActivityReplyVariables,

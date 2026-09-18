@@ -1,71 +1,11 @@
 /**
  * The pagination and pure-helper members of the `AniListApi` type.
  */
-import { type MediaListCollectionResponse } from "../interfaces/responses/query/MediaListCollectionResponse";
-import { type FuzzyDateOptions } from "../helpers/fuzzyDate";
-import { type FlattenedMediaListEntry } from "../helpers/flattenMediaListCollection";
-import { type CrossLinkMedia, type CrossLinkResult } from "../helpers/crossLink";
-import {
-    type PaginateOptions,
-    type PaginateResult,
-    type ChunkPaginateOptions,
-    type ChunkPaginateResult,
-} from "../Paginator";
-import { type PageInfo } from "../interfaces/responses/page/PageInfo";
-import { type FuzzyDateInput } from "../types/FuzzyDate";
-
-/**
- * Callback that fetches a single {@link PageInfo}-based page.
- *
- * The optional third parameter is the traversal's `AbortSignal`, forwarded
- * from the `signal` option of the pagination helpers so an aborted
- * traversal cancels the in-flight page request instead of only stopping
- * new launches. It mirrors the fetcher signature of the exported
- * `paginate`/`paginatePages` functions.
- */
-type PageFetcher<TPage extends { pageInfo: PageInfo }> = (
-    page: number,
-    perPage: number,
-    signal?: AbortSignal
-) => Promise<TPage>;
-
-/**
- * The element type of the items array stored at `itemsKey` on a page response;
- * `never` when `itemsKey` is not an array-typed key, so a bad key collapses
- * `items` to `never[]` at the call site instead of blocking `TPage` inference
- * from the fetch callback.
- */
-type PageItem<TPage extends { pageInfo: PageInfo }, K extends string> = K extends keyof TPage
-    ? TPage[K] extends readonly (infer U)[]
-        ? U
-        : never
-    : never;
-
-/**
- * The element type of the items array stored at `itemsKey` on a chunk response;
- * `never` when `itemsKey` is not an array-typed key, so a bad key collapses
- * `items` to `never[]` at the call site instead of blocking `TChunk` inference
- * from the fetch callback.
- */
-type ChunkItem<TChunk extends { hasNextChunk: boolean }, K extends string> = K extends keyof TChunk
-    ? TChunk[K] extends readonly (infer U)[]
-        ? U
-        : never
-    : never;
-
-/**
- * Callback that fetches a single `MediaListCollection` chunk.
- *
- * The optional third parameter is the traversal's `AbortSignal`, forwarded
- * from the `signal` option of `paginateChunks` so an aborted traversal
- * cancels the in-flight chunk request. It mirrors the fetcher signature of
- * the exported `paginateChunks` function.
- */
-type ChunkFetcher<TChunk extends { hasNextChunk: boolean }> = (
-    chunk: number,
-    perChunk: number,
-    signal?: AbortSignal
-) => Promise<TChunk>;
+import type { fuzzyDate } from "../helpers/fuzzyDate";
+import type { fuzzyDateInt } from "../helpers/fuzzyDateInt";
+import type { flattenMediaListCollection } from "../helpers/flattenMediaListCollection";
+import type { crossLink } from "../helpers/crossLink";
+import type { paginate, paginatePages, paginateChunks } from "../Paginator";
 
 /**
  * Pagination and transformation helpers exposed by `AniListApi`.
@@ -74,12 +14,12 @@ type ChunkFetcher<TChunk extends { hasNextChunk: boolean }> = (
  */
 export type AniListHelpers = {
     /**
-     * {@link paginate} walks {@link PageInfo}-based pages until `hasNextPage` is false or `maxPages` is
-     * reached, collecting every item across pages.
+     * {@link paginate} walks `PageInfo`-based pages until `hasNextPage` is false, the received
+     * `lastPage` bound is reached, or `maxPages` is reached, collecting every item across pages.
      * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal` (forwarded from the `signal` option so an aborted traversal cancels the in-flight request).
      * @param itemsKey - The key of the items array on the page response (e.g. `"media"`, `"users"`).
-     * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, and `onPage` controls; a {@link PaginateOptions}.
-     * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run; a {@link PaginateResult}.
+     * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, and `onPage` controls; a `PaginateOptions`.
+     * @returns The collected items, per-page snapshots, page count, and whether the guard or the server-reported `lastPage` bound truncated the run; a `PaginateResult`.
      * @see https://docs.anilist.co/reference/object/pageinfo
      * @example
      * ```typescript
@@ -90,17 +30,13 @@ export type AniListHelpers = {
      * );
      * ```
      */
-    paginate: <TPage extends { pageInfo: PageInfo }, K extends string>(
-        fetchPage: PageFetcher<TPage>,
-        itemsKey: K,
-        options?: PaginateOptions
-    ) => Promise<PaginateResult<PageItem<TPage, K>>>;
+    paginate: typeof paginate;
 
     /**
-     * `paginatePages` is an async generator yielding each {@link PageInfo}-based page until
-     * `hasNextPage` is false or `maxPages` is reached.
+     * `paginatePages` is an async generator yielding each `PageInfo`-based page until
+     * `hasNextPage` is false, the received `lastPage` bound is reached, or `maxPages` is reached.
      * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal` (forwarded from the `signal` option so an aborted traversal cancels the in-flight request).
-     * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, and `signal` controls; a {@link PaginateOptions}.
+     * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, and `signal` controls; a `PaginateOptions`.
      * @returns An async generator yielding each raw page response in turn.
      * @see https://docs.anilist.co/reference/object/pageinfo
      * @example
@@ -112,18 +48,15 @@ export type AniListHelpers = {
      * }
      * ```
      */
-    paginatePages: <TPage extends { pageInfo: PageInfo }>(
-        fetchPage: PageFetcher<TPage>,
-        options?: PaginateOptions
-    ) => AsyncGenerator<TPage>;
+    paginatePages: typeof paginatePages;
 
     /**
-     * {@link paginateChunks} iterates {@link MediaListCollectionResponse} chunks until `hasNextChunk` is
+     * {@link paginateChunks} iterates `MediaListCollectionResponse` chunks until `hasNextChunk` is
      * false or `maxChunks` is reached, collecting every item across chunks.
      * @param fetchChunk - Callback that fetches a single chunk given its 1-based number, `perChunk`, and the traversal's `AbortSignal` (forwarded from the `signal` option so an aborted traversal cancels the in-flight request).
      * @param itemsKey - The key of the items array on the chunk response (e.g. `"lists"`).
-     * @param options - Optional `perChunk`, `startChunk`, `maxChunks`, `concurrency`, `signal`, and `onChunk` controls; a {@link ChunkPaginateOptions}.
-     * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run; a {@link ChunkPaginateResult}.
+     * @param options - Optional `perChunk`, `startChunk`, `maxChunks`, `concurrency`, `signal`, and `onChunk` controls; a `ChunkPaginateOptions`.
+     * @returns The collected items, per-chunk snapshots, chunk count, and whether the guard truncated the run; a `ChunkPaginateResult`.
      * @see https://docs.anilist.co/reference/object/medialistcollection
      * @example
      * ```typescript
@@ -136,27 +69,23 @@ export type AniListHelpers = {
      * );
      * ```
      */
-    paginateChunks: <TChunk extends { hasNextChunk: boolean }, K extends string>(
-        fetchChunk: ChunkFetcher<TChunk>,
-        itemsKey: K,
-        options?: ChunkPaginateOptions
-    ) => Promise<ChunkPaginateResult<ChunkItem<TChunk, K>>>;
+    paginateChunks: typeof paginateChunks;
 
     /**
-     * {@link fuzzyDate} builds an AniList {@link FuzzyDateInput} from optional year, month, and day parts.
-     * @param options - The year, month, and day to include; a {@link FuzzyDateOptions}. All fields are optional.
-     * @returns A {@link FuzzyDateInput} object with omitted parts set to `0`, the value AniList uses for an unknown date part.
+     * {@link fuzzyDate} builds an AniList `FuzzyDateInput` from optional year, month, and day parts.
+     * @param options - The year, month, and day to include; a `FuzzyDateOptions`. All fields are optional.
+     * @returns A `FuzzyDateInput` object with omitted parts set to `0`, the value AniList uses for an unknown date part.
      * @see https://docs.anilist.co/reference/input/fuzzydateinput
      * @example
      * ```typescript
      * const startedAt = aniLink.anilist.fuzzyDate({ year: 2024, month: 4, day: 15 });
      * ```
      */
-    fuzzyDate: (options?: FuzzyDateOptions) => FuzzyDateInput;
+    fuzzyDate: typeof fuzzyDate;
     /**
      * {@link fuzzyDateInt} builds the `YYYYMMDD` integer AniList's `FuzzyDateInt` query arguments expect
      * from optional year, month, and day parts, filling omitted parts with `0`.
-     * @param options - The year, month, and day parts to pack. All fields are optional; a {@link FuzzyDateOptions}.
+     * @param options - The year, month, and day parts to pack. All fields are optional; a `FuzzyDateOptions`.
      * @returns The `YYYYMMDD` integer for `startDate`/`endDate`/`startedAt`/`completedAt` query filter variables.
      * @see https://docs.anilist.co/reference/input/fuzzydateinput
      * @example
@@ -172,13 +101,13 @@ export type AniListHelpers = {
      * });
      * ```
      */
-    fuzzyDateInt: (options?: FuzzyDateOptions) => number;
+    fuzzyDateInt: typeof fuzzyDateInt;
 
     /**
-     * {@link flattenMediaListCollection} flattens a {@link MediaListCollectionResponse} into a single array of
+     * {@link flattenMediaListCollection} flattens a `MediaListCollectionResponse` into a single array of
      * entries tagged with their list group.
-     * @param response - The {@link MediaListCollectionResponse} returned by `mediaListCollection`.
-     * @returns A flat array of {@link FlattenedMediaListEntry} across all list groups.
+     * @param response - The `MediaListCollectionResponse` returned by `mediaListCollection`.
+     * @returns A flat array of `FlattenedMediaListEntry` across all list groups.
      * @see https://docs.anilist.co/reference/object/medialistcollection
      * @example
      * ```typescript
@@ -187,14 +116,12 @@ export type AniListHelpers = {
      * console.log(entries.length, entries[0].listNames);
      * ```
      */
-    flattenMediaListCollection: (
-        response: MediaListCollectionResponse
-    ) => FlattenedMediaListEntry[];
+    flattenMediaListCollection: typeof flattenMediaListCollection;
 
     /**
      * {@link crossLink} builds bidirectional AniList↔MyAnimeList id lookup maps from AniList media entries.
      * @param media - AniList media entries carrying `id` and `idMal`; e.g. the `media` array of a `page.medias` response, or a one-element array around a `query.media` result.
-     * @returns The `anilistToMal` and `malToAnilist` lookup maps plus the `unmapped` entries without a MAL id; a {@link CrossLinkResult}.
+     * @returns The `anilistToMal` and `malToAnilist` lookup maps plus the `unmapped` entries without a MAL id; a `CrossLinkResult`.
      * @see https://docs.anilist.co/reference/object/media
      * @example
      * ```typescript
@@ -207,5 +134,5 @@ export type AniListHelpers = {
      * }
      * ```
      */
-    crossLink: <TMedia extends CrossLinkMedia>(media: readonly TMedia[]) => CrossLinkResult<TMedia>;
+    crossLink: typeof crossLink;
 };

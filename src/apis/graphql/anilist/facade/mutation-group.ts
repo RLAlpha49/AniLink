@@ -6,7 +6,13 @@
  * JSDoc prose lives in scripts/generate-facade-groups.config.ts.
  */
 import { type RequestOptions } from "../../../../base/RequestHandler";
-import { type Activity, type ActivityReply } from "../interfaces/Activity";
+import {
+    type Activity,
+    type ActivityReply,
+    type ListActivity,
+    type MessageActivity,
+    type TextActivity,
+} from "../interfaces/Activity";
 import { type BasicUser } from "../interfaces/Basic";
 import { type Likeable } from "../interfaces/Likeable";
 import { type DeleteMediaListEntryResponse } from "../interfaces/responses/mutation/DeleteMediaListEntry";
@@ -139,7 +145,7 @@ export type AniListMutations = {
          */
         updateUser: ((
             variables: UpdateUserVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<UpdateUserResponse>) &
             ((
                 variables: UpdateUserVariables,
@@ -165,7 +171,7 @@ export type AniListMutations = {
          */
         saveMediaListEntry: ((
             variables: SaveMediaListEntryVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<MediaListResponse>) &
             ((
                 variables: SaveMediaListEntryVariables,
@@ -196,7 +202,7 @@ export type AniListMutations = {
          */
         updateMediaListEntries: ((
             variables: UpdateMediaListEntriesVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<MediaListResponse[]>) &
             ((
                 variables: UpdateMediaListEntriesVariables,
@@ -223,7 +229,7 @@ export type AniListMutations = {
          */
         deleteMediaListEntry: ((
             variables: DeleteMediaListEntryVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<DeleteMediaListEntryResponse>) &
             ((
                 variables: DeleteMediaListEntryVariables,
@@ -249,7 +255,7 @@ export type AniListMutations = {
          */
         deleteCustomList: ((
             variables: DeleteCustomListVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<DeleteResult>) &
             ((
                 variables: DeleteCustomListVariables,
@@ -275,16 +281,16 @@ export type AniListMutations = {
          */
         saveTextActivity: ((
             variables: SaveTextActivityVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<Activity>) &
             ((
                 variables: SaveTextActivityVariables,
                 options: RequestOptions & { fields: undefined }
             ) => Promise<Activity>) &
-            (<K extends FieldPath<Activity>>(
+            (<K extends FieldPath<TextActivity>>(
                 variables: SaveTextActivityVariables,
                 options: RequestOptions & { fields: readonly K[] | undefined }
-            ) => Promise<DeepPick<Activity, K>>);
+            ) => Promise<DeepPick<TextActivity, K>>);
 
         /**
          * `SaveMessageActivityMutation` creates or updates a message activity for the authenticated user; `id` is required only when updating.
@@ -301,16 +307,16 @@ export type AniListMutations = {
          */
         saveMessageActivity: ((
             variables: SaveMessageActivityVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<Activity>) &
             ((
                 variables: SaveMessageActivityVariables,
                 options: RequestOptions & { fields: undefined }
             ) => Promise<Activity>) &
-            (<K extends FieldPath<Activity>>(
+            (<K extends FieldPath<MessageActivity>>(
                 variables: SaveMessageActivityVariables,
                 options: RequestOptions & { fields: readonly K[] | undefined }
-            ) => Promise<DeepPick<Activity, K>>);
+            ) => Promise<DeepPick<MessageActivity, K>>);
 
         /**
          * `SaveListActivityMutation` saves a list activity on the AniList API.
@@ -328,16 +334,16 @@ export type AniListMutations = {
          */
         saveListActivity: ((
             variables: SaveListActivityVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<Activity>) &
             ((
                 variables: SaveListActivityVariables,
                 options: RequestOptions & { fields: undefined }
             ) => Promise<Activity>) &
-            (<K extends FieldPath<Activity>>(
+            (<K extends FieldPath<ListActivity>>(
                 variables: SaveListActivityVariables,
                 options: RequestOptions & { fields: readonly K[] | undefined }
-            ) => Promise<DeepPick<Activity, K>>);
+            ) => Promise<DeepPick<ListActivity, K>>);
 
         /**
          * `DeleteActivityMutation` deletes one of the authenticated user's own activities.
@@ -354,7 +360,7 @@ export type AniListMutations = {
          */
         deleteActivity: ((
             variables: DeleteActivityVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<DeleteResult>) &
             ((
                 variables: DeleteActivityVariables,
@@ -379,10 +385,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
          */
-        toggleActivityPin: (
+        toggleActivityPin: ((
             variables: ToggleActivityPinVariables,
-            options?: RequestOptions
-        ) => Promise<Activity>;
+            options?: RequestOptions & { fields?: undefined }
+        ) => Promise<Activity>) &
+            ((
+                variables: ToggleActivityPinVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<Activity>) &
+            (<K extends FieldPath<Activity>>(
+                variables: ToggleActivityPinVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<Activity, K>>);
 
         /**
          * `ToggleActivitySubscriptionMutation` subscribes or unsubscribes the authenticated user from an activity.
@@ -398,10 +412,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/union/activityunion
          */
-        toggleActivitySubscription: (
+        toggleActivitySubscription: ((
             variables: ToggleActivitySubscriptionVariables,
-            options?: RequestOptions
-        ) => Promise<Activity>;
+            options?: RequestOptions & { fields?: undefined }
+        ) => Promise<Activity>) &
+            ((
+                variables: ToggleActivitySubscriptionVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<Activity>) &
+            (<K extends FieldPath<Activity>>(
+                variables: ToggleActivitySubscriptionVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<Activity, K>>);
 
         /**
          * `SaveActivityReplyMutation` creates or updates a reply on an activity; `id` is required only when updating.
@@ -418,7 +440,7 @@ export type AniListMutations = {
          */
         saveActivityReply: ((
             variables: SaveActivityReplyVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<ActivityReply>) &
             ((
                 variables: SaveActivityReplyVariables,
@@ -444,7 +466,7 @@ export type AniListMutations = {
          */
         deleteActivityReply: ((
             variables: DeleteActivityReplyVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<DeleteResult>) &
             ((
                 variables: DeleteActivityReplyVariables,
@@ -471,7 +493,7 @@ export type AniListMutations = {
          */
         toggleLike: ((
             variables: ToggleLikeVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<BasicUser>) &
             ((
                 variables: ToggleLikeVariables,
@@ -496,10 +518,18 @@ export type AniListMutations = {
          * ```
          * @see https://docs.anilist.co/reference/union/likeableunion
          */
-        toggleLikeV2: (
+        toggleLikeV2: ((
             variables: ToggleLikeVariables,
-            options?: RequestOptions
-        ) => Promise<Likeable>;
+            options?: RequestOptions & { fields?: undefined }
+        ) => Promise<Likeable>) &
+            ((
+                variables: ToggleLikeVariables,
+                options: RequestOptions & { fields: undefined }
+            ) => Promise<Likeable>) &
+            (<K extends FieldPath<Likeable>>(
+                variables: ToggleLikeVariables,
+                options: RequestOptions & { fields: readonly K[] | undefined }
+            ) => Promise<DeepPick<Likeable, K>>);
 
         /**
          * `ToggleFollowMutation` toggles the authenticated user's follow of the user named by `userId`.
@@ -516,7 +546,7 @@ export type AniListMutations = {
          */
         toggleFollow: ((
             variables: ToggleFollowVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<UserResponse>) &
             ((
                 variables: ToggleFollowVariables,
@@ -542,7 +572,7 @@ export type AniListMutations = {
          */
         toggleFavourite: ((
             variables: ToggleFavouriteVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<Favourites>) &
             ((
                 variables: ToggleFavouriteVariables,
@@ -579,7 +609,7 @@ export type AniListMutations = {
          */
         updateFavouriteOrder: ((
             variables: UpdateFavouriteOrderVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<Favourites>) &
             ((
                 variables: UpdateFavouriteOrderVariables,
@@ -605,7 +635,7 @@ export type AniListMutations = {
          */
         saveReview: ((
             variables: SaveReviewVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<ReviewResponse>) &
             ((
                 variables: SaveReviewVariables,
@@ -631,7 +661,7 @@ export type AniListMutations = {
          */
         rateReview: ((
             variables: RateReviewVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<ReviewResponse>) &
             ((
                 variables: RateReviewVariables,
@@ -657,7 +687,7 @@ export type AniListMutations = {
          */
         deleteReview: ((
             variables: DeleteReviewVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<DeleteResult>) &
             ((
                 variables: DeleteReviewVariables,
@@ -683,7 +713,7 @@ export type AniListMutations = {
          */
         saveRecommendation: ((
             variables: SaveRecommendationVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<RecommendationResponse>) &
             ((
                 variables: SaveRecommendationVariables,
@@ -718,7 +748,7 @@ export type AniListMutations = {
          */
         saveThread: ((
             variables: SaveThreadVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<ThreadResponse>) &
             ((
                 variables: SaveThreadVariables,
@@ -744,7 +774,7 @@ export type AniListMutations = {
          */
         deleteThread: ((
             variables: DeleteThreadVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<DeleteResult>) &
             ((
                 variables: DeleteThreadVariables,
@@ -770,7 +800,7 @@ export type AniListMutations = {
          */
         toggleThreadSubscription: ((
             variables: ToggleThreadSubscriptionVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<ThreadResponse>) &
             ((
                 variables: ToggleThreadSubscriptionVariables,
@@ -803,7 +833,7 @@ export type AniListMutations = {
          */
         saveThreadComment: ((
             variables: SaveThreadCommentVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<ThreadCommentResponse>) &
             ((
                 variables: SaveThreadCommentVariables,
@@ -829,7 +859,7 @@ export type AniListMutations = {
          */
         deleteThreadComment: ((
             variables: DeleteThreadCommentVariables,
-            options?: RequestOptions
+            options?: RequestOptions & { fields?: undefined }
         ) => Promise<DeleteResult>) &
             ((
                 variables: DeleteThreadCommentVariables,

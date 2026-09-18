@@ -63,7 +63,7 @@ export class ToggleFollowMutation extends AniListOperation {
      */
     async toggleFollow(
         variables: ToggleFollowVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<UserResponse>;
     async toggleFollow(
         variables: ToggleFollowVariables,

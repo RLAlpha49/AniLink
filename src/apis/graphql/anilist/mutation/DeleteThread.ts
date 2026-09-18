@@ -64,7 +64,7 @@ export class DeleteThreadMutation extends AniListOperation {
      */
     async deleteThread(
         variables: DeleteThreadVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<DeleteResult>;
     async deleteThread(
         variables: DeleteThreadVariables,

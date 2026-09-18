@@ -71,7 +71,7 @@ export class DeleteCustomListMutation extends AniListOperation {
      */
     async deleteCustomList(
         variables: DeleteCustomListVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<DeleteResult>;
     async deleteCustomList(
         variables: DeleteCustomListVariables,

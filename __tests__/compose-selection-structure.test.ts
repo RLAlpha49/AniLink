@@ -37,6 +37,24 @@ describe("composeDocument structure failures", () => {
         );
     });
 
+    test("rejects an inline fragment that selects no fields", () => {
+        // `... on TextActivity {` closed on the very next line would re-render
+        // as an empty selection set — invalid GraphQL — so the parser fails at
+        // parse time, naming the fragment, instead of shipping a document the
+        // server rejects with a less actionable message.
+        const malformed = [
+            "query { Media (id: $id) {",
+            "  ... on TextActivity {",
+            "  }",
+            "}",
+            "}",
+        ].join("\n");
+        expect(() => composeDocument(malformed, ["TextActivity"], [])).toThrow(
+            AniLinkValidationError
+        );
+        expect(() => composeDocument(malformed, ["TextActivity"], [])).toThrow(/selects no fields/);
+    });
+
     test("repeated composition of the same document is stable (parse cache)", () => {
         const maximal = [
             "query ($id: Int) { Media (id: $id) {",

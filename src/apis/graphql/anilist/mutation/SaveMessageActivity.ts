@@ -8,7 +8,7 @@ import type {
     FieldsSelection,
 } from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
-import { type Activity } from "../interfaces/Activity";
+import { type Activity, type MessageActivity } from "../interfaces/Activity";
 import { MessageActivitySchema } from "../schemas/Activity";
 
 /**
@@ -92,7 +92,7 @@ export class SaveMessageActivityMutation extends AniListOperation {
      * @returns The {@link Activity} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `message` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/union/activityunion
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<Activity, K>`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<MessageActivity, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveMessageActivityMutation("your-token").saveMessageActivity({ id: 1, message: "Hello, world!" });
@@ -100,19 +100,19 @@ export class SaveMessageActivityMutation extends AniListOperation {
      */
     async saveMessageActivity(
         variables: SaveMessageActivityVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<Activity>;
     async saveMessageActivity(
         variables: SaveMessageActivityVariables,
         options: RequestOptions & { fields: undefined }
     ): Promise<Activity>;
-    async saveMessageActivity<K extends FieldPath<Activity>>(
+    async saveMessageActivity<K extends FieldPath<MessageActivity>>(
         variables: SaveMessageActivityVariables,
         options: RequestOptions & { fields: readonly K[] | undefined }
-    ): Promise<DeepPick<Activity, K>>;
+    ): Promise<DeepPick<MessageActivity, K>>;
     async saveMessageActivity(
         variables: SaveMessageActivityVariables,
-        options?: RequestOptions & FieldsSelection<Activity>
+        options?: RequestOptions & FieldsSelection<MessageActivity>
     ): FieldsResult<Activity> {
         const mutation = `
       mutation ($id: Int, $message: String, $recipientId: Int, $private: Boolean, $locked: Boolean, $asMod: Boolean, $asHtml: Boolean) {

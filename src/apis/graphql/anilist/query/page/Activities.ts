@@ -1,4 +1,12 @@
 import { AniListOperation } from "../../AniListOperation";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../../base/RequestHandler";
 import { type ActivitiesPageResponse } from "../../interfaces/responses/page/Activities";
 import { ActivityTypeMappings } from "../../types/ActivityType";
@@ -220,8 +228,20 @@ export class ActivitiesQuery extends AniListOperation {
      */
     async activities(
         variables: ActivitiesVariables,
-        options?: RequestOptions
-    ): Promise<ActivitiesPageResponse> {
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<ActivitiesPageResponse>;
+    async activities(
+        variables: ActivitiesVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<ActivitiesPageResponse>;
+    async activities<K extends FieldPath<ActivitiesPageResponse>>(
+        variables: ActivitiesVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<ActivitiesPageResponse, K | "pageInfo">>;
+    async activities(
+        variables: ActivitiesVariables,
+        options?: RequestOptions & FieldsSelection<ActivitiesPageResponse>
+    ): FieldsResult<ActivitiesPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $id: Int, $userId: Int, $messengerId: Int, $mediaId: Int, $type: ActivityType, $isFollowing: Boolean, $hasReplies: Boolean, $hasRepliesOrTypeText: Boolean, $createdAt: Int, $id_not: Int, $id_in: [Int], $id_not_in: [Int], $userId_not: Int, $userId_in: [Int], $userId_not_in: [Int], $messengerId_not: Int, $messengerId_in: [Int], $messengerId_not_in: [Int], $mediaId_not: Int, $mediaId_in: [Int], $mediaId_not_in: [Int], $type_not: ActivityType, $type_in: [ActivityType], $type_not_in: [ActivityType], $createdAt_greater: Int, $sort: [ActivitySort], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -238,9 +258,14 @@ export class ActivitiesQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<ActivitiesPageResponse>(query, variables, {
-            mappings: ActivitiesMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<ActivitiesPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: ActivitiesMappings,
+                transportOptions,
+            }
+        );
     }
 }

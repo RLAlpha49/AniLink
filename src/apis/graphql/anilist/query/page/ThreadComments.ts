@@ -100,7 +100,7 @@ export class ThreadCommentsQuery extends AniListOperation {
      */
     async threadComments(
         variables: ThreadCommentsVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ThreadCommentsPageResponse>;
     async threadComments(
         variables: ThreadCommentsVariables,

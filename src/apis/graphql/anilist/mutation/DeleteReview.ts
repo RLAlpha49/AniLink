@@ -64,7 +64,7 @@ export class DeleteReviewMutation extends AniListOperation {
      */
     async deleteReview(
         variables: DeleteReviewVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<DeleteResult>;
     async deleteReview(
         variables: DeleteReviewVariables,

@@ -112,7 +112,7 @@ export class FollowersQuery extends AniListOperation {
      */
     async followers(
         variables: FollowersVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<FollowersPageResponse>;
     async followers(
         variables: FollowersVariables,

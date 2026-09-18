@@ -189,7 +189,10 @@ export class StaffsQuery extends AniListOperation {
      * const result = await new StaffsQuery().staffs({ search: "Hayao Miyazaki", page: 1 });
      * ```
      */
-    async staffs(variables: StaffsVariables, options?: RequestOptions): Promise<StaffsPageResponse>;
+    async staffs(
+        variables: StaffsVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<StaffsPageResponse>;
     async staffs(
         variables: StaffsVariables,
         options: RequestOptions & { fields: undefined }

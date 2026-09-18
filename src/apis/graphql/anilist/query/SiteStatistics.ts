@@ -186,7 +186,7 @@ export class SiteStatisticsQuery extends AniListOperation {
      */
     async siteStatistics(
         variables?: SiteStatisticsVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<SiteStatisticsResponse>;
     async siteStatistics(
         variables: SiteStatisticsVariables,

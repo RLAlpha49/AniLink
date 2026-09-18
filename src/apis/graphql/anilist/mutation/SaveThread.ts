@@ -106,7 +106,7 @@ export class SaveThreadMutation extends AniListOperation {
      */
     async saveThread(
         variables: SaveThreadVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ThreadResponse>;
     async saveThread(
         variables: SaveThreadVariables,

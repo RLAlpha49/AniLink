@@ -235,7 +235,7 @@ export class MediaListQuery extends AniListOperation {
      */
     async mediaList(
         variables: MediaListVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<MediaListResponse>;
     async mediaList(
         variables: MediaListVariables,

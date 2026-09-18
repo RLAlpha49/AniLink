@@ -212,7 +212,10 @@ export class StudioQuery extends AniListOperation {
      * const result = await new StudioQuery().studio({ id: 1 });
      * ```
      */
-    async studio(variables: StudioVariables, options?: RequestOptions): Promise<StudioResponse>;
+    async studio(
+        variables: StudioVariables,
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<StudioResponse>;
     async studio(
         variables: StudioVariables,
         options: RequestOptions & { fields: undefined }

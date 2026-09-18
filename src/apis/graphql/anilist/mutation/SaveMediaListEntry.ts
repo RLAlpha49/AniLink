@@ -168,7 +168,7 @@ export class SaveMediaListEntryMutation extends AniListOperation {
      */
     async saveMediaListEntry(
         variables: SaveMediaListEntryVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<MediaListResponse>;
     async saveMediaListEntry(
         variables: SaveMediaListEntryVariables,

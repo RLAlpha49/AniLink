@@ -64,7 +64,7 @@ export class DeleteMediaListEntryMutation extends AniListOperation {
      */
     async deleteMediaListEntry(
         variables: DeleteMediaListEntryVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<DeleteMediaListEntryResponse>;
     async deleteMediaListEntry(
         variables: DeleteMediaListEntryVariables,

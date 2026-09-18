@@ -75,7 +75,7 @@ export class ToggleThreadSubscriptionMutation extends AniListOperation {
      */
     async toggleThreadSubscription(
         variables: ToggleThreadSubscriptionVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<ThreadResponse>;
     async toggleThreadSubscription(
         variables: ToggleThreadSubscriptionVariables,

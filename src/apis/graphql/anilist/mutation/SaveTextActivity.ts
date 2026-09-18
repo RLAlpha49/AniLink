@@ -8,7 +8,7 @@ import type {
     FieldsSelection,
 } from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
-import { type Activity } from "../interfaces/Activity";
+import { type Activity, type TextActivity } from "../interfaces/Activity";
 import { TextActivitySchema } from "../schemas/Activity";
 
 /**
@@ -74,7 +74,7 @@ export class SaveTextActivityMutation extends AniListOperation {
      * @returns The {@link Activity} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `text` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/union/activityunion
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<Activity, K>`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<TextActivity, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveTextActivityMutation("your-token").saveTextActivity({ id: 1, text: "Hello, world!" });
@@ -82,19 +82,19 @@ export class SaveTextActivityMutation extends AniListOperation {
      */
     async saveTextActivity(
         variables: SaveTextActivityVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<Activity>;
     async saveTextActivity(
         variables: SaveTextActivityVariables,
         options: RequestOptions & { fields: undefined }
     ): Promise<Activity>;
-    async saveTextActivity<K extends FieldPath<Activity>>(
+    async saveTextActivity<K extends FieldPath<TextActivity>>(
         variables: SaveTextActivityVariables,
         options: RequestOptions & { fields: readonly K[] | undefined }
-    ): Promise<DeepPick<Activity, K>>;
+    ): Promise<DeepPick<TextActivity, K>>;
     async saveTextActivity(
         variables: SaveTextActivityVariables,
-        options?: RequestOptions & FieldsSelection<Activity>
+        options?: RequestOptions & FieldsSelection<TextActivity>
     ): FieldsResult<Activity> {
         const mutation = `
       mutation ($id: Int, $text: String, $locked: Boolean, $asHtml: Boolean) {

@@ -1,4 +1,12 @@
 import { AniListOperation } from "../../AniListOperation";
+import { composeDocument } from "../../schemas/selection/composeSelection";
+import { PAGE_ALWAYS, splitFieldsOption } from "../../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../../base/RequestHandler";
 
 import { type NotificationsPageResponse } from "../../interfaces/responses/page/Notifications";
@@ -83,8 +91,20 @@ export class NotificationsQuery extends AniListOperation {
      */
     async notifications(
         variables: NotificationsVariables,
-        options?: RequestOptions
-    ): Promise<NotificationsPageResponse> {
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<NotificationsPageResponse>;
+    async notifications(
+        variables: NotificationsVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<NotificationsPageResponse>;
+    async notifications<K extends FieldPath<NotificationsPageResponse>>(
+        variables: NotificationsVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<NotificationsPageResponse, K | "pageInfo">>;
+    async notifications(
+        variables: NotificationsVariables,
+        options?: RequestOptions & FieldsSelection<NotificationsPageResponse>
+    ): FieldsResult<NotificationsPageResponse, "pageInfo"> {
         const query = `
       query ($page: Int, $perPage: Int, $type: NotificationType, $resetNotificationCount: Boolean, $type_in: [NotificationType], $asHtml: Boolean) {
         Page (page: $page, perPage: $perPage) {
@@ -101,9 +121,14 @@ export class NotificationsQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<NotificationsPageResponse>(query, variables, {
-            mappings: NotificationsMappings,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<NotificationsPageResponse>(
+            composeDocument(query, fields, PAGE_ALWAYS),
+            variables,
+            {
+                mappings: NotificationsMappings,
+                transportOptions,
+            }
+        );
     }
 }

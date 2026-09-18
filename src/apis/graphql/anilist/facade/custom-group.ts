@@ -1,4 +1,4 @@
-import type { RequestOptions } from "../../../../base/RequestHandler";
+import type { CustomRequest } from "../CustomRequest";
 
 /**
  * The `custom` member group of the `AniListApi` type.
@@ -15,7 +15,7 @@ export type AniListCustom = {
      * resolves to the full `{ data }` envelope.
      * @param query - The GraphQL query or mutation document to send verbatim.
      * @param variables - The variables to forward with the request. Optional.
-     * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
+     * @param options - Optional per-request transport settings (`RequestOptions`) merged over the instance-level ones for this call only.
      * @returns {Promise<T>} A promise that resolves to the unwrapped response, typed as `T` (defaults to `unknown`).
      * @throws {AniLinkError} When the request fails. When AniList returns partial success (some fields resolve while others fail inside an HTTP 200 envelope), the thrown `AniLinkGraphQLError` exposes the resolved portion via its `partialData` field, so the fields that did resolve remain recoverable from the error.
      * @see https://docs.anilist.co/reference/query
@@ -29,9 +29,5 @@ export type AniListCustom = {
      * const response = await aniLink.anilist.custom(mutation, variables);
      * ```
      */
-    custom: <T = unknown>(
-        query: string,
-        variables?: Record<string, unknown>,
-        options?: RequestOptions
-    ) => Promise<T>;
+    custom: CustomRequest["custom"];
 };

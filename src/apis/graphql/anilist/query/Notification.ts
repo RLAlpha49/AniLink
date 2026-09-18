@@ -1,4 +1,12 @@
 import { AniListOperation } from "../AniListOperation";
+import { composeDocument } from "../schemas/selection/composeSelection";
+import { splitFieldsOption } from "../schemas/selection/fieldsSelection";
+import type {
+    DeepPick,
+    FieldPath,
+    FieldsResult,
+    FieldsSelection,
+} from "../schemas/selection/fieldsSelection";
 import type { RequestOptions } from "../../../../base/RequestHandler";
 import { type NotificationResponse } from "../interfaces/responses/query/Notification";
 import { type NotificationType, NotificationTypeMappings } from "../types/Type";
@@ -69,8 +77,20 @@ export class NotificationQuery extends AniListOperation {
      */
     async notification(
         variables: NotificationVariables,
-        options?: RequestOptions
-    ): Promise<NotificationResponse> {
+        options?: RequestOptions & { fields?: undefined }
+    ): Promise<NotificationResponse>;
+    async notification(
+        variables: NotificationVariables,
+        options: RequestOptions & { fields: undefined }
+    ): Promise<NotificationResponse>;
+    async notification<K extends FieldPath<NotificationResponse>>(
+        variables: NotificationVariables,
+        options: RequestOptions & { fields: readonly K[] | undefined }
+    ): Promise<DeepPick<NotificationResponse, K>>;
+    async notification(
+        variables: NotificationVariables,
+        options?: RequestOptions & FieldsSelection<NotificationResponse>
+    ): FieldsResult<NotificationResponse> {
         const query = `
       query ($type: NotificationType, $resetNotificationCount: Boolean, $type_in: [NotificationType], $asHtml: Boolean) {
         Notification (type: $type, resetNotificationCount: $resetNotificationCount, type_in: $type_in) {
@@ -78,10 +98,15 @@ export class NotificationQuery extends AniListOperation {
         }
       }
     `;
-        return await this.execute<NotificationResponse>(query, variables, {
-            mappings: NotificationMappings,
-            requiresAuth: true,
-            transportOptions: options,
-        });
+        const { fields, transportOptions } = splitFieldsOption(options);
+        return await this.execute<NotificationResponse>(
+            composeDocument(query, fields, []),
+            variables,
+            {
+                mappings: NotificationMappings,
+                requiresAuth: true,
+                transportOptions,
+            }
+        );
     }
 }

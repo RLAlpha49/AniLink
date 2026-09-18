@@ -89,7 +89,7 @@ export class ToggleFavouriteMutation extends AniListOperation {
      */
     async toggleFavourite(
         variables: ToggleFavouriteVariables,
-        options?: RequestOptions
+        options?: RequestOptions & { fields?: undefined }
     ): Promise<Favourites>;
     async toggleFavourite(
         variables: ToggleFavouriteVariables,
