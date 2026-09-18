@@ -64,6 +64,49 @@ jobs:
                     exit 1
                   fi
 
+            # The workflow_run conclusion is green even when an individual
+            # job inside the run was skipped or soft-failed, so a future CI
+            # edit that quietly drops a gate would still publish. Query the
+            # triggering run's jobs and require every one to have completed
+            # with success — a skipped or failed job blocks the release
+            # instead of hiding behind the green workflow conclusion. Every
+            # job is checked rather than an expected-name list so the gate
+            # survives CI restructures and also covers jobs added later.
+            - name: Verify every CI job ran and succeeded
+              if: ${{ github.event_name == 'workflow_run' }}
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  RUN_ID: ${{ github.event.workflow_run.id }}
+              run: |
+                  api_failures=0
+                  api_stderr="$(mktemp)"
+                  while :; do
+                    if jobs_tsv="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs" \
+                        --jq '.jobs[] | [.name, .status, (.conclusion // "none")] | @tsv' 2>"$api_stderr")"; then
+                      break
+                    fi
+                    api_failures=$((api_failures + 1))
+                    if [ "$api_failures" -ge 5 ]; then
+                      echo "::error::GitHub API kept failing while listing jobs for CI run ${RUN_ID}"
+                      cat "$api_stderr"
+                      exit 1
+                    fi
+                    sleep 30
+                  done
+                  total_jobs="$(printf '%s\n' "$jobs_tsv" | grep -c . || true)"
+                  if [ "$total_jobs" -eq 0 ]; then
+                    echo "::error::CI run ${RUN_ID} reported no jobs; refusing to publish"
+                    exit 1
+                  fi
+                  bad_jobs="$(printf '%s\n' "$jobs_tsv" | awk -F'\t' '$2 != "completed" || $3 != "success"')"
+                  if [ -n "$bad_jobs" ]; then
+                    echo "::error::CI run ${RUN_ID} concluded green but not every job succeeded; refusing to publish:"
+                    printf '%s\n' "$bad_jobs" | awk -F'\t' '{printf "  %s (%s)\n", $1, $3}'
+                    exit 1
+                  fi
+                  echo "All ${total_jobs} jobs in CI run ${RUN_ID} completed successfully."
+
             # The gate polls (like the docs deploy gate) instead of checking
             # once: a dispatch shortly after a push would otherwise fail while
             # CI is still running. The branch comes from the dispatched ref,
