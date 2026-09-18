@@ -13,13 +13,19 @@ import { paginate, paginatePages, paginateChunks } from "../src/apis/graphql/ani
 import type { PageInfo } from "../src/apis/graphql/anilist/interfaces/responses/page/PageInfo";
 import { microtaskLatency } from "./helpers/microtaskLatency";
 
-/** Build a {@link PageInfo} object for tests. */
+/**
+ * Build a {@link PageInfo} object for tests. The default `lastPage` is beyond
+ * any page the arbitraries can reach (`startPage` and `maxPages` are each
+ * capped at 1000, so the highest page is 1999), so the paginator's lastPage
+ * launch bound never fires unless a test overrides it — termination is driven
+ * by `hasNextPage` here.
+ */
 function pageInfo(overrides: Partial<PageInfo> = {}): PageInfo {
     return {
         total: 100,
         perPage: 50,
         currentPage: 1,
-        lastPage: 2,
+        lastPage: Number.MAX_SAFE_INTEGER,
         hasNextPage: true,
         ...overrides,
     };

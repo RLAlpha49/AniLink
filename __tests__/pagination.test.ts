@@ -13,13 +13,17 @@ import { fuzzyDate } from "../src/apis/graphql/anilist/helpers/fuzzyDate";
 import { flattenMediaListCollection } from "../src/apis/graphql/anilist/helpers/flattenMediaListCollection";
 import type { MediaListCollectionResponse } from "../src/apis/graphql/anilist/interfaces/responses/query/MediaListCollectionResponse";
 
-/** Build a {@link PageInfo} object for tests. */
+/**
+ * Build a {@link PageInfo} object for tests. The default `lastPage` is large
+ * enough that the paginator's lastPage launch bound never fires unless a test
+ * overrides it — termination is driven by `hasNextPage` here.
+ */
 function pageInfo(overrides: Partial<PageInfo> = {}): PageInfo {
     return {
         total: 100,
         perPage: 50,
         currentPage: 1,
-        lastPage: 2,
+        lastPage: 1000,
         hasNextPage: true,
         ...overrides,
     };
@@ -371,6 +375,31 @@ describe("paginatePages", () => {
         expect(yielded).toHaveLength(2);
     });
 
+    test("stops launching pages beyond the lastPage bound reported by a received page", async () => {
+        const launchedPages: number[] = [];
+        const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
+            launchedPages.push(page);
+            return {
+                pageInfo: pageInfo({
+                    currentPage: page,
+                    lastPage: 3,
+                    hasNextPage: page < 3,
+                }),
+                media: [{ id: page }],
+            };
+        });
+
+        const yielded: TestPage[] = [];
+        for await (const page of paginatePages(fetchPage, { concurrency: 2 })) {
+            yielded.push(page);
+        }
+
+        expect(yielded).toHaveLength(3);
+        // Page 1 reported lastPage 3, so the look-ahead refill stops at
+        // page 3 instead of launching pages the server said do not exist.
+        expect(launchedPages).toEqual([1, 2, 3]);
+    });
+
     test("supports early break from the consumer loop", async () => {
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
             pageInfo: pageInfo({ currentPage: page, hasNextPage: true }),
@@ -524,10 +553,10 @@ describe("paginatePages", () => {
         expect(first.value.pageInfo.currentPage).toBe(1);
 
         // Break without releasing pages 2 and 3: the iterator must complete
-        // promptly instead of hanging on the unresolved stragglers.
-        const settledBeforeBreak = Date.now();
+        // without awaiting the unresolved stragglers. Their gates are never
+        // released, so a return() that awaited them would hang this test —
+        // completion itself is the deterministic proof.
         await expect(generator.return(undefined)).resolves.toMatchObject({ done: true });
-        expect(Date.now() - settledBeforeBreak).toBeLessThan(1_000);
         expect(launchedPages).toEqual([1, 2, 3]);
     });
 
@@ -550,10 +579,10 @@ describe("paginatePages", () => {
         });
 
         const generator = paginatePages(fetchPage, { concurrency: 3 });
-        const settledAt = Date.now();
+        // Pages 2 and 3 were launched as stragglers but never released, so a
+        // next() that awaited them before rejecting would hang this test —
+        // the rejection itself is the deterministic proof.
         await expect(generator.next()).rejects.toThrow("page 1 failed");
-        expect(Date.now() - settledAt).toBeLessThan(1_000);
-        // Pages 2 and 3 were launched as stragglers but never released.
         expect(launchedPages).toEqual([1, 2, 3]);
         // Releasing the stragglers later must not surface an unhandled rejection.
         gates.forEach((release) => release());

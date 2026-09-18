@@ -75,7 +75,8 @@ console.log(chunked.items.length, chunked.chunkCount, chunked.truncated);
 
 - Results are always **in page/chunk order**, regardless of completion order — concurrency never shuffles your data.
 - Scheduling stops only after the terminal result is processed (consumed in order), not when it settles: a fetched page reporting `hasNextPage: false` (or a chunk reporting `hasNextChunk: false`) halts further scheduling once it has been consumed, and any already-launched stragglers are drained and discarded.
-- `truncated` is `true` when the traversal stopped at `maxPages`/`maxChunks` before the source ran out.
+- Page look-ahead never launches a page beyond the smallest `pageInfo.lastPage` a received page has reported: those requests would only be drained and discarded, so skipping them keeps their rate-limit spend off the wire. Chunk traversals are not affected — `MediaListCollection` chunks carry no `pageInfo`.
+- `truncated` is `true` when the traversal stopped at `maxPages`/`maxChunks` before the source ran out, or when the `lastPage` bound ended a page traversal whose last fetched page still reported `hasNextPage: true` — a short read is never mistaken for a clean end. For `paginatePages`, the same situation is visible on the last yielded page's `pageInfo` (`hasNextPage: true` at `currentPage === lastPage`) since a generator has no result flag.
 - `hasNextChunk` semantics: `paginateChunks` continues while the fetched chunk reports more chunks ahead, up to `maxChunks`.
 
 ## Cancelling look-ahead

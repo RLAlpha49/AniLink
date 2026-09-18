@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+    extractLastPageBound,
     fetchCursorChain,
     fetchNumericWithLookAhead,
     fetchWithLookAhead,
@@ -220,6 +221,54 @@ describe("fetchNumericWithLookAhead", () => {
         expect(result.count).toBe(1);
         expect(result.responses).toEqual([1]);
         expect(result.truncated).toBe(false);
+    });
+
+    test("never launches pages beyond the lastPage bound reported by a received page", async () => {
+        const requested: number[] = [];
+        const result = await fetchNumericWithLookAhead<{ page: number; more: boolean }>(
+            async (n) => {
+                requested.push(n);
+                return { page: n, more: n < 5, pageInfo: { lastPage: 3 } };
+            },
+            (response) => response.more,
+            1,
+            20,
+            2,
+            undefined,
+            extractLastPageBound
+        );
+
+        // Page 1 reports lastPage 3: the window keeps overlapping latency but
+        // never launches a page the server said does not exist, so the run
+        // ends at page 3 instead of launching discarded pages 4+. Page 3
+        // still reports more data, so the bound cut is surfaced as
+        // truncation instead of a clean end.
+        expect(result.responses.map((r) => r.page)).toEqual([1, 2, 3]);
+        expect(result.count).toBe(3);
+        expect(result.truncated).toBe(true);
+        expect(requested).toEqual([1, 2, 3]);
+    });
+
+    test("treats a lastPage of 0 as no bound and keeps launching ahead", async () => {
+        const requested: number[] = [];
+        const result = await fetchNumericWithLookAhead<{ page: number; more: boolean }>(
+            async (n) => {
+                requested.push(n);
+                return { page: n, more: n < 3, pageInfo: { lastPage: 0 } };
+            },
+            (response) => response.more,
+            1,
+            10,
+            2,
+            undefined,
+            extractLastPageBound
+        );
+
+        // lastPage 0 means "unknown": the window keeps launching ahead of
+        // consumption exactly as it does for a response without pageInfo.
+        expect(result.responses.map((r) => r.page)).toEqual([1, 2, 3]);
+        expect(result.count).toBe(3);
+        expect(requested).toEqual([1, 2, 3, 4]);
     });
 });
 

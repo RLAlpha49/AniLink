@@ -35,7 +35,11 @@ export interface LookAheadResult<TEntry> {
     /** Number of entries actually fetched. */
     count: number;
 
-    /** Whether the traversal stopped at `maxEntries` before the source ran out. */
+    /**
+     * Whether the traversal stopped early — at the `maxEntries` guard, or at
+     * a launch bound a received entry reported while that entry still
+     * reported more data — so a short read is not mistaken for a clean end.
+     */
     truncated: boolean;
 }
 
@@ -159,8 +163,9 @@ export function bridgeAbortSignal(external: AbortSignal | undefined): AbortBridg
  * but-unconsumed requests so round-trip latency overlaps instead of stacking,
  * while results are appended strictly in entry order no matter when each
  * request settles. Scheduling stops as soon as an entry reports "no more data"
- * (per the caller-supplied `extractHasMore`) or the `maxEntries` guard fires;
- * `truncated` mirrors the sequential semantics.
+ * (per the caller-supplied `extractHasMore`), at the `maxEntries` guard, or —
+ * when `extractBound` is supplied — at the smallest launch bound a received
+ * entry reported; `truncated` mirrors the sequential semantics.
  *
  * Because the window runs ahead of consumption, up to `concurrency - 1`
  * already-launched requests may complete past a terminal entry; their payloads
@@ -182,8 +187,9 @@ export function bridgeAbortSignal(external: AbortSignal | undefined): AbortBridg
  * @param maxEntries - Hard cap on entries fetched, guarding against unbounded loops.
  * @param concurrency - Maximum number of requests kept in flight at once.
  * @param signal - Optional `AbortSignal` to cancel the traversal.
+ * @param extractBound - Optional reader for the terminal page bound a fetched entry reports (AniList's `pageInfo.lastPage`). Supply it only when entry numbers are page numbers; chunk-style traversals omit it so their scheduling is governed solely by the terminal entry and guard checks.
  * @returns The responses in entry order, how many were fetched, and whether
- *          the guard truncated the run.
+ *          the guard or a reported launch bound truncated the run.
  * @throws The rejection from the next unconsumed `fetch` call in entry order,
  *         unless the `signal` aborted (in which case a partial result is returned).
  * @see {@link LookAheadResult}
@@ -194,7 +200,8 @@ export async function fetchWithLookAhead<TEntry>(
     startNumber: number,
     maxEntries: number,
     concurrency: number,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    extractBound?: (response: TEntry) => number | undefined
 ): Promise<LookAheadResult<TEntry>>;
 /**
  * Shared look-ahead driver for paged traversals — cursor paging overload.
@@ -252,6 +259,7 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
               maxEntries: number,
               concurrency: number,
               signal?: AbortSignal,
+              extractBound?: (response: TEntry) => number | undefined,
           ]
         | [
               fetch: (key: number) => Promise<TEntry>,
@@ -301,16 +309,44 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
         );
     }
     // Numeric overload: (fetch, extractHasMore, startNumber, maxEntries,
-    // concurrency, signal?)
-    const [fetch, extractHasMore, startNumber, maxEntries, concurrency, signal] = args;
+    // concurrency, signal?, extractBound?)
+    const [fetch, extractHasMore, startNumber, maxEntries, concurrency, signal, extractBound] =
+        args;
     return fetchNumericWithLookAhead(
         fetch,
         extractHasMore,
         startNumber,
         maxEntries,
         concurrency,
-        signal
+        signal,
+        extractBound
     );
+}
+
+/**
+ * Read the terminal-page bound a fetched page reports — AniList's
+ * `pageInfo.lastPage` — so numeric look-ahead scheduling can stop launching
+ * pages the server has already said do not exist. AniList page traversals
+ * pass this as the look-ahead driver's `extractBound`; chunk traversals
+ * supply no bound reader. Returns `undefined` when
+ * the response carries no usable bound (a non-object payload, a missing or
+ * malformed `pageInfo`, or a `lastPage` that is not a positive finite number,
+ * such as the `0` AniList reports when the true count is unknown), leaving
+ * scheduling to the existing terminal-entry and guard checks.
+ *
+ * @param response - A fetched page response of any shape.
+ * @returns The positive `lastPage` bound reported by the page, or `undefined` when unknown.
+ * @see {@link fetchNumericWithLookAhead}
+ */
+export function extractLastPageBound(response: unknown): number | undefined {
+    if (typeof response !== "object" || response === null) return undefined;
+    const pageInfo = (response as { pageInfo?: unknown }).pageInfo;
+    if (typeof pageInfo !== "object" || pageInfo === null) return undefined;
+    const lastPage = (pageInfo as { lastPage?: unknown }).lastPage;
+    if (typeof lastPage !== "number" || !Number.isFinite(lastPage) || lastPage <= 0) {
+        return undefined;
+    }
+    return lastPage;
 }
 
 /**
@@ -319,8 +355,16 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
  * overlaps round-trip latency while results are appended strictly in entry
  * order. Scheduling stops as soon as an entry reports "no more data" or the
  * `maxEntries` guard fires; already-launched stragglers are drained and
- * discarded. An abort settles in-flight requests and returns the collected
- * prefix as a partial result with `truncated: false`.
+ * discarded. When `extractBound` is supplied (AniList page traversals pass
+ * {@link extractLastPageBound}), scheduling also never launches an entry
+ * numbered beyond the smallest positive bound a received entry reported:
+ * those requests were going to be drained and discarded anyway, so skipping
+ * them keeps their quota spend off the wire. A traversal the bound ends while
+ * the last consumed entry still reports more data returns `truncated: true`
+ * so the short read is not mistaken for a clean end. Traversals whose entries
+ * carry no page numbers (chunks) omit `extractBound` and leave the existing
+ * guards in charge. An abort settles in-flight requests and returns the
+ * collected prefix as a partial result with `truncated: false`.
  *
  * @typeParam TEntry - The raw response shape of a single page or chunk.
  * @param fetch - Callback that fetches a single entry given its numeric key.
@@ -329,7 +373,8 @@ export async function fetchWithLookAhead<TEntry, TKey = number>(
  * @param maxEntries - Hard cap on entries fetched, guarding against unbounded loops.
  * @param concurrency - Maximum number of requests kept in flight at once.
  * @param signal - Optional `AbortSignal` to cancel the traversal.
- * @returns The responses in entry order, how many were fetched, and whether the guard truncated the run.
+ * @param extractBound - Optional reader for the terminal page bound a fetched entry reports (AniList's `pageInfo.lastPage`); omit it for chunk-style traversals whose entries carry no page numbers.
+ * @returns The responses in entry order, how many were fetched, and whether the guard or a reported bound truncated the run.
  * @throws The rejection from the next unconsumed `fetch` call in entry order, unless the `signal` aborted.
  * @see {@link LookAheadResult}
  */
@@ -339,13 +384,23 @@ export async function fetchNumericWithLookAhead<TEntry>(
     startNumber: number,
     maxEntries: number,
     concurrency: number,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    extractBound?: (response: TEntry) => number | undefined
 ): Promise<LookAheadResult<TEntry>> {
     const responses: TEntry[] = [];
     const pending: Promise<void>[] = [];
     let launched = 0;
     let count = 0;
     let truncated = false;
+    // Optional terminal-page bound reader. Chunk traversals share this
+    // driver and their entries carry no page numbers, so they omit it and
+    // the bound below stays `Infinity` forever — page semantics belong to
+    // the callers that know their entries are pages.
+    const readBound = extractBound ?? ((): number | undefined => undefined);
+    // Smallest positive bound observed on a received entry; `Infinity` until
+    // one reports it. The bound only tightens (min), so a later entry
+    // reporting a larger value cannot re-open the window.
+    let lastPageBound = Number.POSITIVE_INFINITY;
 
     while (count < maxEntries) {
         if (signal?.aborted) {
@@ -353,7 +408,11 @@ export async function fetchNumericWithLookAhead<TEntry>(
             responses.length = count;
             return { responses, count, truncated: false };
         }
-        while (launched < maxEntries && launched - count < concurrency) {
+        while (
+            launched < maxEntries &&
+            launched - count < concurrency &&
+            startNumber + launched <= lastPageBound
+        ) {
             const slot = launched;
             launched += 1;
             const request = fetch(startNumber + slot).then((response) => {
@@ -367,7 +426,18 @@ export async function fetchNumericWithLookAhead<TEntry>(
             void request.catch(() => {});
         }
 
-        if (count >= launched) break;
+        if (count >= launched) {
+            // With entries still under the guard, only a launch bound can
+            // empty the window (the maxEntries and concurrency gates always
+            // leave launched ahead of count). Exiting there while the last
+            // consumed entry still reports more data means the bound cut the
+            // traversal short — surface that like any other truncation
+            // instead of a silent clean end.
+            if (count > 0 && extractHasMore(responses[count - 1])) {
+                truncated = true;
+            }
+            break;
+        }
 
         try {
             await pending[count];
@@ -380,6 +450,13 @@ export async function fetchNumericWithLookAhead<TEntry>(
             throw err;
         }
         count += 1;
+
+        // Tighten the launch bound from the entry just consumed: entries
+        // beyond the reported last page would only be drained and discarded.
+        const observedBound = readBound(responses[count - 1]);
+        if (observedBound !== undefined && observedBound < lastPageBound) {
+            lastPageBound = observedBound;
+        }
 
         if (!extractHasMore(responses[count - 1])) {
             // Terminal entry: drain already-launched stragglers so nothing

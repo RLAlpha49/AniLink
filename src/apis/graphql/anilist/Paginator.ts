@@ -8,6 +8,7 @@ import {
 import { AniLinkValidationError } from "../../../base/AniLinkError";
 import {
     bridgeAbortSignal,
+    extractLastPageBound,
     fetchWithLookAhead,
     MAX_CONCURRENCY,
     resolveCappedInt,
@@ -86,7 +87,7 @@ type ArrayKeys<T> = {
  * `K` is not an array-typed key, so a bad `itemsKey` collapses `items` to `never[]`
  * at the call site instead of blocking `TPage` inference.
  */
-type ArrayElement<T, K extends keyof T> =
+type ArrayElement<T, K extends string> =
     K extends ArrayKeys<T> ? (T[K] extends readonly (infer U)[] ? U : never) : never;
 
 /** Options controlling a {@link paginate} traversal over {@link PageInfo}-based pages. */
@@ -248,7 +249,11 @@ export interface PaginateResult<TItem> {
     /** Number of pages fetched. */
     pageCount: number;
 
-    /** `true` when the traversal stopped at `maxPages` before `hasNextPage` was false. */
+    /**
+     * `true` when the traversal stopped at `maxPages`, or at the server-reported
+     * `lastPage` bound while the last fetched page still reported
+     * `hasNextPage: true`.
+     */
     truncated: boolean;
 }
 
@@ -290,8 +295,10 @@ function extractHasMore(response: unknown): boolean {
  * Iterate {@link PageInfo}-based pages until `hasNextPage` is false or `maxPages` is reached.
  *
  * The helper calls `fetchPage(page, perPage)` for each page, extracts the items
- * array at `itemsKey`, and stops when AniList reports no further pages or when the
- * `maxPages` guard fires. The guard prevents accidental unbounded fetch loops.
+ * array at `itemsKey`, and stops when AniList reports no further pages — either
+ * `hasNextPage: false` or a `pageInfo.lastPage` the traversal has reached — or
+ * when the `maxPages` guard fires. The guard prevents accidental unbounded
+ * fetch loops.
  * Pass `concurrency` to keep multiple page requests in flight at once; results
  * are still collected strictly in page order. The default `maxPages` of 100
  * means an unconstrained traversal can issue up to 100 round-trips; set an
@@ -302,7 +309,7 @@ function extractHasMore(response: unknown): boolean {
  * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and an optional `AbortSignal` forwarded from the traversal.
  * @param itemsKey - The key of the items array on the page response (e.g. `"media"`, `"users"`).
  * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, `onPage`, and `onHookError` controls.
- * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run.
+ * @returns The collected items, per-page snapshots, page count, and whether the `maxPages` guard or the server-reported `lastPage` bound truncated the run.
  * @throws An {@link AniLinkValidationError} when a fetched page response has no `itemsKey` key at all (a typo'd key reads `undefined`); a present non-array value at the key is the documented `never[]` case and collects nothing.
  * @see https://docs.anilist.co/reference/object/pageinfo
  * @example
@@ -315,10 +322,7 @@ function extractHasMore(response: unknown): boolean {
  * console.log(result.items.length, result.truncated);
  * ```
  */
-export async function paginate<
-    TPage extends { pageInfo: PageInfo },
-    K extends keyof TPage & string,
->(
+export async function paginate<TPage extends { pageInfo: PageInfo }, K extends string>(
     fetchPage: (page: number, perPage: number, signal?: AbortSignal) => Promise<TPage>,
     itemsKey: K,
     options?: PaginateOptions
@@ -343,7 +347,8 @@ export async function paginate<
             startPage,
             maxPages,
             concurrency,
-            signal
+            signal,
+            extractLastPageBound
         );
 
         const items: ArrayElement<TPage, K>[] = [];
@@ -353,10 +358,10 @@ export async function paginate<
             // mistake and must fail loudly — a silent empty result is the
             // hardest failure to debug in a pagination API where empty is a
             // normal outcome. A present non-array value (e.g. `pageInfo`) is
-            // the documented `never[]` case: the type-level guard already
-            // rejects it at compile time, so at runtime it collects nothing
-            // instead of spreading a non-iterable.
-            const raw = response[itemsKey] as unknown;
+            // the documented `never[]` case: `ArrayElement` collapses the
+            // item type to `never` at compile time, so at runtime it collects
+            // nothing instead of spreading a non-iterable.
+            const raw = response[itemsKey as keyof TPage] as unknown;
             if (raw === undefined) {
                 throw new AniLinkValidationError([
                     `paginate: the page response has no "${itemsKey}" key. Check the itemsKey argument.`,
@@ -379,7 +384,11 @@ export async function paginate<
 
 /**
  * Async generator that yields each {@link PageInfo}-based page response until
- * `hasNextPage` is false or `maxPages` is reached.
+ * `hasNextPage` is false, the smallest received `pageInfo.lastPage` is reached,
+ * or `maxPages` is reached. When the `lastPage` bound ends the traversal while
+ * the last yielded page still reports `hasNextPage: true`, the generator ends
+ * without a truncation flag — that page's `pageInfo` (`hasNextPage: true` with
+ * `currentPage` at `lastPage`) is the visible signal of the short read.
  *
  * Use this for streaming or early-exit workflows where collecting every item
  * into memory is unnecessary. The `maxPages` guard still prevents unbounded
@@ -433,9 +442,18 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
     let nextToLaunch = startPage;
     let nextToYield = startPage;
     let terminal = false;
+    // Smallest positive `pageInfo.lastPage` observed on a yielded page;
+    // `Infinity` until some page reports one. The bound only tightens (min),
+    // so a later page reporting a larger value cannot re-open the window.
+    let lastPageBound = Number.POSITIVE_INFINITY;
 
     const launchWindow = (): void => {
-        while (!terminal && nextToLaunch - startPage < maxPages && pending.size < concurrency) {
+        while (
+            !terminal &&
+            nextToLaunch - startPage < maxPages &&
+            pending.size < concurrency &&
+            nextToLaunch <= lastPageBound
+        ) {
             const page = nextToLaunch;
             nextToLaunch += 1;
             const request = fetchPage(page, perPage, signal);
@@ -463,6 +481,15 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
             }
             pending.delete(page);
             nextToYield += 1;
+            // Tighten the launch bound from the page just consumed: pages
+            // beyond the reported last page would only be drained and
+            // discarded on the consumer's early exit. Duck-typed so a
+            // malformed `pageInfo` leaves the existing guards in charge
+            // instead of throwing inside the bound bookkeeping.
+            const observedBound = extractLastPageBound(response);
+            if (observedBound !== undefined && observedBound < lastPageBound) {
+                lastPageBound = observedBound;
+            }
             yield response;
             if (!response.pageInfo.hasNextPage) {
                 terminal = true;
@@ -509,10 +536,7 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
  * console.log(result.items.length, result.truncated);
  * ```
  */
-export async function paginateChunks<
-    TChunk extends { hasNextChunk: boolean },
-    K extends keyof TChunk & string,
->(
+export async function paginateChunks<TChunk extends { hasNextChunk: boolean }, K extends string>(
     fetchChunk: (chunk: number, perChunk: number, signal?: AbortSignal) => Promise<TChunk>,
     itemsKey: K,
     options?: ChunkPaginateOptions
@@ -552,10 +576,10 @@ export async function paginateChunks<
             // mistake and must fail loudly — a silent empty result is the
             // hardest failure to debug in a pagination API where empty is a
             // normal outcome. A present non-array value (e.g. `hasNextChunk`) is
-            // the documented `never[]` case: the type-level guard already
-            // rejects it at compile time, so at runtime it collects nothing
-            // instead of spreading a non-iterable.
-            const raw = response[itemsKey] as unknown;
+            // the documented `never[]` case: `ArrayElement` collapses the
+            // item type to `never` at compile time, so at runtime it collects
+            // nothing instead of spreading a non-iterable.
+            const raw = response[itemsKey as keyof TChunk] as unknown;
             if (raw === undefined) {
                 throw new AniLinkValidationError([
                     `paginateChunks: the chunk response has no "${itemsKey}" key. Check the itemsKey argument.`,
