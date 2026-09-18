@@ -91,18 +91,17 @@ function buildLazyGroup(
             configurable: false,
             get() {
                 if (bound === undefined) {
+                    // Method existence is guaranteed by `validateCategoryMethods`,
+                    // which ran over the class prototype before this group was
+                    // built — bind directly without a second check.
                     const instance = new entry.operationClass(
                         authToken,
                         options,
                         stateOwner
                     ) as unknown as Record<string, unknown>;
-                    const method = instance[entry.methodName];
-                    if (typeof method !== "function") {
-                        throw new TypeError(
-                            `Operation "${entry.name}" does not expose a "${entry.methodName}" method to bind.`
-                        );
-                    }
-                    bound = (method as (...args: unknown[]) => unknown).bind(instance);
+                    bound = (instance[entry.methodName] as (...args: unknown[]) => unknown).bind(
+                        instance
+                    );
                 }
                 return bound;
             },
