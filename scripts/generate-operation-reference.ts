@@ -1,13 +1,15 @@
 /**
  * Build-time generator for the AniLink operation reference.
  *
- * Run: `npx tsx scripts/generate-operation-reference.ts`
+ * Usage:
+ *   npm run docs:operations             # write the manifests
+ *   npm run docs:operations -- --check  # exit 1 when any manifest is stale
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
-import { dirname, resolve, join } from "node:path";
+import { dirname, relative, resolve, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ANILIST_PROVIDER_CONFIG } from "./provider-config";
-import { collectOperationSignatures } from "./generate-facade-groups";
+import { collectOperationSignatures, parseRegistrySource } from "./generate-facade-groups";
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -442,7 +444,7 @@ function discoverOperationsInFile(filePath: string): RawOp[] {
     const lines = content.split("\n");
     const ops: RawOp[] = [];
     for (let i = 0; i < lines.length; i++) {
-        if (/^\s*custom:\s*</.test(lines[i])) {
+        if (/^\s*custom\s*:/.test(lines[i])) {
             ops.push({
                 category: "custom",
                 name: "custom",
@@ -476,18 +478,9 @@ function resolveRegistryCandidates(
     const registryPath = join(sourceRoot, "registry.ts");
     if (!existsSync(registryPath)) return [];
     const content = readFileText(registryPath);
-    const escapedName = op.name.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-    const re = new RegExp(
-        String.raw`op(?:As)?\(\s*"${escapedName}"\s*,\s*(\w+)\s*(?:,\s*"([\w]+)")?\s*\)`,
-        "g"
-    );
-    const candidates: Array<{ methodName: string; className: string }> = [];
-    let m = re.exec(content);
-    while (m !== null) {
-        candidates.push({ className: m[1], methodName: m[2] ?? op.name });
-        m = re.exec(content);
-    }
-    return candidates;
+    return parseRegistrySource(content)
+        .filter((entry) => entry.name === op.name && entry.category === op.category)
+        .map(({ className, methodName }) => ({ className, methodName }));
 }
 
 /** Resolve candidate class/method pairs from `wiring.ts` bindings. */
@@ -1509,16 +1502,22 @@ export function generateReferenceManifest(): ReferenceManifest {
 }
 
 /**
- * Write the generated manifest to `outPath` as minified JSON.
+ * Write the generated manifest to `outPath` as minified JSON, plus one
+ * provider/category shard per section.
+ *
+ * Delegates to {@link renderManifestFiles} so the file set the generator
+ * produces is defined exactly once — the same definition `--check` and the
+ * tests compare against.
  *
  * @param outPath - Destination path; parent directories are created.
  * @returns The manifest written to the complete file and section shards.
  */
 export function writeReferenceManifest(outPath: string): ReferenceManifest {
-    const manifest = generateReferenceManifest();
-    mkdirSync(dirname(outPath), { recursive: true });
-    writeFileSync(outPath, JSON.stringify(manifest), "utf8");
-    writeReferenceSections(manifest, dirname(outPath));
+    const { manifest, files } = renderManifestFiles(dirname(outPath));
+    for (const [path, content] of files) {
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, content, "utf8");
+    }
     return manifest;
 }
 
@@ -1547,33 +1546,108 @@ export function buildReferenceSections(manifest: ReferenceManifest): ReferenceSe
 }
 
 /**
- * Write one provider/category JSON shard for every section in a manifest.
+ * Remove the generation timestamp from a manifest JSON string.
  *
- * @param manifest Complete operation-reference manifest.
- * @param outDir Directory containing the complete manifest.
- * @returns Nothing; writes one `<provider>/<category>.json` shard per section.
+ * `generatedAt` changes on every render, so `--check` must compare only the
+ * semantic content or it could never pass against committed manifests. An
+ * unreadable or corrupt manifest compares as stale — the rerun the check
+ * exists to request is also the fix for a damaged file.
+ *
+ * @param json Minified manifest JSON (complete or section).
+ * @returns The same manifest re-serialized without `generatedAt`, or `null` when `json` does not parse.
  */
-export function writeReferenceSections(manifest: ReferenceManifest, outDir: string): void {
-    for (const section of buildReferenceSections(manifest)) {
-        const sectionDir = join(outDir, section.provider);
-        mkdirSync(sectionDir, { recursive: true });
-        writeFileSync(
-            join(sectionDir, `${section.category}.json`),
-            JSON.stringify(section),
-            "utf8"
-        );
+function stripGeneratedAt(json: string): string | null {
+    try {
+        const parsed = JSON.parse(json) as { generatedAt?: string };
+        delete parsed.generatedAt;
+        return JSON.stringify(parsed);
+    } catch {
+        return null;
     }
 }
 
-// CLI entry: `npx tsx scripts/generate-operation-reference.ts`
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+/**
+ * Render every manifest file the generator produces to in-memory strings.
+ *
+ * @param outDir Directory that receives the complete manifest and section shards.
+ * @returns The complete manifest plus each output path mapped to the minified JSON content for that file.
+ */
+function renderManifestFiles(outDir: string): {
+    manifest: ReferenceManifest;
+    files: Map<string, string>;
+} {
+    const manifest = generateReferenceManifest();
+    const files = new Map<string, string>();
+    files.set(join(outDir, "operations.json"), JSON.stringify(manifest));
+    for (const section of buildReferenceSections(manifest)) {
+        files.set(
+            join(outDir, section.provider, `${section.category}.json`),
+            JSON.stringify(section)
+        );
+    }
+    return { manifest, files };
+}
+
+/**
+ * Write the manifests, or with `--check` verify the committed ones are current.
+ *
+ * In normal mode this writes the complete manifest and its section shards. With
+ * `--check`, it only compares rendered content against the committed files and
+ * reports stale outputs for CI.
+ *
+ * @returns Process-style status code: `0` when written or current, `1` when stale in check mode.
+ */
+function main(): number {
+    const check = process.argv.includes("--check");
     const outDir = resolve(import.meta.dirname, "..", "lib", "operation-reference");
     const outPath = join(outDir, "operations.json");
-    const manifest = writeReferenceManifest(outPath);
+    const { manifest, files: rendered } = renderManifestFiles(outDir);
+
+    const stale: string[] = [];
+    for (const [path, content] of rendered) {
+        let current: string | undefined;
+        try {
+            current = readFileSync(path, "utf8").replace(/\r\n/g, "\n");
+        } catch {
+            current = undefined;
+        }
+        const expected = stripGeneratedAt(content);
+        const matches =
+            current !== undefined && expected !== null && stripGeneratedAt(current) === expected;
+        if (!matches) stale.push(relative(ROOT, path));
+    }
+
+    if (check) {
+        if (stale.length === 0) {
+            console.log(
+                `Operation reference manifests up to date (${rendered.size} files checked).`
+            );
+            return 0;
+        }
+        console.error(`Operation reference manifests are stale. Rerun 'npm run docs:operations':`);
+        for (const path of stale) console.error(`  ${path}`);
+        return 1;
+    }
+
+    mkdirSync(dirname(outPath), { recursive: true });
+    writeFileSync(outPath, rendered.get(outPath)!, "utf8");
+    for (const [path, content] of rendered) {
+        if (path !== outPath) {
+            mkdirSync(dirname(path), { recursive: true });
+            writeFileSync(path, content, "utf8");
+        }
+    }
+
     const byProvider = manifest.operations.reduce<Record<string, number>>((acc, op) => {
         acc[op.provider] = (acc[op.provider] ?? 0) + 1;
         return acc;
     }, {});
     console.log(`Wrote ${manifest.operations.length} operations to ${outPath}`);
     console.log(`  anilist: ${byProvider.anilist ?? 0}, mal: ${byProvider.mal ?? 0}`);
+    return 0;
+}
+
+// CLI entry: `npx tsx scripts/generate-operation-reference.ts`
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+    process.exitCode = main();
 }
