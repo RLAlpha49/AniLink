@@ -40,6 +40,9 @@ jobs:
       - name: Type-check source
         run: npm run typecheck
 
+      - name: Type-check tests and scripts
+        run: npm run typecheck:tests
+
       - name: Check formatting
         run: npm run format:check
 
