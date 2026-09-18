@@ -17,10 +17,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
-    name: Quality gates and build
+  lint-and-format:
+    name: Lint, format, and type-check
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -49,6 +49,23 @@ jobs:
       - name: Check JSDoc comments
         run: npm run jsdoc:check
 
+  codegen-checks:
+    name: Generated artifacts in sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Check generated facade groups are up to date
         run: npm run facade:generate -- --check
 
@@ -58,14 +75,55 @@ jobs:
       - name: Check operation reference manifests are up to date
         run: npm run docs:operations -- --check
 
+  api-compare:
+    name: API contract comparison
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Compare package contracts against AniList schema snapshot
         run: npm run anilist:api:compare -- --strict
 
       - name: Compare package contracts against MyAnimeList OpenAPI snapshot
         run: npm run mal:api:compare -- --strict
 
+  build:
+    name: Build package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build package
         run: npm run build
+
+      - name: Share built dist with the packaged smoke test
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
 
   test:
     name: Test (${{ matrix.os }}, Node ${{ matrix.node }})
@@ -148,6 +206,7 @@ jobs:
 
   package-smoke:
     name: Packaged package smoke test
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -169,11 +228,16 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
 
-      - name: Install dependencies
+      # The dist consumed here is built by the build job for the same commit,
+      # so this job never repeats the install-and-build cycle; it packs the
+      # already-built output and drives it through a real consumer install.
+      - name: Download built dist from the build job
         if: ${{ env.ANILIST_TOKEN != '' }}
-        run: npm ci
+        uses: actions/download-artifact@v7
+        with:
+          name: dist
+          path: dist
 
       # The tarball is installed into an isolated consumer project and driven
       # through its public entry point, so this job catches packaging
@@ -181,7 +245,7 @@ jobs:
       # workspace-level suites cannot see. Queries only — never mutations.
       - name: Pack, install locally, and run live query smoke test
         if: ${{ env.ANILIST_TOKEN != '' }}
-        run: npm run test:package
+        run: npm run test:package -- --skip-build
 
   secret-scan:
     name: Secret scanning
