@@ -6,7 +6,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Observability
 
-Seven lifecycle hooks report request lifecycle events — `onRequestStart`, `onResponse`, `onPace`, `onError`, `onRetry`, `onCircuitOpen`, and `onCircuitClose` — plus the `onHookError` observer, which reports failures of any of those hooks (and of the token-refresh persistence callbacks) instead of lifecycle events itself. Configure them per provider slot — they never leak between providers.
+Seven lifecycle hooks report request lifecycle events — `onRequestStart`, `onResponse`, `onPace`, `onError`, `onRetry`, `onCircuitOpen`, and `onCircuitClose` — plus the `onHookError` observer, which reports failures of any of those hooks (and of the token-refresh persistence callbacks) instead of lifecycle events itself. The automatic token-refresh lifecycle additionally reports through its own pair of credential-slot callbacks, `onTokenRefresh` and `onTokenRefreshError` (see [Token refresh events](#token-refresh-events)). Configure them per provider slot — they never leak between providers.
 
 ## Hook contracts
 
@@ -189,6 +189,33 @@ The `diagnostics` option (per-request, per-slot, or client-level on the credenti
 `"silent"` and `"hook"` never silence real failures observed by a configured `onHookError` — a throwing hook, or a failed MAL or AniList refresh grant — they only control the unsolicited fallback output. The pagination helpers (`paginate`, `paginateChunks`) and both token-refresh lifecycles accept the same `diagnostics` option for their callback-failure reports.
 
 The one-time `stateOwner` warning is spent only when an emission actually happened: a first trigger under `"silent"` (or `"hook"` with no observer) suppresses its own emission without consuming the warning — a later `"warn"`-mode request still emits it.
+
+## Token refresh events
+
+The automatic token-refresh lifecycle (both providers) reports through two dedicated callbacks on the provider's credential slot, independent of the request hooks:
+
+| Callback              | Fires                                | Payload                                                                                          |
+| --------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `onTokenRefresh`      | After every successful refresh grant | The effective token response (`MalTokenResponse` / `AniListTokenResponse`)                       |
+| `onTokenRefreshError` | When a refresh grant fails           | The sanitized refresh error the awaiting caller catches (an `AniLinkError` with `status`/`code`) |
+
+Both fire exactly once per grant — concurrent `401`s share one in-flight grant and therefore one event, so a failure storm cannot multiply alerts. `onTokenRefreshError` receives the same sanitized error the failing call rejects with, so the observer and the caller's `catch` see identical failure material:
+
+```typescript
+const aniLink = new AniLink({
+    mal: {
+        refreshToken: stored.refresh_token,
+        clientId: "mal-client-id",
+        onTokenRefresh: (response) => saveToken(response),
+        onTokenRefreshError: (error) => {
+            // error.status and error.code are inspectable
+            alerting.record("token-refresh-failed", error);
+        },
+    },
+});
+```
+
+A failed grant is additionally reported through `onHookError` under the `malTokenRefresh` (MAL) or `aniListTokenRefresh` (AniList) hook name with the `token-refresh` diagnostic kind (above). `onTokenRefreshError` is the typed, dedicated channel for consumers that want to alert on refresh failures without parsing hook diagnostics — use it to distinguish "the access token expired and refresh recovered" (one `onTokenRefresh` event) from "refresh is broken and every request is failing" (one `onTokenRefreshError` event per failed grant, then the surfaced errors). A throwing `onTokenRefreshError` callback is itself reported through `onHookError` (falling back to a console warning) and never replaces the propagated refresh error.
 
 ## Transport state snapshot
 

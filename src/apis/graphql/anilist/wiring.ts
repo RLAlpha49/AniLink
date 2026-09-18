@@ -217,6 +217,7 @@ export function buildAniListWiring(
                   clientSecret: credentials.clientSecret.trim(),
                   refreshToken: credentials.refreshToken.trim(),
                   onTokenRefresh: credentials.onTokenRefresh,
+                  onTokenRefreshError: credentials.onTokenRefreshError,
                   onHookError: credentials.onHookError,
                   diagnostics: credentials.diagnostics,
                   applyAccessToken: (accessToken) => {

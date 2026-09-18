@@ -48,6 +48,7 @@ export function buildMyAnimeListApi(
                   refreshToken: credentials.refreshToken.trim(),
                   clientSecret: credentials.clientSecret?.trim(),
                   onTokenRefresh: credentials.onTokenRefresh,
+                  onTokenRefreshError: credentials.onTokenRefreshError,
                   onHookError: credentials.onHookError,
                   diagnostics: credentials.diagnostics,
                   applyAccessToken: (accessToken) => {

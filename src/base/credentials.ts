@@ -28,8 +28,8 @@ export interface ProviderCredentials extends RequestOptions {
  * live in `apis/graphql/anilist/auth`.
  *
  * The refresh fields (`refreshToken`, `clientId`, `clientSecret`,
- * `onTokenRefresh`) opt a client into the automatic token-refresh
- * lifecycle (`AniListTokenRefresher`, wired in
+ * `onTokenRefresh`, `onTokenRefreshError`) opt a client into the automatic
+ * token-refresh lifecycle (`AniListTokenRefresher`, wired in
  * `apis/graphql/anilist/wiring.ts`): a 401 from an expired access token
  * — or a missing token on an auth-required operation — triggers one
  * deduplicated refresh grant and a single replayed request.
@@ -52,6 +52,12 @@ export interface AniListCredentials extends ProviderCredentials {
      * `clientSecret`.
      */
     onTokenRefresh?: import("../apis/graphql/anilist/tokenRefresh").AniListTokenRefreshCallback;
+    /**
+     * Called when an automatic token-refresh grant fails, with the sanitized
+     * refresh error the awaiting caller catches. Fires once per failed
+     * grant — concurrent 401s share one failure event.
+     */
+    onTokenRefreshError?: import("../apis/graphql/anilist/tokenRefresh").AniListTokenRefreshErrorCallback;
 }
 
 /**
@@ -90,6 +96,12 @@ export interface MalCredentials extends ProviderCredentials {
      * refresh lifecycle together with `refreshToken` and `clientId`.
      */
     onTokenRefresh?: import("../apis/rest/mal/tokenRefresh").MalTokenRefreshCallback;
+    /**
+     * Called when an automatic token-refresh grant fails, with the sanitized
+     * refresh error the awaiting caller catches. Fires once per failed
+     * grant — concurrent 401s share one failure event.
+     */
+    onTokenRefreshError?: import("../apis/rest/mal/tokenRefresh").MalTokenRefreshErrorCallback;
 }
 
 /**
@@ -217,6 +229,7 @@ export function resolveAniListCredentials(
             "clientId",
             "clientSecret",
             "onTokenRefresh",
+            "onTokenRefreshError",
         ]),
     };
 }
@@ -259,6 +272,7 @@ export function resolveMalCredentials(
             "clientId",
             "clientSecret",
             "onTokenRefresh",
+            "onTokenRefreshError",
         ]),
     };
 }

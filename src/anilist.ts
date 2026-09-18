@@ -37,6 +37,8 @@ export type {
     PaginateOptions,
     PaginateResult,
 } from "./apis/graphql/anilist/Paginator";
+export type { AniListTokenRefreshCallback } from "./apis/graphql/anilist/tokenRefresh";
+export type { AniListTokenRefreshErrorCallback } from "./apis/graphql/anilist/tokenRefresh";
 export { crossLink } from "./apis/graphql/anilist/helpers/crossLink";
 export type { CrossLinkMedia, CrossLinkResult } from "./apis/graphql/anilist/helpers/crossLink";
 export { fuzzyDate } from "./apis/graphql/anilist/helpers/fuzzyDate";

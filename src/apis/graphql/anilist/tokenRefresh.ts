@@ -14,7 +14,7 @@
  * Unlike MAL, AniList's refresh grant requires the client secret, so the
  * lifecycle only activates when the secret is configured too.
  */
-import { AniLinkApiError, AniLinkAuthError } from "../../../base/AniLinkError";
+import { type AniLinkError, AniLinkApiError, AniLinkAuthError } from "../../../base/AniLinkError";
 import type { OnHookErrorHandler, RequestAuthInput } from "../../../base/RequestHandler";
 import { type DiagnosticsMode, resolveDiagnosticsMode } from "../../../base/transportTypes";
 import { reportDiagnostic, safeInvoke } from "../../../base/hooks";
@@ -37,6 +37,20 @@ import { refreshAccessToken, type AniListTokenResponse } from "./auth";
 export type AniListTokenRefreshCallback = (response: AniListTokenResponse) => void;
 
 /**
+ * Callback invoked when an automatic token-refresh grant fails.
+ *
+ * The callback fires exactly once per failed grant — concurrent 401s share
+ * one in-flight grant and one failure event. It receives the sanitized
+ * refresh error (an {@link AniLinkError} carrying the upstream `status` and
+ * `code`), the same error the awaiting caller catches. Exceptions thrown by
+ * the callback are reported through `onHookError` (falling back to a console
+ * warning) and never replace the propagated refresh error.
+ *
+ * @see {@link AniListTokenRefresher}
+ */
+export type AniListTokenRefreshErrorCallback = (error: AniLinkError) => void;
+
+/**
  * Builds the coordinator's dependencies.
  *
  * @see {@link AniListTokenRefresher}
@@ -50,6 +64,8 @@ export interface AniListTokenRefresherOptions {
     refreshToken: string;
     /** Optional callback invoked once after every successful refresh. */
     onTokenRefresh?: AniListTokenRefreshCallback;
+    /** Optional callback invoked once when a refresh grant fails. */
+    onTokenRefreshError?: AniListTokenRefreshErrorCallback;
     /** Optional observer for `onTokenRefresh` failures, mirroring the transport hooks. */
     onHookError?: OnHookErrorHandler;
     /** How a throwing `onTokenRefresh` callback with no observer is reported; defaults to `"warn"`. */
@@ -81,6 +97,7 @@ export class AniListTokenRefresher {
     private readonly clientSecret: string;
     private refreshToken: string;
     private readonly onTokenRefresh?: AniListTokenRefreshCallback;
+    private readonly onTokenRefreshError?: AniListTokenRefreshErrorCallback;
     private readonly onHookError: OnHookErrorHandler | undefined;
     private readonly diagnostics: DiagnosticsMode;
     private readonly applyAccessToken: (accessToken: string) => void;
@@ -89,7 +106,7 @@ export class AniListTokenRefresher {
     /**
      * Constructs a refresh coordinator from the credential slot fields.
      *
-     * @param options - The refresh grant fields, the auth-swap callback, the optional persistence callback, and the diagnostics mode.
+     * @param options - The refresh grant fields, the auth-swap callback, the optional persistence and failure callbacks, and the diagnostics mode.
      * @throws A `TypeError` when `options.diagnostics` is defined but not one of `"warn"`, `"hook"`, or `"silent"`.
      */
     constructor(options: AniListTokenRefresherOptions) {
@@ -97,6 +114,7 @@ export class AniListTokenRefresher {
         this.clientSecret = options.clientSecret;
         this.refreshToken = options.refreshToken;
         this.onTokenRefresh = options.onTokenRefresh;
+        this.onTokenRefreshError = options.onTokenRefreshError;
         this.onHookError = options.onHookError;
         this.diagnostics = resolveDiagnosticsMode(options.diagnostics);
         this.applyAccessToken = options.applyAccessToken;
@@ -114,7 +132,9 @@ export class AniListTokenRefresher {
      * — surfaces unchanged. A failed refresh grant is reported to
      * `onHookError` (under the `aniListTokenRefresh` hook name) before the
      * sanitized error rethrows, so the grant failure is observable through
-     * the same channel as every other lifecycle failure.
+     * the same channel as every other lifecycle failure. The
+     * `onTokenRefreshError` callback (when configured) fires once per failed
+     * grant with the same sanitized error.
      *
      * @param operation - A closure performing one request attempt; called at most twice.
      * @returns The first successful attempt's result.
@@ -178,6 +198,26 @@ export class AniListTokenRefresher {
     private async refresh(): Promise<AniListTokenResponse> {
         if (this.refreshInFlight === undefined) {
             this.refreshInFlight = this.performRefresh()
+                .catch((error: unknown) => {
+                    // Fires once per failed grant: concurrent 401s share the
+                    // in-flight promise, so they share one failure event,
+                    // mirroring the success callback's once-per-grant
+                    // contract. A throwing observer of this event is itself
+                    // reported through `onHookError`; the sanitized refresh
+                    // error still propagates to every awaiting caller. The
+                    // catch binds to performRefresh alone so exceptions
+                    // from the auth swap or the success callback below —
+                    // not grant failures — propagate without this
+                    // reporting.
+                    safeInvoke(
+                        this.onTokenRefreshError,
+                        "onTokenRefreshError",
+                        this.onHookError,
+                        this.diagnostics,
+                        error
+                    );
+                    throw error;
+                })
                 .then((response) => {
                     this.applyAccessToken(response.access_token);
                     safeInvoke(

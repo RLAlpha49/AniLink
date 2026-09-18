@@ -23,6 +23,7 @@ export type {
     MalTokenResponse,
 } from "./apis/rest/mal/auth";
 export type { MalTokenRefreshCallback } from "./apis/rest/mal/tokenRefresh";
+export type { MalTokenRefreshErrorCallback } from "./apis/rest/mal/tokenRefresh";
 export { buildMyAnimeListApi } from "./apis/rest/mal/wiring";
 export type {
     MyAnimeListAnimeApi,

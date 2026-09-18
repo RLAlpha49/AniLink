@@ -110,6 +110,7 @@ The behavior, precisely:
 - **Deduplicated.** Concurrent `401`s trigger a single refresh call; every replay waits for the same new token.
 - **Rotation-safe.** A refresh response without `refresh_token` keeps the stored one (rotation semantics).
 - **Observable.** `onTokenRefresh` fires exactly once per refresh grant — concurrent `401`s share one grant and one callback — with the effective `MalTokenResponse`, so you can persist the new pair. A callback that throws is reported through `onHookError` (falling back to a console warning) and never aborts the replayed request.
+- **Failure event.** `onTokenRefreshError` fires exactly once per failed grant with the sanitized token-request error — the same error the failing call rejects with — so monitoring can distinguish "refresh recovered" from "refresh is broken" without parsing hook diagnostics. A callback that throws is reported through `onHookError` and never replaces the propagated error.
 - **Fail-fast.** A failed refresh surfaces the sanitized token-request error — the request is never replayed with the stale token.
 
 The refresh grant runs on the same 10-second token-request timeout as `refreshMalAccessToken`. It is not governed by your MAL transport settings — your `timeout`, hooks, pacing, and retry policy do not apply to the token request. In particular, do not add `401` to `retryOnStatus`: the refresh lifecycle owns `401` handling, and a retry-configured `401` would multiply requests before the refresh ever runs.
