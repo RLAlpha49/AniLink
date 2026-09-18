@@ -45,11 +45,7 @@ AniLink ships helpers for the full flow. First, register an application on the [
 import { buildAuthorizationUrl } from "anilink-api-wrapper";
 
 const state = crypto.randomUUID(); // a fresh random value per login attempt
-const authorizeUrl = buildAuthorizationUrl(
-    "your-client-id",
-    "https://example.com/callback",
-    state
-);
+const authorizeUrl = buildAuthorizationUrl("your-client-id", "https://example.com/callback", state);
 // Redirect the user to `authorizeUrl`.
 ```
 
@@ -102,6 +98,29 @@ if (Date.now() >= getTokenExpiry(tokenResponse).getTime() - 60_000) {
 }
 ```
 
+## 5. Automatic refresh
+
+Steps 1–4 leave the refresh chore to you. Configure `refreshToken`, `clientId`, and `clientSecret` and the client takes over: when any AniList request fails with a `401` (an HTTP-level 401, or a GraphQL envelope whose errors entry carries `status: 401`), the client exchanges the stored refresh token for a fresh access token, swaps the auth material, and replays the original request once — automatically.
+
+```typescript
+const aniLink = new AniLink({
+    anilist: {
+        authToken: token.access_token,
+        refreshToken: token.refresh_token,
+        clientId: "your-client-id",
+        clientSecret: "your-client-secret",
+        onTokenRefresh: (response) => saveToken(response),
+    },
+});
+```
+
+- **Opt-in.** Without the full set (`refreshToken`, `clientId`, and `clientSecret`), there is no refresh path — a `401` surfaces immediately, exactly as before. AniList's refresh grant requires the client secret, unlike MAL where it is optional, so the lifecycle stays off until all three fields are configured.
+- **Bootstrappable.** A client configured with only the refresh fields (no `authToken`) refreshes on the first auth-required call instead of failing — a persisted refresh token alone is enough to construct a working client.
+- **One replay, no loop.** A replay that fails again surfaces that error; there is no retry loop. Concurrent 401s share one refresh grant.
+- **Per-call, not per-traversal.** Refresh applies per wrapped operation call. Pages already in flight under `paginate` with `concurrency > 1` that dispatched with the expired token fail independently; only the failing call itself triggers the grant and replay.
+
+**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. If the process exits — or the callback throws — between the refresh and your persistence write, the in-memory client works but your stored credentials are stale. When AniList rotates the refresh token, the stored one is then permanently invalid and automatic refresh cannot recover after a restart; manual re-authorization is the only fix. The callback receives the effective token response — when AniList omits `refresh_token`, the stored one stays valid and the response carries it.
+
 ## Constants and types
 
 `ANILIST_AUTHORIZE_URL` and `ANILIST_TOKEN_URL` expose the OAuth endpoints. `AniListTokenResponse` types the token payload (`access_token`, `token_type`, `expires_in`, `refresh_token`) — handy for your own storage layer.
@@ -110,3 +129,4 @@ if (Date.now() >= getTokenExpiry(tokenResponse).getTime() - 60_000) {
 
 - <Icon name="ArrowRight" :size="14" /> [AniList client configuration](/guides/anilist/configuration) — transport settings for the authenticated client.
 - <Icon name="ArrowRight" :size="14" /> [Mutations](/guides/anilist/mutations) — the operations that require this token.
+- <Icon name="ArrowRight" :size="14" /> [MAL authentication](/guides/mal/authentication) — the same automatic-refresh lifecycle on the MAL slot, where the client secret is optional.

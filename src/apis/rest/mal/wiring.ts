@@ -1,21 +1,9 @@
-import { resolveMalCredentials, type MalCredentials } from "../../../base/credentials";
+import { isNonBlank, resolveMalCredentials, type MalCredentials } from "../../../base/credentials";
 import { MalAnimeOperation } from "./operations/AnimeOperation";
 import { MalMangaOperation } from "./operations/MangaOperation";
 import { MalUserOperation } from "./operations/UserOperation";
 import type { MyAnimeListApi } from "./facade";
 import { buildRefreshedAuth, MalTokenRefresher } from "./tokenRefresh";
-
-/**
- * Whether a credential string is present with at least one non-whitespace
- * character. A whitespace-only value must not activate the refresh
- * lifecycle: it would construct a refresher whose every 401 performs a
- * doomed refresh grant before replaying, instead of surfacing the 401.
- *
- * @param value - The credential string, when configured.
- * @returns Whether the value is non-blank.
- */
-const isNonBlank = (value: string | undefined): value is string =>
-    typeof value === "string" && value.trim() !== "";
 
 /**
  * {@link buildMyAnimeListApi} is the wiring helper that builds the {@link MyAnimeListApi} from provider-owned {@link MalCredentials}.
@@ -51,12 +39,14 @@ export function buildMyAnimeListApi(
     // whitespace-only value is treated as missing, matching the empty-string
     // case). Without them the facade keeps the direct bound methods — zero
     // wrapper overhead, zero behavior change.
+    // Values are trimmed before use so a credential copied with trailing
+    // whitespace still authenticates (matching the AniList wiring).
     const refresher =
         isNonBlank(credentials?.refreshToken) && isNonBlank(credentials?.clientId)
             ? new MalTokenRefresher({
-                  clientId: credentials.clientId,
-                  refreshToken: credentials.refreshToken,
-                  clientSecret: credentials.clientSecret,
+                  clientId: credentials.clientId.trim(),
+                  refreshToken: credentials.refreshToken.trim(),
+                  clientSecret: credentials.clientSecret?.trim(),
                   onTokenRefresh: credentials.onTokenRefresh,
                   onHookError: credentials.onHookError,
                   diagnostics: credentials.diagnostics,

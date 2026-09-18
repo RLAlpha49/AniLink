@@ -23,14 +23,35 @@ export interface ProviderCredentials extends RequestOptions {
 }
 
 /**
- * AniList-specific credentials. Currently a bearer token plus transport
- * settings; OAuth helper functions live in `apis/graphql/anilist/auth`.
+ * AniList-specific credentials: a bearer token, optional automatic
+ * token-refresh fields, and transport settings. OAuth helper functions
+ * live in `apis/graphql/anilist/auth`.
+ *
+ * The refresh fields (`refreshToken`, `clientId`, `clientSecret`,
+ * `onTokenRefresh`) opt a client into the automatic token-refresh
+ * lifecycle (`AniListTokenRefresher`, wired in
+ * `apis/graphql/anilist/wiring.ts`): a 401 from an expired access token
+ * — or a missing token on an auth-required operation — triggers one
+ * deduplicated refresh grant and a single replayed request.
  *
  * @see {@link resolveAniListCredentials}
  */
 export interface AniListCredentials extends ProviderCredentials {
     /** The bearer token sent on authenticated AniList requests. */
     authToken?: string;
+    /** The AniList OAuth2 refresh token used to obtain a new access token. */
+    refreshToken?: string;
+    /** The AniList application client ID used by OAuth helpers. */
+    clientId?: string;
+    /** The AniList application secret, required by AniList's refresh grant. */
+    clientSecret?: string;
+    /**
+     * Called after every successful automatic token refresh so callers can
+     * persist the new access/refresh token pair. Enables the automatic
+     * refresh lifecycle together with `refreshToken`, `clientId`, and
+     * `clientSecret`.
+     */
+    onTokenRefresh?: import("../apis/graphql/anilist/tokenRefresh").AniListTokenRefreshCallback;
 }
 
 /**
@@ -107,6 +128,21 @@ export interface AniLinkCredentials {
 }
 
 /**
+ * Whether a credential string is configured: a non-empty string whose
+ * whitespace-only values count as missing, exactly like the empty string.
+ *
+ * Both provider wirings apply this same rule when deciding whether the
+ * automatic token-refresh lifecycle activates, so a whitespace-only
+ * `refreshToken` or `clientId` never triggers a doomed refresh grant on
+ * every 401.
+ *
+ * @param value - The credential value to test.
+ * @returns `true` when the value is a string with at least one non-whitespace character.
+ */
+export const isNonBlank = (value: string | undefined): value is string =>
+    typeof value === "string" && value.trim() !== "";
+
+/**
  * Normalized authentication and transport settings for one provider slot.
  *
  * Credential resolvers use this shape to keep provider-specific fields out of
@@ -175,7 +211,13 @@ export function resolveAniListCredentials(
     if (credentials === undefined) return {};
     return {
         auth: credentials.authToken,
-        options: resolveTransportOptions(credentials, ["authToken"]),
+        options: resolveTransportOptions(credentials, [
+            "authToken",
+            "refreshToken",
+            "clientId",
+            "clientSecret",
+            "onTokenRefresh",
+        ]),
     };
 }
 

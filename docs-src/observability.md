@@ -6,7 +6,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Observability
 
-Seven lifecycle hooks report request lifecycle events — `onRequestStart`, `onResponse`, `onPace`, `onError`, `onRetry`, `onCircuitOpen`, and `onCircuitClose` — plus the `onHookError` observer, which reports failures of any of those hooks (and of the MAL token-refresh callbacks) instead of lifecycle events itself. Configure them per provider slot — they never leak between providers.
+Seven lifecycle hooks report request lifecycle events — `onRequestStart`, `onResponse`, `onPace`, `onError`, `onRetry`, `onCircuitOpen`, and `onCircuitClose` — plus the `onHookError` observer, which reports failures of any of those hooks (and of the token-refresh persistence callbacks) instead of lifecycle events itself. Configure them per provider slot — they never leak between providers.
 
 ## Hook contracts
 
@@ -154,7 +154,7 @@ The full precedence chain, most specific first:
 
 When unset at every level, hook failures fall back to `console.warn`.
 
-On the MAL slot, the slot-level `onHookError` does double duty: besides request-hook failures, it also observes the automatic token-refresh lifecycle — a failed refresh grant is reported under the `malTokenRefresh` hook name (with the sanitized refresh error as `error.cause`, so its `status` and `code` stay inspectable), and a throwing `onTokenRefresh` persistence callback under the `onTokenRefresh` hook name. The client-level default covers both when the slot defines no observer of its own.
+On the MAL and AniList slots, the slot-level `onHookError` does double duty: besides request-hook failures, it also observes the automatic token-refresh lifecycle — a failed refresh grant is reported under the `malTokenRefresh` (MAL) or `aniListTokenRefresh` (AniList) hook name (with the sanitized refresh error as `error.cause`, so its `status` and `code` stay inspectable), and a throwing `onTokenRefresh` persistence callback under the `onTokenRefresh` hook name. The client-level default covers both when the slot defines no observer of its own.
 
 The `stateOwner` diagnostic (below) follows the same resolution: it is emitted through the triggering request's resolved observer — the per-request one when set, otherwise the slot's, otherwise the client-level default.
 
@@ -176,7 +176,7 @@ The library's only unsolicited output — the hook-failure fallback and the `sta
 }
 ```
 
-Three `kind` values exist: `"hook-failure"` (a lifecycle hook threw), `"state-owner"` (the one-time `stateOwner` keying warning), and `"token-refresh"` (a MAL refresh grant failed — a real upstream failure, not a hook failure, so grant-failure metrics do not corrupt hook-health dashboards). `kind` is the sole machine key to switch on; `hookName` names the specific hook (or reserved diagnostic name) for display and correlation, not for branching. When an observer is configured, the `Error` handed to `onHookError` carries the structured record — for a throwing hook, the raw thrown value rides behind it as `error.cause`, so the original exception stays inspectable; for the `stateOwner` warning, the record itself is the `cause`; for a failed refresh grant, the sanitized refresh error (an `AniLinkError` with `status`/`code`) is the `cause`. When no observer is configured, the fallback `console.warn` receives the JSON-serialized record as a single argument — platform log collectors get filterable `source`/`kind`/`hookName`/`requestId` fields instead of prose to parse. One exception: a failed refresh grant is rethrown to the caller, so it never also hits the console fallback — the caller receives that failure once, as the rejection they already handle.
+Three `kind` values exist: `"hook-failure"` (a lifecycle hook threw), `"state-owner"` (the one-time `stateOwner` keying warning), and `"token-refresh"` (a MAL or AniList refresh grant failed — a real upstream failure, not a hook failure, so grant-failure metrics do not corrupt hook-health dashboards). `kind` is the sole machine key to switch on; `hookName` names the specific hook (or reserved diagnostic name) for display and correlation, not for branching. When an observer is configured, the `Error` handed to `onHookError` carries the structured record — for a throwing hook, the raw thrown value rides behind it as `error.cause`, so the original exception stays inspectable; for the `stateOwner` warning, the record itself is the `cause`; for a failed refresh grant, the sanitized refresh error (an `AniLinkError` with `status`/`code`) is the `cause`. When no observer is configured, the fallback `console.warn` receives the JSON-serialized record as a single argument — platform log collectors get filterable `source`/`kind`/`hookName`/`requestId` fields instead of prose to parse. One exception: a failed refresh grant is rethrown to the caller, so it never also hits the console fallback — the caller receives that failure once, as the rejection they already handle.
 
 The `diagnostics` option (per-request, per-slot, or client-level on the credentials object — `"warn"` | `"hook"` | `"silent"`, default `"warn"`) controls emission. The client-level value applies to every provider slot that does not define its own, exactly like the client-level `onHookError`:
 
@@ -186,7 +186,7 @@ The `diagnostics` option (per-request, per-slot, or client-level on the credenti
 | `"hook"`   | Route through `onHookError` only — the console is never touched, so captured-console environments get no noise. |
 | `"silent"` | Suppress both diagnostics entirely.                                                                             |
 
-`"silent"` and `"hook"` never silence real failures observed by a configured `onHookError` — a throwing hook, or a failed MAL refresh grant — they only control the unsolicited fallback output. The pagination helpers (`paginate`, `paginateChunks`) and the MAL token-refresh lifecycle accept the same `diagnostics` option for their callback-failure reports.
+`"silent"` and `"hook"` never silence real failures observed by a configured `onHookError` — a throwing hook, or a failed MAL or AniList refresh grant — they only control the unsolicited fallback output. The pagination helpers (`paginate`, `paginateChunks`) and both token-refresh lifecycles accept the same `diagnostics` option for their callback-failure reports.
 
 The one-time `stateOwner` warning is spent only when an emission actually happened: a first trigger under `"silent"` (or `"hook"` with no observer) suppresses its own emission without consuming the warning — a later `"warn"`-mode request still emits it.
 
@@ -201,7 +201,9 @@ const state = aniLink.getTransportState();
 for (const breaker of state.anilist.circuit) {
     console.log(
         breaker.host,
-        breaker.openedAt === null ? "closed" : `open since ${new Date(breaker.openedAt).toISOString()}`,
+        breaker.openedAt === null
+            ? "closed"
+            : `open since ${new Date(breaker.openedAt).toISOString()}`,
         `failures: ${breaker.consecutiveFailures}`
     );
 }

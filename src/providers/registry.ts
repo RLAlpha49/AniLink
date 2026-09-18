@@ -67,7 +67,16 @@ const buildAniListClient: ProviderFactory<AniListCredentials, AniListApi> = (
     stateOwner
 ) => {
     const resolved = resolveAniListCredentials(credentials);
-    return buildAniListApi(resolved.auth, resolved.options ?? legacyOptions, stateOwner);
+    // The raw slot rides along so the wiring can read the automatic
+    // token-refresh fields (`refreshToken`, `clientId`, `clientSecret`,
+    // `onTokenRefresh`) the resolver strips from the transport options —
+    // the same raw-slot flow `buildMyAnimeListApi` uses for MAL.
+    return buildAniListApi(
+        resolved.auth,
+        resolved.options ?? legacyOptions,
+        stateOwner,
+        credentials
+    );
 };
 
 const buildMalClient: ProviderFactory<MalCredentials, MyAnimeListApi> = (

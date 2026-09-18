@@ -15,6 +15,7 @@ import type { AniListMutations } from "./mutation-group";
 import type { AniListHelpers } from "./helpers-group";
 import { buildAniListWiring } from "../wiring";
 import type { RequestAuthInput, RequestOptions } from "../../../../base/RequestHandler";
+import type { AniListCredentials } from "../../../../base/credentials";
 
 export {
     AniLinkApiError,
@@ -59,17 +60,23 @@ export type AniLinkOptions = RequestOptions;
 /**
  * Builds the {@link AniListApi} facade from the operation classes.
  *
+ * When `credentials` carries the automatic token-refresh fields (`refreshToken`,
+ * `clientId`, and `clientSecret`), every facade method runs under the refresh
+ * lifecycle; without them the facade keeps the direct bound methods.
+ *
  * @param authToken - The authentication material shared by every operation instance. A plain string is treated as a bearer token; a structured {@link RequestAuthInput} carries explicit headers for schemes such as Basic auth or a provider API key.
  * @param options - Timeout, cancellation, and debugging settings; an {@link AniLinkOptions} merged over the defaults.
  * @param stateOwner - Stable per-client object keying the shared transport state (breaker, budget, pacing); when omitted, a fresh one is allocated for this client.
+ * @param credentials - The raw AniList credential slot, read for the optional automatic token-refresh lifecycle fields; transport settings on the slot are ignored here because they already flow through `options`.
  * @returns The composed {@link AniListApi}.
  */
 export function buildAniListApi(
     authToken?: RequestAuthInput,
     options?: AniLinkOptions,
-    stateOwner?: object
+    stateOwner?: object,
+    credentials?: AniListCredentials
 ): AniListApi {
-    return buildAniListWiring(authToken, options, stateOwner);
+    return buildAniListWiring(authToken, options, stateOwner, credentials);
 }
 
 /**

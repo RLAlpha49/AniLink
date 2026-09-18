@@ -11,7 +11,7 @@ import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 import { buildAuthorizationUrl } from "../src/apis/graphql/anilist/auth";
 import { buildMalAuthorizationUrl } from "../src/apis/rest/mal/auth";
-import { resolveMalCredentials } from "../src/base/credentials";
+import { resolveAniListCredentials, resolveMalCredentials } from "../src/base/credentials";
 import {
     applyJitter,
     getBackoffDelay,
@@ -179,6 +179,40 @@ describe("resolveMalCredentials property tests", () => {
                     const resolved = resolveMalCredentials(creds);
                     expect(resolved.auth).toBeUndefined();
                     expect(resolved.options).toEqual({ timeout: creds.timeout });
+                }
+            )
+        );
+    });
+});
+
+describe("resolveAniListCredentials property tests", () => {
+    test("never leaks refreshToken, clientId, clientSecret, or onTokenRefresh into options", () => {
+        fc.assert(
+            fc.property(
+                fc.record({
+                    authToken: fc.string({ minLength: 0, maxLength: 50 }),
+                    refreshToken: fc.string({ minLength: 0, maxLength: 50 }),
+                    clientId: fc.string({ minLength: 0, maxLength: 30 }),
+                    clientSecret: fc.string({ minLength: 0, maxLength: 50 }),
+                    timeout: fc.integer({ min: 1, max: 60_000 }),
+                }),
+                (creds) => {
+                    const resolved = resolveAniListCredentials({
+                        ...creds,
+                        onTokenRefresh: () => {},
+                    });
+                    const options = resolved.options ?? {};
+
+                    // The four refresh-lifecycle fields must never appear in
+                    // the shared transport options — they stay in the raw
+                    // credential slot the wiring reads.
+                    expect(options).not.toHaveProperty("refreshToken");
+                    expect(options).not.toHaveProperty("clientId");
+                    expect(options).not.toHaveProperty("clientSecret");
+                    expect(options).not.toHaveProperty("onTokenRefresh");
+
+                    // The bearer token reaches the auth slot, not the options.
+                    expect(resolved.auth).toBe(creds.authToken);
                 }
             )
         );

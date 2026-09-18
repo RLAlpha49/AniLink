@@ -26,6 +26,10 @@ layout: .vitepress/theme/DocsLayout.vue
 | `onHookError`         | `OnHookErrorHandler`              | —               | Fires when a lifecycle hook throws. **Wire this to your logger in production** — without it, hook failures fall back to `console.warn`, which is unqueryable in serverless/structured-logging setups | Route hook failures to a logger                     |
 | `onCircuitOpen`       | `OnCircuitOpenHandler`            | —               | Fires when the circuit breaker trips                                                                                                                                                                 | Breaker trip alerts                                 |
 | `onCircuitClose`      | `OnCircuitCloseHandler`           | —               | Fires when the circuit breaker closes after a probe                                                                                                                                                  | Breaker recovery tracking                           |
+| `refreshToken`        | `string`                          | —               | Stored refresh token; with `clientId` and `clientSecret`, enables automatic refresh on `401` (and bootstraps a client that has no `authToken`)                                                       | Automatic token refresh                             |
+| `clientId`            | `string`                          | —               | AniList application client ID; with `refreshToken` and `clientSecret`, enables automatic refresh                                                                                                     | Automatic token refresh                             |
+| `clientSecret`        | `string`                          | —               | AniList application secret; required by AniList's refresh grant, so the lifecycle stays off until it is set                                                                                          | Automatic token refresh                             |
+| `onTokenRefresh`      | `AniListTokenRefreshCallback`     | —               | Fires after every successful automatic refresh with the effective token response — persist it synchronously                                                                                          | Persisting refreshed tokens                         |
 | `exposeRawAxiosError` | `boolean`                         | `false`         | Attaches the raw Axios error as `rawAxiosError`/`cause`. Sensitive headers are redacted                                                                                                              | Local debugging only                                |
 
 <Callout kind="tip">
@@ -47,7 +51,7 @@ const aniLink = new AniLink("anilist-token", {
 });
 ```
 
-Each mechanism gets its own page: [Retries & resilience](/retries-and-resilience), [Observability](/observability), [Cancellation & timeouts](/cancellation-and-timeouts), [Response cache](/response-cache).
+Each mechanism gets its own page: [Retries & resilience](/retries-and-resilience), [Observability](/observability), [Cancellation & timeouts](/cancellation-and-timeouts), [Response cache](/response-cache). With `refreshToken`, `clientId`, and `clientSecret` all set, a `401` triggers an automatic refresh and a single replay — see [AniList authentication](/guides/anilist/authentication#_5-automatic-refresh).
 
 ## Next steps
 
