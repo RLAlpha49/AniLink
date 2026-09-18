@@ -12,6 +12,10 @@ AniLink is a typed TypeScript wrapper for two providers: the AniList GraphQL API
 2. Install Node.js 22 or later and npm.
 3. Run `npm install` to install dependencies.
 
+### `.npmrc` settings
+
+- `onnxruntime-node-install = skip` — `@huggingface/transformers` (the docs search-index embedder) depends on `onnxruntime-node`, whose install script downloads extra native binaries that the build never needs. The skip flag stops that download; the CPU bindings bundled in the package are enough for `npm run docs:search-index`.
+
 ## Development Workflow
 
 | Command                                  | What it does                                                                                 |
@@ -33,6 +37,8 @@ AniLink is a typed TypeScript wrapper for two providers: the AniList GraphQL API
 | `npm run docs:generate`                  | Generates the API docs into `docs/`                                                          |
 
 Run `npm run check` before you push. It chains every gate CI enforces on a pull request — typecheck (source and tests), lint, coverage-thresholded tests, formatting, JSDoc, facade and interface sync, the strict API-drift compares (AniList and MyAnimeList), and the build — so local and CI verdicts match one-for-one. A pull request merges only when all checks pass. Two further CI gates run outside the chain: the packaged-dist smoke test (`npm run test:package`, its own CI job) and the weekly StrykerJS mutation run (`npm run mutation:test`).
+
+For a quicker pre-push signal, `npm run check:fast` runs the fast-feedback subset — typecheck (source and tests), lint, and the unit tests without coverage — while the full `npm run check` chain remains the CI contract that a pull request must pass.
 
 The `graphql` devDependency is used by the API-drift tooling (`lib/api-compare/`) to parse AniList's introspection schema; do not remove it even though `src/` never imports it. The `typescript` compiler API used by the MAL contract extraction comes from the same `typescript` devDependency that powers `tsc`.
 
