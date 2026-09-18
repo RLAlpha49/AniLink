@@ -52,6 +52,9 @@ jobs:
       - name: Check generated interfaces are up to date
         run: npm run interfaces:generate -- --check
 
+      - name: Check operation reference manifests are up to date
+        run: npm run docs:operations -- --check
+
       - name: Compare package contracts against AniList schema snapshot
         run: npm run anilist:api:compare -- --strict
 
