@@ -164,7 +164,7 @@ export function chunkOperations(manifest: ReferenceManifest): SearchDoc[] {
         ]
             .filter(Boolean)
             .join("\n");
-        const pageSegment = op.provider === "mal" ? "" : `/${op.category}`;
+        const pageSegment = `/${op.category}`;
         return {
             id: "",
             url: `/operations/${op.provider}${pageSegment}#${op.namespace}`,

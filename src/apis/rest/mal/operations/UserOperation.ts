@@ -1,11 +1,12 @@
 import { RestOperation } from "../../RestOperation";
 import { AniLinkValidationError } from "../../../../base/AniLinkError";
-import { MAL_API_BASE_URL } from "../constants";
+import { formatMalFields, MAL_API_BASE_URL } from "../constants";
 import type {
     MalRequestOptions,
     MalUser,
     MalUserAnimeListParams,
     MalUserAnimeListResponse,
+    MalUserGetParams,
     MalUserMangaListParams,
     MalUserMangaListResponse,
 } from "../types";
@@ -68,8 +69,62 @@ export class MalUserOperation extends RestOperation {
             transportOptions,
             // `buildQueryString` skips undefined values, so `fields` can be
             // passed straight through.
-            query: { fields: Array.isArray(fields) ? fields.join(",") : fields },
+            query: { fields: formatMalFields(fields) },
         });
+    }
+
+    /**
+     * {@link MalUserOperation.get} gets a MyAnimeList user profile.
+     *
+     * It calls `GET /users/{username}` through `RestOperation.execute` and
+     * returns a {@link MalUser} shaped by {@link MalRequestOptions.fields}.
+     * The facade alias is `MyAnimeListUserApi.get`. MyAnimeList documents only
+     * `@me` for this endpoint, so `username` accepts `@me` (with the same
+     * case-insensitive, whitespace-tolerant check as the user-list reads) and
+     * requires an access token to resolve it. Other usernames are passed
+     * through, but MyAnimeList currently answers them with `404`.
+     *
+     * @param params - The profile read inputs; a {@link MalUserGetParams} carrying the username.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The requested {@link MalUser}.
+     * @throws An `AniLinkAuthError` when `username` is `@me` and no access token is configured.
+     * @throws An {@link AniLinkValidationError} when `username` is empty or only whitespace.
+     * @throws A normalized `AniLinkError` when the request fails.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const user = await api.user.get(
+     *   { username: "@me" },
+     *   { fields: ["id", "name", "location"] }
+     * );
+     * console.log(user.name);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
+     */
+    public async get(params: MalUserGetParams, options: MalRequestOptions = {}): Promise<MalUser> {
+        const { username } = params;
+        const { fields, ...transportOptions } = options;
+        const normalized = MalUserOperation.normalizeUsername(username);
+        MalUserOperation.requireUsername(normalized);
+        return await this.execute<MalUser>(
+            normalized === "@me" ? "/users/@me" : "/users/{username}",
+            {
+                // `@me` resolves the authenticated user, which only a bearer
+                // token can identify — a client ID alone cannot — so fail fast
+                // like `me`.
+                requiresAuth: normalized === "@me",
+                transportOptions,
+                // `buildQueryString` skips undefined/null values, so the
+                // optional filters can be passed straight through.
+                query: {
+                    fields: formatMalFields(fields),
+                },
+                // The trimmed username, not the raw argument: surrounding
+                // whitespace would otherwise be percent-encoded into the
+                // path and answered with a 404.
+                pathParams: normalized === "@me" ? undefined : { username: normalized },
+            }
+        );
     }
 
     /**
@@ -112,13 +167,16 @@ export class MalUserOperation extends RestOperation {
                 // `buildQueryString` skips undefined/null values, so the
                 // optional filters can be passed straight through.
                 query: {
-                    fields: Array.isArray(fields) ? fields.join(",") : fields,
+                    fields: formatMalFields(fields),
                     status,
                     sort,
                     limit,
                     offset,
                 },
-                pathParams: normalized === "@me" ? undefined : { username },
+                // The trimmed username, not the raw argument: surrounding
+                // whitespace would otherwise be percent-encoded into the
+                // path and answered with a 404.
+                pathParams: normalized === "@me" ? undefined : { username: normalized },
             }
         );
     }
@@ -163,13 +221,16 @@ export class MalUserOperation extends RestOperation {
                 // `buildQueryString` skips undefined/null values, so the
                 // optional filters can be passed straight through.
                 query: {
-                    fields: Array.isArray(fields) ? fields.join(",") : fields,
+                    fields: formatMalFields(fields),
                     status,
                     sort,
                     limit,
                     offset,
                 },
-                pathParams: normalized === "@me" ? undefined : { username },
+                // The trimmed username, not the raw argument: surrounding
+                // whitespace would otherwise be percent-encoded into the
+                // path and answered with a 404.
+                pathParams: normalized === "@me" ? undefined : { username: normalized },
             }
         );
     }

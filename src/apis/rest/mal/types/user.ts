@@ -79,3 +79,19 @@ export interface MalUserMangaListParams {
     /** The offset of the first entry; defaults to 0. */
     offset?: number;
 }
+
+/**
+ * {@link MalUserGetParams} is the params object of the public user-profile read.
+ *
+ * It carries the API's own inputs for `GET /users/{user_name}`, consumed by
+ * `MalUserOperation.get` and `MyAnimeListUserApi.get` as the single params
+ * object of the unified `(params, options?)` convention. MyAnimeList only
+ * documents `@me` for this endpoint, so `username` accepts `@me` (with the
+ * same case-insensitive, whitespace-tolerant check as the user-list reads).
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
+ */
+export interface MalUserGetParams {
+    /** The MyAnimeList username; MyAnimeList documents only `@me` for this endpoint. */
+    username: string;
+}

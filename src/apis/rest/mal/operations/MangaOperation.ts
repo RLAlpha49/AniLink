@@ -1,6 +1,6 @@
 import { RestOperation } from "../../RestOperation";
 import { AniLinkValidationError } from "../../../../base/AniLinkError";
-import { MAL_API_BASE_URL } from "../constants";
+import { formatMalFields, MAL_API_BASE_URL } from "../constants";
 import type {
     MalManga,
     MalMangaDeleteParams,
@@ -8,6 +8,10 @@ import type {
     MalMangaListStatus,
     MalMangaListStatusUpdate,
     MalMangaListStatusUpdateParams,
+    MalMangaRankingParams,
+    MalMangaRankingResponse,
+    MalMangaSearchResponse,
+    MalMangaSearchParams,
     MalRequestOptions,
 } from "../types";
 
@@ -68,8 +72,99 @@ export class MalMangaOperation extends RestOperation {
             transportOptions,
             // `buildQueryString` skips undefined values, so `fields` can be
             // passed straight through.
-            query: { fields: Array.isArray(fields) ? fields.join(",") : fields },
+            query: { fields: formatMalFields(fields) },
             pathParams: { id },
+        });
+    }
+
+    /**
+     * {@link MalMangaOperation.search} searches MyAnimeList manga by keyword.
+     *
+     * It calls `GET /manga` through `RestOperation.execute` with the `q` keyword
+     * plus the `limit`/`offset` paging filters and returns a
+     * {@link MalMangaSearchResponse} page of `MalMangaSearchEntry` entries
+     * shaped by {@link MalRequestOptions.fields}. The facade alias is
+     * `MyAnimeListMangaApi.search` and it is a public read.
+     *
+     * @param params - The search inputs; a {@link MalMangaSearchParams} carrying the keyword plus the optional paging filters.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The search results page, a {@link MalMangaSearchResponse}.
+     * @throws An {@link AniLinkValidationError} when `q` is empty or only whitespace.
+     * @throws A normalized `AniLinkError` when the request fails.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const results = await api.manga.search(
+     *   { q: "berserk" },
+     *   { fields: ["id", "title", "main_picture"] }
+     * );
+     * console.log(results.data[0]?.node.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_get
+     */
+    public async search(
+        params: MalMangaSearchParams,
+        options: MalRequestOptions = {}
+    ): Promise<MalMangaSearchResponse> {
+        const { q, limit, offset } = params;
+        // An empty keyword would reach the wire as `?q=` and a remote `400`.
+        // Fail fast with a labeled client-side error instead, like the
+        // username reads fail fast on an empty username.
+        if (q.trim() === "") {
+            throw new AniLinkValidationError(["q must be a non-empty search keyword"]);
+        }
+        const { fields, ...transportOptions } = options;
+        return await this.execute<MalMangaSearchResponse>("/manga", {
+            transportOptions,
+            // `buildQueryString` skips undefined values, so the optional
+            // filters can be passed straight through.
+            query: {
+                q,
+                limit,
+                offset,
+                fields: formatMalFields(fields),
+            },
+        });
+    }
+
+    /**
+     * {@link MalMangaOperation.ranking} gets one of MyAnimeList's manga ranking lists.
+     *
+     * It calls `GET /manga/ranking` through `RestOperation.execute` with the
+     * `ranking_type` query parameter and returns a {@link MalMangaRankingResponse}
+     * page of `MalMangaRankingEntry` entries shaped by
+     * {@link MalRequestOptions.fields}. The facade alias is
+     * `MyAnimeListMangaApi.ranking` and it is a public read.
+     *
+     * @param params - The ranking read inputs; a {@link MalMangaRankingParams} carrying the ranking list to fetch.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The ranking page, a {@link MalMangaRankingResponse}.
+     * @throws A normalized `AniLinkError` when the request fails.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const top = await api.manga.ranking(
+     *   { rankingType: "manga" },
+     *   { fields: ["id", "title", "mean"] }
+     * );
+     * console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_ranking_get
+     */
+    public async ranking(
+        params: MalMangaRankingParams,
+        options: MalRequestOptions = {}
+    ): Promise<MalMangaRankingResponse> {
+        const { rankingType } = params;
+        const { fields, ...transportOptions } = options;
+        return await this.execute<MalMangaRankingResponse>("/manga/ranking", {
+            transportOptions,
+            // `buildQueryString` skips undefined values, so `fields` can be
+            // passed straight through.
+            query: {
+                ranking_type: rankingType,
+                fields: formatMalFields(fields),
+            },
         });
     }
 
@@ -146,7 +241,7 @@ export class MalMangaOperation extends RestOperation {
             body: this.encodeListStatusBody(payload),
             // `buildQueryString` skips undefined values, so `fields` can be
             // passed straight through.
-            query: { fields: Array.isArray(fields) ? fields.join(",") : fields },
+            query: { fields: formatMalFields(fields) },
             pathParams: { id },
         });
     }

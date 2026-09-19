@@ -54,3 +54,20 @@ export const DEFAULT_MAL_ANIME_FIELDS: readonly string[] = [
     "broadcast",
     "average_episode_duration",
 ];
+
+/**
+ * Formats a {@link MalRequestOptions} `fields` selector for the `fields` query
+ * parameter: an array becomes the comma-separated string MyAnimeList expects,
+ * a string passes through unchanged, and `undefined` stays `undefined` so
+ * `buildQueryString` omits the parameter entirely.
+ *
+ * Every MAL read and list-status write funnels its field selection through
+ * this one helper, so the wire format cannot drift between operations.
+ *
+ * @param fields - The field selector from the request options, when one was given.
+ * @returns The comma-separated selector string, or `undefined` when no selector was given.
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
+ */
+export const formatMalFields = (
+    fields: string | readonly string[] | undefined
+): string | undefined => (typeof fields === "string" ? fields : fields?.join(","));

@@ -186,6 +186,57 @@ export interface MalAnimeSuggestionsResponse {
 }
 
 /**
+ * {@link MalAnimeSearchEntry} is one entry of an anime keyword-search result.
+ *
+ * It wraps the {@link MalAnime} node, and is the element type of
+ * {@link MalAnimeSearchResponse} returned by `MalAnimeOperation.search` and
+ * `MyAnimeListAnimeApi.search`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_get
+ */
+export interface MalAnimeSearchEntry {
+    /** The anime entry, shaped by the `fields` query parameter. */
+    node: MalAnime;
+    /** Any additional fields returned by MyAnimeList remain available without narrowing. */
+    [field: string]: unknown;
+}
+
+/**
+ * {@link MalAnimeSearchResponse} is the response of the anime keyword-search endpoint.
+ *
+ * It is the shape returned by `MalAnimeOperation.search` and
+ * `MyAnimeListAnimeApi.search` from `GET /anime`: a page of
+ * {@link MalAnimeSearchEntry} entries plus the {@link MalPaging} node.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_get
+ */
+export interface MalAnimeSearchResponse {
+    /** The search-result entries on this page. */
+    data: MalAnimeSearchEntry[];
+    /** The paging node with the next-page URL, when the list continues. */
+    paging?: MalPaging;
+}
+
+/**
+ * {@link MalAnimeSearchParams} is the params object of the anime keyword search.
+ *
+ * It carries the API's own inputs for `GET /anime` — the `q` keyword plus the
+ * `limit` and `offset` paging filters — consumed by `MalAnimeOperation.search`
+ * and `MyAnimeListAnimeApi.search` as the single params object of the unified
+ * `(params, options?)` convention.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_get
+ */
+export interface MalAnimeSearchParams {
+    /** The search keyword. */
+    q: string;
+    /** The number of entries per page; defaults to 100, capped at 100 by MyAnimeList. */
+    limit?: number;
+    /** The offset of the first entry; defaults to 0. */
+    offset?: number;
+}
+
+/**
  * The watch status of an anime on a user's MyAnimeList list.
  *
  * These are the five fixed values MyAnimeList accepts for the `status` field

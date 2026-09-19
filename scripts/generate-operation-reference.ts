@@ -59,8 +59,13 @@ export interface ReferenceOperation {
     namespace: string;
     /** Public operation name. */
     name: string;
-    /** Category within the provider surface. */
-    category: "query" | "mutation" | "page" | "custom" | "rest";
+    /**
+     * Category within the provider surface: the AniList facade group
+     * (query, page, mutation, custom) or the MAL facade namespace (anime,
+     * manga, user, forum). Each category becomes one catalog page and one
+     * manifest shard, exactly like the AniList category pages.
+     */
+    category: "query" | "mutation" | "page" | "custom" | "anime" | "manga" | "user" | "forum";
     /** Signature line. */
     signature: string;
     /** Purpose extracted from JSDoc. */
@@ -163,6 +168,29 @@ function jsdocSeeUrls(jsdoc: string): string[] {
     return out;
 }
 
+/**
+ * Extract the `@throws` entries from a JSDoc block.
+ *
+ * MAL facade JSDoc documents every thrown error class with its condition
+ * (`@throws `AniLinkRestError` for a non-success MyAnimeList response.`), so
+ * the reference reads the error table straight from the facade instead of
+ * re-deriving it per operation like the AniList flow does.
+ *
+ * @param jsdoc JSDoc block text.
+ * @returns One ThrowsEntry per `@throws` tag, in documented order.
+ */
+function jsdocThrows(jsdoc: string): ThrowsEntry[] {
+    const inner = jsdocInner(jsdoc);
+    const out: ThrowsEntry[] = [];
+    const re = /@throws\s+`?(\w+)`?\s+(.+?)(?=\n\s*@|\n\s*$)/g;
+    let m = re.exec(inner);
+    while (m !== null) {
+        out.push({ error: m[1], condition: cleanDescription(m[2]).replace(/\.$/, "") });
+        m = re.exec(inner);
+    }
+    return out;
+}
+
 /** Find the JSDoc block (`/** ... *\/`) immediately preceding `lineIndex`. */
 function findJsdocAbove(lines: string[], lineIndex: number): string {
     let i = lineIndex - 1;
@@ -245,10 +273,20 @@ interface RawMember {
     description: string;
 }
 
-/** Parse an interface body into raw members. */
+/**
+ * Parse an interface body into raw members, flattening one level of
+ * `extends` so inherited members are documented with the interface's own.
+ *
+ * The MAL params interfaces extend a shared payload type
+ * (`MalAnimeListStatusUpdateParams extends MalAnimeListStatusUpdate` adds
+ * only the `id`), so the reference must read the inherited members too —
+ * the same way the AniList flow reads every member of a variables
+ * interface. AniList interfaces never extend, so this changes nothing for
+ * them.
+ */
 function parseInterfaceMembers(filePath: string, interfaceName: string): RawMember[] {
     const content = readFileText(filePath);
-    const re = new RegExp(String.raw`export interface ${interfaceName}\s*\{`);
+    const re = new RegExp(String.raw`export interface ${interfaceName}\b[^{]*\{`);
     const m = re.exec(content);
     if (!m) return [];
     const openIdx = content.indexOf("{", m.index);
@@ -266,6 +304,20 @@ function parseInterfaceMembers(filePath: string, interfaceName: string): RawMemb
         const rawType = memberMatch[3].trim();
         const description = memberDescriptionAbove(bodyLines, i);
         members.push({ name, rawType, required: !optional, description });
+    }
+    // Flatten one level of `extends`: the inherited members follow the
+    // interface's own, in declaration order, and are skipped when the base
+    // cannot be found (the reference then documents the own members only).
+    const extendsMatch = /extends\s+([\w.]+)/.exec(m[0]);
+    if (extendsMatch) {
+        const baseName = extendsMatch[1];
+        const baseFile = findInterfaceFile(filePath, baseName) ?? findResponseTypeFile(baseName);
+        if (baseFile) {
+            const own = new Set(members.map((mem) => mem.name));
+            for (const inherited of parseInterfaceMembers(baseFile, baseName)) {
+                if (!own.has(inherited.name)) members.push(inherited);
+            }
+        }
     }
     return members;
 }
@@ -294,7 +346,7 @@ function toParamFields(members: RawMember[]): ParamField[] {
 
 /** Find the file containing `export interface <interfaceName>` starting from a hint file's directory. */
 function findInterfaceFile(hintFilePath: string, interfaceName: string): string | null {
-    const hintRe = new RegExp(String.raw`export interface ${interfaceName}\s*\{`);
+    const hintRe = new RegExp(String.raw`export interface ${interfaceName}\b[^{]*\{`);
     if (hintRe.test(readFileText(hintFilePath))) {
         return hintFilePath;
     }
@@ -318,7 +370,7 @@ function findInterfaceFile(hintFilePath: string, interfaceName: string): string 
 function interfaceInFile(filePath: string, interfaceName: string): boolean {
     if (!interfaceName) return false;
     const content = readFileText(filePath);
-    return new RegExp(String.raw`export interface ${interfaceName}\s*\{`).test(content);
+    return new RegExp(String.raw`export interface ${interfaceName}\b[^{]*\{`).test(content);
 }
 
 // ---------------------------------------------------------------------------
@@ -355,7 +407,7 @@ function searchDirForInterface(dir: string, typeName: string, depth: number): st
             if (found) return found;
         } else if (name.endsWith(".ts")) {
             const content = readFileText(full);
-            if (new RegExp(String.raw`export interface ${typeName}\s*\{`).test(content)) {
+            if (new RegExp(String.raw`export interface ${typeName}\b[^{]*\{`).test(content)) {
                 return full;
             }
         }
@@ -710,54 +762,34 @@ function anilistAuth(op: RawOp): string {
 // MAL REST operation discovery
 // ---------------------------------------------------------------------------
 
-/** The MAL facade methods that map to public operations. */
-const MAL_FACADE_METHODS = new Set([
-    "get",
-    "me",
-    "seasonal",
-    "ranking",
-    "suggestions",
-    "animeList",
-    "mangaList",
-    "updateMyListStatus",
-    "deleteFromList",
-]);
-
-/** The MAL facade methods that read public data without an access token. */
-const MAL_PUBLIC_READ_METHODS = new Set(["get", "seasonal", "ranking", "animeList", "mangaList"]);
-
 /**
- * Fallback purpose text per MAL operation, used when the facade JSDoc yields
- * no main text. Keyed by `namespace.methodName`; an unknown key throws so a
- * new operation without a fallback fails the docs build loudly instead of
- * being documented with another operation's text.
+ * The MAL facade interface that owns each namespace.
+ *
+ * The facade is the single source of truth for the catalog, exactly like the
+ * generated AniList facade groups: every public MAL operation is one
+ * `MyAnimeList*Api` property, and the reference reads its signature, JSDoc
+ * prose, `@example`, `@see` link, and `@throws` table straight from that
+ * property — no per-operation tables live here.
  */
-const MAL_PURPOSE_FALLBACKS: Record<string, string> = {
-    "anime.get": "Gets one anime by its MyAnimeList ID.",
-    "manga.get": "Gets one manga by its MyAnimeList ID.",
-    "anime.seasonal": "Gets the anime of one broadcast season.",
-    "anime.ranking": "Gets one of MyAnimeList's anime ranking lists.",
-    "anime.suggestions": "Gets MyAnimeList's anime suggestions for the authenticated user.",
-    "user.animeList": "Gets a user's anime list, one page at a time.",
-    "user.mangaList": "Gets a user's manga list, one page at a time.",
-    "user.me": "Gets the currently authenticated MyAnimeList user.",
-    "anime.updateMyListStatus": "Updates the authenticated user's anime list status.",
-    "manga.updateMyListStatus": "Updates the authenticated user's manga list status.",
-    "anime.deleteFromList": "Removes an anime from the authenticated user's list.",
-    "manga.deleteFromList": "Removes a manga from the authenticated user's list.",
-};
-
-/** The MAL facade interface that owns each namespace. */
 const MAL_FACADE_INTERFACES: Record<
     string,
-    { namespace: "anime" | "manga" | "user"; domain: string }
+    { namespace: "anime" | "manga" | "user" | "forum"; domain: string }
 > = {
     MyAnimeListAnimeApi: { namespace: "anime", domain: "Anime" },
     MyAnimeListMangaApi: { namespace: "manga", domain: "Manga" },
     MyAnimeListUserApi: { namespace: "user", domain: "User" },
+    MyAnimeListForumApi: { namespace: "forum", domain: "Forum" },
 };
 
-/** Discover MAL REST operations from the facade source. */
+/**
+ * Discover MAL REST operations from the facade source.
+ *
+ * Every `MyAnimeList*Api` property signature is one operation; the JSDoc
+ * above it carries the purpose, example, upstream link, and error table, and
+ * the `params`/`options` types are resolved to their interfaces for the
+ * nested request fields — the same source-driven flow the AniList half of
+ * this generator uses.
+ */
 function discoverMalOperations(): ReferenceOperation[] {
     const facadePath = join(SRC, "apis/rest/mal/facade.ts");
     const content = readFileText(facadePath);
@@ -791,7 +823,6 @@ function discoverMalOperations(): ReferenceOperation[] {
     while ((sig = sigRe.exec(content)) !== null) {
         const current: RegExpExecArray = sig;
         const methodName = current[1];
-        if (!MAL_FACADE_METHODS.has(methodName)) continue;
         const span = ifaceSpans.find((s) => current.index >= s.start && current.index < s.end);
         const owner = span?.name ? MAL_FACADE_INTERFACES[span.name] : undefined;
         // Skip the composite `MyAnimeListApi` interface, which re-declares the
@@ -812,101 +843,77 @@ function discoverMalOperations(): ReferenceOperation[] {
     return ops;
 }
 
-/** Build one MAL ReferenceOperation from its facade signature. */
+/**
+ * Build one MAL ReferenceOperation from its facade signature and JSDoc.
+ *
+ * Every documented fact is read from source, mirroring the AniList flow:
+ * the facade JSDoc supplies the purpose, example, upstream link, error
+ * table, and parameter descriptions; the `params` and `options` types are
+ * resolved to their interfaces for the nested request fields. A facade
+ * method without JSDoc fails the build loudly instead of being published
+ * with empty prose.
+ */
 function buildMalOperation(
-    namespace: "anime" | "manga" | "user",
+    namespace: "anime" | "manga" | "user" | "forum",
     domain: string,
     methodName: string,
     params: string,
     responseType: string,
     jsdoc: string
 ): ReferenceOperation {
-    const isPublicRead = MAL_PUBLIC_READ_METHODS.has(methodName);
+    const purpose = jsdocMainText(jsdoc);
+    const example = jsdocExample(jsdoc);
+    const seeUrls = jsdocSeeUrls(jsdoc);
+    const errors = jsdocThrows(jsdoc);
+    if (purpose === "" || example === "" || seeUrls.length === 0 || errors.length === 0) {
+        throw new Error(
+            `mal.${namespace}.${methodName} facade JSDoc must carry main text, @example, @see, and @throws; the reference is generated from them.`
+        );
+    }
+
+    // The request parameters come from the signature; each one's description
+    // is its `@param` tag, and the params object resolves to its interface
+    // for the nested fields — the REST analogue of the AniList variables
+    // interface read. A parameter without a `@param` tag fails the build
+    // loudly instead of being published with an empty description.
     const request: ParamField[] = [];
     const paramRe = /(\w+)(\?)?:\s*([^,)]+)/g;
     let pm = paramRe.exec(params);
     while (pm !== null) {
         const pname = pm[1];
+        const description = jsdocParamDescription(jsdoc, pname);
+        if (description === "") {
+            throw new Error(
+                `mal.${namespace}.${methodName} facade JSDoc must document its ${pname} parameter with @param.`
+            );
+        }
         request.push({
             name: pname,
             type: pm[3].trim(),
             required: !pm[2],
-            description: malParamDescription(pname),
+            description,
         });
         pm = paramRe.exec(params);
     }
-    const optionsParam = request.find((r) => r.name === "options");
-    if (optionsParam) {
-        // `deleteFromList` resolves with no response body, so `fields` has
-        // nothing to shape there; every other operation documents it.
-        optionsParam.nestedFields =
-            methodName === "deleteFromList"
-                ? malOptionFields().filter((field) => field.name !== "fields")
-                : malOptionFields();
-    }
-    // The unified `(params, options?)` convention: the params object carries
-    // the API's own inputs. Every method with a `params` argument must be
-    // mapped here — an unmapped method fails the build instead of silently
-    // publishing wrong reference docs.
     const paramsParam = request.find((r) => r.name === "params");
     if (paramsParam) {
-        const paramsFields = malParamsFields(namespace, methodName);
-        if (paramsFields === undefined) {
+        const paramsFile = findResponseTypeFile(paramsParam.type);
+        const paramsFields = paramsFile
+            ? toParamFields(parseInterfaceMembers(paramsFile, paramsParam.type))
+            : [];
+        if (paramsFields.length === 0) {
             throw new Error(
-                `No params fields mapped for mal.${namespace}.${methodName}; add it to malParamsFields.`
+                `Could not parse ${paramsParam.type} for mal.${namespace}.${methodName}; the params interface must exist under src/apis/rest/mal.`
             );
         }
         paramsParam.nestedFields = paramsFields;
     }
-
-    const errors: ThrowsEntry[] = isPublicRead
-        ? [
-              // The user-list reads fail fast on `@me` without a token, like `me`.
-              ...(methodName === "animeList" || methodName === "mangaList"
-                  ? [
-                        { error: "AniLinkAuthError", condition: "`@me` without an access token" },
-                        {
-                            error: "AniLinkValidationError",
-                            condition: "empty or whitespace-only `username`",
-                        },
-                    ]
-                  : []),
-              { error: "AniLinkRestError", condition: "non-success MyAnimeList response" },
-              {
-                  error: "AniLinkNetworkError",
-                  condition: "timeout, cancellation, or other transport failure",
-              },
-          ]
-        : [
-              { error: "AniLinkAuthError", condition: "no MAL access token is configured" },
-              // The list-status writes fail fast on an empty payload, like the
-              // username reads fail fast on an empty username.
-              ...(methodName === "updateMyListStatus"
-                  ? [
-                        {
-                            error: "AniLinkValidationError",
-                            condition: "params carries no list-status field to change",
-                        },
-                    ]
-                  : []),
-              { error: "AniLinkRestError", condition: "non-success MyAnimeList response" },
-              {
-                  error: "AniLinkNetworkError",
-                  condition: "timeout, cancellation, or other transport failure",
-              },
-          ];
-
-    const example = malExample(namespace, methodName);
-    const upstream = malUpstreamReference(namespace, methodName);
-    const signature = malSignature(methodName, params, responseType);
-    const typedocInterface = malTypedocInterface(namespace);
-    const jsdocPurpose = jsdocMainText(jsdoc);
-    const purposeFallback = MAL_PURPOSE_FALLBACKS[`${namespace}.${methodName}`];
-    if (jsdocPurpose === "" && purposeFallback === undefined) {
-        throw new Error(
-            `No JSDoc main text and no purpose fallback for mal.${namespace}.${methodName}; add one to MAL_PURPOSE_FALLBACKS.`
-        );
+    const optionsParam = request.find((r) => r.name === "options");
+    if (optionsParam) {
+        optionsParam.nestedFields = malOptionFields(optionsParam.description);
     }
+
+    const signature = `${methodName}(${params.replace(/\s+/g, " ").trim()}): Promise<${responseType}>`;
 
     return {
         provider: "mal",
@@ -914,29 +921,30 @@ function buildMalOperation(
         domain,
         namespace: `mal.${namespace}.${methodName}`,
         name: `${namespace}.${methodName}`,
-        category: "rest",
+        // The facade namespace is the MAL category — the analogue of the
+        // AniList facade groups — so each namespace gets its own catalog
+        // page and manifest shard, like the AniList category pages.
+        category: namespace,
         signature,
-        purpose: jsdocPurpose || purposeFallback || "",
-        auth: isPublicRead
-            ? methodName === "get"
-                ? `Not required for public ${namespace} data; pass an access token for list-related fields.`
-                : methodName === "animeList" || methodName === "mangaList"
-                  ? "Not required for public user lists; `@me` and private lists require an access token — a client ID alone cannot resolve `@me`."
-                  : "Not required — a public read."
-            : "Required — MAL OAuth2 access token (`mal.accessToken` credential slot).",
+        purpose,
+        auth: malAuth(namespace, methodName, errors),
         request,
         responseType,
         response: extractResponseFields(responseType),
         errors,
         example,
         links: [
-            { label: "TypeDoc", url: `${TYPEDOC_BASE}interfaces/${typedocInterface}.html` },
-            { label: "MAL API reference", url: upstream },
+            {
+                label: "TypeDoc",
+                url: `${TYPEDOC_BASE}interfaces/${malTypedocInterface(namespace)}.html`,
+            },
+            { label: "MAL API reference", url: seeUrls[0] },
         ],
     };
 }
 
-/** The TypeDoc interface page name for a MAL namespace.
+/**
+ * The TypeDoc interface page name for a MAL namespace.
  *
  * TypeDoc qualifies interface pages with their defining module, so the page
  * for `MyAnimeListAnimeApi` lives at
@@ -946,454 +954,84 @@ function buildMalOperation(
 function malTypedocInterface(namespace: string): string {
     if (namespace === "manga") return "apis_rest_mal_facade.MyAnimeListMangaApi";
     if (namespace === "user") return "apis_rest_mal_facade.MyAnimeListUserApi";
+    if (namespace === "forum") return "apis_rest_mal_facade.MyAnimeListForumApi";
     return "apis_rest_mal_facade.MyAnimeListAnimeApi";
 }
 
-/** The upstream MAL API reference URL for one operation. */
-function malUpstreamReference(namespace: string, methodName: string): string {
-    if (namespace === "user") {
-        if (methodName === "animeList") {
-            return "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get";
-        }
-        if (methodName === "mangaList") {
-            return "https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get";
-        }
-        return "https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get";
-    }
-    if (namespace === "manga") {
-        return methodName === "get"
-            ? "https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get"
-            : methodName === "updateMyListStatus"
-              ? "https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put"
-              : "https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_delete";
-    }
-    return methodName === "get"
-        ? "https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get"
-        : methodName === "seasonal"
-          ? "https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get"
-          : methodName === "ranking"
-            ? "https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get"
-            : methodName === "suggestions"
-              ? "https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_suggestions_get"
-              : methodName === "updateMyListStatus"
-                ? "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put"
-                : "https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete";
-}
-
-/** The public signature string for one MAL operation. */
-function malSignature(methodName: string, params: string, responseType: string): string {
-    const cleaned = params.replace(/\s+/g, " ").trim();
-    return `${methodName}(${cleaned}): Promise<${responseType}>`;
-}
-
-/** The code example for one MAL operation. */
-function malExample(namespace: "anime" | "manga" | "user", methodName: string): string {
-    const header = [
-        'import { AniLink } from "anilink-api-wrapper";',
-        "",
-        'const aniLink = new AniLink({ mal: { accessToken: "mal-token" } });',
-    ];
-    if (methodName === "get") {
-        const entity = namespace === "manga" ? "manga" : "anime";
-        const id = namespace === "manga" ? 1 : 21;
-        return [
-            ...header,
-            `const ${entity} = await aniLink.mal.${namespace}.get({ id: ${id} }, {`,
-            '    fields: ["id", "title", "main_picture", "synopsis"],',
-            "});",
-            `console.log(${entity}.title);`,
-        ].join("\n");
-    }
-    if (methodName === "me") {
-        return [
-            ...header,
-            "const user = await aniLink.mal.user.me({",
-            '    fields: ["id", "name", "location", "joined_at"],',
-            "});",
-            "console.log(user.name);",
-        ].join("\n");
-    }
-    if (methodName === "animeList") {
-        return [
-            ...header,
-            "const list = await aniLink.mal.user.animeList(",
-            '    { username: "@me", status: "watching" },',
-            '    { fields: ["id", "title", "list_status"] }',
-            ");",
-            "console.log(list.data[0]?.node.title);",
-        ].join("\n");
-    }
-    if (methodName === "mangaList") {
-        return [
-            ...header,
-            "const list = await aniLink.mal.user.mangaList(",
-            '    { username: "@me", status: "reading" },',
-            '    { fields: ["id", "title", "list_status"] }',
-            ");",
-            "console.log(list.data[0]?.node.title);",
-        ].join("\n");
-    }
-    if (methodName === "seasonal") {
-        return [
-            ...header,
-            "const season = await aniLink.mal.anime.seasonal(",
-            '    { year: 2024, season: "winter" },',
-            '    { fields: ["id", "title", "main_picture"] }',
-            ");",
-            "console.log(season.data[0]?.node.title);",
-        ].join("\n");
-    }
-    if (methodName === "ranking") {
-        return [
-            ...header,
-            "const top = await aniLink.mal.anime.ranking(",
-            '    { rankingType: "airing" },',
-            '    { fields: ["id", "title", "mean"] }',
-            ");",
-            "console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);",
-        ].join("\n");
-    }
-    if (methodName === "suggestions") {
-        return [
-            ...header,
-            "const suggestions = await aniLink.mal.anime.suggestions({",
-            '    fields: ["id", "title", "main_picture"],',
-            "});",
-            "console.log(suggestions.data[0]?.node.title);",
-        ].join("\n");
-    }
-    if (methodName === "updateMyListStatus") {
-        if (namespace === "manga") {
-            return [
-                ...header,
-                "const status = await aniLink.mal.manga.updateMyListStatus({",
-                "    id: 1,",
-                '    status: "reading",',
-                "    num_chapters_read: 10,",
-                "    score: 9,",
-                "});",
-                "console.log(status.num_chapters_read);",
-            ].join("\n");
-        }
-        return [
-            ...header,
-            "const status = await aniLink.mal.anime.updateMyListStatus({",
-            "    id: 21,",
-            '    status: "watching",',
-            "    num_watched_episodes: 10,",
-            "    score: 9,",
-            "});",
-            "console.log(status.num_episodes_watched);",
-        ].join("\n");
-    }
-    // deleteFromList
-    const id = namespace === "manga" ? 1 : 21;
-    return [...header, `await aniLink.mal.${namespace}.deleteFromList({ id: ${id} });`].join("\n");
-}
-
-/** Human-readable description for a MAL facade parameter. */
-function malParamDescription(name: string): string {
-    if (name === "params") {
-        return "The operation's own inputs as one typed object; see its nested fields.";
-    }
-    if (name === "options") {
-        return "Optional field selection and transport settings; merged over the instance defaults.";
-    }
-    return "";
+/**
+ * Extract the `@param <name>` description from a JSDoc block.
+ *
+ * @param jsdoc JSDoc block text.
+ * @param name The parameter name whose description to read.
+ * @returns The cleaned description, or an empty string when the parameter
+ *   is not documented.
+ */
+function jsdocParamDescription(jsdoc: string, name: string): string {
+    const inner = jsdocInner(jsdoc);
+    const re = new RegExp(String.raw`@param\s+${name}\s+-\s+(.+?)(?=\n\s*@|\n\s*$)`, "g");
+    const m = re.exec(inner);
+    return m ? cleanDescription(m[1]) : "";
 }
 
 /**
- * The nested fields of one MAL method's `params` object, keyed by method
- * name. Returns `undefined` for methods without a mapping so the caller can
- * fail loudly instead of documenting a wrong shape.
+ * Derive the auth-requirement text for a MAL operation from its error table.
+ *
+ * The facade `@throws` entries state the token contract: an
+ * `AniLinkAuthError` for a missing token marks the whole operation as
+ * authenticated, one conditioned on `@me` marks the `@me` path as
+ * authenticated, and no auth error at all marks a public read — the REST
+ * analogue of the AniList category-based auth rule.
+ *
+ * @param namespace The facade namespace the operation belongs to.
+ * @param methodName The facade method name.
+ * @param errors The `@throws` entries read from the facade JSDoc.
+ * @returns The auth-requirement text for the reference card.
  */
-function malParamsFields(
-    namespace: "anime" | "manga" | "user",
-    methodName: string
-): ParamField[] | undefined {
-    switch (methodName) {
-        case "get":
-        case "deleteFromList":
-            return [malIdField(namespace)];
-        case "updateMyListStatus":
-            return [malIdField(namespace), ...malListStatusUpdateFields(namespace)];
-        case "animeList":
-            return [malUsernameField(), ...malListFilterFields("anime")];
-        case "mangaList":
-            return [malUsernameField(), ...malListFilterFields("manga")];
-        case "seasonal":
-            return [malYearField(), malSeasonField()];
-        case "ranking":
-            return [malRankingTypeField()];
-        default:
-            return undefined;
+function malAuth(
+    namespace: "anime" | "manga" | "user" | "forum",
+    methodName: string,
+    errors: ThrowsEntry[]
+): string {
+    const authError = errors.find((entry) => entry.error === "AniLinkAuthError");
+    if (authError === undefined) {
+        // The anime/manga lookups expose list-related fields that need a token.
+        if (methodName === "get" && (namespace === "anime" || namespace === "manga")) {
+            return `Not required for public ${namespace} data; pass an access token for list-related fields.`;
+        }
+        return "Not required — a public read.";
     }
-}
-
-/** The `id` field of the get/update/delete params objects. */
-function malIdField(namespace: string): ParamField {
-    return {
-        name: "id",
-        type: "number",
-        required: true,
-        description:
-            namespace === "manga" ? "The MyAnimeList manga ID." : "The MyAnimeList anime ID.",
-    };
-}
-
-/** The `username` field of the user-list params objects. */
-function malUsernameField(): ParamField {
-    return {
-        name: "username",
-        type: "string",
-        required: true,
-        description: "The MyAnimeList user name, or @me for the authenticated user.",
-    };
-}
-
-/** The `year` field of the seasonal params object. */
-function malYearField(): ParamField {
-    return {
-        name: "year",
-        type: "number",
-        required: true,
-        description: "The season's year.",
-    };
-}
-
-/** The `season` field of the seasonal params object. */
-function malSeasonField(): ParamField {
-    return {
-        name: "season",
-        type: "MalSeason",
-        required: true,
-        description: "The season's broadcast window (winter, spring, summer, or fall).",
-    };
-}
-
-/** The `rankingType` field of the ranking params object. */
-function malRankingTypeField(): ParamField {
-    return {
-        name: "rankingType",
-        type: "MalRankingType",
-        required: true,
-        description:
-            "The ranking list to fetch (all, airing, upcoming, tv, ova, movie, special, bypopularity, or favorite).",
-    };
-}
-
-/** The status/sort/limit/offset filter fields of the user-list params objects. */
-function malListFilterFields(listKind: "anime" | "manga"): ParamField[] {
-    const isAnime = listKind === "anime";
-    return [
-        {
-            name: "status",
-            type: isAnime ? "MalAnimeListStatusValue" : "MalMangaListStatusValue",
-            required: false,
-            description: isAnime
-                ? "The watch status to filter by (watching, completed, on_hold, dropped, plan_to_watch); omit to return all."
-                : "The reading status to filter by (reading, completed, on_hold, dropped, plan_to_read); omit to return all.",
-        },
-        {
-            name: "sort",
-            type: isAnime ? "MalAnimeListSort" : "MalMangaListSort",
-            required: false,
-            description:
-                "The sort order (list_score, list_updated_at, and the start-date sort are descending; the title and id sorts are ascending).",
-        },
-        {
-            name: "limit",
-            type: "number",
-            required: false,
-            description:
-                "The number of entries per page; defaults to 100, capped at 1000 by MyAnimeList.",
-        },
-        {
-            name: "offset",
-            type: "number",
-            required: false,
-            description: "The offset of the first entry; defaults to 0.",
-        },
-    ];
-}
-
-/** The MAL options fields documented on MAL operations. */
-function malOptionFields(): ParamField[] {
-    return [
-        {
-            name: "fields",
-            type: "string | readonly string[]",
-            required: false,
-            description:
-                "Comma-separated MAL field selector, or the same selector as an array. Shapes the response.",
-        },
-        {
-            name: "timeout",
-            type: "number",
-            required: false,
-            description: "Milliseconds before the request is aborted. `0` disables.",
-        },
-        {
-            name: "signal",
-            type: "AbortSignal",
-            required: false,
-            description: "Signal used to cancel the in-flight request.",
-        },
-    ];
-}
-
-/** The `MalAnimeListStatusUpdate` / `MalMangaListStatusUpdate` fields documented on the update operation. */
-function malListStatusUpdateFields(namespace: "anime" | "manga" | "user"): ParamField[] {
-    if (namespace === "manga") {
-        return [
-            {
-                name: "status",
-                type: "MalMangaListStatusValue",
-                required: false,
-                description:
-                    "The reading status to set (reading, completed, on_hold, dropped, plan_to_read).",
-            },
-            {
-                name: "num_chapters_read",
-                type: "number",
-                required: false,
-                description: "The number of chapters the user has read.",
-            },
-            {
-                name: "num_volumes_read",
-                type: "number",
-                required: false,
-                description: "The number of volumes the user has read.",
-            },
-            {
-                name: "score",
-                type: "number",
-                required: false,
-                description: "The user's score out of 10.",
-            },
-            {
-                name: "start_date",
-                type: "string",
-                required: false,
-                description:
-                    "The date the user started reading; partial dates (YYYY-MM, YYYY) accepted.",
-            },
-            {
-                name: "finish_date",
-                type: "string",
-                required: false,
-                description:
-                    "The date the user finished reading; partial dates (YYYY-MM, YYYY) accepted.",
-            },
-            {
-                name: "comments",
-                type: "string",
-                required: false,
-                description: "Free-form notes attached to the entry.",
-            },
-            {
-                name: "is_rereading",
-                type: "boolean",
-                required: false,
-                description: "Whether the user is currently rereading the manga.",
-            },
-            {
-                name: "num_times_reread",
-                type: "number",
-                required: false,
-                description: "The number of times the user has reread the manga.",
-            },
-            {
-                name: "reread_value",
-                type: "number",
-                required: false,
-                description: "The reread value rating (0-5).",
-            },
-            {
-                name: "priority",
-                type: "number",
-                required: false,
-                description: "The priority rating (0-2).",
-            },
-            {
-                name: "tags",
-                type: "readonly string[]",
-                required: false,
-                description: "User-defined tags; sent as a comma-separated string.",
-            },
-        ];
+    if (/no MAL access token is configured/.test(authError.condition)) {
+        return "Required — MAL OAuth2 access token (`mal.accessToken` credential slot).";
     }
-    return [
-        {
-            name: "status",
-            type: "MalAnimeListStatusValue",
-            required: false,
-            description:
-                "The watch status to set (watching, completed, on_hold, dropped, plan_to_watch).",
-        },
-        {
-            name: "num_watched_episodes",
-            type: "number",
-            required: false,
-            description: "The number of episodes the user has watched.",
-        },
-        {
-            name: "score",
-            type: "number",
-            required: false,
-            description: "The user's score out of 10.",
-        },
-        {
-            name: "start_date",
-            type: "string",
-            required: false,
-            description:
-                "The date the user started watching; partial dates (YYYY-MM, YYYY) accepted.",
-        },
-        {
-            name: "finish_date",
-            type: "string",
-            required: false,
-            description:
-                "The date the user finished watching; partial dates (YYYY-MM, YYYY) accepted.",
-        },
-        {
-            name: "comments",
-            type: "string",
-            required: false,
-            description: "Free-form notes attached to the entry.",
-        },
-        {
-            name: "is_rewatching",
-            type: "boolean",
-            required: false,
-            description: "Whether the user is currently rewatching the anime.",
-        },
-        {
-            name: "num_times_rewatched",
-            type: "number",
-            required: false,
-            description: "The number of times the user has rewatched the anime.",
-        },
-        {
-            name: "rewatch_value",
-            type: "number",
-            required: false,
-            description: "The rewatch value rating (0-5).",
-        },
-        {
-            name: "priority",
-            type: "number",
-            required: false,
-            description: "The priority rating (0-2).",
-        },
-        {
-            name: "tags",
-            type: "readonly string[]",
-            required: false,
-            description: "User-defined tags; sent as a comma-separated string.",
-        },
-    ];
+    // The remaining auth errors fire on `@me` without a token: the profile
+    // read documents only `@me`, while the list reads serve public lists.
+    if (namespace === "user" && methodName === "get") {
+        return "Requires an access token — MyAnimeList documents only `@me` for this endpoint; other usernames are passed through but currently answered with `404`.";
+    }
+    return "Not required for public user lists; `@me` and private lists require an access token — a client ID alone cannot resolve `@me`.";
+}
+
+/**
+ * The nested fields documented for a MAL operation's `options` object.
+ *
+ * `fields` is read from the `MalRequestOptions` interface and the transport
+ * pair from the shared `RequestOptions` base, so the documented shape
+ * tracks the source types. Operations whose facade `@param options` text
+ * names only transport settings — the forum reads and the list-status
+ * deletes, whose endpoints take no `fields` query parameter — drop
+ * `fields`.
+ *
+ * @param optionsDescription The `@param options` text from the facade JSDoc.
+ * @returns The nested option fields for the reference card.
+ */
+function malOptionFields(optionsDescription: string): ParamField[] {
+    const fields = toParamFields(
+        parseInterfaceMembers(join(SRC, "apis/rest/mal/types/common.ts"), "MalRequestOptions")
+    );
+    const transport = toParamFields(
+        parseInterfaceMembers(join(SRC, "base/transportTypes.ts"), "RequestOptions")
+    ).filter((field) => field.name === "timeout" || field.name === "signal");
+    return /field selection/.test(optionsDescription) ? [...fields, ...transport] : transport;
 }
 
 // ---------------------------------------------------------------------------

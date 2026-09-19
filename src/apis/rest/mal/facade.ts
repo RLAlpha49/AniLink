@@ -5,12 +5,23 @@ import type {
     MalAnimeListStatus,
     MalAnimeListStatusUpdateParams,
     MalAnimeRankingResponse,
+    MalAnimeSearchResponse,
+    MalAnimeSearchParams,
     MalAnimeSuggestionsResponse,
+    MalForumBoardsResponse,
+    MalForumTopicParams,
+    MalForumTopicResponse,
+    MalForumTopicsParams,
+    MalForumTopicsResponse,
     MalManga,
     MalMangaDeleteParams,
     MalMangaGetParams,
     MalMangaListStatus,
     MalMangaListStatusUpdateParams,
+    MalMangaRankingParams,
+    MalMangaRankingResponse,
+    MalMangaSearchResponse,
+    MalMangaSearchParams,
     MalRankingParams,
     MalRequestOptions,
     MalSeasonalAnimeResponse,
@@ -18,6 +29,7 @@ import type {
     MalUser,
     MalUserAnimeListParams,
     MalUserAnimeListResponse,
+    MalUserGetParams,
     MalUserMangaListParams,
     MalUserMangaListResponse,
 } from "./types";
@@ -53,6 +65,33 @@ export interface MyAnimeListAnimeApi {
      * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
      */
     get: (params: MalAnimeGetParams, options?: MalRequestOptions) => Promise<MalAnime>;
+
+    /**
+     * {@link MyAnimeListAnimeApi.search} searches MyAnimeList anime by keyword through `MalAnimeOperation.search`.
+     *
+     * It is the public facade for `GET /anime`; use {@link MalRequestOptions.fields} to select the response shape and {@link MalRequestOptions} transport settings to override per call.
+     *
+     * @param params - The search inputs; a {@link MalAnimeSearchParams} carrying the keyword plus the optional paging filters.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The search results page, a {@link MalAnimeSearchResponse}.
+     * @throws `AniLinkValidationError` when `q` is empty or only whitespace.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const results = await api.anime.search(
+     *   { q: "one piece" },
+     *   { fields: ["id", "title", "main_picture"] }
+     * );
+     * console.log(results.data[0]?.node.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_get
+     */
+    search: (
+        params: MalAnimeSearchParams,
+        options?: MalRequestOptions
+    ) => Promise<MalAnimeSearchResponse>;
 
     /**
      * {@link MyAnimeListAnimeApi.seasonal} gets the anime of one broadcast season through `MalAnimeOperation.seasonal`.
@@ -208,6 +247,59 @@ export interface MyAnimeListMangaApi {
     get: (params: MalMangaGetParams, options?: MalRequestOptions) => Promise<MalManga>;
 
     /**
+     * {@link MyAnimeListMangaApi.search} searches MyAnimeList manga by keyword through `MalMangaOperation.search`.
+     *
+     * It is the public facade for `GET /manga`; use {@link MalRequestOptions.fields} to select the response shape and {@link MalRequestOptions} transport settings to override per call.
+     *
+     * @param params - The search inputs; a {@link MalMangaSearchParams} carrying the keyword plus the optional paging filters.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The search results page, a {@link MalMangaSearchResponse}.
+     * @throws `AniLinkValidationError` when `q` is empty or only whitespace.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const results = await api.manga.search(
+     *   { q: "berserk" },
+     *   { fields: ["id", "title", "main_picture"] }
+     * );
+     * console.log(results.data[0]?.node.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_get
+     */
+    search: (
+        params: MalMangaSearchParams,
+        options?: MalRequestOptions
+    ) => Promise<MalMangaSearchResponse>;
+
+    /**
+     * {@link MyAnimeListMangaApi.ranking} gets one of MyAnimeList's manga ranking lists through `MalMangaOperation.ranking`.
+     *
+     * It is the public facade for `GET /manga/ranking`; use {@link MalRequestOptions.fields} to select the response shape and {@link MalRequestOptions} transport settings to override per call.
+     *
+     * @param params - The ranking read inputs; a {@link MalMangaRankingParams} carrying the ranking list to fetch.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The ranking page, a {@link MalMangaRankingResponse}.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const top = await api.manga.ranking(
+     *   { rankingType: "manga" },
+     *   { fields: ["id", "title", "mean"] }
+     * );
+     * console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_ranking_get
+     */
+    ranking: (
+        params: MalMangaRankingParams,
+        options?: MalRequestOptions
+    ) => Promise<MalMangaRankingResponse>;
+
+    /**
      * {@link MyAnimeListMangaApi.updateMyListStatus} updates the authenticated user's manga list status through `MalMangaOperation.updateMyListStatus`.
      *
      * It is the public facade for `PATCH /manga/{id}/my_list_status` and requires a MAL access token from `MalCredentials.accessToken` via `buildMyAnimeListApi`; send only the `MalMangaListStatusUpdate` fields you want to change, form-encoded as MAL requires.
@@ -287,6 +379,31 @@ export interface MyAnimeListUserApi {
     me: (options?: MalRequestOptions) => Promise<MalUser>;
 
     /**
+     * {@link MyAnimeListUserApi.get} gets a MyAnimeList user profile through `MalUserOperation.get`.
+     *
+     * It is the public facade for `GET /users/{user_name}`; MyAnimeList documents only `@me` for this endpoint, so `username` accepts `@me` (case-insensitive, whitespace-tolerant) and requires an access token to resolve it. Other usernames are passed through, but MyAnimeList currently answers them with `404`. Use {@link MalRequestOptions.fields} to select the response shape.
+     *
+     * @param params - The profile read inputs; a {@link MalUserGetParams} carrying the username.
+     * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The requested {@link MalUser}.
+     * @throws `AniLinkAuthError` when `username` is `@me` and no access token is configured.
+     * @throws `AniLinkValidationError` when `username` is empty or only whitespace.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const user = await api.user.get(
+     *   { username: "@me" },
+     *   { fields: ["id", "name", "location"] }
+     * );
+     * console.log(user.name);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
+     */
+    get: (params: MalUserGetParams, options?: MalRequestOptions) => Promise<MalUser>;
+
+    /**
      * {@link MyAnimeListUserApi.animeList} gets a user's anime list through `MalUserOperation.animeList`.
      *
      * It is the public facade for `GET /users/{user_name}/animelist`; `username` accepts a user name or `@me`. A public list needs only `MalCredentials.clientId` (or an access token) — MAL rejects unauthenticated requests — while `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserAnimeListParams} to filter by status, sort, and page with `limit`/`offset`.
@@ -344,6 +461,82 @@ export interface MyAnimeListUserApi {
 }
 
 /**
+ * {@link MyAnimeListForumApi} is the forum group exposed by {@link MyAnimeListApi} under `aniLink.mal.forum`.
+ *
+ * It is the facade boundary for the MyAnimeList forum reads: `boards` delegates to `MalForumOperation` and returns the {@link MalForumBoardsResponse} board tree, `topics` covers the filterable `GET /forum/topics` topic list, and `topic` covers `GET /forum/topic/{topic_id}` with its posts and poll.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_boards_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_topics_get
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_topic_get
+ */
+export interface MyAnimeListForumApi {
+    /**
+     * {@link MyAnimeListForumApi.boards} gets the MyAnimeList forum board tree through `MalForumOperation.boards`.
+     *
+     * It is the public facade for `GET /forum/boards`; use {@link MalRequestOptions} transport settings to override per call.
+     *
+     * @param options - Optional transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The forum board tree, a {@link MalForumBoardsResponse}.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const boards = await api.forum.boards();
+     * console.log(boards.categories[0]?.boards[0]?.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_boards_get
+     */
+    boards: (options?: MalRequestOptions) => Promise<MalForumBoardsResponse>;
+
+    /**
+     * {@link MyAnimeListForumApi.topics} gets the MyAnimeList forum topic list through `MalForumOperation.topics`.
+     *
+     * It is the public facade for `GET /forum/topics`; filter by board, keyword, or creator with {@link MalForumTopicsParams} and page with `limit`/`offset`.
+     *
+     * @param params - The topic-list read inputs; a {@link MalForumTopicsParams} carrying the optional board, keyword, creator, sort, and paging filters.
+     * @param options - Optional transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The topic list page, a {@link MalForumTopicsResponse}.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const topics = await api.forum.topics({ q: "one piece" });
+     * console.log(topics.data[0]?.title);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_topics_get
+     */
+    topics: (
+        params?: MalForumTopicsParams,
+        options?: MalRequestOptions
+    ) => Promise<MalForumTopicsResponse>;
+
+    /**
+     * {@link MyAnimeListForumApi.topic} gets one forum topic with its posts and poll through `MalForumOperation.topic`.
+     *
+     * It is the public facade for `GET /forum/topic/{topic_id}`; page through a long topic's posts with the `limit`/`offset` fields of {@link MalForumTopicParams}.
+     *
+     * @param params - The topic read inputs; a {@link MalForumTopicParams} carrying the topic ID plus the optional post-paging filters.
+     * @param options - Optional transport settings; a {@link MalRequestOptions} merged over the instance defaults.
+     * @returns The topic detail page, a {@link MalForumTopicResponse}.
+     * @throws `AniLinkRestError` for a non-success MyAnimeList response.
+     * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.
+     * @example
+     * ```typescript
+     * const api = new AniLink({ mal: { accessToken: "mal-token" } }).mal;
+     * const topic = await api.forum.topic({ id: 23744 });
+     * console.log(topic.data.title, topic.data.posts[0]?.body);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_topic_get
+     */
+    topic: (
+        params: MalForumTopicParams,
+        options?: MalRequestOptions
+    ) => Promise<MalForumTopicResponse>;
+}
+
+/**
  * {@link MyAnimeListApi} is the typed MyAnimeList REST surface exposed by `aniLink.mal`.
  *
  * It composes {@link MyAnimeListAnimeApi}, {@link MyAnimeListMangaApi}, and {@link MyAnimeListUserApi} from `MalAnimeOperation`, `MalMangaOperation`, and `MalUserOperation` via `buildMyAnimeListApi`. Read methods accept {@link MalRequestOptions} and return {@link MalAnime}, {@link MalManga}, or {@link MalUser}; the anime group additionally exposes the discovery reads `seasonal`, `ranking`, and `suggestions` for the seasonal, ranking, and suggestion endpoints, and the anime and manga groups expose `updateMyListStatus` and `deleteFromList` for the authenticated list-status write/delete endpoints. OAuth helpers `buildMalAuthorizationUrl`, `getMalAccessToken`, and `refreshMalAccessToken` supply the token for `MalCredentials`.
@@ -357,4 +550,6 @@ export interface MyAnimeListApi {
     manga: MyAnimeListMangaApi;
     /** User operations via {@link MyAnimeListUserApi} and `MalUserOperation`. */
     user: MyAnimeListUserApi;
+    /** Forum operations via {@link MyAnimeListForumApi} and `MalForumOperation`. */
+    forum: MyAnimeListForumApi;
 }

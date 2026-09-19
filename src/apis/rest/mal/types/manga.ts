@@ -217,3 +217,122 @@ export interface MalUserMangaListResponse {
     /** The paging node with the next/previous page URLs, when the list continues. */
     paging?: MalPaging;
 }
+
+/**
+ * The ranking lists MyAnimeList exposes for manga.
+ *
+ * These are the fixed `ranking_type` query values accepted by
+ * `GET /manga/ranking`, consumed as the `rankingType` parameter of
+ * `MalMangaOperation.ranking` and `MyAnimeListMangaApi.ranking`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_ranking_get
+ */
+export type MalMangaRankingType =
+    | "all"
+    | "manga"
+    | "novels"
+    | "oneshots"
+    | "doujin"
+    | "manhwa"
+    | "manhua"
+    | "bypopularity"
+    | "favorite";
+
+/**
+ * {@link MalMangaRankingEntry} is one entry of a manga ranking list.
+ *
+ * It wraps the {@link MalManga} node with its `ranking` position, and is the
+ * element type of {@link MalMangaRankingResponse} returned by
+ * `MalMangaOperation.ranking` and `MyAnimeListMangaApi.ranking`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_ranking_get
+ */
+export interface MalMangaRankingEntry {
+    /** The manga entry, shaped by the `fields` query parameter. */
+    node: MalManga;
+    /** The entry's rank within the requested ranking list. */
+    ranking: { rank: number };
+    /** Any additional fields returned by MyAnimeList remain available without narrowing. */
+    [field: string]: unknown;
+}
+
+/**
+ * {@link MalMangaRankingResponse} is the response of the manga ranking endpoint.
+ *
+ * It is the shape returned by `MalMangaOperation.ranking` and
+ * `MyAnimeListMangaApi.ranking` from `GET /manga/ranking`: a page of
+ * {@link MalMangaRankingEntry} entries plus the {@link MalPaging} node.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_ranking_get
+ */
+export interface MalMangaRankingResponse {
+    /** The ranking entries on this page. */
+    data: MalMangaRankingEntry[];
+    /** The paging node with the next-page URL, when the list continues. */
+    paging?: MalPaging;
+}
+
+/**
+ * {@link MalMangaRankingParams} is the params object of the manga ranking read.
+ *
+ * It carries the API's own inputs for `GET /manga/ranking`, consumed by
+ * `MalMangaOperation.ranking` and `MyAnimeListMangaApi.ranking` as the single
+ * params object of the unified `(params, options?)` convention.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_ranking_get
+ */
+export interface MalMangaRankingParams {
+    /** The ranking list to fetch; one of {@link MalMangaRankingType}. */
+    rankingType: MalMangaRankingType;
+}
+
+/**
+ * {@link MalMangaSearchEntry} is one entry of a manga keyword-search result.
+ *
+ * It wraps the {@link MalManga} node, and is the element type of
+ * {@link MalMangaSearchResponse} returned by `MalMangaOperation.search` and
+ * `MyAnimeListMangaApi.search`.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_get
+ */
+export interface MalMangaSearchEntry {
+    /** The manga entry, shaped by the `fields` query parameter. */
+    node: MalManga;
+    /** Any additional fields returned by MyAnimeList remain available without narrowing. */
+    [field: string]: unknown;
+}
+
+/**
+ * {@link MalMangaSearchResponse} is the response of the manga keyword-search endpoint.
+ *
+ * It is the shape returned by `MalMangaOperation.search` and
+ * `MyAnimeListMangaApi.search` from `GET /manga`: a page of
+ * {@link MalMangaSearchEntry} entries plus the {@link MalPaging} node.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_get
+ */
+export interface MalMangaSearchResponse {
+    /** The search-result entries on this page. */
+    data: MalMangaSearchEntry[];
+    /** The paging node with the next-page URL, when the list continues. */
+    paging?: MalPaging;
+}
+
+/**
+ * {@link MalMangaSearchParams} is the params object of the manga keyword search.
+ *
+ * It carries the API's own inputs for `GET /manga` — the `q` keyword plus the
+ * `limit` and `offset` paging filters — consumed by `MalMangaOperation.search`
+ * and `MyAnimeListMangaApi.search` as the single params object of the unified
+ * `(params, options?)` convention.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_get
+ */
+export interface MalMangaSearchParams {
+    /** The search keyword. */
+    q: string;
+    /** The number of entries per page; defaults to 100, capped at 100 by MyAnimeList. */
+    limit?: number;
+    /** The offset of the first entry; defaults to 0. */
+    offset?: number;
+}

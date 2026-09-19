@@ -1,5 +1,6 @@
 import { isNonBlank, resolveMalCredentials, type MalCredentials } from "../../../base/credentials";
 import { MalAnimeOperation } from "./operations/AnimeOperation";
+import { MalForumOperation } from "./operations/ForumOperation";
 import { MalMangaOperation } from "./operations/MangaOperation";
 import { MalUserOperation } from "./operations/UserOperation";
 import type { MyAnimeListApi } from "./facade";
@@ -33,6 +34,7 @@ export function buildMyAnimeListApi(
     const anime = new MalAnimeOperation(auth, options, sharedStateOwner);
     const manga = new MalMangaOperation(auth, options, sharedStateOwner);
     const user = new MalUserOperation(auth, options, sharedStateOwner);
+    const forum = new MalForumOperation(auth, options, sharedStateOwner);
 
     // The automatic refresh lifecycle is opt-in: it activates only when both
     // the refresh token and client ID are configured (non-blank — a
@@ -52,7 +54,7 @@ export function buildMyAnimeListApi(
                   onHookError: credentials.onHookError,
                   diagnostics: credentials.diagnostics,
                   applyAccessToken: (accessToken) => {
-                      for (const operation of [anime, manga, user]) {
+                      for (const operation of [anime, manga, user, forum]) {
                           operation.updateAuth(
                               buildRefreshedAuth(operation.getAuth(), accessToken)
                           );
@@ -65,6 +67,7 @@ export function buildMyAnimeListApi(
         return {
             anime: {
                 get: anime.get.bind(anime),
+                search: anime.search.bind(anime),
                 seasonal: anime.seasonal.bind(anime),
                 ranking: anime.ranking.bind(anime),
                 suggestions: anime.suggestions.bind(anime),
@@ -73,13 +76,21 @@ export function buildMyAnimeListApi(
             },
             manga: {
                 get: manga.get.bind(manga),
+                search: manga.search.bind(manga),
+                ranking: manga.ranking.bind(manga),
                 updateMyListStatus: manga.updateMyListStatus.bind(manga),
                 deleteFromList: manga.deleteFromList.bind(manga),
             },
             user: {
                 me: user.me.bind(user),
+                get: user.get.bind(user),
                 animeList: user.animeList.bind(user),
                 mangaList: user.mangaList.bind(user),
+            },
+            forum: {
+                boards: forum.boards.bind(forum),
+                topics: forum.topics.bind(forum),
+                topic: forum.topic.bind(forum),
             },
         };
     }
@@ -98,6 +109,7 @@ export function buildMyAnimeListApi(
     return {
         anime: {
             get: wrap(anime.get.bind(anime)),
+            search: wrap(anime.search.bind(anime)),
             seasonal: wrap(anime.seasonal.bind(anime)),
             ranking: wrap(anime.ranking.bind(anime)),
             suggestions: wrap(anime.suggestions.bind(anime)),
@@ -106,13 +118,21 @@ export function buildMyAnimeListApi(
         },
         manga: {
             get: wrap(manga.get.bind(manga)),
+            search: wrap(manga.search.bind(manga)),
+            ranking: wrap(manga.ranking.bind(manga)),
             updateMyListStatus: wrap(manga.updateMyListStatus.bind(manga)),
             deleteFromList: wrap(manga.deleteFromList.bind(manga)),
         },
         user: {
             me: wrap(user.me.bind(user)),
+            get: wrap(user.get.bind(user)),
             animeList: wrap(user.animeList.bind(user)),
             mangaList: wrap(user.mangaList.bind(user)),
+        },
+        forum: {
+            boards: wrap(forum.boards.bind(forum)),
+            topics: wrap(forum.topics.bind(forum)),
+            topic: wrap(forum.topic.bind(forum)),
         },
     };
 }

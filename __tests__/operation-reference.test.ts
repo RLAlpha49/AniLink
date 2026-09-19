@@ -5,8 +5,9 @@ import { afterAll, describe, expect, it } from "vitest";
 import {
     generateReferenceManifest,
     writeReferenceManifest,
+    type ReferenceOperation,
 } from "../scripts/generate-operation-reference";
-import { loadOperations } from "../docs-src/lib/load-ops";
+import { loadOperations, type OperationSection } from "../docs-src/lib/load-ops";
 
 /**
  * Shared output directory and manifest written once for the whole suite.
@@ -110,13 +111,24 @@ describe("operation reference section manifests", () => {
         ).toBe(true);
     });
 
-    it("loads the MAL REST section independently", async () => {
-        const grouped = await loadOperations("mal", "rest", outputDir);
-        const operations = Object.values(grouped).flat();
+    it("loads each MAL namespace section independently", async () => {
+        const expectedCounts: Partial<Record<OperationSection, number>> = {
+            anime: 7,
+            manga: 5,
+            user: 4,
+            forum: 3,
+        };
+        const all: ReferenceOperation[] = [];
+        for (const [category, count] of Object.entries(expectedCounts)) {
+            const grouped = await loadOperations("mal", category as OperationSection, outputDir);
+            const operations = Object.values(grouped).flat();
 
-        expect(operations).toHaveLength(12);
-        expect(operations.every((operation) => operation.provider === "mal")).toBe(true);
-        expect(operations.every((operation) => operation.category === "rest")).toBe(true);
+            expect(operations).toHaveLength(count);
+            expect(operations.every((operation) => operation.provider === "mal")).toBe(true);
+            expect(operations.every((operation) => operation.category === category)).toBe(true);
+            all.push(...operations);
+        }
+        expect(all).toHaveLength(19);
     });
 
     it("describes auth accurately for public MAL reads", () => {

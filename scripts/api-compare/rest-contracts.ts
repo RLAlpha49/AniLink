@@ -51,6 +51,8 @@ function isExcludedType(name: string): boolean {
  */
 export const MAL_ENDPOINT_MAPPINGS: RestEndpointMapping[] = [
     { typeName: "MalAnime", path: "/anime/{anime_id}", method: "get" },
+    { typeName: "MalAnimeSearchEntry", path: "/anime", method: "get", dataItems: true },
+    { typeName: "MalAnimeSearchResponse", path: "/anime", method: "get" },
     {
         typeName: "MalSeasonalAnime",
         path: "/anime/season/{year}/{season}",
@@ -69,6 +71,15 @@ export const MAL_ENDPOINT_MAPPINGS: RestEndpointMapping[] = [
     },
     { path: "/anime/{anime_id}/my_list_status", method: "delete" },
     { typeName: "MalManga", path: "/manga/{manga_id}", method: "get" },
+    { typeName: "MalMangaSearchEntry", path: "/manga", method: "get", dataItems: true },
+    { typeName: "MalMangaSearchResponse", path: "/manga", method: "get" },
+    {
+        typeName: "MalMangaRankingEntry",
+        path: "/manga/ranking",
+        method: "get",
+        dataItems: true,
+    },
+    { typeName: "MalMangaRankingResponse", path: "/manga/ranking", method: "get" },
     { typeName: "MalMangaListStatus", path: "/manga/{manga_id}/my_list_status", method: "patch" },
     { path: "/manga/{manga_id}/my_list_status", method: "delete" },
     { typeName: "MalUser", path: "/users/{user_name}", method: "get" },
@@ -86,6 +97,16 @@ export const MAL_ENDPOINT_MAPPINGS: RestEndpointMapping[] = [
         dataItems: true,
     },
     { typeName: "MalUserMangaListResponse", path: "/users/{user_name}/mangalist", method: "get" },
+    { typeName: "MalForumBoardsResponse", path: "/forum/boards", method: "get" },
+    { typeName: "MalForumTopicSummary", path: "/forum/topics", method: "get", dataItems: true },
+    { typeName: "MalForumTopicsResponse", path: "/forum/topics", method: "get" },
+    {
+        typeName: "MalForumTopicDetail",
+        path: "/forum/topic/{topic_id}",
+        method: "get",
+        dataItems: true,
+    },
+    { typeName: "MalForumTopicResponse", path: "/forum/topic/{topic_id}", method: "get" },
 ];
 
 /**

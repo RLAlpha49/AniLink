@@ -6,5 +6,6 @@
  */
 export * from "./anime";
 export * from "./common";
+export * from "./forum";
 export * from "./manga";
 export * from "./user";

@@ -25,7 +25,7 @@ Every operation entry carries the same anatomy, so once you have read one, you h
 ## Catalogs
 
 - <Icon name="ArrowRight" :size="14" /> [AniList operation catalog](/operations/anilist/query) — choose from [queries](/operations/anilist/query), [page queries](/operations/anilist/page), [mutations](/operations/anilist/mutation), and [`custom()`](/operations/anilist/custom).
-- <Icon name="ArrowRight" :size="14" /> [MyAnimeList operation catalog](/operations/mal) — every MAL operation is REST, so the catalog is a single page: lookups, discovery reads, user-list reads, list-status updates, and `user.me`.
+- <Icon name="ArrowRight" :size="14" /> [MyAnimeList operation catalog](/operations/mal/anime) — choose from [anime](/operations/mal/anime), [manga](/operations/mal/manga), [user](/operations/mal/user), and [forum](/operations/mal/forum) operations.
 
 ## Relationship to the other surfaces
 

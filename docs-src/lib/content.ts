@@ -273,6 +273,36 @@ export const PAGES: DocPage[] = [
             "Anime and manga lookups, discovery reads, user-list reads, list-status writes, and user.me on the REST surface.",
         provider: "mal",
         section: "reference",
+        children: [
+            {
+                path: "/operations/mal/anime",
+                title: "Anime operations",
+                summary: "Anime lookups, discovery reads, and list-status writes.",
+                provider: "mal",
+                section: "reference",
+            },
+            {
+                path: "/operations/mal/manga",
+                title: "Manga operations",
+                summary: "Manga lookups, discovery reads, and list-status writes.",
+                provider: "mal",
+                section: "reference",
+            },
+            {
+                path: "/operations/mal/user",
+                title: "User operations",
+                summary: "Profile reads and user-list reads.",
+                provider: "mal",
+                section: "reference",
+            },
+            {
+                path: "/operations/mal/forum",
+                title: "Forum operations",
+                summary: "Forum boards and topic reads.",
+                provider: "mal",
+                section: "reference",
+            },
+        ],
     },
 ];
 
