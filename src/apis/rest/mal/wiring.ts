@@ -4,7 +4,7 @@ import { MalForumOperation } from "./operations/ForumOperation";
 import { MalMangaOperation } from "./operations/MangaOperation";
 import { MalUserOperation } from "./operations/UserOperation";
 import type { MyAnimeListApi } from "./facade";
-import { buildRefreshedAuth, MalTokenRefresher } from "./tokenRefresh";
+import { buildMalTokenRefresher, buildRefreshedAuth } from "./tokenRefresh";
 
 /**
  * {@link buildMyAnimeListApi} is the wiring helper that builds the {@link MyAnimeListApi} from provider-owned {@link MalCredentials}.
@@ -45,7 +45,7 @@ export function buildMyAnimeListApi(
     // whitespace still authenticates (matching the AniList wiring).
     const refresher =
         isNonBlank(credentials?.refreshToken) && isNonBlank(credentials?.clientId)
-            ? new MalTokenRefresher({
+            ? buildMalTokenRefresher({
                   clientId: credentials.clientId.trim(),
                   refreshToken: credentials.refreshToken.trim(),
                   clientSecret: credentials.clientSecret?.trim(),

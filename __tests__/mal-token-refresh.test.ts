@@ -492,10 +492,10 @@ describe("MAL automatic token refresh", () => {
     });
 
     test("pins the AniLinkRestError extends AniLinkApiError inheritance the refresh classifier relies on", () => {
-        // The 401 classifier in MalTokenRefresher matches on AniLinkApiError;
-        // MAL 401s are normalized to AniLinkRestError. If this inheritance is
-        // ever restructured, this test fails before the refresh lifecycle
-        // silently stops triggering.
+        // The 401 classifier in the shared TokenRefresher matches on
+        // AniLinkApiError; MAL 401s are normalized to AniLinkRestError. If this
+        // inheritance is ever restructured, this test fails before the refresh
+        // lifecycle silently stops triggering.
         const restError = new AniLinkRestError(401, { error: "invalid_token" });
         expect(restError).toBeInstanceOf(AniLinkApiError);
         expect(restError.status).toBe(401);

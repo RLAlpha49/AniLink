@@ -546,7 +546,7 @@ describe("AniList automatic token refresh", () => {
     });
 
     test("pins the AniLinkGraphQLError extends AniLinkApiError inheritance the refresh classifier relies on", () => {
-        // The 401 classifier in AniListTokenRefresher matches on
+        // The 401 classifier in the shared TokenRefresher matches on
         // AniLinkApiError; GraphQL-envelope 401s are normalized to
         // AniLinkGraphQLError with the upstream status. If this inheritance
         // is ever restructured, this test fails before the refresh

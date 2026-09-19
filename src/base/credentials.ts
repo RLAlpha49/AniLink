@@ -29,7 +29,8 @@ export interface ProviderCredentials extends RequestOptions {
  *
  * The refresh fields (`refreshToken`, `clientId`, `clientSecret`,
  * `onTokenRefresh`, `onTokenRefreshError`) opt a client into the automatic
- * token-refresh lifecycle (`AniListTokenRefresher`, wired in
+ * token-refresh lifecycle (the shared `TokenRefresher`, bound to AniList's
+ * grant in `apis/graphql/anilist/tokenRefresh.ts` and wired in
  * `apis/graphql/anilist/wiring.ts`): a 401 from an expired access token
  * — or a missing token on an auth-required operation — triggers one
  * deduplicated refresh grant and a single replayed request.
@@ -71,7 +72,8 @@ export interface AniListCredentials extends ProviderCredentials {
  * The inherited transport-level `onHookError` (a {@link RequestOptions} field,
  * not a MAL-specific one) does double duty on this slot: the transport
  * invokes it for request-hook failures, and the automatic token-refresh
- * lifecycle (`MalTokenRefresher`, wired in `apis/rest/mal/wiring.ts`)
+ * lifecycle (the shared `TokenRefresher`, bound to MAL's grant in
+ * `apis/rest/mal/tokenRefresh.ts` and wired in `apis/rest/mal/wiring.ts`)
  * consumes the same value for token-refresh observer failures — a failed
  * refresh grant is reported under the `malTokenRefresh` hook name and a
  * throwing `onTokenRefresh` callback under the `onTokenRefresh` hook name.

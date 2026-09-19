@@ -34,7 +34,7 @@ import { type RequestAuthInput, type RequestOptions } from "../../../base/Reques
 import type { AniListCredentials } from "../../../base/credentials";
 import type { AniListApi } from "./facade";
 import { ANILIST_OPERATION_REGISTRY, type OperationCategory } from "./registry";
-import { AniListTokenRefresher, buildRefreshedAuth } from "./tokenRefresh";
+import { buildAniListTokenRefresher, buildRefreshedAuth } from "./tokenRefresh";
 
 /**
  * Validates that every entry in a registry category exposes its declared
@@ -163,7 +163,7 @@ function buildLazyGroup(
  *
  * When the credential slot carries refresh fields, every facade method is
  * wrapped with the automatic token-refresh lifecycle (see
- * `AniListTokenRefresher`); without them the facade keeps the direct bound
+ * automatic refresh lifecycle); without them the facade keeps the direct bound
  * methods — zero wrapper overhead, zero behavior change.
  *
  * @param authToken - The authentication material shared by every operation instance. A plain string is treated as a bearer token; a structured {@link RequestAuthInput} carries explicit headers for schemes such as Basic auth or a provider API key.
@@ -212,7 +212,7 @@ export function buildAniListWiring(
         isNonBlank(credentials?.refreshToken) &&
         isNonBlank(credentials?.clientId) &&
         isNonBlank(credentials?.clientSecret)
-            ? new AniListTokenRefresher({
+            ? buildAniListTokenRefresher({
                   clientId: credentials.clientId.trim(),
                   clientSecret: credentials.clientSecret.trim(),
                   refreshToken: credentials.refreshToken.trim(),
