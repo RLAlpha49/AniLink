@@ -1,4 +1,87 @@
-import { GraphQLOperation } from "../GraphQLOperation";
+import { BaseOperation } from "../../../base/BaseOperation";
+import { type RequestOptions } from "../../../base/RequestHandler";
+import {
+    type VariableTypeMappings,
+    requireVariables,
+    validateVariables,
+} from "../../../base/ValidateVariables";
+
+/**
+ * Named trailing options for `AniListOperation.request`, replacing the
+ * former positional tail so call sites name their arguments and new options
+ * can be added without reordering. Mirrors the `DispatchOptions` pattern
+ * used by {@link BaseOperation}'s `dispatch` method.
+ *
+ * AniList-scoped: this module is the only GraphQL protocol layer in the
+ * library, so the request/execute contracts carry the provider's name. A
+ * future second GraphQL provider should re-extract a shared base rather
+ * than extend this one.
+ *
+ * @see {@link AniListOperation}
+ */
+export interface AniListRequestOptions {
+    /** Whether the operation requires an authentication token. Defaults to `false` (public queries). */
+    requiresAuth?: boolean;
+    /** Optional human-readable operation name included in missing-token auth errors. Defaults to the concrete operation class name. */
+    operation?: string;
+    /** Per-request transport settings merged over the instance-level ones. A field set here wins; unset fields keep the instance value. */
+    transportOptions?: RequestOptions;
+}
+
+/**
+ * A single variable-presence requirement declared by an operation.
+ *
+ * Mirrors the requirement shapes accepted by {@link requireVariables}, with
+ * the operation's error `message` attached so an operation can declare its
+ * whole validation contract as data.
+ */
+export type AniListVariableRequirement =
+    | { readonly kind: "one"; readonly message: string }
+    | { readonly kind: "all"; readonly names: readonly string[]; readonly message: string }
+    | { readonly kind: "any"; readonly names: readonly string[]; readonly message: string }
+    | { readonly kind: "notOnly"; readonly names: readonly string[]; readonly message: string }
+    | {
+          readonly kind: "implies";
+          /** Each `[antecedent, consequent]` pair: when the antecedent variable is set, the consequent must be set too. */
+          readonly pairs: readonly (readonly [string, string])[];
+          readonly message: string;
+      };
+
+/**
+ * The declarative contract an operation passes to
+ * `AniListOperation.execute`.
+ *
+ * Every field is optional: an operation declares only the variation points it
+ * needs, and `execute` applies them in a fixed order so validation behaviour
+ * is uniform across the whole API surface.
+ */
+export interface AniListExecuteOptions {
+    /**
+     * Variable-presence requirements evaluated before type validation. Each
+     * entry maps directly to one {@link requireVariables} call.
+     */
+    readonly requirements?: readonly AniListVariableRequirement[];
+
+    /**
+     * The variable type map used to type-check caller-supplied variables.
+     * Omit for operations that declare no typed variables.
+     */
+    readonly mappings?: VariableTypeMappings;
+
+    /**
+     * Whether the operation requires an authentication token. Defaults to
+     * `false` (public queries).
+     */
+    readonly requiresAuth?: boolean;
+
+    /**
+     * Per-request transport settings (`timeout`, `signal`, retry policy,
+     * lifecycle hooks, pacing, circuit breaker) merged over the instance-level
+     * options for this single call. A field set here wins; unset fields keep
+     * the instance value.
+     */
+    readonly transportOptions?: RequestOptions;
+}
 
 /**
  * The AniList GraphQL endpoint used by every AniLink operation. It is defined
@@ -7,17 +90,91 @@ import { GraphQLOperation } from "../GraphQLOperation";
 export const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
 
 /**
- * `AniListOperation` is the AniList binding of the shared GraphQL protocol
- * layer.
+ * `AniListOperation` is the GraphQL protocol layer for the AniList provider:
+ * the shared validate-then-dispatch pipeline plus the pinned AniList
+ * endpoint in one module.
  *
- * It pins the AniList endpoint onto {@link GraphQLOperation}; everything else
- * — request shaping, variable validation, envelope unwrapping, and transport
- * behaviour — is inherited unchanged. Concrete AniList operations extend this
- * class exactly as they previously extended `APIWrapper`.
+ * It extends the provider-agnostic {@link BaseOperation} with what GraphQL
+ * adds on top of plain HTTP: JSON-encoded `{ query, variables }` bodies,
+ * validate-then-dispatch ordering for operation variables, and envelope
+ * unwrapping. Concrete AniList operations extend this class and only
+ * declare their variables interface, GraphQL document, and a thin method.
+ *
+ * @see https://docs.anilist.co/reference/query
  */
-export abstract class AniListOperation extends GraphQLOperation {
+export abstract class AniListOperation extends BaseOperation {
     /**
      * The AniList GraphQL endpoint every document is POSTed to.
      */
     protected readonly graphqlUrl = ANILIST_GRAPHQL_URL;
+
+    /**
+     * Sends a GraphQL document to the configured endpoint.
+     *
+     * The token guard, Authorization header, timeout, retry policy, and error
+     * normalization are handled by the shared request pipeline; this method
+     * only shapes the GraphQL-specific POST body.
+     *
+     * @param query - The GraphQL document to execute.
+     * @param variables - The variables for the document. When omitted the request body contains only the query.
+     * @param options - Named trailing options; see {@link AniListRequestOptions}.
+     * @returns The unwrapped response data. For documents with a single root field this is the bare field value; otherwise it is the full `{ data }` envelope.
+     * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, or a normalized {@link AniLinkError} when the request fails.
+     */
+    protected async request<T = unknown>(
+        query: string,
+        variables?: unknown,
+        options: AniListRequestOptions = {}
+    ): Promise<T> {
+        const { requiresAuth, operation, transportOptions } = options;
+        const data = variables === undefined ? { query } : { query, variables };
+        return await this.dispatch<T>(this.graphqlUrl, "POST", data, {
+            requiresAuth,
+            operation,
+            transportOptions,
+        });
+    }
+
+    /**
+     * Runs the shared validate-then-dispatch pipeline for an operation.
+     *
+     * Operations declare their contract as a {@link AniListExecuteOptions}
+     * object — variable-presence requirements, an optional type map, and the
+     * auth requirement — and this method applies them in a fixed order before
+     * delegating to {@link AniListOperation.request}.
+     *
+     * @param query - The GraphQL document to execute.
+     * @param variables - The variables for the document. Pass `undefined` for
+     * operations that take no variables.
+     * @param options - The declarative validation and auth contract.
+     * @returns The unwrapped response data, as described in {@link AniListOperation.request}.
+     * @throws An {@link AniLinkValidationError} when a requirement or type check
+     * fails, or a normalized {@link AniLinkError} when the request fails.
+     */
+    protected async execute<T = unknown>(
+        query: string,
+        variables: object | undefined,
+        options: AniListExecuteOptions
+    ): Promise<T> {
+        const { requirements, mappings, requiresAuth, transportOptions } = options;
+
+        // Requirements are evaluated against an empty object when the caller
+        // omitted the variables object entirely, so an operation declaring
+        // `kind: "one"`/`"any"`/`"all"` requirements fails fast with a local
+        // AniLinkValidationError instead of deferring to a remote 400. Type
+        // mappings stay skipped: with no variables object there is nothing
+        // to type-check.
+        const variablesForRequirements = variables ?? {};
+        if (requirements) {
+            for (const requirement of requirements) {
+                requireVariables(variablesForRequirements, requirement, requirement.message);
+            }
+        }
+
+        if (mappings && variables !== undefined) {
+            validateVariables(variables, mappings);
+        }
+
+        return await this.request<T>(query, variables, { requiresAuth, transportOptions });
+    }
 }

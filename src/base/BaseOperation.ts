@@ -119,7 +119,7 @@ export const resolveOperationLabel = (operation: object): string | undefined => 
  * authentication token, the resolved transport settings, and the shallow
  * per-request merge — and delegates the actual HTTP call to the provider-
  * agnostic {@link sendRequest} pipeline. Protocol-specific base classes
- * subclass it: `GraphQLOperation` adds GraphQL envelope handling and
+ * subclass it: `AniListOperation` adds GraphQL envelope handling and
  * `RestOperation` adds query-string and JSON-body handling without
  * duplicating any of the plumbing here.
  */

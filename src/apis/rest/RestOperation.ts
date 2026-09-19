@@ -99,12 +99,12 @@ export const buildQueryString = (params: Record<string, unknown>): string => {
  * `RestOperation` is the REST protocol layer shared by every REST-style
  * provider.
  *
- * It is the REST counterpart of the shared `GraphQLOperation` base:
- * both extend the {@link BaseOperation} transport plumbing, but this class
- * shapes plain HTTP requests instead of GraphQL documents — path-based URLs
- * with query strings, JSON bodies, and verbatim response bodies (no envelope
- * unwrapping). Failures surface as `AniLinkRestError` via the shared
- * pipeline's error normalization.
+ * It is the REST counterpart of the AniList GraphQL protocol layer
+ * (`AniListOperation`): both extend the {@link BaseOperation} transport
+ * plumbing, but this class shapes plain HTTP requests instead of GraphQL
+ * documents — path-based URLs with query strings, JSON bodies, and
+ * verbatim response bodies (no envelope unwrapping). Failures surface as
+ * `AniLinkRestError` via the shared pipeline's error normalization.
  *
  * Concrete operations declare their endpoint path, parameter interface, and a
  * thin method that calls `execute`.
