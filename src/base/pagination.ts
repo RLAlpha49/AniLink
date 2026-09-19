@@ -2,11 +2,12 @@
  * Provider-neutral pagination machinery.
  *
  * This module owns the transport-agnostic parts of walking a paged remote
- * collection: numeric option resolution and clamping, plus the look-ahead
+ * collection: numeric option resolution and clamping, the look-ahead
  * request driver that overlaps round-trip latency while collecting results
- * strictly in entry order. Schema-specific contracts — what a page looks
- * like, where the "more data available" flag lives, and per-page size caps —
- * stay with each provider.
+ * strictly in entry order, and the streaming page generator that yields
+ * the same traversal one page at a time. Schema-specific contracts — what a
+ * page looks like, where the "more data available" flag lives, and per-page
+ * size caps — stay with each provider.
  *
  * The driver is key-agnostic: providers with numeric paging (AniList pages,
  * chunks) use slot arithmetic from `startNumber`, while providers with
@@ -535,4 +536,140 @@ export async function fetchCursorChain<TEntry, TKey>(
         // maxEntries)` early exit.
         truncated: responses.length >= maxEntries && maxEntries > 0,
     };
+}
+
+/**
+ * Options controlling a {@link streamNumericPages} traversal.
+ *
+ * Every field is the provider-resolved value — defaults applied, caps
+ * enforced. The provider adapters own those rules; the engine only
+ * consumes the results.
+ *
+ * @see {@link streamNumericPages}
+ */
+export interface StreamNumericPagesOptions {
+    /** Entries requested per page, forwarded verbatim to every `fetchPage` call. */
+    perPage: number;
+    /** 1-based page number the traversal starts from. */
+    startPage: number;
+    /** Hard cap on pages fetched, guarding against unbounded loops. */
+    maxPages: number;
+    /** Maximum number of page requests kept in flight at once. */
+    concurrency: number;
+    /** Optional `AbortSignal` to cancel the traversal. */
+    signal?: AbortSignal;
+}
+
+/**
+ * Streaming numeric-page driver: the generator counterpart of
+ * {@link fetchNumericWithLookAhead}.
+ *
+ * Yields pages strictly in page order while keeping a window of at most
+ * `concurrency` launched-but-unconsumed requests in flight, so round-trip
+ * latency overlaps without reordering results. Scheduling stops as soon as
+ * a fetched page is terminal per the caller-supplied `isTerminalPage`, at
+ * the `maxPages` guard, or — when `extractBound` is supplied — beyond the
+ * smallest launch bound a received page reported; already-launched
+ * stragglers are drained and their payloads discarded. On early exit
+ * (`break`/`return` by the consumer), the `finally` block disposes the
+ * abort bridge so unconsumed in-flight requests are cancelled instead of
+ * running to completion for payloads that will be discarded.
+ *
+ * A page rejection propagates to the consumer unless the traversal signal
+ * aborted, in which case the generator ends after the already-yielded
+ * prefix. An already-aborted signal yields nothing.
+ *
+ * @typeParam TPage - The raw response shape of a single page.
+ * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal`.
+ * @param isTerminalPage - Reads the end-of-list signal from a fetched page; a terminal page is yielded, then the traversal ends.
+ * @param options - The provider-resolved traversal options; see {@link StreamNumericPagesOptions}.
+ * @param extractBound - Optional reader for the terminal page bound a fetched page reports (AniList's `pageInfo.lastPage`); scheduling never launches a page numbered beyond the smallest reported bound.
+ * @yields Each fetched page, in page order.
+ * @see {@link fetchNumericWithLookAhead}
+ * @see {@link bridgeAbortSignal}
+ */
+export async function* streamNumericPages<TPage>(
+    fetchPage: (page: number, perPage: number, signal?: AbortSignal) => Promise<TPage>,
+    isTerminalPage: (response: TPage) => boolean,
+    options: StreamNumericPagesOptions,
+    extractBound?: (response: TPage) => number | undefined
+): AsyncGenerator<TPage> {
+    const { perPage, startPage, maxPages, concurrency } = options;
+
+    const { signal, dispose } = bridgeAbortSignal(options.signal);
+
+    if (signal.aborted) {
+        dispose();
+        return;
+    }
+
+    const pending = new Map<number, Promise<TPage>>();
+    let nextToLaunch = startPage;
+    let nextToYield = startPage;
+    let terminal = false;
+    // Smallest positive launch bound observed on a received page;
+    // `Infinity` until one reports it (or forever when no `extractBound` is
+    // supplied). The bound only tightens (min), so a later page reporting a
+    // larger value cannot re-open the window.
+    let launchBound = Number.POSITIVE_INFINITY;
+    const readBound = extractBound ?? ((): number | undefined => undefined);
+
+    const launchWindow = (): void => {
+        while (
+            !terminal &&
+            nextToLaunch - startPage < maxPages &&
+            pending.size < concurrency &&
+            nextToLaunch <= launchBound
+        ) {
+            const page = nextToLaunch;
+            nextToLaunch += 1;
+            const request = fetchPage(page, perPage, signal);
+            pending.set(page, request);
+            // A sibling may reject before this request is ever awaited; mark
+            // that secondary rejection handled so Node does not report it as
+            // unhandled. The original rejection still propagates through
+            // the awaited `pending.get(page)` when the slot is consumed.
+            void request.catch(() => {});
+        }
+    };
+
+    try {
+        while (nextToYield - startPage < maxPages) {
+            launchWindow();
+            const page = nextToYield;
+            const request = pending.get(page);
+            if (request === undefined) {
+                break;
+            }
+            let response: TPage;
+            try {
+                response = await request;
+            } catch (err) {
+                if (signal.aborted) {
+                    break;
+                }
+                throw err;
+            }
+            pending.delete(page);
+            nextToYield += 1;
+            // Tighten the launch bound from the page just consumed: pages
+            // beyond the reported last page would only be drained and
+            // discarded on the consumer's early exit. Duck-typed so a
+            // malformed page leaves the existing guards in charge instead of
+            // throwing inside the bound bookkeeping.
+            const observedBound = readBound(response);
+            if (observedBound !== undefined && observedBound < launchBound) {
+                launchBound = observedBound;
+            }
+            yield response;
+            if (isTerminalPage(response)) {
+                terminal = true;
+                await Promise.allSettled([...pending.values()]);
+                break;
+            }
+        }
+    } finally {
+        dispose();
+        pending.clear();
+    }
 }

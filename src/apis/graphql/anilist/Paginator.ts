@@ -13,6 +13,7 @@ import {
     MAX_CONCURRENCY,
     resolveCappedInt,
     resolvePositiveInt,
+    streamNumericPages,
 } from "../../../base/pagination";
 
 /**
@@ -61,7 +62,7 @@ const safeCallback = <T>(
     diagnostics: DiagnosticsMode,
     payload: T
 ): void => {
-    safeInvoke(callback as (...args: never[]) => void, name, onHookError, diagnostics, payload);
+    safeInvoke(callback, name, onHookError, diagnostics, payload);
 };
 
 /**
@@ -431,76 +432,17 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
         "concurrency"
     );
 
-    const { signal, dispose } = bridgeAbortSignal(options?.signal);
-
-    if (signal.aborted) {
-        dispose();
-        return;
-    }
-
-    const pending = new Map<number, Promise<TPage>>();
-    let nextToLaunch = startPage;
-    let nextToYield = startPage;
-    let terminal = false;
-    // Smallest positive `pageInfo.lastPage` observed on a yielded page;
-    // `Infinity` until some page reports one. The bound only tightens (min),
-    // so a later page reporting a larger value cannot re-open the window.
-    let lastPageBound = Number.POSITIVE_INFINITY;
-
-    const launchWindow = (): void => {
-        while (
-            !terminal &&
-            nextToLaunch - startPage < maxPages &&
-            pending.size < concurrency &&
-            nextToLaunch <= lastPageBound
-        ) {
-            const page = nextToLaunch;
-            nextToLaunch += 1;
-            const request = fetchPage(page, perPage, signal);
-            pending.set(page, request);
-            void request.catch(() => {});
-        }
-    };
-
-    try {
-        while (nextToYield - startPage < maxPages) {
-            launchWindow();
-            const page = nextToYield;
-            const request = pending.get(page);
-            if (request === undefined) {
-                break;
-            }
-            let response: TPage;
-            try {
-                response = await request;
-            } catch (err) {
-                if (signal.aborted) {
-                    break;
-                }
-                throw err;
-            }
-            pending.delete(page);
-            nextToYield += 1;
-            // Tighten the launch bound from the page just consumed: pages
-            // beyond the reported last page would only be drained and
-            // discarded on the consumer's early exit. Duck-typed so a
-            // malformed `pageInfo` leaves the existing guards in charge
-            // instead of throwing inside the bound bookkeeping.
-            const observedBound = extractLastPageBound(response);
-            if (observedBound !== undefined && observedBound < lastPageBound) {
-                lastPageBound = observedBound;
-            }
-            yield response;
-            if (!response.pageInfo.hasNextPage) {
-                terminal = true;
-                await Promise.allSettled([...pending.values()]);
-                break;
-            }
-        }
-    } finally {
-        dispose();
-        pending.clear();
-    }
+    // The streaming traversal runs on the shared engine: the launch window,
+    // the terminal-page drain, the abort bridging, and the early-exit
+    // cancellation live once for every provider. AniList contributes only
+    // its terminal predicate (`pageInfo.hasNextPage: false`) and its
+    // launch-bound reader (`pageInfo.lastPage`).
+    yield* streamNumericPages(
+        fetchPage,
+        (response) => !response.pageInfo.hasNextPage,
+        { perPage, startPage, maxPages, concurrency, signal: options?.signal },
+        extractLastPageBound
+    );
 }
 
 /**
