@@ -1,4 +1,13 @@
+!.env.example
+.github/copilot-instructions.md
 .github/skills
+.gitignore
+.vscode
+AGENTS.md
+TODO.md
+.env*
+.stryker-tmp
+.markdownlint.json
 /artifacts
 /audit
 /coverage
@@ -8,12 +17,4 @@
 /graphify-out
 /.models
 /node_modules
-.env*
-!.env.example
-.stryker-tmp
 /reports
-.github/copilot-instructions.md
-.gitignore
-AGENTS.md
-TODO.md
-.vscode
