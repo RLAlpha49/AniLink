@@ -149,20 +149,22 @@ export const reportDiagnostic = (options: ReportDiagnosticOptions): boolean => {
  * @param name - The hook's option name, used in the report.
  * @param onHookError - Consumer callback observing hook failures, when configured.
  * @param diagnostics - The resolved diagnostics mode for the request.
- * @param args - Arguments forwarded verbatim to the hook.
+ * @param args - Arguments forwarded verbatim to the hook; the tuple type is
+ * inferred from the hook's own signature, so a mismatched call site fails
+ * compilation instead of needing a cast.
  */
-export const safeInvoke = (
-    hook: ((...args: never[]) => void) | undefined,
+export const safeInvoke = <TArgs extends unknown[]>(
+    hook: ((...args: TArgs) => void) | undefined,
     name: string,
     onHookError: OnHookErrorHandler | undefined,
     diagnostics: DiagnosticsMode,
-    ...args: unknown[]
+    ...args: TArgs
 ): void => {
     if (hook === undefined) {
         return;
     }
     try {
-        (hook as (...hookArgs: unknown[]) => void)(...args);
+        hook(...args);
     } catch (hookError: unknown) {
         const firstArg = args[0];
         const requestId =
