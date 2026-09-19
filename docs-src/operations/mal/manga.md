@@ -1,6 +1,6 @@
 ---
 title: MyAnimeList manga operations
-description: "The public MyAnimeList manga operations — lookups, discovery reads, and list-status writes — grouped by response domain."
+description: "The public MyAnimeList manga operations are grouped by response domain. They cover lookups, discovery reads, and list-status writes."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
@@ -11,6 +11,6 @@ import { data as grouped } from "./manga.data.ts";
 
 # MyAnimeList manga operations
 
-The public MyAnimeList manga operations, grouped by response domain.
+The public MyAnimeList manga operations are grouped by response domain.
 
 <OperationCatalog :grouped="grouped" />

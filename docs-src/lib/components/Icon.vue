@@ -2,11 +2,11 @@
 /**
  * Thin wrapper that exposes Lucide icons to Markdown content.
  *
- * Markdown files cannot import Vue components per-file, so this wrapper is
- * registered globally in the theme and addressed by icon name. It forwards
- * `size` and `strokeWidth` (and any extra SVG attribute) to the underlying
- * Lucide functional component, keeping the ink-line aesthetic tunable from
- * one place.
+ * Markdown files cannot import Vue components per-file, so the theme
+ * registers this wrapper globally and you specify the icon by name.
+ * It forwards `size`, `strokeWidth`, and any extra SVG attribute to
+ * the underlying Lucide functional component, which lets you tune
+ * the icon's appearance in Markdown.
  */
 import { computed, type FunctionalComponent } from "vue";
 import * as lucide from "@lucide/vue";

@@ -1,6 +1,6 @@
 ---
 title: MyAnimeList user operations
-description: "The public MyAnimeList user operations — profile reads and user-list reads — grouped by response domain."
+description: "The public MyAnimeList user operations are grouped by response domain. They cover profile reads and user-list reads."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
@@ -11,6 +11,6 @@ import { data as grouped } from "./user.data.ts";
 
 # MyAnimeList user operations
 
-The public MyAnimeList user operations, grouped by response domain.
+The public MyAnimeList user operations are grouped by response domain.
 
 <OperationCatalog :grouped="grouped" />

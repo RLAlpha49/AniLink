@@ -1,6 +1,6 @@
 ---
 title: MyAnimeList forum operations
-description: "The public MyAnimeList forum operations — boards and topics reads — grouped by response domain."
+description: "The public MyAnimeList forum operations for reading boards and topics, grouped by response domain."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

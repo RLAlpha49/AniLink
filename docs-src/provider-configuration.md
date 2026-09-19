@@ -1,12 +1,12 @@
 ---
 title: Provider configuration
-description: "The two ways to pass AniLink credentials — positional token or per-provider anilist and mal slots — and how each maps to the client surfaces."
+description: "The two forms for passing AniLink credentials, the positional AniList token or per-provider anilist and mal slots, and how each form maps credentials to the aniLink.anilist and aniLink.mal clients."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # Provider configuration
 
-AniLink accepts credentials two ways. Both produce a client with `aniLink.anilist` and `aniLink.mal` surfaces — pick whichever fits your setup.
+AniLink accepts credentials in two forms. Both produce a client with `aniLink.anilist` and `aniLink.mal`. The positional form authenticates only AniList. The per-provider form takes a credentials slot for each provider.
 
 <Mermaid
     :code="`flowchart LR\n    subgraph ctor[AniLink constructor]\n        direction TB\n        pos[Positional form\ntoken, options]:::form\n        obj[Per-provider form\nanilist + mal slots]:::form\n    end\n\n    pos -->|forwards token + options| bpc\n    obj --> bpc[buildProviderClients]\n\n    bpc -->|anilist slot only| af[AniList factory]\n    bpc -->|mal slot only| mf[MAL factory]\n\n    af --> al[anilist surface\nuses anilist credentials]:::iso\n    mf --> mal[mal surface\nuses mal credentials]:::iso\n\n    al -.->|credentials never cross| mal\n    mal -.->|credentials never cross| al\n\n    classDef form fill:#fff2cc,stroke:#d6b656,color:#5c4a00;\n    classDef iso fill:#e1d5e7,stroke:#9673a6,color:#3b3a45;`"
@@ -21,7 +21,7 @@ import { AniLink } from "anilink-api-wrapper";
 const aniLink = new AniLink("anilist-token", { timeout: 10_000 });
 ```
 
-The first argument is the AniList token. The second is transport settings, forwarded **only to the AniList factory**. The MAL surface is still there, just unauthenticated.
+The first argument is the AniList token. The second argument is transport settings, and the constructor forwards them only to the AniList factory. The MAL client still exists, but it is unauthenticated.
 
 ## Per-provider credentials form
 
@@ -34,7 +34,7 @@ const aniLink = new AniLink({
 });
 ```
 
-When the first argument is a credentials object, the second constructor argument is rejected with a `TypeError` — transport settings belong inside each provider's slot, where they are easy to find. The credentials form carries its own per-provider transport settings, so a second argument would be silently dropped; the constructor rejects the ambiguous call instead.
+When the first argument is a credentials object, the constructor rejects a second argument with a `TypeError`. Transport settings belong inside each provider's slot, so the constructor would silently drop a second argument. It rejects the ambiguous call instead.
 
 ## Credential slots
 
@@ -45,21 +45,21 @@ When the first argument is a credentials object, the second constructor argument
 
 <Callout kind="provider" label="Provider scope">
 
-Credentials given under one key are never applied to another provider's requests. A MAL access token is never sent to AniList. An AniList bearer token is never sent to MAL. Ever.
+AniLink never applies credentials from one slot to another provider's requests. It never sends a MAL access token to AniList, and it never sends an AniList bearer token to MAL.
 
 </Callout>
 
 ### Credential key validation
 
-Unknown credential keys fail fast with a `TypeError` at client construction. A typo such as `accesstoken` (instead of `accessToken`) or an obsolete field produces an actionable error listing the valid transport and auth fields — not the silent-ignore-then-mysterious-`AniLinkAuthError`-later treatment.
+Unknown credential keys fail fast with a `TypeError` at client construction. A typo such as `accesstoken` instead of `accessToken`, or an obsolete field, produces an error that lists the valid transport and auth fields. Otherwise the constructor would silently ignore the key, and requests would fail later with an `AniLinkAuthError`.
 
 ### Client-level `onHookError`
 
-The per-provider credentials form accepts a top-level `onHookError` that applies to every provider slot that does not define its own. See [Observability](/observability) for details.
+The per-provider credentials form accepts a top-level `onHookError`. It applies to every provider slot that does not define its own. See [Observability](/observability) for details.
 
 ## `buildProviderClients()`
 
-The constructor delegates to `buildProviderClients`, which is exported for advanced composition:
+The constructor delegates to `buildProviderClients`, which is also exported so you can build provider clients without the `AniLink` class:
 
 ```typescript
 import { buildProviderClients } from "anilink-api-wrapper";
@@ -72,11 +72,11 @@ const clients = buildProviderClients({
 const anime = await clients.mal.anime.get({ id: 21 });
 ```
 
-`buildProviderClients(credentials?, legacyOptions?)` invokes each registered provider factory with only that provider's credential slot. `legacyOptions` exists for the positional form and is forwarded only to the AniList factory — nothing more.
+`buildProviderClients(credentials?, legacyOptions?)` invokes each registered provider factory with only that provider's credential slot. `legacyOptions` holds the positional form's transport settings, and `buildProviderClients` forwards it only to the AniList factory.
 
 ## Transport settings scoping
 
-`timeout`, `retry`, `signal`, pacing, circuit breaker, and hooks are transport settings. They are scoped to the provider slot where they are declared:
+`timeout`, `retry`, `signal`, pacing, circuit breaker, and hooks are transport settings. AniLink scopes each setting to the provider slot where you declare it:
 
 ```typescript
 const aniLink = new AniLink({
@@ -85,10 +85,10 @@ const aniLink = new AniLink({
 });
 ```
 
-Here AniList requests time out after 5 s with no retries, while MAL requests get 15 s and the default retry policy. Same client, different temperaments.
+Here AniList requests time out after 5 seconds with no retries, while MAL requests time out after 15 seconds with the default retry policy.
 
 ## Next steps
 
-- <Icon name="ArrowRight" :size="14" /> [AniList client configuration](/guides/anilist/configuration) — the full options table.
-- <Icon name="ArrowRight" :size="14" /> [MAL client configuration](/guides/mal/configuration) — MAL credentials in detail.
-- <Icon name="ArrowRight" :size="14" /> [Observability](/observability) — client-level `onHookError` and lifecycle hooks.
+- <Icon name="ArrowRight" :size="14" /> [AniList client configuration](/guides/anilist/configuration) has the full options table.
+- <Icon name="ArrowRight" :size="14" /> [MAL client configuration](/guides/mal/configuration) covers MAL credentials in detail.
+- <Icon name="ArrowRight" :size="14" /> [Observability](/observability) documents client-level `onHookError` and lifecycle hooks.

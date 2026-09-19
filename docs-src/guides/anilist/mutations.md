@@ -1,12 +1,12 @@
 ---
 title: Mutations
-description: "The authenticated aniLink.anilist.mutation operations: token requirement, and why mutations are never retried by default."
+description: "The aniLink.anilist.mutation operations require a token, and the default retry policy never retries them."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # Mutations
 
-Every `aniLink.anilist.mutation.*` method requires authentication — call one without a token and `AniLinkAuthError` is thrown. Mutations are **never retried** by the default retry policy unless you opt in.
+Every `aniLink.anilist.mutation.*` method requires authentication. Call one without a token and the method throws `AniLinkAuthError`. The default retry policy **never retries** mutations unless you opt in.
 
 ## Lists
 
@@ -87,9 +87,9 @@ const entry = await aniLink.anilist.mutation.saveMediaListEntry({
 
 ## Errors
 
-Mutations throw `AniLinkAuthError` (no token), `AniLinkGraphQLError` (validation failures inside HTTP 200), `AniLinkApiError` (HTTP-level failures), and `AniLinkNetworkError` (transport). [Error handling](/error-handling) covers the full taxonomy.
+Mutations throw `AniLinkAuthError` (no token), `AniLinkGraphQLError` (validation failures inside HTTP 200), `AniLinkApiError` (HTTP-level failures), and `AniLinkNetworkError` (transport). [Error handling](/error-handling) covers every error type.
 
 ## Next steps
 
-- <Icon name="ArrowRight" :size="14" /> [Mutation operation reference](/operations/anilist/mutation#lists) — variables per mutation.
-- <Icon name="ArrowRight" :size="14" /> [Retries & resilience](/retries-and-resilience) — opting into mutation retries.
+- <Icon name="ArrowRight" :size="14" /> [Mutation operation reference](/operations/anilist/mutation#lists), with variables for each mutation.
+- <Icon name="ArrowRight" :size="14" /> [Retries & resilience](/retries-and-resilience), including how to opt into mutation retries.

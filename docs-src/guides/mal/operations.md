@@ -1,6 +1,6 @@
 ---
 title: MAL operations
-description: "The MyAnimeList REST operation surface: anime and manga lookups and search, seasonal, rankings, suggestions, user lists, and the forum reads with parameter tables per operation."
+description: "The MyAnimeList REST operations: anime and manga lookups and search, seasonal, rankings, suggestions, user lists, and the forum reads with parameter tables per operation."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
@@ -8,16 +8,16 @@ layout: .vitepress/theme/DocsLayout.vue
 
 ## `mal.anime.get(params, options?)`
 
-Gets one anime by its MyAnimeList ID. Calls `GET /anime/{id}` on the MAL API v2 — the bread-and-butter lookup.
+Gets one anime by its MyAnimeList ID. Calls `GET /anime/{id}` on the MAL API v2. This is the standard lookup.
 
 | Parameter | Type                | Required | Description                                                                |
 | --------- | ------------------- | -------- | -------------------------------------------------------------------------- |
-| `params`  | `MalAnimeGetParams` | yes      | `{ id }` — the MyAnimeList anime ID                                        |
+| `params`  | `MalAnimeGetParams` | yes      | `{ id }`, the MyAnimeList anime ID                                         |
 | `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults |
 
-**Auth:** not required for public anime data. Pass an access token for list-related fields — the public data is free, the personal data is not.
+**Auth:** not required for public anime data. Pass an access token for list-related fields.
 
-**Returns:** `MalAnime` — `id` and `title` are always present. `main_picture` and any other requested fields appear when selected via `fields`. Extra fields are exposed through an index signature without narrowing, so nothing you ask for is hidden from you.
+**Returns:** `MalAnime`. `id` and `title` are always present. `main_picture` and any other requested fields appear when selected via `fields`. An index signature exposes extra fields without narrowing.
 
 ```typescript
 const anime = await aniLink.mal.anime.get(
@@ -33,16 +33,16 @@ console.log(anime.title, anime.main_picture?.large);
 
 ## `mal.anime.search(params, options?)`
 
-Searches MyAnimeList anime by keyword. Calls `GET /anime` with a `q` query parameter — the search box on every anime discovery app.
+Searches MyAnimeList anime by keyword. Calls `GET /anime` with a `q` query parameter. This is the standard keyword search.
 
 | Parameter | Type                   | Required | Description                                                                                  |
 | --------- | ---------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| `params`  | `MalAnimeSearchParams` | yes      | `{ q, limit?, offset? }` — the keyword plus the optional paging filters; `limit` caps at 100 |
+| `params`  | `MalAnimeSearchParams` | yes      | `{ q, limit?, offset? }`, the keyword plus the optional paging filters; `limit` caps at 100  |
 | `options` | `MalRequestOptions`    | no       | Field selection plus transport settings, merged over the instance defaults                   |
 
-**Auth:** not required — a public read, same deal as `anime.get`.
+**Auth:** not required. This is a public read, same as `anime.get`.
 
-**Returns:** `MalAnimeSearchResponse` — `data` holds one `MalAnimeSearchEntry` per result: a `node` shaped by `fields`. `paging.next` carries the next-page URL when the list continues; follow it manually for now — manual requests bypass the library's pacing, retry, and circuit-breaker, so space them out on long lists.
+**Returns:** `MalAnimeSearchResponse`. `data` holds one `MalAnimeSearchEntry` per result: a `node` shaped by `fields`. `paging.next` carries the next-page URL when the list continues; follow it manually for now. Manual requests bypass the library's pacing, retry, and circuit-breaker, so space them out on long lists.
 
 ```typescript
 const results = await aniLink.mal.anime.search(
@@ -52,21 +52,21 @@ const results = await aniLink.mal.anime.search(
 console.log(results.data[0]?.node.title);
 ```
 
-**Errors:** `AniLinkValidationError` when `q` is empty or only whitespace — thrown before any request is sent. `AniLinkRestError` for non-success responses. `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+**Errors:** `AniLinkValidationError` when `q` is empty or only whitespace, thrown before any request is sent. `AniLinkRestError` for non-success responses. `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
 **Reference:** [MAL anime search endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
 
 ## `mal.user.me(options?)`
 
-Gets the currently authenticated user. Calls `GET /users/@me` — the "who am I?" call.
+Gets the currently authenticated user. Calls `GET /users/@me`. This is the "who am I?" call.
 
 | Parameter | Type                | Required | Description                             |
 | --------- | ------------------- | -------- | --------------------------------------- |
 | `options` | `MalRequestOptions` | no       | Field selection plus transport settings |
 
-**Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent. No token, no trip.
+**Auth:** requires a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
-**Returns:** `MalUser` — `id` and `name` are always present. `location`, `joined_at`, and other requested fields appear when selected.
+**Returns:** `MalUser`. `id` and `name` are always present. `location`, `joined_at`, and other requested fields appear when selected.
 
 ```typescript
 const user = await aniLink.mal.user.me({
@@ -81,16 +81,16 @@ console.log(user.name);
 
 ## `mal.user.get(params, options?)`
 
-Gets a MyAnimeList user profile. Calls `GET /users/{user_name}` — the profile read behind every "about me" panel. MyAnimeList documents only `@me` for this endpoint, so `username` accepts `@me` (case-insensitive, whitespace-tolerant) and needs an access token to resolve it. Other usernames are passed through, but MyAnimeList currently answers them with `404`.
+Gets a MyAnimeList user profile. Calls `GET /users/{user_name}`. MyAnimeList documents only `@me` for this endpoint, so `username` accepts `@me` (case-insensitive, whitespace-tolerant) and needs an access token to resolve it. The library passes other usernames through, but MyAnimeList currently answers them with `404`.
 
 | Parameter | Type                | Required | Description                                                                      |
 | --------- | ------------------- | -------- | -------------------------------------------------------------------------------- |
-| `params`  | `MalUserGetParams`  | yes      | `{ username }` — the MyAnimeList username; MyAnimeList documents only `@me` here |
+| `params`  | `MalUserGetParams`  | yes      | `{ username }`, the MyAnimeList username; MyAnimeList documents only `@me` here  |
 | `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults       |
 
-**Auth:** requires an access token — MyAnimeList documents only `@me` for this endpoint; other usernames are passed through but currently answered with `404`.
+**Auth:** requires an access token. MyAnimeList documents only `@me` for this endpoint; the library passes other usernames through, but MyAnimeList currently answers them with `404`.
 
-**Returns:** `MalUser` — `id` and `name` are always present. `location`, `joined_at`, and other requested fields appear when selected via `fields`.
+**Returns:** `MalUser`. `id` and `name` are always present. `location`, `joined_at`, and other requested fields appear when selected via `fields`.
 
 ```typescript
 const user = await aniLink.mal.user.get(
@@ -106,16 +106,16 @@ console.log(user.name);
 
 ## `mal.user.animeList(params, options?)`
 
-Gets a user's anime list, one page at a time. Calls `GET /users/{username}/animelist` — the paginated read that was missing while AniList users had first-class pagination helpers all along.
+Gets a user's anime list, one page at a time. Calls `GET /users/{username}/animelist`. This is the paginated read that was missing while AniList users had dedicated pagination helpers.
 
 | Parameter | Type                     | Required | Description                                                                                    |
 | --------- | ------------------------ | -------- | ---------------------------------------------------------------------------------------------- |
-| `params`  | `MalUserAnimeListParams` | yes      | `{ username, status?, sort?, limit?, offset? }` — the user name or `@me` plus the list filters |
+| `params`  | `MalUserAnimeListParams` | yes      | `{ username, status?, sort?, limit?, offset? }`, the user name or `@me` plus the list filters  |
 | `options` | `MalRequestOptions`      | no       | Field selection plus transport settings, merged over the instance defaults                     |
 
-**Auth:** not required for public user lists — `@me` and private lists require an access token; a client ID alone cannot resolve `@me`. Without a token, `@me` fails fast with `AniLinkAuthError` before any request is sent.
+**Auth:** not required for public user lists. `@me` and private lists require an access token; a client ID alone cannot resolve `@me`. Without a token, `@me` fails fast with `AniLinkAuthError` before any request is sent.
 
-**Returns:** `MalUserAnimeListResponse` — `data` holds one `MalUserAnimeListEntry` per entry: a `node` shaped by `fields` plus a `list_status` wrapper that appears when requested (for example `list_status{priority,comments}`). `paging.next` and `paging.previous` carry the next/previous page URLs when the list continues in that direction; the paging is offset-based, so the next URL carries the incremented `offset`. Follow pages manually — manual requests bypass the library's pacing, retry, and circuit breaker, so space them out on long lists. With `responseCache` enabled, list reads may be stale for `ttlMs` after `updateMyListStatus` — the cache is TTL-only and does not invalidate on writes.
+**Returns:** `MalUserAnimeListResponse`. `data` holds one `MalUserAnimeListEntry` per entry: a `node` shaped by `fields` plus a `list_status` wrapper that appears when requested (for example `list_status{priority,comments}`). `paging.next` and `paging.previous` carry the next/previous page URLs when the list continues in that direction; the paging is offset-based, so the next URL carries the incremented `offset`. Follow pages manually. Manual requests bypass the library's pacing, retry, and circuit breaker, so space them out on long lists. With `responseCache` enabled, list reads may be stale for `ttlMs` after `updateMyListStatus`. The cache is TTL-only and does not invalidate on writes.
 
 ```typescript
 const list = await aniLink.mal.user.animeList(
@@ -125,22 +125,22 @@ const list = await aniLink.mal.user.animeList(
 console.log(list.data[0]?.node.title, list.data[0]?.list_status?.score);
 ```
 
-**Errors:** `AniLinkAuthError` (`@me` without a token — thrown before any request is sent), `AniLinkValidationError` (empty or whitespace-only `username` — thrown before any request is sent), `AniLinkRestError` for non-success responses (e.g. `400` invalid status or sort, `401` expired token). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+**Errors:** `AniLinkAuthError` (`@me` without a token, thrown before any request is sent), `AniLinkValidationError` (empty or whitespace-only `username`, thrown before any request is sent), `AniLinkRestError` for non-success responses (e.g. `400` invalid status or sort, `401` expired token). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
 **Reference:** [MAL user anime list endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListUserApi.html)
 
 ## `mal.user.mangaList(params, options?)`
 
-Gets a user's manga list, one page at a time. Calls `GET /users/{username}/mangalist` — the manga twin of `user.animeList`.
+Gets a user's manga list, one page at a time. Calls `GET /users/{username}/mangalist`. This is the manga counterpart of `user.animeList`.
 
 | Parameter | Type                     | Required | Description                                                                                    |
 | --------- | ------------------------ | -------- | ---------------------------------------------------------------------------------------------- |
-| `params`  | `MalUserMangaListParams` | yes      | `{ username, status?, sort?, limit?, offset? }` — the user name or `@me` plus the list filters |
+| `params`  | `MalUserMangaListParams` | yes      | `{ username, status?, sort?, limit?, offset? }`, the user name or `@me` plus the list filters  |
 | `options` | `MalRequestOptions`      | no       | Field selection plus transport settings, merged over the instance defaults                     |
 
-**Auth:** not required for public user lists — `@me` and private lists require an access token; a client ID alone cannot resolve `@me`. Without a token, `@me` fails fast with `AniLinkAuthError` before any request is sent.
+**Auth:** not required for public user lists. `@me` and private lists require an access token; a client ID alone cannot resolve `@me`. Without a token, `@me` fails fast with `AniLinkAuthError` before any request is sent.
 
-**Returns:** `MalUserMangaListResponse` — `data` holds one `MalUserMangaListEntry` per entry: a `node` shaped by `fields` plus a `list_status` wrapper that appears when requested. `paging.next` and `paging.previous` carry the next/previous page URLs when the list continues in that direction; the paging is offset-based, so the next URL carries the incremented `offset`. Follow pages manually — manual requests bypass the library's pacing, retry, and circuit breaker. With `responseCache` enabled, list reads may be stale for `ttlMs` after `updateMyListStatus` — the cache is TTL-only and does not invalidate on writes.
+**Returns:** `MalUserMangaListResponse`. `data` holds one `MalUserMangaListEntry` per entry: a `node` shaped by `fields` plus a `list_status` wrapper that appears when requested. `paging.next` and `paging.previous` carry the next/previous page URLs when the list continues in that direction; the paging is offset-based, so the next URL carries the incremented `offset`. Follow pages manually. Manual requests bypass the library's pacing, retry, and circuit breaker. With `responseCache` enabled, list reads may be stale for `ttlMs` after `updateMyListStatus`. The cache is TTL-only and does not invalidate on writes.
 
 ```typescript
 const list = await aniLink.mal.user.mangaList(
@@ -150,22 +150,22 @@ const list = await aniLink.mal.user.mangaList(
 console.log(list.data[0]?.node.title, list.data[0]?.list_status?.score);
 ```
 
-**Errors:** `AniLinkAuthError` (`@me` without a token — thrown before any request is sent), `AniLinkValidationError` (empty or whitespace-only `username` — thrown before any request is sent), `AniLinkRestError` for non-success responses (e.g. `400` invalid status or sort, `401` expired token). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+**Errors:** `AniLinkAuthError` (`@me` without a token, thrown before any request is sent), `AniLinkValidationError` (empty or whitespace-only `username`, thrown before any request is sent), `AniLinkRestError` for non-success responses (e.g. `400` invalid status or sort, `401` expired token). `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
 **Reference:** [MAL user manga list endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListUserApi.html)
 
 ## `mal.manga.get(params, options?)`
 
-Gets one manga by its MyAnimeList ID. Calls `GET /manga/{id}` on the MAL API v2 — the manga twin of `anime.get`.
+Gets one manga by its MyAnimeList ID. Calls `GET /manga/{id}` on the MAL API v2. This is the manga counterpart of `anime.get`.
 
 | Parameter | Type                | Required | Description                                                                |
 | --------- | ------------------- | -------- | -------------------------------------------------------------------------- |
-| `params`  | `MalMangaGetParams` | yes      | `{ id }` — the MyAnimeList manga ID                                        |
+| `params`  | `MalMangaGetParams` | yes      | `{ id }`, the MyAnimeList manga ID                                         |
 | `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults |
 
-**Auth:** not required for public manga data. Pass an access token for list-related fields — same deal as `anime.get`.
+**Auth:** not required for public manga data. Pass an access token for list-related fields, same as `anime.get`.
 
-**Returns:** `MalManga` — `id` and `title` are always present. `main_picture` and any other requested fields appear when selected via `fields`. Manga-specific fields such as `num_chapters` and `num_volumes` are available through the same `fields` selector. Extra fields are exposed through an index signature without narrowing.
+**Returns:** `MalManga`. `id` and `title` are always present. `main_picture` and any other requested fields appear when selected via `fields`. Manga-specific fields such as `num_chapters` and `num_volumes` are available through the same `fields` selector. An index signature exposes extra fields without narrowing.
 
 ```typescript
 const manga = await aniLink.mal.manga.get(
@@ -181,16 +181,16 @@ console.log(manga.title, manga.main_picture?.large);
 
 ## `mal.manga.updateMyListStatus(params, options?)`
 
-Updates the authenticated user's manga list status. Calls `PATCH /manga/{id}/my_list_status` with a form-urlencoded body — MAL rejects JSON on this endpoint, so do not try to be clever.
+Updates the authenticated user's manga list status. Calls `PATCH /manga/{id}/my_list_status` with a form-urlencoded body. MAL rejects JSON on this endpoint.
 
 | Parameter | Type                             | Required | Description                                                                                         |
 | --------- | -------------------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `params`  | `MalMangaListStatusUpdateParams` | yes      | `{ id, ...fields }` — the manga ID plus only the list-status fields to change, form-encoded for MAL |
+| `params`  | `MalMangaListStatusUpdateParams` | yes      | `{ id, ...fields }`, the manga ID plus only the list-status fields to change, form-encoded for MAL  |
 | `options` | `MalRequestOptions`              | no       | Field selection plus transport settings, merged over the instance defaults                          |
 
-**Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
+**Auth:** requires a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
-**Returns:** `MalMangaListStatus` — the updated list status. MAL reports the chapter count as `num_chapters_read` and returns `tags` as an array of strings. Quirks of the API, faithfully passed through.
+**Returns:** `MalMangaListStatus`, the updated list status. MAL reports the chapter count as `num_chapters_read` and returns `tags` as an array of strings. The library passes these API quirks through unchanged.
 
 ```typescript
 const status = await aniLink.mal.manga.updateMyListStatus({
@@ -202,22 +202,22 @@ const status = await aniLink.mal.manga.updateMyListStatus({
 console.log(status.num_chapters_read);
 ```
 
-**Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `400` invalid fields), `AniLinkNetworkError`. Excess properties on the params object (typos like `num_chapter_read`) are dropped client-side instead of being form-encoded to MAL.
+**Errors:** `AniLinkAuthError` (no token configured), `AniLinkRestError` (e.g. `400` invalid fields), `AniLinkNetworkError`. The library drops excess properties on the params object (typos like `num_chapter_read`) client-side instead of form-encoding them to MAL.
 
 **Reference:** [MAL manga list-status endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListMangaApi.html)
 
 ## `mal.manga.deleteFromList(params, options?)`
 
-Removes a manga from the authenticated user's list. Calls `DELETE /manga/{id}/my_list_status` — gone means gone.
+Removes a manga from the authenticated user's list. Calls `DELETE /manga/{id}/my_list_status`. The removal is permanent.
 
 | Parameter | Type                   | Required | Description                                           |
 | --------- | ---------------------- | -------- | ----------------------------------------------------- |
-| `params`  | `MalMangaDeleteParams` | yes      | `{ id }` — the MyAnimeList manga ID                   |
+| `params`  | `MalMangaDeleteParams` | yes      | `{ id }`, the MyAnimeList manga ID                    |
 | `options` | `MalRequestOptions`    | no       | Transport settings, merged over the instance defaults |
 
-**Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
+**Auth:** requires a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
-**Returns:** `void` — the response carries no body.
+**Returns:** `void`. The response carries no body.
 
 ```typescript
 await aniLink.mal.manga.deleteFromList({ id: 1 });
@@ -229,16 +229,16 @@ await aniLink.mal.manga.deleteFromList({ id: 1 });
 
 ## `mal.manga.search(params, options?)`
 
-Searches MyAnimeList manga by keyword. Calls `GET /manga` with a `q` query parameter — the manga counterpart of `anime.search`.
+Searches MyAnimeList manga by keyword. Calls `GET /manga` with a `q` query parameter. This is the manga counterpart of `anime.search`.
 
 | Parameter | Type                   | Required | Description                                                                                  |
 | --------- | ---------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| `params`  | `MalMangaSearchParams` | yes      | `{ q, limit?, offset? }` — the keyword plus the optional paging filters; `limit` caps at 100 |
+| `params`  | `MalMangaSearchParams` | yes      | `{ q, limit?, offset? }`, the keyword plus the optional paging filters; `limit` caps at 100  |
 | `options` | `MalRequestOptions`    | no       | Field selection plus transport settings, merged over the instance defaults                   |
 
-**Auth:** not required — a public read, same deal as `manga.get`.
+**Auth:** not required. This is a public read, same as `manga.get`.
 
-**Returns:** `MalMangaSearchResponse` — `data` holds one `MalMangaSearchEntry` per result: a `node` shaped by `fields`. `paging.next` carries the next-page URL when the list continues; follow it manually — manual requests bypass the library's pacing, retry, and circuit-breaker.
+**Returns:** `MalMangaSearchResponse`. `data` holds one `MalMangaSearchEntry` per result: a `node` shaped by `fields`. `paging.next` carries the next-page URL when the list continues; follow it manually. Manual requests bypass the library's pacing, retry, and circuit-breaker.
 
 ```typescript
 const results = await aniLink.mal.manga.search(
@@ -248,22 +248,22 @@ const results = await aniLink.mal.manga.search(
 console.log(results.data[0]?.node.title);
 ```
 
-**Errors:** `AniLinkValidationError` when `q` is empty or only whitespace — thrown before any request is sent. `AniLinkRestError` for non-success responses. `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
+**Errors:** `AniLinkValidationError` when `q` is empty or only whitespace, thrown before any request is sent. `AniLinkRestError` for non-success responses. `AniLinkNetworkError` covers timeout, cancellation, or transport failures.
 
 **Reference:** [MAL manga search endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_get) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListMangaApi.html)
 
 ## `mal.manga.ranking(params, options?)`
 
-Gets one of MyAnimeList's manga ranking lists. Calls `GET /manga/ranking` with a `ranking_type` query parameter — the top lists, from `all` to `favorite`. The manga counterpart of `anime.ranking`, closing the anime/manga asymmetry.
+Gets one of MyAnimeList's manga ranking lists. Calls `GET /manga/ranking` with a `ranking_type` query parameter. This is the manga counterpart of `anime.ranking`.
 
 | Parameter | Type                    | Required | Description                                                                                                                             |
 | --------- | ----------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `params`  | `MalMangaRankingParams` | yes      | `{ rankingType }` — the ranking list: `all`, `manga`, `novels`, `oneshots`, `doujin`, `manhwa`, `manhua`, `bypopularity`, or `favorite` |
+| `params`  | `MalMangaRankingParams` | yes      | `{ rankingType }`, the ranking list: `all`, `manga`, `novels`, `oneshots`, `doujin`, `manhwa`, `manhua`, `bypopularity`, or `favorite`  |
 | `options` | `MalRequestOptions`     | no       | Field selection plus transport settings, merged over the instance defaults                                                              |
 
-**Auth:** not required — a public read, same deal as `manga.get`.
+**Auth:** not required. This is a public read, same as `manga.get`.
 
-**Returns:** `MalMangaRankingResponse` — `data` holds one `MalMangaRankingEntry` per position: a `node` shaped by `fields` plus its `ranking.rank`. `paging.next` carries the next-page URL when the list continues; follow it manually — manual requests bypass the library's pacing, retry, and circuit-breaker.
+**Returns:** `MalMangaRankingResponse`. `data` holds one `MalMangaRankingEntry` per position: a `node` shaped by `fields` plus its `ranking.rank`. `paging.next` carries the next-page URL when the list continues; follow it manually. Manual requests bypass the library's pacing, retry, and circuit-breaker.
 
 ```typescript
 const top = await aniLink.mal.manga.ranking(
@@ -279,14 +279,14 @@ console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);
 
 ## `mal.anime.updateMyListStatus(params, options?)`
 
-Updates the authenticated user's anime list status. Calls `PATCH /anime/{id}/my_list_status` with a form-urlencoded body — the anime twin of `mal.manga.updateMyListStatus`, and MAL rejects JSON on this endpoint too.
+Updates the authenticated user's anime list status. Calls `PATCH /anime/{id}/my_list_status` with a form-urlencoded body. This is the anime counterpart of `mal.manga.updateMyListStatus`, and MAL rejects JSON on this endpoint too.
 
 | Parameter | Type                             | Required | Description                                                                                         |
 | --------- | -------------------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `params`  | `MalAnimeListStatusUpdateParams` | yes      | `{ id, ...fields }` — the anime ID plus only the list-status fields to change, form-encoded for MAL |
+| `params`  | `MalAnimeListStatusUpdateParams` | yes      | `{ id, ...fields }`, the anime ID plus only the list-status fields to change, form-encoded for MAL  |
 | `options` | `MalRequestOptions`              | no       | Field selection plus transport settings, merged over the instance defaults                          |
 
-Every payload field is optional — send only the ones you want to change. The `MalAnimeListStatusUpdate` fields:
+Every payload field is optional. Send only the ones you want to change. The `MalAnimeListStatusUpdate` fields:
 
 | Field                  | Type       | Description                                                                               |
 | ---------------------- | ---------- | ----------------------------------------------------------------------------------------- |
@@ -302,9 +302,9 @@ Every payload field is optional — send only the ones you want to change. The `
 | `priority`             | `number`   | The priority rating (0-2)                                                                 |
 | `tags`                 | `string[]` | User-defined tags; sent to MAL as a comma-separated string                                |
 
-**Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
+**Auth:** requires a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
-**Returns:** `MalAnimeListStatus` — the updated list status. MAL reports the episode count as `num_episodes_watched` (the request field is `num_watched_episodes` — a documented MAL asymmetry) and returns `tags` as an array of strings. Quirks of the API, faithfully passed through.
+**Returns:** `MalAnimeListStatus`, the updated list status. MAL reports the episode count as `num_episodes_watched` (the request field is `num_watched_episodes`, a documented MAL asymmetry) and returns `tags` as an array of strings. The library passes these API quirks through unchanged.
 
 ```typescript
 const status = await aniLink.mal.anime.updateMyListStatus({
@@ -316,22 +316,22 @@ const status = await aniLink.mal.anime.updateMyListStatus({
 console.log(status.num_episodes_watched);
 ```
 
-**Errors:** `AniLinkAuthError` (no token configured), `AniLinkValidationError` (params carries no list-status field to change — thrown before any request is sent), `AniLinkRestError` (e.g. `400` invalid fields), `AniLinkNetworkError`. Excess properties on the params object (typos like `num_watched_episode`) are dropped client-side instead of being form-encoded to MAL.
+**Errors:** `AniLinkAuthError` (no token configured), `AniLinkValidationError` (params carries no list-status field to change, thrown before any request is sent), `AniLinkRestError` (e.g. `400` invalid fields), `AniLinkNetworkError`. The library drops excess properties on the params object (typos like `num_watched_episode`) client-side instead of form-encoding them to MAL.
 
 **Reference:** [MAL anime list-status endpoint](https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put) · [TypeDoc](/typedoc/interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html)
 
 ## `mal.anime.deleteFromList(params, options?)`
 
-Removes an anime from the authenticated user's list. Calls `DELETE /anime/{id}/my_list_status` — gone means gone.
+Removes an anime from the authenticated user's list. Calls `DELETE /anime/{id}/my_list_status`. The removal is permanent.
 
 | Parameter | Type                   | Required | Description                                           |
 | --------- | ---------------------- | -------- | ----------------------------------------------------- |
-| `params`  | `MalAnimeDeleteParams` | yes      | `{ id }` — the MyAnimeList anime ID                   |
+| `params`  | `MalAnimeDeleteParams` | yes      | `{ id }`, the MyAnimeList anime ID                    |
 | `options` | `MalRequestOptions`    | no       | Transport settings, merged over the instance defaults |
 
-**Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
+**Auth:** requires a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
-**Returns:** `void` — the response carries no body.
+**Returns:** `void`. The response carries no body.
 
 ```typescript
 await aniLink.mal.anime.deleteFromList({ id: 21 });
@@ -343,16 +343,16 @@ await aniLink.mal.anime.deleteFromList({ id: 21 });
 
 ## `mal.anime.seasonal(params, options?)`
 
-Gets the anime of one broadcast season. Calls `GET /anime/season/{year}/{season}` — the seasonal chart, the browsing feature third-party apps are built on.
+Gets the anime of one broadcast season. Calls `GET /anime/season/{year}/{season}`. This is the seasonal chart, the browsing feature third-party apps are built on.
 
 | Parameter | Type                | Required | Description                                                                                     |
 | --------- | ------------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| `params`  | `MalSeasonalParams` | yes      | `{ year, season }` — the year and the broadcast window: `winter`, `spring`, `summer`, or `fall` |
+| `params`  | `MalSeasonalParams` | yes      | `{ year, season }`, the year and the broadcast window: `winter`, `spring`, `summer`, or `fall`  |
 | `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults                      |
 
-**Auth:** not required — a public read, same deal as `anime.get`.
+**Auth:** not required. This is a public read, same as `anime.get`.
 
-**Returns:** `MalSeasonalAnimeResponse` — `data` holds one `MalSeasonalAnime` per entry: a `node` shaped by `fields`; the entry's rank within the season, when requested, is a `rank` field on the node itself. `paging.next` carries the next-page URL when the list continues; follow it manually for now — manual requests bypass the library's pacing, retry, and circuit-breaker, so space them out on long lists.
+**Returns:** `MalSeasonalAnimeResponse`. `data` holds one `MalSeasonalAnime` per entry: a `node` shaped by `fields`; the entry's rank within the season, when requested, is a `rank` field on the node itself. `paging.next` carries the next-page URL when the list continues; follow it manually for now. Manual requests bypass the library's pacing, retry, and circuit-breaker, so space them out on long lists.
 
 ```typescript
 const season = await aniLink.mal.anime.seasonal(
@@ -368,16 +368,16 @@ console.log(season.data[0]?.node.title, season.data[0]?.node.rank);
 
 ## `mal.anime.ranking(params, options?)`
 
-Gets one of MyAnimeList's anime ranking lists. Calls `GET /anime/ranking` with a `ranking_type` query parameter — the top lists, from `all` to `favorite`.
+Gets one of MyAnimeList's anime ranking lists. Calls `GET /anime/ranking` with a `ranking_type` query parameter. This returns the top lists.
 
 | Parameter | Type                | Required | Description                                                                                                                       |
 | --------- | ------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `params`  | `MalRankingParams`  | yes      | `{ rankingType }` — the ranking list: `all`, `airing`, `upcoming`, `tv`, `ova`, `movie`, `special`, `bypopularity`, or `favorite` |
+| `params`  | `MalRankingParams`  | yes      | `{ rankingType }`, the ranking list: `all`, `airing`, `upcoming`, `tv`, `ova`, `movie`, `special`, `bypopularity`, or `favorite`  |
 | `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults                                                        |
 
-**Auth:** not required — a public read, same deal as `anime.get`.
+**Auth:** not required. This is a public read, same as `anime.get`.
 
-**Returns:** `MalAnimeRankingResponse` — `data` holds one `MalRankingEntry` per position: a `node` shaped by `fields` plus its `ranking.rank`. `paging.next` carries the next-page URL when the list continues; follow it manually — manual requests bypass the library's pacing, retry, and circuit-breaker.
+**Returns:** `MalAnimeRankingResponse`. `data` holds one `MalRankingEntry` per position: a `node` shaped by `fields` plus its `ranking.rank`. `paging.next` carries the next-page URL when the list continues; follow it manually. Manual requests bypass the library's pacing, retry, and circuit-breaker.
 
 ```typescript
 const top = await aniLink.mal.anime.ranking(
@@ -393,15 +393,15 @@ console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);
 
 ## `mal.anime.suggestions(options?)`
 
-Gets MyAnimeList's anime suggestions for the authenticated user. Calls `GET /anime/suggestions` — MAL's idea of what you should watch next.
+Gets MyAnimeList's anime suggestions for the authenticated user. Calls `GET /anime/suggestions`.
 
 | Parameter | Type                | Required | Description                                                                |
 | --------- | ------------------- | -------- | -------------------------------------------------------------------------- |
 | `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults |
 
-**Auth:** required — a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent. Suggestions are personal, so the token is not optional.
+**Auth:** requires a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent. Suggestions are personal, so the token is not optional.
 
-**Returns:** `MalAnimeSuggestionsResponse` — `data` holds `MalSuggestion` entries: a `node` shaped by `fields`, with no ranking wrapper here. `paging.next` carries the next-page URL when the list continues; the next page requires the same access token, and manual requests bypass the library's pacing and retry.
+**Returns:** `MalAnimeSuggestionsResponse`. `data` holds `MalSuggestion` entries: a `node` shaped by `fields`, with no ranking wrapper here. `paging.next` carries the next-page URL when the list continues; the next page requires the same access token, and manual requests bypass the library's pacing and retry.
 
 ```typescript
 const suggestions = await aniLink.mal.anime.suggestions({
@@ -416,15 +416,15 @@ console.log(suggestions.data[0]?.node.title);
 
 ## `mal.forum.boards(options?)`
 
-Gets the MyAnimeList forum board tree. Calls `GET /forum/boards` — the categories, boards, and subboards every forum navigation starts from.
+Gets the MyAnimeList forum board tree. Calls `GET /forum/boards`. These are the categories, boards, and subboards that forum navigation starts from.
 
 | Parameter | Type                | Required | Description                                           |
 | --------- | ------------------- | -------- | ----------------------------------------------------- |
 | `options` | `MalRequestOptions` | no       | Transport settings, merged over the instance defaults |
 
-**Auth:** not required — a public read.
+**Auth:** not required. This is a public read.
 
-**Returns:** `MalForumBoardsResponse` — `categories` holds one `MalForumCategory` per group, each carrying its `MalForumBoard` entries with their `subboards`.
+**Returns:** `MalForumBoardsResponse`. `categories` holds one `MalForumCategory` per group, each carrying its `MalForumBoard` entries with their `subboards`.
 
 ```typescript
 const boards = await aniLink.mal.forum.boards();
@@ -437,16 +437,16 @@ console.log(boards.categories[0]?.boards[0]?.title);
 
 ## `mal.forum.topics(params, options?)`
 
-Gets the MyAnimeList forum topic list, one page at a time. Calls `GET /forum/topics` — filterable by board, keyword, and creator.
+Gets the MyAnimeList forum topic list, one page at a time. Calls `GET /forum/topics`, filterable by board, keyword, and creator.
 
 | Parameter | Type                   | Required | Description                                                                                                                        |
 | --------- | ---------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `params`  | `MalForumTopicsParams` | no       | `{ boardId?, subboardId?, q?, topicUserName?, userName?, sort?, limit?, offset? }` — every filter is optional; `limit` caps at 100 |
+| `params`  | `MalForumTopicsParams` | no       | `{ boardId?, subboardId?, q?, topicUserName?, userName?, sort?, limit?, offset? }`, every filter is optional; `limit` caps at 100  |
 | `options` | `MalRequestOptions`    | no       | Transport settings, merged over the instance defaults                                                                              |
 
-**Auth:** not required — a public read.
+**Auth:** not required. This is a public read.
 
-**Returns:** `MalForumTopicsResponse` — `data` holds one `MalForumTopicSummary` per topic: title, creator, post count, and last-post info. `paging.next` carries the next-page URL when the list continues; follow it manually — manual requests bypass the library's pacing, retry, and circuit-breaker.
+**Returns:** `MalForumTopicsResponse`. `data` holds one `MalForumTopicSummary` per topic: title, creator, post count, and last-post info. `paging.next` carries the next-page URL when the list continues; follow it manually. Manual requests bypass the library's pacing, retry, and circuit-breaker.
 
 ```typescript
 const topics = await aniLink.mal.forum.topics({ q: "one piece" });
@@ -459,16 +459,16 @@ console.log(topics.data[0]?.title);
 
 ## `mal.forum.topic(params, options?)`
 
-Gets one forum topic with its posts and poll. Calls `GET /forum/topic/{topic_id}` — the thread reader behind every forum deep link.
+Gets one forum topic with its posts and poll. Calls `GET /forum/topic/{topic_id}`.
 
 | Parameter | Type                  | Required | Description                                                                                         |
 | --------- | --------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `params`  | `MalForumTopicParams` | yes      | `{ id, limit?, offset? }` — the topic ID plus the optional post-paging filters; `limit` caps at 100 |
+| `params`  | `MalForumTopicParams` | yes      | `{ id, limit?, offset? }`, the topic ID plus the optional post-paging filters; `limit` caps at 100  |
 | `options` | `MalRequestOptions`   | no       | Transport settings, merged over the instance defaults                                               |
 
-**Auth:** not required — a public read.
+**Auth:** not required. This is a public read.
 
-**Returns:** `MalForumTopicResponse` — `data` is the topic's `MalForumTopicDetail`: `title`, `posts` (each with its author and body), and `poll` when one is attached. `paging.next` carries the next post-page URL when the topic continues.
+**Returns:** `MalForumTopicResponse`. `data` is the topic's `MalForumTopicDetail`: `title`, `posts` (each with its author and body), and `poll` when one is attached. `paging.next` carries the next post-page URL when the topic continues.
 
 ```typescript
 const topic = await aniLink.mal.forum.topic({ id: 23744 });
@@ -481,7 +481,7 @@ console.log(topic.data.title, topic.data.posts[0]?.body);
 
 ## `fields` selection
 
-`fields` accepts a comma-separated string or an array — both produce the same query parameter, so pick whichever reads better:
+`fields` accepts a comma-separated string or an array. Both produce the same query parameter, so pick whichever reads better:
 
 ```typescript
 // Equivalent:
@@ -496,9 +496,9 @@ Field names are MAL's own, and AniLink passes them through verbatim. See the [MA
 ## Calling convention changes in v3
 
 Every MAL operation with inputs now takes a single params object followed by
-the optional trailing options — the same `(params, options?)` convention as
-AniList. The parameterless reads — `mal.user.me(options?)` and
-`mal.anime.suggestions(options?)` — take the options object alone:
+the optional trailing options, the same `(params, options?)` convention as
+AniList. The parameterless reads, `mal.user.me(options?)` and
+`mal.anime.suggestions(options?)`, take the options object alone:
 
 | v2                                                  | v3                                                            |
 | --------------------------------------------------- | ------------------------------------------------------------- |
@@ -508,11 +508,11 @@ AniList. The parameterless reads — `mal.user.me(options?)` and
 | `mal.user.animeList("@me", { status: "watching" })` | `mal.user.animeList({ username: "@me", status: "watching" })` |
 
 The list filters (`status`, `sort`, `limit`, `offset`) moved from the options
-argument into params — they are the API's own inputs. `fields` and every
+argument into params. They are the API's own inputs. `fields` and every
 transport setting stay in the trailing options.
 
 ## Next steps
 
-- <Icon name="ArrowRight" :size="14" /> [MAL operation catalog](/operations/mal/anime) — every operation on this page with its full request/response anatomy, grouped by [anime](/operations/mal/anime), [manga](/operations/mal/manga), [user](/operations/mal/user), and [forum](/operations/mal/forum).
-- <Icon name="ArrowRight" :size="14" /> [Operation reference overview](/operations/) — how the generated catalogs stay in sync with the code.
-- <Icon name="ArrowRight" :size="14" /> [Per-request options](/per-request-options) — transport overrides per call.
+- <Icon name="ArrowRight" :size="14" /> [MAL operation catalog](/operations/mal/anime) lists every operation on this page with its full request and response details, grouped by [anime](/operations/mal/anime), [manga](/operations/mal/manga), [user](/operations/mal/user), and [forum](/operations/mal/forum).
+- <Icon name="ArrowRight" :size="14" /> [Operation reference overview](/operations/) explains how the generated catalogs stay in sync with the code.
+- <Icon name="ArrowRight" :size="14" /> [Per-request options](/per-request-options) covers transport overrides per call.

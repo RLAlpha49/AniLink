@@ -372,8 +372,8 @@ button:focus-visible {
 /* Inline icons (Markdown <Icon /> wrapper)                            */
 /* ------------------------------------------------------------------ */
 
-/* Keep the Lucide icon aligned with the first line of a list item and
-   give it a hair of breathing room from the following link text. */
+/* Keep the Lucide icon aligned with the first line of a list item. Add a
+   small gap before the link text that follows. */
 li > .docs-icon {
     margin-right: 0.3em;
     color: var(--rd-text-soft);

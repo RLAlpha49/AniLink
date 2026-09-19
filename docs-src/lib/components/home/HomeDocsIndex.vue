@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /**
- * Documentation index — the reading-path sections and the provider guide
- * chips. Section component of the Home composition; derives its page lists
- * from the single source of truth in content.ts.
+ * Documentation index: the reading-path sections and the provider guide
+ * chips. This is a section component of the Home composition. It derives
+ * its page lists from content.ts.
  */
 import { withBase } from "vitepress";
 import { BookOpen, Disc, Square } from "@lucide/vue";
@@ -44,9 +44,9 @@ const malGuidePages = PAGES.filter((p) => p.section === "mal");
             </p>
             <h2 id="home-docs-title" class="home-section-title">Where to start reading</h2>
             <p class="home-section-lede">
-                The docs are organized as a single reading path. Begin with the start guides, move
-                through the core transport concepts, then branch into provider-specific guides and
-                the generated operation reference.
+                The docs form a single reading path. Begin with the start guides, move through the
+                core transport concepts, then branch into provider-specific guides and the generated
+                operation reference.
             </p>
         </header>
 

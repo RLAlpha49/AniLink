@@ -4,23 +4,25 @@
  *
  * Loads the precomputed vector index (`/search-index.json`) and the same
  * `Xenova/bge-small-en-v1.5` model used at build time, embeds the query
- * in-browser, and ranks chunks by cosine similarity. Results are merged
- * with a lightweight keyword pass over the same index text so exact API
- * names surface instantly while concept queries get meaning-aware matches.
+ * in-browser, and ranks chunks by cosine similarity. It merges those
+ * results with a lightweight keyword pass over the same index text so
+ * exact API names appear instantly while concept queries match by
+ * meaning.
  *
- * Two-phase results: keyword matches appear immediately (before the model
- * has loaded), then semantic results refine the list once the query vector
- * is computed. A status indicator stays visible throughout so the user
- * always knows whether semantic search is still warming up.
+ * Results arrive in two phases. Keyword matches appear immediately, before
+ * the model has loaded. Semantic results then refine the list once the
+ * model computes the query vector. A status indicator stays visible
+ * throughout so the user always knows whether semantic search is still
+ * warming up.
  *
- * Everything browser-only (fetch, dynamic import of the transformers lib,
- * localStorage) is guarded so the component is SSR-safe under VitePress.
+ * The component guards everything browser-only (fetch, dynamic import of
+ * the transformers lib, localStorage) so it is SSR-safe under VitePress.
  *
  * The multi-megabyte transformers bundle and model weights load lazily on
  * the first submitted query, not on mount. Opening the modal costs
  * only the small index fetch; visitors who never search never download the
  * model. The keyword phase still runs first so results appear while the
- * model warms up, and the model is browser-cached after the first load.
+ * model warms up, and the browser caches the model after the first load.
  */
 import { onBeforeUnmount, onMounted, ref, computed } from "vue";
 import { CornerDownLeft, Search, Sparkles } from "@lucide/vue";
@@ -51,18 +53,18 @@ const activeIndex = ref(0);
 
 /**
  * Monotonic token for in-flight searches. Each `runSearch` invocation
- * captures the current value before awaiting; when the semantic phase
+ * captures the current value before awaiting. When the semantic phase
  * resumes, a mismatch means a newer keystroke already superseded this
- * invocation, so its (stale) results are discarded instead of overwriting
- * the newer keyword results.
+ * invocation. The invocation discards its (stale) results instead of
+ * overwriting the newer keyword results.
  */
 let searchToken = 0;
 /** Pending debounce timer for `runSearch`, cleared on unmount. */
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
- * Debounced entry point for the input event: waits for a typing pause so
- * the keyword phase runs once per pause instead of once per keystroke.
+ * Debounced entry point for the input event. It waits for a typing pause
+ * so the keyword phase runs once per pause instead of once per keystroke.
  * Recent-search chips call `runSearch` directly (single deliberate action).
  */
 function scheduleSearch(): void {
@@ -76,8 +78,9 @@ function scheduleSearch(): void {
 /**
  * Stable option id for a result URL. Derived from the URL so
  * `aria-activedescendant` stays valid across re-renders and the two-phase
- * keyword→semantic result swap. The URL is encoded rather than stripped so
- * punctuation-differing URLs (e.g. `/a/b` vs `/a-b`) cannot collide.
+ * swap from keyword to semantic results. It encodes the URL rather than
+ * stripping it, so punctuation-differing URLs (e.g. `/a/b` vs `/a-b`)
+ * cannot collide.
  */
 function optionId(url: string): string {
     return "ss-option-" + encodeURIComponent(url);
@@ -105,7 +108,7 @@ const anyLoading = computed(() => keywordLoading.value || semanticLoading.value)
 
 /** Status line shown beneath the input. */
 const statusText = computed(() => {
-    if (semanticError.value) return "Semantic unavailable — keyword results only";
+    if (semanticError.value) return "Semantic unavailable, keyword results only";
     if (semanticLoading.value) return "Warming up semantic search…";
     if (keywordLoading.value) return "Searching…";
     if (query.value && semanticReady.value && results.value.length) return "Semantic results";
@@ -117,9 +120,9 @@ async function loadIndex(): Promise<void> {
     if (index.length) return;
     const res = await fetch("/search-index.json");
     const json: SearchIndex = (await res.json()) as SearchIndex;
-    // Per-doc field sniffing (vector vs q/scale) ranks either format, but a
-    // format this runtime predates cannot — surface that instead of
-    // silently degraded semantic ranking.
+    // Per-doc field sniffing (vector vs q/scale) ranks either format, but
+    // not a format newer than this runtime. Warn instead of silently
+    // degrading semantic ranking.
     if (json.format && json.format !== "float" && json.format !== "int8") {
         console.warn(
             `[anilink-search] unknown search-index format "${json.format}"; semantic ranking may be degraded`
@@ -170,9 +173,10 @@ async function runSearch(): Promise<void> {
         return;
     }
 
-    // Phase 1 — keyword results appear immediately. The index is preloaded
-    // on mount, so this usually resolves from the in-memory cache without a
-    // network round-trip; if still in flight it waits for the preload.
+    // Phase 1: keyword results appear immediately. The component preloads
+    // the index on mount, so this usually resolves from the in-memory
+    // cache without a network round-trip; if still in flight it waits for
+    // the preload.
     keywordLoading.value = true;
     try {
         await loadIndex();
@@ -197,7 +201,7 @@ async function runSearch(): Promise<void> {
         if (token === searchToken) keywordLoading.value = false;
     }
 
-    // Phase 2 — semantic results refine the list once the model is ready.
+    // Phase 2: semantic results refine the list once the model is ready.
     if (semanticError.value) return;
     await loadModel();
     // A newer invocation superseded this one while the model was still
@@ -219,7 +223,7 @@ async function runSearch(): Promise<void> {
                 title: d.title,
                 text: d.text,
                 source: d.source,
-                // Pass the doc itself: cosineSimilarity decodes int8-quantized
+                // Pass the doc itself. cosineSimilarity decodes int8-quantized
                 // vectors (v2 index format) transparently.
                 score: cosineSimilarity(qvec, d),
                 matchedBy: "semantic" as const,
@@ -233,7 +237,7 @@ async function runSearch(): Promise<void> {
     }
 }
 
-/** Select a result: persist the query as recent, emit the URL. */
+/** Select a result: persist the query as a recent search, emit the URL. */
 function select(url: string): void {
     const q = query.value.trim();
     if (q) {
@@ -247,7 +251,7 @@ function select(url: string): void {
     emit("select", url);
 }
 
-/** Keyboard navigation: arrows move selection, enter activates. */
+/** Keyboard navigation: arrows move the selection, Enter activates it. */
 function onKeydown(e: KeyboardEvent): void {
     if (!filteredResults.value.length) return;
     if (e.key === "ArrowDown") {
@@ -279,12 +283,12 @@ onMounted(() => {
     } catch {
         /* ignore */
     }
-    // Load only the small JSON index on mount. It is needed for the keyword
-    // phase of every search, so pre-fetching it keeps first results instant
-    // when the user submits a query. The multi-megabyte transformers bundle
-    // and model weights are NOT touched here: `loadModel()` runs lazily from
-    // `runSearch()` on the first submitted query, so visitors who
-    // never search never pay for the model download.
+    // Load only the small JSON index on mount. The keyword phase of every
+    // search needs it, so pre-fetching it keeps first results instant
+    // when the user submits a query. This hook does NOT touch the
+    // multi-megabyte transformers bundle or model weights. `loadModel()`
+    // runs lazily from `runSearch()` on the first submitted query, so
+    // visitors who never search never download the model.
     void loadIndex();
 });
 
@@ -302,7 +306,7 @@ void emit;
                 v-model="query"
                 type="text"
                 class="ss-input"
-                placeholder="Search the docs… (try “how do I authenticate”)"
+                placeholder="Search the docs… (try 'how do I authenticate')"
                 aria-label="Search docs"
                 autocomplete="off"
                 spellcheck="false"
@@ -395,9 +399,9 @@ void emit;
         </ul>
 
         <div v-else-if="query && !anyLoading" class="ss-empty">
-            <p>No results for “{{ query }}”.</p>
+            <p>No results for "{{ query }}".</p>
             <a class="ss-empty-link" href="https://github.com/RLAlpha49/AniLink/issues">
-                Search GitHub issues →
+                Search GitHub issues
             </a>
         </div>
 
@@ -643,7 +647,7 @@ void emit;
     color: var(--rd-accent);
 }
 /* Semantic-match indicator: a small sparkles chip on results that the
-   semantic pass surfaced (not just keyword). */
+   semantic pass matched, not on keyword-only matches. */
 .ss-match {
     display: inline-flex;
     align-items: center;

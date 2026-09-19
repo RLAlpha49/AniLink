@@ -3,10 +3,9 @@
  *
  * The reference cards under `/operations/anilist` and `/operations/mal`
  * render TypeScript source from the generated operation manifest. The
- * data loaders are responsible only for grouping and filtering the raw
- * manifest — Shiki highlighting happens at render time inside the
- * `OperationCard` component (see
- * `docs-src/lib/useShikiHighlighter.ts`).
+ * data loaders only group and filter the raw manifest. The
+ * `OperationCard` component applies Shiki highlighting at
+ * render time. See `docs-src/lib/useShikiHighlighter.ts`.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -25,9 +24,10 @@ export type OperationSection = ReferenceOperation["category"];
 /**
  * Load the generated manifest, filter by `provider`, and group the
  * operations by `domain`. The returned records carry only raw text
- * fields; highlighting is applied at render time.
+ * fields. The `OperationCard` component applies highlighting at
+ * render time.
  *
- * @param provider Which provider to keep — `"anilist"` or `"mal"`.
+ * @param provider Which provider to keep, `"anilist"` or `"mal"`.
  * @param category Which category shard to load.
  * @param baseDir Repository root containing `lib/operation-reference`.
  * Defaults to the current working directory so the docs data loaders

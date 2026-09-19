@@ -3,9 +3,9 @@
  *
  * Tracks every heading currently visible in the reading viewport so the
  * table of contents can highlight all on-screen sections at once (short or
- * skipped sections stay lit while they are visible). It also exposes a
- * continuous scroll-progress value (0..1) across the whole page so the TOC
- * can scroll in sync with the page like a minimap.
+ * skipped sections stay highlighted while they are visible). It also
+ * exposes a continuous scroll-progress value (0..1) across the whole page
+ * so the TOC can scroll in sync with the page.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import type { ComputedRef, Readonly, Ref } from "vue";
@@ -93,7 +93,7 @@ export function selectScrollIndicatorViewport(
     };
 }
 
-/** Calculate how much of each TOC entry is covered by the visible range. */
+/** Calculate how much of each TOC entry the visible range covers. */
 export function selectTocEntryColorProgress(
     entryTops: number[],
     entryHeights: number[],
@@ -124,12 +124,12 @@ export function selectTocEntryColorProgress(
  * Compute every section visible in the reading viewport plus the overall
  * page scroll progress.
  *
- * A section is considered visible when any part of its body (from its heading
- * to the next heading) overlaps the viewport band. This lets short or skipped
+ * A section is visible when any part of its body (from its heading to the
+ * next heading) overlaps the viewport band. This lets short or skipped
  * sections stay highlighted while they are on screen, instead of only the
  * single heading nearest the top. `progress` is the fraction of the scrollable
- * content already scrolled, clamped to [0, 1], so the TOC can mirror page
- * scroll position.
+ * content already scrolled, clamped to [0, 1], so the TOC can mirror the
+ * page's scroll position.
  */
 export function selectVisibleSections(
     positions: HeadingPosition[],
@@ -169,7 +169,7 @@ export function selectVisibleSections(
     }
 
     // Continuous progress of the lead section toward the next heading, so the
-    // TOC highlight can glide smoothly between entries instead of snapping.
+    // TOC highlight moves between entries gradually instead of snapping.
     let leadProgress = 0;
     if (leadIndex >= 0) {
         const sectionTop = positions[leadIndex].top;
@@ -314,7 +314,7 @@ export function useHeadingScrollSpy(pageHeaders: Readonly<Ref<readonly PageHeadi
 
         contentObserver?.disconnect();
         contentObserver = new MutationObserver(() => {
-            // Debounce: coalesce bursts of mutations (e.g. Shiki highlighting) into
+            // Debounce bursts of mutations (e.g. Shiki highlighting) into
             // a single re-collection so we don't thrash on every text node change.
             if (contentObserverTimer !== null && typeof window !== "undefined") {
                 window.clearTimeout(contentObserverTimer);
@@ -374,7 +374,7 @@ export function useHeadingScrollSpy(pageHeaders: Readonly<Ref<readonly PageHeadi
      * state, re-collect rendered headings, re-attach listeners, and
      * resume content observation. Runs whenever the page's heading list
      * changes (route change or asynchronously mounted content) so
-     * positions always match what is currently rendered.
+     * positions always match the rendered headings.
      */
     async function refreshHeadings(): Promise<void> {
         if (!mounted || typeof window === "undefined") {

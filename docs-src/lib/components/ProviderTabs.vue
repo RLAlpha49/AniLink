@@ -3,7 +3,7 @@
  * Provider switcher shared by all redesigns.
  *
  * Renders the AniList / MyAnimeList slot pair; the active pane is
- * client-side state. Styling comes entirely from redesign CSS variables.
+ * client-side state. All styling comes from redesign CSS variables.
  */
 import { ref } from "vue";
 import { Disc, Square } from "@lucide/vue";

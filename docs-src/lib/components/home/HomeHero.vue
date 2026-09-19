@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Landing hero — display title, lede, action buttons, and the at-a-glance
+ * Landing hero: display title, lede, action buttons, and the at-a-glance
  * stats card with the version tag. Section component of the Home
  * composition; owns the hero markup and scoped styles.
  */
@@ -15,7 +15,7 @@ const anilinkVersion = __ANILINK_VERSION__;
 /* ------------------------------------------------------------------ */
 
 const stats = [
-    { value: "2", label: "Provider surfaces" },
+    { value: "2", label: "Providers" },
     { value: "1", label: "Client class" },
     { value: "100%", label: "Typed end-to-end" },
 ];
@@ -35,7 +35,7 @@ const stats = [
                 </h1>
                 <p class="home-hero-lede">
                     A typed TypeScript client for the AniList GraphQL and MyAnimeList REST APIs. One
-                    class, two isolated provider surfaces, normalized errors, retries, pacing, and a
+                    class, two isolated providers, normalized errors, retries, pacing, and a
                     generated operation reference.
                 </p>
                 <div class="home-hero-actions">

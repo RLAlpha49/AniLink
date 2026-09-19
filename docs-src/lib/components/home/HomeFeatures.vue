@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Feature grid — six cards describing the library's cross-cutting plumbing.
+ * Feature grid: six cards describing the library's cross-cutting plumbing.
  * Section component of the Home composition; owns the feature data and
  * scoped styles.
  */
@@ -16,7 +16,7 @@ const features: FeatureCard[] = [
     {
         icon: Boxes,
         title: "Typed operations",
-        body: "Every query, page query, and mutation ships with typed variables and a typed response, generated from the provider schemas. No hand-written GraphQL shapes.",
+        body: "Every query, page query, and mutation ships with typed variables and a typed response, generated from the provider schemas. You never write GraphQL shapes by hand.",
     },
     {
         icon: ShieldCheck,
@@ -26,12 +26,12 @@ const features: FeatureCard[] = [
     {
         icon: Zap,
         title: "Resilience built in",
-        body: "Retries with jittered backoff, optional rate-limit pacing, and an optional circuit breaker — identical behavior on both providers.",
+        body: "Retries use jittered backoff. You can turn on rate-limit pacing and a circuit breaker. Both providers get the same behavior.",
     },
     {
         icon: Layers,
         title: "Provider isolation",
-        body: "Credentials and transport settings are scoped per provider slot. A MAL token is never sent to AniList, and vice versa.",
+        body: "Each provider slot has its own credentials and transport settings. A MAL token never reaches AniList, and vice versa.",
     },
     {
         icon: Activity,
@@ -41,7 +41,7 @@ const features: FeatureCard[] = [
     {
         icon: Timer,
         title: "Cancellation & timeouts",
-        body: "Pass an AbortSignal or a per-request timeout and the transport cancels in flight, releases the attempt, and surfaces a typed cancellation error.",
+        body: "Pass an AbortSignal or a per-request timeout. The transport cancels in flight, releases the attempt, and throws a typed cancellation error.",
     },
 ];
 </script>

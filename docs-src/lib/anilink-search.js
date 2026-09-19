@@ -5,7 +5,7 @@
  * search.js). This script replaces it with the same semantic search the
  * VitePress docs use: it loads the precomputed `/search-index.json` and the
  * `Xenova/bge-small-en-v1.5` model, embeds the query in-browser, and ranks
- * chunks by cosine similarity. Results are scoped to show all sources, with
+ * chunks by cosine similarity. Results show all sources by default, with
  * source-type filters so the user can narrow to guides, operations, or the
  * API reference.
  */
@@ -16,7 +16,7 @@
     var MODEL_REVISION = "ea104dacec62c0de699686887e3f920caeb4f3e3";
     // Keep in sync with SEARCH_MODEL_ID / SEARCH_MODEL_REVISION in
     // docs-src/lib/search-rank.ts and the @huggingface/transformers version
-    // in package.json: all three must embed with the same weights or cosine
+    // in package.json. All three must embed with the same weights or cosine
     // rankings silently degrade.
     var TRANSFORMERS_CDN =
         "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/dist/transformers.min.js";
@@ -38,7 +38,7 @@
      * Monotonic token for in-flight searches. Each `runSearch` invocation
      * captures the current value before awaiting; when a phase resumes, a
      * mismatch means a newer keystroke already superseded this invocation,
-     * so its (stale) results are discarded instead of overwriting the
+     * so the phase discards its stale results instead of overwriting the
      * newer keyword results or clobbering the newer run's loading flags.
      */
     var searchToken = 0;
@@ -46,10 +46,10 @@
     var debounceTimer = null;
 
     /**
-     * Debounced entry point for the input event: waits for a typing pause
+     * Debounced entry point for the input event. Waits for a typing pause
      * so the keyword phase runs once per pause instead of once per
-     * keystroke (each keystroke would otherwise await a full query
-     * embedding on the semantic path).
+     * keystroke. Each keystroke would otherwise await a full query
+     * embedding on the semantic path.
      */
     function scheduleSearch() {
         if (debounceTimer !== null) clearTimeout(debounceTimer);
@@ -62,7 +62,7 @@
     var overlay, modal, input, statusEl, listEl, filtersEl;
 
     /**
-     * Active theme for the page: TypeDoc stores its choice as a
+     * Active theme for the page. TypeDoc stores its choice as a
      * `data-theme` attribute on `<html>`, and the literal `"os"` resolves
      * to the OS preference. Used to theme the modal overlay's palette.
      */
@@ -76,12 +76,13 @@
 
     /**
      * Reconstruct a doc's embedding as floats, whichever format the index
-     * was written in: v2 docs carry `q` (int8 codes) and `scale`, and
-     * `q[i] / 127 * scale` rebuilds the component; older float-format (v1)
-     * indexes carry `vector` directly. Both are handled so a stale index
-     * still ranks correctly. Results are memoized on the doc (`_v`) because
-     * vectors are immutable after `loadIndex` — the same doc is re-ranked
-     * on every query, so the reconstruction happens once, not per query.
+     * was written in. v2 docs carry `q` (int8 codes) and `scale`, and
+     * `q[i] / 127 * scale` rebuilds the component. Older float-format (v1)
+     * indexes carry `vector` directly. The function handles both so a
+     * stale index still ranks correctly. It memoizes results on the
+     * doc (`_v`) because vectors are immutable after `loadIndex`.
+     * `runSearch` re-ranks the same doc on every query, so the
+     * reconstruction happens once, not per query.
      */
     function docVector(doc) {
         if (doc._v) return doc._v;
@@ -115,7 +116,7 @@
     }
 
     /**
-     * Keyword relevance of a doc to a query: each query term scores +3
+     * Keyword relevance of a doc to a query. Each query term scores +3
      * when it appears in the title and +1 when it appears anywhere in
      * the title-plus-body text, so title hits dominate the ranking.
      */
@@ -135,8 +136,8 @@
     /**
      * Merge the two result passes: normalize each list to 0..1 against
      * its own score range, dedupe by url keeping the higher score, and
-     * sort descending. A url matched by both passes is tagged "both"
-     * so the result badge can show the keyword reinforcement.
+     * sort descending. The merge tags a url matched by both passes as
+     * "both" so the result badge can show the keyword reinforcement.
      */
     function mergeResults(semantic, keyword) {
         function norm(arr) {
@@ -183,9 +184,9 @@
 
     /**
      * Fetch and cache `/search-index.json` once per page load. Warns but
-     * continues when the index carries a format this runtime predates:
-     * per-doc field sniffing ranks either known format, but an unknown
-     * future format cannot be ranked, and a visible warning beats
+     * continues when the index carries a format this runtime predates.
+     * Per-doc field sniffing ranks either known format, but it cannot
+     * rank an unknown future format, and a visible warning beats
      * silently degraded semantic results.
      */
     async function loadIndex() {
@@ -193,8 +194,8 @@
         var res = await fetch(INDEX_URL);
         var json = await res.json();
         // Per-doc field sniffing (vector vs q/scale) ranks either format, but
-        // a format this runtime predates cannot — surface that instead of
-        // silently degraded semantic ranking.
+        // it cannot rank a format this runtime predates. Warn instead of
+        // letting semantic ranking degrade silently.
         if (json.format && json.format !== "float" && json.format !== "int8") {
             console.warn(
                 "[anilink-search] unknown search-index format '" +
@@ -230,13 +231,13 @@
     }
 
     /**
-     * Two-phase search for the current input value: the keyword phase
-     * runs first (index-only, so results appear instantly), then the
-     * semantic phase embeds the query and merges cosine-ranked results
-     * over them. Both phases capture `searchToken` before awaiting and
-     * drop their results when a newer keystroke has superseded them, so
-     * a slow phase never clobbers newer results or leaves stale loading
-     * flags behind.
+     * Two-phase search for the current input value. The keyword phase
+     * runs first and uses only the index, so results appear instantly.
+     * The semantic phase then embeds the query and merges cosine-ranked
+     * results over them. Both phases capture `searchToken` before
+     * awaiting and drop their results when a newer keystroke has
+     * superseded them, so a slow phase never clobbers newer results or
+     * leaves stale loading flags behind.
      */
     async function runSearch() {
         var q = input.value.trim();
@@ -245,8 +246,8 @@
         if (!q) {
             results = [];
             // The token bump above invalidates any in-flight run, whose
-            // finally blocks then skip clearing their own loading flags —
-            // clear both here so the status line drops immediately.
+            // finally blocks then skip clearing their own loading flags.
+            // Clear both here so the status line drops immediately.
             keywordLoading = false;
             semanticLoading = false;
             renderResults();
@@ -296,7 +297,7 @@
             var out = await extractor(q, { pooling: "mean", normalize: true });
             // A newer keystroke superseded this invocation while the model
             // was embedding; its results are stale, so leave the newer
-            // keyword results (and any newer semantic pass) in place.
+            // keyword results and any newer semantic pass in place.
             if (token !== searchToken) return;
             var qvec = Array.from(out.tolist()[0]);
             var semantic = index
@@ -348,7 +349,7 @@
         if (!statusEl) return;
         var anyLoading = keywordLoading || semanticLoading;
         var text = "";
-        if (semanticError) text = "Semantic unavailable — keyword results only";
+        if (semanticError) text = "Semantic unavailable, keyword results only";
         else if (semanticLoading) text = "Warming up semantic search…";
         else if (keywordLoading) text = "Searching…";
         else if (input && input.value.trim() && semanticReady && results.length)
@@ -489,7 +490,7 @@
         input = document.createElement("input");
         input.type = "text";
         input.className = "as-input";
-        input.placeholder = "Search the docs\u2026 (try \u201chow do I authenticate\u201d)";
+        input.placeholder = "Search the docs\u2026 (try 'how do I authenticate')";
         input.setAttribute("aria-label", "Search docs");
         input.autocomplete = "off";
         input.spellcheck = false;
@@ -556,7 +557,7 @@
         // appear instantly), so it loads first; the model warms up only after
         // the index is ready, so its large download can't starve the index
         // fetch on a slow connection and leave the input unable to show
-        // keyword results. The model is browser-cached after first load.
+        // keyword results. The browser caches the model after first load.
         (async function () {
             await loadIndex();
             loadModel();

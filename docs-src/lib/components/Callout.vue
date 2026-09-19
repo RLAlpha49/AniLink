@@ -2,8 +2,8 @@
 /**
  * Callout box shared by all redesigns.
  *
- * Three semantic kinds (note / caution / provider) with an optional
- * label override. Styling comes entirely from redesign CSS variables.
+ * The callout has three semantic kinds: note, caution, and provider, with
+ * an optional label override. All styling comes from redesign CSS variables.
  */
 import { Info, Layers, TriangleAlert } from "@lucide/vue";
 

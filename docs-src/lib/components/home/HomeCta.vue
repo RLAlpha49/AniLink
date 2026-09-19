@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Closing call-to-action — install the package and start reading. Section
+ * Closing call-to-action: install the package and start reading. Section
  * component of the Home composition.
  */
 import { withBase } from "vitepress";

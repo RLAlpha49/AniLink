@@ -1,14 +1,14 @@
 ---
 title: Complete examples
-description: "Flagship AniList operations with every variable filled out."
+description: "The largest AniList operations with every variable filled out."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # Complete examples
 
-The flagship operations with **every** variable filled out — the full surface at a glance. Every property below is optional unless the type says otherwise, so real calls pass only what they need.
+The largest operations with every variable filled out. Every property below is optional unless the type says otherwise, so real calls pass only what they need.
 
-## query.media — all 70 variables
+## query.media: all 70 variables
 
 ```typescript
 await aniLink.anilist.query.media({
@@ -85,7 +85,7 @@ await aniLink.anilist.query.media({
 });
 ```
 
-## query.mediaListCollection — all 24 variables
+## query.mediaListCollection: all 24 variables
 
 ```typescript
 await aniLink.anilist.query.mediaListCollection({
@@ -115,7 +115,7 @@ await aniLink.anilist.query.mediaListCollection({
 });
 ```
 
-## query.user — all 10 variables
+## query.user: all 10 variables
 
 ```typescript
 await aniLink.anilist.query.user({
@@ -132,7 +132,7 @@ await aniLink.anilist.query.user({
 });
 ```
 
-## mutation.saveMediaListEntry — all 16 variables
+## mutation.saveMediaListEntry: all 16 variables
 
 ```typescript
 await aniLink.anilist.mutation.saveMediaListEntry({
@@ -155,7 +155,7 @@ await aniLink.anilist.mutation.saveMediaListEntry({
 });
 ```
 
-## mutation.updateUser — all 16 variables
+## mutation.updateUser: all 16 variables
 
 ```typescript
 await aniLink.anilist.mutation.updateUser({
@@ -192,7 +192,7 @@ await aniLink.anilist.mutation.updateUser({
 });
 ```
 
-## query.page.medias — page + perPage plus the media filters
+## query.page.medias: page and perPage plus the media filters
 
 ```typescript
 await aniLink.anilist.query.page.medias({
@@ -206,7 +206,7 @@ await aniLink.anilist.query.page.medias({
 
 ## Selecting fields
 
-Field-aware single-entity queries — those whose signature lists a `fields` option — accept it to request only what you need; the return type narrows to your selection plus the always-selected keys:
+Field-aware single-entity queries, those whose signature lists a `fields` option, accept it to request only what you need; the return type narrows to your selection plus the always-selected keys:
 
 ```typescript
 const slim = await aniLink.anilist.query.media(

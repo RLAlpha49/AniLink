@@ -1,12 +1,12 @@
 <script setup lang="ts">
 /**
- * Code showcase — a representative typed call, syntax-highlighted with the
- * site's shared Shiki highlighter. Section component of the Home composition.
+ * Code sample: a representative typed call, syntax-highlighted with the
+ * site's shared Shiki highlighter. This component is one section of the Home page.
  *
- * The highlighter emits dual-theme HTML (light/dark) whose token colors are
- * mapped to the site palette by the global .shiki rules in base.css. The
- * highlighted HTML is populated on mount (client-side) with a plain `<pre>`
- * fallback for the SSR/initial paint so the panel is never empty.
+ * The highlighter emits dual-theme HTML (light/dark). The global .shiki rules
+ * in base.css map its token colors to the site palette. The component
+ * populates the highlighted HTML on mount (client-side). A plain `<pre>`
+ * fallback covers the SSR/initial paint so the panel is never empty.
  */
 import { onMounted, ref } from "vue";
 import { Terminal } from "@lucide/vue";
@@ -15,20 +15,20 @@ import { highlightTypeScript } from "../../useShikiHighlighter";
 const codeSource = [
     'import { AniLink } from "anilink-api-wrapper";',
     "",
-    "// One client, two isolated provider surfaces.",
+    "// One client, two isolated providers.",
     "const aniLink = new AniLink({",
     "    anilist: { authToken: process.env.ANILIST_TOKEN },",
     "    mal:     { accessToken: process.env.MAL_TOKEN },",
     "});",
     "",
-    "// AniList — typed GraphQL, no token needed for public reads.",
+    "// AniList: typed GraphQL, no token needed for public reads.",
     "const anime = await aniLink.anilist.query.media({",
     "    id: 21,",
     '    type: "ANIME",',
     "});",
-    'console.log(anime.media?.title?.romaji); // → "One Piece"',
+    'console.log(anime.media?.title?.romaji); // prints "One Piece"',
     "",
-    "// MyAnimeList — typed REST, public fields need no token.",
+    "// MyAnimeList: typed REST, public fields need no token.",
     "const mal = await aniLink.mal.anime.get({ id: 21 }, {",
     '    fields: ["id", "title", "main_picture"],',
     "});",
@@ -52,12 +52,13 @@ onMounted(() => {
     <section class="home-section home-code" aria-labelledby="home-code-title">
         <header class="home-section-head">
             <p class="home-section-kicker">
-                <Terminal :size="13" aria-hidden="true" /> One client, two surfaces
+                <Terminal :size="13" aria-hidden="true" /> One client, two providers
             </p>
             <h2 id="home-code-title" class="home-section-title">Typed from install to response</h2>
             <p class="home-section-lede">
-                Construct once with per-provider credentials. Each surface is fully typed —
-                variables in, responses out — and they never share a transport credential.
+                Construct once with per-provider credentials. Each API is fully typed, from the
+                variables you send to the responses you get back. The two providers never share a
+                transport credential.
             </p>
         </header>
 
@@ -93,7 +94,7 @@ onMounted(() => {
 
 <style scoped>
 /* ------------------------------------------------------------------ */
-/* CODE SHOWCASE                                                      */
+/* CODE SAMPLE                                                        */
 /* ------------------------------------------------------------------ */
 
 .home-code-panel {

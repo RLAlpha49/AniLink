@@ -1,34 +1,35 @@
 /**
  * Shared analytics-consent contract for the AniLink docs.
  *
- * Both docs surfaces (the VitePress site and the TypeDoc API reference) load
+ * Both docs sites (the VitePress site and the TypeDoc API reference) load
  * Google Analytics 4. GA4 cookies are not strictly necessary, so the site
  * defaults every consent signal to "denied" and only enables measurement
  * after the visitor accepts in the consent banner. The boot script below is
- * inlined into both surfaces at build time; it must stay dependency-free
+ * inlined into both sites at build time; it must stay dependency-free
  * and SSR-safe (it runs before the page hydrates).
  *
- * The boot script is the single implementation of the consent logic: it
+ * The boot script is the single implementation of the consent logic. It
  * defines a `window.__anilinkConsent` API (`accepted`, `needsChoice`, `set`)
- * that both surfaces call, so the VitePress bundle and the TypeDoc inline
+ * that both sites call, so the VitePress bundle and the TypeDoc inline
  * script cannot drift apart. The module functions below are thin wrappers
  * over that API.
  *
  * Advertising consent signals (`ad_storage`, `ad_user_data`,
- * `ad_personalization`) are permanently denied: the docs run no ads and
+ * `ad_personalization`) are permanently denied. The docs run no ads and
  * build no personalization profiles, so accepting grants analytics
  * measurement only.
  *
- * The gtag library is never fetched from Google until the visitor accepts;
- * declining or ignoring the banner makes no third-party analytics request
- * at all. A stored choice expires after 12 months, after which the banner
+ * The site never fetches the gtag library from Google until the visitor
+ * accepts; declining or ignoring the banner makes no third-party analytics
+ * request. A stored choice expires after 12 months, after which the banner
  * reappears and measurement stays off until the visitor chooses again.
  *
- * Plain JavaScript (no TypeScript syntax) so the VitePress config bundler
- * can import it and the TypeDoc plugin can extract the boot script as text.
+ * The file is plain JavaScript (no TypeScript syntax) so the VitePress
+ * config bundler can import it and the TypeDoc plugin can extract the boot
+ * script as text.
  */
 
-/** GA4 measurement ID — the single definition shared by every surface. */
+/** GA4 measurement ID: the single definition shared by every site. */
 export const GA_MEASUREMENT_ID = "G-E7DTXPFY3D";
 
 /** localStorage key holding the visitor's choice. */
@@ -38,19 +39,19 @@ export const CONSENT_STORAGE_KEY = "anilink-analytics-consent";
 export const CONSENT_EXPIRY_MS = 365 * 24 * 60 * 60 * 1000;
 
 /**
- * Inline boot script — the single implementation of the consent contract.
+ * Inline boot script: the single implementation of the consent contract.
  *
  * Defines `window.__anilinkConsent` (`accepted()`, `needsChoice()`,
  * `set(accepted)`) and runs the boot sequence: default every GA4 consent
- * signal to "denied", then — only if a fresh stored choice is "accepted" —
- * grant analytics, load the gtag library, and start measurement. Denying
+ * signal to "denied", then, only if a fresh stored choice is "accepted",
+ * grant analytics, load the gtag library, and start measurement. Declining
  * (or never answering) leaves measurement off: no cookies, no hits, and no
- * request to Google at all. Declining after an earlier acceptance also
- * deletes any `_ga` cookies consent no longer covers.
+ * request to Google. Declining after an earlier acceptance also
+ * deletes any `_ga` cookies that consent no longer covers.
  *
- * Stored format: `{"choice":"accepted"|"denied","at":<epoch ms>}`. A choice
- * older than the expiry is treated as unanswered, so the banner reappears
- * and measurement stays off until the visitor chooses again.
+ * Stored format: `{"choice":"accepted"|"denied","at":<epoch ms>}`. The
+ * script treats a choice older than the expiry as unanswered, so the banner
+ * reappears and measurement stays off until the visitor chooses again.
  */
 export const CONSENT_BOOT_SCRIPT = `(() => {
   function readChoice() {
@@ -78,7 +79,7 @@ export const CONSENT_BOOT_SCRIPT = `(() => {
         }
       }
     } catch (e) {
-      /* cookie access unavailable — nothing to clear */
+      /* Cookie access unavailable. Nothing to clear. */
     }
   }
   function loadGtagLibrary() {
@@ -95,7 +96,7 @@ export const CONSENT_BOOT_SCRIPT = `(() => {
         JSON.stringify({ choice: accepted ? "accepted" : "denied", at: Date.now() })
       );
     } catch (e) {
-      /* storage unavailable — nothing to persist */
+      /* Storage unavailable. Nothing to persist. */
     }
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(["consent", "update", {
@@ -134,7 +135,7 @@ export const CONSENT_BOOT_SCRIPT = `(() => {
       loadGtagLibrary();
     }
   } catch (e) {
-    /* storage unavailable — leave consent denied */
+    /* Storage unavailable. Leave consent denied. */
   }
 })();`;
 
@@ -151,8 +152,8 @@ export function consentAccepted() {
 
 /**
  * True when no valid stored choice exists (none, malformed, or expired).
- * SSR-safe: defaults to true — before the boot script has run (or during
- * SSR), no choice is known, so the banner shows and stays measurement-off.
+ * SSR-safe: defaults to true. Before the boot script has run (or during
+ * SSR), no choice is known, so the banner shows and measurement stays off.
  */
 export function consentChoiceNeeded() {
     return consentApi()?.needsChoice() ?? true;
@@ -163,8 +164,8 @@ export function consentChoiceNeeded() {
  * consent field, loads the gtag library, and (re)configures GA4; "denied"
  * revokes every field and clears existing analytics cookies.
  *
- * Delegates to the boot script's `window.__anilinkConsent` API — the same
- * implementation the TypeDoc banner calls — so both surfaces behave
+ * Delegates to the boot script's `window.__anilinkConsent` API, the same
+ * implementation the TypeDoc banner calls, so both sites behave
  * identically. No-op until the boot script has run.
  *
  * @param {boolean} accepted - The visitor's consent choice.

@@ -1,48 +1,48 @@
 ---
 title: Troubleshooting & FAQ
-description: "Symptom, cause, and fix rows grouped by provider: skim for what hurts — auth, rate limits, and common AniLink setup mistakes."
+description: "Symptom, cause, and fix rows grouped by provider. Covers auth, rate limits, and common AniLink setup mistakes."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # Troubleshooting & FAQ
 
-Symptom → cause → fix, labelled by provider. Skim for what hurts; the answer is probably here.
+Each row gives the symptom, the cause, and the fix, labelled by provider. Skim the headings for your symptom.
 
 ## 401 Unauthorized
 
-**AniList** — the token is missing, expired, or revoked. Mutations and viewer-scoped queries want a token; public queries do not. Fix: configure `refreshToken`, `clientId`, and `clientSecret` and the client refreshes automatically on `401` (one replay, no loop) — see [automatic refresh](/guides/anilist/authentication#_5-automatic-refresh). Otherwise re-run the [OAuth flow](/guides/anilist/authentication) and construct a new client with the fresh token. See the [token-refresh recipe](/recipes#background-token-refresh-loop).
+**AniList.** The token is missing, expired, or revoked. Mutations and viewer-scoped queries require a token; public queries do not. Configure `refreshToken`, `clientId`, and `clientSecret`. The client refreshes automatically on `401` (one replay, no loop). See [automatic refresh](/guides/anilist/authentication#_5-automatic-refresh). Otherwise re-run the [OAuth flow](/guides/anilist/authentication) and construct a new client with the fresh token. See the [token-refresh recipe](/recipes#background-token-refresh-loop).
 
-**MAL** — the access token expired, and MAL tokens are short-lived by design. Fix: configure `refreshToken` and `clientId` and the client refreshes automatically on `401` (one replay, no loop) — see [automatic refresh](/guides/mal/authentication#_4-automatic-refresh). Otherwise refresh with `refreshMalAccessToken` before expiry. See the [token-refresh recipe](/recipes#background-token-refresh-loop).
+**MAL.** The access token expired, and MAL tokens are short-lived by design. Configure `refreshToken` and `clientId`. The client refreshes automatically on `401` (one replay, no loop). See [automatic refresh](/guides/mal/authentication#_4-automatic-refresh). Otherwise refresh with `refreshMalAccessToken` before expiry. See the [token-refresh recipe](/recipes#background-token-refresh-loop).
 
 ## 429 Too Many Requests
 
-Both providers rate limit — that is their nature. AniLink's default retry policy already retries `429` with backoff and honors `Retry-After`. If a `429` still reaches you:
+Both providers rate limit. AniLink's default retry policy retries `429` with backoff and honors `Retry-After`. If you still see a `429`:
 
-- You disabled retries (`retry: false`) — re-enable or catch `AniLinkApiError` and check `error.rateLimit?.reset`.
-- Your volume is high — enable `paceWithRateLimit` so the client waits before hitting the limit.
+- You disabled retries (`retry: false`). Re-enable them, or catch `AniLinkApiError` and check `error.rateLimit?.reset`.
+- You send more requests than the rate limit allows. Enable `paceWithRateLimit` so the client waits before it reaches the limit.
 
 ## Timeouts
 
-`TIMEOUT_ERROR` means the request outlived `timeout` (default 30000 ms). Fix: raise `timeout` for slow endpoints, or pass a per-request `timeout`. `0` disables the timeout entirely — use with care.
+`TIMEOUT_ERROR` means the request took longer than `timeout` (default 30000 ms). Raise `timeout` for slow endpoints, or pass a per-request `timeout`. `0` disables the timeout, so a stalled request can hang indefinitely.
 
 ## Invalid fields (MAL)
 
-MAL answers `400` when `fields` contains a name it does not recognize. Field names are MAL's own — see the [MAL API v2 schema](https://myanimelist.net/apiconfig/references/api/v2). AniLink passes `fields` through verbatim, so the fix is on your side of the keyboard.
+MAL returns `400` when `fields` contains a name it does not recognize. MAL defines the valid field names. See the [MAL API v2 schema](https://myanimelist.net/apiconfig/references/api/v2). AniLink passes `fields` through verbatim, so you must fix the field names yourself.
 
 ## Missing provider credentials
 
-`AniLinkAuthError` with no request sent means the operation wanted a token that was never configured — calling `mal.user.me()` without `mal.accessToken`, say, or an AniList mutation without `authToken`. Fix: supply the credential in the correct provider slot.
+`AniLinkAuthError` with no request sent means the operation required a token you never configured. This happens when you call `mal.user.me()` without `mal.accessToken`, or run an AniList mutation without `authToken`. Supply the credential in the correct provider slot.
 
 ## Unexpected GraphQL envelope
 
-`anilist.custom()` unwraps single-root-field documents to the bare value and returns the full `{ data }` envelope for multi-root documents. Seeing an unexpected shape? Count your document's root fields. See [Custom queries](/guides/anilist/custom-queries).
+`anilist.custom()` unwraps single-root-field documents to the bare value and returns the full `{ data }` envelope for multi-root documents. If you see an unexpected shape, count your document's root fields. See [Custom queries](/guides/anilist/custom-queries).
 
 ## FAQ
 
-**Does one client share tokens between providers?** No. Credential slots are isolated — that is the whole design. See [Provider configuration](/provider-configuration).
+**Does one client share tokens between providers?** No. Each provider has its own credential slots. See [Provider configuration](/provider-configuration).
 
-**Are mutations retried?** Not by default. Opt in explicitly. See [Retries & resilience](/retries-and-resilience).
+**Does AniLink retry mutations?** Not by default. Opt in explicitly. See [Retries & resilience](/retries-and-resilience).
 
-**Does AniLink normalize AniList and MAL data?** No. Cross-provider mapping is your code's job — by design, not neglect.
+**Does AniLink normalize AniList and MAL data?** No. Cross-provider mapping is your code's job.
 
 **Where are exact types documented?** The [TypeDoc API reference](/typedoc/modules/AniLink.html). The [operation reference](/operations/index) links each operation to its TypeDoc page.

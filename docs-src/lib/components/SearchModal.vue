@@ -3,7 +3,7 @@
  * Modal shell for semantic search.
  *
  * Mounts `SemanticSearch` in a centered overlay with a backdrop. Opens via
- * `openModal()` (called from the navbar button) or the global `Cmd/Ctrl+K`
+ * `openModal()`, which the navbar button calls, or the global `Cmd/Ctrl+K`
  * and `/` keyboard shortcuts. Closes on Escape or backdrop click. On select,
  * performs a full navigation to the result URL.
  */
@@ -14,14 +14,14 @@ import SemanticSearch from "./SemanticSearch.vue";
 const router = useRouter();
 
 /**
- * Offset for the sticky header so scrolled-to headings are not hidden.
- * Mirrors HEADING_SCROLL_OFFSET in DocsLayout.vue so anchor targets land
+ * Offset for the sticky header so scrolled-to headings stay visible.
+ * Mirrors HEADING_SCROLL_OFFSET in DocsLayout.vue so anchor targets appear
  * at the same position whether reached via the TOC or via search.
  */
 const HEADING_SCROLL_OFFSET = 80;
 
 const open = ref(false);
-/** Panel element — the focus-trap boundary. */
+/** The panel element is the focus-trap boundary. */
 const panelRef = ref<HTMLElement | null>(null);
 /** Element to restore focus to when the modal closes. */
 let lastFocused: HTMLElement | null = null;
@@ -54,7 +54,7 @@ function closeModal(): void {
 /**
  * Scroll an anchor target into view inside the reading column, offset for
  * the sticky header. Mirrors the container logic in DocsLayout.vue's
- * scrollToHeading: the docs layout scrolls `.docs-columns`, not the window.
+ * scrollToHeading. The docs layout scrolls `.docs-columns`, not the window.
  */
 function scrollToAnchor(hash: string): void {
     if (typeof window === "undefined") return;
@@ -79,26 +79,26 @@ function scrollToAnchor(hash: string): void {
 function onSelect(url: string): void {
     closeModal();
     if (typeof window === "undefined") return;
-    // Prefer the VitePress router: SPA navigation keeps the page (and the
+    // Prefer the VitePress router. SPA navigation keeps the page (and the
     // already-loaded transformers model) alive instead of a full reload.
-    // The router is only meaningful in the browser; under SSR there is no
+    // The router is only meaningful in the browser. Under SSR there is no
     // history to push, so fall back to a full page assignment.
     if (router) {
         const hashIdx = url.indexOf("#");
         const path = hashIdx >= 0 ? url.slice(0, hashIdx) : url;
         const hash = hashIdx >= 0 ? url.slice(hashIdx) : "";
-        // Same-page anchor link (e.g. an operation anchor on the operations
-        // page): router.go() pushes the URL but does not scroll when the
-        // pathname is unchanged, so scroll the target manually.
+        // A same-page anchor link, such as an operation anchor on the
+        // operations page. router.go() pushes the URL but does not scroll
+        // when the pathname is unchanged, so scroll the target manually.
         if (hash && path === router.route.path) {
             void router.go(url).then(() => scrollToAnchor(hash));
         } else if (hash) {
-            // Cross-page anchor link (most results): the router's built-in
+            // Most results are cross-page anchor links. The router's built-in
             // hash scroll targets the window, but this layout scrolls
-            // `.docs-columns` (html/body are overflow:hidden), so the built-in
-            // scroll is a no-op here and the route watcher resets to the top.
-            // Navigate, then scroll the anchor manually once the new page has
-            // rendered.
+            // `.docs-columns` because html and body have overflow:hidden. The
+            // built-in scroll is a no-op here, and the route watcher resets to
+            // the top. Navigate, then scroll the anchor manually once the new
+            // page has rendered.
             void router.go(url).then(() => {
                 nextTick(() => {
                     requestAnimationFrame(() => scrollToAnchor(hash));
@@ -126,9 +126,9 @@ function isTyping(e: KeyboardEvent): boolean {
 }
 
 /**
- * Keep Tab focus inside the dialog (WCAG 2.1.2 / 2.4.3). Attached to the
- * overlay so the handler fires for every keydown that bubbles out of the
- * panel while the modal is open.
+ * Keep Tab focus inside the dialog (WCAG 2.1.2 and 2.4.3). The template
+ * attaches this handler to the overlay, so the handler fires for every
+ * keydown that bubbles out of the panel while the modal is open.
  */
 function trapFocus(e: KeyboardEvent): void {
     if (e.key !== "Tab") return;
@@ -167,7 +167,7 @@ function onKeydown(e: KeyboardEvent): void {
     }
 }
 
-// Lock body scroll while the modal is open so the page behind stays put.
+// Lock body scroll while the modal is open so the page behind does not scroll.
 watch(open, (isOpen) => {
     if (typeof document === "undefined") return;
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -248,7 +248,7 @@ defineExpose({ openModal });
     opacity: 0;
 }
 
-/* Panel rise + scale */
+/* Panel rise and scale */
 .ss-panel-enter-active {
     transition:
         opacity 0.22s ease,

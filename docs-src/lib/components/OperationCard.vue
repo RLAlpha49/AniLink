@@ -3,9 +3,9 @@
  * Operation reference card shared by all redesigns.
  *
  * Renders one generated operation: signature, request/response tables,
- * auth, errors, example, and links. Highlighting is applied on demand
- * via the shared Shiki highlighter; while pending, CodeBlock falls back
- * to a plain `<pre>` view so nothing flickers.
+ * auth, errors, example, and links. The shared Shiki highlighter
+ * applies highlighting on demand; until it resolves, CodeBlock falls
+ * back to a plain `<pre>` view so nothing flickers.
  */
 import { computed, ref, watchEffect } from "vue";
 import {
@@ -163,7 +163,7 @@ const errorsOpen = ref(false);
                 @click="responseOpen = !responseOpen"
             >
                 <ArrowUpRight :size="13" :stroke-width="2.25" aria-hidden="true" />
-                Response — <code>{{ op.responseType }}</code>
+                Response: <code>{{ op.responseType }}</code>
                 <ChevronDown class="op-chevron" :size="13" aria-hidden="true" />
             </button>
             <div class="op-collapsible-body">
@@ -206,7 +206,7 @@ const errorsOpen = ref(false);
             <div class="op-collapsible-body">
                 <ul class="op-errors">
                     <li v-for="err in op.errors" :key="err.error + err.condition">
-                        <code>{{ err.error }}</code> — {{ err.condition }}
+                        <code>{{ err.error }}:</code> {{ err.condition }}
                     </li>
                 </ul>
             </div>

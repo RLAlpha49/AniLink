@@ -1,6 +1,6 @@
 ---
 title: AniList custom operations
-description: "The flexible custom AniList GraphQL operation, including its request and response contract."
+description: "The custom AniList GraphQL operation, including its request and response contract."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
@@ -11,6 +11,6 @@ import { data as grouped } from "./custom.data.ts";
 
 # AniList custom operations
 
-The flexible custom AniList GraphQL operation, including its request and response contract.
+The custom AniList GraphQL operation, including its request and response contract.
 
 <OperationCatalog :grouped="grouped" />

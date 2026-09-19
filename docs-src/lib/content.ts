@@ -36,7 +36,7 @@ export const PAGES: DocPage[] = [
     {
         path: "/introduction",
         title: "Introduction",
-        summary: "What AniLink is, and when to reach for each provider.",
+        summary: "What AniLink is, and when to use each provider.",
         provider: "shared",
         section: "start",
     },
@@ -57,7 +57,7 @@ export const PAGES: DocPage[] = [
     {
         path: "/privacy",
         title: "Privacy",
-        summary: "What the docs site does — and does not do — with your data.",
+        summary: "What the docs site does, and does not do, with your data.",
         provider: "shared",
         section: "start",
     },
@@ -127,7 +127,7 @@ export const PAGES: DocPage[] = [
     {
         path: "/guides/anilist/authentication",
         title: "AniList authentication",
-        summary: "OAuth token setup for the GraphQL surface.",
+        summary: "OAuth token setup for the GraphQL API.",
         provider: "anilist",
         section: "anilist",
     },
@@ -155,7 +155,7 @@ export const PAGES: DocPage[] = [
     {
         path: "/guides/anilist/complete-examples",
         title: "Complete examples",
-        summary: "Flagship operations with every variable filled out.",
+        summary: "The largest operations with every variable filled out.",
         provider: "anilist",
         section: "anilist",
     },
@@ -211,7 +211,7 @@ export const PAGES: DocPage[] = [
     {
         path: "/guides/mal/operations",
         title: "MAL operations",
-        summary: "Anime and user endpoints on the REST surface.",
+        summary: "Anime and user endpoints on the REST API.",
         provider: "mal",
         section: "mal",
     },
@@ -260,7 +260,7 @@ export const PAGES: DocPage[] = [
             {
                 path: "/operations/anilist/custom",
                 title: "Custom operations",
-                summary: "Flexible custom GraphQL requests.",
+                summary: "GraphQL requests from documents you write yourself.",
                 provider: "anilist",
                 section: "reference",
             },
@@ -270,7 +270,7 @@ export const PAGES: DocPage[] = [
         path: "/operations/mal",
         title: "MAL catalog",
         summary:
-            "Anime and manga lookups, discovery reads, user-list reads, list-status writes, and user.me on the REST surface.",
+            "Anime and manga lookups, discovery reads, user-list reads, list-status writes, and user.me on the REST API.",
         provider: "mal",
         section: "reference",
         children: [

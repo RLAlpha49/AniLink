@@ -5,7 +5,7 @@ layout: .vitepress/theme/DocsLayout.vue
 ---
 
 <script setup>
-// The MAL catalog is a parent entry in the sidebar; clicking it lands on
+// The MAL catalog is a parent entry in the sidebar; clicking it opens
 // the first category (anime operations) rather than a separate landing page.
 if (typeof window !== "undefined") {
     window.location.replace("/operations/mal/anime");
@@ -14,4 +14,4 @@ if (typeof window !== "undefined") {
 
 # MyAnimeList operation catalog
 
-Redirecting to [Anime operations](/operations/mal/anime)…
+This page redirects to [Anime operations](/operations/mal/anime).

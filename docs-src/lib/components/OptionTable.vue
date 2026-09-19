@@ -47,7 +47,7 @@ defineProps<{ rows: OptionRow[]; showProvider?: boolean }>();
                     </td>
                     <td>
                         <code v-if="row.default">{{ row.default }}</code
-                        ><span v-else>—</span>
+                        ><span v-else>.</span>
                     </td>
                     <td>{{ row.description }}</td>
                 </tr>

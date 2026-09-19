@@ -3,16 +3,17 @@
  * Analytics consent banner for the AniLink docs.
  *
  * Shows at the bottom of the viewport until the visitor accepts or declines
- * analytics, and again once a stored choice has expired (12 months). The
- * choice is applied through the shared consent API (`../consent.mjs`, backed
- * by the boot script injected into <head>) — accepting grants GA4
- * measurement, declining keeps it off and clears any analytics cookies.
+ * analytics, and again once a stored choice has expired (12 months).
+ * The banner applies the choice through the shared consent API
+ * (`../consent.mjs`, backed by the boot script injected into <head>).
+ * Accepting grants GA4 measurement; declining keeps it off and clears any
+ * analytics cookies.
  * The GA4 boot script defaults every consent signal to "denied", so the
  * banner never gates measurement that has already started.
  *
- * A stored choice can always be changed: while it is valid (accepted or
- * declined, not yet expired), a small settings button in the bottom-right
- * corner reopens the banner so the visitor can choose again.
+ * A stored choice can always be changed. While it is valid, meaning
+ * accepted or declined and not yet expired, a small settings button in the
+ * bottom-right corner reopens the banner so the visitor can choose again.
  */
 import { onMounted, ref } from "vue";
 import { Cookie } from "@lucide/vue";
@@ -23,8 +24,9 @@ const settingsAvailable = ref(false);
 
 onMounted(() => {
     // Show only when no valid choice is stored: first visit, or the previous
-    // choice expired (12 months) and should be confirmed again. Otherwise the
-    // banner stays closed and the settings button lets the visitor reopen it.
+    // choice expired (12 months) and the visitor should confirm it again.
+    // Otherwise the banner stays closed and the settings button lets the
+    // visitor reopen it.
     if (consentChoiceNeeded()) {
         visible.value = true;
     } else {
@@ -57,7 +59,7 @@ function decline(): void {
         <Transition name="consent-slide">
             <div v-if="visible" class="consent-banner" role="region" aria-label="Analytics consent">
                 <p class="consent-text">
-                    This site uses Google Analytics to understand how the docs are used. See the
+                    This site uses Google Analytics to understand how visitors use the docs. See the
                     <a href="/privacy">privacy page</a> for details.
                 </p>
                 <div class="consent-actions">
@@ -139,8 +141,9 @@ function decline(): void {
     color: var(--rd-bg);
 }
 
-/* Reopen control shown while a valid choice is stored and the banner is
- * closed; sits below the search modal so it never floats above an overlay. */
+/* The reopen control appears while a valid choice is stored and the banner
+ * is closed. It sits below the search modal so it never renders above an
+ * overlay. */
 .consent-settings {
     position: fixed;
     bottom: 1rem;

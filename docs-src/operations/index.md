@@ -1,16 +1,16 @@
 ---
 title: Operation reference
-description: "The generated per-operation catalog of every public AniLink operation across both providers, produced from source metadata so it cannot drift from the code."
+description: "The per-operation catalog of every public AniLink operation across both providers, generated from source metadata so it cannot drift from the code."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # Operation reference
 
-The operation reference is a generated, per-operation catalog of every public AniLink operation across both providers. It is produced from source metadata by `scripts/generate-operation-reference.ts` during `npm run docs:generate`, so it cannot drift from the code — regenerate the docs and the catalog follows the source, always.
+The operation reference is a generated, per-operation catalog of every public AniLink operation across both providers. `scripts/generate-operation-reference.ts` generates it from source metadata during `npm run docs:generate`, so it cannot drift from the code. Regenerate the docs and the catalog follows the source.
 
 ## What each operation page shows
 
-Every operation entry carries the same anatomy, so once you have read one, you have read them all:
+Every operation entry has the same sections:
 
 | Section   | Contents                                                                                                           |
 | --------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -24,11 +24,5 @@ Every operation entry carries the same anatomy, so once you have read one, you h
 
 ## Catalogs
 
-- <Icon name="ArrowRight" :size="14" /> [AniList operation catalog](/operations/anilist/query) — choose from [queries](/operations/anilist/query), [page queries](/operations/anilist/page), [mutations](/operations/anilist/mutation), and [`custom()`](/operations/anilist/custom).
-- <Icon name="ArrowRight" :size="14" /> [MyAnimeList operation catalog](/operations/mal/anime) — choose from [anime](/operations/mal/anime), [manga](/operations/mal/manga), [user](/operations/mal/user), and [forum](/operations/mal/forum) operations.
-
-## Relationship to the other surfaces
-
-- <Icon name="ArrowRight" :size="14" /> **Guides** teach concepts and workflows and link here for per-operation detail.
-- <Icon name="ArrowRight" :size="14" /> **TypeDoc** (the [API reference](/typedoc/modules/AniLink.html)) states the exact contract-level types. The operation reference links to it for full response shapes.
-- <Icon name="ArrowRight" :size="14" /> The former interactive Explorer was retired in favor of this catalog — it listed operations but never documented request/response anatomy, and this does both.
+- <Icon name="ArrowRight" :size="14" /> [AniList operation catalog](/operations/anilist/query) covers [queries](/operations/anilist/query), [page queries](/operations/anilist/page), [mutations](/operations/anilist/mutation), and [`custom()`](/operations/anilist/custom).
+- <Icon name="ArrowRight" :size="14" /> [MyAnimeList operation catalog](/operations/mal/anime) covers [anime](/operations/mal/anime), [manga](/operations/mal/manga), [user](/operations/mal/user), and [forum](/operations/mal/forum) operations.

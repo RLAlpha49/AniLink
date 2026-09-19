@@ -1,9 +1,9 @@
 /**
  * Shared Shiki highlighter for the redesign themes.
  *
- * Each redesign ships its own token palette; the highlighter emits both
- * light and dark dual-theme variables and the redesign CSS maps them to
- * its own palette, so one highlighter serves all five skins.
+ * Each redesign ships its own token palette. The highlighter emits light
+ * and dark dual-theme variables. The redesign CSS maps them to its own
+ * palette, so one highlighter covers all five skins.
  */
 import { createHighlighterCore, type HighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
@@ -13,13 +13,13 @@ import typescript from "shiki/langs/typescript.mjs";
 import bash from "shiki/langs/bash.mjs";
 import json from "shiki/langs/json.mjs";
 
-/** Module-scoped promise so a single highlighter is shared by every consumer. */
+/** The promise is module-scoped, so every consumer shares a single highlighter. */
 let highlighterPromise: Promise<HighlighterCore> | undefined;
 
 /**
  * Lazily create and return the shared Shiki highlighter.
  *
- * @returns The shared highlighter; the creation promise is memoized, so
+ * @returns The shared highlighter. The creation promise is memoized, so
  * concurrent callers all await the same instance.
  */
 export function getSharedHighlighter(): Promise<HighlighterCore> {
@@ -34,13 +34,13 @@ export function getSharedHighlighter(): Promise<HighlighterCore> {
 }
 
 /**
- * Highlight a TypeScript source string, reusing the shared highlighter.
+ * Highlight a TypeScript source string with the shared highlighter.
  *
  * Returns an empty string for empty input so the caller can render the
  * raw source as a fallback without a separate conditional.
  *
  * @param source TypeScript source to highlight.
- * @returns Dual-theme (light/dark) HTML, or an empty string for empty input.
+ * @returns Light and dark dual-theme HTML, or an empty string for empty input.
  */
 export async function highlightTypeScript(source: string): Promise<string> {
     if (!source) return "";

@@ -3,13 +3,13 @@
  * Renders a Mermaid diagram from a fenced code block.
  *
  * Mermaid is a devDependency, so this component imports it lazily and renders
- * client-side. It honors the active light/dark theme by re-running whenever the
+ * client-side. It follows the active light/dark theme by re-running whenever the
  * `dark` class on `<html>` changes. Registered globally in the theme so it can
  * be used from Markdown as `<Mermaid>` with a `:code` prop, or wrapped by a
  * small Markdown shim that passes the fenced body through.
  *
  * A toolbar button opens the rendered SVG in a full-screen overlay where the
- * user can zoom (wheel or buttons) and pan (drag) freely. The overlay closes
+ * user can zoom (wheel or buttons) and pan (drag). The overlay closes
  * on Escape, backdrop click, or its close button.
  */
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
@@ -33,8 +33,8 @@ function isDark(): boolean {
 /**
  * Render the diagram source with a lazily imported Mermaid, themed for
  * the active light/dark mode. A malformed diagram falls back to the
- * escaped raw source in a `<pre>` so the page never shows a blank hole;
- * the label contrast fixup runs on the next frame once the SVG is in
+ * escaped raw source in a `<pre>` so the page never shows a blank hole.
+ * The label contrast fixup runs on the next frame once the SVG is in
  * the DOM.
  */
 async function render(): Promise<void> {
@@ -61,8 +61,8 @@ async function render(): Promise<void> {
  * Walk every node in the rendered SVG and set its label text color to a
  * dark or light value based on the luminance of the node's actual fill.
  * This keeps text readable regardless of which Mermaid theme is active or
- * how classDef fills were inverted, because it reads the computed fill at
- * runtime rather than assuming a fixed palette.
+ * how classDef fills were inverted. It reads the computed fill at runtime
+ * rather than assuming a fixed palette.
  */
 function applyReadableContrast(): void {
     if (typeof document === "undefined" || !container.value) return;
@@ -112,7 +112,7 @@ let renderCounter = 0;
 
 onMounted(() => {
     render();
-    // Re-render when the theme flips, since Mermaid bakes colors into the SVG.
+    // Re-render when the theme changes, since Mermaid hardcodes colors into the SVG.
     if (typeof MutationObserver !== "undefined" && typeof document !== "undefined") {
         observer = new MutationObserver(() => render());
         observer.observe(document.documentElement, {
@@ -135,7 +135,7 @@ watch(() => props.code, render);
 // --- Zoom / pan overlay -------------------------------------------------
 
 const overlayOpen = ref(false);
-/** Overlay element — focus-trap boundary for the dialog. */
+/** Overlay element: focus-trap boundary for the dialog. */
 const overlayRef = ref<HTMLElement | null>(null);
 /** Element to restore focus to when the overlay closes. */
 let lastFocused: HTMLElement | null = null;
@@ -162,7 +162,7 @@ function openOverlay(): void {
     if (typeof window !== "undefined") {
         window.addEventListener("keydown", onOverlayKeydown);
     }
-    // Move focus into the dialog so screen-reader and keyboard users land on
+    // Move focus into the dialog so screen-reader and keyboard users start at
     // the overlay controls instead of staying on the trigger.
     nextTick(() => {
         if (typeof document === "undefined") return;
@@ -177,7 +177,7 @@ function closeOverlay(): void {
     if (typeof window !== "undefined") {
         window.removeEventListener("keydown", onOverlayKeydown);
     }
-    // Hand focus back to the Expand trigger.
+    // Return focus to the Expand trigger.
     lastFocused?.focus();
     lastFocused = null;
 }
@@ -192,7 +192,7 @@ function onOverlayKeydown(e: KeyboardEvent): void {
 
 /**
  * Keep Tab focus inside the overlay dialog (WCAG 2.1.2 / 2.4.3). The only
- * tabbable controls live in the toolbar, so the cycle wraps within it.
+ * tabbable controls are in the toolbar, so the cycle wraps within it.
  */
 function trapOverlayFocus(e: KeyboardEvent): void {
     const root = overlayRef.value;
@@ -218,7 +218,7 @@ function trapOverlayFocus(e: KeyboardEvent): void {
 
 function onWheel(e: WheelEvent): void {
     e.preventDefault();
-    // Zoom toward the cursor: keep the point under the pointer stationary.
+    // Zoom toward the cursor and keep the point under the pointer stationary.
     const stage = e.currentTarget as HTMLDivElement;
     const rect = stage.getBoundingClientRect();
     const px = e.clientX - rect.left - rect.width / 2;

@@ -40,7 +40,7 @@ export default {
 // Re-export so VitePress's virtual module resolution finds the default export.
 export { DocsLayout };
 
-// SSR-safe app creation helper required by VitePress custom themes.
+// VitePress custom themes require an SSR-safe app creation helper.
 export function createApp(): App {
     return createSSRApp(DocsLayout);
 }

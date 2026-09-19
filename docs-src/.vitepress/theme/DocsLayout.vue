@@ -109,7 +109,7 @@ watch(
     }
 );
 
-/** Offset for the sticky header so scrolled-to headings are not hidden. */
+/** Offset for the sticky header so it does not hide scrolled-to headings. */
 const HEADING_SCROLL_OFFSET = 80;
 
 /** Smoothly scroll a heading into view inside the reading column. */
@@ -274,8 +274,9 @@ function scheduleMeasure(): void {
 }
 
 /**
- * Vertical position and height of the TOC viewport marker. It represents the
- * same percentage of the document that is currently visible in the reader.
+ * Vertical position and height of the TOC viewport marker. It spans the same
+ * percentage of the TOC as the portion of the document currently visible in
+ * the reading column.
  */
 const indicatorStyle = computed<Record<string, string>>(() => {
     const tops = entryTops.value;
@@ -292,9 +293,9 @@ const indicatorStyle = computed<Record<string, string>>(() => {
 
 /**
  * Translate the TOC list so it scrolls in sync with the page like a minimap.
- * The on-screen region of the page stays in view in the TOC: when the TOC is
+ * The on-screen region of the page stays in view in the TOC. When the TOC is
  * taller than its own viewport, the list shifts proportionally to the page's
- * scroll progress so the currently visible entries track the page.
+ * scroll progress.
  */
 const tocListStyle = computed<Record<string, string>>(() => {
     const list = tocList.value;
@@ -341,7 +342,7 @@ const showToc = computed(() => tocHeaders.value.length > 0 && !isLanding.value);
 
 /* Reflect the active heading in the URL hash as the reader scrolls, so the
    address bar and the on-screen section stay in sync. Skipped on landing and
-   when no heading is active (e.g. at the very top). */
+   when no heading is active (e.g. at the top). */
 watch(activeHeadingId, (id) => {
     if (typeof window === "undefined" || typeof history === "undefined") return;
     if (!id || isLanding.value) return;
@@ -586,7 +587,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                     </nav>
 
                     <footer class="docs-foot">
-                        <p>AniLink — typed AniList & MyAnimeList client for TypeScript.</p>
+                        <p>AniLink, typed AniList & MyAnimeList client for TypeScript.</p>
                     </footer>
                 </main>
 
@@ -624,7 +625,7 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
 
 <style scoped>
 /* ------------------------------------------------------------------ */
-/* Theme tokens — light (Sumi, 墨) and dark (Yoru, 夜)                */
+/* Theme tokens: light (Sumi, 墨) and dark (Yoru, 夜)                 */
 /* ------------------------------------------------------------------ */
 
 .docs {
@@ -1359,7 +1360,7 @@ html.dark .docs :deep(.provider-tabs .tab-btn--mal.active) {
     margin: 0 0 0.4rem;
 }
 
-/* Collapsible request/response blocks: collapsed by default. */
+/* Collapsible request/response blocks start collapsed. */
 .docs :deep(.op-collapsible .op-toggle) {
     width: 100%;
     margin: 0 0 0;

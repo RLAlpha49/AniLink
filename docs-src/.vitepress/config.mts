@@ -17,7 +17,7 @@ const SITE_URL = "https://anilink.alpha49.com";
 const DEFAULT_SITE_DESCRIPTION =
     "AniLink is the TypeScript docs and reference for AniList and MyAnimeList integrations, including authentication, paging, GraphQL queries, and API patterns.";
 
-const SOCIAL_CARD_ALT = "AniLink — typed AniList and MyAnimeList client for TypeScript";
+const SOCIAL_CARD_ALT = "AniLink, typed AniList and MyAnimeList client for TypeScript";
 
 if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
     throw new Error(`Missing valid version in ${packageJsonPath}`);
@@ -58,13 +58,13 @@ function pageDescriptionFor(title: string | undefined, relativePath: string | un
     const baseTitle = title?.trim() || "AniLink documentation";
     const context = describeRouteContext(route);
 
-    return `${baseTitle} — AniLink ${context} for TypeScript. Learn the patterns, client setup, and API usage needed to integrate AniList and MyAnimeList reliably.`;
+    return `${baseTitle}, AniLink ${context} for TypeScript. Learn the patterns, client setup, and API usage needed to integrate AniList and MyAnimeList.`;
 }
 
 /**
- * Social-card image for a route context. The branded cards are generated
- * by `scripts/generate-social-cards.ts`; the default card is a designed
- * asset committed at `docs-src/public/social-card.png`.
+ * Social-card image for a route context. `scripts/generate-social-cards.ts`
+ * generates the branded cards; the default card is a designed asset
+ * committed at `docs-src/public/social-card.png`.
  */
 function socialCardFor(context: string): string {
     if (context === "AniList") return `${SITE_URL}/social-card-anilist.png`;
@@ -73,12 +73,12 @@ function socialCardFor(context: string): string {
     return `${SITE_URL}/social-card.png`;
 }
 
-/** Alt text naming the surface the selected card brands. */
+/** Alt text naming the docs area the selected card brands. */
 function socialCardAltFor(context: string): string {
-    if (context === "AniList") return "AniLink — typed AniList GraphQL client for TypeScript";
-    if (context === "MyAnimeList") return "AniLink — typed MyAnimeList REST client for TypeScript";
+    if (context === "AniList") return "AniLink, typed AniList GraphQL client for TypeScript";
+    if (context === "MyAnimeList") return "AniLink, typed MyAnimeList REST client for TypeScript";
     if (context === "operation reference") {
-        return "AniLink — AniList and MyAnimeList operation reference";
+        return "AniLink, AniList and MyAnimeList operation reference";
     }
     return SOCIAL_CARD_ALT;
 }
@@ -110,7 +110,7 @@ function pageForRoute(route: string): DocPage | undefined {
  * exists as a real page in the content model, and the current page. Guide
  * sections are flat (no intermediate pages), so their trails are two levels;
  * nested operation pages carry the full section chain. Navigation-group
- * titles are not used as crumbs: only the operation-reference group has a
+ * titles are not used as crumbs. Only the operation-reference group has a
  * real landing page, and that page already appears as an ancestor.
  */
 function breadcrumbFor(route: string): BreadcrumbItem[] | undefined {
@@ -163,19 +163,19 @@ function sourceFileForSitemapUrl(url: string): string | null {
 }
 
 /**
- * File → last-commit-date map for every docs-src page, built with one git
+ * File-to-last-commit-date map for every docs-src page, built with one git
  * process. `git log --name-only` walks history newest-first; the first
  * (newest) commit touching each file wins. Files with no history (new,
  * uncommitted pages) are absent from the map.
  *
  * Returns an empty map when git is unavailable or the build runs outside a
- * repository — callers then omit lastmod rather than guessing.
+ * repository. Callers then omit lastmod rather than guessing.
  */
 function gitLastmodMap(): Map<string, string> {
     const map = new Map<string, string>();
     try {
-        // One process for the whole tree instead of one per sitemap URL
-        // (a per-URL spawn cost ~0.5s each on Windows, ~15s per build).
+        // Use one process for the whole tree instead of one per sitemap URL
+        // (a per-URL spawn cost of ~0.5s each on Windows, ~15s per build).
         const output = execFileSync(
             "git",
             ["log", "--format=%cI", "--name-only", "--", "docs-src"],
@@ -205,18 +205,18 @@ function gitLastmodMap(): Map<string, string> {
             }
         }
     } catch {
-        // No git, shallow history, or not a repo: leave the map empty.
+        // No git, shallow history, or not a repo. Leave the map empty.
     }
     return map;
 }
 
 /**
- * Last-modified timestamp for a sitemap URL, as an ISO 8601 string — or
+ * Last-modified timestamp for a sitemap URL, as an ISO 8601 string, or
  * undefined to omit the field.
  *
  * Uses the file's last git commit date. When the date cannot be resolved
  * (uncommitted page, no git history, git unavailable), the lastmod field is
- * omitted rather than stamped with the build time: a sitemap whose every
+ * omitted rather than stamped with the build time. A sitemap whose every
  * entry says "modified just now" on each deploy teaches crawlers to ignore
  * the field. The sitemap spec allows omission.
  */
@@ -231,19 +231,19 @@ function lastmodForSitemapUrl(url: string, gitDates: Map<string, string>): strin
  * VitePress dev server under `/typedoc/...`.
  *
  * In production the built site (`../docs`) is served statically, so the
- * TypeDoc pages live alongside the VitePress output and Just Work. In dev,
- * VitePress serves from `docs-src/` (the `srcDir`), which does not contain
- * the TypeDoc output, so `/typedoc/...` requests fall through to the SPA
- * `index.html` fallback and render the VitePress 404. This middleware
- * mirrors the production layout during `vitepress dev`.
+ * TypeDoc pages live alongside the VitePress output and need no middleware.
+ * In dev, VitePress serves from `docs-src/` (the `srcDir`), which does not
+ * contain the TypeDoc output, so `/typedoc/...` requests fall through to
+ * the SPA `index.html` fallback and render the VitePress 404. This
+ * middleware mirrors the production layout during `vitepress dev`.
  *
- * It also handles the clean-URL form: because `cleanUrls` is enabled, the
+ * It also handles the clean-URL form. Because `cleanUrls` is enabled, the
  * browser may request `/typedoc/classes/AniLink.AniLink` (no `.html`); the
  * middleware rewrites that to the on-disk `.html` file, matching how
  * GitHub Pages serves clean URLs.
  */
 function serveTypedoc(): Plugin {
-    // `../docs/typedoc` relative to this config file.
+    // `../docs/typedoc` is relative to this config file.
     const configDir = dirname(fileURLToPath(import.meta.url));
     const typedocRoot = normalize(join(configDir, "..", "..", "docs", "typedoc"));
 
@@ -282,8 +282,8 @@ function serveTypedoc(): Plugin {
             return candidate;
         }
 
-        // Clean-URL fallback: `/foo/bar` -> `/foo/bar.html`. TypeDoc page names
-        // contain dots (e.g. `AniLink.AniLink`), so checking `extname` is
+        // Clean-URL fallback: `/foo/bar` maps to `/foo/bar.html`. TypeDoc page
+        // names contain dots (e.g. `AniLink.AniLink`), so checking `extname` is
         // unreliable; only skip when the path already ends in `.html`.
         if (!decoded.endsWith(".html")) {
             const withHtml = candidate + ".html";
@@ -292,7 +292,7 @@ function serveTypedoc(): Plugin {
             }
         }
 
-        // Directory index: `/foo/` -> `/foo/index.html`.
+        // Directory index: `/foo/` maps to `/foo/index.html`.
         if (decoded.endsWith("/")) {
             const index = join(candidate, "index.html");
             if (existsSync(index) && statSync(index).isFile()) {

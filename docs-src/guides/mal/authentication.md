@@ -14,7 +14,7 @@ MAL uses OAuth2 with PKCE. First, register an application at the [MAL API panel]
 
 ## 1. Build the authorization URL
 
-The library provides `buildMalAuthorizationUrl` but no PKCE generator — the
+The library provides `buildMalAuthorizationUrl` but no PKCE generator. The
 verifier and challenge are yours to create. MAL's authorization server
 supports only the `plain` PKCE method, so the challenge is the verifier
 itself:
@@ -23,7 +23,7 @@ itself:
 import { randomBytes } from "node:crypto";
 import { buildMalAuthorizationUrl } from "anilink-api-wrapper";
 
-// Random 32 bytes -> 43-char base64url string (MAL allows 43-128 chars).
+// 32 random bytes produce a 43-char base64url string. MAL allows 43-128 chars.
 const codeVerifier = randomBytes(32).toString("base64url");
 
 // Plain challenge: identical to the verifier.
@@ -34,13 +34,13 @@ const authorizeUrl = buildMalAuthorizationUrl("mal-client-id", codeChallenge, "c
 ```
 
 Keep the `codeVerifier` for step 2. Under the `plain` method the challenge is
-the verifier itself, so the verifier does travel in the authorization URL —
-treat the URL as sensitive and do not log or share it. The verifier is sent
-again when the code is exchanged for a token. In a browser environment, use
+the verifier itself, so the verifier appears in the authorization URL.
+Treat the URL as sensitive and do not log or share it. The token exchange
+sends the verifier again. In a browser environment, use
 `crypto.getRandomValues` for the verifier bytes and base64url-encode them
 yourself.
 
-`buildMalAuthorizationUrl(clientId, codeChallenge, state?)` takes the plain code challenge (the verifier itself). The optional `state` is your CSRF protection — validate it on the redirect before exchanging the code.
+`buildMalAuthorizationUrl(clientId, codeChallenge, state?)` takes the plain code challenge, the verifier itself. The optional `state` is your CSRF protection. Validate it on the redirect before exchanging the code.
 
 ## 2. Exchange the code
 
@@ -79,11 +79,11 @@ if (Date.now() >= getMalTokenExpiry(token).getTime() - 60_000) {
 }
 ```
 
-`getMalTokenExpiry(response, now?)` computes the absolute expiry from `expires_in`. The refresh response may omit `refresh_token` — keep the stored one when it does (rotation semantics).
+`getMalTokenExpiry(response, now?)` computes the absolute expiry from `expires_in`. The refresh response may omit `refresh_token`. Keep the stored one when it does, per rotation semantics.
 
 ## 4. Automatic refresh
 
-Steps 1–3 leave the refresh chore to you. Configure `refreshToken` and `clientId` and the client takes over: when any MAL request fails with a `401`, the client exchanges the stored refresh token for a fresh access token, swaps the stored auth material, and replays the original request once — automatically.
+Steps 1 to 3 leave the refresh work to you. Configure `refreshToken` and `clientId`, and the client handles the refresh. When any MAL request fails with a `401`, the client exchanges the stored refresh token for a fresh access token, stores the new pair, and replays the original request once.
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -95,27 +95,27 @@ const aniLink = new AniLink({
         clientId: "mal-client-id",
         // clientSecret: "optional", // only for applications that use one
         onTokenRefresh: (response) => {
-            // Persist the new pair synchronously — see the warning below.
+            // Persist the new pair synchronously. See the warning below.
             token = { ...response, refresh_token: response.refresh_token ?? token.refresh_token };
         },
     },
 });
 ```
 
-The behavior, precisely:
+The behavior:
 
-- **Opt-in.** No `refreshToken` + `clientId`, no refresh path — a `401` surfaces immediately, exactly as before.
-- **Bootstrappable.** A client configured with only `refreshToken` + `clientId` (no `accessToken`) refreshes on the first auth-required call instead of failing — a persisted refresh token alone is enough to construct a working client.
-- **One replay.** The original request is retried exactly once with the new token. A replay that `401`s again surfaces that error — no retry loop.
+- **Opt-in.** Without `refreshToken` + `clientId`, there is no refresh path. The request fails with a `401` immediately, as before.
+- **Bootstrappable.** A client configured with only `refreshToken` + `clientId` but no `accessToken` refreshes on the first auth-required call instead of failing. A persisted refresh token alone is enough to construct a working client.
+- **One replay.** The client retries the original request exactly once with the new token. If the replayed request returns another `401`, your call rejects with that error. There is no retry loop.
 - **Deduplicated.** Concurrent `401`s trigger a single refresh call; every replay waits for the same new token.
-- **Rotation-safe.** A refresh response without `refresh_token` keeps the stored one (rotation semantics).
-- **Observable.** `onTokenRefresh` fires exactly once per refresh grant — concurrent `401`s share one grant and one callback — with the effective `MalTokenResponse`, so you can persist the new pair. A callback that throws is reported through `onHookError` (falling back to a console warning) and never aborts the replayed request.
-- **Failure event.** `onTokenRefreshError` fires exactly once per failed grant with the sanitized token-request error — the same error the failing call rejects with — so monitoring can distinguish "refresh recovered" from "refresh is broken" without parsing hook diagnostics. A callback that throws is reported through `onHookError` and never replaces the propagated error.
-- **Fail-fast.** A failed refresh surfaces the sanitized token-request error — the request is never replayed with the stale token.
+- **Rotation-safe.** A refresh response without `refresh_token` keeps the stored one, per rotation semantics.
+- **Observable.** `onTokenRefresh` fires exactly once per refresh grant with the effective `MalTokenResponse`, so you can persist the new pair. Concurrent `401`s share one grant and one callback. If the callback throws, the client reports it through `onHookError` and falls back to a console warning. It never aborts the replayed request.
+- **Failure event.** `onTokenRefreshError` fires exactly once per failed grant with the sanitized token-request error, the same error the failing call rejects with. Monitoring can distinguish "refresh recovered" from "refresh is broken" without parsing hook diagnostics. If the callback throws, the client reports it through `onHookError` and never replaces the propagated error.
+- **Fail-fast.** A failed refresh returns the sanitized token-request error. The client never replays the request with the stale token.
 
-The refresh grant runs on the same 10-second token-request timeout as `refreshMalAccessToken`. It is not governed by your MAL transport settings — your `timeout`, hooks, pacing, and retry policy do not apply to the token request. In particular, do not add `401` to `retryOnStatus`: the refresh lifecycle owns `401` handling, and a retry-configured `401` would multiply requests before the refresh ever runs.
+The refresh grant runs on the same 10-second token-request timeout as `refreshMalAccessToken`. Your MAL transport settings do not control it. Your `timeout`, hooks, pacing, and retry policy do not apply to the token request. In particular, do not add `401` to `retryOnStatus`. Automatic refresh handles `401` responses, and a retry-configured `401` would multiply requests before the refresh runs.
 
-**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. If the process exits — or the callback throws — between the refresh and your persistence write, the in-memory client works but your stored credentials are stale. When MAL rotates the refresh token, the stored one is then permanently invalid and automatic refresh cannot recover after a restart; manual re-authorization is the only fix.
+**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. If the process exits or the callback throws between the refresh and your persistence write, the in-memory client works but your stored credentials are stale. When MAL rotates the refresh token, the stored one is permanently invalid and automatic refresh cannot recover after a restart; manual re-authorization is the only fix.
 
 ## Constants and types
 
@@ -131,9 +131,9 @@ The refresh grant runs on the same 10-second token-request timeout as `refreshMa
 
 ## Safe state validation
 
-Generate a fresh random `state` per login attempt, store it server-side bound to the session, and compare with a timing-safe equality check before calling `getMalAccessToken`. Reject mismatches immediately — no exceptions.
+Generate a fresh random `state` per login attempt, store it server-side bound to the session, and compare with a timing-safe equality check before calling `getMalAccessToken`. Reject mismatches immediately.
 
 ## Next steps
 
-- <Icon name="ArrowRight" :size="14" /> [MAL client configuration](/guides/mal/configuration) — storing the tokens.
-- <Icon name="ArrowRight" :size="14" /> [MAL operations](/guides/mal/operations) — what the token unlocks.
+- <Icon name="ArrowRight" :size="14" /> [MAL client configuration](/guides/mal/configuration) covers storing the tokens.
+- <Icon name="ArrowRight" :size="14" /> [MAL operations](/guides/mal/operations) shows the API calls the token enables.

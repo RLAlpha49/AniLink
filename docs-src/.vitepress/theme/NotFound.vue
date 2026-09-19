@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// Custom 404 view for the AniLink docs. Rendered by DocsLayout for any
-// not-found route (page.isNotFound) and embedded in 404.md for the static
-// 404.html entry point. Theme tokens (--rd-*) are inherited from .docs.
+// Custom 404 view for the AniLink docs. DocsLayout renders it for any
+// not-found route (page.isNotFound), and 404.md embeds it for the static
+// 404.html entry point. It inherits the theme tokens (--rd-*) from .docs.
 import { withBase } from "vitepress";
 import { BookOpen, Home, Library, Rocket } from "@lucide/vue";
 </script>
@@ -11,8 +11,8 @@ import { BookOpen, Home, Library, Rocket } from "@lucide/vue";
         <p class="nf-code">404</p>
         <h1 class="nf-title">Page not found</h1>
         <p class="nf-message">
-            The page you were looking for has wandered off — or never existed in the first place.
-            Use one of the entry points below to get back on track.
+            The page you were looking for does not exist, or the link is broken. Use one of the
+            entry points below to keep reading.
         </p>
         <div class="nf-actions">
             <a class="nf-btn nf-btn--primary" :href="withBase('/')">

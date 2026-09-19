@@ -3,12 +3,12 @@
  * Editorial landing page for the AniLink documentation.
  *
  * Breaks out of the constrained reading column into a full-width, multi-section
- * composition that honors the Sumi (墨, ink) / Yoru (夜, night) aesthetic of the
+ * composition. It matches the Sumi (墨, ink) / Yoru (夜, night) aesthetic of the
  * rest of the site: Zen Old Mincho display type, vermillion/gold accents, paper
  * grain, and vertical Japanese text motifs. All content is static and SSR-safe.
  *
- * Thin composition: each section (hero, code showcase, features, provider
- * comparison, docs index, CTA) lives in its own component under home/, owning
+ * Thin composition: each section (hero, code sample, features, provider
+ * comparison, docs index, CTA) lives in its own component under home/ and owns
  * its data and scoped styles. This file owns the shared entrance animation
  * state and the section-level layout tokens the sections consume.
  */
@@ -21,13 +21,13 @@ import HomeDocsIndex from "./home/HomeDocsIndex.vue";
 import HomeCta from "./home/HomeCta.vue";
 
 /* ------------------------------------------------------------------ */
-/* Entrance animation — staggered reveal on mount, SSR-safe            */
+/* Entrance animation: staggered reveal on mount, SSR-safe            */
 /* ------------------------------------------------------------------ */
 
 const mounted = ref(false);
 
 onMounted(() => {
-    // Defer to next frame so the initial paint completes before transitions fire.
+    // Defer to the next frame so the initial paint completes before transitions fire.
     requestAnimationFrame(() => {
         mounted.value = true;
     });
@@ -55,7 +55,7 @@ const rootClass = computed(() => ({
 
 <style scoped>
 /* ================================================================== */
-/* Home — full-width editorial landing. Uses the DocsLayout tokens.   */
+/* Home: full-width editorial landing. Uses the DocsLayout tokens.    */
 /* ================================================================== */
 
 .home {
@@ -71,8 +71,8 @@ const rootClass = computed(() => ({
 }
 
 /* ------------------------------------------------------------------ */
-/* Entrance animation — staggered fade/rise. The `--ready` class is    */
-/* toggled one frame after mount so SSR markup paints first.          */
+/* Entrance animation: staggered fade/rise. The component toggles the */
+/* `--ready` class one frame after mount so SSR markup paints first.  */
 /* ------------------------------------------------------------------ */
 
 .home > section {
@@ -124,7 +124,7 @@ const rootClass = computed(() => ({
 }
 
 /* The section header and buttons render inside the section components,
-   so their shared skins use :deep() to reach past the child scope. */
+   so their shared styles use :deep() to reach past the child scope. */
 
 .home :deep(.home-section-head) {
     max-width: 46rem;
@@ -219,7 +219,7 @@ html.dark .home :deep(.home-btn--solid:hover) {
 }
 
 /* ------------------------------------------------------------------ */
-/* RESPONSIVE                                                         */
+/* Responsive                                                         */
 /* ------------------------------------------------------------------ */
 
 @media (max-width: 720px) {

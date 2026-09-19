@@ -8,7 +8,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 ## Constructor token
 
-Pass the token positionally or in the `anilist` credential slot — whichever reads better in your code:
+Pass the token positionally or in the `anilist` credential slot, whichever reads better in your code:
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -18,7 +18,7 @@ const aniLink = new AniLink("anilist-token");
 const aniLink2 = new AniLink({ anilist: { authToken: "anilist-token" } });
 ```
 
-Multiple instances can hold different tokens, and each exposes its own `anilist` surface. One per user, one per bot — your call.
+Multiple instances can hold different tokens, and each exposes its own `anilist` API. Use one instance per user or one per bot, whichever you prefer.
 
 ## Public versus authenticated operations
 
@@ -29,7 +29,7 @@ const aniLink = new AniLink();
 const anime = await aniLink.anilist.query.media({ id: 1, type: "ANIME" });
 ```
 
-Mutations and viewer-scoped queries (`viewer`, `notification`, list mutations) want a token. Call them without one and `AniLinkAuthError` is thrown.
+Mutations and viewer-scoped queries (`viewer`, `notification`, list mutations) require a token. Calling them without one throws `AniLinkAuthError`.
 
 ## OAuth2 authorization-code flow
 
@@ -49,7 +49,7 @@ const authorizeUrl = buildAuthorizationUrl("your-client-id", "https://example.co
 // Redirect the user to `authorizeUrl`.
 ```
 
-The third `state` parameter is optional but strongly recommended — it is your CSRF protection. Bind it to the user's session, and validate that the `state` on the redirect matches before exchanging the code.
+The third `state` parameter is optional but strongly recommended. It is your CSRF protection. Bind it to the user's session, and validate that the `state` on the redirect matches before exchanging the code.
 
 ### 2. Exchange the code for a token
 
@@ -84,7 +84,7 @@ const nextRefreshToken = rotated ?? refresh_token;
 
 ### 4. Refresh proactively
 
-AniList reports the token lifetime as `expires_in` seconds. Use `getTokenExpiry` to refresh before expiry — no need to wait for a `401` to learn the token is dead:
+AniList reports the token lifetime as `expires_in` seconds. Use `getTokenExpiry` to refresh before expiry, so you do not need to wait for a `401` to learn the token has expired:
 
 ```typescript
 import { getTokenExpiry, refreshAccessToken } from "anilink-api-wrapper";
@@ -100,7 +100,7 @@ if (Date.now() >= getTokenExpiry(tokenResponse).getTime() - 60_000) {
 
 ## 5. Automatic refresh
 
-Steps 1–4 leave the refresh chore to you. Configure `refreshToken`, `clientId`, and `clientSecret` and the client takes over: when any AniList request fails with a `401` (an HTTP-level 401, or a GraphQL envelope whose errors entry carries `status: 401`), the client exchanges the stored refresh token for a fresh access token, swaps the auth material, and replays the original request once — automatically.
+Steps 1 to 4 leave refreshing to you. Configure `refreshToken`, `clientId`, and `clientSecret`, and the client handles refreshing. When any AniList request fails with a `401` (an HTTP-level 401, or a GraphQL envelope whose errors entry carries `status: 401`), the client automatically exchanges the stored refresh token for a fresh access token. It updates its credentials and replays the original request once.
 
 ```typescript
 const aniLink = new AniLink({
@@ -114,20 +114,20 @@ const aniLink = new AniLink({
 });
 ```
 
-- **Opt-in.** Without the full set (`refreshToken`, `clientId`, and `clientSecret`), there is no refresh path — a `401` surfaces immediately, exactly as before. AniList's refresh grant requires the client secret, unlike MAL where it is optional, so the lifecycle stays off until all three fields are configured.
-- **Bootstrappable.** A client configured with only the refresh fields (no `authToken`) refreshes on the first auth-required call instead of failing — a persisted refresh token alone is enough to construct a working client.
-- **One replay, no loop.** A replay that fails again surfaces that error; there is no retry loop. Concurrent 401s share one refresh grant.
-- **Failure event.** `onTokenRefreshError` fires exactly once per failed grant with the sanitized token-request error — the same error the failing call rejects with — so monitoring can distinguish "refresh recovered" from "refresh is broken" without parsing hook diagnostics. A callback that throws is reported through `onHookError` and never replaces the propagated error.
-- **Per-call, not per-traversal.** Refresh applies per wrapped operation call. Pages already in flight under `paginate` with `concurrency > 1` that dispatched with the expired token fail independently; only the failing call itself triggers the grant and replay.
+- **Opt-in.** Without the full set (`refreshToken`, `clientId`, and `clientSecret`), the client never attempts a refresh. The call fails with a `401` immediately, exactly as before. AniList's refresh grant requires the client secret, unlike MAL where it is optional, so automatic refresh stays off until all three fields are configured.
+- **Bootstrappable.** A client configured with only the refresh fields (no `authToken`) refreshes on the first auth-required call instead of failing. A persisted refresh token alone is enough to construct a working client.
+- **One replay, no loop.** A replay that fails again rejects with that error; there is no retry loop. Concurrent 401s share one refresh grant.
+- **Failure event.** `onTokenRefreshError` fires exactly once per failed grant with the sanitized token-request error. The failing call rejects with the same error, so monitoring can distinguish "refresh recovered" from "refresh is broken" without parsing hook diagnostics. If the callback throws, the client reports that through `onHookError`; the throw never replaces the propagated error.
+- **Per-call, not per-traversal.** Refresh applies per wrapped operation call. Pages already in flight under `paginate` with `concurrency > 1` fail independently if they dispatched with the expired token. Only the failing call itself triggers the grant and replay.
 
-**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. If the process exits — or the callback throws — between the refresh and your persistence write, the in-memory client works but your stored credentials are stale. When AniList rotates the refresh token, the stored one is then permanently invalid and automatic refresh cannot recover after a restart; manual re-authorization is the only fix. The callback receives the effective token response — when AniList omits `refresh_token`, the stored one stays valid and the response carries it.
+**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. If the process exits or the callback throws between the refresh and your persistence write, the in-memory client works but your stored credentials are stale. When AniList rotates the refresh token, the stored one becomes permanently invalid. Automatic refresh cannot recover after a restart; manual re-authorization is the only fix. The callback receives the effective token response. When AniList omits `refresh_token`, the stored one stays valid and the response carries it.
 
 ## Constants and types
 
-`ANILIST_AUTHORIZE_URL` and `ANILIST_TOKEN_URL` expose the OAuth endpoints. `AniListTokenResponse` types the token payload (`access_token`, `token_type`, `expires_in`, `refresh_token`) — handy for your own storage layer.
+`ANILIST_AUTHORIZE_URL` and `ANILIST_TOKEN_URL` expose the OAuth endpoints. `AniListTokenResponse` types the token payload (`access_token`, `token_type`, `expires_in`, `refresh_token`), handy for your own storage layer.
 
 ## Next steps
 
-- <Icon name="ArrowRight" :size="14" /> [AniList client configuration](/guides/anilist/configuration) — transport settings for the authenticated client.
-- <Icon name="ArrowRight" :size="14" /> [Mutations](/guides/anilist/mutations) — the operations that require this token.
-- <Icon name="ArrowRight" :size="14" /> [MAL authentication](/guides/mal/authentication) — the same automatic-refresh lifecycle on the MAL slot, where the client secret is optional.
+- <Icon name="ArrowRight" :size="14" /> [AniList client configuration](/guides/anilist/configuration), transport settings for the authenticated client.
+- <Icon name="ArrowRight" :size="14" /> [Mutations](/guides/anilist/mutations), the operations that require this token.
+- <Icon name="ArrowRight" :size="14" /> [MAL authentication](/guides/mal/authentication), the same automatic-refresh lifecycle on the MAL slot, where the client secret is optional.

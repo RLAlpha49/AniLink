@@ -6,9 +6,9 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Complete examples
 
-Every MAL operation with **every** param filled in — the full surface at a glance. Every optional property below can be omitted in real calls; pass only what you need.
+This page shows every MAL operation with **every** param filled in. Every optional property below can be omitted in real calls; pass only what you need.
 
-## anime reads
+## Anime reads
 
 ```typescript
 await aniLink.mal.anime.get({ id: 21 });
@@ -29,10 +29,10 @@ await aniLink.mal.anime.ranking({
     //                       | "movie" | "special" | "bypopularity" | "favorite"
 });
 
-await aniLink.mal.anime.suggestions(); // no params — authenticated read
+await aniLink.mal.anime.suggestions(); // no params, authenticated read
 ```
 
-## anime list write
+## Anime list write
 
 ```typescript
 // id required, every payload field optional
@@ -40,21 +40,21 @@ await aniLink.mal.anime.updateMyListStatus({
     id: 21,
     status: "watching", // "watching" | "completed" | "on_hold" | "dropped" | "plan_to_watch"
     num_watched_episodes: 5,
-    score: 8, // 0–10
+    score: 8, // 0-10
     start_date: "2026-01-15", // partial dates OK: "2026-01" or "2026"
     finish_date: "2026-09-01",
     comments: "rewatching with a friend",
     is_rewatching: true,
     num_times_rewatched: 2,
-    rewatch_value: 3, // 0–5
-    priority: 1, // 0–2
+    rewatch_value: 3, // 0-5
+    priority: 1, // 0-2
     tags: ["cozy", "winter-2026"],
 });
 
 await aniLink.mal.anime.deleteFromList({ id: 21 });
 ```
 
-## manga
+## Manga
 
 Same shape with manga fields:
 
@@ -91,17 +91,17 @@ await aniLink.mal.manga.updateMyListStatus({
 await aniLink.mal.manga.deleteFromList({ id: 1 });
 ```
 
-## user
+## User
 
 ```typescript
 await aniLink.mal.user.me();
 
 await aniLink.mal.user.get({
-    username: "@me", // required — MyAnimeList documents only "@me" here
+    username: "@me", // required. MyAnimeList documents only "@me" here
 });
 
 await aniLink.mal.user.animeList({
-    username: "@me", // required — "@me" (authenticated) or any MAL username
+    username: "@me", // required: "@me" (authenticated) or any MAL username
     status: "watching", // optional filter
     sort: "list_score", // "list_score" | "list_updated_at" | "anime_title"
     //                        | "anime_start_date" | "anime_id"
@@ -119,32 +119,32 @@ await aniLink.mal.user.mangaList({
 });
 ```
 
-## forum
+## Forum
 
 ```typescript
 await aniLink.mal.forum.boards(); // no params
 
 await aniLink.mal.forum.topics({
-    boardId: 5, // optional — limit to one board
-    subboardId: 0, // optional — limit to one subboard
-    q: "one piece", // optional — filter topic titles
-    topicUserName: "someuser", // optional — topics created by a user
-    userName: "someuser", // optional — topics with posts by a user
-    sort: "recent", // "recent" — the only documented sort
+    boardId: 5, // optional, limit to one board
+    subboardId: 0, // optional, limit to one subboard
+    q: "one piece", // optional, filter topic titles
+    topicUserName: "someuser", // optional, topics created by a user
+    userName: "someuser", // optional, topics with posts by a user
+    sort: "recent", // "recent" is the only documented sort
     limit: 100, // optional, max 100
     offset: 0,
 });
 
 await aniLink.mal.forum.topic({
-    id: 23744, // required — the topic ID
-    limit: 100, // optional, max 100 — pages through the topic's posts
+    id: 23744, // required: the topic ID
+    limit: 100, // optional, max 100. Pages through the topic's posts
     offset: 0,
 });
 ```
 
 ## Trailing options
 
-Every operation accepts the same options object — `fields` to select the response shape, plus the transport settings shared with AniList. Operations with inputs take it after params; zero-parameter operations such as `anime.suggestions()` and `user.me()` take it as their first argument:
+Every operation accepts the same options object. It has `fields` to select the response shape, plus the transport settings shared with AniList. Operations with inputs take it after params; zero-parameter operations such as `anime.suggestions()` and `user.me()` take it as their first argument:
 
 ```typescript
 await aniLink.mal.anime.get(

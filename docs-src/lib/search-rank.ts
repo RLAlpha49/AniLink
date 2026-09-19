@@ -11,15 +11,15 @@
  * build-time indexer (`scripts/generate-search-index.ts`), the VitePress
  * search UI (`SemanticSearch.vue`), and the TypeDoc search bridge
  * (`anilink-search.js`). All three must embed with the same weights or
- * cosine rankings silently degrade, so the id and revision live here — the
- * one module every consumer already imports.
+ * cosine rankings silently degrade, so the id and revision are defined
+ * here, the one module every consumer already imports.
  */
 export const SEARCH_MODEL_ID = "Xenova/bge-small-en-v1.5";
 
 /**
  * Pinned model revision. Pinning keeps build-time and browser embeddings
- * byte-identical across deploys; every consumer — the build indexer, the
- * VitePress search UI, the TypeDoc bridge, and the CI model cache key —
+ * byte-identical across deploys; every consumer (the build indexer, the
+ * VitePress search UI, the TypeDoc bridge, and the CI model cache key)
  * must reference this same constant or cosine rankings silently degrade.
  */
 export const SEARCH_MODEL_REVISION = "ea104dacec62c0de699686887e3f920caeb4f3e3";
@@ -30,25 +30,26 @@ export const SEARCH_MODEL_REVISION = "ea104dacec62c0de699686887e3f920caeb4f3e3";
  * - `"float"` (v1): each `SearchDoc.vector` is a full-precision float array
  *   (~3.5 KB of JSON per chunk; the whole index ships ~2.2 MB).
  * - `"int8"` (v2): each `SearchDoc.q` is an int8 array plus a per-vector
- *   `scale` factor; floats are reconstructed at ranking time. Roughly 4x
- *   smaller and near-lossless for cosine ranking (embeddings are
- *   L2-normalized, so all components live in a narrow range).
+ *   `scale` factor; ranking reconstructs the floats. The int8 format is
+ *   roughly four times smaller and near-lossless for cosine ranking
+ *   (embeddings are L2-normalized, so all components fall within a narrow
+ *   range).
  */
 export type SearchIndexFormat = "float" | "int8";
 
 /** One searchable chunk. */
 export interface SearchDoc {
-    /** Stable id (hash of url+title). */
+    /** Stable id (hash of url and title). */
     id: string;
     /** Deep link with anchor. */
     url: string;
     /** Heading or operation namespace. */
     title: string;
-    /** Chunk body, truncated to ~500 chars for embedding. */
+    /** Chunk body, truncated to ~500 characters for embedding. */
     text: string;
     /** Content source. */
     source: "guide" | "operation" | "typedoc";
-    /** 384-dim embedding (filled at embed time). */
+    /** 384-dimensional embedding (filled at embed time). */
     vector?: number[];
     /**
      * Int8-quantized embedding (v2 format). Present only when the index was
@@ -57,8 +58,8 @@ export interface SearchDoc {
     q?: number[];
     /**
      * Per-vector scale factor for `q` (v2 format): `q[i] / 127 * scale`
-     * reconstructs the float component. Chosen as the max absolute component
-     * so quantization never clips.
+     * reconstructs the float component. The scale is the max absolute
+     * component, so quantization never clips.
      */
     scale?: number;
 }
@@ -82,9 +83,9 @@ export interface SearchIndex {
  * Quantize a float embedding to int8 plus a scale factor.
  *
  * The scale is the max absolute component, so every component maps into
- * [-127, 127] without clipping. Returns `null` for zero vectors (nothing to
- * encode; the caller leaves both `q` and `scale` unset and ranking treats the
- * doc as having no vector).
+ * [-127, 127] without clipping. Returns `null` for zero vectors; there is
+ * nothing to encode. The caller leaves both `q` and `scale` unset, and
+ * ranking treats the doc as having no vector.
  *
  * @param vector Full-precision embedding.
  * @returns Int8 codes and the scale factor, or `null` for a zero vector.
@@ -106,15 +107,15 @@ export function quantizeVector(vector: number[]): { q: number[]; scale: number }
 /**
  * Reconstructed vectors, memoized per doc. Docs are immutable after the
  * index loads, but every query re-ranks every doc, so without this cache the
- * int8→float reconstruction would repeat per doc per query.
+ * int8-to-float reconstruction would repeat per doc per query.
  */
 const vectorCache = new WeakMap<SearchDoc, number[]>();
 
 /**
  * Reconstruct a doc's embedding as floats, whichever format the index was
- * written in: v1 docs carry `vector` directly; v2 docs carry `q` (int8 codes)
- * and `scale`, and `q[i] / 127 * scale` rebuilds the component. Memoized —
- * see {@link vectorCache}.
+ * written in. v1 docs carry `vector` directly; v2 docs carry `q` (int8 codes)
+ * and `scale`, and `q[i] / 127 * scale` rebuilds the component. This function
+ * memoizes the result; see {@link vectorCache}.
  *
  * @param doc Chunk carrying `vector`, or `q` and `scale`.
  * @returns The doc's embedding, or `null` when no usable vector data exists.
@@ -138,7 +139,7 @@ export function docVector(doc: SearchDoc): number[] | null {
 /**
  * Reconstruct a float embedding from int8 codes.
  *
- * Inverse of {@link quantizeVector}: `q[i] / 127 * scale`.
+ * The inverse of {@link quantizeVector} is `q[i] / 127 * scale`.
  *
  * @param doc Chunk carrying `q` and `scale`.
  * @returns The reconstructed embedding, or `null` when either field is missing.
@@ -152,7 +153,7 @@ export function dequantizeVector(doc: SearchDoc): number[] | null {
     return out;
 }
 
-/** A scored search result, produced by ranking + merge. */
+/** A scored search result, produced by ranking and merge. */
 export interface ScoredResult {
     /** Result URL. */
     url: string;
@@ -171,8 +172,8 @@ export interface ScoredResult {
 /**
  * Escape characters that could be interpreted as HTML markup in text content.
  *
- * Ampersands are encoded first so the entities added for angle brackets are
- * not encoded a second time.
+ * This function encodes ampersands first so the entities added for angle
+ * brackets are not encoded a second time.
  *
  * @param s Text to escape.
  * @returns Text safe to insert as HTML text content.
@@ -184,15 +185,15 @@ export function escapeHtml(s: string): string {
 /**
  * Cosine similarity between two equal-length vectors.
  *
- * `b` may be a doc instead of a raw vector: whichever format the index was
- * written in — v1 (`vector`) or v2 (`q`/`scale`) — the embedding is resolved
- * on the fly, so callers pass the doc itself and never need to know the
- * format. A doc with neither `vector` nor `q`/`scale` scores 0.
+ * `b` may be a doc instead of a raw vector. Whichever format the index was
+ * written in, v1 (`vector`) or v2 (`q`/`scale`), this function resolves the
+ * embedding on the fly, so callers pass the doc itself and never need to
+ * know the format. A doc with neither `vector` nor `q`/`scale` scores 0.
  */
 export function cosineSimilarity(a: number[], b: number[] | SearchDoc): number {
     const bv = Array.isArray(b) ? b : (docVector(b) ?? []);
     // A doc with no vector data (or a length mismatch, which would make every
-    // product NaN) has no similarity to anything: score 0.
+    // product NaN) has no similarity to anything, so the score is 0.
     if (bv.length === 0 || bv.length !== a.length) return 0;
     let dot = 0;
     let na = 0;
@@ -208,7 +209,7 @@ export function cosineSimilarity(a: number[], b: number[] | SearchDoc): number {
 
 /**
  * Merge semantic (0..1) and keyword (raw scores) results: normalize each list
- * to 0..1, dedupe by url keeping the max score, sort descending.
+ * to 0..1, dedupe by url and keep the max score, sort descending.
  *
  * @param semantic Semantic results with scores in 0..1.
  * @param keyword Keyword results with raw scores.

@@ -2,9 +2,10 @@
 /**
  * Renders one provider/category slice of the operation reference.
  *
- * Imported by the generated operation pages instead of a shared theme
- * so the operation cards and their Shiki highlighter load only when a
- * reader opens an operation-reference page.
+ * The generated operation pages import this component. The shared
+ * theme does not import it, so the operation cards and their Shiki
+ * highlighter load only when a reader opens an operation-reference
+ * page.
  */
 import type { GroupedOperations } from "../load-ops";
 import OperationCard from "./OperationCard.vue";

@@ -1,6 +1,6 @@
 ---
 title: MyAnimeList anime operations
-description: "The public MyAnimeList anime operations — lookups, discovery reads, and list-status writes — grouped by response domain."
+description: "The public MyAnimeList anime operations, lookups, discovery reads, and list-status writes, grouped by response domain."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 

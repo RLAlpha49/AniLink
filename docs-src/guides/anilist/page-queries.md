@@ -1,6 +1,6 @@
 ---
 title: Page queries
-description: "Fetch one known page of an AniList collection with aniLink.anilist.query.page: page and perPage controls returning pageInfo."
+description: "Fetch one known page of an AniList collection with aniLink.anilist.query.page, which adds page and perPage controls and returns pageInfo."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
@@ -14,7 +14,7 @@ layout: .vitepress/theme/DocsLayout.vue
 - You want exactly one slice of results (e.g. "top 10 trending").
 - You are building your own pagination loop.
 
-Collecting everything instead? Use the [pagination helpers](/guides/anilist/pagination) — that is their whole job.
+To collect everything instead, use the [pagination helpers](/guides/anilist/pagination).
 
 ## Available page queries
 
@@ -22,7 +22,7 @@ Collecting everything instead? Use the [pagination helpers](/guides/anilist/pagi
 
 ## `pageInfo` semantics
 
-Every page response carries `pageInfo`:
+Every page response includes `pageInfo`:
 
 | Field | Meaning |
 | --- | --- |
@@ -47,5 +47,5 @@ console.log(page.pageInfo.hasNextPage, page.media.length);
 
 ## Next steps
 
-- <Icon name="ArrowRight" :size="14" /> [Pagination](/guides/anilist/pagination) — walking pages automatically.
-- <Icon name="ArrowRight" :size="14" /> [Operation reference](/operations/anilist/page#page-queries) — per-method variables and responses.
+- <Icon name="ArrowRight" :size="14" /> [Pagination](/guides/anilist/pagination), fetching pages automatically.
+- <Icon name="ArrowRight" :size="14" /> [Operation reference](/operations/anilist/page#page-queries), with variables and responses for each method.

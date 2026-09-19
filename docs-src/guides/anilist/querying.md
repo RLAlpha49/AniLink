@@ -1,16 +1,16 @@
 ---
 title: Querying data
-description: "The aniLink.anilist.query surface grouped by domain: typed variables object plus optional trailing RequestOptions everywhere."
+description: "The aniLink.anilist.query methods are grouped by domain. Every method takes a typed variables object and an optional trailing RequestOptions."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # Querying data
 
-The query surface is grouped by domain. Every method takes a typed variables object and an optional trailing `RequestOptions` — same shape everywhere, so muscle memory transfers.
+The query methods are grouped by domain. Every method takes a typed variables object and an optional trailing `RequestOptions`. The shape is the same everywhere, so you learn it once.
 
 ## Selecting fields
 
-Every query returns the maximal selection by default. Field-aware queries — those whose signature lists a `fields` option — accept it in the trailing options to request only what you need, at any nesting depth, and the return type narrows to exactly your selection. Plain-response queries such as `query.markdown` and `query.viewer` have no `fields` option; they always return their fixed shape:
+Every query returns the maximal selection by default. Field-aware queries are those whose signature lists a `fields` option. They accept it in the trailing options to request only what you need at any nesting depth. The return type narrows to exactly your selection. Plain-response queries such as `query.markdown` and `query.viewer` have no `fields` option; they always return their fixed shape:
 
 ```typescript
 const slim = await aniLink.anilist.query.media(
@@ -52,7 +52,7 @@ const anime = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
 | Operation | Purpose |
 | --- | --- |
 | [`query.user`](/operations/anilist/query#users) | One user by id or name |
-| [`query.viewer`](/operations/anilist/query#users) | The authenticated user (token required) |
+| [`query.viewer`](/operations/anilist/query#users) | The authenticated user, token required |
 | [`query.following`](/operations/anilist/query#users) | Users a user follows |
 | [`query.follower`](/operations/anilist/query#users) | Users following a user |
 
@@ -79,7 +79,7 @@ const anime = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
 | --- | --- |
 | [`query.activity`](/operations/anilist/query#activity) | One activity |
 | [`query.activityReply`](/operations/anilist/query#activity) | One activity reply |
-| [`query.notification`](/operations/anilist/query#activity) | Notifications for the viewer (token required) |
+| [`query.notification`](/operations/anilist/query#activity) | Notifications for the viewer, token required |
 
 ## Community
 
@@ -117,6 +117,6 @@ const character = await aniLink.anilist.query.character({
 
 ## Next steps
 
-- <Icon name="ArrowRight" :size="14" /> [Page queries](/guides/anilist/page-queries) — fetching a single known page.
-- <Icon name="ArrowRight" :size="14" /> [Pagination](/guides/anilist/pagination) — collecting many pages automatically.
-- <Icon name="ArrowRight" :size="14" /> [Query operation reference](/operations/anilist/query) — variables and response shapes per operation.
+- <Icon name="ArrowRight" :size="14" /> [Page queries](/guides/anilist/page-queries), fetching a single known page.
+- <Icon name="ArrowRight" :size="14" /> [Pagination](/guides/anilist/pagination), collecting many pages automatically.
+- <Icon name="ArrowRight" :size="14" /> [Query operation reference](/operations/anilist/query), variables and response shapes per operation.

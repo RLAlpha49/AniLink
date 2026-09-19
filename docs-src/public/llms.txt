@@ -1,66 +1,61 @@
 # AniLink
 
-> Typed TypeScript client for the AniList GraphQL and MyAnimeList REST APIs: one class, two isolated provider surfaces, normalized errors, retries, and pagination helpers.
+> Typed TypeScript client for the AniList GraphQL and MyAnimeList REST APIs: one class, two isolated providers, normalized errors, retries, and pagination helpers.
 
-- [AniLink home](https://anilink.alpha49.com/): Typed TypeScript client for the AniList GraphQL and MyAnimeList REST APIs: one class, two isolated provider surfaces, normalized errors, retries, and pagination helpers.
+- [AniLink home](https://anilink.alpha49.com/): Typed TypeScript client for the AniList GraphQL and MyAnimeList REST APIs: one class, two isolated providers, normalized errors, retries, and pagination helpers.
 
 ## Start here
 
-- [Introduction](https://anilink.alpha49.com/introduction): What AniLink is: one AniLink class exposing the typed anilist and mal APIs side by side. Both use one calling convention, (params, options?) for operations with inputs and (options?) for the parameterless reads. Includes a provider, protocol, and namespace overview.
-- [Getting started](https://anilink.alpha49.com/getting-started): Install anilink-api-wrapper, construct a client with credentials, and send a first request to either provider.
-- [Provider configuration](https://anilink.alpha49.com/provider-configuration): The two ways to pass AniLink credentials — positional token or per-provider anilist and mal slots — and how each maps to the client surfaces.
-- [Privacy](https://anilink.alpha49.com/privacy): How the AniLink docs site handles analytics: GA4 measurement stays off until you accept in the consent banner, and declining clears analytics cookies.
+- [Introduction](https://anilink.alpha49.com/introduction): AniLink is one class that exposes the typed anilist and mal APIs side by side. Both use one calling convention. Operations with inputs take (params, options?) and the parameterless reads take (options?). This page covers the providers, protocols, and namespaces.
+- [Getting started](https://anilink.alpha49.com/getting-started): Install anilink-api-wrapper, create a client with credentials, and send a first request to either provider.
+- [Provider configuration](https://anilink.alpha49.com/provider-configuration): The two forms for passing AniLink credentials, the positional AniList token or per-provider anilist and mal slots, and how each form maps credentials to the aniLink.anilist and aniLink.mal clients.
+- [Privacy](https://anilink.alpha49.com/privacy): How the AniLink docs site handles analytics. GA4 measurement stays off until you press Accept in the consent banner, and declining clears analytics cookies.
 
 ## Core concepts
 
-- [Error handling](https://anilink.alpha49.com/error-handling): The AniLinkError taxonomy with stable code values: classify transport failures by instanceof or code, never by parsing messages.
-- [Retries & resilience](https://anilink.alpha49.com/retries-and-resilience): The three shared-transport resilience mechanisms — transient-failure retries, rate-limit pacing, and the circuit breaker — and their per-provider defaults.
-- [Cancellation & timeouts](https://anilink.alpha49.com/cancellation-and-timeouts): Per-request timeout and AbortSignal support in AniLink, including the fail-fast validation of invalid timeout values.
-- [Per-request options](https://anilink.alpha49.com/per-request-options): Override timeouts, retries, and other instance defaults for a single call with the trailing per-request options argument every operation accepts.
-- [Observability](https://anilink.alpha49.com/observability): The seven AniLink request-lifecycle hooks plus the onHookError failure observer, configured per provider slot so they never leak between providers.
-- [Response cache](https://anilink.alpha49.com/response-cache): The opt-in in-memory TTL response cache keyed by method, url, and body: repeated identical reads — GETs and GraphQL queries — skip the network and mutations are never cached.
+- [Error handling](https://anilink.alpha49.com/error-handling): The AniLinkError class hierarchy gives every transport failure a stable code. Classify failures by instanceof or code, never by parsing messages.
+- [Retries & resilience](https://anilink.alpha49.com/retries-and-resilience): The three shared-transport resilience mechanisms are transient-failure retries, rate-limit pacing, and the circuit breaker, with their per-provider defaults.
+- [Cancellation & timeouts](https://anilink.alpha49.com/cancellation-and-timeouts): Per-request timeout and AbortSignal support in AniLink, including the fail-fast check for invalid timeout values.
+- [Per-request options](https://anilink.alpha49.com/per-request-options): Override timeouts, retries, and other instance defaults for a single call. Every operation accepts the trailing per-request options argument.
+- [Observability](https://anilink.alpha49.com/observability): The seven AniLink request-lifecycle hooks plus the onHookError failure observer, configured per provider slot so they never fire for another provider's requests.
+- [Response cache](https://anilink.alpha49.com/response-cache): The opt-in in-memory TTL response cache keyed by method, url, and body. Repeated identical reads, whether GETs or GraphQL queries, skip the network, and the cache never stores mutations.
 
 ## Cookbook
 
-- [Recipes](https://anilink.alpha49.com/recipes): Complete copy-pasteable AniLink workflows — list walking, upserts, token refresh — with each recipe stating its provider scope up front.
-- [TypeScript patterns](https://anilink.alpha49.com/typescript-patterns): How AniLink operation variables and responses stay fully typed, so inferred shapes appear on hover without type archaeology.
-- [Troubleshooting](https://anilink.alpha49.com/troubleshooting): Symptom, cause, and fix rows grouped by provider: skim for what hurts — auth, rate limits, and common AniLink setup mistakes.
+- [Recipes](https://anilink.alpha49.com/recipes): Copy-pasteable AniLink workflows for paginated list sync, upserts, and token refresh. Each recipe states its provider scope up front.
+- [TypeScript patterns](https://anilink.alpha49.com/typescript-patterns): How AniLink fully types operation variables and responses, so inferred shapes appear on hover.
+- [Troubleshooting](https://anilink.alpha49.com/troubleshooting): Symptom, cause, and fix rows grouped by provider. Covers auth, rate limits, and common AniLink setup mistakes.
 
 ## AniList guides
 
 - [AniList authentication](https://anilink.alpha49.com/guides/anilist/authentication): Create an AniList GraphQL client token and pass it positionally or in the anilist credential slot.
-- [AniList configuration](https://anilink.alpha49.com/guides/anilist/configuration): Every AniList slot option — timeout, retries, pacing, hooks, exposeRawAxiosError — with types, defaults, and when to change each.
-- [Querying data](https://anilink.alpha49.com/guides/anilist/querying): The aniLink.anilist.query surface grouped by domain: typed variables object plus optional trailing RequestOptions everywhere.
+- [AniList configuration](https://anilink.alpha49.com/guides/anilist/configuration): Every AniList slot option, including timeout, retries, pacing, hooks, and exposeRawAxiosError, with types, defaults, and when to change each.
+- [Querying data](https://anilink.alpha49.com/guides/anilist/querying): The aniLink.anilist.query methods are grouped by domain. Every method takes a typed variables object and an optional trailing RequestOptions.
 - [Field selection](https://anilink.alpha49.com/guides/anilist/field-selection): Request only the fields you need from AniList operations, at any nesting depth, with response types that narrow to your selection.
-- [Complete examples](https://anilink.alpha49.com/guides/anilist/complete-examples): Flagship AniList operations with every variable filled out.
-- [Page queries](https://anilink.alpha49.com/guides/anilist/page-queries): Fetch one known page of an AniList collection with aniLink.anilist.query.page: page and perPage controls returning pageInfo.
-- [Pagination](https://anilink.alpha49.com/guides/anilist/pagination): The three AniList pagination helpers — paginate, paginatePages, and the chunk-based sibling paginateChunks — and when to use each traversal style.
-- [Mutations](https://anilink.alpha49.com/guides/anilist/mutations): The authenticated aniLink.anilist.mutation operations: token requirement, and why mutations are never retried by default.
-- [Custom queries](https://anilink.alpha49.com/guides/anilist/custom-queries): Send a GraphQL document you write yourself with anilist.custom — the typed escape hatch for field combinations the operations do not expose.
-- [Helpers](https://anilink.alpha49.com/guides/anilist/helpers): The four AniList data helpers — fuzzyDate, fuzzyDateInt, flattenMediaListCollection, and crossLink — as client methods on the anilist namespace.
+- [Complete examples](https://anilink.alpha49.com/guides/anilist/complete-examples): The largest AniList operations with every variable filled out.
+- [Page queries](https://anilink.alpha49.com/guides/anilist/page-queries): Fetch one known page of an AniList collection with aniLink.anilist.query.page, which adds page and perPage controls and returns pageInfo.
+- [Pagination](https://anilink.alpha49.com/guides/anilist/pagination): The three AniList pagination helpers: paginate, paginatePages, and the chunk-based paginateChunks. When to use each traversal style.
+- [Mutations](https://anilink.alpha49.com/guides/anilist/mutations): The aniLink.anilist.mutation operations require a token, and the default retry policy never retries them.
+- [Custom queries](https://anilink.alpha49.com/guides/anilist/custom-queries): Send a GraphQL document you write yourself with anilist.custom for field combinations the typed operations do not expose.
+- [Helpers](https://anilink.alpha49.com/guides/anilist/helpers): The four AniList data helpers as client methods on the anilist namespace: fuzzyDate, fuzzyDateInt, flattenMediaListCollection, and crossLink.
 
 ## MyAnimeList guides
 
 - [MAL authentication](https://anilink.alpha49.com/guides/mal/authentication): The MyAnimeList OAuth2 with PKCE flow: register an application, run the code exchange, and use the resulting access token.
-- [MAL configuration](https://anilink.alpha49.com/guides/mal/configuration): The mal slot fields — access token and shared transport options — and how they map onto the REST operations.
-- [MAL operations](https://anilink.alpha49.com/guides/mal/operations): The MyAnimeList REST operation surface: anime and manga lookups and search, seasonal, rankings, suggestions, user lists, and the forum reads with parameter tables per operation.
+- [MAL configuration](https://anilink.alpha49.com/guides/mal/configuration): The mal slot fields for the access token and shared transport options, and how they map onto the REST operations.
+- [MAL operations](https://anilink.alpha49.com/guides/mal/operations): The MyAnimeList REST operations: anime and manga lookups and search, seasonal, rankings, suggestions, user lists, and the forum reads with parameter tables per operation.
 - [Complete examples](https://anilink.alpha49.com/guides/mal/complete-examples): Every MyAnimeList operation with its complete params object filled out.
 
 ## Operations
 
-- [Operation reference](https://anilink.alpha49.com/operations/): The generated per-operation catalog of every public AniLink operation across both providers, produced from source metadata so it cannot drift from the code.
+- [Operation reference](https://anilink.alpha49.com/operations/): The per-operation catalog of every public AniLink operation across both providers, generated from source metadata so it cannot drift from the code.
 - [AniList catalog](https://anilink.alpha49.com/operations/anilist): Entry point for the AniList operation pages, grouped by query, page-query, mutation, and custom categories.
 - [Query operations](https://anilink.alpha49.com/operations/anilist/query): The public AniList GraphQL query operations, grouped by response domain.
 - [Page-query operations](https://anilink.alpha49.com/operations/anilist/page): The paginated AniList GraphQL page-query operations, grouped by response domain.
 - [Mutation operations](https://anilink.alpha49.com/operations/anilist/mutation): The authenticated AniList GraphQL mutation operations, grouped by response domain.
-- [Custom operations](https://anilink.alpha49.com/operations/anilist/custom): The flexible custom AniList GraphQL operation, including its request and response contract.
+- [Custom operations](https://anilink.alpha49.com/operations/anilist/custom): The custom AniList GraphQL operation, including its request and response contract.
 - [MAL catalog](https://anilink.alpha49.com/operations/mal): Entry point for the MyAnimeList operation pages, grouped by anime, manga, user, and forum categories.
-- [Anime operations](https://anilink.alpha49.com/operations/mal/anime): The public MyAnimeList anime operations — lookups, discovery reads, and list-status writes — grouped by response domain.
-- [Manga operations](https://anilink.alpha49.com/operations/mal/manga): The public MyAnimeList manga operations — lookups, discovery reads, and list-status writes — grouped by response domain.
-- [User operations](https://anilink.alpha49.com/operations/mal/user): The public MyAnimeList user operations — profile reads and user-list reads — grouped by response domain.
-- [Forum operations](https://anilink.alpha49.com/operations/mal/forum): The public MyAnimeList forum operations — boards and topics reads — grouped by response domain.
-
-## API Reference
-
-- [TypeDoc API reference](https://anilink.alpha49.com/typedoc/): Generated API reference for every public class, interface, type, and function.
-- [TypeDoc llms.txt](https://anilink.alpha49.com/typedoc/llms.txt): Machine-readable index of the TypeDoc API reference pages.
+- [Anime operations](https://anilink.alpha49.com/operations/mal/anime): The public MyAnimeList anime operations, lookups, discovery reads, and list-status writes, grouped by response domain.
+- [Manga operations](https://anilink.alpha49.com/operations/mal/manga): The public MyAnimeList manga operations are grouped by response domain. They cover lookups, discovery reads, and list-status writes.
+- [User operations](https://anilink.alpha49.com/operations/mal/user): The public MyAnimeList user operations are grouped by response domain. They cover profile reads and user-list reads.
+- [Forum operations](https://anilink.alpha49.com/operations/mal/forum): The public MyAnimeList forum operations for reading boards and topics, grouped by response domain.

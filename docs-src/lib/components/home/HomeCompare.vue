@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Provider comparison — AniList vs MyAnimeList capability table. Section
+ * Provider comparison: AniList vs MyAnimeList capability table. Section
  * component of the Home composition; owns the comparison data and scoped
  * styles.
  */
@@ -16,7 +16,7 @@ const compareRows: CompareRow[] = [
     { label: "Protocol", anilist: "GraphQL", mal: "REST" },
     { label: "Namespace", anilist: "aniLink.anilist", mal: "aniLink.mal" },
     {
-        label: "Surface",
+        label: "Operations",
         anilist: "Queries · Page · Mutations · custom()",
         mal: "anime.get · seasonal · ranking · user.animeList · user.mangaList · user.me",
     },
@@ -33,8 +33,8 @@ const compareRows: CompareRow[] = [
             </p>
             <h2 id="home-compare-title" class="home-section-title">AniList & MyAnimeList</h2>
             <p class="home-section-lede">
-                The two surfaces share a transport layer — timeouts, retries, pacing, the circuit
-                breaker, hooks, error normalization — but never share credentials.
+                Both providers share a transport layer: timeouts, retries, pacing, the circuit
+                breaker, hooks, and error normalization. They never share credentials.
             </p>
         </header>
 
