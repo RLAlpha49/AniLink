@@ -164,7 +164,7 @@ jobs:
           retention-days: 14
 
   integration:
-    name: Live AniList integration test
+    name: Live integration tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -197,7 +197,7 @@ jobs:
         if: ${{ env.HAS_ANILIST_TOKEN == 'true' }}
         run: npm ci
 
-      - name: Run live AniList integration test
+      - name: Run live integration tests
         if: ${{ env.HAS_ANILIST_TOKEN == 'true' }}
         env:
           ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
