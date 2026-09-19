@@ -110,10 +110,18 @@ const ROOT = resolve(import.meta.dirname, "..");
 const SRC = join(ROOT, "src");
 const TYPEDOC_BASE = "https://anilink.alpha49.com/typedoc/";
 
-/** Read a file as UTF-8 text, returning "" if missing. */
+/**
+ * Read a file as UTF-8 text with CRLF normalized to LF, returning "" if missing.
+ *
+ * Windows checkouts smudge LF blobs to CRLF (`core.autocrlf`), while the JSDoc
+ * parsers below anchor on `\n`; unnormalized text would drop every `@example`
+ * and `@throws` from the facade JSDoc and fail generation. Every source read
+ * in this script goes through here, so one normalization covers them all, the
+ * same treatment the `--check` comparison applies below.
+ */
 function readFileText(p: string): string {
     try {
-        return readFileSync(p, "utf8");
+        return readFileSync(p, "utf8").replace(/\r\n/g, "\n");
     } catch {
         return "";
     }
