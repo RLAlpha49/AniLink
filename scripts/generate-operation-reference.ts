@@ -753,9 +753,9 @@ function anilistSignature(op: RawOp): string {
 /** Build the auth requirement text for an AniList operation. */
 function anilistAuth(op: RawOp): string {
     if (op.category === "mutation") {
-        return "Required — AniList access token (constructor `authToken` or `anilist.authToken` credential slot).";
+        return "Required: AniList access token (constructor `authToken` or `anilist.authToken` credential slot).";
     }
-    return "Not required — public data. Pass a token for viewer-scoped fields.";
+    return "Not required for public data. Pass a token for viewer-scoped fields.";
 }
 
 // ---------------------------------------------------------------------------
@@ -998,17 +998,17 @@ function malAuth(
         if (methodName === "get" && (namespace === "anime" || namespace === "manga")) {
             return `Not required for public ${namespace} data; pass an access token for list-related fields.`;
         }
-        return "Not required — a public read.";
+        return "Not required: a public read.";
     }
     if (/no MAL access token is configured/.test(authError.condition)) {
-        return "Required — MAL OAuth2 access token (`mal.accessToken` credential slot).";
+        return "Required: MAL OAuth2 access token (`mal.accessToken` credential slot).";
     }
     // The remaining auth errors fire on `@me` without a token: the profile
     // read documents only `@me`, while the list reads serve public lists.
     if (namespace === "user" && methodName === "get") {
-        return "Requires an access token — MyAnimeList documents only `@me` for this endpoint; other usernames are passed through but currently answered with `404`.";
+        return "Requires an access token: MyAnimeList documents only `@me` for this endpoint; other usernames are passed through but currently answered with `404`.";
     }
-    return "Not required for public user lists; `@me` and private lists require an access token — a client ID alone cannot resolve `@me`.";
+    return "Not required for public user lists; `@me` and private lists require an access token, because a client ID alone cannot resolve `@me`.";
 }
 
 /**

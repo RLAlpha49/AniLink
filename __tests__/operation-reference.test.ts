@@ -142,8 +142,8 @@ describe("operation reference section manifests", () => {
             (operation) => operation.namespace === "mal.anime.get"
         );
 
-        expect(seasonal?.auth).toBe("Not required — a public read.");
-        expect(ranking?.auth).toBe("Not required — a public read.");
+        expect(seasonal?.auth).toBe("Not required: a public read.");
+        expect(ranking?.auth).toBe("Not required: a public read.");
         expect(get?.auth).toBe(
             "Not required for public anime data; pass an access token for list-related fields."
         );
@@ -160,10 +160,10 @@ describe("operation reference section manifests", () => {
         expect(animeList).toBeDefined();
         expect(mangaList).toBeDefined();
         expect(animeList?.auth).toBe(
-            "Not required for public user lists; `@me` and private lists require an access token — a client ID alone cannot resolve `@me`."
+            "Not required for public user lists; `@me` and private lists require an access token, because a client ID alone cannot resolve `@me`."
         );
         expect(mangaList?.auth).toBe(
-            "Not required for public user lists; `@me` and private lists require an access token — a client ID alone cannot resolve `@me`."
+            "Not required for public user lists; `@me` and private lists require an access token, because a client ID alone cannot resolve `@me`."
         );
         // The user-list reads fail fast on `@me` without a token, like `me`.
         expect(animeList?.errors.map((entry) => entry.error)).toContain("AniLinkAuthError");
