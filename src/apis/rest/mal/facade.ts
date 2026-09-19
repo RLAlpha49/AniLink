@@ -1,3 +1,4 @@
+import type { malPaginate, malPaginatePages } from "./Paginator";
 import type {
     MalAnime,
     MalAnimeDeleteParams,
@@ -552,4 +553,48 @@ export interface MyAnimeListApi {
     user: MyAnimeListUserApi;
     /** Forum operations via {@link MyAnimeListForumApi} and `MalForumOperation`. */
     forum: MyAnimeListForumApi;
+    /**
+     * {@link malPaginate} walks MyAnimeList list pages until a short page or the
+     * `maxPages` guard is reached, collecting every item across pages.
+     * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal`; return the raw MAL list response (`{ data, paging? }`).
+     * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, and `onPage` controls; a `MalPaginateOptions`.
+     * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run; a `MalPaginateResult`.
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_get
+     * @example
+     * ```typescript
+     * const result = await aniLink.mal.paginate(
+     *   (page, perPage) => aniLink.mal.anime.search({
+     *     q: "one piece",
+     *     limit: perPage,
+     *     offset: (page - 1) * perPage,
+     *   }),
+     *   { perPage: 100, maxPages: 5 }
+     * );
+     * console.log(result.items.length, result.truncated);
+     * ```
+     */
+    paginate: typeof malPaginate;
+    /**
+     * `malPaginatePages` is an async generator yielding each MyAnimeList list
+     * page until a short page or the `maxPages` guard is reached. The
+     * `onPage` callback (when configured) fires once per page as it is
+     * yielded, mirroring `mal.paginate`'s observer contract in streaming form.
+     * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal`; return the raw MAL list response (`{ data, paging? }`).
+     * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, `onPage`, `onHookError`, and `diagnostics` controls; a `MalPaginateOptions`.
+     * @returns An async generator yielding each raw MAL list page in turn.
+     * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_get
+     * @example
+     * ```typescript
+     * for await (const page of aniLink.mal.paginatePages((page, perPage) =>
+     *   aniLink.mal.user.animeList({
+     *     username: "@me",
+     *     limit: perPage,
+     *     offset: (page - 1) * perPage,
+     *   })
+     * )) {
+     *   console.log(page.data.length);
+     * }
+     * ```
+     */
+    paginatePages: typeof malPaginatePages;
 }

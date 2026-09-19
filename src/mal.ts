@@ -32,6 +32,8 @@ export type {
     MyAnimeListMangaApi,
     MyAnimeListUserApi,
 } from "./apis/rest/mal/facade";
+export { malPaginate, malPaginatePages } from "./apis/rest/mal/Paginator";
+export type { MalPage, MalPaginateOptions, MalPaginateResult } from "./apis/rest/mal/Paginator";
 export type {
     MalAnime,
     MalAnimeGetParams,

@@ -98,6 +98,8 @@ export type { AniListTokenRefreshCallback } from "./apis/graphql/anilist/tokenRe
 export type { AniListTokenRefreshErrorCallback } from "./apis/graphql/anilist/tokenRefresh";
 export { buildMyAnimeListApi } from "./apis/rest/mal/wiring";
 export type { MyAnimeListApi } from "./apis/rest/mal/facade";
+export { malPaginate, malPaginatePages } from "./apis/rest/mal/Paginator";
+export type { MalPage, MalPaginateOptions, MalPaginateResult } from "./apis/rest/mal/Paginator";
 
 /**
  * {@link AniLink} is the public entry point for interacting with the AniList GraphQL

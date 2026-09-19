@@ -4,6 +4,7 @@ import { MalForumOperation } from "./operations/ForumOperation";
 import { MalMangaOperation } from "./operations/MangaOperation";
 import { MalUserOperation } from "./operations/UserOperation";
 import type { MyAnimeListApi } from "./facade";
+import { malPaginate, malPaginatePages } from "./Paginator";
 import { buildMalTokenRefresher, buildRefreshedAuth } from "./tokenRefresh";
 
 /**
@@ -92,6 +93,11 @@ export function buildMyAnimeListApi(
                 topics: forum.topics.bind(forum),
                 topic: forum.topic.bind(forum),
             },
+            // The pagination helpers are provider-owned pure functions over
+            // the shared engine — no transport state to bind, so they are
+            // exposed directly on both branches.
+            paginate: malPaginate,
+            paginatePages: malPaginatePages,
         };
     }
 
@@ -134,5 +140,7 @@ export function buildMyAnimeListApi(
             topics: wrap(forum.topics.bind(forum)),
             topic: wrap(forum.topic.bind(forum)),
         },
+        paginate: malPaginate,
+        paginatePages: malPaginatePages,
     };
 }
