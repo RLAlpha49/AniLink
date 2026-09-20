@@ -60,3 +60,8 @@
 - [Manga operations](https://anilink.alpha49.com/operations/mal/manga): The public MyAnimeList manga operations are grouped by response domain. They cover lookups, discovery reads, and list-status writes.
 - [User operations](https://anilink.alpha49.com/operations/mal/user): The public MyAnimeList user operations are grouped by response domain. They cover profile reads and user-list reads.
 - [Forum operations](https://anilink.alpha49.com/operations/mal/forum): The public MyAnimeList forum operations for reading boards and topics, grouped by response domain.
+
+## API Reference
+
+- [TypeDoc API reference](https://anilink.alpha49.com/typedoc/): Generated API reference for every public class, interface, type, and function.
+- [TypeDoc llms.txt](https://anilink.alpha49.com/typedoc/llms.txt): Machine-readable index of the TypeDoc API reference pages.
