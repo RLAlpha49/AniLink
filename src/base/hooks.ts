@@ -188,6 +188,27 @@ export const safeInvoke = <TArgs extends unknown[]>(
 };
 
 /**
+ * The transport-supplied facts that extend {@link buildErrorContext} beyond
+ * the error's own shape: cumulative retry timing, the budget-exhaustion
+ * signal, and the circuit fast-fail facts. All optional so call sites pass
+ * only what they know.
+ *
+ * @see {@link buildErrorContext}
+ */
+export interface ErrorContextFacts {
+    /** The scheduled retry delay, when the failure will be retried. */
+    nextDelayMs?: number;
+    /** Total time the logical request spent waiting between attempts, when any wait occurred. */
+    retryWaitMs?: number;
+    /** Whether the failure surfaced because the retry budget was exhausted. */
+    budgetExhausted?: boolean;
+    /** The upstream host scope, on circuit fast-fail errors. */
+    host?: string;
+    /** The cooldown remaining on the open breaker, on circuit fast-fail errors. */
+    retryAfterMs?: number;
+}
+
+/**
  * Builds the context object handed to the error lifecycle hooks.
  *
  * @param requestId - The correlation ID of the logical request.
@@ -195,7 +216,9 @@ export const safeInvoke = <TArgs extends unknown[]>(
  * @param method - The HTTP method of the request.
  * @param attempt - The 1-based attempt number.
  * @param normalized - The normalized failure for the attempt.
- * @param nextDelayMs - The scheduled retry delay, when the failure will be retried.
+ * @param facts - The transport-supplied facts: the scheduled retry delay
+ * when the failure will be retried, the cumulative retry wait, the
+ * budget-exhaustion signal, and the circuit fast-fail facts.
  * @returns The populated hook context.
  */
 export const buildErrorContext = (
@@ -204,7 +227,7 @@ export const buildErrorContext = (
     method: HttpMethod,
     attempt: number,
     normalized: AniLinkError,
-    nextDelayMs?: number
+    facts: ErrorContextFacts = {}
 ): RequestErrorContext => ({
     requestId,
     url,
@@ -215,7 +238,13 @@ export const buildErrorContext = (
     ...(normalized instanceof AniLinkApiError && normalized.rateLimit !== undefined
         ? { rateLimit: normalized.rateLimit }
         : {}),
-    ...(nextDelayMs === undefined ? {} : { nextDelayMs }),
+    ...(facts.nextDelayMs === undefined ? {} : { nextDelayMs: facts.nextDelayMs }),
+    ...(facts.retryWaitMs === undefined || facts.retryWaitMs <= 0
+        ? {}
+        : { retryWaitMs: facts.retryWaitMs }),
+    ...(facts.budgetExhausted ? { budgetExhausted: true } : {}),
+    ...(facts.host === undefined ? {} : { host: facts.host }),
+    ...(facts.retryAfterMs === undefined ? {} : { retryAfterMs: facts.retryAfterMs }),
 });
 
 /**
@@ -229,7 +258,9 @@ export const buildErrorContext = (
  * @param attempt - The 1-based attempt number.
  * @param normalized - The normalized failure for the attempt.
  * @param resolved - The resolved request options carrying the error hooks.
- * @param nextDelayMs - The scheduled retry delay, when the failure will be retried.
+ * @param facts - The transport-supplied context facts: the scheduled retry
+ * delay when the failure will be retried, the cumulative retry wait, the
+ * budget-exhaustion signal, and the circuit fast-fail facts.
  * @returns Nothing; the failure is only observed, never rethrown.
  */
 export const reportFailure = (
@@ -239,10 +270,10 @@ export const reportFailure = (
     attempt: number,
     normalized: AniLinkError,
     resolved: ResolvedRequestOptions,
-    nextDelayMs?: number
+    facts: ErrorContextFacts = {}
 ): void => {
-    const context = buildErrorContext(requestId, url, method, attempt, normalized, nextDelayMs);
-    if (nextDelayMs !== undefined) {
+    const context = buildErrorContext(requestId, url, method, attempt, normalized, facts);
+    if (facts.nextDelayMs !== undefined) {
         safeInvoke(
             resolved.onRetry ?? resolved.onError,
             resolved.onRetry === undefined ? "onError" : "onRetry",

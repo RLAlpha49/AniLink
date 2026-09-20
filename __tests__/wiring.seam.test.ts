@@ -9,6 +9,7 @@ import {
 import { ANILIST_GRAPHQL_URL } from "../src/apis/graphql/anilist/AniListOperation";
 import { DEFAULT_REQUEST_TIMEOUT } from "../src/base/transportTypes";
 import { AniLink } from "../src/AniLink";
+import { ResponseCache } from "../src/base/responseCache";
 import { getAxiosStub, makeAxiosResponseError } from "./helpers/axiosStub";
 
 /**
@@ -207,5 +208,44 @@ describe("client-level onHookError wiring", () => {
         // The slot-level handler wins; the client-level default is not called.
         expect(slotHookError).toHaveBeenCalledTimes(1);
         expect(clientHookError).not.toHaveBeenCalled();
+    });
+});
+
+describe("response cache stats through the transport-state snapshot", () => {
+    test("a cache wired through a credentials slot surfaces in getTransportState", async () => {
+        // A consumer wiring the cache through a credentials slot never holds
+        // the ResponseCache instance — the registry resolves it and the
+        // transport-state snapshot reads the counters through it.
+        const client = new AniLink({
+            anilist: {
+                authToken: "anilist-token",
+                responseCache: new ResponseCache({ ttlMs: 10_000 }),
+            },
+        });
+
+        // One cache-miss read through the real wiring: the entry count and
+        // the miss counter both move.
+        await client.anilist.query.media({ id: 1, type: "ANIME" }, { retry: false });
+
+        const state = client.getTransportState();
+        expect(state.anilist.responseCache).toBeDefined();
+        expect(state.anilist.responseCache?.entries).toBe(1);
+        expect(state.anilist.responseCache?.misses).toBe(1);
+
+        // The MAL slot has no cache: the field is absent, not zeroed.
+        expect(state.mal).not.toHaveProperty("responseCache");
+    });
+
+    test("a cache wired through legacy options surfaces in getTransportState too", async () => {
+        // The legacy `new AniLink(token, options)` form: the same cache
+        // instance the AniList client uses must reach the snapshot.
+        const client = new AniLink("legacy-token", {
+            responseCache: new ResponseCache({ ttlMs: 10_000 }),
+        });
+
+        await client.anilist.query.media({ id: 1, type: "ANIME" }, { retry: false });
+
+        const state = client.getTransportState();
+        expect(state.anilist.responseCache?.entries).toBe(1);
     });
 });

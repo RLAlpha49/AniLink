@@ -840,14 +840,25 @@ describe("circuit breaker", () => {
         expect(mocks.request).toHaveBeenCalledTimes(3);
 
         // While the probe is in flight, concurrent requests fast-fail without
-        // reaching the network.
-        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
-            code: "CIRCUIT_OPEN_ERROR",
-        });
-        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+        // reaching the network. The fast-fail report carries the host scope
+        // but no retryAfterMs: while a probe is pending, the remaining wait
+        // is not a cooldown number, so the field is absent rather than
+        // misleading.
+        const fastFailOnError = vi.fn();
+        await expect(
+            sendRequest(url, "POST", { query: "query" }, undefined, {
+                requiresAuth: false,
+                options: { ...pendingOptions, onError: fastFailOnError },
+                stateOwner: pendingOptions,
+            })
+        ).rejects.toMatchObject({
             code: "CIRCUIT_OPEN_ERROR",
         });
         expect(mocks.request).toHaveBeenCalledTimes(3);
+        expect(fastFailOnError).toHaveBeenCalledTimes(1);
+        const fastFailContext = fastFailOnError.mock.calls[0][1];
+        expect(fastFailContext.host).toBe("graphql.anilist.co");
+        expect(fastFailContext).not.toHaveProperty("retryAfterMs");
 
         // The probe succeeds: the breaker closes and later requests dispatch.
         resolveProbe(probeResponse);
@@ -1538,10 +1549,12 @@ describe("rate-limit pacing", () => {
         const first = callSendRequest(url, "POST", { query: "query" });
         await expect(first).resolves.toEqual({ id: 1 });
 
-        // The next request is paced again by the refreshed headers.
+        // The next request is paced again by the refreshed headers. The
+        // pacing sleep carries a random stagger bounded at 500ms, so the
+        // dispatch lands somewhere in (4s, 5.5s].
         const second = callSendRequest(url, "POST", { query: "query" });
         second.catch(() => {});
-        await vi.advanceTimersByTimeAsync(5_000);
+        await vi.advanceTimersByTimeAsync(5_600);
         await expect(second).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(2);
     });
@@ -1572,7 +1585,8 @@ describe("rate-limit pacing", () => {
         const promise = callSendRequest(url, "POST", { query: "query" });
         promise.catch(() => {});
 
-        await vi.advanceTimersByTimeAsync(4_000);
+        // The stagger-bounded sleep lands in (3s, 4.4s].
+        await vi.advanceTimersByTimeAsync(4_500);
         await expect(promise).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(2);
     });
@@ -1678,6 +1692,66 @@ describe("rate-limit pacing", () => {
             requiresAuth: false,
             options: { ...pendingOptions, ignorePaceDeadline: true },
         });
+        second.catch(() => {});
+        await vi.advanceTimersByTimeAsync(1);
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+        await expect(second).resolves.toEqual({ id: 1 });
+    });
+
+    test("a terminal 429 records the reset deadline so the next request waits for the exhausted window", async () => {
+        // The failure-path counterpart of paceAfterSuccess: a 429 that
+        // surfaces without another attempt scheduled (retries disabled)
+        // records the window reset from its own rate-limit metadata, so
+        // the next request to the host waits for the window it already
+        // proved exhausted instead of dispatching immediately and eating
+        // another 429.
+        const resetAt = Math.floor(Date.now() / 1000) + 60;
+        mocks.request
+            .mockRejectedValueOnce(
+                apiError(429, {
+                    "x-ratelimit-limit": "90",
+                    "x-ratelimit-remaining": "0",
+                    "x-ratelimit-reset": String(resetAt),
+                })
+            )
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+
+        configureRequestOptions({ retry: false, paceWithRateLimit: true });
+
+        // First call: the terminal 429 surfaces immediately.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+            status: 429,
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        // Second call: gated on the deadline recorded from the terminal
+        // 429's own metadata — still waiting well into the 60s window.
+        const second = callSendRequest(url, "POST", { query: "query" });
+        second.catch(() => {});
+        await vi.advanceTimersByTimeAsync(30_000);
+        expect(mocks.request).toHaveBeenCalledTimes(1); // second still gated
+
+        // Past the reset, the second call dispatches and resolves.
+        await vi.advanceTimersByTimeAsync(35_000);
+        await expect(second).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("a terminal 429 without rate-limit metadata records no deadline", async () => {
+        // No reset header, nothing to wait for: the next request dispatches
+        // immediately instead of pacing on a deadline that does not exist.
+        mocks.request
+            .mockRejectedValueOnce(apiError(429))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+
+        configureRequestOptions({ retry: false, paceWithRateLimit: true });
+
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            status: 429,
+        });
+
+        const second = callSendRequest(url, "POST", { query: "query" });
         second.catch(() => {});
         await vi.advanceTimersByTimeAsync(1);
         expect(mocks.request).toHaveBeenCalledTimes(2);

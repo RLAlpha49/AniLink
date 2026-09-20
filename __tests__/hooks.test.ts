@@ -367,14 +367,9 @@ describe("buildErrorContext", () => {
 
     test("adds nextDelayMs only when a retry is scheduled", () => {
         const normalized = new AniLinkError("failed", AniLinkErrorCodes.UNKNOWN);
-        const withDelay = buildErrorContext(
-            "req-1",
-            "https://api.test",
-            method,
-            1,
-            normalized,
-            750
-        );
+        const withDelay = buildErrorContext("req-1", "https://api.test", method, 1, normalized, {
+            nextDelayMs: 750,
+        });
         const withoutDelay = buildErrorContext("req-1", "https://api.test", method, 1, normalized);
         expect(withDelay.nextDelayMs).toBe(750);
         expect("nextDelayMs" in withoutDelay).toBe(false);
@@ -399,7 +394,7 @@ describe("reportFailure", () => {
                 onRetry,
                 onError,
             },
-            500
+            { nextDelayMs: 500 }
         );
         expect(onRetry).toHaveBeenCalledTimes(1);
         expect(onError).not.toHaveBeenCalled();
@@ -420,7 +415,7 @@ describe("reportFailure", () => {
                 ...baseOptions,
                 onError,
             },
-            500
+            { nextDelayMs: 500 }
         );
         expect(onError).toHaveBeenCalledTimes(1);
         const context = onError.mock.calls[0][1];

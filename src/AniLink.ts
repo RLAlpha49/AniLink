@@ -2,6 +2,7 @@ import { type AniLinkOptions, type AniListApi } from "./apis/graphql/anilist/fac
 import { buildProviderClients } from "./providers/registry";
 import type { MyAnimeListApi } from "./apis/rest/mal/facade";
 import type { AniLinkCredentials } from "./base/credentials";
+import type { ResponseCache } from "./base/responseCache";
 import { snapshotTransportState, type TransportStateSnapshot } from "./base/transportState";
 
 export type { AniListApi, AniLinkOptions } from "./apis/graphql/anilist/facade";
@@ -121,6 +122,11 @@ export class AniLink {
     /** The per-provider state owners the clients key their shared transport state (breaker, budget, pacing) through. */
     private stateOwners: { anilist: object; mal: object };
 
+    /** The per-provider response caches resolved from the transport options, when enabled, for the cache-stats snapshot. */
+    private responseCaches:
+        | { anilist: ResponseCache | undefined; mal: ResponseCache | undefined }
+        | undefined;
+
     /**
      * Creates a new {@link AniLink} instance. The `authToken` parameter is optional and only
      * required for authenticated queries and mutations; without it only public queries are
@@ -171,15 +177,23 @@ export class AniLink {
         this.anilist = clients.anilist;
         this.mal = clients.mal;
         this.stateOwners = clients.stateOwners;
+        this.responseCaches = clients.responseCaches ?? {
+            anilist: undefined,
+            mal: undefined,
+        };
     }
 
     /**
      * Returns a read-only, point-in-time snapshot of each provider client's
      * shared transport state — the circuit-breaker scopes, retry-budget
-     * window, and rate-limit pacing deadlines keyed through that client's
-     * state owner — so "is the breaker open right now?", "how many budget
-     * retries are spent?", and "when does the pacing deadline elapse?" can
-     * be answered without pre-wiring lifecycle hooks.
+     * window, rate-limit pacing deadlines keyed through that client's
+     * state owner, and (when the provider's transport options enable a
+     * response cache) the cache's live entry count and lifetime
+     * hit/miss/expiration/eviction counters — so "is the breaker open right
+     * now?", "how many budget retries are spent?", "when does the pacing
+     * deadline elapse?", and "how is the cache performing?" can be answered
+     * without pre-wiring lifecycle hooks and without holding the
+     * {@link ResponseCache} instance.
      *
      * Each provider's snapshot is built by {@link snapshotTransportState},
      * which owns the read-only contract: deep-frozen copies that never
@@ -210,12 +224,19 @@ export class AniLink {
      * for (const deadline of state.anilist.paceDeadlines) {
      *     console.log("pacing until", new Date(deadline.deadlineMs).toISOString(), "for", deadline.host);
      * }
+     * if (state.anilist.responseCache) {
+     *     console.log("cache entries:", state.anilist.responseCache.entries);
+     * }
      * ```
      */
     public getTransportState(): { anilist: TransportStateSnapshot; mal: TransportStateSnapshot } {
+        // The caches field is normalized to a full pair in the constructor,
+        // so the snapshot reads never see `undefined`; the local keeps the
+        // narrowing inside this method.
+        const caches = this.responseCaches ?? { anilist: undefined, mal: undefined };
         return Object.freeze({
-            anilist: snapshotTransportState(this.stateOwners.anilist),
-            mal: snapshotTransportState(this.stateOwners.mal),
+            anilist: snapshotTransportState(this.stateOwners.anilist, caches.anilist),
+            mal: snapshotTransportState(this.stateOwners.mal, caches.mal),
         });
     }
 }

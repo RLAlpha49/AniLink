@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { AniLinkApiError, AniLinkErrorCodes, AniLinkRestError } from "../src/base/AniLinkError";
 import { snapshotTransportState } from "../src/base/transportState";
+import { ResponseCache } from "../src/base/responseCache";
 import { recordPaceDeadline } from "../src/base/pacing";
 import { getCircuitState } from "../src/base/circuitBreaker";
 import { getRetryBudgetState } from "../src/base/retry";
@@ -151,6 +152,30 @@ describe("snapshotTransportState", () => {
         expect(snapshot.paceDeadlines).toEqual([
             { host: "graphql.anilist.co", deadlineMs: Date.now() - 500 },
         ]);
+    });
+
+    test("includes the response cache counters when a cache is threaded through", () => {
+        const owner = {};
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        cache.set("GET", "https://example.com/api", undefined, undefined, { id: 1 });
+        cache.get("GET", "https://example.com/api");
+        cache.get("GET", "https://example.com/other");
+
+        const snapshot = snapshotTransportState(owner, cache);
+
+        expect(snapshot.responseCache).toEqual({
+            entries: 1,
+            hits: 1,
+            misses: 1,
+            expirations: 0,
+            evictions: 0,
+        });
+        expect(Object.isFrozen(snapshot.responseCache)).toBe(true);
+    });
+
+    test("omits the responseCache field when no cache is threaded through", () => {
+        const snapshot = snapshotTransportState({});
+        expect(snapshot).not.toHaveProperty("responseCache");
     });
 });
 

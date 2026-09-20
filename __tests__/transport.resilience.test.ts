@@ -554,19 +554,21 @@ describe("Circuit accounting for partial-success envelopes", () => {
         expect(mocks.request).toHaveBeenCalledTimes(2);
     });
 
-    test("a caller-side partial envelope resets the breaker streak like a success", async () => {
-        // A partial envelope whose error entries carry no availability
-        // signal (a caller-side GraphQL failure, e.g. a validation error
-        // with no upstream status) proves the upstream answered, so the
-        // streak resets exactly as a success or a strict-mode throw of the
-        // same class would.
+    test("a status-less partial envelope leaves the breaker streak untouched", async () => {
+        // A partial envelope whose error entries carry no upstream status
+        // is streak-neutral: it may be a server fault that omitted its
+        // status, so it must not reset the streak (a sustained outage
+        // surfacing as status-less partial envelopes would otherwise erase
+        // the streak other error classes accumulated), but it carries no
+        // availability-class status either, so it must not advance the
+        // streak — matching the strict mode's throw of the same error.
         pendingOptions = {
             retry: false,
             circuitBreaker: { threshold: 2, cooldownMs: 60_000 },
             allowPartialData: true,
         };
 
-        // One availability-class partial envelope advances the streak.
+        // One availability-class partial envelope advances the streak to 1.
         mocks.request.mockResolvedValueOnce({
             data: {
                 data: { User: { id: 1 }, Page: { id: 2 } },
@@ -579,8 +581,8 @@ describe("Circuit accounting for partial-success envelopes", () => {
         await vi.advanceTimersByTimeAsync(10);
         await expect(first).resolves.toBeDefined();
 
-        // A caller-side partial envelope (no status on the error entry)
-        // resets the streak.
+        // A status-less partial envelope (no status on the error entry)
+        // leaves the streak at 1 instead of resetting it.
         mocks.request.mockResolvedValueOnce({
             data: {
                 data: { User: { id: 3 }, Page: { id: 4 } },
@@ -593,8 +595,8 @@ describe("Circuit accounting for partial-success envelopes", () => {
         await vi.advanceTimersByTimeAsync(10);
         await expect(second).resolves.toBeDefined();
 
-        // The streak was reset, so one more availability-class partial
-        // envelope does not reach the threshold of 2.
+        // The streak was not reset, so one more availability-class partial
+        // envelope reaches the threshold of 2 and opens the breaker.
         mocks.request.mockResolvedValueOnce({
             data: {
                 data: { User: { id: 5 }, Page: { id: 6 } },
@@ -604,8 +606,19 @@ describe("Circuit accounting for partial-success envelopes", () => {
         const third = callSendRequest("https://graphql.anilist.co", "POST", {
             query: "query",
         });
+        third.catch(() => {});
         await vi.advanceTimersByTimeAsync(10);
         await expect(third).resolves.toBeDefined();
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+
+        // The breaker is open: the next request fast-fails without
+        // touching the network.
+        const fourth = callSendRequest("https://graphql.anilist.co", "POST", {
+            query: "query",
+        });
+        fourth.catch(() => {});
+        await vi.advanceTimersByTimeAsync(10);
+        await expect(fourth).rejects.toMatchObject({ code: "CIRCUIT_OPEN_ERROR" });
         expect(mocks.request).toHaveBeenCalledTimes(3);
     });
 });
@@ -643,14 +656,18 @@ describe("onResponse pacedMs stamping", () => {
         second.catch(() => {});
         await vi.advanceTimersByTimeAsync(1_000);
         expect(mocks.request).toHaveBeenCalledTimes(1);
-        await vi.advanceTimersByTimeAsync(1_100);
+        // The pacing sleep carries a random stagger bounded at a tenth of
+        // the wait (capped at 500ms), so the dispatch lands in (2s, 2.2s].
+        await vi.advanceTimersByTimeAsync(1_300);
         await expect(second).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(2);
 
         // The paced emission carries the wait length; a non-paced
-        // emission (the first response) carries no pacedMs at all.
+        // emission (the first response) carries no pacedMs at all. The
+        // stagger is excluded from pacedMs, so it is exactly the 2s
+        // deadline wait.
         expect(onResponse).toHaveBeenCalledTimes(1);
-        expect(onResponse.mock.calls[0][0]).toMatchObject({ pacedMs: 2_000 });
+        expect(onResponse.mock.calls[0][0].pacedMs).toBe(2_000);
     });
 
     test("a request that never waits carries no pacedMs on onResponse", async () => {
@@ -686,11 +703,12 @@ describe("onResponse pacedMs stamping", () => {
         const onResponse = vi.fn();
         const second = client.query.user({ id: 1 }, { onResponse, retry: false });
         second.catch(() => {});
-        await vi.advanceTimersByTimeAsync(2_100);
+        // The stagger-bounded sleep lands in (2s, 2.2s].
+        await vi.advanceTimersByTimeAsync(2_300);
         await expect(second).rejects.toBeInstanceOf(AniLinkApiError);
 
         expect(onResponse).toHaveBeenCalledTimes(1);
-        expect(onResponse.mock.calls[0][0]).toMatchObject({ pacedMs: 2_000 });
+        expect(onResponse.mock.calls[0][0].pacedMs).toBe(2_000);
     });
 
     test("a pacing wait before a failed attempt is stamped on the retried attempt's onResponse", async () => {
@@ -725,17 +743,18 @@ describe("onResponse pacedMs stamping", () => {
         const onResponse = vi.fn();
         const request = client.query.user({ id: 1 }, { onResponse });
         request.catch(() => {});
-        // Attempt 1's 1s pacing wait + 1ms retry backoff; attempt 2
-        // dispatches immediately (the deadline elapsed during attempt
-        // 1's wait) and resolves.
-        await vi.advanceTimersByTimeAsync(1_100);
+        // Attempt 1's 1s pacing wait (plus a stagger bounded at 100ms) +
+        // 1ms retry backoff; attempt 2 dispatches immediately (the
+        // deadline elapsed during attempt 1's wait) and resolves.
+        await vi.advanceTimersByTimeAsync(1_200);
         await expect(request).resolves.toEqual({ id: 1 });
 
         // Both attempts emitted onResponse, and both carry the wait:
-        // attempt 1's own error-path emission reports the 1s it waited,
-        // and the retry's emission reports the accumulated total.
+        // attempt 1's own error-path emission reports exactly the 1s it
+        // waited (stagger excluded), and the retry's emission reports the
+        // accumulated total.
         expect(onResponse).toHaveBeenCalledTimes(2);
-        expect(onResponse.mock.calls[0][0]).toMatchObject({ pacedMs: 1_000 });
-        expect(onResponse.mock.calls[1][0]).toMatchObject({ pacedMs: 1_000 });
+        expect(onResponse.mock.calls[0][0].pacedMs).toBe(1_000);
+        expect(onResponse.mock.calls[1][0].pacedMs).toBe(onResponse.mock.calls[0][0].pacedMs);
     });
 });

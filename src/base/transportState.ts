@@ -14,6 +14,7 @@
 import { peekCircuitStates } from "./circuitBreaker";
 import { peekRetryBudgetState } from "./retry";
 import { peekPaceDeadlines } from "./pacing";
+import type { ResponseCacheStats } from "./responseCache";
 
 /**
  * A frozen copy of one host-scoped {@link CircuitState} record, as exposed by
@@ -79,6 +80,16 @@ export interface TransportStateSnapshot {
     retryBudget?: RetryBudgetSnapshot;
     /** Frozen per-host rate-limit pacing deadlines, one per host with a recorded (not yet elapsed-and-cleared) deadline. */
     paceDeadlines: readonly PaceDeadlineSnapshot[];
+    /**
+     * Frozen response-cache counters, present only when the client's
+     * transport options enable a {@link ResponseCache}: the live entry count
+     * and the lifetime hit/miss/expiration/eviction counters, so cache
+     * tuning (`ttlMs`/`maxEntries`) is data-driven through the same facade
+     * surface as the breaker/budget/pacing state — without holding the
+     * `ResponseCache` instance (which a consumer wiring the cache through a
+     * provider credentials slot never held).
+     */
+    responseCache?: ResponseCacheStats;
 }
 
 /**
@@ -97,6 +108,9 @@ export interface TransportStateSnapshot {
  * @param owner - The stable per-client state owner threaded through the
  * provider wiring (exposed on the `stateOwners` field of
  * {@link ProviderClients}).
+ * @param responseCache - The client's configured response cache, when one
+ * is enabled, contributing the frozen `responseCache` counters to the
+ * snapshot.
  * @returns A deep-frozen {@link TransportStateSnapshot} of the owner's
  * recorded state.
  * @example
@@ -107,7 +121,10 @@ export interface TransportStateSnapshot {
  * }
  * ```
  */
-export const snapshotTransportState = (owner: object): TransportStateSnapshot => {
+export const snapshotTransportState = (
+    owner: object,
+    responseCache?: { stats(): ResponseCacheStats }
+): TransportStateSnapshot => {
     const circuitScopes = peekCircuitStates(owner);
     const circuit: CircuitStateSnapshot[] =
         circuitScopes === undefined
@@ -140,5 +157,6 @@ export const snapshotTransportState = (owner: object): TransportStateSnapshot =>
               }
             : {}),
         paceDeadlines: Object.freeze(paceDeadlines),
+        ...(responseCache !== undefined ? { responseCache: responseCache.stats() } : {}),
     });
 };

@@ -588,6 +588,378 @@ describe("GraphQL errors in HTTP 200 responses", () => {
         expect(error).toBeInstanceOf(AniLinkGraphQLError);
         expect(onResponse).toHaveBeenCalledTimes(1);
     });
+
+    test("a 200 error envelope's onResponse carries rateLimit and cacheHit facts", async () => {
+        // The pre-extraction payload: the HTTP 200 attempt succeeded, so its
+        // onResponse emission reports the parsed rate-limit headers and the
+        // cache-miss marker even though the envelope later throws.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "Not found." }], data: null },
+            headers: {
+                "x-ratelimit-limit": "90",
+                "x-ratelimit-remaining": "89",
+                "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 60),
+            },
+        });
+
+        const onResponse = vi.fn();
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            {
+                requiresAuth: false,
+                options: { retry: false, responseCache: cache, onResponse },
+            }
+        ).catch(() => {
+            // The envelope throws; the emission is what this test asserts.
+        });
+
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        const context = onResponse.mock.calls[0][0];
+        expect(context.cacheHit).toBe(false);
+        expect(context.rateLimit).toMatchObject({ limit: 90, remaining: 89 });
+        expect(context.cacheWrite).toBeUndefined();
+    });
+
+    test("a partial-success envelope reports onResponse before onError", async () => {
+        // The pre-extraction ordering: the attempt's onResponse fires before
+        // the partial envelope's error entries surface through onError, so
+        // consumers joining the two streams see a stable order.
+        const events: string[] = [];
+        const onResponse = vi.fn(() => {
+            events.push("response");
+        });
+        const onError = vi.fn(() => {
+            events.push("error");
+        });
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { Media: { id: 1 }, Page: null },
+                errors: [{ message: "Page failed." }],
+            },
+        });
+
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } Page { media { id } } }" },
+            undefined,
+            {
+                requiresAuth: false,
+                options: { retry: false, allowPartialData: true, onResponse, onError },
+            }
+        );
+
+        expect(events).toEqual(["response", "error"]);
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("error-context observability fields", () => {
+    test("a terminal retryable failure in a spent window reports budgetExhausted", async () => {
+        // A 429 is retryable under the policy; with the shared budget
+        // already spent by an earlier request, the 429 surfaces with
+        // budgetExhausted: true — the chronic-exhaustion signal.
+        const stateOwner = {};
+        const options = {
+            retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 },
+            retryBudget: { maxRetriesPerWindow: 1, windowMs: 60_000 },
+        };
+
+        // Prime the budget: this request's retry spends the window's single
+        // unit (429 → retry → success).
+        mocks.request
+            .mockRejectedValueOnce({
+                isAxiosError: true,
+                response: { status: 429, data: {}, headers: {} },
+            })
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { requiresAuth: false, options, stateOwner }
+        );
+
+        // The next request's 429 is retryable but the window is spent: it
+        // surfaces with budgetExhausted.
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 429, data: {}, headers: {} },
+        });
+        const onError = vi.fn();
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { requiresAuth: false, options: { ...options, onError }, stateOwner }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        expect(onError).toHaveBeenCalled();
+        const context = onError.mock.calls.at(-1)?.[1];
+        expect(context.budgetExhausted).toBe(true);
+        expect(context.retryWaitMs).toBeUndefined();
+    });
+
+    test("a never-retryable failure in a spent window does not report budgetExhausted", async () => {
+        // A 404 is never retryable; landing in a spent window must not be
+        // miscounted as chronic budget exhaustion.
+        const stateOwner = {};
+        const options = {
+            retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 },
+            retryBudget: { maxRetriesPerWindow: 1, windowMs: 60_000 },
+        };
+
+        // Spend the window's single retry unit.
+        mocks.request
+            .mockRejectedValueOnce({
+                isAxiosError: true,
+                response: { status: 429, data: {}, headers: {} },
+            })
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { requiresAuth: false, options, stateOwner }
+        );
+
+        // A 404 in the same spent window: never retryable, so no
+        // budgetExhausted flag.
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 404, data: {}, headers: {} },
+        });
+        const onError = vi.fn();
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { requiresAuth: false, options: { ...options, onError }, stateOwner }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkApiError);
+        const context = onError.mock.calls.at(-1)?.[1];
+        expect(context.budgetExhausted).toBeUndefined();
+    });
+
+    test("retryWaitMs accumulates server-dictated waits across attempts", async () => {
+        // Two 429s with Retry-After: 1, then the terminal failure: the
+        // terminal report carries the accumulated wait of the first retry's
+        // server-dictated delay (the second never sleeps — it surfaces).
+        const onError = vi.fn();
+        mocks.request
+            .mockRejectedValueOnce({
+                isAxiosError: true,
+                response: { status: 429, data: {}, headers: { "retry-after": "1" } },
+            })
+            .mockRejectedValueOnce({
+                isAxiosError: true,
+                response: { status: 429, data: {}, headers: { "retry-after": "1" } },
+            });
+
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            {
+                requiresAuth: false,
+                options: {
+                    retry: { maxRetries: 1, baseDelayMs: 1, maxDelayMs: 1 },
+                    retryBudget: { maxRetriesPerWindow: 5, windowMs: 60_000 },
+                    onError,
+                },
+            }
+        ).catch(() => {
+            // The request surfaces the second 429; the emission is the
+            // assertion target.
+        });
+
+        const context = onError.mock.calls.at(-1)?.[1];
+        // The first retry slept the 1-second server-dictated wait; the
+        // terminal report carries it.
+        expect(context.retryWaitMs).toBeGreaterThanOrEqual(1_000);
+    });
+
+    test("a circuit-open fast-fail reports host and retryAfterMs", async () => {
+        // Trip the breaker, then fast-fail: the terminal onError context
+        // carries the host scope and the cooldown remaining.
+        const stateOwner = {};
+        const options = {
+            retry: false,
+            circuitBreaker: { threshold: 1, cooldownMs: 30_000 },
+        };
+
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            response: { status: 500, data: {}, headers: {} },
+        });
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { requiresAuth: false, options, stateOwner }
+        ).catch(() => {
+            // The 500 trips the breaker (threshold 1).
+        });
+
+        const onError = vi.fn();
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { requiresAuth: false, options: { ...options, onError }, stateOwner }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkNetworkError);
+        expect(onError).toHaveBeenCalledTimes(1);
+        const context = onError.mock.calls[0][1];
+        expect(context.host).toBe("graphql.anilist.co");
+        expect(context.retryAfterMs).toBeGreaterThan(0);
+    });
+
+    test("cacheWrite marks a cache-miss read whose response was written back", async () => {
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const onResponse = vi.fn();
+        const options = { responseCache: cache, onResponse };
+
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { options }
+        );
+
+        // The network-served response was written back: the emission
+        // carries cacheWrite: true alongside cacheHit: false.
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onResponse.mock.calls[0][0]).toMatchObject({
+            cacheHit: false,
+            cacheWrite: true,
+        });
+    });
+
+    test("a partial-success envelope resolved by allowPartialData reports no cacheWrite", async () => {
+        // The third cache outcome: a cacheable read whose response was NOT
+        // written back because the partial envelope is excluded from
+        // caching. The emission must not carry cacheWrite, so fill-rate
+        // metrics do not overcount.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const onResponse = vi.fn();
+        const options = { responseCache: cache, allowPartialData: true, onResponse };
+
+        mocks.request.mockResolvedValueOnce({
+            data: {
+                data: { User: { id: 1 }, Page: { id: 2 } },
+                errors: [{ message: "favourite failed", status: 500 }],
+            },
+        });
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { User { id } Page { id } }" },
+            "token",
+            { options }
+        );
+
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onResponse.mock.calls[0][0]).toMatchObject({ cacheHit: false });
+        expect(onResponse.mock.calls[0][0]).not.toHaveProperty("cacheWrite");
+    });
+
+    test("an invalidation-guarded write-back drop reports no cacheWrite", async () => {
+        // The third cache outcome, in-flight flavor: a read whose response
+        // arrived after an invalidation affecting it landed, so the
+        // generation guard dropped the write-back. The emission must not
+        // carry cacheWrite.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const onResponse = vi.fn();
+        const options = { responseCache: cache, onResponse };
+
+        // Hold the read's network response pending.
+        let resolveRead:
+            ((value: { data: { data: { Media: { id: number } } } }) => void) | undefined;
+        mocks.request.mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    resolveRead = resolve;
+                })
+        );
+        const readPromise = sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { options }
+        );
+        readPromise.catch(() => {});
+
+        // While the read is in flight, a mapped mutation at the same
+        // endpoint invalidates the affected root field.
+        mocks.request.mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "mutation { SaveMediaListEntry (mediaId: 1) { id } }" },
+            "token",
+            { options }
+        );
+
+        // The read completes with its pre-mutation response; the write-back
+        // is dropped by the in-flight guard.
+        resolveRead?.({ data: { data: { Media: { id: 1 } } } });
+        await readPromise;
+
+        expect(onResponse).toHaveBeenCalledTimes(2);
+        // The mutation completed first, so the read's emission is the
+        // second one.
+        const readEmission = onResponse.mock.calls[1][0];
+        expect(readEmission).toMatchObject({ cacheHit: false });
+        expect(readEmission).not.toHaveProperty("cacheWrite");
+    });
+
+    test("an auth-required read with no token is not served a cache hit", async () => {
+        // The auth guard gates the cache read: an anonymous-namespace entry
+        // must not satisfy a requiresAuth request.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const options = { responseCache: cache };
+
+        // Prime the anonymous namespace with a read.
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            undefined,
+            { requiresAuth: false, options }
+        );
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+
+        // The same read, auth-required, with no token: fails fast with
+        // AniLinkAuthError instead of the anonymous cache hit.
+        const error = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            undefined,
+            { requiresAuth: true, options }
+        ).catch((requestError: unknown) => requestError);
+
+        expect(error).toBeInstanceOf(AniLinkAuthError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe("request lifecycle hooks", () => {
@@ -1668,7 +2040,11 @@ describe("response cache integration", () => {
             expect(mocks.request).toHaveBeenCalledTimes(3);
         });
 
-        test("a successful GraphQL mutation invalidates the cached GraphQL queries at the endpoint", async () => {
+        test("a successful unmapped GraphQL mutation invalidates the cached GraphQL queries at the endpoint", async () => {
+            // A mutation whose root field is not in the scoped-invalidation map
+            // keeps the conservative whole-endpoint invalidation: every cached
+            // query at the endpoint is dropped, so an unmapped (including any
+            // future upstream) mutation can never under-invalidate.
             const cache = new ResponseCache({ ttlMs: 10_000 });
             const options = { responseCache: cache };
 
@@ -1689,11 +2065,11 @@ describe("response cache integration", () => {
             );
             expect(mocks.request).toHaveBeenCalledTimes(2);
 
-            // A GraphQL mutation through the same endpoint.
+            // An unmapped GraphQL mutation through the same endpoint.
             await sendRequest(
                 "https://graphql.anilist.co",
                 "POST",
-                { query: "mutation { SaveMediaListEntry (mediaId: 1) { id } }" },
+                { query: "mutation { DeleteThread (id: 1) { id } }" },
                 "token",
                 { options }
             );
@@ -1717,40 +2093,61 @@ describe("response cache integration", () => {
             expect(mocks.request).toHaveBeenCalledTimes(5);
         });
 
-        test("a failed GraphQL mutation leaves the cached queries intact", async () => {
+        test("a mapped GraphQL mutation invalidates only the affected root fields' cached queries", async () => {
+            // Root-field-scoped invalidation: a SaveMediaListEntry changes
+            // what MediaList/MediaListCollection/Page/Media/User/Viewer
+            // queries can report (the list-entry state those documents can
+            // embed), but cannot change what a Staff query returns — that
+            // cached entry stays warm instead of being flushed wholesale.
             const cache = new ResponseCache({ ttlMs: 10_000 });
-            const options = { responseCache: cache, retry: false };
+            const options = { responseCache: cache };
 
+            // Prime the cache with one affected and one unaffected read.
             await sendRequest(
                 "https://graphql.anilist.co",
                 "POST",
-                { query: "query { Viewer { id } }" },
+                { query: "query { MediaList (userId: 1) { id } }" },
                 "token",
                 { options }
             );
-            expect(mocks.request).toHaveBeenCalledTimes(1);
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query { Staff (id: 1) { id } }" },
+                "token",
+                { options }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(2);
 
-            mocks.request.mockRejectedValueOnce({
-                isAxiosError: true,
-                response: { status: 500, data: { message: "boom" } },
-            });
+            // A mapped mutation through the same endpoint.
             await sendRequest(
                 "https://graphql.anilist.co",
                 "POST",
                 { query: "mutation { SaveMediaListEntry (mediaId: 1) { id } }" },
                 "token",
                 { options }
-            ).catch(() => undefined);
+            );
 
-            // The cached query survived the failed mutation: still a hit.
+            // The affected MediaList read was dropped: it refetches.
             await sendRequest(
                 "https://graphql.anilist.co",
                 "POST",
-                { query: "query { Viewer { id } }" },
+                { query: "query { MediaList (userId: 1) { id } }" },
                 "token",
                 { options }
             );
-            expect(mocks.request).toHaveBeenCalledTimes(2);
+            expect(mocks.request).toHaveBeenCalledTimes(4);
+
+            // The unaffected Staff read survived the scoped invalidation:
+            // still a cache hit, no refetch.
+            await sendRequest(
+                "https://graphql.anilist.co",
+                "POST",
+                { query: "query { Staff (id: 1) { id } }" },
+                "token",
+                { options }
+            );
+            expect(mocks.request).toHaveBeenCalledTimes(4);
         });
 
         test("a GraphQL mutation does not drop cached reads at other URLs", async () => {

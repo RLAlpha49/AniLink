@@ -86,6 +86,8 @@ const unpaced = new AniLink("token", { paceWithRateLimit: false });
 
 `rateLimitFloor` must be a finite, non-negative integer; `0` disables floor-based pacing (the transport still honors `Retry-After` on `429` responses), and a defined-but-invalid value throws instead of being silently coerced.
 
+A terminal `429` — one that exhausted its retries, ran with retries disabled, or surfaced for any other reason without another attempt scheduled — records the same reset deadline from its own `x-ratelimit-*` metadata, so the next request to that host waits for the window it already proved exhausted instead of dispatching immediately, eating another `429`, and repeating until the window resets on its own. The recorded deadline is clamped to the 5-minute maximum like every pacing wait: a `429` reporting a far-future reset paces in 5-minute increments, each post-clamp dispatch eating at most one more `429` before re-recording, until the window actually resets.
+
 <Callout kind="warning">
 
 **Bulk traversals.** A single low-quota response pauses _every_ subsequent request to that host until the window resets, up to 5 minutes per wait. For bulk jobs (`paginate`/`paginateChunks` with default concurrency 3), this serializes throughput. Prefer `paceWithRateLimit: false` plus an explicit retry policy for bulk work, and keep pacing on for latency-sensitive user-facing calls. The tripping response itself still returns immediately; only later requests wait.

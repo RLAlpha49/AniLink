@@ -226,6 +226,38 @@ export const getCircuitState = (owner: object, scope: string): CircuitState => {
 };
 
 /**
+ * Computes the cooldown remaining on an open breaker — the milliseconds
+ * until the next half-open probe may dispatch — for the circuit fast-fail
+ * error context (see {@link checkCircuitOpen}). While a probe is pending
+ * (`probeInFlight`), no cooldown applies: the next request fast-fails
+ * until the probe settles, so the remaining wait is not a cooldown number
+ * and the caller reports `undefined`.
+ *
+ * The math is the same {@link checkCircuitOpen} performs: the scaled
+ * cooldown (see {@link scaledCooldownMs}) measured from `openedAt`. A
+ * closed breaker has no cooldown either.
+ *
+ * @param circuit - The caller's breaker state, when the breaker is enabled.
+ * @param breaker - The breaker configuration, when enabled.
+ * @returns The cooldown remaining in milliseconds while the breaker is
+ * open and no probe is pending, or `undefined` otherwise.
+ */
+export const circuitCooldownRemainingMs = (
+    circuit: CircuitState | undefined,
+    breaker: { threshold: number; cooldownMs: number } | undefined
+): number | undefined => {
+    if (circuit === undefined || breaker === undefined) {
+        return undefined;
+    }
+    if (circuit.probeInFlight || circuit.openedAt === null) {
+        return undefined;
+    }
+    const remaining =
+        circuit.openedAt + scaledCooldownMs(breaker, circuit.failedProbes) - Date.now();
+    return remaining > 0 ? remaining : undefined;
+};
+
+/**
  * Returns the breaker scopes recorded for one owner without creating or
  * refreshing anything — the read-only counterpart of {@link getCircuitState}
  * used by transport-state snapshots. Unlike {@link getCircuitState},

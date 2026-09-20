@@ -6,12 +6,14 @@ import {
 import { buildMyAnimeListApi } from "../apis/rest/mal/wiring";
 import {
     resolveAniListCredentials,
+    resolveMalCredentials,
     type AniLinkCredentials,
     type AniListCredentials,
     type MalCredentials,
     type ProviderCredentials,
 } from "../base/credentials";
 import type { RequestOptions } from "../base/RequestHandler";
+import type { ResponseCache } from "../base/responseCache";
 import type { MyAnimeListApi } from "../apis/rest/mal/facade";
 
 /**
@@ -39,6 +41,17 @@ export interface ProviderClients {
     mal: MyAnimeListApi;
     /** The per-provider state owners the clients key their shared transport state (breaker, budget, pacing) through. */
     stateOwners: { anilist: object; mal: object };
+    /**
+     * The per-provider response caches resolved from each slot's transport
+     * options, when enabled — the instances {@link AniLink}'s transport-state
+     * snapshot reads the cache counters through, so a consumer wiring the
+     * cache through a credentials slot (where the instance is constructed
+     * for them) still reaches `stats()` via `getTransportState()`. Optional
+     * so external `ProviderClients` consumers (custom registries, test
+     * doubles) constructed before the field existed keep compiling; a
+     * missing value reads as no cache in the snapshot.
+     */
+    responseCaches?: { anilist: ResponseCache | undefined; mal: ResponseCache | undefined };
 }
 
 /**
@@ -70,10 +83,14 @@ const buildAniListClient: ProviderFactory<AniListCredentials, AniListApi> = (
     // The raw slot rides along so the wiring can read the automatic
     // token-refresh fields (`refreshToken`, `clientId`, `clientSecret`,
     // `onTokenRefresh`) the resolver strips from the transport options —
-    // the same raw-slot flow `buildMyAnimeListApi` uses for MAL.
+    // the same raw-slot flow `buildMyAnimeListApi` uses for MAL. The options
+    // precedence (the slot's own transport settings win over the legacy
+    // options) is shared with the cache lookup in
+    // {@link buildProviderClients} through {@link effectiveAniListOptions},
+    // so the two sites cannot drift.
     return buildAniListApi(
         resolved.auth,
-        resolved.options ?? legacyOptions,
+        effectiveAniListOptions(credentials, legacyOptions),
         stateOwner,
         credentials
     );
@@ -84,6 +101,24 @@ const buildMalClient: ProviderFactory<MalCredentials, MyAnimeListApi> = (
     _legacyOptions,
     stateOwner
 ) => buildMyAnimeListApi(credentials, stateOwner);
+
+/**
+ * The effective transport options one provider slot resolves to — the
+ * single resolution both the provider factory and the cache lookup in
+ * {@link buildProviderClients} read, so the cache instance the snapshot
+ * reports is by construction the one the client uses.
+ *
+ * @param slot - The provider's credential slot, when present.
+ * @param legacyOptions - The legacy `new AniLink(token, options)` transport
+ * settings, forwarded only to the AniList slot.
+ * @returns The slot's own transport options when it carries any, otherwise
+ * the legacy options, otherwise `undefined`.
+ */
+const effectiveAniListOptions = (
+    slot: AniListCredentials | undefined,
+    legacyOptions?: RequestOptions
+): RequestOptions | undefined =>
+    resolveAniListCredentials(slot).options ?? legacyOptions;
 
 /**
  * {@link PROVIDER_FACTORIES} is the provider factories used by the composition seam.
@@ -147,6 +182,15 @@ export function buildProviderClients(
     const anilistStateOwner: object = {};
     const malStateOwner: object = {};
 
+    // The per-provider resolved transport options' response caches, when
+    // enabled, so the transport-state snapshot can read the cache counters
+    // without the consumer holding the cache instance. The AniList slot
+    // resolves its own options first (the raw slot's transport settings
+    // win over the legacy options); the MAL slot likewise. A slot without a
+    // cache stays `undefined`.
+    const anilistCache = effectiveAniListOptions(credentials.anilist, legacyOptions)?.responseCache;
+    const malCache = resolveMalCredentials(credentials.mal).options?.responseCache;
+
     // Explicit construction keeps every factory call fully typed: a
     // factory signature change fails here at compile time instead of
     // surfacing at runtime behind a cast. legacyOptions is forwarded only
@@ -160,5 +204,6 @@ export function buildProviderClients(
         ),
         mal: PROVIDER_FACTORIES.mal(withDefaultHook(credentials.mal), undefined, malStateOwner),
         stateOwners: { anilist: anilistStateOwner, mal: malStateOwner },
+        responseCaches: { anilist: anilistCache, mal: malCache },
     };
 }

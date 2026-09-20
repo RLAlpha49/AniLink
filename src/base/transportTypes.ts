@@ -156,6 +156,39 @@ export interface RequestErrorContext {
      * `x-ratelimit-*` headers, when the upstream included them.
      */
     rateLimit?: RateLimitInfo;
+    /**
+     * Total time this logical request has spent waiting between attempts
+     * (retry backoff and server-dictated delays), accumulated across its
+     * attempts. Present only when a wait occurred — the same
+     * optional-presence convention as `pacedMs` on `onResponse` — so a
+     * request that failed after several server-dictated 429 delays stays
+     * distinguishable from a fast validation failure in error dashboards
+     * without joining `onRetry` events per `requestId`.
+     */
+    retryWaitMs?: number;
+    /**
+     * Whether the failure surfaced because the per-window retry budget was
+     * exhausted — the failure was retryable, but the window's retry spend
+     * was already spent — as opposed to a failure that was never retryable.
+     * Present only on the terminal `onError` report of a budget-gated
+     * failure, so hook-based monitoring can detect chronic budget
+     * exhaustion (the condition the budget exists to surface) without
+     * polling transport-state snapshots.
+     */
+    budgetExhausted?: boolean;
+    /**
+     * The upstream host scope the circuit breaker fast-failed for, present
+     * on `CIRCUIT_OPEN_ERROR` error contexts so fast-fail volume can be
+     * graphed per upstream directly from `onError` events.
+     */
+    host?: string;
+    /**
+     * Cooldown remaining on the open circuit breaker, in milliseconds,
+     * present on `CIRCUIT_OPEN_ERROR` error contexts while the breaker is
+     * open and no probe is pending — the answer to "when can I retry?" in
+     * the structured payload instead of the message prose.
+     */
+    retryAfterMs?: number;
 }
 
 /**
@@ -216,17 +249,27 @@ export type OnResponseHandler = (
         durationMs: number;
         rateLimit?: RateLimitInfo;
         cacheHit?: boolean;
+        cacheWrite?: boolean;
         pacedMs?: number;
     }
 ) => void;
 
 /**
  * A callback invoked when proactive rate-limit pacing delays the next request
- * after a successful attempt, with the pacing wait in `delayMs`.
+ * after a successful attempt, with the pacing wait in `delayMs`. Fires after
+ * a completed wait, before the request dispatches, and for a wait aborted
+ * partway through — an aborted wait reports the elapsed portion in `delayMs`
+ * with `aborted: true`, so observers can distinguish a cancelled pacing wait
+ * from no pacing at all without watching `onError`.
  *
  * @see {@link RequestOptions.onPace}
  */
-export type OnPaceHandler = (context: RequestContext & { delayMs: number }) => void;
+export type OnPaceHandler = (
+    context: RequestContext & {
+        delayMs: number;
+        aborted?: boolean;
+    }
+) => void;
 
 /**
  * A callback invoked when a user-supplied lifecycle hook throws. Throwing

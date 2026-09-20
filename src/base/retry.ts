@@ -406,6 +406,45 @@ export const computeNextRetryDelay = (input: RetryDelayInput): number | null => 
 };
 
 /**
+ * Whether a failure that surfaced without a retry did so because of the
+ * retry-budget count gate — the failure was retryable (the per-class matrix
+ * in {@link getRetryDelay} would have returned a delay), but the window's
+ * retry spend was already used up.
+ *
+ * This is the precise condition behind the `budgetExhausted` fact on the
+ * terminal `onError` report: `computeNextRetryDelay` returns `null` for four
+ * disjoint reasons (a failed probe, a disabled policy, the budget gate, and
+ * a non-retryable error class), and only the budget gate should carry the
+ * flag. A never-retryable failure (a validation error, an auth error, a
+ * status-less GraphQL envelope) that happens to land while the shared
+ * budget is spent must not be miscounted as chronic budget exhaustion.
+ *
+ * @param input - The same decision inputs {@link computeNextRetryDelay}
+ * received for the failed attempt.
+ * @returns `true` when the budget count gate is what surfaced the failure.
+ */
+export const isBudgetGatedFailure = (input: RetryDelayInput): boolean => {
+    const { normalized, rawError, attempt, policy, budgetState, budget, wasProbe } = input;
+    // A probe failure or a disabled policy surfaces for its own reason,
+    // never the budget's; without both budget halves there is no budget gate.
+    if (wasProbe || policy === null) {
+        return false;
+    }
+    if (budgetState === undefined || budget === undefined) {
+        return false;
+    }
+    if (budgetState.retriesUsed < budget.maxRetriesPerWindow) {
+        // The count gate did not fire; whatever surfaced this failure, it
+        // was not the budget.
+        return false;
+    }
+    // The count gate fired. It is the reason only when the failure would
+    // otherwise have been retried: the per-class matrix must return a delay
+    // for this attempt (a retryable class, within the policy's retry cap).
+    return getRetryDelay(normalized, rawError, attempt, policy) !== null;
+};
+
+/**
  * Shared retry-budget state, keyed on a stable per-client owner like the
  * circuit breaker's `circuitStates` map. Only populated when a request opts
  * in via `retryBudget`.
