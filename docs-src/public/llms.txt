@@ -44,6 +44,7 @@
 - [MAL authentication](https://anilink.alpha49.com/guides/mal/authentication): The MyAnimeList OAuth2 with PKCE flow: register an application, run the code exchange, and use the resulting access token.
 - [MAL configuration](https://anilink.alpha49.com/guides/mal/configuration): The mal slot fields for the access token and shared transport options, and how they map onto the REST operations.
 - [MAL operations](https://anilink.alpha49.com/guides/mal/operations): The MyAnimeList REST operations: anime and manga lookups and search, seasonal, rankings, suggestions, user lists, and the forum reads with parameter tables per operation.
+- [MAL pagination](https://anilink.alpha49.com/guides/mal/pagination): The two MyAnimeList pagination helpers: malPaginate and the streaming malPaginatePages, over the offset/limit list endpoints.
 - [Complete examples](https://anilink.alpha49.com/guides/mal/complete-examples): Every MyAnimeList operation with its complete params object filled out.
 
 ## Operations

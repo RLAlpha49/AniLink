@@ -216,6 +216,13 @@ export const PAGES: DocPage[] = [
         section: "mal",
     },
     {
+        path: "/guides/mal/pagination",
+        title: "MAL pagination",
+        summary: "The two MyAnimeList pagination helpers over the offset/limit list endpoints.",
+        provider: "mal",
+        section: "mal",
+    },
+    {
         path: "/guides/mal/complete-examples",
         title: "Complete examples",
         summary: "Every MAL operation with its complete params object filled out.",
