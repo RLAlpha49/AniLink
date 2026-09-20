@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ResponseCache } from "../src/base/responseCache";
+import { ResponseCache, extractQueryRootField } from "../src/base/responseCache";
 
 describe("ResponseCache", () => {
     test("returns undefined for a missing key", () => {
@@ -959,5 +959,182 @@ describe("ResponseCache", () => {
             expirations: 0,
             evictions: 1,
         });
+    });
+});
+
+describe("extractQueryRootField", () => {
+    // The extractor is fail-closed: any document it cannot confidently
+    // attribute to one root field yields undefined, and an unscoped entry
+    // is dropped by every scoped invalidation alongside the whole-endpoint
+    // sweeps — so a misattributed entry can never survive a mapped
+    // mutation's invalidation.
+    const extract = (query: string): string | undefined => extractQueryRootField({ query });
+
+    test("extracts the root field of a plain query document", () => {
+        expect(extract("query { Media (id: 1) { id } }")).toBe("Media");
+    });
+
+    test("extracts the root field of an anonymous shorthand document", () => {
+        expect(extract("{ Viewer { id } }")).toBe("Viewer");
+    });
+
+    test("extracts the root field of a named query with variable declarations", () => {
+        expect(extract("query Media($id: Int) { Media (id: $id) { id } }")).toBe("Media");
+    });
+
+    test("attributes an aliased root field to the underlying field name", () => {
+        // The alias is caller-chosen; the invalidation map keys on the real
+        // field, so the entry must be attributed to MediaList, not myList.
+        expect(extract("query { myList: MediaList (userId: 1) { id } }")).toBe("MediaList");
+    });
+
+    test("skips an object-literal variable default before the selection set", () => {
+        // The first { opens the default value, not the root selection set;
+        // the paren-matched header skip must not be fooled by it.
+        expect(extract("query ($f: MediaFilter = {id: 5}) { Page { media { id } } }")).toBe("Page");
+    });
+
+    test("returns undefined for a fragment-spread root selection", () => {
+        // The selected root fields live in the fragment definition, not the
+        // document: the entry cannot be attributed, so it stays unscoped
+        // (fail closed — every scoped invalidation drops it).
+        expect(extract("query { ...mediaFields }")).toBeUndefined();
+    });
+
+    test("returns undefined for a multi-field root selection", () => {
+        // A document selecting two root fields is attributed to neither:
+        // the second field's data could be changed by an invalidation keyed
+        // on the first's name alone, so the entry must stay unscoped (fail
+        // closed — every scoped invalidation drops it).
+        expect(extract("query { Media (id: 1) { id } Viewer { id } }")).toBeUndefined();
+    });
+
+    test("attributes a single aliased field with arguments and sub-selection", () => {
+        // The full span of the one selection — alias, arguments,
+        // sub-selection — is consumed before the single-selection check,
+        // so a one-field document with a deep sub-selection still extracts.
+        expect(
+            extract("query { myList: MediaList (userId: 1, sort: [SCORE]) { media { id } } }")
+        ).toBe("MediaList");
+    });
+
+    test("returns undefined for a document with no selection set", () => {
+        expect(extract("query")).toBeUndefined();
+    });
+
+    test("returns undefined for a non-string query body", () => {
+        expect(extractQueryRootField(undefined)).toBeUndefined();
+        expect(extractQueryRootField({})).toBeUndefined();
+    });
+});
+
+describe("Root-field-scoped invalidation is fail-closed", () => {
+    const url = "https://graphql.anilist.co";
+    // Primes an entry the way the transport does: through setIfFresh with
+    // the document's extracted root field, so the entry carries the
+    // attribution the scoped predicates match against.
+    const prime = (cache: ResponseCache, query: string): void => {
+        cache.setIfFresh(
+            "POST",
+            url,
+            { query },
+            "none",
+            cache.getGeneration(),
+            { data: true },
+            extractQueryRootField({ query })
+        );
+    };
+
+    test("drops a fragment-spread document a mapped mutation cannot attribute", () => {
+        // A fragment-spread root cannot be attributed to a root field, so
+        // the entry must not survive a scoped invalidation on a
+        // technicality — the fragment may select any affected field.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        prime(cache, "query { ...mediaFields }");
+        expect(cache.get("POST", url, { query: "query { ...mediaFields }" }, "none")).toBeDefined();
+
+        const removed = cache.deleteRootFieldsForUrl(url, ["MediaList"]);
+
+        expect(removed).toBe(1);
+        expect(
+            cache.get("POST", url, { query: "query { ...mediaFields }" }, "none")
+        ).toBeUndefined();
+    });
+
+    test("drops a multi-field document attributed to neither of its selections", () => {
+        // A document selecting Media and Viewer is attributed to neither
+        // root field: an UpdateUser-scoped invalidation (User/Viewer) must
+        // drop it even though its first selection is the unaffected Media.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const query = "query { Media (id: 1) { id } Viewer { id } }";
+        prime(cache, query);
+        expect(cache.get("POST", url, { query }, "none")).toBeDefined();
+
+        const removed = cache.deleteRootFieldsForUrl(url, ["User", "Viewer"]);
+
+        expect(removed).toBe(1);
+        expect(cache.get("POST", url, { query }, "none")).toBeUndefined();
+    });
+
+    test("keeps an unaffected single-root document warm", () => {
+        // The fail-closed drop is scoped: a confidently attributed,
+        // unaffected root field still survives a scoped invalidation.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const query = "query { Staff (id: 1) { id } }";
+        prime(cache, query);
+        expect(cache.get("POST", url, { query }, "none")).toBeDefined();
+
+        const removed = cache.deleteRootFieldsForUrl(url, ["MediaList"]);
+
+        expect(removed).toBe(0);
+        expect(cache.get("POST", url, { query }, "none")).toBeDefined();
+    });
+
+    test("treats an unattributed in-flight read as affected by a scoped invalidation", () => {
+        // The in-flight guard mirrors the deletion predicate: a read whose
+        // document cannot be attributed must not re-cache its response
+        // after a scoped invalidation landed mid-flight, exactly as an
+        // attributed affected read would not.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const query = "query { ...mediaFields }";
+        const generationAtRead = cache.getGeneration();
+
+        // A scoped invalidation lands while the read is in flight.
+        cache.deleteRootFieldsForUrl(url, ["MediaList"]);
+
+        const stored = cache.setIfFresh(
+            "POST",
+            url,
+            { query },
+            "none",
+            generationAtRead,
+            { data: true },
+            undefined
+        );
+        expect(stored).toBe(false);
+        expect(cache.get("POST", url, { query }, "none")).toBeUndefined();
+    });
+
+    test("keeps an unaffected attributed in-flight read's write-back", () => {
+        // The mirror cuts both ways: a confidently attributed read whose
+        // root field is unaffected still stores its response after a
+        // scoped invalidation lands mid-flight.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const query = "query { Staff (id: 1) { id } }";
+        const generationAtRead = cache.getGeneration();
+
+        cache.deleteRootFieldsForUrl(url, ["MediaList"]);
+
+        const stored = cache.setIfFresh(
+            "POST",
+            url,
+            { query },
+            "none",
+            generationAtRead,
+            { data: true },
+            "Staff"
+        );
+        expect(stored).toBe(true);
+        expect(cache.get("POST", url, { query }, "none")).toBeDefined();
     });
 });

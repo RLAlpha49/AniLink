@@ -25,7 +25,10 @@
  * re-derives the rules itself.
  */
 
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import type { HttpMethod } from "./transportTypes";
+import type { ResolvedRequestOptions } from "./requestOptions";
+import { safeInvoke } from "./hooks";
 
 /**
  * Matches a GraphQL document that declares a read (query) operation: an
@@ -248,6 +251,272 @@ export const resolveCacheAuthKey = (
 };
 
 /**
+ * Extracts the first field selected inside a GraphQL document's root
+ * selection set — the shared core of the query and mutation root-field
+ * extractors — using the same deliberately lightweight shape checks the
+ * cacheability gate applies (see {@link GRAPHQL_QUERY_PATTERN}), not a
+ * parser.
+ *
+ * The operation header (the `query`/`mutation` keyword, an optional
+ * operation name, and an optional variable-declaration list) is skipped
+ * by paren matching, not by anchoring at the first `{`: a variable
+ * declaration can carry an object-literal default (`query ($f:
+ * MediaFilter = {id: 5}) { ... }`) whose brace is not the selection set.
+ * After the header, the next `{` opens the root selection set and the
+ * first selection inside it is the root field. An alias prefix
+ * (`myList: MediaList`) is skipped so the document is attributed to the
+ * underlying field name, not the caller-chosen alias.
+ *
+ * The extraction is fail-closed: it returns `undefined` whenever it cannot
+ * confidently attribute the document to exactly one root field — no
+ * selection set, a root selection opening with a fragment spread (`query {
+ * ...frag }`, whose selected root fields live in the fragment definition,
+ * not the document), or a root selection containing more than one field
+ * (the second field's data could be changed by an invalidation keyed on
+ * the first's name alone). An unattributed entry stays unscoped, so every
+ * scoped invalidation drops it alongside the whole-endpoint sweeps.
+ *
+ * @param document - The GraphQL document with leading comments stripped.
+ * @returns The document's root field name, or `undefined` when it cannot
+ * be attributed confidently.
+ */
+const extractRootField = (document: string): string | undefined => {
+    // Skip the operation header: the keyword, an optional name, and an
+    // optional parenthesized variable-declaration list (matched by paren
+    // depth so object-literal defaults containing braces or nested parens
+    // do not end the skip early). A flat character scan (not a regex with
+    // an unbounded class) keeps the security linter satisfied, the same
+    // approach stripLeadingComments uses.
+    const keyword = /^\s*(query|mutation|subscription|fragment)\b/.exec(document);
+    let rest = keyword === null ? document : document.slice(keyword[0].length);
+    // The operation name (up to the declarations or the selection set).
+    const name = /^\s*[A-Za-z_][A-Za-z0-9_]*/.exec(rest);
+    if (name !== null && name[0].trim() !== "") {
+        rest = rest.slice(name[0].length);
+    }
+    if (/^\s*\(/.test(rest)) {
+        let depth = 0;
+        let end = -1;
+        for (let i = 0; i < rest.length; i += 1) {
+            const ch = rest[i];
+            if (ch === "(") {
+                depth += 1;
+            } else if (ch === ")") {
+                depth -= 1;
+                if (depth === 0) {
+                    end = i + 1;
+                    break;
+                }
+            }
+        }
+        if (end === -1) {
+            // Unbalanced declarations: not a confidently attributable
+            // document.
+            return undefined;
+        }
+        rest = rest.slice(end);
+    }
+    const openBrace = rest.indexOf("{");
+    if (openBrace === -1) {
+        return undefined;
+    }
+    const inside = rest.slice(openBrace + 1);
+    // A fragment spread opens the root selection: the selected root fields
+    // live in the fragment definition, not the document, so the document
+    // cannot be confidently attributed — fail closed.
+    if (/^\s*\.\.\./.test(inside)) {
+        return undefined;
+    }
+    // The first selection: an optional alias prefix (`myList: MediaList`)
+    // is skipped so the document is attributed to the underlying field
+    // name, then the selection's full span — optional arguments and
+    // optional sub-selection — is consumed so the check below can tell
+    // whether a second selection follows. Two anchored matches (not one
+    // alternation with nested quantifiers) keep the security linter
+    // satisfied.
+    let cursor = inside;
+    let selection = /^\s*[A-Za-z_][A-Za-z0-9_]*/.exec(cursor);
+    if (selection === null) {
+        return undefined;
+    }
+    let fieldName = selection[0].trim();
+    cursor = cursor.slice(selection[0].length);
+    const colon = /^\s*:/.exec(cursor);
+    if (colon !== null) {
+        // The first identifier was an alias; the field name follows.
+        selection = /^\s*[A-Za-z_][A-Za-z0-9_]*/.exec(cursor.slice(colon[0].length));
+        if (selection === null) {
+            return undefined;
+        }
+        fieldName = selection[0].trim();
+        cursor = cursor.slice(colon[0].length + selection[0].length);
+    }
+    // Optional arguments, matched by paren depth so nested parens and
+    // object-literal values do not end the span early.
+    if (/^\s*\(/.test(cursor)) {
+        const openParen = cursor.indexOf("(");
+        let depth = 0;
+        let end = -1;
+        for (let i = openParen; i < cursor.length; i += 1) {
+            const ch = cursor[i];
+            if (ch === "(") {
+                depth += 1;
+            } else if (ch === ")") {
+                depth -= 1;
+                if (depth === 0) {
+                    end = i + 1;
+                    break;
+                }
+            }
+        }
+        if (end === -1) {
+            // Unbalanced arguments: not a confidently attributable document.
+            return undefined;
+        }
+        cursor = cursor.slice(end);
+    }
+    // Optional sub-selection, matched by brace depth so nested selections
+    // do not end the span early.
+    if (/^\s*\{/.test(cursor)) {
+        const openBraceIdx = cursor.indexOf("{");
+        let depth = 0;
+        let end = -1;
+        for (let i = openBraceIdx; i < cursor.length; i += 1) {
+            const ch = cursor[i];
+            if (ch === "{") {
+                depth += 1;
+            } else if (ch === "}") {
+                depth -= 1;
+                if (depth === 0) {
+                    end = i + 1;
+                    break;
+                }
+            }
+        }
+        if (end === -1) {
+            // Unbalanced sub-selection: not a confidently attributable
+            // document.
+            return undefined;
+        }
+        cursor = cursor.slice(end);
+    }
+    // The document is attributed only when the first selection is the only
+    // one: the next non-whitespace character after its span must close the
+    // root selection set. A second root selection — or anything unparseable
+    // behind the first, such as a trailing comma or a comment — fails the
+    // attribution, because the second selection's data could be changed by
+    // an invalidation keyed on the first's name alone.
+    const trailing = cursor.trimStart();
+    if (trailing === "" || trailing[0] !== "}") {
+        return undefined;
+    }
+    return fieldName;
+};
+
+/**
+ * Extracts the root field of a GraphQL query document — the first field
+ * selected inside the document's root selection set — using the same
+ * deliberately lightweight shape checks the cacheability gate applies (see
+ * {@link GRAPHQL_QUERY_PATTERN}), not a parser. The transport records the
+ * extracted field on the cache entry at write time (see
+ * {@link ResponseCache.setIfFresh}) so root-field-scoped invalidation (see
+ * {@link ResponseCache.deleteRootFieldsForUrl}) can attribute the entry
+ * to the root field its document actually selects.
+ *
+ * The extraction is fail-closed (see {@link extractRootField}): a document
+ * whose root field cannot be confidently attributed — a fragment-spread
+ * root, a multi-field root selection, an unlocatable selection — yields
+ * `undefined` and the entry stays unscoped, so scoped invalidations drop
+ * it alongside the whole-endpoint sweeps. An aliased root field is
+ * attributed to the underlying field name, not the alias.
+ *
+ * Internal transport helper: exported for the transport module, not part
+ * of the package's public surface.
+ *
+ * @param data - The request body carrying the `{ query, variables }` document.
+ * @returns The query's root field name, or `undefined` when the document
+ * does not expose one confidently.
+ */
+export const extractQueryRootField = (data: object | string | undefined): string | undefined => {
+    if (typeof data !== "object" || data === null || Array.isArray(data)) {
+        return undefined;
+    }
+    const { query } = data as { query?: unknown };
+    if (typeof query !== "string") {
+        return undefined;
+    }
+    return extractRootField(stripLeadingComments(query));
+};
+
+/**
+ * Root-field-scoped invalidation map for AniList GraphQL mutations: the
+ * mutation root field to the query root fields it can change. A mutation
+ * listed here invalidates only the cached queries whose root field it
+ * affects; a mutation not listed (including any future upstream mutation)
+ * falls back to the conservative whole-endpoint invalidation (see
+ * {@link ResponseCache.deleteAllForUrl}), so an unmapped mutation can never
+ * under-invalidate.
+ *
+ * The mapping is derived from the AniList schema semantics of each
+ * mutation: which query documents can observe the state it writes. `Page`
+ * appears wherever the mutation's affected objects are also reachable
+ * through the generic `Page` root field (list entries, reviews, and
+ * notifications are all `Page`-selectable).
+ */
+const MUTATION_ROOT_FIELD_INVALIDATION: ReadonlyMap<string, readonly string[]> = new Map([
+    // Media list entry writes change what MediaList, MediaListCollection,
+    // and Page (media lists) queries report, plus the Media documents
+    // that embed the requesting user's list entry for that media
+    // (`Media.mediaListEntry`), the User/Viewer documents that embed a
+    // `mediaListCollection`, and the Activity queries that embed the
+    // ListActivity AniList generates from the write — the shipped schemas
+    // do not select those embeds, but `custom()` documents can, and the
+    // map must not under-invalidate them.
+    [
+        "SaveMediaListEntry",
+        ["MediaList", "MediaListCollection", "Page", "Media", "User", "Viewer", "Activity"],
+    ],
+    [
+        "UpdateMediaListEntries",
+        ["MediaList", "MediaListCollection", "Page", "Media", "User", "Viewer", "Activity"],
+    ],
+    [
+        "DeleteMediaListEntry",
+        ["MediaList", "MediaListCollection", "Page", "Media", "User", "Viewer", "Activity"],
+    ],
+    // Favourite toggles change the user's Favourites, the User/Viewer
+    // documents that embed them, the isFavourite/favourites embeds on the
+    // object types the shipped Media/Character/Staff/Studio schemas
+    // select, and the Page queries that reach those embeds
+    // (Page→users→favourites, Page→media→isFavourite).
+    [
+        "ToggleFavourite",
+        ["Favourites", "User", "Viewer", "Media", "Character", "Staff", "Studio", "Page"],
+    ],
+    [
+        "UpdateFavouriteOrder",
+        ["Favourites", "User", "Viewer", "Media", "Character", "Staff", "Studio", "Page"],
+    ],
+    // Review writes change Review queries, Page (reviews), the Media
+    // documents that embed the reviews connection (`Media.reviews`), and
+    // the User/Viewer documents that embed one (`User.reviews`).
+    ["SaveReview", ["Review", "Page", "Media", "User", "Viewer"]],
+    ["DeleteReview", ["Review", "Page", "Media", "User", "Viewer"]],
+    ["RateReview", ["Review", "Page", "Media", "User", "Viewer"]],
+    // Profile writes change User and Viewer documents, the Follower and
+    // Following collections (the user's name/avatar/about change what they
+    // report), and the Page queries that embed user profiles. The
+    // animeListOptions/mangaListOptions variables also change list options
+    // (custom lists, scoring display), so the MediaList/MediaListCollection
+    // queries and the Media documents embedding the user's list entry
+    // (`Media.mediaListEntry`) are affected too.
+    [
+        "UpdateUser",
+        ["User", "Viewer", "Follower", "Following", "Page", "MediaList", "MediaListCollection", "Media"],
+    ],
+]);
+
+/**
  * Path segments of REST sub-resources that mutate the state of their parent
  * resource rather than being resources of their own. A write to
  * `/anime/21/my_list_status` changes the anime entry `GET /anime/21` returns,
@@ -314,11 +583,18 @@ const deriveMutationCachePrefix = (url: string): string | undefined => {
  * - A REST write (`POST`/`PUT`/`PATCH`/`DELETE` on the REST protocol) drops
  *   the cached `GET` entries of the mutated resource, derived from the
  *   request URL (see {@link deriveMutationCachePrefix}).
- * - A GraphQL `mutation` document drops every cached GraphQL query at the
- *   endpoint (see {@link ResponseCache.deleteAllForUrl}): every operation
- *   of one provider is keyed at the same URL, and a mutation can change
- *   what many different query documents return, so no finer-grained prefix
- *   than the endpoint can be derived.
+ * - A GraphQL `mutation` document whose root field is mapped in
+ *   {@link MUTATION_ROOT_FIELD_INVALIDATION} drops only the cached GraphQL
+ *   queries at the endpoint whose root field the mutation can change — a
+ *   `SaveMediaListEntry` flushes `MediaList`/`MediaListCollection`/`Page`
+ *   queries but leaves a cached `Staff` query warm. Cached queries whose
+ *   document cannot be confidently attributed to a single root field are
+ *   dropped by every scoped invalidation (see
+ *   {@link ResponseCache.deleteRootFieldsForUrl}), fail-closed. A
+ *   mutation not in the map (including any future upstream mutation)
+ *   falls back to the conservative whole-endpoint invalidation (see
+ *   {@link ResponseCache.deleteAllForUrl}), so an unmapped mutation can
+ *   never under-invalidate.
  *
  * The write-ness decision comes from the request's own shape — the method,
  * protocol, and document — never from whether the request was cache-keyed.
@@ -346,22 +622,85 @@ export const invalidateAfterMutation = (
         return;
     }
     // A GraphQL document POST that is not a cacheable read is a `mutation`
-    // document: invalidate the endpoint's cached queries wholesale. The
-    // cacheable-read check — not the cache key — decides write-ness, so a
-    // fail-closed read (credential headers, cache skipped) is never
-    // mistaken for a mutation.
+    // document. The cacheable-read check — not the cache key — decides
+    // write-ness, so a fail-closed read (credential headers, cache skipped)
+    // is never mistaken for a mutation.
     if (
         !isRestCall &&
         isGraphQLDocumentRequest(method, data) &&
         !isCacheableRequest(method, data)
     ) {
-        cache.deleteAllForUrl(url);
+        // A mapped mutation root field invalidates only the cached queries
+        // whose root field it can change; an unmapped one (including any
+        // future upstream mutation) keeps the conservative whole-endpoint
+        // invalidation so it can never under-invalidate.
+        const rootField = extractQueryRootField(data);
+        const affected =
+            rootField === undefined ? undefined : MUTATION_ROOT_FIELD_INVALIDATION.get(rootField);
+        if (affected !== undefined) {
+            cache.deleteRootFieldsForUrl(url, affected);
+        } else {
+            cache.deleteAllForUrl(url);
+        }
         return;
     }
     const prefix = deriveMutationCachePrefix(url);
     if (prefix !== undefined) {
         cache.deleteMatching(prefix);
     }
+};
+
+/**
+ * Reads the response cache for a request and, on a hit, fires the
+ * `onRequestStart`/`onResponse` hooks with `cacheHit: true` before returning
+ * the cached body.
+ *
+ * The cache-hit hook emissions live here — with the cache policy, not in the
+ * transport entry — so the read path's observability contract stays next to
+ * the cache it reports on. The transport fires the hooks through the same
+ * `safeInvoke` isolation every other emission uses; the correlation
+ * `requestId` is generated lazily — only when a hook is actually configured
+ * — so the cache-hit fast path of a hook-less hot loop does not pay the UUID
+ * generation cost on every call.
+ *
+ * Internal transport helper: exported for the transport module, not part
+ * of the package's public surface.
+ *
+ * @param resolved - The resolved request options, carrying the cache and hooks.
+ * @param method - The HTTP method.
+ * @param url - The request URL.
+ * @param data - The request body, when present.
+ * @param cacheAuthKey - The auth-scoping cache key fragment.
+ * @returns The cached response, or `undefined` on a miss.
+ */
+export const tryCacheRead = <T>(
+    resolved: ResolvedRequestOptions,
+    method: HttpMethod,
+    url: string,
+    data: object | string | undefined,
+    cacheAuthKey: string
+): T | undefined => {
+    const cached = resolved.responseCache!.get<T>(method, url, data, cacheAuthKey);
+    if (cached === undefined) {
+        return undefined;
+    }
+    if (resolved.onRequestStart !== undefined || resolved.onResponse !== undefined) {
+        const requestId = randomUUID();
+        const hookContext = { requestId, url, method, attempt: 1 };
+        safeInvoke(
+            resolved.onRequestStart,
+            "onRequestStart",
+            resolved.onHookError,
+            resolved.diagnostics,
+            hookContext
+        );
+        safeInvoke(resolved.onResponse, "onResponse", resolved.onHookError, resolved.diagnostics, {
+            ...hookContext,
+            durationMs: 0,
+            cacheHit: true,
+        });
+    }
+    return cached;
 };
 
 /**
@@ -372,18 +711,28 @@ interface CacheEntry<T> {
     data: T;
     /** The epoch millisecond at which the entry expires. */
     expiresAt: number;
+    /**
+     * The GraphQL document's single selected root field, for GraphQL query
+     * `POST` entries — the scoping key for root-field invalidation (see
+     * `deleteRootFieldsForUrl`). `undefined` for `GET` entries and for
+     * documents whose root field could not be confidently attributed (a
+     * fragment-spread root, a multi-field selection); such entries are
+     * dropped by every scoped invalidation, fail-closed.
+     */
+    rootField?: string;
 }
 
 /**
  * One recorded invalidation for the in-flight read guard (see
  * {@link ResponseCache.setIfFresh}): the generation it landed at and a
- * predicate telling whether a cache key falls inside its scope.
+ * predicate telling whether a cache key (with its entry's recorded root
+ * field, when one exists) falls inside its scope.
  */
 interface InvalidationEvent {
     /** The generation the invalidation landed at. */
     at: number;
-    /** Whether the invalidation affects the given cache key. */
-    affects: (key: string) => boolean;
+    /** Whether the invalidation affects the given cache key and root field. */
+    affects: (key: string, rootField: string | undefined) => boolean;
 }
 
 /**
@@ -764,12 +1113,41 @@ export class ResponseCache {
         authKey: string | undefined,
         response: T
     ): void {
-        if (!isCacheableRequest(method, data)) return;
+        this.setEntry(method, url, data, authKey, response, undefined);
+    }
+
+    /**
+     * The single write path behind {@link set} and {@link setIfFresh}: all
+     * the write-side guards (cacheability, `ttlMs: 0`, the clone, the
+     * opportunistic purge, LRU eviction) with the entry's root field
+     * recorded for GraphQL query documents so scoped invalidation can
+     * attribute the entry to the root field its document selects.
+     *
+     * @param method - The HTTP method.
+     * @param url - The request URL.
+     * @param data - The request body, when present.
+     * @param authKey - An authentication-safe credential identity.
+     * @param response - The response body to cache.
+     * @param rootField - The GraphQL document's single selected root field,
+     * when the caller knows it (the transport extracts it for query reads).
+     * @returns Whether the response was actually stored: `false` when a
+     * write-side guard skipped it (not cacheable, `ttlMs: 0`, or an
+     * uncloneable payload).
+     */
+    private setEntry<T>(
+        method: string,
+        url: string,
+        data: object | string | undefined,
+        authKey: string | undefined,
+        response: T,
+        rootField: string | undefined
+    ): boolean {
+        if (!isCacheableRequest(method, data)) return false;
         // `ttlMs: 0` is the explicit "do not retain" configuration: storing
         // an already-expired entry would make `get()` a guaranteed miss while
         // still paying the clone and eviction bookkeeping, so skip the write
         // entirely.
-        if (this.ttlMs === 0) return;
+        if (this.ttlMs === 0) return false;
         const key = ResponseCache.buildKey(method, url, data, authKey);
         let snapshot: T;
         try {
@@ -784,7 +1162,7 @@ export class ResponseCache {
             // Uncloneable payload (functions, DOM nodes): skip caching
             // rather than fail a request that already succeeded, and never
             // fall back to storing the live reference.
-            return;
+            return false;
         }
         // Opportunistic purge: expired entries are also evicted on write so
         // never-re-read entries do not linger until LRU pressure. Bounded by
@@ -803,7 +1181,9 @@ export class ResponseCache {
         this.entries.set(key, {
             data: snapshot,
             expiresAt: Date.now() + this.ttlMs,
+            ...(rootField !== undefined ? { rootField } : {}),
         });
+        return true;
     }
 
     /**
@@ -841,6 +1221,16 @@ export class ResponseCache {
      * @param generationAtRead - The generation the caller captured before
      * the read went to the network.
      * @param response - The response body to cache.
+     * @param rootField - The GraphQL document's single selected root field,
+     * when the caller knows it, so scoped invalidations that landed while
+     * the read was in flight are matched against the read's own root field;
+     * an unattributed document (`undefined`) is treated as affected by
+     * every scoped invalidation, fail-closed.
+     * @returns Whether the response was actually stored: `false` when an
+     * invalidation affecting the read landed while it was in flight (the
+     * stale response is dropped) or a write-side guard skipped it — the
+     * signal behind the `cacheWrite` flag on the transport's `onResponse`
+     * emission, so consumers can measure cache fill rate.
      */
     setIfFresh<T>(
         method: string,
@@ -848,12 +1238,13 @@ export class ResponseCache {
         data: object | string | undefined,
         authKey: string | undefined,
         generationAtRead: number,
-        response: T
-    ): void {
-        if (this.wasInvalidatedSince(generationAtRead, method, url, data, authKey)) {
-            return;
+        response: T,
+        rootField?: string
+    ): boolean {
+        if (this.wasInvalidatedSince(generationAtRead, method, url, data, authKey, rootField)) {
+            return false;
         }
-        this.set(method, url, data, authKey, response);
+        return this.setEntry(method, url, data, authKey, response, rootField);
     }
 
     /**
@@ -875,6 +1266,10 @@ export class ResponseCache {
      * @param url - The URL of the read.
      * @param data - The request body of the read, when present.
      * @param authKey - The auth-scoping cache key fragment of the read.
+     * @param rootField - The read's GraphQL root field, when known, so a
+     * scoped invalidation is matched against the read's own root field; an
+     * unattributed document is treated as affected by every scoped
+     * invalidation, fail-closed.
      * @returns `true` when an affecting invalidation landed mid-flight.
      */
     private wasInvalidatedSince(
@@ -882,7 +1277,8 @@ export class ResponseCache {
         method: string,
         url: string,
         data: object | string | undefined,
-        authKey: string | undefined
+        authKey: string | undefined,
+        rootField: string | undefined
     ): boolean {
         if (generationAtRead === this.generation) {
             // Fast path: no invalidation landed at all.
@@ -902,7 +1298,7 @@ export class ResponseCache {
             if (event.at <= generationAtRead) {
                 break;
             }
-            if (event.affects(key)) {
+            if (event.affects(key, rootField)) {
                 return true;
             }
         }
@@ -914,10 +1310,12 @@ export class ResponseCache {
      * so an in-flight read can later tell whether the invalidation affected
      * its key (see {@link setIfFresh}).
      *
-     * @param affects - Whether a cache key falls inside the invalidation's
-     * scope.
+     * @param affects - Whether a cache key (with its entry's recorded root
+     * field, when one exists) falls inside the invalidation's scope.
      */
-    private recordInvalidation(affects: (key: string) => boolean): void {
+    private recordInvalidation(
+        affects: (key: string, rootField: string | undefined) => boolean
+    ): void {
         this.generation += 1;
         this.invalidationEvents.push({ at: this.generation, affects });
         if (this.invalidationEvents.length > MAX_INVALIDATION_EVENTS) {
@@ -1070,6 +1468,66 @@ export class ResponseCache {
     }
 
     /**
+     * Removes every cached GraphQL query `POST` entry at the given URL whose
+     * document selects one of the given root fields, and returns how many
+     * entries were removed.
+     *
+     * This is the scoped invalidation primitive for mapped GraphQL mutations
+     * (see {@link invalidateAfterMutation}): a mutation whose root field is
+     * known to affect only certain query root fields drops exactly those
+     * cached queries, leaving unrelated root fields' entries warm, instead
+     * of the whole-endpoint sweep {@link deleteAllForUrl} performs. The
+     * match is against the document's single selected root field — recorded
+     * on the entry at write time (see {@link CacheEntry.rootField}) — so a
+     * query document is attributed to the root field it actually selects,
+     * not to every field it mentions. Entries whose document could not be
+     * confidently attributed to a single root field (fragment-spread roots,
+     * multi-field selections) are dropped too — fail-closed, like the
+     * unmapped-mutation fallback — because such a document may select data
+     * the affected-field match cannot see.
+     *
+     * @param url - The request URL whose cached reads should be considered;
+     * its query string and fragment are ignored.
+     * @param rootFields - The query root fields whose cached entries should
+     * be dropped.
+     * @returns The number of cached entries removed.
+     */
+    deleteRootFieldsForUrl(url: string, rootFields: readonly string[]): number {
+        const fragmentIndex = url.indexOf("#");
+        const withoutFragment = fragmentIndex === -1 ? url : url.slice(0, fragmentIndex);
+        const queryIndex = withoutFragment.indexOf("?");
+        const base = queryIndex === -1 ? withoutFragment : withoutFragment.slice(0, queryIndex);
+        const prefix = base.endsWith("/") && base.length > 1 ? base.slice(0, -1) : base;
+
+        const fieldSet = new Set(rootFields);
+        // An invalidation landed, whether or not an entry matches: an
+        // in-flight read of an affected query is stale even when no cached
+        // copy of it existed yet. The scope predicate mirrors the deletion
+        // below — a POST entry at the URL whose document selects one of the
+        // affected root fields, or whose document could not be attributed
+        // to a root field at all (fail-closed: an unattributed document may
+        // select anything, so it must not survive a scoped invalidation on
+        // a technicality).
+        this.recordInvalidation(
+            (key, rootField) =>
+                ResponseCache.keyAtPrefix(key, `POST:${prefix}`, ":?#") &&
+                (rootField === undefined || fieldSet.has(rootField))
+        );
+
+        let removed = 0;
+        for (const [key, entry] of this.entries) {
+            if (
+                ResponseCache.keyAtPrefix(key, `POST:${prefix}`, ":?#") &&
+                (entry.rootField === undefined || fieldSet.has(entry.rootField))
+            ) {
+                this.entries.delete(key);
+                removed += 1;
+            }
+        }
+        return removed;
+    }
+
+    /**
      * Evicts the least-recently-used entry.
      */
     private evictLru(): void {
@@ -1122,9 +1580,10 @@ export class ResponseCache {
      * counters, so cache tuning (`ttlMs`/`maxEntries`) can be data-driven:
      * entry counts and eviction/expiration counters distinguish a too-small
      * cache (rising `evictions`) from a too-short TTL (rising
-     * `expirations`), and hit-rate dashboards can read `hits`/`misses`
-     * directly instead of inferring misses by subtracting hits from total
-     * response counts.
+     * `expirations`), and hit-rate dashboards compute
+     * `hits / (hits + misses + expirations)` — an expired-on-read entry
+     * counts as an expiration, not a miss, so the three counters partition
+     * every `get()` call.
      *
      * The counters are cumulative for the cache instance's lifetime —
      * `delete()`, `deleteMatching()`, `deleteAllForUrl()`, and `clear()`
