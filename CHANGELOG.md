@@ -1,5 +1,125 @@
 # Changelog
 
+## [3.0.0](https://github.com/RLAlpha49/AniLink/compare/v2.3.0...v3.0.0) (2026-09-20)
+
+### ⚠ BREAKING CHANGES
+
+* **anilist:** query fuzzy-date filter variables (startDate, endDate, startedAt, completedAt and their _greater/_lesser variants) now take a YYYYMMDD number instead of a FuzzyDateInput object; the object form is rejected by the local validator. Use fuzzyDateInt() to build the integer, or keep fuzzyDate() for the list-entry mutations, which are unchanged.
+* **mal:** MAL REST operations take a single params object; the
+MalUserAnimeListOptions and MalUserMangaListOptions types are removed;
+updateMyListStatus rejects empty payloads and drops unknown fields from
+the form body.
+
+### ✨ Features
+
+* **anilist:** add automatic token refresh lifecycle ([8471f6b](https://github.com/RLAlpha49/AniLink/commit/8471f6b88adf792beb501c955a374ea0ec9b2dd4))
+* **anilist:** add fuzzyDateInt and type query fuzzy-date filters as FuzzyDateInt ([13ad6f1](https://github.com/RLAlpha49/AniLink/commit/13ad6f110c7760896409d36cc0e75f82948c0399))
+* **auth:** add onTokenRefreshError callback for refresh failures ([d056a99](https://github.com/RLAlpha49/AniLink/commit/d056a993d9f9c491617f6928873f0756aa3aeec5))
+* **cache:** add lifetime stats and a cloneOnRead opt-out to ResponseCache ([e4197f6](https://github.com/RLAlpha49/AniLink/commit/e4197f607c240af25699e846205d2096377c1f16))
+* **docs:** add a focus-managed mobile nav drawer and collapsible TOC ([d7881ca](https://github.com/RLAlpha49/AniLink/commit/d7881ca7b5cd8bfe4c480aa7db4e603dad920217))
+* **errors:** give AniLinkRestError a distinct REST_ERROR code ([8bf5cd9](https://github.com/RLAlpha49/AniLink/commit/8bf5cd9e3a2451acd6ffe3f2d794fc0a2b8588e2))
+* **mal:** add paginate and paginatePages list helpers ([7f08cf3](https://github.com/RLAlpha49/AniLink/commit/7f08cf31d74e1ccbbe11e4fef73116718a7c4c90))
+* **mal:** add search, manga ranking, user.get, and forum reads ([62259df](https://github.com/RLAlpha49/AniLink/commit/62259dff9480bcd91bfcb7dcd7f5c2a2ac68a45f))
+* **mal:** switch REST operations to a single params object ([12f167f](https://github.com/RLAlpha49/AniLink/commit/12f167f82fbd849792638d5731058a5257b91660))
+* **pagination:** report hook failures through onHookError ([58c388b](https://github.com/RLAlpha49/AniLink/commit/58c388b090f292b471512c3e6d3bc39a7c69e96f))
+* **pagination:** stop page look-ahead at the server-reported lastPage bound ([5eaed79](https://github.com/RLAlpha49/AniLink/commit/5eaed79cd43b18a0df647c3306fb23c51e0f5f19))
+* **selection:** select union fields via type-qualified fragments ([ad06d67](https://github.com/RLAlpha49/AniLink/commit/ad06d6716cd7b175ac69d4dc5a6248a15778356a))
+* **transport:** add diagnostics modes, partial-data envelopes, and pacedMs stamps ([44dfe8a](https://github.com/RLAlpha49/AniLink/commit/44dfe8ae0651e12fe1133f41ea2c94dd005cb13f))
+* **transport:** cache GraphQL reads and invalidate after mutations ([777c02a](https://github.com/RLAlpha49/AniLink/commit/777c02a24130f8836777fa47a3befea0f40a8c3a))
+* **transport:** expose read-only transport state snapshots ([4640634](https://github.com/RLAlpha49/AniLink/commit/4640634f98454ccec2614535fc9cf7d2766b63d8))
+* **transport:** scale circuit-breaker cooldowns after failed probes ([a890688](https://github.com/RLAlpha49/AniLink/commit/a8906887706e0b10a1e2c963589138c685a7335d))
+
+### 🐛 Bug Fixes
+
+* **agents:** throw on invalid socket bounds ([4f58d73](https://github.com/RLAlpha49/AniLink/commit/4f58d7361bde3efe565b0719a83ae2989efb5389))
+* **anilink:** reject options combined with a credentials object ([c9c2de3](https://github.com/RLAlpha49/AniLink/commit/c9c2de3a08856caa0f309ba8521a1fc660ff2feb))
+* **anilist:** accept anonymous selections in custom() and reject malformed flatten entries ([a74596c](https://github.com/RLAlpha49/AniLink/commit/a74596cdcef752ab70313d32ba327d6b52abb2c2))
+* **anilist:** bound saveMediaListEntry fields by the maximal document ([e35ba97](https://github.com/RLAlpha49/AniLink/commit/e35ba97bf2431be5a0ef31b9d71f112c23fe0156))
+* **anilist:** check variable requirements when variables are omitted ([2f33687](https://github.com/RLAlpha49/AniLink/commit/2f3368742c3041dae437a9a3a34ceeec34f925a5))
+* **anilist:** correct the externalLinkSourceCollection facade [@see](https://github.com/see) link ([e993b81](https://github.com/RLAlpha49/AniLink/commit/e993b816069817325bcb88cccfa857b534bee832))
+* **anilist:** forward the traversal signal to facade pagination fetchers ([690600b](https://github.com/RLAlpha49/AniLink/commit/690600bc317f64741b4da3dd06a3a41fed93ada3))
+* **auth:** disable retries on token grants and reject invalid lifetimes ([dc1b67e](https://github.com/RLAlpha49/AniLink/commit/dc1b67ea875a588101ce07a07a449af71104b91e))
+* **base:** deep-merge nested per-request option overrides ([d03ea72](https://github.com/RLAlpha49/AniLink/commit/d03ea724d5d177ed36ca2b6aab8bec12a79aa62a))
+* **cache:** honor ttlMs 0, canonicalize query order, and purge expired entries on write ([a85312c](https://github.com/RLAlpha49/AniLink/commit/a85312c48b102ca9478429c63bc9350ce442da2a))
+* **docs:** discard stale search results and shrink the search index ([ddec623](https://github.com/RLAlpha49/AniLink/commit/ddec623e141e13ae767c350a654b52af1c68b681))
+* **docs:** route search selections through the VitePress router ([5638836](https://github.com/RLAlpha49/AniLink/commit/56388367f36e3d16f6b6f6bd6375a73be753343a))
+* **errors:** point validation, path-param, and token errors at the real failure ([d96b937](https://github.com/RLAlpha49/AniLink/commit/d96b937bc686422dd250373d4bd172b9e2a08331))
+* **mal:** rebuild refresh auth from live state and drop the client-ID header on bearer requests ([eda05a6](https://github.com/RLAlpha49/AniLink/commit/eda05a6e647873324932c2e9e90321db55ca7738))
+* **operations:** normalize line endings in reference generator ([c9150ae](https://github.com/RLAlpha49/AniLink/commit/c9150ae12417908135e1c31d58e286ceb7dc66ff))
+* **pacing:** validate rateLimitFloor and emit onPace after the wait ([93748de](https://github.com/RLAlpha49/AniLink/commit/93748de254aba32dc24c71cd89ff763b396799df))
+* **pagination:** throw on defined-but-invalid numeric options ([bd4bc92](https://github.com/RLAlpha49/AniLink/commit/bd4bc9243f0f57fca21f35fe215d13e5f63e7311))
+* **rest:** fail fast on nested query params and missing path parameters ([f585736](https://github.com/RLAlpha49/AniLink/commit/f58573622bb71ebc4751d3795d14dc4bcf3fa106))
+* **transport:** bound the parked evicted keep-alive agent pair list ([25bf2a5](https://github.com/RLAlpha49/AniLink/commit/25bf2a5b27f50e24c3e4fa087dc3b8f61cd87d1c))
+* **transport:** respect server-dictated 429 delays in the retry budget ([536fced](https://github.com/RLAlpha49/AniLink/commit/536fced6f4e424ee722599fc76a42c7ff5d4a202))
+* **transport:** share resilience state across one client's operations ([adc22f4](https://github.com/RLAlpha49/AniLink/commit/adc22f465208977e7eda10ab9aec455e91467ccc))
+
+### ⚡ Performance
+
+* **transport:** return paced successful responses immediately ([39eef06](https://github.com/RLAlpha49/AniLink/commit/39eef065e6626e1b5dd20cdf071ff32c191e84b8))
+
+### ♻️ Refactoring
+
+* **anilist:** drop redundant method check in lazy group binding ([ecfec86](https://github.com/RLAlpha49/AniLink/commit/ecfec86eecda5adf0a74f738b0a982342b8b709e))
+* **anilist:** fold GraphQLOperation into AniListOperation ([351b267](https://github.com/RLAlpha49/AniLink/commit/351b2670dccd06bbf84d727528a22f7c92091d7d))
+* **anilist:** make operation classes the single source of facade metadata ([b56a2df](https://github.com/RLAlpha49/AniLink/commit/b56a2df4d806fa1ed87b98b317e46c93a4e84c72))
+* **base:** assert transport option key exhaustiveness ([f494b48](https://github.com/RLAlpha49/AniLink/commit/f494b4817396a6f07c68d71b5cf14301ba0e840d))
+* **base:** extract shared token-refresh lifecycle into TokenRefresher ([daf2592](https://github.com/RLAlpha49/AniLink/commit/daf25921166a75ad245c2b61ce788f3ec06a4f55))
+* **base:** infer safeInvoke hook argument types ([6e7a995](https://github.com/RLAlpha49/AniLink/commit/6e7a99533875584d2b0b4c29d95cd28e74779060))
+* **base:** move cache auth keys and mutation invalidation into responseCache ([3de1380](https://github.com/RLAlpha49/AniLink/commit/3de13808604c2a82cbb51ca4e286dab3ce41373f))
+* **docs:** split the home page into section components ([1a34811](https://github.com/RLAlpha49/AniLink/commit/1a3481145e5338976e5aa02dd3eb4da4ac2c3f0d))
+* **errors:** import facade errors from base/AniLinkError ([a2f0a12](https://github.com/RLAlpha49/AniLink/commit/a2f0a12822ec7bcbb38a0d796744ea2b30703b12))
+* **pagination:** express fetchWithLookAhead call shapes as labeled tuples ([7819d3f](https://github.com/RLAlpha49/AniLink/commit/7819d3f09de9a088d57317afcb84689fb7222fa8))
+* **pagination:** extract the streamNumericPages engine ([4968efd](https://github.com/RLAlpha49/AniLink/commit/4968efda9d0744c13fbfff6b2712c2c1d365db90))
+* **transport:** extract auth and cache helpers from sendRequest ([8b0cc3a](https://github.com/RLAlpha49/AniLink/commit/8b0cc3a86dcfced2f3adcf44abf8c3696e61d6f3))
+* **validate:** add an implies requirement kind ([57638c5](https://github.com/RLAlpha49/AniLink/commit/57638c594d3a4a6832dcc02bff8ba140effd3a09))
+
+### 📚 Documentation
+
+* add npmrc settings and check:fast instructions ([fec67c5](https://github.com/RLAlpha49/AniLink/commit/fec67c5084631ffecd308168934cbbc8955fdd18))
+* add patch dependency notes and metadata ([d666e9b](https://github.com/RLAlpha49/AniLink/commit/d666e9b6fe570c824127111d7423cbfea4f81044))
+* add per-page SEO metadata, social cards, and typedoc sitemap merge ([062afe8](https://github.com/RLAlpha49/AniLink/commit/062afe8e1d8a572daf3ddf0376b07c177f539fb1))
+* add TypeDoc API reference links to llms.txt ([340642c](https://github.com/RLAlpha49/AniLink/commit/340642ce7a8f5931f3aa39ab54e26273b72e9619))
+* **api:** audit and enrich JSDoc across public surface ([f19645a](https://github.com/RLAlpha49/AniLink/commit/f19645a328ed6901e3d08637feef539f6e6be0ef))
+* **api:** clarify response cache read types in llms.txt ([41b2991](https://github.com/RLAlpha49/AniLink/commit/41b29915e002c8881820dd73c7ec5e3b65eb1807))
+* clarify retry window, breaker, and stateOwner semantics ([465931a](https://github.com/RLAlpha49/AniLink/commit/465931a2eb6f3b89c084416587bfc74763072546))
+* clarify site copy and replace em dashes ([6d3a05d](https://github.com/RLAlpha49/AniLink/commit/6d3a05d9e8b51ffadd9ff4fba2a28a4a89ee3476))
+* cover retry budget, MAL anime list ops, and hook precedence ([a8aa747](https://github.com/RLAlpha49/AniLink/commit/a8aa7471b2ec4a415d3169e467320c37941c66eb))
+* fix TypeDoc links to match generated module paths ([b47040d](https://github.com/RLAlpha49/AniLink/commit/b47040d51a6885cd62120c4fee25aa951e8f0963))
+* **introduction:** clarify details and remove custom section ([294909a](https://github.com/RLAlpha49/AniLink/commit/294909a669002a17007d6d881c0d9514fa79312f))
+* **mal:** align the MalCredentials table ([7878be4](https://github.com/RLAlpha49/AniLink/commit/7878be46c92b3e61e6cf6f76a0a48a1d31891bcd))
+* **mal:** document the pagination helpers ([541eafc](https://github.com/RLAlpha49/AniLink/commit/541eafcb42283c7c5daa51e062a9d46cc744e479))
+* **mal:** document the search, ranking, user, and forum operations ([8adecba](https://github.com/RLAlpha49/AniLink/commit/8adecba9b328f896f05ab942842a4a87dd03af86))
+* **operations:** replace em dashes in generated auth strings ([080b9f6](https://github.com/RLAlpha49/AniLink/commit/080b9f67d7f9b7323095bcb1dc8095318dfd6a0a))
+* **privacy:** document font loading and search fetch timing ([5e3153e](https://github.com/RLAlpha49/AniLink/commit/5e3153ee494fd5e0f727615dc91c31f50b691a28))
+* **readme:** clarify provider descriptions and examples ([ffe9198](https://github.com/RLAlpha49/AniLink/commit/ffe9198c7b8b03ad1511ea5c400be191e162c0bc))
+* record design decisions and refresh the contributor guide ([495436d](https://github.com/RLAlpha49/AniLink/commit/495436d40619cc2179cc72c4503d2bf2d74f0160))
+* regenerate llms.txt to match the introduction description ([2564576](https://github.com/RLAlpha49/AniLink/commit/256457624bad39b4c4bd0de07801f79700be4488))
+* **transport:** describe immediate paced-response returns and pre-dispatch onPace ([fa95e60](https://github.com/RLAlpha49/AniLink/commit/fa95e6006f7fc8279b494e978fb151ce9f42d2e9))
+
+### 📦 Build
+
+* **operations:** add a --check mode to the operation reference generator and commit manifests ([c708784](https://github.com/RLAlpha49/AniLink/commit/c708784fe883f163d776330b9e20f4067ded36b5))
+
+### 🔧 CI/CD
+
+* add Node.js 26 to test matrix ([64ec605](https://github.com/RLAlpha49/AniLink/commit/64ec605b25a8594ca1964c6fd4e04084d5151d87))
+* add typecheck for tests and scripts ([16a8402](https://github.com/RLAlpha49/AniLink/commit/16a840264c51b45ef4a5da28446f9dd7ff950016))
+* check operation reference manifests in CI ([b96489d](https://github.com/RLAlpha49/AniLink/commit/b96489d5645ecaa4384a56433dea1ab6c7961f33))
+* **docs:** upgrade cache action to v6 ([fc38161](https://github.com/RLAlpha49/AniLink/commit/fc38161d1e8a74bab01ebc7d4117bc747db96e19))
+* flatten the api-compare annotation branch ([9906abe](https://github.com/RLAlpha49/AniLink/commit/9906abefd2dd7121cf79b6324e7e8bdb49113ddc))
+* remove docs-src from codeql ignore paths ([ee1f0d9](https://github.com/RLAlpha49/AniLink/commit/ee1f0d98dd82a053b32122951ab3c75039e4b141))
+* rename integration test job names to reflect multi-service coverage ([08a9aee](https://github.com/RLAlpha49/AniLink/commit/08a9aeebc3cc7a85c990123bb199dfa84ffe3d8c))
+* split quality job into separate jobs and optimize smoke test ([b6b81d4](https://github.com/RLAlpha49/AniLink/commit/b6b81d48111e373a964249b55ddd3e82bca50cb9))
+* verify every CI job ran and succeeded before release ([2eb9b5a](https://github.com/RLAlpha49/AniLink/commit/2eb9b5aeae7b5394bbb36df30e4721c7c9294d6d))
+
+### 🧪 Tests
+
+* add live provider-settings integration suites ([8231ba2](https://github.com/RLAlpha49/AniLink/commit/8231ba2f86bca06e22ff2b4ee8ac7d123b6473b6))
+* **docs:** cover the consent boot script ([9d1600b](https://github.com/RLAlpha49/AniLink/commit/9d1600b59c254f7e71207a9af3f5d308c9d7ae01))
+* **integration:** add MAL client ID support and increase timeout ([4ae9fbe](https://github.com/RLAlpha49/AniLink/commit/4ae9fbe3e1003a2eb47da024092f08f852c1b991))
+* **mutation:** expand coverage for auth and schema files ([4a41c13](https://github.com/RLAlpha49/AniLink/commit/4a41c13d4b13b23eff72bd988e9aec4f575b4800))
+* **pagination:** replace wall-clock sleeps with deterministic microtask gates ([091ec98](https://github.com/RLAlpha49/AniLink/commit/091ec989167bc10cc5da5e5bcf5243d757a9aed6))
+
 ## [2.3.0](https://github.com/RLAlpha49/AniLink/compare/v2.2.0...v2.3.0) (2026-09-13)
 
 ### ✨ Features

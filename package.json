@@ -1,6 +1,6 @@
 {
     "name": "anilink-api-wrapper",
-    "version": "2.3.0",
+    "version": "3.0.0",
     "description": "A typed TypeScript wrapper that unifies the AniList GraphQL and MyAnimeList REST APIs behind one calling convention: one params object and one options object per operation, with normalized errors, retries, pacing, and caching shared across providers.",
     "type": "module",
     "main": "dist/AniLink.mjs",
