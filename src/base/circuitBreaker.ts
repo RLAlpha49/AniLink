@@ -16,6 +16,7 @@ import {
     AniLinkApiError,
     AniLinkError,
     AniLinkErrorCodes,
+    AniLinkGraphQLError,
     AniLinkNetworkError,
     AniLinkValidationError,
 } from "./AniLinkError";
@@ -92,14 +93,15 @@ const scaledCooldownMs = (
 
 /**
  * Classifies a normalized failure as an availability failure — the only
- * class that may count toward the circuit breaker.
+ * class that may advance the circuit breaker's failure streak.
  *
  * Availability failures are transport-level conditions that indicate the
  * upstream is unhealthy: network errors, timeouts, rate limiting (429), and
  * server faults (5xx), including their GraphQL-envelope counterparts.
- * Caller-side errors (4xx, GraphQL validation failures with no upstream
- * status) and caller-initiated aborts say nothing about upstream health, so
- * counting them would let a consumer-side bug fast-fail healthy traffic.
+ * Caller-side errors (4xx) and caller-initiated aborts say nothing about
+ * upstream health, so counting them would let a consumer-side bug fast-fail
+ * healthy traffic. GraphQL envelope errors with no upstream status are
+ * neither: they are streak-neutral (see {@link isStreakNeutralFailure}).
  *
  * @param error - The normalized failure from the request pipeline.
  * @returns Whether the failure may count toward the breaker.
@@ -116,6 +118,31 @@ export const isAvailabilityFailure = (error: AniLinkError): boolean => {
     }
     return false;
 };
+
+/**
+ * Classifies a normalized failure as streak-neutral — the class that
+ * leaves the circuit breaker's failure streak untouched, neither advancing
+ * it like an availability failure nor resetting it like a
+ * reachability-proving caller-side error.
+ *
+ * A GraphQL envelope error whose entries carry no upstream status (the
+ * common AniList envelope shape, where `status` falls back to the HTTP `200`
+ * envelope default) is ambiguous: it may be a server fault that omitted its
+ * status, so it must not reset the streak — a sustained outage manifesting
+ * as status-less envelope errors would otherwise erase whatever streak
+ * other error classes accumulated — but it carries no availability-class
+ * status either, so it must not advance the streak and trip the breaker on
+ * what may be a consumer-side query bug. The one exception is the reserved
+ * half-open probe, which a neutral failure still settles by closing (see
+ * {@link recordCircuitFailure}): the upstream answered the probe with an
+ * HTTP 200 envelope, so it is reachable, and an unsettled probe would wedge
+ * the breaker in half-open forever.
+ *
+ * @param error - The normalized failure from the request pipeline.
+ * @returns Whether the failure leaves the breaker streak untouched.
+ */
+export const isStreakNeutralFailure = (error: AniLinkError): boolean =>
+    error instanceof AniLinkGraphQLError && error.status === 200;
 
 /**
  * Upper bound on distinct host scopes tracked per owner. Public transport
@@ -302,14 +329,17 @@ export const recordCircuitSuccess = (
  * Counts a failed attempt and opens the circuit once the consecutive-failure
  * budget is exhausted. Only availability failures (see
  * {@link isAvailabilityFailure}) count: network errors, timeouts, 429s, and
- * 5xx responses. Caller-side errors (4xx, GraphQL validation failures) and
- * caller-initiated aborts say nothing about upstream health, so they never
- * advance the streak — and because such a failure proves the upstream
- * answered, it resets the streak like a success would: a stale 500-streak
- * cannot trip the breaker after interleaved caller-side errors. When such a
- * failure is the reserved post-cooldown probe, the breaker closes (the
- * upstream answered, so it is reachable) instead of wedging the half-open
- * state. When an *availability* failure is the reserved post-cooldown probe,
+ * 5xx responses. Caller-side errors (4xx) and caller-initiated aborts say
+ * nothing about upstream health, so they never advance the streak — and
+ * because such a failure proves the upstream answered, it resets the streak
+ * like a success would: a stale 500-streak cannot trip the breaker after
+ * interleaved caller-side errors. Status-less GraphQL envelope errors are
+ * the exception (see {@link isStreakNeutralFailure}): they reset nothing,
+ * so a sustained outage that manifests as status-less envelope errors can
+ * no longer erase the streak other error classes accumulated. When such a
+ * failure — including a streak-neutral one — is the reserved post-cooldown
+ * probe, the breaker closes (the upstream answered, so it is reachable)
+ * instead of wedging the half-open state. When an *availability* failure is the reserved post-cooldown probe,
  * it clears the half-open state and re-opens the breaker immediately so the
  * next request fast-fails until the cooldown elapses again — and the
  * failed probe advances the probe-failure counter, which scales the next
@@ -338,6 +368,18 @@ export const recordCircuitFailure = (
         return;
     }
     if (!isAvailabilityFailure(normalized)) {
+        // A status-less GraphQL envelope error is streak-neutral: with no
+        // upstream status it proves neither an unhealthy upstream (so it
+        // must not advance the streak) nor a healthy one (so it must not
+        // reset the streak either — resetting would let a sustained outage
+        // that manifests as status-less envelope errors erase the streak
+        // other error classes accumulated). The half-open probe is the one
+        // exception: the upstream answered the probe with an HTTP 200
+        // envelope, so it is reachable, and the probe must settle by closing
+        // instead of wedging the breaker in half-open forever.
+        if (isStreakNeutralFailure(normalized) && !circuit.probeInFlight) {
+            return;
+        }
         // The upstream answered with a caller-side error, so it is
         // reachable: the availability-failure streak resets, exactly as it
         // would on a success. If this was the reserved half-open probe,

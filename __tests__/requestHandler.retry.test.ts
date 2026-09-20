@@ -1073,6 +1073,29 @@ describe("circuit breaker", () => {
             );
         }
         expect(mocks.request).toHaveBeenCalledTimes(3);
+
+        // A status-less GraphQL error is streak-neutral, not
+        // streak-resetting: after one 500 advances the streak to 1, a
+        // status-less envelope must leave it there, so the next 500
+        // reaches the threshold of 2 and the breaker fast-fails.
+        mocks.request.mockRejectedValueOnce(apiError(500));
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "validation failed" }] },
+        });
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkGraphQLError
+        );
+        mocks.request.mockRejectedValueOnce(apiError(500));
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toBeInstanceOf(
+            AniLinkApiError
+        );
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "CIRCUIT_OPEN_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(6);
     });
 
     test("closes the breaker when the post-cooldown probe fails with a caller-side 404", async () => {
@@ -1112,6 +1135,52 @@ describe("circuit breaker", () => {
         await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
             code: "API_ERROR",
         });
+        expect(mocks.request).toHaveBeenCalledTimes(4);
+    });
+
+    test("closes the breaker when the post-cooldown probe fails with a status-less GraphQL envelope error", async () => {
+        // A status-less envelope error (HTTP 200 + errors, no entry status)
+        // is streak-neutral, but it still proves the upstream answered the
+        // probe: the breaker must close instead of wedging in half-open
+        // forever. This is the one branch where the neutral classification
+        // changes probe bookkeeping.
+        const onCircuitClose = vi.fn();
+        mocks.request.mockRejectedValue(apiError(500));
+        configureRequestOptions({
+            retry: false,
+            circuitBreaker: breaker,
+            onCircuitClose,
+        });
+
+        // Trip the breaker with server faults.
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "API_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+
+        // Cooldown elapses; the probe answers HTTP 200 with a status-less
+        // GraphQL error envelope — the upstream is reachable, so the
+        // breaker closes instead of re-opening or wedging half-open.
+        await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
+        mocks.request.mockResolvedValueOnce({
+            data: { errors: [{ message: "invalid argument" }] },
+        });
+        await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
+            code: "GRAPHQL_ERROR",
+        });
+        expect(mocks.request).toHaveBeenCalledTimes(3);
+
+        // The close is observable: onCircuitClose fires for the probe-close
+        // path exactly like a successful probe.
+        expect(onCircuitClose).toHaveBeenCalledTimes(1);
+        expect(onCircuitClose.mock.calls[0][0].host).toBe("graphql.anilist.co");
+
+        // Breaker closed: the next request reaches the network.
+        mocks.request.mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        await expect(callSendRequest(url, "POST", { query: "query" })).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(4);
     });
 

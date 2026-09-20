@@ -217,7 +217,11 @@ const extractUpstreamStatus = (errors: ReadonlyArray<GraphQLUpstreamError>): num
  * carries one (for example `404` or `429`), and the HTTP `200` envelope status
  * otherwise. This makes `status` a meaningful classification field for
  * GraphQL failures and lets status-based branching and retry policies treat a
- * GraphQL-level `429`/`5xx` like its HTTP-level counterpart.
+ * GraphQL-level `429`/`5xx` like its HTTP-level counterpart. The `200`
+ * default is not an availability-class status: the circuit breaker treats a
+ * `200`-defaulted GraphQL error as streak-neutral — it neither advances nor
+ * resets the failure streak — because the envelope proves the upstream
+ * answered while the status-less entries carry no upstream-health signal.
  *
  * @see {@link GraphQLUpstreamError}
  */
