@@ -198,9 +198,10 @@ describe("paginate", () => {
             concurrency: 2,
             signal: controller.signal,
         });
-        // Page 3 is only scheduled after page 1 is consumed, so awaiting its
-        // launch deterministically proves page 1 settled and page 2 is
-        // parked on the abort listener — no wall-clock sleep.
+        // The window ramps, so page 2 is only scheduled after page 1 is
+        // consumed; awaiting page 3's launch deterministically proves page 1
+        // settled, page 2 was consumed, and page 3 is parked on the abort
+        // listener — no wall-clock sleep.
         await page3Launched;
         controller.abort();
 
@@ -267,18 +268,19 @@ describe("paginate", () => {
             concurrency: 2,
             signal: controller.signal,
         });
-        // Page 3 is only scheduled after page 1 is consumed, so awaiting its
-        // launch deterministically proves page 1 settled and page 2 is
-        // parked on the abort listener — no wall-clock sleep.
+        // The window ramps, so page 2 is only scheduled after page 1 is
+        // consumed; awaiting page 3's launch deterministically proves page 1
+        // settled, page 2 was consumed, and page 3 is parked on the abort
+        // listener — no wall-clock sleep.
         await page3Launched;
         controller.abort();
 
         await promise;
 
-        // The look-ahead page 2 was launched with the traversal-owned signal,
+        // The look-ahead page 3 was launched with the traversal-owned signal,
         // so aborting the external signal must have forwarded to it.
-        expect(inFlightSignals.length).toBeGreaterThanOrEqual(2);
-        const lookAheadSignal = inFlightSignals[1];
+        expect(inFlightSignals.length).toBeGreaterThanOrEqual(3);
+        const lookAheadSignal = inFlightSignals[2];
         expect(lookAheadSignal.aborted).toBe(true);
     });
 
@@ -419,15 +421,17 @@ describe("paginatePages", () => {
         let inFlight = 0;
         let maxObserved = 0;
         const settleOrder: number[] = [];
-        // Later pages settle sooner than earlier ones: page N parks until
-        // page N+1 has settled, so the settle order is deterministically
-        // [3, 2, 1] without racing real timer durations.
+        // A later page settles sooner than an earlier one: page 2 parks
+        // until page 3 has settled, so the settle order is deterministically
+        // [1, 3, 2] without racing real timer durations. Page 1 must not
+        // park — the ramped window launches it alone, so its settle cannot
+        // depend on a sibling that has not launched yet.
         const settleGates = new Map<number, () => void>();
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
             inFlight += 1;
             maxObserved = Math.max(maxObserved, inFlight);
-            if (page < 3) {
-                await new Promise<void>((resolve) => settleGates.set(page + 1, resolve));
+            if (page === 2) {
+                await new Promise<void>((resolve) => settleGates.set(3, resolve));
             }
             inFlight -= 1;
             settleOrder.push(page);
@@ -443,7 +447,10 @@ describe("paginatePages", () => {
             yielded.push(page);
         }
 
-        // Look-ahead overlaps latency, but the consumer still sees pages in order.
+        // Look-ahead overlaps latency, but the consumer still sees pages in
+        // order. The window ramps — page 1 launches alone, then pages 2 and 3
+        // overlap once page 1 confirmed more data — so pages 2 and 3 are in
+        // flight together and page 2 settles after page 3.
         expect(maxObserved).toBeGreaterThanOrEqual(2);
         expect(settleOrder).not.toEqual([1, 2, 3]);
         expect(yielded.map((p) => p.pageInfo.currentPage)).toEqual([1, 2, 3]);
@@ -464,19 +471,24 @@ describe("paginatePages", () => {
 
         const generator = paginatePages(fetchPage, { concurrency: 3 });
 
-        // The window launches pages 1-3 while page 1 is being fetched.
+        // The window ramps: page 1 launches alone while nothing else is
+        // known to exist.
         const firstPromise = generator.next();
-        await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3]));
+        await vi.waitFor(() => expect(launchedPages).toEqual([1]));
 
         gates[0]?.();
         const first = await firstPromise;
         expect(first.value.pageInfo.currentPage).toBe(1);
 
-        // Consuming page 1 refills the window with page 4 before the
-        // traversal can know page 3 is terminal.
+        // Page 1 confirmed more data, so the window grows to its full size
+        // of 3: pages 2 and 3 launch before page 1 is yielded.
+        await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3]));
+
         gates[1]?.();
         const second = await generator.next();
         expect(second.value.pageInfo.currentPage).toBe(2);
+        // Consuming page 2 refills the window with page 4 before the
+        // traversal can know page 3 is terminal.
         await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3, 4]));
 
         // Page 3 is terminal. Release pages 3 and 4 so the terminal page
@@ -545,12 +557,16 @@ describe("paginatePages", () => {
 
         const generator = paginatePages(fetchPage, { concurrency: 3 });
         const firstPromise = generator.next();
-        await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3]));
+        // The window ramps: page 1 launches alone and parks on its gate.
+        await vi.waitFor(() => expect(launchedPages).toEqual([1]));
 
         // Release only page 1 so it can be yielded; pages 2 and 3 stay pending.
         gates[0]?.();
         const first = await firstPromise;
         expect(first.value.pageInfo.currentPage).toBe(1);
+        // Page 1 confirmed more data, so pages 2 and 3 fill the window and
+        // park on their gates before page 1 is yielded.
+        await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3]));
 
         // Break without releasing pages 2 and 3: the iterator must complete
         // without awaiting the unresolved stragglers. Their gates are never
@@ -579,11 +595,12 @@ describe("paginatePages", () => {
         });
 
         const generator = paginatePages(fetchPage, { concurrency: 3 });
-        // Pages 2 and 3 were launched as stragglers but never released, so a
-        // next() that awaited them before rejecting would hang this test —
-        // the rejection itself is the deterministic proof.
+        // The window ramps: page 1 launches alone, then pages 2 and 3 fill
+        // the window once page 1 confirmed more data — but page 1 rejects
+        // before it can confirm anything, so nothing beyond page 1 is ever
+        // launched and the rejection is the deterministic proof.
         await expect(generator.next()).rejects.toThrow("page 1 failed");
-        expect(launchedPages).toEqual([1, 2, 3]);
+        expect(launchedPages).toEqual([1]);
         // Releasing the stragglers later must not surface an unhandled rejection.
         gates.forEach((release) => release());
     });
@@ -1102,12 +1119,14 @@ describe("paginate concurrency", () => {
     });
 
     test("collects results strictly in page order even when later pages settle first", async () => {
-        // Later pages settle sooner: page N parks until page N+1 settles, so
+        // A later page settles sooner: page 2 parks until page 3 settles, so
         // pages resolve deterministically out of order without real timers.
+        // Page 1 must not park — the ramped window launches it alone, so its
+        // settle cannot depend on a sibling that has not launched yet.
         const settleGates = new Map<number, () => void>();
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
-            if (page < 3) {
-                await new Promise<void>((resolve) => settleGates.set(page + 1, resolve));
+            if (page === 2) {
+                await new Promise<void>((resolve) => settleGates.set(3, resolve));
             }
             settleGates.get(page)?.();
             return {
@@ -1135,9 +1154,11 @@ describe("paginate concurrency", () => {
         });
 
         const pending = paginate(fetchPage, "media", { concurrency: 3 });
-        await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3]));
+        // The window ramps: page 1 launches alone and parks on its gate.
+        await vi.waitFor(() => expect(launchedPages).toEqual([1]));
 
-        // Page 1 settles with more data ahead, so the window refills with page 4.
+        // Page 1 settles with more data ahead, so the window grows to its
+        // full size and launches pages 2-4.
         const releaseFirst = gates[0];
         releaseFirst?.();
         await vi.waitFor(() => expect(launchedPages).toEqual([1, 2, 3, 4]));
@@ -1214,12 +1235,14 @@ describe("paginate concurrency", () => {
     });
 
     test("paginateChunks keeps chunks in flight and collects them in chunk order", async () => {
-        // Earlier chunks settle later: chunk N parks until chunk N+1
+        // An earlier chunk settles later: chunk 2 parks until chunk 3
         // settles, so chunks resolve deterministically out of order.
+        // Chunk 1 must not park — the ramped window launches it alone, so
+        // its settle cannot depend on a sibling that has not launched yet.
         const settleGates = new Map<number, () => void>();
         const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => {
-            if (chunk < 3) {
-                await new Promise<void>((resolve) => settleGates.set(chunk + 1, resolve));
+            if (chunk === 2) {
+                await new Promise<void>((resolve) => settleGates.set(3, resolve));
             }
             settleGates.get(chunk)?.();
             return { hasNextChunk: chunk < 3, lists: [{ name: `list-${chunk}` }] };

@@ -72,7 +72,8 @@ describe("fetchWithLookAhead", () => {
         expect(result.count).toBe(3);
         // The source never ran dry, so the run ended at the maxEntries guard.
         expect(result.truncated).toBe(true);
-        // All three fetches were launched up front by the concurrency window.
+        // The window ramps: entry 1 launches alone, then entries 2 and 3
+        // launch together once entry 1 confirmed more data.
         expect(settleOrder).toHaveLength(3);
     });
 
@@ -194,11 +195,34 @@ describe("fetchNumericWithLookAhead", () => {
 
         expect(result.responses).toEqual([1, 2]);
         expect(result.truncated).toBe(false);
-        // The window launched pages 1–3 up front; eager refill may add at
-        // most one straggler (page 4) before page 2 reports terminal, and
-        // nothing past the window is ever requested.
+        // The window ramps: page 1 launches alone, and consuming it (it
+        // confirmed more data) grows the window to 3 — pages 2-4 launch
+        // before page 2 reports terminal, and nothing past the window is
+        // ever requested.
         expect(requested.slice(0, 3)).toEqual([1, 2, 3]);
         expect(requested.length).toBeLessThanOrEqual(4);
+    });
+
+    test("launches the first entry alone so a single-entry traversal costs one request", async () => {
+        const requested: number[] = [];
+        const result = await fetchNumericWithLookAhead<number>(
+            async (n) => {
+                requested.push(n);
+                return n;
+            },
+            () => false,
+            1,
+            10,
+            3
+        );
+
+        // The terminal first entry never lets the window grow: pages 2 and
+        // 3 are never launched, so the traversal spends one request instead
+        // of three requests' worth of rate-limit quota.
+        expect(requested).toEqual([1]);
+        expect(result.responses).toEqual([1]);
+        expect(result.count).toBe(1);
+        expect(result.truncated).toBe(false);
     });
 
     test("returns a partial result when the signal aborts mid-traversal", async () => {
@@ -217,8 +241,12 @@ describe("fetchNumericWithLookAhead", () => {
             controller.signal
         );
 
-        expect(result.count).toBe(1);
-        expect(result.responses).toEqual([1]);
+        // The window ramps, so page 2 (whose fetch fires the abort) only
+        // launches after page 1 is consumed: the abort lands after page 2
+        // settles but before page 3 is consumed, and the collected prefix
+        // returns as a partial result — not a rejection.
+        expect(result.count).toBe(2);
+        expect(result.responses).toEqual([1, 2]);
         expect(result.truncated).toBe(false);
     });
 

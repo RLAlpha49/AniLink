@@ -373,18 +373,23 @@ export function extractLastPageBound(response: unknown): number | undefined {
  * Numeric-mode look-ahead driver: keys are computable without any response,
  * so a window of at most `concurrency` launched-but-unconsumed requests
  * overlaps round-trip latency while results are appended strictly in entry
- * order. Scheduling stops as soon as an entry reports "no more data" or the
- * `maxEntries` guard fires; already-launched stragglers are drained and
- * discarded. When `extractBound` is supplied (AniList page traversals pass
- * {@link extractLastPageBound}), scheduling also never launches an entry
- * numbered beyond the smallest positive bound a received entry reported:
- * those requests were going to be drained and discarded anyway, so skipping
- * them keeps their quota spend off the wire. A traversal the bound ends while
- * the last consumed entry still reports more data returns `truncated: true`
- * so the short read is not mistaken for a clean end. Traversals whose entries
- * carry no page numbers (chunks) omit `extractBound` and leave the existing
- * guards in charge. An abort settles in-flight requests and returns the
- * collected prefix as a partial result with `truncated: false`.
+ * order. The window steps up instead of filling cold: the first entry launches
+ * alone, and the window steps to the full `concurrency` only after a consumed
+ * entry confirms more data exists, so a traversal that ends at its first
+ * entry costs one request instead of `concurrency` requests' worth of
+ * rate-limit quota. Scheduling stops as soon as an entry reports "no more
+ * data" or the `maxEntries` guard fires; already-launched stragglers are
+ * drained and discarded. When `extractBound` is supplied (AniList page
+ * traversals pass {@link extractLastPageBound}), scheduling also never
+ * launches an entry numbered beyond the smallest positive bound a received
+ * entry reported: those requests were going to be drained and discarded
+ * anyway, so skipping them keeps their quota spend off the wire. A traversal
+ * the bound ends while the last consumed entry still reports more data
+ * returns `truncated: true` so the short read is not mistaken for a clean
+ * end. Traversals whose entries carry no page numbers (chunks) omit
+ * `extractBound` and leave the existing guards in charge. An abort settles
+ * in-flight requests and returns the collected prefix as a partial result
+ * with `truncated: false`.
  *
  * @typeParam TEntry - The raw response shape of a single page or chunk.
  * @param fetch - Callback that fetches a single entry given its numeric key.
@@ -421,6 +426,12 @@ export async function fetchNumericWithLookAhead<TEntry>(
     // one reports it. The bound only tightens (min), so a later entry
     // reporting a larger value cannot re-open the window.
     let lastPageBound = Number.POSITIVE_INFINITY;
+    // Current launch-window size. The window steps up: it starts at 1 (the
+    // first entry launches alone) and steps to the full `concurrency` only
+    // after a consumed entry confirms more data exists, so a single-entry
+    // traversal costs one request instead of `concurrency` requests' worth
+    // of quota. With `concurrency: 1` the step is a no-op.
+    let windowSize = Math.min(1, concurrency);
 
     while (count < maxEntries) {
         if (signal?.aborted) {
@@ -430,7 +441,7 @@ export async function fetchNumericWithLookAhead<TEntry>(
         }
         while (
             launched < maxEntries &&
-            launched - count < concurrency &&
+            launched - count < windowSize &&
             startNumber + launched <= lastPageBound
         ) {
             const slot = launched;
@@ -485,6 +496,10 @@ export async function fetchNumericWithLookAhead<TEntry>(
             responses.length = count;
             return { responses, count, truncated: false };
         }
+        // The consumed entry confirmed more data exists: the launch window
+        // has earned its full size, and every refill from here on behaves
+        // exactly as a cold-filled window would.
+        windowSize = concurrency;
         if (count >= maxEntries) {
             await Promise.allSettled(pending.slice(count));
             truncated = true;
@@ -523,14 +538,17 @@ export interface StreamNumericPagesOptions {
  *
  * Yields pages strictly in page order while keeping a window of at most
  * `concurrency` launched-but-unconsumed requests in flight, so round-trip
- * latency overlaps without reordering results. Scheduling stops as soon as
- * a fetched page is terminal per the caller-supplied `isTerminalPage`, at
- * the `maxPages` guard, or — when `extractBound` is supplied — beyond the
- * smallest launch bound a received page reported; already-launched
- * stragglers are drained and their payloads discarded. On early exit
- * (`break`/`return` by the consumer), the `finally` block disposes the
- * abort bridge so unconsumed in-flight requests are cancelled instead of
- * running to completion for payloads that will be discarded.
+ * latency overlaps without reordering results. The window steps up like the
+ * eager driver's: the first page launches alone and the window steps to
+ * the full `concurrency` only after a yielded page is confirmed
+ * non-terminal, so a single-page traversal costs one request. Scheduling
+ * stops as soon as a fetched page is terminal per the caller-supplied
+ * `isTerminalPage`, at the `maxPages` guard, or — when `extractBound` is
+ * supplied — beyond the smallest launch bound a received page reported;
+ * already-launched stragglers are drained and their payloads discarded. On
+ * early exit (`break`/`return` by the consumer), the `finally` block
+ * disposes the abort bridge so unconsumed in-flight requests are cancelled
+ * instead of running to completion for payloads that will be discarded.
  *
  * A page rejection propagates to the consumer unless the traversal signal
  * aborted, in which case the generator ends after the already-yielded
@@ -570,12 +588,18 @@ export async function* streamNumericPages<TPage>(
     // larger value cannot re-open the window.
     let launchBound = Number.POSITIVE_INFINITY;
     const readBound = extractBound ?? ((): number | undefined => undefined);
+    // Current launch-window size, stepping up like the eager driver's: the
+    // first page launches alone and the window steps to the full
+    // `concurrency` only after a yielded page is confirmed non-terminal,
+    // so a single-page traversal costs one request. With `concurrency: 1`
+    // the step is a no-op.
+    let windowSize = Math.min(1, concurrency);
 
-    const launchWindow = (): void => {
+    const launchWindow = (limit: number): void => {
         while (
             !terminal &&
             nextToLaunch - startPage < maxPages &&
-            pending.size < concurrency &&
+            pending.size < limit &&
             nextToLaunch <= launchBound
         ) {
             const page = nextToLaunch;
@@ -592,7 +616,7 @@ export async function* streamNumericPages<TPage>(
 
     try {
         while (nextToYield - startPage < maxPages) {
-            launchWindow();
+            launchWindow(windowSize);
             const page = nextToYield;
             const request = pending.get(page);
             if (request === undefined) {
@@ -618,8 +642,21 @@ export async function* streamNumericPages<TPage>(
             if (observedBound !== undefined && observedBound < launchBound) {
                 launchBound = observedBound;
             }
+            const pageIsTerminal = isTerminalPage(response);
+            if (!pageIsTerminal) {
+                // The consumed page confirmed more data exists: the launch
+                // window has earned its full size. Refill before yielding so
+                // the look-ahead pages are already in flight when the
+                // consumer receives this one — the same head start a
+                // cold-filled window provided, so an early-exiting consumer
+                // still has its stragglers cancelled by the bridge dispose.
+                // The refill leaves one slot for the post-yield pass, so the
+                // steady state matches the cold-filled engine exactly.
+                windowSize = concurrency;
+                launchWindow(concurrency - 1);
+            }
             yield response;
-            if (isTerminalPage(response)) {
+            if (pageIsTerminal) {
                 terminal = true;
                 await Promise.allSettled([...pending.values()]);
                 break;
