@@ -2,18 +2,27 @@
  * Provider-neutral pagination machinery.
  *
  * This module owns the transport-agnostic parts of walking a paged remote
- * collection: numeric option resolution and clamping, the look-ahead
- * request driver that overlaps round-trip latency while collecting results
- * strictly in entry order, and the streaming page generator that yields
- * the same traversal one page at a time. Schema-specific contracts — what a
- * page looks like, where the "more data available" flag lives, and per-page
- * size caps — stay with each provider.
+ * collection: numeric option resolution and clamping (including the shared
+ * `resolvePaginationOptions` preamble both provider adapters resolve their
+ * traversals through), the look-ahead request driver that overlaps
+ * round-trip latency while collecting results strictly in entry order, and
+ * the streaming page generator that yields the same traversal one page at
+ * a time. Schema-specific contracts — what a page looks like, where the
+ * "more data available" flag lives, and per-page size caps — stay with each
+ * provider.
  *
- * The driver is key-agnostic: providers with numeric paging (AniList pages,
- * chunks) use slot arithmetic from `startNumber`, while providers with
- * cursor-based paging (MyAnimeList) supply an `extractNextKey` callback so
- * each follow-up request uses the key carried by the previous entry.
+ * The driver is numeric: every traversal is scheduled by entry number.
+ * Providers whose paging is not page-number-shaped map onto it in their
+ * adapter (MyAnimeList's `offset`/`limit` paging becomes
+ * `(page - 1) * perPage` slot arithmetic), so one scheduling engine serves
+ * every provider. The launch window steps up rather than filling cold: the
+ * first entry launches alone and the window steps to the configured
+ * `concurrency` only after a received entry confirms more data exists, so
+ * a single-entry traversal costs one request while multi-entry traversals
+ * keep their latency overlap.
  */
+
+import { type DiagnosticsMode, resolveDiagnosticsMode } from "./transportTypes";
 
 /**
  * Upper bound on caller-supplied look-ahead `concurrency`. Values above this
@@ -99,6 +108,128 @@ export function resolveCappedInt(
 }
 
 /**
+ * The caller-supplied pagination option values
+ * {@link resolvePaginationOptions} reads: the numeric and diagnostics fields
+ * of the providers' public option interfaces (`PaginateOptions`,
+ * `ChunkPaginateOptions`, `MalPaginateOptions`) in one structural shape, so
+ * every public options type is assignable without the engine importing
+ * provider types. Both naming shapes — `perPage`/`startPage`/`maxPages` and
+ * `perChunk`/`startChunk`/`maxChunks` — are carried; the
+ * {@link PaginationDefaults.naming} discriminator selects which to read.
+ */
+export interface PaginationOptionsInput {
+    /** Entries requested per page (the page naming shape). */
+    perPage?: number;
+    /** Entries requested per chunk (the chunk naming shape). */
+    perChunk?: number;
+    /** 1-based page number to start from (the page naming shape). */
+    startPage?: number;
+    /** 1-based chunk number to start from (the chunk naming shape). */
+    startChunk?: number;
+    /** Hard cap on pages fetched (the page naming shape). */
+    maxPages?: number;
+    /** Hard cap on chunks fetched (the chunk naming shape). */
+    maxChunks?: number;
+    /** Maximum number of requests kept in flight at once. */
+    concurrency?: number;
+    /** Controls how a throwing observer callback is reported. */
+    diagnostics?: DiagnosticsMode;
+}
+
+/**
+ * Per-provider resolution defaults for {@link resolvePaginationOptions}:
+ * the caps and fallbacks a provider's traversals resolve their numeric
+ * options against, plus the public naming shape (`"page"` reads
+ * `perPage`/`startPage`/`maxPages`, `"chunk"` reads
+ * `perChunk`/`startChunk`/`maxChunks`) so a validation error names the
+ * option the caller actually passed.
+ */
+export interface PaginationDefaults {
+    /** Which public naming shape the traversal's options use. */
+    naming: "page" | "chunk";
+    /** Hard cap on entries requested per page or chunk; larger values are clamped down. */
+    maxPerEntry: number;
+    /** Entries requested per page or chunk when the caller omits the option. */
+    defaultPerEntry: number;
+    /** Entry cap when the caller omits the option. */
+    defaultMaxEntries: number;
+    /** Look-ahead window when the caller omits `concurrency`. */
+    defaultConcurrency: number;
+}
+
+/**
+ * The traversal options {@link resolvePaginationOptions} returns: every
+ * numeric option resolved (defaults applied, caps enforced) plus the
+ * diagnostics mode. Signal bridging deliberately stays with the call site —
+ * eager traversals bridge through {@link bridgeAbortSignal} and dispose in
+ * a `finally` block, while streaming traversals let the engine's generator
+ * own the bridge — because traversal lifetimes differ.
+ *
+ * @see {@link resolvePaginationOptions}
+ */
+export interface ResolvedPaginationOptions {
+    /** Resolved entries requested per page or chunk. */
+    perEntry: number;
+    /** Resolved 1-based entry number the traversal starts from. */
+    startEntry: number;
+    /** Resolved hard cap on entries fetched. */
+    maxEntries: number;
+    /** Resolved look-ahead window. */
+    concurrency: number;
+    /** Resolved diagnostics mode. */
+    diagnostics: DiagnosticsMode;
+}
+
+/**
+ * Resolve a provider traversal's numeric options and diagnostics mode in
+ * one place: the per-entry size against the provider's cap, the start
+ * entry, the entry cap, the look-ahead window against
+ * {@link MAX_CONCURRENCY}, and the diagnostics mode. Both provider paginators
+ * call this with their per-provider {@link PaginationDefaults} instead of
+ * hand-copying the resolution preamble per helper.
+ *
+ * @param options - The caller-supplied public options object (any of the providers' pagination option interfaces), when provided.
+ * @param defaults - The provider's caps, fallbacks, and naming shape.
+ * @returns The resolved per-entry size, start entry, entry cap, look-ahead window, and diagnostics mode.
+ * @throws A `TypeError` when a numeric option is defined but not a finite, positive number, or when `diagnostics` is defined but not a valid mode.
+ * @see {@link resolveCappedInt}
+ * @see {@link resolvePositiveInt}
+ * @see {@link resolveDiagnosticsMode}
+ */
+export function resolvePaginationOptions(
+    options: PaginationOptionsInput | undefined,
+    defaults: PaginationDefaults
+): ResolvedPaginationOptions {
+    // The public option names follow the traversal's naming shape so a
+    // validation error names the option the caller actually passed
+    // (`perChunk: -1`, not a generic "option").
+    const perEntryName = defaults.naming === "page" ? "perPage" : "perChunk";
+    const startName = defaults.naming === "page" ? "startPage" : "startChunk";
+    const maxEntriesName = defaults.naming === "page" ? "maxPages" : "maxChunks";
+    return {
+        perEntry: resolveCappedInt(
+            options?.[perEntryName],
+            defaults.maxPerEntry,
+            defaults.defaultPerEntry,
+            perEntryName
+        ),
+        startEntry: resolvePositiveInt(options?.[startName], 1, startName),
+        maxEntries: resolvePositiveInt(
+            options?.[maxEntriesName],
+            defaults.defaultMaxEntries,
+            maxEntriesName
+        ),
+        concurrency: resolveCappedInt(
+            options?.concurrency,
+            MAX_CONCURRENCY,
+            defaults.defaultConcurrency,
+            "concurrency"
+        ),
+        diagnostics: resolveDiagnosticsMode(options?.diagnostics),
+    };
+}
+
+/**
  * The result of bridging an external abort signal into a traversal-owned
  * controller. Call {@link AbortBridge.dispose} in a `finally` block so the
  * listener attached to the external signal is removed when the traversal
@@ -178,9 +309,6 @@ export function bridgeAbortSignal(external: AbortSignal | undefined): AbortBridg
  * a partial result with `truncated: false` — the abort is not propagated as a
  * rejection.
  *
- * Two call shapes are supported via explicit overloads: numeric paging (this
- * signature) and cursor paging (the companion overload below).
- *
  * @typeParam TEntry - The raw response shape of a single page or chunk.
  * @param fetch - Callback that fetches a single entry given its numeric page key.
  * @param extractHasMore - Reads the "more data available" flag from a fetched entry. Return `false` for malformed responses so a broken payload ends the traversal instead of looping forever.
@@ -203,116 +331,7 @@ export async function fetchWithLookAhead<TEntry>(
     concurrency: number,
     signal?: AbortSignal,
     extractBound?: (response: TEntry) => number | undefined
-): Promise<LookAheadResult<TEntry>>;
-/**
- * Shared look-ahead driver for paged traversals — cursor paging overload.
- *
- * Cursor paging is for providers whose next key is carried by the previous
- * response (for example MyAnimeList). Each consumed entry supplies the key
- * for its successor via `extractNextKey`; the first key is `firstKey`. Cursor
- * mode never schedules past a terminal entry even if that entry still carries
- * a stale next key. Because the next key depends on the previous response,
- * requests form a dependency chain and the look-ahead window is effectively 1
- * regardless of the supplied `concurrency`.
- *
- * See the numeric paging overload above for the shared abort, drain, and
- * `truncated` semantics.
- *
- * @typeParam TEntry - The raw response shape of a single page or chunk.
- * @typeParam TKey - The paging key type: an opaque cursor value.
- * @param fetch - Callback that fetches a single entry given its paging key.
- * @param extractHasMore - Reads the "more data available" flag from a fetched entry. Return `false` for malformed responses so a broken payload ends the traversal instead of looping forever.
- * @param extractNextKey - Reads the next paging key from a fetched entry. Pass `undefined` to select numeric paging (use the numeric overload instead in that case).
- * @param firstKey - The paging key to start from.
- * @param maxEntries - Hard cap on entries fetched, guarding against unbounded loops.
- * @param concurrency - Maximum number of requests kept in flight at once (effectively 1 in cursor mode).
- * @param signal - Optional `AbortSignal` to cancel the traversal.
- * @returns The responses in entry order, how many were fetched, and whether
- *          the guard truncated the run.
- * @throws The rejection from the next unconsumed `fetch` call in entry order,
- *         unless the `signal` aborted (in which case a partial result is returned).
- * @see {@link LookAheadResult}
- */
-export async function fetchWithLookAhead<TEntry, TKey>(
-    fetch: (key: TKey) => Promise<TEntry>,
-    extractHasMore: (response: TEntry) => boolean,
-    extractNextKey: ((response: TEntry) => TKey) | undefined,
-    firstKey: TKey,
-    maxEntries: number,
-    concurrency: number,
-    signal?: AbortSignal
-): Promise<LookAheadResult<TEntry>>;
-/**
- * Implementation signature for {@link fetchWithLookAhead}. Not directly
- * callable — callers resolve to one of the two public overloads above. The
- * rest parameter carries each call shape as its own labeled tuple, so the
- * mode is selected structurally: a function in the third slot routes to
- * {@link fetchCursorChain}; a number (or the legacy `undefined` extractor)
- * routes to {@link fetchNumericWithLookAhead}. All scheduling logic lives
- * in those drivers.
- */
-export async function fetchWithLookAhead<TEntry, TKey = number>(
-    ...args:
-        | [
-              fetch: (key: number) => Promise<TEntry>,
-              extractHasMore: (response: TEntry) => boolean,
-              startNumber: number,
-              maxEntries: number,
-              concurrency: number,
-              signal?: AbortSignal,
-              extractBound?: (response: TEntry) => number | undefined,
-          ]
-        | [
-              fetch: (key: number) => Promise<TEntry>,
-              extractHasMore: (response: TEntry) => boolean,
-              extractNextKey: undefined,
-              startNumber: number,
-              maxEntries: number,
-              concurrency: number,
-              signal?: AbortSignal,
-          ]
-        | [
-              fetch: (key: TKey) => Promise<TEntry>,
-              extractHasMore: (response: TEntry) => boolean,
-              extractNextKey: (response: TEntry) => TKey,
-              firstKey: TKey,
-              maxEntries: number,
-              concurrency: number,
-              signal?: AbortSignal,
-          ]
 ): Promise<LookAheadResult<TEntry>> {
-    if (typeof args[2] === "function") {
-        // Cursor shape: (fetch, extractHasMore, extractNextKey, firstKey,
-        // maxEntries, concurrency, signal?) — concurrency is structurally
-        // impossible in a dependency chain, so it is dropped here.
-        const [fetch, extractHasMore, extractNextKey, firstKey, maxEntries, , signal] = args;
-        return fetchCursorChain(
-            fetch,
-            extractHasMore,
-            extractNextKey,
-            firstKey,
-            maxEntries,
-            signal
-        );
-    }
-    if (args[2] === undefined) {
-        // Legacy numeric call shape:
-        // (fetch, extractHasMore, undefined, startNumber, maxEntries,
-        // concurrency, signal?)
-        const [fetch, extractHasMore, , startNumber, maxEntries, concurrency, signal] = args;
-        return fetchNumericWithLookAhead(
-            fetch,
-            extractHasMore,
-            startNumber,
-            maxEntries,
-            concurrency,
-            signal
-        );
-    }
-    // Numeric overload: (fetch, extractHasMore, startNumber, maxEntries,
-    // concurrency, signal?, extractBound?)
-    const [fetch, extractHasMore, startNumber, maxEntries, concurrency, signal, extractBound] =
-        args;
     return fetchNumericWithLookAhead(
         fetch,
         extractHasMore,
@@ -474,68 +493,6 @@ export async function fetchNumericWithLookAhead<TEntry>(
     }
 
     return { responses, count, truncated };
-}
-
-/**
- * Cursor-mode driver: each key is carried by the previous response, so
- * requests form a dependency chain and the traversal is strictly serial —
- * the signature has no `concurrency` parameter because none is possible.
- * The chain ends at a terminal entry, when an entry carries no next key, at
- * the `maxEntries` guard, or on abort (returning the collected prefix as a
- * partial result with `truncated: false`).
- *
- * @typeParam TEntry - The raw response shape of a single page or chunk.
- * @typeParam TKey - The paging key type: an opaque cursor value.
- * @param fetch - Callback that fetches a single entry given its paging key.
- * @param extractHasMore - Reads the "more data available" flag from a fetched entry.
- * @param extractNextKey - Reads the next paging key from a fetched entry.
- * @param firstKey - The paging key to start from.
- * @param maxEntries - Hard cap on entries fetched, guarding against unbounded loops.
- * @param signal - Optional `AbortSignal` to cancel the traversal.
- * @returns The responses in entry order, how many were fetched, and whether the guard truncated the run.
- * @throws The rejection from the current `fetch` call, unless the `signal` aborted.
- * @see {@link LookAheadResult}
- */
-export async function fetchCursorChain<TEntry, TKey>(
-    fetch: (key: TKey) => Promise<TEntry>,
-    extractHasMore: (response: TEntry) => boolean,
-    extractNextKey: (response: TEntry) => TKey,
-    firstKey: TKey,
-    maxEntries: number,
-    signal?: AbortSignal
-): Promise<LookAheadResult<TEntry>> {
-    const responses: TEntry[] = [];
-    let key: TKey | undefined = firstKey;
-
-    while (responses.length < maxEntries && key !== undefined) {
-        if (signal?.aborted) {
-            return { responses, count: responses.length, truncated: false };
-        }
-        let entry: TEntry;
-        try {
-            entry = await fetch(key);
-        } catch (err) {
-            if (signal?.aborted) {
-                return { responses, count: responses.length, truncated: false };
-            }
-            throw err;
-        }
-        responses.push(entry);
-        if (!extractHasMore(entry)) {
-            return { responses, count: responses.length, truncated: false };
-        }
-        key = extractNextKey(entry);
-    }
-
-    return {
-        responses,
-        count: responses.length,
-        // A degenerate guard (maxEntries <= 0) fetched nothing and cut
-        // nothing short: `truncated` reports whether the guard ended a run
-        // that still had data, matching the numeric driver's `while (count <
-        // maxEntries)` early exit.
-        truncated: responses.length >= maxEntries && maxEntries > 0,
-    };
 }
 
 /**

@@ -1,18 +1,13 @@
 import type { PageInfo } from "./interfaces/responses/page/PageInfo";
 import { safeInvoke } from "../../../base/hooks";
-import {
-    type DiagnosticsMode,
-    type OnHookErrorHandler,
-    resolveDiagnosticsMode,
-} from "../../../base/transportTypes";
+import { type DiagnosticsMode, type OnHookErrorHandler } from "../../../base/transportTypes";
 import { AniLinkValidationError } from "../../../base/AniLinkError";
 import {
     bridgeAbortSignal,
     extractLastPageBound,
     fetchWithLookAhead,
-    MAX_CONCURRENCY,
-    resolveCappedInt,
-    resolvePositiveInt,
+    type PaginationDefaults,
+    resolvePaginationOptions,
     streamNumericPages,
 } from "../../../base/pagination";
 
@@ -68,11 +63,37 @@ const safeCallback = <T>(
 /**
  * Default look-ahead `concurrency` for the pagination helpers. A small window
  * overlaps round-trip latency by default so the common traversal does not pay
- * full stacked latency, while the {@link MAX_CONCURRENCY} clamp and the
+ * full stacked latency, while the engine's `MAX_CONCURRENCY` clamp and the
  * `maxPages`/`maxChunks` guards still bound the blast radius. Pass
  * `concurrency: 1` for strictly sequential fetches.
  */
 const DEFAULT_CONCURRENCY = 3;
+
+/**
+ * Resolution defaults for AniList page traversals: the shared engine's
+ * {@link resolvePaginationOptions} resolves `PaginateOptions` against
+ * these caps and fallbacks in one place for every page-shaped helper.
+ */
+const PAGE_DEFAULTS: PaginationDefaults = {
+    naming: "page",
+    maxPerEntry: MAX_PER_PAGE,
+    defaultPerEntry: DEFAULT_PER_PAGE,
+    defaultMaxEntries: DEFAULT_MAX_PAGES,
+    defaultConcurrency: DEFAULT_CONCURRENCY,
+};
+
+/**
+ * Resolution defaults for AniList `MediaListCollection` chunk traversals:
+ * the shared engine's {@link resolvePaginationOptions} resolves
+ * `ChunkPaginateOptions` against these caps and fallbacks in one place.
+ */
+const CHUNK_DEFAULTS: PaginationDefaults = {
+    naming: "chunk",
+    maxPerEntry: MAX_PER_CHUNK,
+    defaultPerEntry: DEFAULT_PER_CHUNK,
+    defaultMaxEntries: DEFAULT_MAX_CHUNKS,
+    defaultConcurrency: DEFAULT_CONCURRENCY,
+};
 
 /**
  * Keys of `T` whose value is a readonly array — the items field of a page or
@@ -331,16 +352,13 @@ export async function paginate<TPage extends { pageInfo: PageInfo }, K extends s
     itemsKey: K,
     options?: PaginateOptions
 ): Promise<PaginateResult<ArrayElement<TPage, K>>> {
-    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE, "perPage");
-    const startPage = resolvePositiveInt(options?.startPage, 1, "startPage");
-    const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES, "maxPages");
-    const concurrency = resolveCappedInt(
-        options?.concurrency,
-        MAX_CONCURRENCY,
-        DEFAULT_CONCURRENCY,
-        "concurrency"
-    );
-    const diagnostics = resolveDiagnosticsMode(options?.diagnostics);
+    const {
+        perEntry: perPage,
+        startEntry: startPage,
+        maxEntries: maxPages,
+        concurrency,
+        diagnostics,
+    } = resolvePaginationOptions(options, PAGE_DEFAULTS);
 
     const { signal, dispose } = bridgeAbortSignal(options?.signal);
 
@@ -425,15 +443,12 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
     fetchPage: (page: number, perPage: number, signal?: AbortSignal) => Promise<TPage>,
     options?: PaginateOptions
 ): AsyncGenerator<TPage> {
-    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE, "perPage");
-    const startPage = resolvePositiveInt(options?.startPage, 1, "startPage");
-    const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES, "maxPages");
-    const concurrency = resolveCappedInt(
-        options?.concurrency,
-        MAX_CONCURRENCY,
-        DEFAULT_CONCURRENCY,
-        "concurrency"
-    );
+    const {
+        perEntry: perPage,
+        startEntry: startPage,
+        maxEntries: maxPages,
+        concurrency,
+    } = resolvePaginationOptions(options, PAGE_DEFAULTS);
 
     // The streaming traversal runs on the shared engine: the launch window,
     // the terminal-page drain, the abort bridging, and the early-exit
@@ -486,21 +501,13 @@ export async function paginateChunks<TChunk extends { hasNextChunk: boolean }, K
     itemsKey: K,
     options?: ChunkPaginateOptions
 ): Promise<ChunkPaginateResult<ArrayElement<TChunk, K>>> {
-    const perChunk = resolveCappedInt(
-        options?.perChunk,
-        MAX_PER_CHUNK,
-        DEFAULT_PER_CHUNK,
-        "perChunk"
-    );
-    const startChunk = resolvePositiveInt(options?.startChunk, 1, "startChunk");
-    const maxChunks = resolvePositiveInt(options?.maxChunks, DEFAULT_MAX_CHUNKS, "maxChunks");
-    const concurrency = resolveCappedInt(
-        options?.concurrency,
-        MAX_CONCURRENCY,
-        DEFAULT_CONCURRENCY,
-        "concurrency"
-    );
-    const diagnostics = resolveDiagnosticsMode(options?.diagnostics);
+    const {
+        perEntry: perChunk,
+        startEntry: startChunk,
+        maxEntries: maxChunks,
+        concurrency,
+        diagnostics,
+    } = resolvePaginationOptions(options, CHUNK_DEFAULTS);
 
     const { signal, dispose } = bridgeAbortSignal(options?.signal);
 

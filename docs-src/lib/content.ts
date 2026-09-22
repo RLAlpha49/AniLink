@@ -169,7 +169,7 @@ export const PAGES: DocPage[] = [
     {
         path: "/guides/anilist/pagination",
         title: "Pagination",
-        summary: "Cursor and page-based iteration helpers.",
+        summary: "Page-based iteration helpers.",
         provider: "anilist",
         section: "anilist",
     },

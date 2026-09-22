@@ -15,18 +15,13 @@
  * provider-neutral seam real.
  */
 import { safeInvoke } from "../../../base/hooks";
-import {
-    type DiagnosticsMode,
-    type OnHookErrorHandler,
-    resolveDiagnosticsMode,
-} from "../../../base/transportTypes";
+import { type DiagnosticsMode, type OnHookErrorHandler } from "../../../base/transportTypes";
 import { AniLinkValidationError } from "../../../base/AniLinkError";
 import {
     bridgeAbortSignal,
     fetchWithLookAhead,
-    MAX_CONCURRENCY,
-    resolveCappedInt,
-    resolvePositiveInt,
+    type PaginationDefaults,
+    resolvePaginationOptions,
     streamNumericPages,
 } from "../../../base/pagination";
 import type { MalPaging } from "./types";
@@ -55,6 +50,19 @@ const DEFAULT_MAX_PAGES = 100;
  * `concurrency` only for endpoints known to tolerate bursts.
  */
 const DEFAULT_CONCURRENCY = 1;
+
+/**
+ * Resolution defaults for MAL list traversals: the shared engine's
+ * {@link resolvePaginationOptions} resolves `MalPaginateOptions` against
+ * these caps and fallbacks in one place for both MAL helpers.
+ */
+const MAL_DEFAULTS: PaginationDefaults = {
+    naming: "page",
+    maxPerEntry: MAX_PER_PAGE,
+    defaultPerEntry: DEFAULT_PER_PAGE,
+    defaultMaxEntries: DEFAULT_MAX_PAGES,
+    defaultConcurrency: DEFAULT_CONCURRENCY,
+};
 
 /**
  * {@link MalPage} is the response shape every MyAnimeList list endpoint returns: the items array plus the optional paging node.
@@ -256,16 +264,13 @@ export async function malPaginate<TItem>(
     fetchPage: (page: number, perPage: number, signal?: AbortSignal) => Promise<MalPage<TItem>>,
     options?: MalPaginateOptions
 ): Promise<MalPaginateResult<TItem>> {
-    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE, "perPage");
-    const startPage = resolvePositiveInt(options?.startPage, 1, "startPage");
-    const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES, "maxPages");
-    const concurrency = resolveCappedInt(
-        options?.concurrency,
-        MAX_CONCURRENCY,
-        DEFAULT_CONCURRENCY,
-        "concurrency"
-    );
-    const diagnostics = resolveDiagnosticsMode(options?.diagnostics);
+    const {
+        perEntry: perPage,
+        startEntry: startPage,
+        maxEntries: maxPages,
+        concurrency,
+        diagnostics,
+    } = resolvePaginationOptions(options, MAL_DEFAULTS);
 
     const { signal, dispose } = bridgeAbortSignal(options?.signal);
 
@@ -355,16 +360,13 @@ export async function* malPaginatePages<TItem>(
     fetchPage: (page: number, perPage: number, signal?: AbortSignal) => Promise<MalPage<TItem>>,
     options?: MalPaginateOptions
 ): AsyncGenerator<MalPage<TItem>> {
-    const perPage = resolveCappedInt(options?.perPage, MAX_PER_PAGE, DEFAULT_PER_PAGE, "perPage");
-    const startPage = resolvePositiveInt(options?.startPage, 1, "startPage");
-    const maxPages = resolvePositiveInt(options?.maxPages, DEFAULT_MAX_PAGES, "maxPages");
-    const concurrency = resolveCappedInt(
-        options?.concurrency,
-        MAX_CONCURRENCY,
-        DEFAULT_CONCURRENCY,
-        "concurrency"
-    );
-    const diagnostics = resolveDiagnosticsMode(options?.diagnostics);
+    const {
+        perEntry: perPage,
+        startEntry: startPage,
+        maxEntries: maxPages,
+        concurrency,
+        diagnostics,
+    } = resolvePaginationOptions(options, MAL_DEFAULTS);
 
     for await (const response of streamNumericPages(
         fetchPage,
