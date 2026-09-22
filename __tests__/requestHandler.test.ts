@@ -132,6 +132,35 @@ test("throws AniLinkAuthError for an empty-string token when auth is required", 
     expect(mocks.request).not.toHaveBeenCalled();
 });
 
+test("does not serve an anonymous cache hit when auth is required", async () => {
+    const url = "https://graphql.anilist.co";
+    const data = { query: "query { Media (id: 1) { id } }" };
+    const cache = new ResponseCache({ ttlMs: 10_000 });
+    cache.set("POST", url, data, "none", { id: 1 });
+    const events: string[] = [];
+
+    const error = await sendRequest(url, "POST", data, undefined, {
+        requiresAuth: true,
+        options: {
+            responseCache: cache,
+            onRequestStart: vi.fn(() => {
+                events.push("requestStart");
+            }),
+            onResponse: vi.fn(() => {
+                events.push("response");
+            }),
+            onError: vi.fn(() => {
+                events.push("error");
+            }),
+        },
+    }).catch((requestError: unknown) => requestError);
+
+    expect(error).toBeInstanceOf(AniLinkAuthError);
+    expect(cache.stats()).toMatchObject({ hits: 0, misses: 0 });
+    expect(mocks.request).not.toHaveBeenCalled();
+    expect(events).toEqual(["requestStart", "error"]);
+});
+
 test("does not require a token when requiresAuth is false", async () => {
     await sendRequest("https://graphql.anilist.co", "POST", {}, undefined, {
         requiresAuth: false,

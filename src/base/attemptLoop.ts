@@ -4,13 +4,13 @@
  * Owns the `executeWithRetry` dispatch loop — the circuit check, the
  * pre-dispatch pacing wait, the network dispatch, the envelope resolution,
  * the cache write-back, the failure recording, the retry-budget accounting,
- * and every lifecycle-hook emission of one logical request — extracted from
- * `RequestHandler.ts` so the loop's invariants (probe bookkeeping,
+ * and every lifecycle-hook emission of one logical request — owned here so
+ * the loop's invariants (probe bookkeeping,
  * `responseReported`, the cumulative `pacedWaitMs`/`retryWaitMs`
  * accumulators, budget-unit spending) live in one focused, reviewable
- * module. The transport entry (`sendRequest`) resolves options, builds the
- * auth headers and the cache policy, and hands the attempt loop a fully
- * resolved request; this module never re-derives policy.
+ * module. The request pipeline (`requestPipeline.ts`) resolves options,
+ * builds auth headers, and decides cache eligibility before it hands the
+ * attempt loop a fully resolved request; this module never re-derives policy.
  */
 import { randomUUID } from "node:crypto";
 import type { AxiosResponse } from "axios";
