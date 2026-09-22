@@ -1,10 +1,28 @@
-import { AniLinkError } from "../../../base/AniLinkError";
-import { type RequestOptions, sendRequest } from "../../../base/RequestHandler";
-import { sanitizeTokenError } from "../../../base/tokenError";
+import { type RequestOptions } from "../../../base/RequestHandler";
+import {
+    computeTokenExpiry,
+    refreshGrantParams,
+    requestTokenGrant,
+    type TokenGrantDescriptor,
+} from "../../../base/tokenRefresh";
 import { MAL_AUTHORIZE_URL, MAL_TOKEN_URL } from "./constants";
 
-/** The explicit timeout applied to MAL OAuth token requests by default. */
-const MAL_AUTH_TIMEOUT_MS = 10_000;
+/**
+ * The MAL facts the shared token machinery reads: the token endpoint, the
+ * sanitize label, the strip rule (the replayed request authenticates with
+ * the bearer token, so the client-ID header is dropped — it is only for
+ * client-ID-only access to public endpoints, and keeping a stale one would
+ * widen client-ID exposure to intermediaries that log request headers,
+ * contradicting `resolveMalCredentials`), and the diagnostics identity.
+ *
+ * @see https://myanimelist.net/apiconfig/references/authorization
+ */
+export const MAL_TOKEN_GRANT: TokenGrantDescriptor = {
+    tokenUrl: MAL_TOKEN_URL,
+    errorLabel: "MAL token request",
+    stripHeaders: ["X-MAL-CLIENT-ID"],
+    provider: { hookName: "malTokenRefresh", providerLabel: "MAL" },
+};
 
 /**
  * {@link MalTokenResponse} is the successful MyAnimeList OAuth2 token response returned by {@link getMalAccessToken} and {@link refreshMalAccessToken}.
@@ -96,61 +114,6 @@ export const buildMalAuthorizationUrl = (
 };
 
 /**
- * Normalizes a failed MAL OAuth token request into an {@link AniLinkError} subclass.
- *
- * Token request bodies carry `client_secret`, authorization `code`, and
- * `refresh_token` values, so the original Axios error is deliberately
- * discarded: the returned error carries only a safe message, a stable code,
- * and — for HTTP failures — the upstream response body, which contains no
- * credentials.
- *
- * @param error - The value thrown by the token request transport.
- * @returns A sanitized error that is safe to surface in application logs.
- */
-const normalizeMalTokenError = (error: unknown): AniLinkError =>
-    sanitizeTokenError(error, "MAL token request");
-
-/**
- * Sends one MyAnimeList OAuth2 token request through the shared transport.
- *
- * Runs form-urlencoded POSTs against {@link MAL_TOKEN_URL} with the shared
- * pipeline's hooks, defaulting to a shorter timeout than REST operations
- * (`MAL_AUTH_TIMEOUT_MS`) because a hung token exchange blocks the whole
- * login flow. Retries are disabled by default: token grants carry
- * single-use credentials (the authorization code and PKCE verifier are
- * consumed server-side on the first attempt), so a retry of a failed
- * exchange is guaranteed to fail again while doubling token-endpoint
- * traffic. A caller opts back in by passing an explicit `retry` policy in
- * `options`. Failures are re-thrown as the sanitized error from
- * `normalizeMalTokenError` so no credentials leak through error payloads.
- *
- * @param params - The URL-encoded grant fields (`grant_type`, `client_id`, and code, verifier, or refresh token as applicable).
- * @param options - Optional transport settings for the token call; `timeout` defaults to `MAL_AUTH_TIMEOUT_MS` and `retry` defaults to disabled.
- * @returns The parsed {@link MalTokenResponse} on success.
- * @throws `AniLinkApiError` when MAL rejects the grant, or `AniLinkNetworkError` on timeout, cancellation, or network failure.
- */
-const requestMalToken = async (
-    params: Record<string, string>,
-    options?: RequestOptions
-): Promise<MalTokenResponse> => {
-    try {
-        const body = new URLSearchParams(params).toString();
-        return await sendRequest<MalTokenResponse>(MAL_TOKEN_URL, "POST", body, undefined, {
-            requiresAuth: false,
-            options: {
-                ...options,
-                timeout: options?.timeout ?? MAL_AUTH_TIMEOUT_MS,
-                retry: options?.retry ?? false,
-                exposeRawAxiosError: false,
-            },
-            contentType: "application/x-www-form-urlencoded",
-        });
-    } catch (error) {
-        throw normalizeMalTokenError(error);
-    }
-};
-
-/**
  * {@link getMalAccessToken} exchanges a MAL authorization code for an access token through PKCE.
  *
  * It completes the flow started by {@link buildMalAuthorizationUrl} using the {@link MalAuthorizationCodeRequest} fields and returns a {@link MalTokenResponse} consumed by `MalCredentials` and `buildMyAnimeListApi`. Transport is shared with {@link RequestOptions}.
@@ -168,7 +131,8 @@ const requestMalToken = async (
 export const getMalAccessToken = (
     request: MalAuthorizationCodeRequest
 ): Promise<MalTokenResponse> =>
-    requestMalToken(
+    requestTokenGrant<MalTokenResponse>(
+        MAL_TOKEN_GRANT,
         {
             client_id: request.clientId,
             code: request.code,
@@ -176,6 +140,7 @@ export const getMalAccessToken = (
             grant_type: "authorization_code",
             ...(request.clientSecret === undefined ? {} : { client_secret: request.clientSecret }),
         },
+        undefined,
         request.options
     );
 
@@ -195,13 +160,10 @@ export const getMalAccessToken = (
  * @see https://myanimelist.net/apiconfig/references/authorization
  */
 export const refreshMalAccessToken = (request: MalRefreshTokenRequest): Promise<MalTokenResponse> =>
-    requestMalToken(
-        {
-            client_id: request.clientId,
-            grant_type: "refresh_token",
-            refresh_token: request.refreshToken,
-            ...(request.clientSecret === undefined ? {} : { client_secret: request.clientSecret }),
-        },
+    requestTokenGrant<MalTokenResponse>(
+        MAL_TOKEN_GRANT,
+        refreshGrantParams(request.clientId, request.clientSecret, request.refreshToken),
+        undefined,
         request.options
     );
 
@@ -221,12 +183,5 @@ export const refreshMalAccessToken = (request: MalRefreshTokenRequest): Promise<
  * ```
  * @see https://myanimelist.net/apiconfig/references/authorization
  */
-export const getMalTokenExpiry = (response: MalTokenResponse, now: number = Date.now()): Date => {
-    const { expires_in } = response;
-    if (!Number.isFinite(expires_in) || expires_in <= 0) {
-        throw new TypeError(
-            `Invalid expires_in ${expires_in}: token lifetime must be a finite, positive number of seconds.`
-        );
-    }
-    return new Date(now + expires_in * 1000);
-};
+export const getMalTokenExpiry = (response: MalTokenResponse, now?: number): Date =>
+    computeTokenExpiry(response, now);

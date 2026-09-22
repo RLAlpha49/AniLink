@@ -1,11 +1,14 @@
 /**
  * The AniList binding of the shared token-refresh lifecycle.
  *
- * The lifecycle itself — the 401/missing-token classifier, the deduplicated
- * in-flight grant, the auth swap, the callbacks, and the single replay —
- * lives in the shared coordinator (`base/tokenRefresh.ts`). This module is
- * the AniList adapter: the refresh grant behind the {@link TokenExchange}
- * seam and the auth rebuild that preserves AniList's bearer-token shape.
+ * The lifecycle itself — the grant POST, the expiry math, the auth
+ * rebuild, the 401/missing-token classifier, the deduplicated in-flight
+ * grant, the callbacks, and the single replay — lives in the shared
+ * module (`base/tokenRefresh.ts`). This module is the thin AniList
+ * adapter: the wiring-facing option and callback types plus two builders
+ * bound to the {@link ANILIST_TOKEN_GRANT} descriptor (the AniList token
+ * endpoint, sanitize label, empty strip rule, and diagnostics identity,
+ * declared in `./auth`).
  *
  * `AniListCredentials.refreshToken`, `clientId`, and `clientSecret` opt a
  * client into the automatic refresh path. Unlike MAL, AniList's refresh
@@ -13,10 +16,9 @@
  * the secret is configured too.
  */
 import { type AniLinkError } from "../../../base/AniLinkError";
-import type { OnHookErrorHandler, RequestAuthInput } from "../../../base/RequestHandler";
-import { type DiagnosticsMode } from "../../../base/transportTypes";
-import { TokenRefresher, type TokenExchange } from "../../../base/tokenRefresh";
-import { refreshAccessToken, type AniListTokenResponse } from "./auth";
+import type { RequestAuthInput } from "../../../base/RequestHandler";
+import { rewriteAuth, type TokenRefreshOptions, TokenRefresher } from "../../../base/tokenRefresh";
+import { ANILIST_TOKEN_GRANT, type AniListTokenResponse } from "./auth";
 
 /**
  * Callback invoked after every successful automatic AniList token refresh
@@ -49,43 +51,26 @@ export type AniListTokenRefreshCallback = (response: AniListTokenResponse) => vo
 export type AniListTokenRefreshErrorCallback = (error: AniLinkError) => void;
 
 /**
- * The fields the AniList wiring passes to {@link buildAniListTokenRefresher}.
+ * The fields the AniList wiring passes to {@link buildAniListTokenRefresher}:
+ * the shared refresh-option shape with AniList's one narrowing — the
+ * refresh grant requires the client secret, unlike MAL's optional one.
  *
  * @see {@link buildAniListTokenRefresher}
  */
-export interface AniListTokenRefresherOptions {
-    /** The AniList application client ID, required for the refresh grant. */
-    clientId: string;
+export interface AniListTokenRefresherOptions extends TokenRefreshOptions<AniListTokenResponse> {
     /** The AniList application client secret, required by AniList's refresh grant. */
     clientSecret: string;
-    /** The stored AniList refresh token exchanged for new access tokens. */
-    refreshToken: string;
-    /** Optional callback invoked once after every successful refresh. */
-    onTokenRefresh?: AniListTokenRefreshCallback;
-    /** Optional callback invoked once when a refresh grant fails. */
-    onTokenRefreshError?: AniListTokenRefreshErrorCallback;
-    /** Optional observer for `onTokenRefresh` failures, mirroring the transport hooks. */
-    onHookError?: OnHookErrorHandler;
-    /** How a throwing `onTokenRefresh` callback with no observer is reported; defaults to `"warn"`. */
-    diagnostics?: DiagnosticsMode;
-    /**
-     * Swaps the fresh access token onto the operation instances. Called
-     * between the refresh and the replay so the replayed request carries the
-     * new auth material. The callback must write through the wiring's live
-     * auth cell (not a construction-time snapshot) so both already-constructed
-     * operations and instances built later see the refreshed token.
-     */
-    applyAccessToken: (accessToken: string) => void;
 }
 
 /**
  * Builds the AniList refresh coordinator: the shared lifecycle bound to
- * AniList's refresh grant.
+ * the {@link ANILIST_TOKEN_GRANT} descriptor.
  *
- * The exchange adapter runs AniList's refresh-token grant with the client
- * ID and secret; its sanitized error (an `AniLinkApiError` or
- * `AniLinkNetworkError`) is the error the awaiting caller catches. Grant
- * failures are reported under the `aniListTokenRefresh` hook name.
+ * The coordinator runs AniList's refresh-token grant with the client ID
+ * and secret through the shared token transport; its sanitized error (an
+ * `AniLinkApiError` or `AniLinkNetworkError`) is the error the awaiting
+ * caller catches. Grant failures are reported under the
+ * `aniListTokenRefresh` hook name.
  *
  * @param options - The refresh grant fields, the auth-swap callback, the optional persistence and failure callbacks, and the diagnostics mode.
  * @returns The configured shared coordinator.
@@ -93,20 +78,11 @@ export interface AniListTokenRefresherOptions {
  */
 export const buildAniListTokenRefresher = (
     options: AniListTokenRefresherOptions
-): TokenRefresher<AniListTokenResponse> => {
-    const exchange: TokenExchange<AniListTokenResponse> = (refreshToken) =>
-        refreshAccessToken(options.clientId, options.clientSecret, refreshToken);
-    return new TokenRefresher<AniListTokenResponse>({
-        exchange,
-        refreshToken: options.refreshToken,
-        provider: { hookName: "aniListTokenRefresh", providerLabel: "AniList" },
-        onTokenRefresh: options.onTokenRefresh,
-        onTokenRefreshError: options.onTokenRefreshError,
-        onHookError: options.onHookError,
-        diagnostics: options.diagnostics,
-        applyAccessToken: options.applyAccessToken,
+): TokenRefresher<AniListTokenResponse> =>
+    new TokenRefresher<AniListTokenResponse>({
+        descriptor: ANILIST_TOKEN_GRANT,
+        ...options,
     });
-};
 
 /**
  * Builds the auth material one operation replays with after a refresh.
@@ -128,13 +104,4 @@ export const buildAniListTokenRefresher = (
 export const buildRefreshedAuth = (
     auth: RequestAuthInput | undefined,
     accessToken: string
-): RequestAuthInput => {
-    const headers =
-        typeof auth === "object" && auth?.headers !== undefined
-            ? Object.fromEntries(Object.entries(auth.headers))
-            : undefined;
-    return {
-        token: accessToken,
-        headers: headers !== undefined && Object.keys(headers).length > 0 ? headers : undefined,
-    };
-};
+): RequestAuthInput => rewriteAuth(ANILIST_TOKEN_GRANT, auth, accessToken);
