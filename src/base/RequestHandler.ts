@@ -327,8 +327,11 @@ export const sendRequest = async <T = unknown>(
         warnOptionsKeyedState(resolved.onHookError, resolved.diagnostics);
     }
 
+    // A per-request cache bypass (`bypassResponseCache`) keeps the read on
+    // the network: no cache key means no lookup and no write-back, so a
+    // freshness-critical read (a watcher poll) never serves a stale entry.
     const cacheAuthKey =
-        authGuard !== undefined
+        authGuard !== undefined || resolved.bypassResponseCache
             ? undefined
             : resolveCacheAuthKey(resolved.responseCache, method, data, isRestCall, resolvedAuth);
 

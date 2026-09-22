@@ -91,6 +91,8 @@ export interface ResolvedRequestOptions {
     allowPartialData: boolean;
     /** The opt-in response cache, when configured. */
     responseCache?: ResponseCache;
+    /** Whether this request skips the response cache entirely (no lookup, no write-back). */
+    bypassResponseCache: boolean;
 }
 
 /**
@@ -149,5 +151,6 @@ export const resolveRequestOptions = (options: RequestOptions = {}): ResolvedReq
         ignorePaceDeadline: options.ignorePaceDeadline ?? false,
         allowPartialData: options.allowPartialData ?? false,
         responseCache: options.responseCache,
+        bypassResponseCache: options.bypassResponseCache ?? false,
     };
 };

@@ -852,6 +852,44 @@ describe("error-context observability fields", () => {
         });
     });
 
+    test("bypassResponseCache skips the cache lookup and the write-back", async () => {
+        // A freshness-critical read (a watcher poll) opts out of the cache
+        // per request: a fresh cached entry must not be served, and the
+        // network response must not be written back over the cached one.
+        const cache = new ResponseCache({ ttlMs: 10_000 });
+        const onResponse = vi.fn();
+        const options = { responseCache: cache, bypassResponseCache: true, onResponse };
+
+        // Prime the cache with a read the bypassed request duplicates.
+        await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { options: { responseCache: cache } }
+        );
+        onResponse.mockClear();
+        mocks.request.mockClear();
+
+        const result = await sendRequest(
+            "https://graphql.anilist.co",
+            "POST",
+            { query: "query { Media (id: 1) { id } }" },
+            "token",
+            { options }
+        );
+
+        // The request went to the network (not served from cache) and was
+        // not written back: a bypassed read carries no cache markers at
+        // all — no `cacheHit` (it is not a cache read) and no `cacheWrite`.
+        // The single-root unwrap resolves the bare field value.
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+        expect(onResponse).toHaveBeenCalledTimes(1);
+        expect(onResponse.mock.calls[0][0]).not.toHaveProperty("cacheHit");
+        expect(onResponse.mock.calls[0][0]).not.toHaveProperty("cacheWrite");
+        expect(result).toEqual({ id: 1 });
+    });
+
     test("a partial-success envelope resolved by allowPartialData reports no cacheWrite", async () => {
         // The third cache outcome: a cacheable read whose response was NOT
         // written back because the partial envelope is excluded from

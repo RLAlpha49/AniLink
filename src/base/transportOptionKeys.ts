@@ -37,6 +37,7 @@ export const TRANSPORT_OPTION_KEYS = [
     "ignorePaceDeadline",
     "allowPartialData",
     "responseCache",
+    "bypassResponseCache",
 ] as const satisfies readonly (keyof RequestOptions)[];
 
 /**

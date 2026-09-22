@@ -22,6 +22,7 @@ const baseOptions = {
     httpsAgent: {} as never,
     ignorePaceDeadline: false,
     allowPartialData: false,
+    bypassResponseCache: false,
     diagnostics: "warn",
 } satisfies Partial<ResolvedRequestOptions> as ResolvedRequestOptions;
 

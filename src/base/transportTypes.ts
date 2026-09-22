@@ -560,4 +560,15 @@ export interface RequestOptions {
      * @see {@link ResponseCache}
      */
     responseCache?: ResponseCache;
+    /**
+     * Skip the {@link RequestOptions.responseCache} for this one request: the
+     * read goes to the network even when a fresh cached entry exists, and the
+     * response is not written back. For reads whose freshness is the point —
+     * a watcher poll, a manual refresh — a cache hit would silently serve
+     * stale data. The instance-level cache still applies to every other
+     * request. Defaults to `false`.
+     *
+     * @see {@link ResponseCache}
+     */
+    bypassResponseCache?: boolean;
 }
