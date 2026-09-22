@@ -6,6 +6,9 @@ import type { fuzzyDateInt } from "../helpers/fuzzyDateInt";
 import type { flattenMediaListCollection } from "../helpers/flattenMediaListCollection";
 import type { crossLink } from "../helpers/crossLink";
 import type { paginate, paginatePages, paginateChunks } from "../Paginator";
+import type { WatchActivityOptions, WatchNotificationsOptions } from "../helpers/watch";
+import type { NotificationResponse } from "../interfaces/responses/query/Notification";
+import type { Activity } from "../interfaces/Activity";
 
 /**
  * Pagination and transformation helpers exposed by `AniListApi`.
@@ -135,4 +138,52 @@ export type AniListHelpers = {
      * ```
      */
     crossLink: typeof crossLink;
+
+    /**
+     * The opt-in polling watchers for the AniList notification and activity
+     * feeds. AniList exposes no push transport, so each watcher polls its
+     * `Page`-based feed operation every `intervalMs`, deduplicates by `id`,
+     * and yields each new item exactly once as an async generator. All
+     * watcher state is in-memory and per-watcher.
+     * @see https://docs.anilist.co/reference/union/notificationunion
+     * @see https://docs.anilist.co/reference/union/activityunion
+     */
+    watch: {
+        /**
+         * {@link watch.notifications} polls the authenticated user's notification feed
+         * (`Page.notifications`) and yields each new notification exactly once.
+         * @param options - The watcher options: `since` (a Unix-second cursor), `intervalMs` (default 60000, clamped to at least 10000), `perPage`, `signal`, `transportOptions`, plus the `type`/`type_in`/`resetNotificationCount`/`asHtml` filters; a `WatchNotificationsOptions`.
+         * @returns An async generator yielding each new notification, oldest first within a poll; it ends when the consumer breaks or the `signal` aborts between polls.
+         * @see https://docs.anilist.co/reference/union/notificationunion
+         * @example
+         * ```typescript
+         * for await (const notification of aniLink.anilist.watch.notifications({
+         *     since: Math.floor(Date.now() / 1000) - 3600,
+         * })) {
+         *     console.log(notification.type, notification.createdAt);
+         * }
+         * ```
+         */
+        notifications: (
+            options?: WatchNotificationsOptions
+        ) => AsyncGenerator<NotificationResponse>;
+
+        /**
+         * {@link watch.activity} polls the AniList activity feed (`Page.activities`, newest
+         * first) and yields each new activity exactly once.
+         * @param options - The watcher options: `since` (a Unix-second cursor), `intervalMs` (default 60000, clamped to at least 10000), `perPage`, `signal`, `transportOptions`, plus the `userId`/`messengerId`/`mediaId`/`type`/`isFollowing`/`sort` filters; a `WatchActivityOptions`.
+         * @returns An async generator yielding each new activity, oldest first within a poll; it ends when the consumer breaks or the `signal` aborts between polls.
+         * @see https://docs.anilist.co/reference/union/activityunion
+         * @example
+         * ```typescript
+         * for await (const activity of aniLink.anilist.watch.activity({
+         *     userId: 542244,
+         *     intervalMs: 120_000,
+         * })) {
+         *     console.log(activity.type, activity.createdAt);
+         * }
+         * ```
+         */
+        activity: (options?: WatchActivityOptions) => AsyncGenerator<Activity>;
+    };
 };

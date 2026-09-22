@@ -493,11 +493,12 @@ function discoverAniListOperations(sourceRoot: string): RawOp[] {
 }
 
 /**
- * Read the `custom` passthrough entry from its facade module.
+ * Read the `custom` facade module's non-registry operations.
  *
- * Only the `custom` operation is discovered from facade text: it is not a
- * registry operation, so the shared signature metadata does not cover it.
- * Every registered operation arrives via {@link collectOperationSignatures}.
+ * Only the `custom` category is discovered from facade text: neither
+ * `custom` nor `customPage` is a registry operation, so the shared signature
+ * metadata does not cover them. Every registered operation arrives via
+ * {@link collectOperationSignatures}.
  */
 function discoverOperationsInFile(filePath: string): RawOp[] {
     const content = readFileText(filePath);
@@ -513,8 +514,74 @@ function discoverOperationsInFile(filePath: string): RawOp[] {
                 description: jsdocMainText(findJsdocAbove(lines, i)),
             });
         }
+        if (/^\s*customPage\s*:/.test(lines[i])) {
+            assertCustomPageSignatureMatchesSource(
+                join(dirname(filePath), "..", "CustomRequest.ts")
+            );
+            ops.push({
+                category: "custom",
+                name: "customPage",
+                variablesType: "",
+                responseType: "any",
+                description: jsdocMainText(findJsdocAbove(lines, i)),
+            });
+        }
     }
     return ops;
+}
+
+/**
+ * Parameter names, in order, of the real `CustomRequest.customPage` method.
+ *
+ * `anilistSignature` hardcodes the normalized manifest signature (generics
+ * and defaults are rewritten for the docs surface), so this list pins the
+ * part that must stay identical to the source.
+ */
+const CUSTOM_PAGE_SOURCE_PARAMS = ["query", "itemsKey", "variables", "options"];
+
+/**
+ * Assert the hardcoded `customPage` signature still matches the real
+ * `CustomRequest.customPage` method.
+ *
+ * Without this, the generator and its committed manifests could agree with
+ * each other while both drift from the actual public method — a renamed or
+ * reordered parameter would silently ship stale docs, the exact failure
+ * mode `collectOperationSignatures` exists to prevent. Parsing the method
+ * here turns that drift into a loud generation failure.
+ *
+ * @param sourcePath - Path to `CustomRequest.ts`.
+ * @throws {Error} When the method is missing or its parameter names no longer match the hardcoded signature.
+ */
+function assertCustomPageSignatureMatchesSource(sourcePath: string): void {
+    const source = readFileText(sourcePath);
+    const match = /async\s+customPage\s*<[^>]*>\s*\(([^)]*)\)/.exec(source);
+    if (match === null) {
+        throw new Error(
+            "customPage signature drift: no `async customPage<…>(…)` method found in CustomRequest.ts — update anilistSignature() in this script to match the source."
+        );
+    }
+    // Split the parameter list on top-level commas only: types like
+    // `Record<string, unknown>` carry commas inside their brackets.
+    const params: string[] = [];
+    let depth = 0;
+    let current = "";
+    for (const char of match[1]) {
+        if ("<({[".includes(char)) depth += 1;
+        if (">)}]".includes(char)) depth -= 1;
+        if (char === "," && depth === 0) {
+            params.push(current);
+            current = "";
+            continue;
+        }
+        current += char;
+    }
+    if (current.trim() !== "") params.push(current);
+    const names = params.map((param) => param.split("=")[0].split(":")[0].replace("?", "").trim());
+    if (names.join(",") !== CUSTOM_PAGE_SOURCE_PARAMS.join(",")) {
+        throw new Error(
+            `customPage signature drift: CustomRequest.customPage parameters (${names.join(", ")}) no longer match the hardcoded manifest signature (${CUSTOM_PAGE_SOURCE_PARAMS.join(", ")}) — update anilistSignature() and CUSTOM_PAGE_SOURCE_PARAMS in this script.`
+        );
+    }
 }
 
 /** Resolve the source class, method, and file for an AniList operation. */
@@ -641,7 +708,10 @@ function resolveAniListFacade(
     sourceRoot: string
 ): { facadeFile: string; propName: string } | null {
     if (op.category === "custom") {
-        return { facadeFile: join(sourceRoot, "facade", "custom-group.ts"), propName: "custom" };
+        return {
+            facadeFile: join(sourceRoot, "facade", "custom-group.ts"),
+            propName: op.name,
+        };
     }
     if (op.category === "page") {
         return { facadeFile: join(sourceRoot, "facade", "query-group.ts"), propName: op.name };
@@ -742,7 +812,7 @@ function anilistDomain(op: RawOp): string {
 
 /** Build the AniList namespace path for an operation. */
 function anilistNamespace(op: RawOp): string {
-    if (op.category === "custom") return "anilist.custom";
+    if (op.category === "custom") return `anilist.${op.name}`;
     if (op.category === "page") return `anilist.query.page.${op.name}`;
     if (op.category === "query") return `anilist.query.${op.name}`;
     return `anilist.mutation.${op.name}`;
@@ -750,8 +820,11 @@ function anilistNamespace(op: RawOp): string {
 
 /** Build the signature line for an AniList operation. */
 function anilistSignature(op: RawOp): string {
-    if (op.category === "custom") {
+    if (op.category === "custom" && op.name === "custom") {
         return "custom<T>(query: string, variables?: Record<string, unknown>, options?: RequestOptions): Promise<T>";
+    }
+    if (op.category === "custom" && op.name === "customPage") {
+        return "customPage<TPage, K>(query: string, itemsKey: K, variables?: Record<string, unknown>, options?: CustomPageOptions): Promise<PaginateResult<ArrayElement<TPage, K>>>";
     }
     const vars = op.variablesType ? `variables: ${op.variablesType}` : "";
     const args = vars ? `${vars}, options?: RequestOptions` : "options?: RequestOptions";
@@ -1213,6 +1286,27 @@ function stripGeneratedAt(json: string): string | null {
 }
 
 /**
+ * Whether the manifest already on disk matches the freshly rendered one,
+ * ignoring `generatedAt` — the single comparison `--check` and the
+ * write-skip share so a timestamp-only regeneration never counts as a
+ * change in either direction.
+ *
+ * @param path Manifest file to compare.
+ * @param content Minified JSON the generator just rendered for that path.
+ * @returns `true` when the file exists and matches modulo `generatedAt`.
+ */
+function manifestFileMatches(path: string, content: string): boolean {
+    let current: string;
+    try {
+        current = readFileSync(path, "utf8").replace(/\r\n/g, "\n");
+    } catch {
+        return false;
+    }
+    const expected = stripGeneratedAt(content);
+    return expected !== null && stripGeneratedAt(current) === expected;
+}
+
+/**
  * Render every manifest file the generator produces to in-memory strings.
  *
  * @param outDir Directory that receives the complete manifest and section shards.
@@ -1251,16 +1345,7 @@ function main(): number {
 
     const stale: string[] = [];
     for (const [path, content] of rendered) {
-        let current: string | undefined;
-        try {
-            current = readFileSync(path, "utf8").replace(/\r\n/g, "\n");
-        } catch {
-            current = undefined;
-        }
-        const expected = stripGeneratedAt(content);
-        const matches =
-            current !== undefined && expected !== null && stripGeneratedAt(current) === expected;
-        if (!matches) stale.push(relative(ROOT, path));
+        if (!manifestFileMatches(path, content)) stale.push(relative(ROOT, path));
     }
 
     if (check) {
@@ -1275,20 +1360,24 @@ function main(): number {
         return 1;
     }
 
-    mkdirSync(dirname(outPath), { recursive: true });
-    writeFileSync(outPath, rendered.get(outPath)!, "utf8");
+    // Skip timestamp-only rewrites: `generatedAt` changes on every run, and
+    // rewriting otherwise-identical manifests buries the real changes under
+    // one-line churn across every shard.
+    let written = 0;
     for (const [path, content] of rendered) {
-        if (path !== outPath) {
-            mkdirSync(dirname(path), { recursive: true });
-            writeFileSync(path, content, "utf8");
-        }
+        if (manifestFileMatches(path, content)) continue;
+        mkdirSync(dirname(path), { recursive: true });
+        writeFileSync(path, content, "utf8");
+        written += 1;
     }
 
     const byProvider = manifest.operations.reduce<Record<string, number>>((acc, op) => {
         acc[op.provider] = (acc[op.provider] ?? 0) + 1;
         return acc;
     }, {});
-    console.log(`Wrote ${manifest.operations.length} operations to ${outPath}`);
+    console.log(
+        `Wrote ${manifest.operations.length} operations to ${outPath} (${written}/${rendered.size} files rewritten, timestamp-only files skipped)`
+    );
     console.log(`  anilist: ${byProvider.anilist ?? 0}, mal: ${byProvider.mal ?? 0}`);
     return 0;
 }

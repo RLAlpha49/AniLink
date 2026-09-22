@@ -87,8 +87,11 @@ type ArrayKeys<T> = {
  * Extract the element type of the array stored at key `K` of `T`; `never` when
  * `K` is not an array-typed key, so a bad `itemsKey` collapses `items` to `never[]`
  * at the call site instead of blocking `TPage` inference.
+ *
+ * Exported so `CustomRequest.customPage` can name its collected item type in
+ * the returned `PaginateResult` without duplicating the conditional.
  */
-type ArrayElement<T, K extends string> =
+export type ArrayElement<T, K extends string> =
     K extends ArrayKeys<T> ? (T[K] extends readonly (infer U)[] ? U : never) : never;
 
 /** Options controlling a {@link paginate} traversal over {@link PageInfo}-based pages. */

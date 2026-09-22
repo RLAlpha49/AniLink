@@ -37,6 +37,7 @@ export type {
     PaginateOptions,
     PaginateResult,
 } from "./apis/graphql/anilist/Paginator";
+export type { CustomPageOptions } from "./apis/graphql/anilist/CustomRequest";
 export type { AniListTokenRefreshCallback } from "./apis/graphql/anilist/tokenRefresh";
 export type { AniListTokenRefreshErrorCallback } from "./apis/graphql/anilist/tokenRefresh";
 export { crossLink } from "./apis/graphql/anilist/helpers/crossLink";

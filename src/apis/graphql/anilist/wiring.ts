@@ -29,6 +29,14 @@ import { fuzzyDate } from "./helpers/fuzzyDate";
 import { fuzzyDateInt } from "./helpers/fuzzyDateInt";
 import { flattenMediaListCollection } from "./helpers/flattenMediaListCollection";
 import { crossLink } from "./helpers/crossLink";
+import {
+    watchNotifications,
+    watchActivity,
+    type FetchActivitiesPage,
+    type FetchNotificationsPage,
+    type WatchActivityOptions,
+    type WatchNotificationsOptions,
+} from "./helpers/watch";
 import { paginate, paginatePages, paginateChunks } from "./Paginator";
 import { type RequestAuthInput, type RequestOptions } from "../../../base/RequestHandler";
 import type { AniListCredentials } from "../../../base/credentials";
@@ -296,6 +304,38 @@ export function buildAniListWiring(
     });
 
     let customBound: ((...args: never[]) => unknown) | undefined;
+    let customPageBound: ((...args: never[]) => unknown) | undefined;
+
+    // The `watch` namespace wires each helper to the page facade's already-
+    // lazily-bound operation methods (`query.page.notifications` /
+    // `query.page.activities`): the getters construct the operation against
+    // the shared auth cell, transport options, and per-client `stateOwner`
+    // and pass it through the token-refresh wrapper, so the watchers' poll
+    // requests join the client's resilience state exactly like a direct
+    // `query.page.notifications` call. The watchers themselves stay pure
+    // helpers over a fetch closure.
+    //
+    // `buildLazyGroup` erases its members to `unknown` (the registry only
+    // names them), so the wrappers below narrow the facade through the
+    // *public* facade contract instead of casting to the watcher's fetch
+    // type: the call sites are compile-checked against `AniListApi`'s
+    // declared page operations, so a signature drift on either side fails
+    // the build instead of surfacing mid-poll.
+    const page = pageFacade as unknown as Pick<
+        AniListApi["query"]["page"],
+        "notifications" | "activities"
+    >;
+    const notificationsFetch: FetchNotificationsPage = (variables, options) =>
+        page.notifications(variables, options);
+    const activitiesFetch: FetchActivitiesPage = (variables, options) =>
+        page.activities(variables, options);
+    const watchFacade = {
+        notifications: (watchOptions?: WatchNotificationsOptions) =>
+            watchNotifications(notificationsFetch, watchOptions),
+        activity: (watchOptions?: WatchActivityOptions) =>
+            watchActivity(activitiesFetch, watchOptions),
+    };
+
     return Object.defineProperties(
         {
             query: queryFacade,
@@ -307,6 +347,7 @@ export function buildAniListWiring(
             fuzzyDateInt,
             flattenMediaListCollection,
             crossLink,
+            watch: watchFacade,
         },
         {
             custom: {
@@ -325,6 +366,24 @@ export function buildAniListWiring(
                         ) => unknown;
                     }
                     return customBound;
+                },
+            },
+            customPage: {
+                enumerable: true,
+                configurable: false,
+                get() {
+                    if (customPageBound === undefined) {
+                        const customPageInstance = new CustomRequest(
+                            getAuth(),
+                            options,
+                            sharedStateOwner
+                        );
+                        trackOperation?.(customPageInstance);
+                        customPageBound = maybeWrap(
+                            customPageInstance.customPage.bind(customPageInstance)
+                        ) as (...args: never[]) => unknown;
+                    }
+                    return customPageBound;
                 },
             },
         }
