@@ -125,8 +125,7 @@ export class AniLink {
 
     /** The per-provider response caches resolved from the transport options, when enabled, for the cache-stats snapshot. */
     private responseCaches:
-        | { anilist: ResponseCache | undefined; mal: ResponseCache | undefined }
-        | undefined;
+        { anilist: ResponseCache | undefined; mal: ResponseCache | undefined } | undefined;
 
     /**
      * Creates a new {@link AniLink} instance. The `authToken` parameter is optional and only

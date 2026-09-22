@@ -512,7 +512,16 @@ const MUTATION_ROOT_FIELD_INVALIDATION: ReadonlyMap<string, readonly string[]> =
     // (`Media.mediaListEntry`) are affected too.
     [
         "UpdateUser",
-        ["User", "Viewer", "Follower", "Following", "Page", "MediaList", "MediaListCollection", "Media"],
+        [
+            "User",
+            "Viewer",
+            "Follower",
+            "Following",
+            "Page",
+            "MediaList",
+            "MediaListCollection",
+            "Media",
+        ],
     ],
 ]);
 

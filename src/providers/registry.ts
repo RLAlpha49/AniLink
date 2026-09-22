@@ -117,8 +117,7 @@ const buildMalClient: ProviderFactory<MalCredentials, MyAnimeListApi> = (
 const effectiveAniListOptions = (
     slot: AniListCredentials | undefined,
     legacyOptions?: RequestOptions
-): RequestOptions | undefined =>
-    resolveAniListCredentials(slot).options ?? legacyOptions;
+): RequestOptions | undefined => resolveAniListCredentials(slot).options ?? legacyOptions;
 
 /**
  * {@link PROVIDER_FACTORIES} is the provider factories used by the composition seam.
