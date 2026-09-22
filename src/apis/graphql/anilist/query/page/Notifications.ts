@@ -84,6 +84,7 @@ export class NotificationsQuery extends AniListOperation {
      * @returns The {@link NotificationsPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/union/notificationunion
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only.
+     * @throws Throws if no authentication token is configured (the feed is always the authenticated user's own) or the request fails.
      * @example
      * ```typescript
      * const result = await new NotificationsQuery().notifications({ page: 1, perPage: 10 });
@@ -127,6 +128,7 @@ export class NotificationsQuery extends AniListOperation {
             variables,
             {
                 mappings: NotificationsMappings,
+                requiresAuth: true,
                 transportOptions,
             }
         );
