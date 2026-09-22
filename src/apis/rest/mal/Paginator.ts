@@ -2,13 +2,14 @@
  * MyAnimeList pagination helpers over the shared pagination engine.
  *
  * MAL's list endpoints paginate with `offset`/`limit` query parameters and
- * signal continuation through a short page (fewer items returned than
- * requested) or the optional `paging.next` URL. These helpers adapt that
- * contract to the engine's numeric driver: the caller-supplied `fetchPage`
- * closure maps the traversal's `(page, perPage)` slot arithmetic onto
- * `offset`/`limit`, and the traversal stops at the first short page — the
- * same signal the engine already treats as terminal, and the one MAL's own
- * `paging.next` is derived from.
+ * signal continuation through the optional `paging.next` URL, with a short
+ * page (fewer items returned than requested) as the heuristic when the
+ * `paging` node is absent. These helpers adapt that contract to the engine's
+ * numeric driver: the caller-supplied `fetchPage` closure maps the
+ * traversal's `(page, perPage)` slot arithmetic onto `offset`/`limit`, and
+ * the traversal stops at the first page that reports the end of the list —
+ * a `paging` node with no `next` URL (authoritative even on a full final
+ * page), or a short page when the response carries no `paging` node.
  *
  * This module is the second adapter over `src/base/pagination.ts` (the
  * AniList paginator is the first), which is what makes the engine's
@@ -114,11 +115,13 @@ export interface MalPaginateOptions {
     /**
      * Maximum number of page requests kept in flight at once while collecting
      * results. Pages are always returned in order regardless of completion
-     * order, scheduling stops as soon as a fetched page comes back short, and
-     * every existing guard (`maxPages`, `perPage` clamping) still applies.
-     * Defaults to `1` (strictly sequential) because MAL's rate limit of
-     * ~1-2 requests per second makes look-ahead counterproductive; values
-     * above 8 are clamped down to 8.
+     * order, scheduling stops as soon as a fetched page reports the end of
+     * the list (a `paging` node with no `next` URL, or a short page when the
+     * response carries no `paging` node), and every existing guard
+     * (`maxPages`, `perPage` clamping) still applies. Defaults to `1`
+     * (strictly sequential) because MAL's rate limit of ~1-2 requests per
+     * second makes look-ahead counterproductive; values above 8 are
+     * clamped down to 8.
      */
     concurrency?: number;
 
@@ -185,7 +188,7 @@ export interface MalPaginateResult<TItem> {
 
     /**
      * `true` when the traversal stopped at the `maxPages` guard before a
-     * short page ended the run. An aborted traversal (the `signal` fired
+     * terminal page ended the run. An aborted traversal (the `signal` fired
      * mid-run) returns the collected prefix with `truncated: false` — check
      * `signal.aborted` if you need to distinguish a clean end from an
      * aborted one.
@@ -217,27 +220,45 @@ const safeCallback = <T>(
 };
 
 /**
- * Read the "more data available" signal from a fetched MAL page using offset
- * math: a page that returned fewer entries than requested is the last one.
- * Returns `false` for malformed responses (a missing or non-array `data`)
- * so a broken payload ends the traversal instead of looping forever.
+ * Read the "more data available" signal from a fetched MAL page. MAL's own
+ * `paging` node is authoritative when present: a node with no `next` URL
+ * says the list ended even when the page came back full (the offset math
+ * cannot know), so a full final page costs no extra round-trip. The
+ * short-page heuristic (a page that returned fewer entries than requested)
+ * remains the fallback for responses with no `paging` node at all. A
+ * malformed `data` (missing or non-array) ends the traversal in every
+ * branch — a broken payload must never keep the traversal launching pages
+ * up to the `maxPages` guard, whether or not it carries a `paging` node.
  *
  * @param response - A fetched MAL list page.
  * @param perPage - The resolved entries-per-page the request asked for.
  * @returns Whether further pages exist beyond this one.
  */
 function extractHasMore(response: MalPage<unknown>, perPage: number): boolean {
-    return Array.isArray(response.data) && response.data.length >= perPage;
+    if (!Array.isArray(response.data)) {
+        return false;
+    }
+    if (typeof response.paging === "object" && response.paging !== null) {
+        // A JSON `null` next URL is read as "no next page": MAL omits the
+        // field in practice, but a nulled link must not cost an extra
+        // (empty) page fetch.
+        return response.paging.next != null;
+    }
+    return response.data.length >= perPage;
 }
 
 /**
- * Iterate MyAnimeList list pages until a short page or the `maxPages` guard is reached, collecting every item across pages.
+ * Iterate MyAnimeList list pages until the end of the list or the `maxPages` guard is reached, collecting every item across pages.
  *
  * The helper calls `fetchPage(page, perPage, signal)` for each page — the
  * closure maps the slot arithmetic onto the endpoint's `offset`/`limit` query
- * parameters (`offset = (page - 1) * perPage`) — and stops at the first page
- * that returns fewer items than requested, the end-of-list signal MAL's own
- * `paging.next` is derived from. The `maxPages` guard prevents accidental
+ * parameters (`offset = (page - 1) * perPage`) — and stops at the first
+ * page that reports the end of the list: MAL's own `paging` node is
+ * authoritative when present (a node with no `next` URL ends the run even
+ * when the page came back full, so a full final page costs no extra
+ * confirmation request), with the short-page heuristic (a page that
+ * returned fewer items than requested) as the fallback for responses
+ * with no `paging` node at all. The `maxPages` guard prevents accidental
  * unbounded fetch loops. This is the MAL sibling of the AniList `paginate`
  * helper; both run over the same shared engine.
  *
@@ -314,11 +335,12 @@ export async function malPaginate<TItem>(
 }
 
 /**
- * Async generator that yields each MyAnimeList list page until a short page
- * or the `maxPages` guard is reached. The generator ends without a
- * truncation flag — a yielded short page is itself the visible signal of
- * the end of the list, and stopping at the guard means the last yielded page
- * came back full.
+ * Async generator that yields each MyAnimeList list page until the end of
+ * the list or the `maxPages` guard is reached. The generator ends without a
+ * truncation flag — a yielded terminal page (a `paging` node with no `next`
+ * URL, or a short page when the response carries no `paging` node) is itself
+ * the visible signal of the end of the list, and stopping at the guard means
+ * the last yielded page came back full.
  *
  * Use this for streaming or early-exit workflows where collecting every item
  * into memory is unnecessary. The `maxPages` guard still prevents unbounded
@@ -326,14 +348,15 @@ export async function malPaginate<TItem>(
  * requests (default `1`, strictly sequential — MAL's rate limit makes
  * look-ahead counterproductive) so round-trip latency overlaps while pages
  * are still yielded strictly in page order; on early exit (`break`/`return`
- * by the consumer), a short page, or the `maxPages` guard, already-launched
- * stragglers are drained and their payloads discarded.
+ * by the consumer), a terminal page, or the `maxPages` guard, already-
+ * launched stragglers are drained and their payloads discarded.
  *
  * The traversal runs on the shared streaming engine
  * (`streamNumericPages`): the launch window, the terminal-page drain, the
  * abort bridging, and the early-exit cancellation live once for every
- * provider. MAL contributes only its terminal predicate — a short page
- * (or a malformed `data` array, which ends the traversal instead of
+ * provider. MAL contributes only its terminal predicate — a `paging` node
+ * with no `next` URL, a short page when the response carries no `paging`
+ * node, or a malformed `data` array (which ends the traversal instead of
  * looping forever) — and honors the same `onPage`/`onHookError`/
  * `diagnostics` observer contract as {@link malPaginate}, firing `onPage`
  * once per page as it is yielded.
@@ -370,12 +393,15 @@ export async function* malPaginatePages<TItem>(
 
     for await (const response of streamNumericPages(
         fetchPage,
-        // A short page is MAL's own end-of-list signal (its `paging.next` is
-        // derived from the same offset math), so the traversal ends there
-        // instead of launching a request the server has already said is
-        // empty. A malformed `data` array ends the traversal the same way
-        // instead of looping forever.
-        (page) => !Array.isArray(page.data) || page.data.length < perPage,
+        // The terminal predicate is {@link extractHasMore} inverted — one
+        // shared definition both traversal helpers consume, so the eager
+        // and streaming MAL helpers can never disagree about where the
+        // list ends: malformed `data` ends it in every branch, MAL's
+        // `paging` node is authoritative when present (a node with no
+        // `next` URL ends the traversal even when the page came back
+        // full), and the short-page heuristic covers responses with no
+        // `paging` node at all.
+        (page) => !extractHasMore(page, perPage),
         { perPage, startPage, maxPages, concurrency, signal: options?.signal }
     )) {
         safeCallback(options?.onPage, "onPage", options?.onHookError, diagnostics, {

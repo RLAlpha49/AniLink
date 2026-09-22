@@ -45,10 +45,13 @@ const result = await aniLink.mal.paginate(
 console.log(result.items.length, result.pageCount, result.truncated);
 ```
 
-The traversal stops at the first short page — a page that returns fewer
-items than requested, the same end-of-list signal MAL's own `paging.next`
-URL is derived from. `truncated` is `true` only when the `maxPages` guard
-ended the run first.
+The traversal stops at the first page that reports the end of the list:
+MAL's own `paging` node is authoritative when present (a node with no
+`next` URL ends the run even when the page came back full, so a full final
+page costs no extra confirmation request), with the short-page heuristic —
+a page that returns fewer items than requested — as the fallback for
+responses with no `paging` node at all. `truncated` is `true` only when
+the `maxPages` guard ended the run first.
 
 ## `mal.paginatePages`
 
@@ -65,10 +68,12 @@ for await (const page of aniLink.mal.paginatePages((page, perPage) =>
 }
 ```
 
-Each yielded page is the raw list response (`{ data, paging? }`). A short
-page is the visible end-of-list signal; `break` stops the traversal and
-cancels any in-flight request. `onPage` fires once per page as it is
-yielded, the same observer contract as `mal.paginate`, in streaming form.
+Each yielded page is the raw list response (`{ data, paging? }`). A
+terminal page — a `paging` node with no `next` URL, or a short page when
+the response carries no `paging` node — is the visible end-of-list signal;
+`break` stops the traversal and cancels any in-flight request. `onPage`
+fires once per page as it is yielded, the same observer contract as
+`mal.paginate`, in streaming form.
 
 ## Options and clamps
 
@@ -93,6 +98,7 @@ with repeated `topic()` calls using the same closure pattern.
 `aniLink.mal.paginate` is the sibling of `aniLink.anilist.paginate`. Both
 run over the same shared pagination engine; the difference is the adapter:
 AniList pages with `page`/`perPage` GraphQL variables and `pageInfo.hasNextPage`,
-while MAL pages with `offset`/`limit` query parameters and short pages. The
+while MAL pages with `offset`/`limit` query parameters and the `paging.next`
+URL (with the short-page heuristic when the `paging` node is absent). The
 options mirror each other, so switching providers reads as a diff of the
 closure only.
