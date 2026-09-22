@@ -7,7 +7,7 @@
  * so transport settings stay uniform across providers.
  */
 import { type RequestAuthInput, type RequestOptions } from "./RequestHandler";
-import { TRANSPORT_OPTION_KEYS } from "./transportOptionKeys";
+import { TRANSPORT_OPTION_KEYS } from "./requestOptions";
 
 /**
  * Transport settings shared by every provider's slot in an

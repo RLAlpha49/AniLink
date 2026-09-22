@@ -7,7 +7,8 @@
  * name is empty or not a string.
  */
 import { describe, expect, test } from "vitest";
-import { BaseOperation, mergeOptions, resolveOperationLabel } from "../src/base/BaseOperation";
+import { BaseOperation, resolveOperationLabel } from "../src/base/BaseOperation";
+import { mergeOptions } from "../src/base/requestOptions";
 import type { RequestOptions } from "../src/base/RequestHandler";
 
 /**

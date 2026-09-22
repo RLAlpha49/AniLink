@@ -4,76 +4,7 @@ import {
     sendRequest,
     type HttpMethod,
 } from "./RequestHandler";
-
-/**
- * Option keys whose values are nested configuration objects. A per-request
- * partial override on one of these keys (for example
- * `{ retry: { maxRetries: 0 } }`) must keep the instance-level fields it does
- * not mention instead of discarding them, so the merge deep-merges exactly
- * these keys and shallow-merges everything else.
- */
-const DEEP_MERGED_OPTION_KEYS = ["retry", "circuitBreaker", "retryBudget"] as const;
-
-/**
- * Assigns a deep-merged value for one key. A generic helper is required
- * because TypeScript collapses a write through a union key (`merged[key]`
- * with `key: "retry" | "circuitBreaker" | "retryBudget"`) to the intersection
- * of all three option types; with `K` deferred to a single type parameter,
- * the assignment targets exactly that key's option type.
- */
-const assignDeepMergedOption = <K extends (typeof DEEP_MERGED_OPTION_KEYS)[number]>(
-    merged: RequestOptions,
-    key: K,
-    value: RequestOptions[K]
-): void => {
-    merged[key] = value;
-};
-
-/**
- * Merges per-request transport settings over the instance-level ones.
- *
- * The merge mirrors `resolveRequestOptions` precedence in `RequestHandler`: a
- * field set on `overrides` wins; every other field keeps the instance value.
- * The nested configuration objects (`DEEP_MERGED_OPTION_KEYS` — `retry`,
- * `circuitBreaker`, `retryBudget`) are merged field-by-field, so a per-request
- * `{ retry: { maxRetries: 0 } }` keeps the instance's `retryOnStatus` and
- * `baseDelayMs` instead of silently falling back to library defaults. Passing
- * no overrides returns the instance options unchanged, so the zero-cost path
- * stays allocation-free.
- *
- * @param base - Instance-level transport settings, when configured.
- * @param overrides - Per-request settings that take precedence over `base`.
- * @returns The merged settings, or the defined input when only one side exists.
- * @see {@link RequestOptions}
- */
-export const mergeOptions = (
-    base: RequestOptions | undefined,
-    overrides: RequestOptions | undefined
-): RequestOptions | undefined => {
-    if (overrides === undefined) return base;
-    if (base === undefined) return overrides;
-    const merged: RequestOptions = { ...base, ...overrides };
-    for (const key of DEEP_MERGED_OPTION_KEYS) {
-        const baseValue = base[key];
-        const overrideValue = overrides[key];
-        // `retry: false` (disable) and `retry: true` are whole-value settings:
-        // they replace the instance policy entirely, by design. Only two
-        // defined objects merge field-by-field.
-        if (
-            typeof baseValue === "object" &&
-            baseValue !== null &&
-            typeof overrideValue === "object" &&
-            overrideValue !== null
-        ) {
-            // The typeof guards prove both sides are the object member of
-            // the option's union, so the spread is field-wise; the helper's
-            // deferred K keeps the assignment scoped to this key's own
-            // option type.
-            assignDeepMergedOption(merged, key, { ...baseValue, ...overrideValue });
-        }
-    }
-    return merged;
-};
+import { mergeOptions } from "./requestOptions";
 
 /**
  * Named trailing options for `BaseOperation.dispatch`, replacing the
@@ -116,8 +47,9 @@ export const resolveOperationLabel = (operation: object): string | undefined => 
  * Shared state and dispatch plumbing for every provider's operations.
  *
  * This class owns exactly what every API style has in common — the instance
- * authentication token, the resolved transport settings, and the shallow
- * per-request merge — and delegates the actual HTTP call to the provider-
+ * authentication token, the resolved transport settings, and the per-request
+ * option merge imported from the `requestOptions` precedence module — and
+ * delegates the actual HTTP call to the provider-
  * agnostic {@link sendRequest} pipeline. Protocol-specific base classes
  * subclass it: `AniListOperation` adds GraphQL envelope handling and
  * `RestOperation` adds query-string and JSON-body handling without

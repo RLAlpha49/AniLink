@@ -16,14 +16,14 @@ vi.mock("axios", () => ({
     }),
 }));
 
-vi.mock("../src/base/RequestHandler", async () => {
-    const { TRANSPORT_OPTION_KEYS } = await import("../src/base/transportOptionKeys");
-    return {
-        __esModule: true,
-        sendRequest: mocks.sendRequest,
-        TRANSPORT_OPTION_KEYS,
-    };
-});
+// The factory only needs to replace `sendRequest`; nothing under test
+// imports `TRANSPORT_OPTION_KEYS` from this module, and pulling the real
+// `requestOptions` module in here would load `agents` under the local
+// axios stub above (which has no `create`).
+vi.mock("../src/base/RequestHandler", () => ({
+    __esModule: true,
+    sendRequest: mocks.sendRequest,
+}));
 
 import { getMalAccessToken, refreshMalAccessToken } from "../src/apis/rest/mal/auth";
 import { AniLinkError } from "../src/base/AniLinkError";

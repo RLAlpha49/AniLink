@@ -1,11 +1,22 @@
 /**
- * Resolved transport options and the option normalizer.
+ * Option precedence for transport settings: the merge, the defaults, and the
+ * key allowlist, owned together in one module.
  *
- * {@link resolveRequestOptions} folds a partial public {@link RequestOptions}
- * into the complete, validated set the request pipeline uses for one call:
- * it resolves the retry policy, the keep-alive agents, the pacing and
- * rate-limit-floor defaults, and forwards every hook. The
- * {@link ResolvedRequestOptions} interface is the shared shape every
+ * This module is the single source of the precedence chain, strongest first:
+ * per-request (operation) options win over constructor (instance) options win
+ * over library defaults. {@link mergeOptions} folds the two caller-supplied
+ * layers together — a field set on the override wins, the nested policy keys
+ * (`retry`, `circuitBreaker`, `retryBudget`) merge field-by-field, and
+ * `retry: false`/`true` remain whole-value — and {@link resolveRequestOptions}
+ * folds the surviving settings into the complete, validated set one request
+ * pipeline runs with: it resolves the retry policy, the keep-alive agents,
+ * the pacing and rate-limit-floor defaults, and forwards every hook.
+ * {@link TRANSPORT_OPTION_KEYS} enumerates every {@link RequestOptions} key
+ * exhaustively, so the credential seam's allowlist cannot drift from the
+ * interface it mirrors. Callers import these pieces instead of re-deriving
+ * any part of the rule.
+ *
+ * The {@link ResolvedRequestOptions} interface is the shared shape every
  * resilience module (errors, pacing, circuit breaker, retry loop) reads
  * from, so it lives here rather than in `transportTypes` to keep the type
  * next to the resolver and avoid pulling runtime agents into the leaf type
@@ -154,3 +165,132 @@ export const resolveRequestOptions = (options: RequestOptions = {}): ResolvedReq
         bypassResponseCache: options.bypassResponseCache ?? false,
     };
 };
+
+/**
+ * Option keys whose values are nested configuration objects. A per-request
+ * partial override on one of these keys (for example
+ * `{ retry: { maxRetries: 0 } }`) must keep the instance-level fields it does
+ * not mention instead of discarding them, so the merge deep-merges exactly
+ * these keys and shallow-merges everything else.
+ */
+const DEEP_MERGED_OPTION_KEYS = ["retry", "circuitBreaker", "retryBudget"] as const;
+
+/**
+ * Assigns a deep-merged value for one key. A generic helper is required
+ * because TypeScript collapses a write through a union key (`merged[key]`
+ * with `key: "retry" | "circuitBreaker" | "retryBudget"`) to the intersection
+ * of all three option types; with `K` deferred to a single type parameter,
+ * the assignment targets exactly that key's option type.
+ */
+const assignDeepMergedOption = <K extends (typeof DEEP_MERGED_OPTION_KEYS)[number]>(
+    merged: RequestOptions,
+    key: K,
+    value: RequestOptions[K]
+): void => {
+    merged[key] = value;
+};
+
+/**
+ * Merges per-request transport settings over the instance-level ones — the
+ * two caller-supplied layers of the precedence chain documented in the module
+ * header; {@link resolveRequestOptions} then applies the library defaults.
+ * A field set on `overrides` wins; every other field keeps the instance
+ * value. The nested configuration objects (`DEEP_MERGED_OPTION_KEYS` —
+ * `retry`, `circuitBreaker`, `retryBudget`) are merged field-by-field, so a
+ * per-request `{ retry: { maxRetries: 0 } }` keeps the instance's
+ * `retryOnStatus` and `baseDelayMs` instead of silently falling back to
+ * library defaults. Passing no overrides returns the instance options
+ * unchanged, so the zero-cost path stays allocation-free.
+ *
+ * @param base - Instance-level transport settings, when configured.
+ * @param overrides - Per-request settings that take precedence over `base`.
+ * @returns The merged settings, or the defined input when only one side exists.
+ * @see {@link RequestOptions}
+ */
+export const mergeOptions = (
+    base: RequestOptions | undefined,
+    overrides: RequestOptions | undefined
+): RequestOptions | undefined => {
+    if (overrides === undefined) return base;
+    if (base === undefined) return overrides;
+    const merged: RequestOptions = { ...base, ...overrides };
+    for (const key of DEEP_MERGED_OPTION_KEYS) {
+        const baseValue = base[key];
+        const overrideValue = overrides[key];
+        // `retry: false` (disable) and `retry: true` are whole-value settings:
+        // they replace the instance policy entirely, by design. Only two
+        // defined objects merge field-by-field.
+        if (
+            typeof baseValue === "object" &&
+            baseValue !== null &&
+            typeof overrideValue === "object" &&
+            overrideValue !== null
+        ) {
+            // The typeof guards prove both sides are the object member of
+            // the option's union, so the spread is field-wise; the helper's
+            // deferred K keeps the assignment scoped to this key's own
+            // option type.
+            assignDeepMergedOption(merged, key, { ...baseValue, ...overrideValue });
+        }
+    }
+    return merged;
+};
+
+/**
+ * Every key of {@link RequestOptions}, in one array — used by the credential
+ * seam to allowlist transport fields and reject mistyped credential keys
+ * (for example `accesstoken` instead of `accessToken`) at client
+ * construction instead of silently ignoring them.
+ *
+ * The `satisfies` clause and the exhaustiveness assertion below bind this
+ * list to the interface: adding a field to `RequestOptions` without adding
+ * it here fails `tsc`, and listing a key the interface does not have fails
+ * too. The array cannot drift from the type it enumerates.
+ */
+export const TRANSPORT_OPTION_KEYS = [
+    "timeout",
+    "signal",
+    "exposeRawAxiosError",
+    "retry",
+    "paceWithRateLimit",
+    "rateLimitFloor",
+    "circuitBreaker",
+    "retryBudget",
+    "maxSockets",
+    "maxFreeSockets",
+    "onError",
+    "onRetry",
+    "onRequestStart",
+    "onResponse",
+    "onPace",
+    "onHookError",
+    "diagnostics",
+    "onCircuitOpen",
+    "onCircuitClose",
+    "ignorePaceDeadline",
+    "allowPartialData",
+    "responseCache",
+    "bypassResponseCache",
+] as const satisfies readonly (keyof RequestOptions)[];
+
+/**
+ * The `RequestOptions` keys missing from {@link TRANSPORT_OPTION_KEYS}.
+ * Empty (`never`) as long as the array lists every key.
+ *
+ * @internal
+ */
+type MissingTransportOptionKeys = Exclude<
+    keyof RequestOptions,
+    (typeof TRANSPORT_OPTION_KEYS)[number]
+>;
+
+/**
+ * Compile-time proof that {@link TRANSPORT_OPTION_KEYS} lists every
+ * `RequestOptions` key: the missing-keys union must satisfy the `never`
+ * constraint. When a new option is added to `RequestOptions` without its
+ * array entry, this assertion fails the build naming the missing key.
+ *
+ * @internal
+ */
+type AssertAllTransportOptionsListed<T extends never> = T;
+type _TransportOptionKeysComplete = AssertAllTransportOptionsListed<MissingTransportOptionKeys>;

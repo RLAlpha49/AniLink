@@ -44,13 +44,12 @@ const requestMock = vi.hoisted(() =>
     )
 );
 
-vi.mock("../../src/base/RequestHandler", async () => {
-    const { TRANSPORT_OPTION_KEYS } = await import("../../src/base/transportOptionKeys");
-    return {
-        sendRequest: requestMock,
-        TRANSPORT_OPTION_KEYS,
-    };
-});
+// Only `sendRequest` needs replacing here; nothing under test imports
+// `TRANSPORT_OPTION_KEYS` from this module, so the factory stays free of
+// the real `requestOptions` module and its runtime graph.
+vi.mock("../../src/base/RequestHandler", () => ({
+    sendRequest: requestMock,
+}));
 
 /**
  * The mocked `sendRequest` transport. Inspect {@link mockSendRequest.mock.calls}
