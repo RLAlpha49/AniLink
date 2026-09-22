@@ -1,16 +1,19 @@
 import { isNonBlank, resolveMalCredentials, type MalCredentials } from "../../../base/credentials";
-import { MalAnimeOperation } from "./operations/AnimeOperation";
-import { MalForumOperation } from "./operations/ForumOperation";
-import { MalMangaOperation } from "./operations/MangaOperation";
-import { MalUserOperation } from "./operations/UserOperation";
+import type { BaseOperation } from "../../../base/BaseOperation";
 import type { MyAnimeListApi } from "./facade";
 import { malPaginate, malPaginatePages } from "./Paginator";
+import {
+    MAL_OPERATION_REGISTRY,
+    type MalOperationConstructor,
+    type MalOperationEntry,
+    type MalOperationGroup,
+} from "./registry";
 import { buildMalTokenRefresher, buildRefreshedAuth } from "./tokenRefresh";
 
 /**
  * {@link buildMyAnimeListApi} is the wiring helper that builds the {@link MyAnimeListApi} from provider-owned {@link MalCredentials}.
  *
- * It resolves credentials through {@link resolveMalCredentials} and composes {@link MalAnimeOperation}, {@link MalMangaOperation}, and {@link MalUserOperation} into the {@link MyAnimeListApi} facade exposed as `aniLink.mal`. Transport settings from {@link MalCredentials} flow to `MalRequestOptions` without leaking between providers.
+ * It resolves credentials through {@link resolveMalCredentials} and composes every operation registered in {@link MAL_OPERATION_REGISTRY} into the {@link MyAnimeListApi} facade exposed as `aniLink.mal` — one construction-and-bind loop drives every member in both refresh modes, so an operation added to the registry appears here without editing this file (the registry's parity asserts keep the group interfaces in `facade.ts` in step). Transport settings from {@link MalCredentials} flow to `MalRequestOptions` without leaking between providers.
  *
  * @param credentials - MAL access and OAuth credentials plus transport settings; a {@link MalCredentials} slot.
  * @param stateOwner - Stable per-client object keying the shared transport state (breaker, budget, pacing); when omitted, a fresh one is allocated for this client.
@@ -27,21 +30,39 @@ export function buildMyAnimeListApi(
     stateOwner?: object
 ): MyAnimeListApi {
     const { auth, options } = resolveMalCredentials(credentials);
-    // The three operations share one resilience state owner so the circuit
-    // breaker, retry budget, and rate-limit pacing span the whole client: a
-    // failure streak on `anime.get` advances the same breaker that gates
-    // `user.me` (still scoped per upstream host inside the state maps).
+    // The registered operations share one resilience state owner so the
+    // circuit breaker, retry budget, and rate-limit pacing span the whole
+    // client: a failure streak on `anime.get` advances the same breaker that
+    // gates `user.me` (still scoped per upstream host inside the state maps).
     const sharedStateOwner: object = stateOwner ?? {};
-    const anime = new MalAnimeOperation(auth, options, sharedStateOwner);
-    const manga = new MalMangaOperation(auth, options, sharedStateOwner);
-    const user = new MalUserOperation(auth, options, sharedStateOwner);
-    const forum = new MalForumOperation(auth, options, sharedStateOwner);
+
+    // One pass over the registry constructs every registered operation
+    // against the shared auth material, transport options, and state owner,
+    // keeping each entry paired with its instance for the binding loop
+    // below. The group list itself is derived from the registry — no
+    // second enumeration of what exists.
+    const groups = Object.keys(MAL_OPERATION_REGISTRY) as MalOperationGroup[];
+    const wired: {
+        group: MalOperationGroup;
+        entry: MalOperationEntry<MalOperationConstructor, string>;
+        instance: BaseOperation;
+    }[] = [];
+    for (const group of groups) {
+        for (const entry of MAL_OPERATION_REGISTRY[group]) {
+            const operationClass: MalOperationConstructor = entry.operationClass;
+            wired.push({
+                group,
+                entry,
+                instance: new operationClass(auth, options, sharedStateOwner),
+            });
+        }
+    }
 
     // The automatic refresh lifecycle is opt-in: it activates only when both
     // the refresh token and client ID are configured (non-blank — a
     // whitespace-only value is treated as missing, matching the empty-string
-    // case). Without them the facade keeps the direct bound methods — zero
-    // wrapper overhead, zero behavior change.
+    // case). Without them every facade member stays the direct bound method
+    // — zero wrapper overhead, zero behavior change.
     // Values are trimmed before use so a credential copied with trailing
     // whitespace still authenticates (matching the AniList wiring).
     const refresher =
@@ -55,92 +76,63 @@ export function buildMyAnimeListApi(
                   onHookError: credentials.onHookError,
                   diagnostics: credentials.diagnostics,
                   applyAccessToken: (accessToken) => {
-                      for (const operation of [anime, manga, user, forum]) {
-                          operation.updateAuth(
-                              buildRefreshedAuth(operation.getAuth(), accessToken)
-                          );
+                      // Every registered operation was constructed above, so
+                      // the swap reaches the whole client: the fresh auth
+                      // material is moved onto each instance inside the
+                      // deduplicated grant, and the original request is
+                      // replayed once against it.
+                      for (const { instance } of wired) {
+                          instance.updateAuth(buildRefreshedAuth(instance.getAuth(), accessToken));
                       }
                   },
               })
             : undefined;
 
-    if (refresher === undefined) {
-        return {
-            anime: {
-                get: anime.get.bind(anime),
-                search: anime.search.bind(anime),
-                seasonal: anime.seasonal.bind(anime),
-                ranking: anime.ranking.bind(anime),
-                suggestions: anime.suggestions.bind(anime),
-                updateMyListStatus: anime.updateMyListStatus.bind(anime),
-                deleteFromList: anime.deleteFromList.bind(anime),
-            },
-            manga: {
-                get: manga.get.bind(manga),
-                search: manga.search.bind(manga),
-                ranking: manga.ranking.bind(manga),
-                updateMyListStatus: manga.updateMyListStatus.bind(manga),
-                deleteFromList: manga.deleteFromList.bind(manga),
-            },
-            user: {
-                me: user.me.bind(user),
-                get: user.get.bind(user),
-                animeList: user.animeList.bind(user),
-                mangaList: user.mangaList.bind(user),
-            },
-            forum: {
-                boards: forum.boards.bind(forum),
-                topics: forum.topics.bind(forum),
-                topic: forum.topic.bind(forum),
-            },
-            // The pagination helpers are provider-owned pure functions over
-            // the shared engine — no transport state to bind, so they are
-            // exposed directly on both branches.
-            paginate: malPaginate,
-            paginatePages: malPaginatePages,
-        };
+    // The per-method refresh wrapper, or the identity pass-through when the
+    // lifecycle is off, so both modes run the same binding loop below.
+    const maybeWrap =
+        refresher === undefined
+            ? <A extends unknown[], R>(
+                  method: (...args: A) => Promise<R>
+              ): ((...args: A) => Promise<R>) => method
+            : <A extends unknown[], R>(
+                      method: (...args: A) => Promise<R>
+                  ): ((...args: A) => Promise<R>) =>
+                  (...args: A) =>
+                      refresher.executeWithRefresh(() => method(...args));
+
+    // One binding loop drives every facade member: each registry entry names
+    // its group, facade key, and method, so adding an operation is one
+    // registry entry — never another hand-written `.bind()`/`wrap()` pair.
+    const groupMembers = Object.fromEntries(groups.map((group) => [group, {}] as const)) as Record<
+        MalOperationGroup,
+        Record<string, unknown>
+    >;
+    for (const { group, entry, instance } of wired) {
+        // The dynamic method lookup is the one place the seam needs a cast:
+        // the entry's method name is only known as `string` here, while the
+        // instance is typed as `BaseOperation`. Existence is guaranteed by
+        // the registry's `op()`, which constrains the facade key to a real
+        // method on the operation class at registry-definition time.
+        const method = (instance as unknown as Record<string, unknown>)[entry.methodName];
+        groupMembers[group][entry.name] = maybeWrap(
+            (method as (...args: unknown[]) => Promise<unknown>).bind(instance)
+        );
     }
 
-    // With refresh credentials, every facade method runs under the refresh
-    // lifecycle: a 401 triggers one deduplicated refresh, the fresh auth
-    // material is swapped onto all three operation instances, and the
-    // original request is replayed once.
-    const wrap =
-        <A extends unknown[], R>(
-            method: (...args: A) => Promise<R>
-        ): ((...args: A) => Promise<R>) =>
-        (...args: A) =>
-            refresher.executeWithRefresh(() => method(...args));
-
+    // The object below is assembled dynamically from the registry, so the
+    // cast through `unknown` is the mechanical bridge to the handwritten
+    // facade type. The compile-time contract lives elsewhere and is not
+    // weakened by it: the registry's parity asserts keep the group member
+    // sets equal to `MyAnimeListApi`'s group interfaces, and the registry's
+    // `op()` entries keep every facade key bound to a real operation-class
+    // method — the same division of labor AniList's wiring uses.
     return {
-        anime: {
-            get: wrap(anime.get.bind(anime)),
-            search: wrap(anime.search.bind(anime)),
-            seasonal: wrap(anime.seasonal.bind(anime)),
-            ranking: wrap(anime.ranking.bind(anime)),
-            suggestions: wrap(anime.suggestions.bind(anime)),
-            updateMyListStatus: wrap(anime.updateMyListStatus.bind(anime)),
-            deleteFromList: wrap(anime.deleteFromList.bind(anime)),
-        },
-        manga: {
-            get: wrap(manga.get.bind(manga)),
-            search: wrap(manga.search.bind(manga)),
-            ranking: wrap(manga.ranking.bind(manga)),
-            updateMyListStatus: wrap(manga.updateMyListStatus.bind(manga)),
-            deleteFromList: wrap(manga.deleteFromList.bind(manga)),
-        },
-        user: {
-            me: wrap(user.me.bind(user)),
-            get: wrap(user.get.bind(user)),
-            animeList: wrap(user.animeList.bind(user)),
-            mangaList: wrap(user.mangaList.bind(user)),
-        },
-        forum: {
-            boards: wrap(forum.boards.bind(forum)),
-            topics: wrap(forum.topics.bind(forum)),
-            topic: wrap(forum.topic.bind(forum)),
-        },
+        ...groupMembers,
+        // The pagination helpers are provider-owned pure functions over
+        // the shared engine — no transport state to bind, so they are
+        // exposed directly alongside the wired groups.
         paginate: malPaginate,
         paginatePages: malPaginatePages,
-    };
+    } as unknown as MyAnimeListApi;
 }
