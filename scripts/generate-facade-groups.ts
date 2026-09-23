@@ -17,17 +17,18 @@ import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { format, resolveConfig } from "prettier";
 import { FACADE_OPERATION_DOCS, type FacadeOperationDoc } from "./generate-facade-groups.config";
-import { ANILIST_OPERATION_REGISTRY } from "../src/apis/graphql/anilist/registry";
+import {
+    ANILIST_OPERATION_REGISTRY,
+    type OperationCategory,
+    type RegistryFacadeOperationKey,
+} from "../src/apis/graphql/anilist/registry";
 
 const REPO_ROOT = resolve(import.meta.dirname, "..");
 const ANILIST_DIR = join(REPO_ROOT, "src/apis/graphql/anilist");
 
 /**
- * Read-through cache for source files, so each file is read once per run
- * instead of once per registry entry that touches it (registry.ts is read
- * per entry by `classModuleFor`, fieldsSelection.ts per page class by
- * `parseAlwaysKeys`). The generator runs once per invocation, so the cache
- * never outlives a single generation pass.
+ * Read-through cache for source files, so repeated class and type lookups
+ * read each file only once during a generation pass.
  */
 const sourceCache = new Map<string, string>();
 
@@ -66,15 +67,18 @@ const OUTPUTS = {
     mutation: "src/apis/graphql/anilist/facade/mutation-group.ts",
 } as const;
 
-/** One declarative registry entry, parsed from `registry.ts`. */
+/** One declarative entry collected from the typed operation registry. */
 interface RegistryEntry {
-    category: "query" | "page" | "mutation";
+    category: OperationCategory;
     name: string;
     className: string;
     methodName: string;
-    /** The declared `fieldsEnabled` flag on the registry entry (defaults to `false`). */
     fieldsEnabled: boolean;
+    alwaysKeys: readonly string[];
 }
+
+/** Shape returned by the source parser retained for focused parser tests. */
+type ParsedRegistryEntry = Omit<RegistryEntry, "alwaysKeys">;
 
 /** The derived signature facts for one bound operation method. */
 interface MethodInfo {
@@ -143,24 +147,31 @@ export function collectOperationSignatures(): OperationSignature[] {
 }
 
 /**
- * Parse the declarative operation registry.
+ * Collect entries from the typed operation registry.
  *
- * Extracts every `op`/`opAs` entry per category plus the class-name-to-module
- * import map used to locate each operation class file.
+ * Operation class references, method names, fields flags, and always-key
+ * arrays come directly from the exported registry values.
  *
  * @returns All registry entries in declaration order.
- * @throws {Error} When a category group or the registry object cannot be found.
  */
 export function collectRegistryEntries(): RegistryEntry[] {
-    return parseRegistrySource(readSource(join(ANILIST_DIR, "registry.ts")));
+    return (Object.keys(ANILIST_OPERATION_REGISTRY) as OperationCategory[]).flatMap((category) =>
+        ANILIST_OPERATION_REGISTRY[category].map((entry) => ({
+            category,
+            name: entry.name,
+            className: entry.operationClass.name,
+            methodName: entry.methodName,
+            fieldsEnabled: entry.fieldsEnabled,
+            alwaysKeys: entry.alwaysKeys,
+        }))
+    );
 }
 
 /**
- * Parse registry source text into registry entries.
+ * Parse registry source text for focused parser tests.
  *
- * Split out of {@link collectRegistryEntries} so the entry regex and its
- * count guard can be tested against synthetic registry source without
- * touching the real file.
+ * Production generation reads {@link ANILIST_OPERATION_REGISTRY} directly.
+ * This helper remains exported for tests against synthetic registry source.
  *
  * @param registrySource - The full text of `registry.ts`.
  * @returns All registry entries in declaration order.
@@ -169,7 +180,7 @@ export function collectRegistryEntries(): RegistryEntry[] {
  *   regex (a call shape the regex does not cover would otherwise be silently
  *   dropped from generation).
  */
-export function parseRegistrySource(registrySource: string): RegistryEntry[] {
+export function parseRegistrySource(registrySource: string): ParsedRegistryEntry[] {
     const objectStart = registrySource.indexOf("ANILIST_OPERATION_REGISTRY");
     const objectEnd = registrySource.indexOf("} as const", objectStart);
     if (objectStart < 0 || objectEnd < 0) {
@@ -177,14 +188,14 @@ export function parseRegistrySource(registrySource: string): RegistryEntry[] {
     }
     const objectText = registrySource.slice(objectStart, objectEnd);
 
-    const entries: RegistryEntry[] = [];
+    const entries: ParsedRegistryEntry[] = [];
     for (const category of ["query", "page", "mutation"] as const) {
         const categoryMatch = new RegExp(`${category}:\\s*\\[([\\s\\S]*?)\\]`).exec(objectText);
         if (!categoryMatch) {
             throw new Error(`Could not locate the "${category}" group in registry.ts.`);
         }
         const entryRegex =
-            /\b(?:opAs|op)\(\s*"([^"]+)"\s*,\s*(\w+)\s*(?:,\s*"([^"]+)"\s*)?(?:,\s*\{\s*fieldsEnabled:\s*(true|false)\s*,?\s*\}\s*)?\)/g;
+            /\b(?:opAs|op)\(\s*"([^"]+)"\s*,\s*(\w+)\s*(?:,\s*"([^"]+)"\s*)?(?:,\s*\{\s*fieldsEnabled:\s*(true|false)\s*,?\s*(?:alwaysKeys:\s*\w+\s*,?\s*)?\}\s*)?\)/g;
         const parsed = [...categoryMatch[1].matchAll(entryRegex)].map((entry) => ({
             category,
             name: entry[1],
@@ -215,96 +226,22 @@ export function parseRegistrySource(registrySource: string): RegistryEntry[] {
  * @returns The AniList-relative module path (e.g. `query/User`).
  * @throws {Error} When the class is not imported by `registry.ts`.
  */
-function classModuleFor(className: string): string {
-    const registrySource = readSource(join(ANILIST_DIR, "registry.ts"));
-    // The import specifier list is matched as a whole rather than exactly,
-    // so a multi-specifier import line still resolves the class's module.
-    const importMatch = new RegExp(
-        `^import\\s*\\{[^}]*\\b${escapeRegExp(className)}\\b[^}]*\\}\\s*from\\s*"([^"]+)";`,
-        "m"
-    ).exec(registrySource);
-    if (!importMatch) {
-        throw new Error(`Operation class ${className} is not imported by registry.ts.`);
+function classModuleFor(entry: RegistryEntry): string {
+    const className = entry.className;
+    const classDirectory =
+        entry.category === "mutation"
+            ? join(ANILIST_DIR, "mutation")
+            : entry.category === "page"
+              ? join(ANILIST_DIR, "query", "page")
+              : join(ANILIST_DIR, "query");
+    const classDeclaration = new RegExp(`export\\s+class\\s+${escapeRegExp(className)}\\b`);
+    for (const file of readdirSync(classDirectory).filter((name) => name.endsWith(".ts"))) {
+        const classPath = join(classDirectory, file);
+        if (classDeclaration.test(readSource(classPath))) {
+            return relative(ANILIST_DIR, classPath).replace(/\\/g, "/").replace(/\.ts$/, "");
+        }
     }
-    return importMatch[1].replace(/^\.\//, "");
-}
-
-/**
- * Parse the always-selected keys an operation class passes to
- * `composeDocument`.
- *
- * The third `composeDocument` argument is either an empty array literal
- * (mutations and queries without always-keys) or an identifier: a constant
- * declared in the class file itself or imported from
- * `schemas/selection/fieldsSelection` (the page queries' shared
- * `PAGE_ALWAYS`). Resolving the identifier through the class's own imports
- * keeps the class file the single source of truth for the always-keys.
- *
- * @param source - The operation class source text.
- * @param imports - Identifier-to-module map of the class file's imports.
- * @param classPath - Absolute path of the class file, used to resolve
- *   imported constant modules and in error messages.
- * @returns The always-keys, quoted for a type union (e.g. `"id" | "idMal"`).
- * @throws {Error} When the `composeDocument` call cannot be found, or the
- *   referenced constant is neither declared in the class file nor imported,
- *   or its declaration cannot be parsed.
- */
-function parseAlwaysKeys(
-    source: string,
-    imports: Map<string, string>,
-    classPath: string
-): string[] {
-    const callMatch = /composeDocument\(\s*\w+\s*,\s*fields\s*,\s*(\[\]|[\w$]+)\s*\)/.exec(source);
-    if (!callMatch) {
-        throw new Error(
-            `No composeDocument call with an always-keys argument found in ${classPath}. ` +
-                "Expected composeDocument(<document>, fields, [] | CONSTANT_NAME)."
-        );
-    }
-    const argument = callMatch[1];
-    if (argument === "[]") return [];
-
-    const declarationRegex = new RegExp(
-        `export\\s+const\\s+${argument}\\b[^=]*=\\s*(\\[[^\\]]*\\])`
-    );
-    const localMatch = declarationRegex.exec(source);
-    if (localMatch) return parseAlwaysKeysLiteral(localMatch[1]);
-
-    const importSpecifier = imports.get(argument);
-    if (!importSpecifier) {
-        throw new Error(
-            `Always-keys constant ${argument} in ${classPath} is neither declared in the class file nor imported.`
-        );
-    }
-    const constantPath = resolve(dirname(classPath), importSpecifier) + ".ts";
-    const importedMatch = declarationRegex.exec(readSource(constantPath));
-    if (!importedMatch) {
-        throw new Error(`Always-keys constant ${argument} not found in ${constantPath}.`);
-    }
-    return parseAlwaysKeysLiteral(importedMatch[1]);
-}
-
-/**
- * Extract the quoted strings of an array literal, re-quoted for a type
- * union.
- *
- * @param literal - The array literal text (e.g. `["id", "idMal"]`).
- * @returns The keys, quoted for a type union.
- * @throws {Error} When the literal contains anything besides double-quoted
- *   strings, whitespace, and commas (e.g. single quotes, a spread, or an
- *   `as const` suffix) — a shape the parser does not understand would
- *   otherwise parse as fewer keys than the constant holds, or as none at
- *   all, generating a wrong public type with no error.
- */
-function parseAlwaysKeysLiteral(literal: string): string[] {
-    const keys = [...literal.matchAll(/"([^"]*)"/g)].map((match) => `"${match[1]}"`);
-    const residue = literal.replace(/"[^"]*"/g, "").replace(/[\s,[\]]/g, "");
-    if (residue.length > 0) {
-        throw new Error(
-            `Unsupported always-keys array literal ${literal} — only double-quoted string elements are parsed.`
-        );
-    }
-    return keys;
+    throw new Error(`Operation class ${className} was not found under ${classDirectory}.`);
 }
 
 /**
@@ -316,7 +253,7 @@ function parseAlwaysKeysLiteral(literal: string): string[] {
  * @throws {Error} When the class file or the bound method cannot be found.
  */
 function loadMethodInfo(entry: RegistryEntry): MethodInfo {
-    const classModule = classModuleFor(entry.className);
+    const classModule = classModuleFor(entry);
     const classPath = join(ANILIST_DIR, `${classModule}.ts`);
     const source = readSource(classPath);
 
@@ -367,44 +304,21 @@ function loadMethodInfo(entry: RegistryEntry): MethodInfo {
         declaredLocally.add(declaration[1]);
     }
 
-    // The registry entry declares whether the operation has a `fields`
-    // surface (the flag added in R-043, replacing the old import heuristic).
-    // The class file's `schemas/selection/` imports are kept as a consistency
-    // assert: a flag that disagrees with the import style means the registry
-    // declaration and the operation class have drifted — fail loudly instead
-    // of silently emitting a facade whose surface does not match the runtime.
-    const importsFromSelection = /from\s+"[^"]*schemas\/selection\//.test(source);
-    if (entry.fieldsEnabled !== importsFromSelection) {
+    // Validate the registry flag against the method's parameter shape, not
+    // the presence or formatting of a selection-module import.
+    const methodSupportsFields = /\bfields\s*\??\s*:/.test(signature[1]);
+    if (entry.fieldsEnabled !== methodSupportsFields) {
         throw new Error(
             `Registry entry "${entry.category}:${entry.name}" declares fieldsEnabled: ${entry.fieldsEnabled} ` +
-                `but its class ${entry.className} ${importsFromSelection ? "imports from" : "does not import from"} schemas/selection/ ` +
-                `in ${classPath}. Fix the registry flag or the operation class so they agree.`
+                `but its class method ${entry.className}.${entry.methodName} ${methodSupportsFields ? "accepts" : "does not accept"} a fields parameter. ` +
+                "Fix the registry flag or method signature so they agree."
         );
     }
     const hasFields = entry.fieldsEnabled;
 
-    // The always-selected keys come from the operation class itself: the
-    // constant (or empty literal) the class passes to composeDocument is the
-    // single source of truth, parsed from the class source (the same class
-    // file the `fieldsEnabled` consistency assert reads) — so the generated
-    // DeepPick union can never drift from
-    // what the runtime document actually selects. Operations without a
-    // `fields` surface send the maximal document as-is and have no
-    // always-keys.
-    const alwaysKeys = hasFields ? parseAlwaysKeys(source, imports, classPath) : [];
-
-    // A parsed entry that does not resolve in the runtime registry must
-    // throw: the parsed registry source and the imported runtime registry
-    // would have drifted apart.
-    const registryEntry = ANILIST_OPERATION_REGISTRY[entry.category].find(
-        (candidate) => candidate.name === entry.name
-    );
-    if (!registryEntry) {
-        throw new Error(
-            `Registry entry "${entry.category}:${entry.name}" parsed from registry.ts does not resolve in ANILIST_OPERATION_REGISTRY. ` +
-                "The parsed source and the imported runtime registry have drifted."
-        );
-    }
+    // The registry references the same key arrays the operation classes pass
+    // to composeDocument, so generated types use runtime values directly.
+    const alwaysKeys = entry.alwaysKeys.map((key) => JSON.stringify(key));
 
     // The narrowing overload may bound its `FieldPath` by a narrower type than
     // the response (e.g. a document-bounded alias omitting keys the maximal
@@ -521,27 +435,10 @@ function resolveResponseModule(responseType: string, method: MethodInfo): string
     return null;
 }
 
-/**
- * Validate that the curated config covers exactly the registry operations.
- *
- * @param entries - All registry entries.
- * @throws {Error} Listing every missing and extra config key.
- */
-function assertConfigExhaustive(entries: RegistryEntry[]): void {
-    const registryKeys = new Set(entries.map((entry) => `${entry.category}:${entry.name}`));
-    const configKeys = new Set(Object.keys(FACADE_OPERATION_DOCS));
-    const missing = [...registryKeys].filter((key) => !configKeys.has(key)).sort();
-    const extra = [...configKeys].filter((key) => !registryKeys.has(key)).sort();
-    if (missing.length === 0 && extra.length === 0) return;
-    const parts: string[] = ["generate-facade-groups config is out of sync with the registry:"];
-    if (missing.length > 0) {
-        parts.push(`  missing prose for: ${missing.join(", ")}`);
-    }
-    if (extra.length > 0) {
-        parts.push(`  unknown keys (no such registry operation): ${extra.join(", ")}`);
-    }
-    parts.push("  Add or remove entries in scripts/generate-facade-groups.config.ts.");
-    throw new Error(parts.join("\n"));
+/** Read the compile-time checked prose entry for a typed registry operation. */
+function operationDocFor(entry: RegistryEntry): FacadeOperationDoc {
+    const key = `${entry.category}:${entry.name}` as RegistryFacadeOperationKey;
+    return FACADE_OPERATION_DOCS[key];
 }
 
 /** The uniform `@param options` prose shared by every member. */
@@ -726,7 +623,7 @@ function renderQueryContainerDoc(entries: RegistryEntry[]): string[] {
         "@type {Object}",
     ];
     for (const entry of entries) {
-        const doc = FACADE_OPERATION_DOCS[`query:${entry.name}`];
+        const doc = operationDocFor(entry);
         lines.push(`@property {Function} ${entry.name} - ${doc.brief}`);
     }
     lines.push("@property {Object} page - Fetches pages of data from the AniList API.");
@@ -751,7 +648,7 @@ function renderPageContainerDoc(entries: RegistryEntry[]): string[] {
         "@type {Object}",
     ];
     for (const entry of entries) {
-        const doc = FACADE_OPERATION_DOCS[`page:${entry.name}`];
+        const doc = operationDocFor(entry);
         lines.push(`@property {Function} ${entry.name} - ${doc.brief}`);
     }
     return lines;
@@ -770,7 +667,7 @@ function renderMutationContainerDoc(entries: RegistryEntry[]): string[] {
         "@type {Object}",
     ];
     for (const entry of entries) {
-        const doc = FACADE_OPERATION_DOCS[`mutation:${entry.name}`];
+        const doc = operationDocFor(entry);
         lines.push(`@property {Function} ${entry.name} - ${doc.brief}`);
     }
     lines.push("");
@@ -786,8 +683,6 @@ function renderMutationContainerDoc(entries: RegistryEntry[]): string[] {
  * @throws {Error} When a member's class method or config prose cannot be resolved.
  */
 function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
-    assertConfigExhaustive(entries);
-
     const queryEntries = entries.filter((entry) => entry.category === "query");
     const pageEntries = entries.filter((entry) => entry.category === "page");
     const mutationEntries = entries.filter((entry) => entry.category === "mutation");
@@ -823,7 +718,7 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
 
     const queryMemberLines: string[] = [];
     for (const entry of queryEntries) {
-        const doc = FACADE_OPERATION_DOCS[`query:${entry.name}`];
+        const doc = operationDocFor(entry);
         const method = loadMethodInfo(entry);
         queryMemberLines.push(...renderMember(entry, doc, method, 8));
         queryMemberLines.push("");
@@ -847,7 +742,7 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
 
     const pageMemberLines: string[] = [];
     for (const entry of pageEntries) {
-        const doc = FACADE_OPERATION_DOCS[`page:${entry.name}`];
+        const doc = operationDocFor(entry);
         const method = loadMethodInfo(entry);
         pageMemberLines.push(...renderMember(entry, doc, method, 12));
         pageMemberLines.push("");
@@ -871,7 +766,7 @@ function buildRawFiles(entries: RegistryEntry[]): Map<string, string> {
 
     const mutationMemberLines: string[] = [];
     for (const entry of mutationEntries) {
-        const doc = FACADE_OPERATION_DOCS[`mutation:${entry.name}`];
+        const doc = operationDocFor(entry);
         const method = loadMethodInfo(entry);
         mutationMemberLines.push(...renderMember(entry, doc, method, 8));
         mutationMemberLines.push("");

@@ -9,24 +9,20 @@
  * `npm run facade:generate` to refresh the derived group types under
  * `facade/` (curated JSDoc prose lives in
  * `scripts/generate-facade-groups.config.ts`). Whether an operation accepts
- * a `fields` selection option is declared per entry (`fieldsEnabled`); the
- * facade generator cross-checks the flag against the class's
- * `schemas/selection/` imports and fails generation on disagreement. The
- * always-keys each operation selects in every composed document are
- * declared once, by the operation class itself (its exported `_ALWAYS`
- * constant, or the shared `PAGE_ALWAYS` for page queries); the facade
- * generator parses them from the class, so this registry carries no
- * duplicate of them.
+ * a `fields` selection option is declared per entry (`fieldsEnabled`), as are
+ * the always-selected keys used by the facade's narrowing types. The key
+ * arrays are the same exported constants the operation classes pass to the
+ * document composer, so runtime behavior and generated types share values.
  */
 import type { RequestAuthInput, RequestOptions } from "../../../base/transportTypes";
 import { ActivityQuery } from "./query/Activity";
 import { ActivityReplyQuery } from "./query/ActivityReply";
 import { ActivityRepliesQuery } from "./query/page/ActivityReplies";
 import { ActivitiesQuery } from "./query/page/Activities";
-import { AiringScheduleQuery } from "./query/AiringSchedule";
+import { AiringScheduleQuery, AIRING_SCHEDULE_ALWAYS } from "./query/AiringSchedule";
 import { AiringSchedulesQuery } from "./query/page/AiringSchedules";
 import { AniChartUserQuery } from "./query/AniChartUser";
-import { CharacterQuery } from "./query/Character";
+import { CharacterQuery, CHARACTER_ALWAYS } from "./query/Character";
 import { CharactersQuery } from "./query/page/Characters";
 import { ExternalLinkSourceCollectionQuery } from "./query/ExternalLinkSourceCollection";
 import { FollowerQuery } from "./query/Follower";
@@ -36,30 +32,33 @@ import { FollowingsQuery } from "./query/page/Followings";
 import { GenreCollectionQuery } from "./query/GenreCollection";
 import { LikesQuery } from "./query/page/Likes";
 import { MarkdownQuery } from "./query/Markdown";
-import { MediaListCollectionQuery } from "./query/MediaListCollection";
-import { MediaListQuery } from "./query/MediaList";
+import {
+    MediaListCollectionQuery,
+    MEDIA_LIST_COLLECTION_ALWAYS,
+} from "./query/MediaListCollection";
+import { MediaListQuery, MEDIA_LIST_ALWAYS } from "./query/MediaList";
 import { MediaListsQuery } from "./query/page/MediaLists";
-import { MediaQuery } from "./query/Media";
+import { MediaQuery, MEDIA_ALWAYS } from "./query/Media";
 import { MediaTagCollectionQuery } from "./query/MediaTagCollection";
-import { MediaTrendQuery } from "./query/MediaTrend";
+import { MediaTrendQuery, MEDIA_TREND_ALWAYS } from "./query/MediaTrend";
 import { MediaTrendsQuery } from "./query/page/MediaTrends";
 import { MediasQuery } from "./query/page/Medias";
 import { NotificationQuery } from "./query/Notification";
 import { NotificationsQuery } from "./query/page/Notifications";
-import { RecommendationQuery } from "./query/Recommendation";
+import { RecommendationQuery, RECOMMENDATION_ALWAYS } from "./query/Recommendation";
 import { RecommendationsQuery } from "./query/page/Recommendations";
-import { ReviewQuery } from "./query/Review";
+import { ReviewQuery, REVIEW_ALWAYS } from "./query/Review";
 import { ReviewsQuery } from "./query/page/Reviews";
-import { SiteStatisticsQuery } from "./query/SiteStatistics";
-import { StaffQuery } from "./query/Staff";
+import { SiteStatisticsQuery, SITE_STATISTICS_ALWAYS } from "./query/SiteStatistics";
+import { StaffQuery, STAFF_ALWAYS } from "./query/Staff";
 import { StaffsQuery } from "./query/page/Staffs";
-import { StudioQuery } from "./query/Studio";
+import { StudioQuery, STUDIO_ALWAYS } from "./query/Studio";
 import { StudiosQuery } from "./query/page/Studios";
-import { ThreadCommentQuery } from "./query/ThreadComment";
+import { ThreadCommentQuery, THREAD_COMMENT_ALWAYS } from "./query/ThreadComment";
 import { ThreadCommentsQuery } from "./query/page/ThreadComments";
-import { ThreadQuery } from "./query/Thread";
+import { ThreadQuery, THREAD_ALWAYS } from "./query/Thread";
 import { ThreadsQuery } from "./query/page/Threads";
-import { UserQuery } from "./query/User";
+import { UserQuery, USER_ALWAYS } from "./query/User";
 import { UsersQuery } from "./query/page/Users";
 import { ViewerQuery } from "./query/Viewer";
 import { DeleteMediaListEntryMutation } from "./mutation/DeleteMediaListEntry";
@@ -91,6 +90,7 @@ import { UpdateAniChartHighlightsMutation } from "./mutation/UpdateAniChartHighl
 import { UpdateMediaListEntriesMutation } from "./mutation/UpdateMediaListEntries";
 import { UpdateUserMutation } from "./mutation/UpdateUser";
 import { SaveMediaListEntryMutation } from "./mutation/SaveMediaListEntry";
+import { PAGE_ALWAYS } from "./schemas/selection/fieldsSelection";
 
 /**
  * The section of the facade an operation is exposed under.
@@ -165,6 +165,9 @@ export interface OperationEntry<
      * `schemas/selection/` imports and fails generation on disagreement.
      */
     readonly fieldsEnabled: boolean;
+
+    /** Keys selected by the operation even when callers request a field subset. */
+    readonly alwaysKeys: readonly string[];
 }
 
 /** The per-entry options {@link op} and {@link opAs} accept beyond the required arguments. */
@@ -175,6 +178,9 @@ interface OperationEntryOptions {
      * through `schemas/selection/`.
      */
     readonly fieldsEnabled?: boolean;
+
+    /** The operation's shared always-selected-key constant. */
+    readonly alwaysKeys?: readonly string[];
 }
 
 /**
@@ -196,6 +202,7 @@ function op<TName extends string, TOperation extends OperationConstructor>(
         operationClass,
         methodName: name,
         fieldsEnabled: options?.fieldsEnabled ?? false,
+        alwaysKeys: options?.alwaysKeys ?? [],
     };
 }
 
@@ -220,6 +227,7 @@ function opAs<TName extends string, TOperation extends OperationConstructor>(
         operationClass,
         methodName,
         fieldsEnabled: options?.fieldsEnabled ?? false,
+        alwaysKeys: options?.alwaysKeys ?? [],
     };
 }
 
@@ -240,51 +248,81 @@ type RegistryGroups = {
  */
 export const ANILIST_OPERATION_REGISTRY = {
     query: [
-        op("user", UserQuery, { fieldsEnabled: true }),
-        op("media", MediaQuery, { fieldsEnabled: true }),
-        op("mediaTrend", MediaTrendQuery, { fieldsEnabled: true }),
-        op("airingSchedule", AiringScheduleQuery, { fieldsEnabled: true }),
-        op("character", CharacterQuery, { fieldsEnabled: true }),
-        op("staff", StaffQuery, { fieldsEnabled: true }),
-        op("mediaList", MediaListQuery, { fieldsEnabled: true }),
-        op("mediaListCollection", MediaListCollectionQuery, { fieldsEnabled: true }),
+        op("user", UserQuery, { fieldsEnabled: true, alwaysKeys: USER_ALWAYS }),
+        op("media", MediaQuery, { fieldsEnabled: true, alwaysKeys: MEDIA_ALWAYS }),
+        op("mediaTrend", MediaTrendQuery, { fieldsEnabled: true, alwaysKeys: MEDIA_TREND_ALWAYS }),
+        op("airingSchedule", AiringScheduleQuery, {
+            fieldsEnabled: true,
+            alwaysKeys: AIRING_SCHEDULE_ALWAYS,
+        }),
+        op("character", CharacterQuery, { fieldsEnabled: true, alwaysKeys: CHARACTER_ALWAYS }),
+        op("staff", StaffQuery, { fieldsEnabled: true, alwaysKeys: STAFF_ALWAYS }),
+        op("mediaList", MediaListQuery, { fieldsEnabled: true, alwaysKeys: MEDIA_LIST_ALWAYS }),
+        op("mediaListCollection", MediaListCollectionQuery, {
+            fieldsEnabled: true,
+            alwaysKeys: MEDIA_LIST_COLLECTION_ALWAYS,
+        }),
         op("genreCollection", GenreCollectionQuery),
         op("mediaTagCollection", MediaTagCollectionQuery),
         op("viewer", ViewerQuery),
         op("notification", NotificationQuery, { fieldsEnabled: true }),
-        op("studio", StudioQuery, { fieldsEnabled: true }),
-        op("review", ReviewQuery, { fieldsEnabled: true }),
+        op("studio", StudioQuery, { fieldsEnabled: true, alwaysKeys: STUDIO_ALWAYS }),
+        op("review", ReviewQuery, { fieldsEnabled: true, alwaysKeys: REVIEW_ALWAYS }),
         op("activity", ActivityQuery, { fieldsEnabled: true }),
         op("activityReply", ActivityReplyQuery),
         op("following", FollowingQuery),
         op("follower", FollowerQuery),
-        op("thread", ThreadQuery, { fieldsEnabled: true }),
-        op("threadComment", ThreadCommentQuery, { fieldsEnabled: true }),
-        op("recommendation", RecommendationQuery, { fieldsEnabled: true }),
+        op("thread", ThreadQuery, { fieldsEnabled: true, alwaysKeys: THREAD_ALWAYS }),
+        op("threadComment", ThreadCommentQuery, {
+            fieldsEnabled: true,
+            alwaysKeys: THREAD_COMMENT_ALWAYS,
+        }),
+        op("recommendation", RecommendationQuery, {
+            fieldsEnabled: true,
+            alwaysKeys: RECOMMENDATION_ALWAYS,
+        }),
         op("markdown", MarkdownQuery),
         op("aniChartUser", AniChartUserQuery),
-        op("siteStatistics", SiteStatisticsQuery, { fieldsEnabled: true }),
+        op("siteStatistics", SiteStatisticsQuery, {
+            fieldsEnabled: true,
+            alwaysKeys: SITE_STATISTICS_ALWAYS,
+        }),
         op("externalLinkSourceCollection", ExternalLinkSourceCollectionQuery),
     ],
     page: [
-        op("users", UsersQuery, { fieldsEnabled: true }),
-        op("medias", MediasQuery, { fieldsEnabled: true }),
-        op("characters", CharactersQuery, { fieldsEnabled: true }),
-        op("staffs", StaffsQuery, { fieldsEnabled: true }),
-        op("studios", StudiosQuery, { fieldsEnabled: true }),
-        op("mediaLists", MediaListsQuery, { fieldsEnabled: true }),
-        op("airingSchedules", AiringSchedulesQuery, { fieldsEnabled: true }),
-        op("mediaTrends", MediaTrendsQuery, { fieldsEnabled: true }),
-        op("notifications", NotificationsQuery, { fieldsEnabled: true }),
-        op("followers", FollowersQuery, { fieldsEnabled: true }),
-        opAs("following", FollowingsQuery, "followings", { fieldsEnabled: true }),
-        op("activities", ActivitiesQuery, { fieldsEnabled: true }),
-        opAs("activityReplies", ActivityRepliesQuery, "activityReplies", { fieldsEnabled: true }),
-        op("threads", ThreadsQuery, { fieldsEnabled: true }),
-        opAs("threadComments", ThreadCommentsQuery, "threadComments", { fieldsEnabled: true }),
-        op("reviews", ReviewsQuery, { fieldsEnabled: true }),
-        opAs("recommendations", RecommendationsQuery, "recommendations", { fieldsEnabled: true }),
-        op("likes", LikesQuery, { fieldsEnabled: true }),
+        op("users", UsersQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        op("medias", MediasQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        op("characters", CharactersQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        op("staffs", StaffsQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        op("studios", StudiosQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        op("mediaLists", MediaListsQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        op("airingSchedules", AiringSchedulesQuery, {
+            fieldsEnabled: true,
+            alwaysKeys: PAGE_ALWAYS,
+        }),
+        op("mediaTrends", MediaTrendsQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        op("notifications", NotificationsQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        op("followers", FollowersQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        opAs("following", FollowingsQuery, "followings", {
+            fieldsEnabled: true,
+            alwaysKeys: PAGE_ALWAYS,
+        }),
+        op("activities", ActivitiesQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        opAs("activityReplies", ActivityRepliesQuery, "activityReplies", {
+            fieldsEnabled: true,
+            alwaysKeys: PAGE_ALWAYS,
+        }),
+        op("threads", ThreadsQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        opAs("threadComments", ThreadCommentsQuery, "threadComments", {
+            fieldsEnabled: true,
+            alwaysKeys: PAGE_ALWAYS,
+        }),
+        op("reviews", ReviewsQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
+        opAs("recommendations", RecommendationsQuery, "recommendations", {
+            fieldsEnabled: true,
+            alwaysKeys: PAGE_ALWAYS,
+        }),
+        op("likes", LikesQuery, { fieldsEnabled: true, alwaysKeys: PAGE_ALWAYS }),
     ],
     mutation: [
         op("updateUser", UpdateUserMutation, { fieldsEnabled: true }),
@@ -320,6 +358,13 @@ export const ANILIST_OPERATION_REGISTRY = {
         op("updateAniChartHighlights", UpdateAniChartHighlightsMutation),
     ],
 } as const satisfies RegistryGroups;
+
+/** Literal `<category>:<name>` keys for the generator-only operation prose. */
+export type RegistryFacadeOperationKey = {
+    [
+        Category in OperationCategory
+    ]: `${Category}:${(typeof ANILIST_OPERATION_REGISTRY)[Category][number]["name"]}`;
+}[OperationCategory];
 
 /**
  * The literal facade keys the `query` registry group exposes, derived from

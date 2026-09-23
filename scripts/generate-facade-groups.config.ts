@@ -9,11 +9,10 @@
  * be derived: each operation's container brief, summary, `@returns` prose,
  * and `@example` block.
  *
- * Keys are `<category>:<name>` (e.g. `"query:user"`, `"page:following"`,
- * `"mutation:saveThread"`) because facade keys are not unique across
- * categories. The generator fails when a key is missing or unknown, so adding
- * a registry operation without prose fails loudly.
+ * Keys are checked against the literal operation keys exported by `registry.ts`.
  */
+
+import type { RegistryFacadeOperationKey } from "../src/apis/graphql/anilist/registry";
 
 /**
  * Curated prose for one facade operation member.
@@ -72,7 +71,7 @@ export interface FacadeOperationDoc {
 /**
  * Curated prose per operation, keyed `<category>:<name>`.
  */
-export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
+export const FACADE_OPERATION_DOCS = {
     "query:user": {
         brief: "Fetches user data from the AniList API.",
         summary:
@@ -663,4 +662,4 @@ export const FACADE_OPERATION_DOCS: Record<string, FacadeOperationDoc> = {
         example:
             "```typescript\nawait aniLink.anilist.mutation.updateAniChartHighlights({\n  highlights: {mediaId: 1, highlight: true},\n});\n```",
     },
-};
+} satisfies Record<RegistryFacadeOperationKey, FacadeOperationDoc>;

@@ -9,7 +9,12 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSy
 import { dirname, relative, resolve, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ANILIST_PROVIDER_CONFIG } from "./provider-config";
-import { collectOperationSignatures, parseRegistrySource } from "./generate-facade-groups";
+import { collectOperationSignatures } from "./generate-facade-groups";
+import { FACADE_OPERATION_DOCS } from "./generate-facade-groups.config";
+import {
+    ANILIST_OPERATION_REGISTRY,
+    type RegistryFacadeOperationKey,
+} from "../src/apis/graphql/anilist/registry";
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -161,6 +166,12 @@ function jsdocExample(jsdoc: string): string {
     const inner = jsdocInner(jsdoc);
     const m = /@example\s*\n+```(?:typescript|ts)?\n([\s\S]*?)```/.exec(inner);
     return m ? m[1].trimEnd() : "";
+}
+
+/** Extract the code body from the curated facade example markdown. */
+function facadeExampleCode(example: string): string {
+    const match = /```(?:typescript|ts)?\n([\s\S]*?)```/.exec(example);
+    return match?.[1].trimEnd() ?? "";
 }
 
 /** Extract all `@see` URLs from a JSDoc block. */
@@ -462,22 +473,15 @@ interface RawOp {
  *
  * Signature facts (name, variables type, response type) come from
  * {@link collectOperationSignatures} — the same source the facade group
- * generator renders from — instead of re-parsing the generated facade source
- * with regexes, so a formatting change in the facade generator can never
- * silently drop operations here. The `custom` entry is not a registry
- * operation and is still read from `custom-group.ts`. Descriptions fall back
- * to the facade JSDoc main text, read positionally from the facade files.
+ * generator renders from. Curated descriptions and examples come from the
+ * same typed prose map as facade generation. The `custom` entry is not a
+ * registry operation and is still read from `custom-group.ts`.
  */
 function discoverAniListOperations(sourceRoot: string): RawOp[] {
     const ops: RawOp[] = [];
     for (const signature of collectOperationSignatures()) {
-        const facade = resolveAniListFacade(
-            { ...signature, description: "", responseType: signature.responseType },
-            sourceRoot
-        );
-        const description = facade
-            ? jsdocMainText(findFacadePropertyJsdoc(facade.facadeFile, facade.propName))
-            : "";
+        const key = `${signature.category}:${signature.name}` as RegistryFacadeOperationKey;
+        const description = cleanDescription(FACADE_OPERATION_DOCS[key].summary);
         ops.push({
             category: signature.category,
             name: signature.name,
@@ -600,14 +604,15 @@ function resolveAniListSourceInfo(
 /** Resolve candidate class/method pairs from `registry.ts` entries. */
 function resolveRegistryCandidates(
     op: RawOp,
-    sourceRoot: string
+    _sourceRoot: string
 ): Array<{ methodName: string; className: string }> {
-    const registryPath = join(sourceRoot, "registry.ts");
-    if (!existsSync(registryPath)) return [];
-    const content = readFileText(registryPath);
-    return parseRegistrySource(content)
-        .filter((entry) => entry.name === op.name && entry.category === op.category)
-        .map(({ className, methodName }) => ({ className, methodName }));
+    if (op.category === "custom") return [];
+    return ANILIST_OPERATION_REGISTRY[op.category]
+        .filter((entry) => entry.name === op.name)
+        .map(({ operationClass, methodName }) => ({
+            className: operationClass.name,
+            methodName,
+        }));
 }
 
 /** Resolve candidate class/method pairs from `wiring.ts` bindings. */
@@ -687,66 +692,6 @@ function findMethodJsdoc(filePath: string, methodName: string): string {
     const methodRe = new RegExp(String.raw`async ${methodName}\s*\(`);
     for (let i = 0; i < lines.length; i++) {
         if (methodRe.test(lines[i])) return findJsdocAbove(lines, i);
-    }
-    return "";
-}
-
-/**
- * Resolve the public-facing facade property for an AniList operation.
- *
- * The catalog documents the call shape a user types in their own code
- * (e.g. `aniLink.anilist.query.user({ id: 1 })`), so it reads JSDoc
- * from the facade type file — not from the implementation class —
- * because only the facade carries the public `await aniLink.…` example.
- *
- * @returns Absolute path to the facade file and the property name to
- *   match on, or `null` if the operation has no facade entry (e.g.
- *   internal helpers).
- */
-function resolveAniListFacade(
-    op: RawOp,
-    sourceRoot: string
-): { facadeFile: string; propName: string } | null {
-    if (op.category === "custom") {
-        return {
-            facadeFile: join(sourceRoot, "facade", "custom-group.ts"),
-            propName: op.name,
-        };
-    }
-    if (op.category === "page") {
-        return { facadeFile: join(sourceRoot, "facade", "query-group.ts"), propName: op.name };
-    }
-    if (op.category === "query") {
-        return { facadeFile: join(sourceRoot, "facade", "query-group.ts"), propName: op.name };
-    }
-    if (op.category === "mutation") {
-        return { facadeFile: join(sourceRoot, "facade", "mutation-group.ts"), propName: op.name };
-    }
-    return null;
-}
-
-/**
- * Extract the JSDoc block above the public-facing facade property
- * `propName` in a facade type file. The facade signatures are
- * `<name>: (variables: T, options?: R) => Promise<U>;` rather than
- * `async name(...)`, so we match the property line by its identifier
- * and the `=> Promise` arrow instead.
- */
-function findFacadePropertyJsdoc(filePath: string, propName: string): string {
-    const content = readFileText(filePath);
-    if (!content) return "";
-    const lines = content.split("\n");
-    // Property lines may wrap across multiple lines, so we join short
-    // continuations (lines without `=>` and without a `;` terminator)
-    // until we see the closing `;` that ends the signature.
-    const propRe = new RegExp(String.raw`^\s*${propName}\s*:`);
-    for (let i = 0; i < lines.length; i++) {
-        if (!propRe.test(lines[i])) continue;
-        let end = i;
-        while (end < lines.length && !/;\s*(?:\/\/.*)?$/.test(lines[end])) end++;
-        if (end >= lines.length) end = i;
-        const joined = lines.slice(i, end + 1).join(" ");
-        if (/=>\s*Promise</.test(joined)) return findJsdocAbove(lines, i);
     }
     return "";
 }
@@ -1123,10 +1068,14 @@ function malOptionFields(optionsDescription: string): ParamField[] {
 function buildAniListOperation(op: RawOp): ReferenceOperation {
     const sourceRoot = join(SRC, "apis/graphql/anilist");
     const info = resolveAniListSourceInfo(op, sourceRoot);
+    const operationDoc =
+        op.category === "custom"
+            ? null
+            : FACADE_OPERATION_DOCS[`${op.category}:${op.name}` as RegistryFacadeOperationKey];
     let request: ParamField[] = [];
     let jsdoc = "";
     let seeUrls: string[] = [];
-    let purpose: string;
+    const purpose = operationDoc ? cleanDescription(operationDoc.summary) : op.description;
 
     if (info) {
         const varsFile = findInterfaceFile(info.sourceFile, op.variablesType);
@@ -1135,25 +1084,6 @@ function buildAniListOperation(op: RawOp): ReferenceOperation {
         }
         jsdoc = findMethodJsdoc(info.sourceFile, info.methodName);
         seeUrls = jsdocSeeUrls(jsdoc);
-    }
-
-    // Prefer the public-facing facade JSDoc for the example and purpose:
-    // it is the only place that shows the `await aniLink.anilist.…` call
-    // shape users will actually type, and the description there uses the
-    // identifiers a reader is likely to search for (e.g. `` `id` ``).
-    const facade = resolveAniListFacade(op, sourceRoot);
-    if (facade) {
-        const facadeJsdoc = findFacadePropertyJsdoc(facade.facadeFile, facade.propName);
-        if (facadeJsdoc) {
-            const facadeExample = jsdocExample(facadeJsdoc);
-            if (facadeExample) jsdoc = facadeJsdoc;
-            const facadePurpose = jsdocMainText(facadeJsdoc);
-            purpose = facadePurpose || op.description;
-        } else {
-            purpose = op.description;
-        }
-    } else {
-        purpose = op.description;
     }
 
     const responseType = op.responseType;
@@ -1195,7 +1125,7 @@ function buildAniListOperation(op: RawOp): ReferenceOperation {
         responseType,
         response,
         errors,
-        example: jsdocExample(jsdoc),
+        example: operationDoc ? facadeExampleCode(operationDoc.example) : jsdocExample(jsdoc),
         links,
     };
 }

@@ -158,39 +158,4 @@ describe("facade group generation", () => {
             writeFileSync(classPath, original);
         }
     });
-
-    test("generation throws when an always-keys constant uses an unsupported literal", async () => {
-        // A constant the literal parser cannot fully consume (here: single
-        // quotes) must fail generation loudly. The silent alternative —
-        // parsing zero keys — would emit DeepPick<Response, K> without the
-        // always-keys, a wrong public type with no error. The generator
-        // runs in a subprocess so its module-level source cache cannot
-        // serve the pre-mutation file text.
-        const classPath = join(process.cwd(), "src/apis/graphql/anilist/query/Media.ts");
-        const original = readFileSync(classPath, "utf8");
-        try {
-            writeFileSync(
-                classPath,
-                original.replace(
-                    'export const MEDIA_ALWAYS: readonly string[] = ["id", "idMal"];',
-                    "export const MEDIA_ALWAYS: readonly string[] = ['id', 'idMal'];"
-                )
-            );
-            const run = new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-                execFile(
-                    process.execPath,
-                    ["--import", "tsx", "scripts/generate-facade-groups.ts", "--check"],
-                    { cwd: process.cwd() },
-                    (error, stdout, stderr) => {
-                        if (error && error.code !== 1) reject(error);
-                        else resolve({ stdout: String(stdout), stderr: String(stderr) });
-                    }
-                );
-            });
-            const { stdout, stderr } = await run;
-            expect(`${stdout}${stderr}`).toMatch(/Unsupported always-keys/);
-        } finally {
-            writeFileSync(classPath, original);
-        }
-    });
 });
