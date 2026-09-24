@@ -11,8 +11,12 @@
  *
  * Run via: `npm run test:package` (see scripts/test-packaged-package.mjs).
  */
-import { AniLink } from "anilink-api-wrapper";
-import { buildMalAuthorizationUrl } from "anilink-api-wrapper/mal";
+import * as root from "anilink-api-wrapper";
+import * as anilist from "anilink-api-wrapper/anilist";
+import * as mal from "anilink-api-wrapper/mal";
+
+const { AniLink } = root;
+const { buildMalAuthorizationUrl } = mal;
 
 /** Well-known public fixtures that are stable in the AniList database. */
 const FIXTURES = {
@@ -57,12 +61,44 @@ function assert(condition, message) {
     if (!condition) throw new Error(`assertion failed: ${message}`);
 }
 
+// RequestAuth, RequestAuthInput, RequestOptions, AniLinkErrorCode, and
+// RateLimitInfo are type-only and have no runtime export to inspect.
+const SHARED_RUNTIME_EXPORTS = [
+    "AniLink",
+    "AniLinkApiError",
+    "AniLinkAuthError",
+    "AniLinkError",
+    "AniLinkErrorCodes",
+    "AniLinkGraphQLError",
+    "AniLinkNetworkError",
+    "AniLinkRestError",
+    "AniLinkValidationError",
+];
+
+for (const exportName of SHARED_RUNTIME_EXPORTS) {
+    for (const [entryName, entry] of Object.entries({ root, anilist, mal })) {
+        assert(
+            Object.hasOwn(entry, exportName),
+            `${entryName} entry should export shared runtime symbol ${exportName}`
+        );
+    }
+}
+console.log("  ok   shared runtime exports resolve from root, anilist, and mal");
+
 console.log(`anilink-api-wrapper packaged smoke test (token: ${token ? "present" : "absent"})`);
 
-const malAuthorizeUrl = buildMalAuthorizationUrl("mal-client", "pkce-challenge");
+const malAuthorizeUrl = buildMalAuthorizationUrl("mal-client", "a".repeat(43));
 assert(
     malAuthorizeUrl.startsWith("https://myanimelist.net/v1/oauth2/authorize?"),
     "MAL subpath should resolve"
+);
+assert(
+    typeof client.anilist.mapExternalIds === "function",
+    "AniList mapping helper should resolve"
+);
+assert(
+    typeof client.mal.auth.buildAuthorizationUrl === "function",
+    "MAL authorization helper should resolve from the public facade"
 );
 console.log("  ok   MAL subpath exports resolve");
 
