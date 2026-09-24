@@ -56,7 +56,7 @@ export interface MalAuthorizationCodeRequest {
     clientId: string;
     /** The authorization code returned by the redirect. */
     code: string;
-    /** The original PKCE code verifier. */
+    /** The original PKCE code verifier, 43–128 RFC 7636 unreserved characters. */
     codeVerifier: string;
     /** An optional client secret for applications that use one. */
     clientSecret?: string;
@@ -82,18 +82,26 @@ export interface MalRefreshTokenRequest {
     options?: RequestOptions;
 }
 
+const validateMalPkceValue = (value: string, name: string): void => {
+    if (!/^[-A-Za-z0-9._~]{43,128}$/.test(value)) {
+        throw new TypeError(`${name} must contain 43 to 128 RFC 7636 unreserved characters.`);
+    }
+};
+
 /**
  * {@link buildMalAuthorizationUrl} is the PKCE helper that builds the MyAnimeList OAuth2 authorization URL for {@link getMalAccessToken}.
  *
  * It encodes the client identity and PKCE challenge from {@link MalAuthorizationCodeRequest} and returns the URL to open in a browser. MAL's authorization server currently supports only the `plain` PKCE method. Validate the `state` on redirect before exchanging the code via {@link getMalAccessToken}.
  *
  * @param clientId - The MAL application client ID from {@link MalAuthorizationCodeRequest.clientId}.
- * @param codeChallenge - The PKCE challenge for the login attempt; under MAL's `plain` method this is the verifier itself.
+ * @param codeChallenge - The PKCE challenge for the login attempt; under MAL's `plain` method this is the verifier itself and must contain 43–128 RFC 7636 unreserved characters.
  * @param state - Optional opaque CSRF state to validate on the redirect.
  * @returns The fully encoded authorization URL for the MAL OAuth flow.
+ * @throws `TypeError` when `codeChallenge` is not a valid MAL PKCE verifier.
  * @example
  * ```typescript
- * const url = buildMalAuthorizationUrl("client-id", "pkce-challenge", "csrf-state");
+ * const codeVerifier = "a".repeat(43);
+ * const url = buildMalAuthorizationUrl("client-id", codeVerifier, "csrf-state");
  * // Open url in a browser, then exchange the returned code with getMalAccessToken.
  * ```
  * @see https://myanimelist.net/apiconfig/references/authorization
@@ -103,6 +111,7 @@ export const buildMalAuthorizationUrl = (
     codeChallenge: string,
     state?: string
 ): string => {
+    validateMalPkceValue(codeChallenge, "codeChallenge");
     const params = new URLSearchParams({
         response_type: "code",
         client_id: clientId,
@@ -120,6 +129,7 @@ export const buildMalAuthorizationUrl = (
  *
  * @param request - The authorization-code fields and optional transport settings; a {@link MalAuthorizationCodeRequest}.
  * @returns The {@link MalTokenResponse} for the authenticated session.
+ * @throws `TypeError` when `codeVerifier` is not a valid MAL PKCE verifier.
  * @throws `AniLinkApiError` when MAL rejects the grant, or `AniLinkNetworkError` on timeout, cancellation, or network failure; both carry sanitized token-request details.
  * @example
  * ```typescript
@@ -128,10 +138,11 @@ export const buildMalAuthorizationUrl = (
  * ```
  * @see https://myanimelist.net/apiconfig/references/authorization
  */
-export const getMalAccessToken = (
+export const getMalAccessToken = async (
     request: MalAuthorizationCodeRequest
-): Promise<MalTokenResponse> =>
-    requestTokenGrant<MalTokenResponse>(
+): Promise<MalTokenResponse> => {
+    validateMalPkceValue(request.codeVerifier, "codeVerifier");
+    return requestTokenGrant<MalTokenResponse>(
         MAL_TOKEN_GRANT,
         {
             client_id: request.clientId,
@@ -143,6 +154,7 @@ export const getMalAccessToken = (
         undefined,
         request.options
     );
+};
 
 /**
  * {@link refreshMalAccessToken} exchanges a MAL refresh token for a new access token.

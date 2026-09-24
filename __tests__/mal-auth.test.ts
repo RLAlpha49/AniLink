@@ -22,6 +22,7 @@ vi.mock("axios", async () => {
 });
 
 const mocks = getAxiosStub();
+const VALID_CODE_VERIFIER = "a".repeat(43);
 
 interface CapturedAxiosConfig {
     url: string;
@@ -39,9 +40,29 @@ beforeEach(() => {
 
 describe("MyAnimeList OAuth2 PKCE helpers", () => {
     test("builds an authorization URL with encoded PKCE and state parameters", () => {
-        expect(buildMalAuthorizationUrl("client id", "challenge/value", "csrf state")).toBe(
-            "https://myanimelist.net/v1/oauth2/authorize?response_type=code&client_id=client%20id&code_challenge=challenge%2Fvalue&code_challenge_method=plain&state=csrf%20state"
+        const url = new URL(
+            buildMalAuthorizationUrl("client id", VALID_CODE_VERIFIER, "csrf state")
         );
+
+        expect(url.searchParams.get("client_id")).toBe("client id");
+        expect(url.searchParams.get("code_challenge")).toBe(VALID_CODE_VERIFIER);
+        expect(url.searchParams.get("code_challenge_method")).toBe("plain");
+        expect(url.searchParams.get("state")).toBe("csrf state");
+    });
+
+    test("rejects PKCE challenges outside MAL's verifier format", () => {
+        expect(() => buildMalAuthorizationUrl("client-id", "too-short")).toThrow(TypeError);
+        expect(() => buildMalAuthorizationUrl("client-id", `${"a".repeat(42)}+`)).toThrow(
+            TypeError
+        );
+        expect(() => buildMalAuthorizationUrl("client-id", "a".repeat(129))).toThrow(TypeError);
+    });
+
+    test("rejects an invalid verifier before making a token request", async () => {
+        await expect(
+            getMalAccessToken({ clientId: "client-id", code: "auth-code", codeVerifier: "short" })
+        ).rejects.toThrow(TypeError);
+        expect(mocks.request).not.toHaveBeenCalled();
     });
 
     test("exchanges an authorization code as form-urlencoded data", async () => {
@@ -49,7 +70,7 @@ describe("MyAnimeList OAuth2 PKCE helpers", () => {
             getMalAccessToken({
                 clientId: "client-id",
                 code: "auth-code",
-                codeVerifier: "verifier",
+                codeVerifier: VALID_CODE_VERIFIER,
                 options: { retry: false },
             })
         ).resolves.toMatchObject({ access_token: "access-token" });
@@ -61,7 +82,7 @@ describe("MyAnimeList OAuth2 PKCE helpers", () => {
         expect(Object.fromEntries(new URLSearchParams(String(config.data)))).toEqual({
             client_id: "client-id",
             code: "auth-code",
-            code_verifier: "verifier",
+            code_verifier: VALID_CODE_VERIFIER,
             grant_type: "authorization_code",
         });
     });
@@ -90,7 +111,7 @@ describe("MyAnimeList OAuth2 PKCE helpers", () => {
         const outcome = await getMalAccessToken({
             clientId: "client-id",
             code: "bad-code",
-            codeVerifier: "verifier",
+            codeVerifier: VALID_CODE_VERIFIER,
             clientSecret: "secret",
             options: { retry: false },
         }).then(
@@ -121,7 +142,7 @@ describe("MyAnimeList OAuth2 PKCE helpers", () => {
             getMalAccessToken({
                 clientId: "client-id",
                 code: "auth-code",
-                codeVerifier: "verifier",
+                codeVerifier: VALID_CODE_VERIFIER,
             })
         ).rejects.toMatchObject({ status: 500 });
         expect(mocks.request).toHaveBeenCalledTimes(1);

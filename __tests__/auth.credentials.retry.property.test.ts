@@ -21,6 +21,12 @@ import {
 
 /** The maximum `Retry-After` delay the transport honors, mirrored from RequestHandler.ts. */
 const MAX_RETRY_AFTER_MS = 60_000;
+const MAL_PKCE_CHARACTERS = [
+    ..."ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~",
+];
+const malCodeVerifierArbitrary = fc
+    .array(fc.constantFrom(...MAL_PKCE_CHARACTERS), { minLength: 43, maxLength: 128 })
+    .map((characters) => characters.join(""));
 
 /** A minimal retry policy for backoff/jitter tests. */
 const makePolicy = (overrides: Partial<RetryPolicy> = {}): RetryPolicy => ({
@@ -78,7 +84,7 @@ describe("buildMalAuthorizationUrl property tests", () => {
         fc.assert(
             fc.property(
                 fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0),
-                fc.string({ minLength: 1, maxLength: 80 }).filter((s) => s.trim().length > 0),
+                malCodeVerifierArbitrary,
                 fc.option(fc.string({ minLength: 1, maxLength: 30 })),
                 (clientId, codeChallenge, state) => {
                     const url = buildMalAuthorizationUrl(
@@ -106,11 +112,24 @@ describe("buildMalAuthorizationUrl property tests", () => {
         fc.assert(
             fc.property(
                 fc.string({ minLength: 1, maxLength: 20 }),
-                fc.string({ minLength: 1, maxLength: 50 }),
+                malCodeVerifierArbitrary,
                 (clientId, codeChallenge) => {
                     const url = new URL(buildMalAuthorizationUrl(clientId, codeChallenge));
                     expect(url.origin + url.pathname).toBe(
                         "https://myanimelist.net/v1/oauth2/authorize"
+                    );
+                }
+            )
+        );
+    });
+
+    test("rejects a malformed PKCE challenge before building the URL", () => {
+        fc.assert(
+            fc.property(
+                fc.string({ maxLength: 42 }).filter((value) => value.length < 43),
+                (codeChallenge) => {
+                    expect(() => buildMalAuthorizationUrl("client-id", codeChallenge)).toThrow(
+                        TypeError
                     );
                 }
             )

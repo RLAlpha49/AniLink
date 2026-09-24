@@ -28,6 +28,8 @@ vi.mock("../src/base/RequestHandler", () => ({
 import { getMalAccessToken, refreshMalAccessToken } from "../src/apis/rest/mal/auth";
 import { AniLinkError } from "../src/base/AniLinkError";
 
+const VALID_CODE_VERIFIER = "a".repeat(43);
+
 beforeEach(() => {
     mocks.sendRequest.mockReset();
 });
@@ -39,7 +41,7 @@ describe("MAL token request normalization of raw transport failures", () => {
         const error = await getMalAccessToken({
             clientId: "client-id",
             code: "auth-code",
-            codeVerifier: "verifier",
+            codeVerifier: VALID_CODE_VERIFIER,
         }).catch((caught: unknown) => caught);
 
         expect(error).toBeInstanceOf(AniLinkNetworkError);
@@ -76,7 +78,7 @@ describe("MAL token request normalization of raw transport failures", () => {
         const error = await getMalAccessToken({
             clientId: "client-id",
             code: "auth-code",
-            codeVerifier: "verifier",
+            codeVerifier: VALID_CODE_VERIFIER,
         }).catch((caught: unknown) => caught);
 
         expect(error).toBeInstanceOf(AniLinkNetworkError);
@@ -93,7 +95,7 @@ describe("MAL token request normalization of raw transport failures", () => {
         const error = await getMalAccessToken({
             clientId: "client-id",
             code: "auth-code",
-            codeVerifier: "verifier",
+            codeVerifier: VALID_CODE_VERIFIER,
         }).catch((caught: unknown) => caught);
 
         expect(error).toBeInstanceOf(AniLinkNetworkError);
@@ -109,7 +111,7 @@ describe("MAL token request normalization of raw transport failures", () => {
         const error = await getMalAccessToken({
             clientId: "client-id",
             code: "auth-code",
-            codeVerifier: "verifier",
+            codeVerifier: VALID_CODE_VERIFIER,
         }).catch((caught: unknown) => caught);
 
         expect(error).toBeInstanceOf(AniLinkNetworkError);
@@ -123,7 +125,7 @@ describe("MAL token request normalization of raw transport failures", () => {
         const error = await getMalAccessToken({
             clientId: "client-id",
             code: "auth-code",
-            codeVerifier: "verifier",
+            codeVerifier: VALID_CODE_VERIFIER,
         }).catch((caught: unknown) => caught);
 
         expect(error).toBeInstanceOf(AniLinkError);
@@ -144,7 +146,7 @@ describe("MAL token request normalization of raw transport failures", () => {
         const error = await getMalAccessToken({
             clientId: "client-id",
             code: "auth-code",
-            codeVerifier: "verifier",
+            codeVerifier: VALID_CODE_VERIFIER,
         }).catch((caught: unknown) => caught);
 
         expect(error).toBe(normalized);
@@ -158,7 +160,7 @@ describe("MAL token request never exposes the raw Axios error", () => {
         await getMalAccessToken({
             clientId: "client-id",
             code: "auth-code",
-            codeVerifier: "verifier",
+            codeVerifier: VALID_CODE_VERIFIER,
             options: { exposeRawAxiosError: true, retry: false },
         }).catch(() => {});
 
