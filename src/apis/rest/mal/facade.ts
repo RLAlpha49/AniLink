@@ -1,4 +1,5 @@
 import type { malPaginate, malPaginatePages } from "./Paginator";
+import type { MalAuthorizationCodeRequest, MalTokenResponse } from "./auth";
 import type {
     MalAnime,
     MalAnimeDeleteParams,
@@ -34,6 +35,51 @@ import type {
     MalUserMangaListParams,
     MalUserMangaListResponse,
 } from "./types";
+
+/**
+ * {@link MyAnimeListAuthApi} exposes MyAnimeList's PKCE authorization helpers under `aniLink.mal.auth`.
+ *
+ * Callers create the PKCE verifier and challenge, validate the returned state, and use this interface to build the authorization URL and exchange the returned code.
+ *
+ * @see https://myanimelist.net/apiconfig/references/authorization
+ */
+export interface MyAnimeListAuthApi {
+    /**
+     * {@link MyAnimeListAuthApi.buildAuthorizationUrl} creates the MyAnimeList OAuth authorization URL for a PKCE login.
+     *
+     * MyAnimeList currently supports the `plain` PKCE method, so pass the verifier as `codeChallenge`. Validate `state` on the redirect before exchanging the code.
+     *
+     * @param clientId - The MyAnimeList application client ID.
+     * @param codeChallenge - The PKCE challenge. With MAL's `plain` method, this is the verifier
+     * itself and must contain 43–128 RFC 7636 unreserved characters.
+     * @param state - Optional opaque state to validate on the redirect.
+     * @returns The fully encoded authorization URL.
+     * @throws `TypeError` when `codeChallenge` is not a valid MAL PKCE verifier.
+     * @example
+     * ```typescript
+     * const url = aniLink.mal.auth.buildAuthorizationUrl(clientId, codeVerifier, state);
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/authorization
+     */
+    buildAuthorizationUrl: (clientId: string, codeChallenge: string, state?: string) => string;
+
+    /**
+     * {@link MyAnimeListAuthApi.exchangeCode} exchanges a MyAnimeList authorization code for an access token through PKCE.
+     *
+     * The request carries the original code verifier used to build the authorization URL. The returned token can be supplied as `MalCredentials.accessToken`.
+     *
+     * @param request - The authorization code, client identity, PKCE verifier, and optional transport settings; a {@link MalAuthorizationCodeRequest}.
+     * @returns The token response, a {@link MalTokenResponse}.
+     * @throws `TypeError` when `codeVerifier` is not a valid MAL PKCE verifier.
+     * @throws `AniLinkApiError` when MAL rejects the grant, or `AniLinkNetworkError` on timeout, cancellation, or network failure.
+     * @example
+     * ```typescript
+     * const token = await aniLink.mal.auth.exchangeCode({ clientId, code, codeVerifier });
+     * ```
+     * @see https://myanimelist.net/apiconfig/references/authorization
+     */
+    exchangeCode: (request: MalAuthorizationCodeRequest) => Promise<MalTokenResponse>;
+}
 
 /**
  * {@link MyAnimeListAnimeApi} is the anime group exposed by {@link MyAnimeListApi} under `aniLink.mal.anime`.
@@ -545,6 +591,8 @@ export interface MyAnimeListForumApi {
  * @see https://myanimelist.net/apiconfig/references/api/v2
  */
 export interface MyAnimeListApi {
+    /** OAuth authorization and code exchange via {@link MyAnimeListAuthApi}. */
+    auth: MyAnimeListAuthApi;
     /** Anime operations via {@link MyAnimeListAnimeApi} and `MalAnimeOperation`. */
     anime: MyAnimeListAnimeApi;
     /** Manga operations via {@link MyAnimeListMangaApi} and `MalMangaOperation`. */

@@ -1,6 +1,7 @@
 import { isNonBlank, resolveMalCredentials, type MalCredentials } from "../../../base/credentials";
 import type { BaseOperation } from "../../../base/BaseOperation";
 import type { MyAnimeListApi } from "./facade";
+import { buildMalAuthorizationUrl, getMalAccessToken } from "./auth";
 import { malPaginate, malPaginatePages } from "./Paginator";
 import {
     MAL_OPERATION_REGISTRY,
@@ -129,6 +130,10 @@ export function buildMyAnimeListApi(
     // method — the same division of labor AniList's wiring uses.
     return {
         ...groupMembers,
+        auth: {
+            buildAuthorizationUrl: buildMalAuthorizationUrl,
+            exchangeCode: getMalAccessToken,
+        },
         // The pagination helpers are provider-owned pure functions over
         // the shared engine — no transport state to bind, so they are
         // exposed directly alongside the wired groups.
