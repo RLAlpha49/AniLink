@@ -11,6 +11,7 @@ import {
     type AniListCredentials,
     type MalCredentials,
     type ProviderCredentials,
+    type ResolvedProviderCredentials,
 } from "../base/credentials";
 import type { RequestOptions } from "../base/RequestHandler";
 import type { ResponseCache } from "../base/responseCache";
@@ -24,23 +25,23 @@ import type { MyAnimeListApi } from "../apis/rest/mal/facade";
  * @see {@link ProviderClients}
  * @see {@link buildProviderClients}
  */
-export type ProviderId = "anilist" | "mal";
+export type ProviderId = keyof typeof PROVIDER_FACTORIES;
 
 /**
  * {@link ProviderClients} is the typed provider clients exposed by one {@link AniLink} instance.
  *
- * It composes {@link AniListApi} under `anilist` and {@link MyAnimeListApi} under `mal`, each built from its own credential slot via {@link PROVIDER_FACTORIES} and {@link buildProviderClients}. The `stateOwners` field carries the per-provider state owner objects the clients were built with, so callers (notably {@link AniLink}'s `getTransportState`) can snapshot each client's shared transport state without pre-wiring hooks.
+ * Its provider properties derive from the return types of {@link PROVIDER_FACTORIES}. The `stateOwners` and `responseCaches` fields use the same provider keys, so each client and its transport metadata are added together by {@link buildProviderClients}.
  *
  * @see {@link AniLink}
  * @see {@link buildProviderClients}
  */
-export interface ProviderClients {
-    /** The AniList GraphQL provider client, a {@link AniListApi} built from {@link AniListCredentials}. */
-    anilist: AniListApi;
-    /** The MyAnimeList REST provider client, a {@link MyAnimeListApi} built from {@link MalCredentials} via {@link buildMyAnimeListApi}. */
-    mal: MyAnimeListApi;
-    /** The per-provider state owners the clients key their shared transport state (breaker, budget, pacing) through. */
-    stateOwners: { anilist: object; mal: object };
+type ProviderClientMap = {
+    [Provider in ProviderId]: ReturnType<(typeof PROVIDER_FACTORIES)[Provider]>;
+};
+
+export interface ProviderClients extends ProviderClientMap {
+    /** The per-provider state owners the clients key their shared transport state through. */
+    stateOwners: Record<ProviderId, object>;
     /**
      * The per-provider response caches resolved from each slot's transport
      * options, when enabled — the instances {@link AniLink}'s transport-state
@@ -51,16 +52,16 @@ export interface ProviderClients {
      * doubles) constructed before the field existed keep compiling; a
      * missing value reads as no cache in the snapshot.
      */
-    responseCaches?: { anilist: ResponseCache | undefined; mal: ResponseCache | undefined };
+    responseCaches?: Record<ProviderId, ResponseCache | undefined>;
 }
 
 /**
  * {@link ProviderFactory} is a provider factory that receives only that provider's credential slot.
  *
- * It is the shape of each entry in {@link PROVIDER_FACTORIES} and is invoked by {@link buildProviderClients} with isolated {@link AniListCredentials} or {@link MalCredentials} plus optional {@link RequestOptions} and the provider's state owner.
+ * It is the callable shape of each entry in {@link PROVIDER_FACTORIES}. Each registry entry also carries the resolver for its credential slot.
  *
- * @typeParam TCredentials - The credential slot for the provider, such as {@link AniListCredentials} or {@link MalCredentials}.
- * @typeParam TClient - The client produced, such as {@link AniListApi} or {@link MyAnimeListApi}.
+ * @typeParam TCredentials - The credential slot accepted by this provider.
+ * @typeParam TClient - The client produced by this provider.
  * @param credentials - The provider's credential slot.
  * @param legacyOptions - Transport settings for the legacy `new AniLink(token, options)` form; only the AniList factory consumes this.
  * @param stateOwner - The provider's state owner, keying the client's shared transport state (breaker, budget, pacing).
@@ -74,6 +75,18 @@ export type ProviderFactory<TCredentials, TClient> = (
     stateOwner?: object
 ) => TClient;
 
+type RegisteredProviderFactory<TCredentials, TClient> = ProviderFactory<TCredentials, TClient> & {
+    readonly resolveCredentials: (credentials?: TCredentials) => ResolvedProviderCredentials;
+    readonly acceptsLegacyOptions: boolean;
+};
+
+const registerProviderFactory = <TCredentials, TClient>(
+    factory: ProviderFactory<TCredentials, TClient>,
+    resolveCredentials: (credentials?: TCredentials) => ResolvedProviderCredentials,
+    acceptsLegacyOptions = false
+): RegisteredProviderFactory<TCredentials, TClient> =>
+    Object.assign(factory, { resolveCredentials, acceptsLegacyOptions });
+
 const buildAniListClient: ProviderFactory<AniListCredentials, AniListApi> = (
     credentials,
     legacyOptions,
@@ -84,13 +97,11 @@ const buildAniListClient: ProviderFactory<AniListCredentials, AniListApi> = (
     // token-refresh fields (`refreshToken`, `clientId`, `clientSecret`,
     // `onTokenRefresh`) the resolver strips from the transport options —
     // the same raw-slot flow `buildMyAnimeListApi` uses for MAL. The options
-    // precedence (the slot's own transport settings win over the legacy
-    // options) is shared with the cache lookup in
-    // {@link buildProviderClients} through {@link effectiveAniListOptions},
-    // so the two sites cannot drift.
+    // precedence is repeated by the cache lookup through the resolver
+    // registered alongside this factory.
     return buildAniListApi(
         resolved.auth,
-        effectiveAniListOptions(credentials, legacyOptions),
+        resolved.options ?? legacyOptions,
         stateOwner,
         credentials
     );
@@ -103,39 +114,32 @@ const buildMalClient: ProviderFactory<MalCredentials, MyAnimeListApi> = (
 ) => buildMyAnimeListApi(credentials, stateOwner);
 
 /**
- * The effective transport options one provider slot resolves to — the
- * single resolution both the provider factory and the cache lookup in
- * {@link buildProviderClients} read, so the cache instance the snapshot
- * reports is by construction the one the client uses.
+ * {@link PROVIDER_FACTORIES} is the provider factory registry used by the composition seam.
  *
- * @param slot - The provider's credential slot, when present.
- * @param legacyOptions - The legacy `new AniLink(token, options)` transport
- * settings, forwarded only to the AniList slot.
- * @returns The slot's own transport options when it carries any, otherwise
- * the legacy options, otherwise `undefined`.
- */
-const effectiveAniListOptions = (
-    slot: AniListCredentials | undefined,
-    legacyOptions?: RequestOptions
-): RequestOptions | undefined => resolveAniListCredentials(slot).options ?? legacyOptions;
-
-/**
- * {@link PROVIDER_FACTORIES} is the provider factories used by the composition seam.
- *
- * It maps each {@link ProviderId} to a {@link ProviderFactory} that builds the AniList surface ({@link AniListApi}) or the MyAnimeList surface ({@link MyAnimeListApi}) from isolated {@link AniLinkCredentials} slots via {@link buildProviderClients} and {@link AniLink}.
+ * Each callable factory carries its credential resolver and declares whether it accepts legacy transport options. {@link ProviderId} and the provider properties in {@link ProviderClients} derive from this registry.
  *
  * @see {@link ProviderId}
  * @see {@link buildProviderClients}
  */
 export const PROVIDER_FACTORIES = {
-    anilist: buildAniListClient,
-    mal: buildMalClient,
+    anilist: registerProviderFactory(buildAniListClient, resolveAniListCredentials, true),
+    mal: registerProviderFactory(buildMalClient, resolveMalCredentials),
 } as const;
+
+/**
+ * The per-provider credential slots accepted by {@link AniLinkCredentials}.
+ * Each slot's type comes from its registered factory parameter.
+ *
+ * @see {@link PROVIDER_FACTORIES}
+ */
+export type ProviderCredentialSlots = {
+    [Provider in ProviderId]?: Parameters<(typeof PROVIDER_FACTORIES)[Provider]>[0];
+};
 
 /**
  * {@link buildProviderClients} builds every public provider client from isolated credential slots.
  *
- * It invokes each {@link ProviderFactory} in {@link PROVIDER_FACTORIES} with its own {@link AniLinkCredentials} slot, producing {@link ProviderClients} with the AniList surface ({@link AniListApi}) and the MyAnimeList surface ({@link MyAnimeListApi}). The optional `legacyOptions` argument exists only for the positional `new AniLink(token, options)` constructor form; provider-scoped credentials carry their own {@link RequestOptions} and never share them with another slot. Each client is built with its own state owner, returned on the `stateOwners` field so the caller can snapshot the clients' shared transport state.
+ * It invokes each factory with its matching {@link AniLinkCredentials} slot and returns one client and state owner per registry key. The optional `legacyOptions` argument exists only for the positional `new AniLink(token, options)` constructor form; the AniList factory consumes it, while provider-scoped credentials take precedence and other factories do not receive it.
  *
  * @param credentials - Per-provider credential slots; an {@link AniLinkCredentials} object.
  * @param legacyOptions - Transport settings for the legacy AniList form; forwarded only to the AniList factory.
@@ -175,34 +179,30 @@ export function buildProviderClients(
         } as T;
     };
 
-    // One state owner per provider, created here so the composition seam
-    // (and {@link AniLink}'s transport-state snapshot) can reach the object
-    // each client keys its shared breaker/budget/pacing state through.
-    const anilistStateOwner: object = {};
-    const malStateOwner: object = {};
+    const clients: Partial<ProviderClientMap> = {};
+    const stateOwners = {} as Record<ProviderId, object>;
+    const responseCaches = {} as Record<ProviderId, ResponseCache | undefined>;
 
-    // The per-provider resolved transport options' response caches, when
-    // enabled, so the transport-state snapshot can read the cache counters
-    // without the consumer holding the cache instance. The AniList slot
-    // resolves its own options first (the raw slot's transport settings
-    // win over the legacy options); the MAL slot likewise. A slot without a
-    // cache stays `undefined`.
-    const anilistCache = effectiveAniListOptions(credentials.anilist, legacyOptions)?.responseCache;
-    const malCache = resolveMalCredentials(credentials.mal).options?.responseCache;
+    for (const providerId of Object.keys(PROVIDER_FACTORIES) as ProviderId[]) {
+        const factory = PROVIDER_FACTORIES[providerId] as unknown as RegisteredProviderFactory<
+            ProviderCredentials,
+            unknown
+        >;
+        const slot = withDefaultHook(credentials[providerId] as ProviderCredentials | undefined);
+        const stateOwner: object = {};
+        const client = factory(
+            slot,
+            factory.acceptsLegacyOptions ? legacyOptions : undefined,
+            stateOwner
+        );
+        const effectiveOptions =
+            factory.resolveCredentials(slot).options ??
+            (factory.acceptsLegacyOptions ? legacyOptions : undefined);
 
-    // Explicit construction keeps every factory call fully typed: a
-    // factory signature change fails here at compile time instead of
-    // surfacing at runtime behind a cast. legacyOptions is forwarded only
-    // to the AniList factory, matching the legacy `new AniLink(token,
-    // options)` contract.
-    return {
-        anilist: PROVIDER_FACTORIES.anilist(
-            withDefaultHook(credentials.anilist),
-            legacyOptions,
-            anilistStateOwner
-        ),
-        mal: PROVIDER_FACTORIES.mal(withDefaultHook(credentials.mal), undefined, malStateOwner),
-        stateOwners: { anilist: anilistStateOwner, mal: malStateOwner },
-        responseCaches: { anilist: anilistCache, mal: malCache },
-    };
+        (clients as Record<ProviderId, unknown>)[providerId] = client;
+        stateOwners[providerId] = stateOwner;
+        responseCaches[providerId] = effectiveOptions?.responseCache;
+    }
+
+    return { ...clients, stateOwners, responseCaches } as ProviderClients;
 }

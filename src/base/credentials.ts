@@ -6,6 +6,7 @@
  * access-token and PKCE fields. All shapes extend {@link ProviderCredentials}
  * so transport settings stay uniform across providers.
  */
+import type { ProviderCredentialSlots } from "../providers/registry";
 import { type RequestAuthInput, type RequestOptions } from "./RequestHandler";
 import { TRANSPORT_OPTION_KEYS } from "./requestOptions";
 
@@ -118,11 +119,7 @@ export interface MalCredentials extends ProviderCredentials {
  *
  * @see {@link ProviderCredentials}
  */
-export interface AniLinkCredentials {
-    /** Credentials for the AniList provider surface. */
-    anilist?: AniListCredentials;
-    /** Credentials for the MyAnimeList provider surface. */
-    mal?: MalCredentials;
+export interface AniLinkCredentials extends ProviderCredentialSlots {
     /**
      * Client-level default for the `onHookError` lifecycle hook, applied to
      * every provider slot that does not define its own `onHookError`. Lets
