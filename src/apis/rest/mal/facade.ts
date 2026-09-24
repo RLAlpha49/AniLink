@@ -428,12 +428,15 @@ export interface MyAnimeListUserApi {
     /**
      * {@link MyAnimeListUserApi.get} gets a MyAnimeList user profile through `MalUserOperation.get`.
      *
-     * It is the public facade for `GET /users/{user_name}`; MyAnimeList documents only `@me` for this endpoint, so `username` accepts `@me` (case-insensitive, whitespace-tolerant) and requires an access token to resolve it. Other usernames are passed through, but MyAnimeList currently answers them with `404`. Use {@link MalRequestOptions.fields} to select the response shape.
+     * It is the public facade for `GET /users/{user_name}`. MyAnimeList documents only `@me` for
+     * this endpoint. Other usernames are passed through, but MyAnimeList currently answers them
+     * with `404`. Every request requires an access token. Use {@link MalRequestOptions.fields} to
+     * select the response shape.
      *
      * @param params - The profile read inputs; a {@link MalUserGetParams} carrying the username.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The requested {@link MalUser}.
-     * @throws `AniLinkAuthError` when `username` is `@me` and no access token is configured.
+     * @throws `AniLinkAuthError` when no access token is configured.
      * @throws `AniLinkValidationError` when `username` is empty or only whitespace.
      * @throws `AniLinkRestError` for a non-success MyAnimeList response.
      * @throws `AniLinkNetworkError` for timeout, cancellation, or other transport failures.

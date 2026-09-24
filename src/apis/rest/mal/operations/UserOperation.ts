@@ -87,7 +87,7 @@ export class MalUserOperation extends RestOperation {
      * @param params - The profile read inputs; a {@link MalUserGetParams} carrying the username.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The requested {@link MalUser}.
-     * @throws An `AniLinkAuthError` when `username` is `@me` and no access token is configured.
+     * @throws An `AniLinkAuthError` when no access token is configured.
      * @throws An {@link AniLinkValidationError} when `username` is empty or only whitespace.
      * @throws A normalized `AniLinkError` when the request fails.
      * @example
@@ -112,7 +112,7 @@ export class MalUserOperation extends RestOperation {
                 // `@me` resolves the authenticated user, which only a bearer
                 // token can identify — a client ID alone cannot — so fail fast
                 // like `me`.
-                requiresAuth: normalized === "@me",
+                requiresAuth: true,
                 transportOptions,
                 // `buildQueryString` skips undefined/null values, so the
                 // optional filters can be passed straight through.
