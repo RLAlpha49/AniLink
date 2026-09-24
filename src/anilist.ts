@@ -42,6 +42,12 @@ export type { AniListTokenRefreshCallback } from "./apis/graphql/anilist/tokenRe
 export type { AniListTokenRefreshErrorCallback } from "./apis/graphql/anilist/tokenRefresh";
 export { crossLink } from "./apis/graphql/anilist/helpers/crossLink";
 export type { CrossLinkMedia, CrossLinkResult } from "./apis/graphql/anilist/helpers/crossLink";
+export { mapExternalIds } from "./apis/graphql/anilist/helpers/mapExternalIds";
+export type {
+    MapExternalIdsOptions,
+    MapExternalIdsResult,
+    MapExternalIdsSource,
+} from "./apis/graphql/anilist/helpers/mapExternalIds";
 export { fuzzyDate } from "./apis/graphql/anilist/helpers/fuzzyDate";
 export type { FuzzyDateOptions } from "./apis/graphql/anilist/helpers/fuzzyDate";
 export { fuzzyDateInt } from "./apis/graphql/anilist/helpers/fuzzyDateInt";

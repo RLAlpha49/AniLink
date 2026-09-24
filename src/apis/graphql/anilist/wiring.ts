@@ -29,6 +29,7 @@ import { fuzzyDate } from "./helpers/fuzzyDate";
 import { fuzzyDateInt } from "./helpers/fuzzyDateInt";
 import { flattenMediaListCollection } from "./helpers/flattenMediaListCollection";
 import { crossLink } from "./helpers/crossLink";
+import { buildMapExternalIdsFacade } from "./helpers/mapExternalIds";
 import {
     watchNotifications,
     watchActivity,
@@ -335,6 +336,7 @@ export function buildAniListWiring(
         activity: (watchOptions?: WatchActivityOptions) =>
             watchActivity(activitiesFetch, watchOptions),
     };
+    const mapExternalIdsFacade = buildMapExternalIdsFacade(options, sharedStateOwner);
 
     return Object.defineProperties(
         {
@@ -347,6 +349,7 @@ export function buildAniListWiring(
             fuzzyDateInt,
             flattenMediaListCollection,
             crossLink,
+            mapExternalIds: mapExternalIdsFacade,
             watch: watchFacade,
         },
         {

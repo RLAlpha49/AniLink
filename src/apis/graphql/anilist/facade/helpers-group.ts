@@ -5,6 +5,7 @@ import type { fuzzyDate } from "../helpers/fuzzyDate";
 import type { fuzzyDateInt } from "../helpers/fuzzyDateInt";
 import type { flattenMediaListCollection } from "../helpers/flattenMediaListCollection";
 import type { crossLink } from "../helpers/crossLink";
+import type { mapExternalIds } from "../helpers/mapExternalIds";
 import type { paginate, paginatePages, paginateChunks } from "../Paginator";
 import type { WatchActivityOptions, WatchNotificationsOptions } from "../helpers/watch";
 import type { NotificationResponse } from "../interfaces/responses/query/Notification";
@@ -138,6 +139,22 @@ export type AniListHelpers = {
      * ```
      */
     crossLink: typeof crossLink;
+
+    /**
+     * {@link mapExternalIds} queries ARM for AniList↔MyAnimeList mappings. Unlike `crossLink`, this helper makes an opt-in network request.
+     * @param source - The source of the input ids, either `anilist` or `myanimelist`.
+     * @param ids - The source ids to map. An empty array returns empty maps without a request.
+     * @param options - Optional AniLink transport settings, including timeout, cancellation,
+     * retries, and request hooks. Per-call settings override the AniList instance settings.
+     * @returns Bidirectional id maps and the input ids without a mapping, as a `MapExternalIdsResult`.
+     * @see https://arm.haglund.dev/
+     * @example
+     * ```typescript
+     * const result = await aniLink.anilist.mapExternalIds("anilist", [21, 22]);
+     * const malId = result.anilistToMal.get(21);
+     * ```
+     */
+    mapExternalIds: typeof mapExternalIds;
 
     /**
      * The opt-in polling watchers for the AniList notification and activity
