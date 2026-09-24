@@ -235,7 +235,7 @@ jobs:
       # already-built output and drives it through a real consumer install.
       - name: Download built dist from the build job
         if: ${{ env.ANILIST_TOKEN != '' }}
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist
