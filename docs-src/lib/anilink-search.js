@@ -19,7 +19,7 @@
     // in package.json. All three must embed with the same weights or cosine
     // rankings silently degrade.
     var TRANSFORMERS_CDN =
-        "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/dist/transformers.min.js";
+        "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0/dist/transformers.min.js";
     var INDEX_URL = "/search-index.json";
     var STORAGE_KEY = "anilink-search-recent";
 
