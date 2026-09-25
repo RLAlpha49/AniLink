@@ -152,19 +152,23 @@ jobs:
         if: ${{ env.HAS_MAL_TOKEN != 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
         run: echo "::warning::MAL_TOKEN secret is not available to fork pull requests; live MyAnimeList integration tests are skipped"
 
+      - name: Fail when MAL_TOKEN is missing outside fork pull requests
+        if: ${{ env.HAS_MAL_TOKEN != 'true' && !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) }}
+        run: echo "::error::MAL_TOKEN secret is not set; live MyAnimeList integration coverage is not running" && exit 1
+
       - name: Set up Node.js
-        if: ${{ env.HAS_ANILIST_TOKEN == 'true' }}
+        if: ${{ env.HAS_ANILIST_TOKEN == 'true' || env.HAS_MAL_TOKEN == 'true' }}
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
-        if: ${{ env.HAS_ANILIST_TOKEN == 'true' }}
+        if: ${{ env.HAS_ANILIST_TOKEN == 'true' || env.HAS_MAL_TOKEN == 'true' }}
         run: npm ci
 
       - name: Run live integration tests
-        if: ${{ env.HAS_ANILIST_TOKEN == 'true' }}
+        if: ${{ env.HAS_ANILIST_TOKEN == 'true' || env.HAS_MAL_TOKEN == 'true' }}
         env:
           ANILIST_TOKEN: ${{ secrets.ANILIST_TOKEN }}
           MAL_TOKEN: ${{ secrets.MAL_TOKEN }}
