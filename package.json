@@ -50,7 +50,7 @@
         "test:package": "node scripts/package-smoke/run.mjs",
         "test:coverage": "vitest run --coverage",
         "mutation:test": "stryker run",
-        "build": "rimraf dist && unbuild && node -e \"for (const f of require('fs').readdirSync('dist')) if (f.endsWith('.d.mts')) require('fs').rmSync('dist/' + f)\"",
+        "build": "rimraf dist && unbuild && node scripts/clean-declarations.mjs",
         "anilist:api:compare": "tsx scripts/api-compare/cli.ts compare --provider anilist",
         "anilist:api:update-schema": "tsx scripts/api-compare/cli.ts update-schema --provider anilist",
         "mal:api:compare": "tsx scripts/api-compare/cli.ts compare --provider mal",
