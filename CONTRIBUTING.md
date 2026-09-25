@@ -1,12 +1,12 @@
 # Contributing to AniLink
 
-Thank you for considering a contribution. This document explains how to set up the project and get a pull request merged.
+Use this guide to set up the project and prepare a pull request.
 
-## Project Overview
+## Project overview
 
-AniLink is a typed TypeScript wrapper for two providers: the AniList GraphQL API and the MyAnimeList REST API. The source lives in `src/`. The public entry point is `src/AniLink.ts`. AniList query operations live in `src/apis/graphql/anilist/query/` and mutations in `src/apis/graphql/anilist/mutation/`; the MyAnimeList REST surface lives in `src/apis/rest/mal/`. Shared request handling — the transport, retries, pacing, circuit breaker, and hooks — lives in `src/base/`.
+AniLink is a typed TypeScript wrapper for the AniList GraphQL API and the MyAnimeList REST API. Source files are in `src/`, and `src/AniLink.ts` is the public entry point. AniList query operations are in `src/apis/graphql/anilist/query/`. Mutation operations are in `src/apis/graphql/anilist/mutation/`. MyAnimeList REST operations are in `src/apis/rest/mal/`. The shared transport, retry, pacing, circuit-breaker, and hook code is in `src/base/`.
 
-## Getting Started
+## Getting started
 
 1. Fork the repository and create your branch from `master`.
 2. Install Node.js 22 or later and npm.
@@ -14,9 +14,9 @@ AniLink is a typed TypeScript wrapper for two providers: the AniList GraphQL API
 
 ### `.npmrc` settings
 
-- `onnxruntime-node-install = skip` — `@huggingface/transformers` (the docs search-index embedder) depends on `onnxruntime-node`, whose install script downloads extra native binaries that the build never needs. The skip flag stops that download; the CPU bindings bundled in the package are enough for `npm run docs:search-index`.
+- Set `onnxruntime-node-install = skip` in `.npmrc`. The docs search-index embedder, `@huggingface/transformers`, depends on `onnxruntime-node`. Its install script downloads native binaries that the build does not use. This setting prevents that download. The package's bundled CPU bindings are enough for `npm run docs:search-index`.
 
-## Development Workflow
+## Development workflow
 
 | Command                                  | What it does                                                                                 |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -25,7 +25,7 @@ AniLink is a typed TypeScript wrapper for two providers: the AniList GraphQL API
 | `npm run typecheck:tests`                | Typechecks the test suites with `tsc --noEmit -p tsconfig.test.json`                         |
 | `npm test`                               | Runs the unit tests with Vitest                                                              |
 | `npm run test:integration`               | Runs the integration tests (needs the network)                                               |
-| `npm run test:package`                   | Runs the packaged-dist smoke test; CI runs it as its own job                                 |
+| `npm run test:package`                   | Runs the packaged-distribution smoke test. CI runs it as a separate job                      |
 | `npm run mutation:test`                  | Runs the StrykerJS mutation tests; CI runs them on a weekly schedule                         |
 | `npm run format:check`                   | Checks formatting with Prettier                                                              |
 | `npm run jsdoc:check`                    | Validates the JSDoc contract                                                                 |
@@ -36,29 +36,33 @@ AniLink is a typed TypeScript wrapper for two providers: the AniList GraphQL API
 | `npm run build`                          | Builds `dist/`                                                                               |
 | `npm run docs:generate`                  | Generates the API docs into `docs/`                                                          |
 
-Run `npm run check` before you push. It chains every gate CI enforces on a pull request — typecheck (source and tests), lint, coverage-thresholded tests, formatting, JSDoc, facade and interface sync, the strict API-drift compares (AniList and MyAnimeList), and the build — so local and CI verdicts match one-for-one. A pull request merges only when all checks pass. Two further CI gates run outside the chain: the packaged-dist smoke test (`npm run test:package`, its own CI job) and the weekly StrykerJS mutation run (`npm run mutation:test`).
+Run `npm run check` before you push. It runs the pull-request CI checks for source and test typechecking, lint, tests with coverage thresholds, formatting, JSDoc, facade and interface sync, strict API-drift comparisons for AniList and MyAnimeList, and the build. CI runs the packaged-distribution smoke test (`npm run test:package`) as a separate job. StrykerJS mutation tests run weekly (`npm run mutation:test`).
 
-For a quicker pre-push signal, `npm run check:fast` runs the fast-feedback subset — typecheck (source and tests), lint, and the unit tests without coverage — while the full `npm run check` chain remains the CI contract that a pull request must pass.
+For a faster check before you push, run `npm run check:fast`. It runs source and test typechecking, lint, and unit tests without coverage. CI requires the full `npm run check` chain for pull requests.
 
 ### Patched dependencies
 
-One patch-package patch ships in this repo: `patches/@stryker-mutator+vitest-runner+10.0.0.patch`, applied on install by the `postinstall` script. In the repository checkout, `postinstall` checks for this exact file and exits with an error if it is missing. Packaged consumer installs skip the repository-only patch because the tarball contains no `package-lock.json` or `patches/` directory. Restore the tracked patch file before running `npm install` in the repository. It adapts `@stryker-mutator/vitest-runner` to Vitest 5: `collectTestName` must join suite parts with `" > "` because Vitest 5 matches `testNamePattern` against the full chain (with the upstream space-joined names, the per-test filter matched zero tests and every covered mutant was reported Survived), and the debug log of the final Vitest config needs a try/catch guard for non-serializable configs. The fix is tracked upstream in [stryker-js#6210](https://github.com/stryker-mutator/stryker-js/issues/6210) with open pull requests [#6214](https://github.com/stryker-mutator/stryker-js/pull/6214) and [#6220](https://github.com/stryker-mutator/stryker-js/pull/6220); drop the patch once a release ships it. The patch file's header comment records the same details.
+The repository applies one `patch-package` patch through the `postinstall` script: `patches/@stryker-mutator+vitest-runner+10.0.0.patch`. If the patch is missing from the repository checkout, `postinstall` exits with an error. Packaged consumer installs skip the patch because the tarball does not contain `package-lock.json` or a `patches/` directory. Restore the tracked patch file before running `npm install` in the repository.
 
-The `graphql` devDependency is used by the API-drift tooling (`lib/api-compare/`) to parse AniList's introspection schema; do not remove it even though `src/` never imports it. The `typescript` compiler API used by the MAL contract extraction comes from the same `typescript` devDependency that powers `tsc`.
+The patch adapts `@stryker-mutator/vitest-runner` to Vitest 5. Vitest 5 matches `testNamePattern` against the full test-name chain, so `collectTestName` must join suite parts with `" > "`. Upstream's space-joined names caused the per-test filter to match zero tests, so Stryker reported every covered mutant as Survived. The patch also guards the debug log of the final Vitest config because some configs cannot be serialized.
 
-The response-shape codegen pipeline and its artifacts are documented in [OWNERSHIP.md](OWNERSHIP.md), which also records the project's [design decisions](OWNERSHIP.md#design-decisions) — ESM-only distribution, axios as the sole runtime dependency, hooks and correlation IDs over a telemetry SDK, and in-memory-only state.
+Upstream tracks the fix in [stryker-js#6210](https://github.com/stryker-mutator/stryker-js/issues/6210). Pull requests [#6214](https://github.com/stryker-mutator/stryker-js/pull/6214) and [#6220](https://github.com/stryker-mutator/stryker-js/pull/6220) are open. Remove the patch after a release includes the fix. The patch file's header comment records these details.
 
-## JSDoc Contract
+The API-drift tooling in `lib/api-compare/` uses the `graphql` devDependency to parse AniList's introspection schema. Keep this dependency even though files in `src/` do not import it. The MAL contract extractor uses the TypeScript compiler API from the `typescript` devDependency. `tsc` uses the same dependency.
 
-`scripts/check-jsdoc.ts` enforces documentation rules on a narrow slice of the public API surface — not every exported symbol in `src/`. What the validator checks:
+See [OWNERSHIP.md](OWNERSHIP.md) for the response-shape code-generation pipeline and its artifacts. The file also records the project's [design decisions](OWNERSHIP.md#design-decisions). These include an ESM-only distribution, `axios` as the only runtime dependency, hooks and correlation IDs instead of a telemetry SDK, and in-memory-only state.
 
-- **Public operations in `src/AniLink.ts`:** each operation property needs a JSDoc block with a `@param` tag for every parameter in its signature, plus `@returns`, a concrete `@example`, and a valid `@see` link to a page in `scripts/reference-pages.json`.
-- **Exported interfaces and classes in `src/apis/graphql/anilist/query` and `src/apis/graphql/anilist/mutation`:** need JSDoc and a valid `@see` tag. Mutation methods additionally need `@throws`. A `variables` parameter needs `@param variables`; async methods need `@returns`.
-- **Exported types and consts in `src/apis/graphql/anilist/types`:** need JSDoc and a valid `@see` tag.
+## JSDoc contract
 
-Anything else — query-method `@throws`, non-exported helpers, exports outside these trees — is accepted but not enforced. Run `npm run jsdoc:check` after you touch public API code; the validator is the source of truth for the exact rules.
+`scripts/check-jsdoc.ts` enforces documentation rules for a subset of the public API in `src/`. The validator checks the following:
 
-## Commit Messages
+- For each public operation property in `src/AniLink.ts`, add a JSDoc block. Include a `@param` tag for every parameter in its signature, plus `@returns`, a concrete `@example`, and a valid `@see` link to a page in `scripts/reference-pages.json`.
+- Exported interfaces and classes in `src/apis/graphql/anilist/query` and `src/apis/graphql/anilist/mutation` need JSDoc and a valid `@see` tag. Mutation methods also need `@throws`. If a method has a `variables` parameter, document it with `@param variables`. Add `@returns` to async methods.
+- Exported types and constants in `src/apis/graphql/anilist/types` need JSDoc and a valid `@see` tag.
+
+The validator does not require `@throws` on query methods, JSDoc for non-exported helpers, or JSDoc for exports outside these directories. Run `npm run jsdoc:check` after you change public API code. The validator defines the exact requirements.
+
+## Commit messages
 
 This project uses [semantic-release](https://semantic-release.org/) with conventional commits. The commit messages decide the release version:
 
@@ -72,14 +76,14 @@ Docs, style, refactor, and dependency commits also produce patch releases. Write
 
 When the strict API-drift compare fails because AniList itself changed, see [Upstream compatibility](README.md#upstream-compatibility) in the README for how removals and deprecations map to release categories.
 
-## Pull Requests
+## Pull requests
 
 1. Rebase your branch on `master` before you open the pull request.
 2. Keep the pull request focused on one change.
 3. Add or update tests for behavior changes. Tests live in `__tests__/`.
-4. Make sure all CI checks pass. A maintainer reviews after CI is green.
+4. Confirm that all CI checks pass. A maintainer reviews the pull request after CI passes.
 
-## Reporting Issues
+## Reporting issues
 
 Open a GitHub issue for bugs and feature requests.
 
