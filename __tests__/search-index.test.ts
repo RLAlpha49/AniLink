@@ -6,21 +6,45 @@
  * + file-writing CLI is exercised end-to-end via `npm run docs:search-index`,
  * not here.
  */
-import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
     chunkMarkdown,
     chunkOperations,
     chunkTypedoc,
     cosineSimilarity,
+    createTypedocSearchConfig,
     mergeResults,
     quantizeVector,
     dequantizeVector,
+    shouldIndexGuideMarkdown,
+    TYPEDOC_SEARCH_CONFIG_ASSET,
+    TYPEDOC_SEARCH_CORE_ASSET,
+    TYPEDOC_SEARCH_BRIDGE_ASSET,
+    writeTypedocSearchAssets,
     type ScoredResult,
 } from "../scripts/generate-search-index";
 import type { ReferenceManifest } from "../scripts/generate-operation-reference";
-import { escapeHtml, SEARCH_MODEL_REVISION } from "../docs-src/lib/search-rank";
+import {
+    docVector,
+    escapeHtml,
+    createSearchCoordinator,
+    keywordResults,
+    keywordScore,
+    semanticResults,
+    SEARCH_MODEL_ID,
+    SEARCH_MODEL_REVISION,
+    type SearchDoc,
+} from "../docs-src/lib/search-rank";
+
+const temporaryRoots: string[] = [];
+
+afterEach(() => {
+    vi.useRealTimers();
+    for (const root of temporaryRoots.splice(0)) rmSync(root, { recursive: true, force: true });
+});
 
 describe("chunkMarkdown", () => {
     it("splits a doc into one chunk per H2/H3 heading with its body", () => {
@@ -143,6 +167,15 @@ Useful text here.
         const titles = chunks.map((c) => c.title);
         expect(titles).not.toContain("Example");
         expect(titles).toContain("Real");
+    });
+});
+
+describe("guide markdown indexing", () => {
+    it("excludes the 404 page and internal markdown paths", () => {
+        expect(shouldIndexGuideMarkdown("404.md")).toBe(false);
+        expect(shouldIndexGuideMarkdown(".vitepress/README.md")).toBe(false);
+        expect(shouldIndexGuideMarkdown("lib/README.md")).toBe(false);
+        expect(shouldIndexGuideMarkdown("guides/getting-started.md")).toBe(true);
     });
 });
 
@@ -394,24 +427,79 @@ describe("mergeResults", () => {
  * degrades cosine rankings.
  */
 describe("transformers version sync", () => {
-    it("CDN URL in anilink-search.js matches the pinned package.json version", () => {
+    it("TypeDoc runtime config uses the pinned CDN version and shared model constants", () => {
         const bridgePath = join(process.cwd(), "docs-src", "lib", "anilink-search.js");
         const bridge = readFileSync(bridgePath, "utf8");
-        const cdnMatch = /@huggingface\/transformers@(\d+\.\d+\.\d+)\//.exec(bridge);
-        expect(cdnMatch, `TRANSFORMERS_CDN version not found in ${bridgePath}`).not.toBeNull();
 
         const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")) as {
             devDependencies: Record<string, string>;
         };
-        const pinned = pkg.devDependencies["@huggingface/transformers"]!;
-        const pinnedVersion = /^\d+\.\d+\.\d+$/.test(pinned)
-            ? pinned
-            : (/\d+\.\d+\.\d+/.exec(pinned)?.[0] ?? "");
+        const pinnedVersion = pkg.devDependencies["@huggingface/transformers"]!;
+        const runtimeConfig = createTypedocSearchConfig(
+            SEARCH_MODEL_ID,
+            SEARCH_MODEL_REVISION,
+            pinnedVersion
+        );
 
-        expect(
-            cdnMatch![1] === pinnedVersion,
-            `@huggingface/transformers is pinned to ${pinnedVersion} in package.json but the TypeDoc bridge loads ${cdnMatch![1]} from the CDN. Update TRANSFORMERS_CDN in docs-src/lib/anilink-search.js (or the devDependency in package.json) so both use the same version.`
-        ).toBe(true);
+        expect(runtimeConfig).toContain(
+            `https://cdn.jsdelivr.net/npm/@huggingface/transformers@${pinnedVersion}/dist/transformers.min.js`
+        );
+        expect(runtimeConfig).toContain(`SEARCH_MODEL_ID = ${JSON.stringify(SEARCH_MODEL_ID)}`);
+        expect(runtimeConfig).toContain(
+            `SEARCH_MODEL_REVISION = ${JSON.stringify(SEARCH_MODEL_REVISION)}`
+        );
+        expect(bridge).toContain(`var SEARCH_CORE_ASSET = "${TYPEDOC_SEARCH_CORE_ASSET}";`);
+        expect(bridge).toContain(`var SEARCH_CONFIG_ASSET = "${TYPEDOC_SEARCH_CONFIG_ASSET}";`);
+        expect(bridge).toContain("new URL(SEARCH_CORE_ASSET, assetUrl)");
+        expect(bridge).toContain("new URL(SEARCH_CONFIG_ASSET, assetUrl)");
+    });
+
+    it("rejects a ranged transformers version", () => {
+        expect(() =>
+            createTypedocSearchConfig(SEARCH_MODEL_ID, SEARCH_MODEL_REVISION, "^4.3.0")
+        ).toThrow(/exact pinned version/);
+    });
+
+    it("writes the shared search modules to the TypeDoc assets directory", () => {
+        const root = mkdtempSync(join(tmpdir(), "anilink-search-assets-"));
+        temporaryRoots.push(root);
+        const typedocRoot = join(root, "typedoc");
+        const assetsRoot = join(typedocRoot, "assets");
+
+        writeTypedocSearchAssets(process.cwd(), typedocRoot);
+
+        expect(readFileSync(join(assetsRoot, TYPEDOC_SEARCH_CORE_ASSET), "utf8")).toBe(
+            readFileSync(join(process.cwd(), "docs-src", "lib", "search-core.js"), "utf8")
+        );
+        expect(readFileSync(join(assetsRoot, TYPEDOC_SEARCH_BRIDGE_ASSET), "utf8")).toBe(
+            readFileSync(
+                join(process.cwd(), "docs-src", "lib", TYPEDOC_SEARCH_BRIDGE_ASSET),
+                "utf8"
+            )
+        );
+        const config = readFileSync(join(assetsRoot, TYPEDOC_SEARCH_CONFIG_ASSET), "utf8");
+        expect(config).toContain(`SEARCH_MODEL_ID = ${JSON.stringify(SEARCH_MODEL_ID)}`);
+        expect(config).toContain(
+            `SEARCH_MODEL_REVISION = ${JSON.stringify(SEARCH_MODEL_REVISION)}`
+        );
+    });
+
+    it("validates the package pin before writing any TypeDoc search assets", () => {
+        const root = mkdtempSync(join(tmpdir(), "anilink-invalid-search-assets-"));
+        temporaryRoots.push(root);
+        const typedocRoot = join(root, "typedoc");
+        const assetsRoot = join(typedocRoot, "assets");
+        mkdirSync(join(root, "docs-src", "lib"), { recursive: true });
+        mkdirSync(assetsRoot, { recursive: true });
+        writeFileSync(
+            join(root, "package.json"),
+            JSON.stringify({ devDependencies: { "@huggingface/transformers": "^4.3.0" } })
+        );
+        writeFileSync(join(root, "docs-src", "lib", "search-core.js"), "export {};\n");
+
+        expect(() => writeTypedocSearchAssets(root, typedocRoot)).toThrow(/exact pinned version/);
+        expect(existsSync(join(assetsRoot, TYPEDOC_SEARCH_CORE_ASSET))).toBe(false);
+        expect(existsSync(join(assetsRoot, TYPEDOC_SEARCH_CONFIG_ASSET))).toBe(false);
     });
 
     it("model revision in search-rank.ts matches the generator constants", () => {
@@ -435,58 +523,91 @@ describe("transformers version sync", () => {
 });
 
 /**
- * The TypeDoc bridge is plain JS with no type checking, so its two pure
- * ranking helpers are evaluated directly from the shipped source — the
- * same pattern the consent suite uses for CONSENT_BOOT_SCRIPT — rather
- * than trusting a re-implementation.
+ * The TypeDoc bridge loads its ranking helpers from the same runtime-agnostic
+ * module as the VitePress UI, so exercise that shared implementation directly.
  */
-describe("anilink-search bridge functions", () => {
-    /**
-     * Extract a top-level `function NAME(...) { ... }` block from the bridge
-     * source by brace matching, so the tests run the exact shipped code.
-     */
-    function extractBridgeFunction(name: string): string {
-        const bridgePath = join(process.cwd(), "docs-src", "lib", "anilink-search.js");
-        const bridge = readFileSync(bridgePath, "utf8");
-        const start = bridge.indexOf(`function ${name}(`);
-        expect(start, `function ${name} not found in ${bridgePath}`).toBeGreaterThan(-1);
-        const open = bridge.indexOf("{", start);
-        let depth = 0;
-        for (let i = open; i < bridge.length; i++) {
-            if (bridge[i] === "{") depth++;
-            else if (bridge[i] === "}") {
-                depth--;
-                if (depth === 0) return bridge.slice(start, i + 1);
-            }
-        }
-        throw new Error(`unbalanced braces extracting ${name} from ${bridgePath}`);
+describe("shared search core", () => {
+    function searchDoc(overrides: Partial<SearchDoc> = {}): SearchDoc {
+        return {
+            id: "x",
+            url: "/x",
+            title: "x",
+            text: "",
+            source: "guide",
+            ...overrides,
+        };
     }
-
-    /** Evaluate a named bridge function in an isolated scope. */
-    function loadBridgeFunction<T>(name: string): T {
-        return new Function(`${extractBridgeFunction(name)}; return ${name};`)() as T;
-    }
-
-    const docVector = loadBridgeFunction<(doc: unknown) => number[] | null>("docVector");
-    const cosine = loadBridgeFunction<(a: number[], b: number[]) => number>("cosine");
 
     it("docVector returns v1 float vectors and reconstructs v2 int8 vectors", () => {
         // v1: full-precision floats stored directly.
         expect(docVector({ vector: [0.25, -0.5] })).toEqual([0.25, -0.5]);
+        expect(docVector(searchDoc({ vector: [0.25, -0.5] }))).toEqual([0.25, -0.5]);
         // v2: int8 codes + scale reconstruct the floats (q[i] / 127 * scale).
-        expect(docVector({ q: [127, -127], scale: 0.5 })).toEqual([0.5, -0.5]);
-        expect(docVector({ q: [64, 32], scale: 1 })).toEqual([64 / 127, 32 / 127]);
+        expect(docVector(searchDoc({ q: [127, -127], scale: 0.5 }))).toEqual([0.5, -0.5]);
+        expect(docVector(searchDoc({ q: [64, 32], scale: 1 }))).toEqual([64 / 127, 32 / 127]);
     });
 
     it("docVector returns null for docs with no usable vector data", () => {
-        expect(docVector({})).toBeNull();
-        expect(docVector({ q: [127] })).toBeNull();
-        expect(docVector({ scale: 0.5 })).toBeNull();
+        expect(docVector(searchDoc())).toBeNull();
+        expect(docVector(searchDoc({ q: [127] }))).toBeNull();
+        expect(docVector({ q: [127], scale: null } as never)).toBeNull();
+        expect(docVector(searchDoc({ scale: 0.5 }))).toBeNull();
     });
 
-    it("cosine returns 0 on length mismatch instead of a wrong or NaN score", () => {
-        expect(cosine([1, 0], [1, 0, 0])).toBe(0);
-        expect(cosine([1, 0], [1])).toBe(0);
+    it("cosineSimilarity returns 0 on length mismatch instead of a wrong or NaN score", () => {
+        expect(cosineSimilarity([1, 0], [1, 0, 0])).toBe(0);
+        expect(cosineSimilarity([1, 0], [1])).toBe(0);
+    });
+
+    it("scores query terms with title weight 3 and body weight 1", () => {
+        expect(keywordScore({ title: "Authentication", text: "" }, "auth")).toBe(4);
+        expect(keywordScore({ title: "Getting started", text: "auth token" }, "auth")).toBe(1);
+        expect(keywordScore({ title: "Getting started", text: "token" }, "missing")).toBe(0);
+    });
+
+    it("filters and limits keyword results", () => {
+        const results = keywordResults(
+            [
+                searchDoc({ url: "/auth", title: "Authentication" }),
+                searchDoc({ url: "/token", title: "Tokens", text: "auth" }),
+                searchDoc({ url: "/other", title: "Other" }),
+            ],
+            "auth",
+            1
+        );
+
+        expect(results).toHaveLength(1);
+        expect(results[0].url).toBe("/auth");
+        expect(results[0].score).toBe(4);
+    });
+
+    it("ranks semantic results using indexed vectors", () => {
+        const results = semanticResults(
+            [
+                searchDoc({ url: "/match", vector: [1, 0] }),
+                searchDoc({ url: "/other", vector: [0, 1] }),
+            ],
+            [1, 0]
+        );
+
+        expect(results.map((result) => result.url)).toEqual(["/match", "/other"]);
+        expect(results[0].score).toBeCloseTo(1, 5);
+    });
+
+    it("invalidates older searches and cancels pending debounce callbacks", () => {
+        vi.useFakeTimers();
+        const coordinator = createSearchCoordinator();
+        const first = coordinator.begin();
+        const second = coordinator.begin();
+        const callback = vi.fn();
+
+        expect(coordinator.isCurrent(first)).toBe(false);
+        expect(coordinator.isCurrent(second)).toBe(true);
+        coordinator.schedule(callback);
+        coordinator.clearDebounce();
+        vi.advanceTimersByTime(150);
+
+        expect(callback).not.toHaveBeenCalled();
     });
 });
 
@@ -498,14 +619,28 @@ describe("anilink-search bridge wiring", () => {
         );
         // Input goes through a debounce, not straight to runSearch.
         expect(bridge.includes('input.addEventListener("input", scheduleSearch)')).toBe(true);
-        // Each run captures a monotonic token; a stale phase must not
-        // overwrite newer results or clobber the newer run's loading flags.
-        expect(bridge.includes("var token = ++searchToken;")).toBe(true);
-        const staleGuards = bridge.match(/if \(token !== searchToken\) return;/g) ?? [];
-        expect(staleGuards.length).toBeGreaterThanOrEqual(2);
+        // The shared coordinator invalidates stale work and preserves newer loading state.
+        expect(bridge.includes("var token = searchCoordinator.begin();")).toBe(true);
+        const staleGuards = bridge.match(/searchCoordinator\.isCurrent\(token\)/g) ?? [];
+        expect(staleGuards.length).toBeGreaterThanOrEqual(3);
         // A pending debounce must not fire after the modal closes.
-        expect(/function closeModal\(\) \{[\s\S]*?clearTimeout\(debounceTimer\)/.test(bridge)).toBe(
-            true
+        expect(
+            /function closeModal\(\) \{[\s\S]*?searchCoordinator\.clearDebounce\(\)/.test(bridge)
+        ).toBe(true);
+    });
+
+    it("registers handlers before imports and preserves native search on failure", () => {
+        const bridge = readFileSync(
+            join(process.cwd(), "docs-src", "lib", "anilink-search.js"),
+            "utf8"
         );
+        const initCall = bridge.lastIndexOf("    init();");
+        const imports = bridge.indexOf("    Promise.all([", initCall);
+
+        expect(initCall).toBeGreaterThan(-1);
+        expect(imports).toBeGreaterThan(initCall);
+        expect(bridge).toContain('searchModulesState = "failed";');
+        expect(bridge).toContain("openNativeSearch();");
+        expect(bridge).toContain("native search remains available");
     });
 });

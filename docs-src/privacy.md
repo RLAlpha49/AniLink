@@ -33,10 +33,12 @@ The docs load their typefaces from Google Fonts: Shippori Mincho, Zen Old Mincho
 
 The docs site also stores two strictly necessary, analytics-free preferences in localStorage:
 
-| Key                     | Purpose                                                |
-| ----------------------- | ------------------------------------------------------ |
-| `anilink-docs-theme`    | Remembers your light/dark theme choice.                |
-| `anilink-search-recent` | Remembers your last five search queries, only locally. |
+| Key                     | Purpose                                                            |
+| ----------------------- | ------------------------------------------------------------------ |
+| `anilink-docs-theme`    | Remembers your light/dark theme choice.                            |
+| `anilink-search-recent` | Stores up to five queries locally on the main docs site.           |
+
+On the main docs site, select **Clear** beside **Recent searches** to remove saved queries from localStorage. The API-reference search does not save recent queries.
 
 Your browser stores the semantic-search model weights in the Cache API so repeat searches do not re-download the model. That cache contains no personal data. When the fetches happen depends on which part of the docs you use. The API reference loads the embedding library from cdn.jsdelivr.net and the model weights from the Hugging Face CDN when you open its search dialog, before you type anything. The main docs site loads only its small first-party search index when you open the search dialog and defers the library and model weights until you submit your first search. Your search queries and the document content stay in your browser, and the model runs entirely there. As with any network request, however, both CDN providers receive standard request metadata such as your IP address and browser information.
 

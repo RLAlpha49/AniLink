@@ -27,10 +27,12 @@
 import { onBeforeUnmount, onMounted, ref, computed } from "vue";
 import { CornerDownLeft, Search, Sparkles } from "@lucide/vue";
 import {
-    cosineSimilarity,
+    createSearchCoordinator,
+    keywordResults,
     mergeResults,
     SEARCH_MODEL_ID,
     SEARCH_MODEL_REVISION,
+    semanticResults,
     type ScoredResult,
     type SearchDoc,
     type SearchIndex,
@@ -50,17 +52,13 @@ const semanticError = ref(false);
 const results = ref<ScoredResult[]>([]);
 const recent = ref<string[]>([]);
 const activeIndex = ref(0);
+const RECENT_SEARCHES_KEY = "anilink-search-recent";
 
 /**
- * Monotonic token for in-flight searches. Each `runSearch` invocation
- * captures the current value before awaiting. When the semantic phase
- * resumes, a mismatch means a newer keystroke already superseded this
- * invocation. The invocation discards its (stale) results instead of
- * overwriting the newer keyword results.
+ * Shared debounce and stale-result state. Each run gets a monotonically
+ * increasing token so an older async phase cannot overwrite newer results.
  */
-let searchToken = 0;
-/** Pending debounce timer for `runSearch`, cleared on unmount. */
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+const searchCoordinator = createSearchCoordinator();
 
 /**
  * Debounced entry point for the input event. It waits for a typing pause
@@ -68,11 +66,9 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
  * Recent-search chips call `runSearch` directly (single deliberate action).
  */
 function scheduleSearch(): void {
-    if (debounceTimer !== null) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-        debounceTimer = null;
+    searchCoordinator.schedule(() => {
         void runSearch();
-    }, 150);
+    });
 }
 
 /**
@@ -148,23 +144,10 @@ async function loadModel(): Promise<void> {
     }
 }
 
-/** Lightweight keyword score over index text (title weighted higher). */
-function keywordScore(doc: SearchDoc, q: string): number {
-    const title = doc.title.toLowerCase();
-    const text = (doc.title + " " + doc.text).toLowerCase();
-    const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
-    let score = 0;
-    for (const t of terms) {
-        if (title.includes(t)) score += 3;
-        if (text.includes(t)) score += 1;
-    }
-    return score;
-}
-
 /** Run the keyword pass instantly, then the semantic pass when ready. */
 async function runSearch(): Promise<void> {
     const q = query.value.trim();
-    const token = ++searchToken;
+    const token = searchCoordinator.begin();
     activeIndex.value = 0;
     if (!q) {
         results.value = [];
@@ -183,22 +166,10 @@ async function runSearch(): Promise<void> {
         // A newer invocation superseded this one while the index was still
         // loading (first search after mount); its results are stale, so leave
         // the newer results and loading state untouched.
-        if (token !== searchToken) return;
-        const keyword: ScoredResult[] = index
-            .map((d) => ({
-                url: d.url,
-                title: d.title,
-                text: d.text,
-                source: d.source,
-                score: keywordScore(d, q),
-                matchedBy: "keyword" as const,
-            }))
-            .filter((r) => r.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 8);
-        results.value = keyword;
+        if (!searchCoordinator.isCurrent(token)) return;
+        results.value = keywordResults(index, q);
     } finally {
-        if (token === searchToken) keywordLoading.value = false;
+        if (searchCoordinator.isCurrent(token)) keywordLoading.value = false;
     }
 
     // Phase 2: semantic results refine the list once the model is ready.
@@ -207,7 +178,7 @@ async function runSearch(): Promise<void> {
     // A newer invocation superseded this one while the model was still
     // loading (first semantic search); bail before touching the loading
     // state so the newer invocation's flags stay authoritative.
-    if (token !== searchToken) return;
+    if (!searchCoordinator.isCurrent(token)) return;
     if (!extractor) return;
     semanticLoading.value = true;
     try {
@@ -216,24 +187,12 @@ async function runSearch(): Promise<void> {
         // A newer keystroke superseded this invocation while the model was
         // embedding; its results are stale, so leave the newer keyword
         // results (and any newer semantic pass) in place.
-        if (token !== searchToken) return;
-        const semantic: ScoredResult[] = index
-            .map((d) => ({
-                url: d.url,
-                title: d.title,
-                text: d.text,
-                source: d.source,
-                // Pass the doc itself. cosineSimilarity decodes int8-quantized
-                // vectors (v2 index format) transparently.
-                score: cosineSimilarity(qvec, d),
-                matchedBy: "semantic" as const,
-            }))
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 8);
+        if (!searchCoordinator.isCurrent(token)) return;
+        const semantic = semanticResults(index, qvec);
         results.value = mergeResults(semantic, results.value);
         activeIndex.value = 0;
     } finally {
-        if (token === searchToken) semanticLoading.value = false;
+        if (searchCoordinator.isCurrent(token)) semanticLoading.value = false;
     }
 }
 
@@ -243,12 +202,22 @@ function select(url: string): void {
     if (q) {
         recent.value = [q, ...recent.value.filter((r) => r !== q)].slice(0, 5);
         try {
-            localStorage.setItem("anilink-search-recent", JSON.stringify(recent.value));
+            localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent.value));
         } catch {
             /* storage may be unavailable; ignore */
         }
     }
     emit("select", url);
+}
+
+/** Clear recent searches from reactive state and browser storage. */
+function clearRecent(): void {
+    recent.value = [];
+    try {
+        localStorage.removeItem(RECENT_SEARCHES_KEY);
+    } catch {
+        /* storage may be unavailable; ignore */
+    }
 }
 
 /** Keyboard navigation: arrows move the selection, Enter activates it. */
@@ -270,15 +239,12 @@ function onKeydown(e: KeyboardEvent): void {
 
 onBeforeUnmount(() => {
     // A pending debounce firing after unmount would touch dead refs.
-    if (debounceTimer !== null) {
-        clearTimeout(debounceTimer);
-        debounceTimer = null;
-    }
+    searchCoordinator.clearDebounce();
 });
 
 onMounted(() => {
     try {
-        const saved = localStorage.getItem("anilink-search-recent");
+        const saved = localStorage.getItem(RECENT_SEARCHES_KEY);
         if (saved) recent.value = JSON.parse(saved) as string[];
     } catch {
         /* ignore */
@@ -311,7 +277,7 @@ void emit;
                 autocomplete="off"
                 spellcheck="false"
                 role="combobox"
-                aria-expanded="filteredResults.length > 0"
+                :aria-expanded="filteredResults.length > 0"
                 aria-controls="ss-listbox"
                 :aria-activedescendant="
                     filteredResults[activeIndex]
@@ -369,7 +335,9 @@ void emit;
                     @mousemove="activeIndex = i"
                 >
                     <span class="ss-badges">
-                        <span class="ss-badge" :data-source="r.source">{{ r.source }}</span>
+                        <span class="ss-badge" v-bind="{ 'data-source': r.source }">{{
+                            r.source
+                        }}</span>
                         <span
                             v-if="r.matchedBy !== 'keyword'"
                             class="ss-match"
@@ -406,7 +374,17 @@ void emit;
         </div>
 
         <div v-else-if="!query && recent.length" class="ss-recent">
-            <p class="ss-recent-label">Recent searches</p>
+            <div class="ss-recent-header">
+                <p class="ss-recent-label">Recent searches</p>
+                <button
+                    type="button"
+                    class="ss-recent-clear"
+                    aria-label="Clear recent searches"
+                    @click="clearRecent"
+                >
+                    Clear
+                </button>
+            </div>
             <div class="ss-recent-chips">
                 <button
                     v-for="r in recent"
@@ -722,6 +700,26 @@ void emit;
     margin: 0;
     font-size: 13px;
     color: var(--rd-text-soft);
+}
+.ss-recent-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.ss-recent-clear {
+    padding: 2px 4px;
+    border: 0;
+    background: transparent;
+    color: var(--rd-text-soft);
+    font: inherit;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+.ss-recent-clear:hover {
+    color: var(--rd-accent);
 }
 .ss-hint-sub {
     margin-top: 4px !important;

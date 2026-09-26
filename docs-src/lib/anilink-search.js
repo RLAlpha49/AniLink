@@ -12,16 +12,16 @@
 (function () {
     "use strict";
 
-    var MODEL_ID = "Xenova/bge-small-en-v1.5";
-    var MODEL_REVISION = "ea104dacec62c0de699686887e3f920caeb4f3e3";
-    // Keep in sync with SEARCH_MODEL_ID / SEARCH_MODEL_REVISION in
-    // docs-src/lib/search-rank.ts and the @huggingface/transformers version
-    // in package.json. All three must embed with the same weights or cosine
-    // rankings silently degrade.
-    var TRANSFORMERS_CDN =
-        "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0/dist/transformers.min.js";
+    var SEARCH_MODEL_ID = null;
+    var SEARCH_MODEL_REVISION = null;
+    var TRANSFORMERS_CDN = null;
+    var SEARCH_CORE_ASSET = "anilink-search-core.js";
+    var SEARCH_CONFIG_ASSET = "anilink-search-config.js";
     var INDEX_URL = "/search-index.json";
-    var STORAGE_KEY = "anilink-search-recent";
+    var searchCore = null;
+    var searchCoordinator = null;
+    var searchModulesState = "loading";
+    var pendingOpen = false;
 
     var index = [];
     var extractor = null;
@@ -32,18 +32,6 @@
     var results = [];
     var activeIndex = 0;
     var filters = { guide: true, operation: true, typedoc: true };
-    var recent = [];
-
-    /**
-     * Monotonic token for in-flight searches. Each `runSearch` invocation
-     * captures the current value before awaiting; when a phase resumes, a
-     * mismatch means a newer keystroke already superseded this invocation,
-     * so the phase discards its stale results instead of overwriting the
-     * newer keyword results or clobbering the newer run's loading flags.
-     */
-    var searchToken = 0;
-    /** Pending debounce timer for `runSearch`, cleared when the modal closes. */
-    var debounceTimer = null;
 
     /**
      * Debounced entry point for the input event. Waits for a typing pause
@@ -52,11 +40,9 @@
      * embedding on the semantic path.
      */
     function scheduleSearch() {
-        if (debounceTimer !== null) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(function () {
-            debounceTimer = null;
+        searchCoordinator.schedule(function () {
             runSearch();
-        }, 150);
+        });
     }
 
     var overlay, modal, input, statusEl, listEl, filtersEl;
@@ -72,114 +58,6 @@
             t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         }
         return t;
-    }
-
-    /**
-     * Reconstruct a doc's embedding as floats, whichever format the index
-     * was written in. v2 docs carry `q` (int8 codes) and `scale`, and
-     * `q[i] / 127 * scale` rebuilds the component. Older float-format (v1)
-     * indexes carry `vector` directly. The function handles both so a
-     * stale index still ranks correctly. It memoizes results on the
-     * doc (`_v`) because vectors are immutable after `loadIndex`.
-     * `runSearch` re-ranks the same doc on every query, so the
-     * reconstruction happens once, not per query.
-     */
-    function docVector(doc) {
-        if (doc._v) return doc._v;
-        var v = null;
-        if (doc.vector) {
-            v = doc.vector;
-        } else if (doc.q && typeof doc.scale === "number") {
-            v = new Array(doc.q.length);
-            for (var i = 0; i < doc.q.length; i++) {
-                v[i] = (doc.q[i] / 127) * doc.scale;
-            }
-        }
-        if (v) doc._v = v;
-        return v;
-    }
-
-    function cosine(a, b) {
-        // A length mismatch (malformed index data) would make every product
-        // NaN; treat it as no similarity instead of a garbage score.
-        if (a.length !== b.length) return 0;
-        var dot = 0,
-            na = 0,
-            nb = 0;
-        for (var i = 0; i < a.length; i++) {
-            dot += a[i] * b[i];
-            na += a[i] * a[i];
-            nb += b[i] * b[i];
-        }
-        if (na === 0 || nb === 0) return 0;
-        return dot / (Math.sqrt(na) * Math.sqrt(nb));
-    }
-
-    /**
-     * Keyword relevance of a doc to a query. Each query term scores +3
-     * when it appears in the title and +1 when it appears anywhere in
-     * the title-plus-body text, so title hits dominate the ranking.
-     */
-    function keywordScore(doc, q) {
-        var title = doc.title.toLowerCase();
-        var text = (doc.title + " " + doc.text).toLowerCase();
-        var terms = q.toLowerCase().split(/\s+/).filter(Boolean);
-        var score = 0;
-        for (var i = 0; i < terms.length; i++) {
-            var t = terms[i];
-            if (title.indexOf(t) >= 0) score += 3;
-            if (text.indexOf(t) >= 0) score += 1;
-        }
-        return score;
-    }
-
-    /**
-     * Merge the two result passes: normalize each list to 0..1 against
-     * its own score range, dedupe by url keeping the higher score, and
-     * sort descending. The merge tags a url matched by both passes as
-     * "both" so the result badge can show the keyword reinforcement.
-     */
-    function mergeResults(semantic, keyword) {
-        function norm(arr) {
-            if (!arr.length) return arr;
-            var max = -Infinity,
-                min = Infinity;
-            for (var i = 0; i < arr.length; i++) {
-                if (arr[i].score > max) max = arr[i].score;
-                if (arr[i].score < min) min = arr[i].score;
-            }
-            var range = max - min || 1;
-            return arr.map(function (r) {
-                return Object.assign({}, r, { score: (r.score - min) / range });
-            });
-        }
-        var sem = norm(semantic);
-        var key = norm(keyword);
-        var keyUrls = {};
-        key.forEach(function (r) {
-            keyUrls[r.url] = true;
-        });
-        var byUrl = {};
-        sem.forEach(function (r) {
-            byUrl[r.url] = Object.assign({}, r, {
-                matchedBy: keyUrls[r.url] ? "both" : "semantic",
-            });
-        });
-        key.forEach(function (r) {
-            if (byUrl[r.url]) {
-                if (r.score > byUrl[r.url].score)
-                    byUrl[r.url] = Object.assign({}, r, { matchedBy: "both" });
-            } else {
-                byUrl[r.url] = Object.assign({}, r, { matchedBy: "keyword" });
-            }
-        });
-        return Object.keys(byUrl)
-            .map(function (u) {
-                return byUrl[u];
-            })
-            .sort(function (a, b) {
-                return b.score - a.score;
-            });
     }
 
     /**
@@ -218,8 +96,8 @@
         renderStatus();
         try {
             var mod = await import(TRANSFORMERS_CDN);
-            extractor = await mod.pipeline("feature-extraction", MODEL_ID, {
-                revision: MODEL_REVISION,
+            extractor = await mod.pipeline("feature-extraction", SEARCH_MODEL_ID, {
+                revision: SEARCH_MODEL_REVISION,
             });
             semanticReady = true;
         } catch {
@@ -234,14 +112,13 @@
      * Two-phase search for the current input value. The keyword phase
      * runs first and uses only the index, so results appear instantly.
      * The semantic phase then embeds the query and merges cosine-ranked
-     * results over them. Both phases capture `searchToken` before
-     * awaiting and drop their results when a newer keystroke has
-     * superseded them, so a slow phase never clobbers newer results or
-     * leaves stale loading flags behind.
+     * results over them. Both phases capture a coordinator token before
+     * awaiting and drop stale results, so a slow phase cannot overwrite
+     * newer results or clear newer loading flags.
      */
     async function runSearch() {
         var q = input.value.trim();
-        var token = ++searchToken;
+        var token = searchCoordinator.begin();
         activeIndex = 0;
         if (!q) {
             results = [];
@@ -259,29 +136,12 @@
         renderStatus();
         try {
             await loadIndex();
-            if (token !== searchToken) return;
-            var keyword = index
-                .map(function (d) {
-                    return {
-                        url: d.url,
-                        title: d.title,
-                        text: d.text,
-                        source: d.source,
-                        score: keywordScore(d, q),
-                        matchedBy: "keyword",
-                    };
-                })
-                .filter(function (r) {
-                    return r.score > 0;
-                })
-                .sort(function (a, b) {
-                    return b.score - a.score;
-                })
-                .slice(0, 8);
+            if (!searchCoordinator.isCurrent(token)) return;
+            var keyword = searchCore.keywordResults(index, q);
             results = keyword;
             renderResults();
         } finally {
-            if (token === searchToken) {
+            if (searchCoordinator.isCurrent(token)) {
                 keywordLoading = false;
                 renderStatus();
             }
@@ -290,7 +150,7 @@
         if (semanticError) return;
         await loadModel();
         if (!extractor) return;
-        if (token !== searchToken) return;
+        if (!searchCoordinator.isCurrent(token)) return;
         semanticLoading = true;
         renderStatus();
         try {
@@ -298,29 +158,14 @@
             // A newer keystroke superseded this invocation while the model
             // was embedding; its results are stale, so leave the newer
             // keyword results and any newer semantic pass in place.
-            if (token !== searchToken) return;
+            if (!searchCoordinator.isCurrent(token)) return;
             var qvec = Array.from(out.tolist()[0]);
-            var semantic = index
-                .map(function (d) {
-                    var vec = docVector(d);
-                    return {
-                        url: d.url,
-                        title: d.title,
-                        text: d.text,
-                        source: d.source,
-                        score: vec ? cosine(qvec, vec) : 0,
-                        matchedBy: "semantic",
-                    };
-                })
-                .sort(function (a, b) {
-                    return b.score - a.score;
-                })
-                .slice(0, 8);
-            results = mergeResults(semantic, results);
+            var semantic = searchCore.semanticResults(index, qvec);
+            results = searchCore.mergeResults(semantic, results);
             activeIndex = 0;
             renderResults();
         } finally {
-            if (token === searchToken) {
+            if (searchCoordinator.isCurrent(token)) {
                 semanticLoading = false;
                 renderStatus();
             }
@@ -328,19 +173,6 @@
     }
 
     function select(url) {
-        var q = input.value.trim();
-        if (q) {
-            recent = [q]
-                .concat(
-                    recent.filter(function (r) {
-                        return r !== q;
-                    })
-                )
-                .slice(0, 5);
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(recent));
-            } catch {}
-        }
         closeModal();
         window.location.assign(url);
     }
@@ -544,6 +376,11 @@
     }
 
     function openModal() {
+        if (searchModulesState === "loading") {
+            pendingOpen = true;
+            return;
+        }
+        if (searchModulesState !== "ready") return;
         if (!overlay) buildModal();
         overlay.className = "as-overlay theme-" + theme();
         document.body.appendChild(overlay);
@@ -567,10 +404,8 @@
     function closeModal() {
         // A pending debounce firing after close would run a search against
         // a detached input; drop it.
-        if (debounceTimer !== null) {
-            clearTimeout(debounceTimer);
-            debounceTimer = null;
-        }
+        searchCoordinator.clearDebounce();
+        pendingOpen = false;
         if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
         document.body.style.overflow = "";
     }
@@ -597,6 +432,7 @@
                 if (!target) return;
                 var trigger = target.closest ? target.closest("#tsd-search-trigger") : null;
                 if (trigger) {
+                    if (searchModulesState === "failed") return;
                     e.preventDefault();
                     e.stopPropagation();
                     openModal();
@@ -605,30 +441,89 @@
             true
         );
 
-        neutralizeNativeSearch();
-        setTimeout(neutralizeNativeSearch, 0);
-        setTimeout(neutralizeNativeSearch, 500);
-        setTimeout(neutralizeNativeSearch, 1500);
+        window.addEventListener(
+            "keydown",
+            function (e) {
+                var mod = e.metaKey || e.ctrlKey;
+                if (mod && e.key.toLowerCase() === "k") {
+                    if (searchModulesState === "failed") return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (overlay && overlay.parentNode) closeModal();
+                    else if (searchModulesState === "loading" && pendingOpen) pendingOpen = false;
+                    else openModal();
+                } else if (e.key === "Escape" && overlay && overlay.parentNode) {
+                    closeModal();
+                } else if (e.key === "Escape" && pendingOpen) {
+                    pendingOpen = false;
+                    e.preventDefault();
+                }
+            },
+            true
+        );
+    }
 
-        window.addEventListener("keydown", function (e) {
-            var mod = e.metaKey || e.ctrlKey;
-            if (mod && e.key.toLowerCase() === "k") {
-                e.preventDefault();
-                if (overlay && overlay.parentNode) closeModal();
-                else openModal();
-            } else if (e.key === "Escape" && overlay && overlay.parentNode) {
-                closeModal();
+    function openNativeSearch() {
+        var nativeDialog = document.getElementById("tsd-search");
+        if (nativeDialog && !nativeDialog.open && typeof nativeDialog.showModal === "function") {
+            nativeDialog.showModal();
+        }
+    }
+
+    var bridgeScript = document.getElementById("anilink-search-script");
+    if (!bridgeScript || !bridgeScript.src) {
+        console.warn("[anilink-search] search bridge script URL is unavailable");
+        return;
+    }
+    var assetUrl = new URL("./", bridgeScript.src);
+    var coreUrl = new URL(SEARCH_CORE_ASSET, assetUrl);
+    var configUrl = new URL(SEARCH_CONFIG_ASSET, assetUrl);
+    // Install handlers synchronously so TypeDoc's native search cannot win a
+    // race while the two local ESM assets load.
+    init();
+    Promise.all([import(coreUrl.href), import(configUrl.href)])
+        .then(function (modules) {
+            var config = modules[1];
+            if (
+                typeof config.SEARCH_MODEL_ID !== "string" ||
+                !config.SEARCH_MODEL_ID ||
+                typeof config.SEARCH_MODEL_REVISION !== "string" ||
+                !config.SEARCH_MODEL_REVISION ||
+                typeof config.TRANSFORMERS_CDN !== "string" ||
+                !/^https:\/\/cdn\.jsdelivr\.net\/npm\/@huggingface\/transformers@\d+\.\d+\.\d+\/dist\/transformers\.min\.js$/.test(
+                    config.TRANSFORMERS_CDN
+                )
+            ) {
+                throw new Error("generated search config is incomplete or invalid");
+            }
+            searchCore = modules[0];
+            searchCoordinator = searchCore.createSearchCoordinator();
+            SEARCH_MODEL_ID = config.SEARCH_MODEL_ID;
+            SEARCH_MODEL_REVISION = config.SEARCH_MODEL_REVISION;
+            TRANSFORMERS_CDN = config.TRANSFORMERS_CDN;
+            searchModulesState = "ready";
+            neutralizeNativeSearch();
+            setTimeout(neutralizeNativeSearch, 0);
+            setTimeout(neutralizeNativeSearch, 500);
+            setTimeout(neutralizeNativeSearch, 1500);
+            if (pendingOpen) {
+                pendingOpen = false;
+                openModal();
+            }
+        })
+        .catch(function (error) {
+            searchModulesState = "failed";
+            console.error(
+                "[anilink-search] failed to load generated search assets " +
+                    coreUrl.href +
+                    " and " +
+                    configUrl.href +
+                    "; TypeDoc native search remains available",
+                error
+            );
+            if (pendingOpen) {
+                pendingOpen = false;
+                openNativeSearch();
             }
         });
-        try {
-            var saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) recent = JSON.parse(saved);
-        } catch {}
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
-    } else {
-        init();
-    }
 })();

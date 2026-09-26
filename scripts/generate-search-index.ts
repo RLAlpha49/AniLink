@@ -13,7 +13,7 @@
  * The pure chunking + math helpers are exported for unit testing.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, normalize, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { ReferenceManifest } from "./generate-operation-reference";
@@ -252,6 +252,59 @@ function injectSearchScript(file: string, rel: string): void {
     if (updated !== html) writeFileSync(file, updated, "utf8");
 }
 
+/** Build the TypeDoc runtime config from the shared model constants and package pin. */
+export function createTypedocSearchConfig(
+    modelId: string,
+    modelRevision: string,
+    transformersVersion: string
+): string {
+    if (!/^\d+\.\d+\.\d+$/.test(transformersVersion)) {
+        throw new Error(
+            `@huggingface/transformers must use an exact pinned version; received ${JSON.stringify(transformersVersion)}`
+        );
+    }
+    return [
+        `export const SEARCH_MODEL_ID = ${JSON.stringify(modelId)};`,
+        `export const SEARCH_MODEL_REVISION = ${JSON.stringify(modelRevision)};`,
+        `export const TRANSFORMERS_CDN = ${JSON.stringify(`https://cdn.jsdelivr.net/npm/@huggingface/transformers@${transformersVersion}/dist/transformers.min.js`)};`,
+        "",
+    ].join("\n");
+}
+
+export const TYPEDOC_SEARCH_BRIDGE_ASSET = "anilink-search.js";
+export const TYPEDOC_SEARCH_CORE_ASSET = "anilink-search-core.js";
+export const TYPEDOC_SEARCH_CONFIG_ASSET = "anilink-search-config.js";
+
+/**
+ * Copy the bridge and shared search modules into the generated TypeDoc assets.
+ * Validate and read every input before writing any output file.
+ *
+ * @param root Absolute path to the repository root.
+ * @param typedocRoot Absolute path to the generated TypeDoc directory.
+ */
+export function writeTypedocSearchAssets(root: string, typedocRoot: string): void {
+    const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
+        devDependencies?: Record<string, string>;
+    };
+    const transformersVersion = packageJson.devDependencies?.["@huggingface/transformers"];
+    if (!transformersVersion) {
+        throw new Error("package.json does not pin @huggingface/transformers");
+    }
+    const config = createTypedocSearchConfig(
+        SEARCH_MODEL_ID,
+        SEARCH_MODEL_REVISION,
+        transformersVersion
+    );
+    const bridge = readFileSync(join(root, "docs-src", "lib", TYPEDOC_SEARCH_BRIDGE_ASSET), "utf8");
+    const core = readFileSync(join(root, "docs-src", "lib", "search-core.js"), "utf8");
+    const assetsRoot = join(typedocRoot, "assets");
+    mkdirSync(assetsRoot, { recursive: true });
+
+    writeFileSync(join(assetsRoot, TYPEDOC_SEARCH_BRIDGE_ASSET), bridge, "utf8");
+    writeFileSync(join(assetsRoot, TYPEDOC_SEARCH_CORE_ASSET), core, "utf8");
+    writeFileSync(join(assetsRoot, TYPEDOC_SEARCH_CONFIG_ASSET), config, "utf8");
+}
+
 /**
  * Index the TypeDoc API reference: sync the custom CSS (which carries the
  * search-modal styles) into the built output, chunk every HTML page, and
@@ -264,18 +317,14 @@ function injectSearchScript(file: string, rel: string): void {
 function indexTypedoc(typedocRoot: string, root: string): SearchDoc[] {
     const docsRoot = join(root, "docs");
     const docs: SearchDoc[] = [];
+    // Validate the runtime modules and transformers pin before writing assets.
+    writeTypedocSearchAssets(root, typedocRoot);
+
     // Sync the custom CSS so the search-modal styles are current without a
     // full typedoc rebuild (TypeDoc copies it during `typedoc`).
     const cssSrc = join(root, "typedoc-custom.css");
     const cssDest = join(typedocRoot, "assets", "custom.css");
     if (existsSync(cssSrc)) writeFileSync(cssDest, readFileSync(cssSrc, "utf8"), "utf8");
-
-    // Copy the semantic-search bridge JS into the built TypeDoc assets. It
-    // lives in `docs-src/lib/` (source) so it survives TypeDoc rebuilds, which
-    // regenerate `docs/typedoc/assets/` and would otherwise drop it.
-    const bridgeSrc = join(root, "docs-src", "lib", "anilink-search.js");
-    const bridgeDest = join(typedocRoot, "assets", "anilink-search.js");
-    if (existsSync(bridgeSrc)) writeFileSync(bridgeDest, readFileSync(bridgeSrc, "utf8"), "utf8");
 
     for (const file of walk(typedocRoot, (n) => n.endsWith(".html"))) {
         const html = readFileSync(file, "utf8");
@@ -290,6 +339,16 @@ function indexTypedoc(typedocRoot: string, root: string): SearchDoc[] {
 /** Read the page title (first H1) from a markdown file, or fall back to the name. */
 function mdTitle(md: string, fallback: string): string {
     return (/^# (.+?)\r?$/m.exec(md)?.[1] ?? fallback).trim();
+}
+
+/** Return whether a docs-src markdown path belongs in the searchable index. */
+export function shouldIndexGuideMarkdown(relativePath: string): boolean {
+    const normalizedPath = relativePath.replaceAll("\\", "/");
+    const pathSegments = normalizedPath.split("/");
+    const pagePath = normalizedPath.replace(/\.md$/, "");
+    return (
+        !pathSegments.includes(".vitepress") && !pathSegments.includes("lib") && pagePath !== "404"
+    );
 }
 
 /** Site origin for sitemap URLs — matches `hostname` in the VitePress config. */
@@ -421,10 +480,11 @@ async function main(): Promise<void> {
     const docsSrc = join(ROOT, "docs-src");
     if (existsSync(docsSrc)) {
         for (const file of walk(docsSrc, (n) => n.endsWith(".md"))) {
-            if (file.includes(`${sep(".vitepress")}`) || file.includes(`${sep("lib")}`)) continue;
-            const md = readFileSync(file, "utf8");
             const rel = file.slice(docsSrc.length + 1).replaceAll("\\", "/");
-            const url = "/" + rel.replace(/\.md$/, "");
+            if (!shouldIndexGuideMarkdown(rel)) continue;
+            const pagePath = rel.replace(/\.md$/, "");
+            const md = readFileSync(file, "utf8");
+            const url = "/" + pagePath;
             const title = mdTitle(md, rel);
             for (const chunk of chunkMarkdown(md, url, title)) docs.push(chunk);
         }
@@ -486,11 +546,6 @@ async function main(): Promise<void> {
     const outPath = join(ROOT, "docs", "search-index.json");
     writeFileSync(outPath, JSON.stringify(index));
     console.log(`\nWrote ${docs.length} chunks to ${outPath}`);
-}
-
-/** Join with the OS separator, normalizing for substring checks. */
-function sep(part: string): string {
-    return process.platform === "win32" ? `\\${part}\\` : `/${part}/`;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
