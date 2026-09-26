@@ -14,3 +14,8 @@ import { data as grouped } from "./user.data.ts";
 The public MyAnimeList user operations are grouped by response domain.
 
 <OperationCatalog :grouped="grouped" />
+
+## Related guides
+
+- [MAL operations](/guides/mal/operations) explains user-list requests and responses.
+- [MAL pagination](/guides/mal/pagination) covers paging through user lists.

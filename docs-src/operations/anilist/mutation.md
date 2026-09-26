@@ -14,3 +14,8 @@ import { data as grouped } from "./mutation.data.ts";
 The authenticated AniList GraphQL mutation operations, grouped by response domain.
 
 <OperationCatalog :grouped="grouped" />
+
+## Related guides
+
+- [Mutations](/guides/anilist/mutations) covers authentication and mutation behavior.
+- [Field selection](/guides/anilist/field-selection) covers selecting mutation response fields.

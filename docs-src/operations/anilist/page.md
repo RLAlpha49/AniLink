@@ -14,3 +14,8 @@ import { data as grouped } from "./page.data.ts";
 The paginated AniList GraphQL query operations, grouped by response domain.
 
 <OperationCatalog :grouped="grouped" />
+
+## Related guides
+
+- [Page queries](/guides/anilist/page-queries) covers fetching one known page.
+- [Pagination](/guides/anilist/pagination) covers traversing pages automatically.

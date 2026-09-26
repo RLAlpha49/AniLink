@@ -14,3 +14,8 @@ import { data as grouped } from "./custom.data.ts";
 The custom AniList GraphQL operation, including its request and response contract.
 
 <OperationCatalog :grouped="grouped" />
+
+## Related guides
+
+- [Custom queries](/guides/anilist/custom-queries) covers writing GraphQL documents.
+- [Field selection](/guides/anilist/field-selection) explains when to use `custom()` instead.

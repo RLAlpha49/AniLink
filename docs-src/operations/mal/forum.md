@@ -14,3 +14,8 @@ import { data as grouped } from "./forum.data.ts";
 The public MyAnimeList forum operations, grouped by response domain.
 
 <OperationCatalog :grouped="grouped" />
+
+## Related guides
+
+- [MAL operations](/guides/mal/operations) explains forum request parameters and responses.
+- [MAL pagination](/guides/mal/pagination) covers paging through forum topics and posts.

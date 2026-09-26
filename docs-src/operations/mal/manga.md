@@ -14,3 +14,8 @@ import { data as grouped } from "./manga.data.ts";
 The public MyAnimeList manga operations are grouped by response domain.
 
 <OperationCatalog :grouped="grouped" />
+
+## Related guides
+
+- [MAL operations](/guides/mal/operations) explains operation parameters and responses.
+- [MAL pagination](/guides/mal/pagination) covers paging through manga results.

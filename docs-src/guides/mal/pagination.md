@@ -95,7 +95,7 @@ with repeated `topic()` calls using the same closure pattern.
 
 ## Relation to the AniList helpers
 
-`aniLink.mal.paginate` is the sibling of `aniLink.anilist.paginate`. Both
+`aniLink.mal.paginate` is the sibling of the helpers in the [AniList pagination guide](/guides/anilist/pagination). Both
 run over the same shared pagination engine; the difference is the adapter:
 AniList pages with `page`/`perPage` GraphQL variables and `pageInfo.hasNextPage`,
 while MAL pages with `offset`/`limit` query parameters and the `paging.next`

@@ -14,3 +14,8 @@ import { data as grouped } from "./anime.data.ts";
 The public MyAnimeList anime operations, grouped by response domain.
 
 <OperationCatalog :grouped="grouped" />
+
+## Related guides
+
+- [MAL operations](/guides/mal/operations) explains operation parameters and responses.
+- [MAL pagination](/guides/mal/pagination) covers paging through anime results.
