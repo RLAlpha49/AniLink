@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, join, normalize, sep } from "node:path";
@@ -18,6 +19,79 @@ const DEFAULT_SITE_DESCRIPTION =
     "AniLink is the TypeScript docs and reference for AniList and MyAnimeList integrations, including authentication, paging, GraphQL queries, and API patterns.";
 
 const SOCIAL_CARD_ALT = "AniLink, typed AniList and MyAnimeList client for TypeScript";
+
+const THEME_BOOT_SCRIPT = `(() => {
+    try {
+        const stored = localStorage.getItem('anilink-docs-theme');
+        const dark = stored
+            ? stored === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (dark) document.documentElement.classList.add('dark');
+    } catch (e) {}
+})();`;
+const VITEPRESS_MAC_BOOT_SCRIPT =
+    'document.documentElement.classList.toggle("mac",/Mac|iPhone|iPod|iPad/i.test(navigator.platform));';
+
+function cspHash(content: string): string {
+    return `'sha256-${createHash("sha256").update(content, "utf8").digest("base64")}'`;
+}
+
+function contentSecurityPolicy(scriptHashes: string[]): string {
+    return [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "form-action 'self'",
+        "frame-src 'none'",
+        `script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com ${scriptHashes.join(" ")}`,
+        // Vite injects development CSS, and Mermaid creates SVG styles at runtime.
+        // Keep script execution restricted while allowing those trusted style sources.
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "style-src-attr 'unsafe-inline'",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' https://www.google-analytics.com",
+        "connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co https://www.google-analytics.com",
+        "worker-src 'self' blob:",
+    ].join("; ");
+}
+
+function inlineScriptForId(html: string, id: string): string | undefined {
+    const match = html.match(
+        new RegExp(`<script\\b(?=[^>]*\\bid=\"${id}\")[^>]*>([\\s\\S]*?)<\\/script>`, "i")
+    );
+    return match?.[1];
+}
+
+function inlineScriptHashes(html: string): string[] {
+    const hashes = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+        .filter((match) => !/\bsrc\s*=/.test(match[1]))
+        .map((match) => cspHash(match[2]));
+    return [...new Set(hashes)];
+}
+
+function applyGeneratedContentSecurityPolicy(html: string): string {
+    for (const id of ["anilink-consent-boot", "anilink-restore-theme"]) {
+        if (inlineScriptForId(html, id) === undefined) {
+            throw new Error(`Missing trusted inline script: ${id}`);
+        }
+    }
+    const scriptHashes = inlineScriptHashes(html);
+
+    const metaPattern = /<meta\b(?=[^>]*\bhttp-equiv="Content-Security-Policy")[^>]*>/i;
+    const meta = metaPattern.exec(html);
+    if (!meta) throw new Error("Missing Content-Security-Policy meta element");
+
+    const policy = contentSecurityPolicy(scriptHashes);
+    const updatedMeta = meta[0].replace(/\bcontent="[^"]*"/, `content="${policy}"`);
+    if (updatedMeta === meta[0]) throw new Error("Could not update Content-Security-Policy meta");
+    return html.slice(0, meta.index) + updatedMeta + html.slice(meta.index + meta[0].length);
+}
+
+const DEV_CONTENT_SECURITY_POLICY = contentSecurityPolicy([
+    cspHash(CONSENT_BOOT_SCRIPT),
+    cspHash(THEME_BOOT_SCRIPT),
+    cspHash(VITEPRESS_MAC_BOOT_SCRIPT),
+]);
 
 if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
     throw new Error(`Missing valid version in ${packageJsonPath}`);
@@ -414,6 +488,7 @@ export default defineConfig({
         plugins: [serveTypedoc(), serveSearchIndex()],
     },
     head: [
+        ["meta", { "http-equiv": "Content-Security-Policy", content: DEV_CONTENT_SECURITY_POLICY }],
         ["link", { rel: "preconnect", href: "https://fonts.googleapis.com" }],
         ["link", { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }],
         [
@@ -427,21 +502,10 @@ export default defineConfig({
         ["meta", { property: "og:site_name", content: "AniLink" }],
         ["meta", { name: "twitter:site", content: "@AniLinkAPI" }],
         ["link", { rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
-        ["script", {}, CONSENT_BOOT_SCRIPT],
-        [
-            "script",
-            { id: "anilink-restore-theme" },
-            `(() => {
-               try {
-                 const stored = localStorage.getItem('anilink-docs-theme');
-                 const dark = stored
-                   ? stored === 'dark'
-                   : window.matchMedia('(prefers-color-scheme: dark)').matches;
-                 if (dark) document.documentElement.classList.add('dark');
-               } catch (e) {}
-             })();`,
-        ],
+        ["script", { id: "anilink-consent-boot" }, CONSENT_BOOT_SCRIPT],
+        ["script", { id: "anilink-restore-theme" }, THEME_BOOT_SCRIPT],
     ],
+    transformHtml: (html) => applyGeneratedContentSecurityPolicy(html),
     transformHead: ({ pageData, title }) => {
         const route = pageData.relativePath ? routeFromRelativePath(pageData.relativePath) : "/";
         const isNotFound = route === "/404";

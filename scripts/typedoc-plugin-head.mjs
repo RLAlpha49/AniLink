@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 /**
  * TypeDoc plugin that reproduces the VitePress docs' `<head>` behavior for
  * the TypeDoc HTML output:
@@ -45,6 +47,42 @@ const DEFAULT_DESCRIPTION =
 /** Rough cap for meta descriptions; crawlers truncate well past this. */
 const MAX_DESCRIPTION_LENGTH = 300;
 
+/** Hash an exact inline script for a restrictive static-page CSP. */
+function cspHash(content) {
+    return `'sha256-${createHash("sha256").update(content, "utf8").digest("base64")}'`;
+}
+
+/** Build the meta-delivered CSP for the resources used by these docs pages. */
+function contentSecurityPolicy(existingScriptHashes) {
+    const scriptHashes = [
+        ...new Set(
+            [CONSENT_BOOT_SCRIPT, CONSENT_BANNER_SCRIPT].map(cspHash).concat(existingScriptHashes)
+        ),
+    ];
+    return [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "form-action 'self'",
+        "frame-src 'none'",
+        `script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com ${scriptHashes.join(" ")}`,
+        "style-src 'self' https://fonts.googleapis.com",
+        "style-src-attr 'none'",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' https://www.google-analytics.com",
+        "connect-src 'self' https://cdn.jsdelivr.net https://huggingface.co https://www.google-analytics.com",
+        "worker-src 'self' blob:",
+    ].join("; ");
+}
+
+/** Hash every inline script already present in the rendered TypeDoc page. */
+function inlineScriptHashes(html) {
+    const hashes = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+        .filter((match) => !/\bsrc\s*=/.test(match[1]))
+        .map((match) => cspHash(match[2]));
+    return [...new Set(hashes)];
+}
+
 const FONT_CSS =
     "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Zen+Old+Mincho:wght@400;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap";
 
@@ -90,7 +128,57 @@ function descriptionFor(model) {
 }
 
 /**
- * Build the per-page head injection: fonts, consent boot script, canonical
+ * Classify a TypeDoc page from its output route and reflection ancestry.
+ * Source paths help classify member pages whose own names omit the provider.
+ *
+ * @param {import("typedoc").Reflection} model The page's reflection.
+ * @param {string} pageUrl The TypeDoc output-relative page URL.
+ * @returns A social-card context used by the docs site.
+ */
+function socialCardContextFor(model, pageUrl) {
+    const details = [pageUrl];
+    const visited = new Set();
+    for (
+        let reflection = model;
+        reflection && !visited.has(reflection);
+        reflection = reflection.parent
+    ) {
+        visited.add(reflection);
+        details.push(reflection.name ?? "", reflection.url ?? "");
+    }
+    for (const source of model?.sources ?? []) {
+        details.push(source.fileName ?? "");
+    }
+
+    const identity = details.join("/").toLowerCase();
+    if (/(^|[^a-z])anilist([^a-z]|$)/.test(identity)) return "AniList";
+    if (/(^|[^a-z])(?:mal|myanimelist)([^a-z]|$)/.test(identity)) return "MyAnimeList";
+    if (/(^|[\\/._-])(?:operations?|queries?|mutations?)(?:[\\/._-]|$)/.test(identity)) {
+        return "operation reference";
+    }
+    return "documentation";
+}
+
+/** Select the same branded social image used by VitePress for this context. */
+function socialCardFor(context) {
+    if (context === "AniList") return `${SITE_URL}/social-card-anilist.png`;
+    if (context === "MyAnimeList") return `${SITE_URL}/social-card-mal.png`;
+    if (context === "operation reference") return `${SITE_URL}/social-card-operations.png`;
+    return `${SITE_URL}/social-card.png`;
+}
+
+/** Alt text naming the docs area selected for a TypeDoc page. */
+function socialCardAltFor(context) {
+    if (context === "AniList") return "AniLink, typed AniList GraphQL client for TypeScript";
+    if (context === "MyAnimeList") return "AniLink, typed MyAnimeList REST client for TypeScript";
+    if (context === "operation reference") {
+        return "AniLink, AniList and MyAnimeList operation reference";
+    }
+    return "AniLink, typed AniList and MyAnimeList client for TypeScript";
+}
+
+/**
+ * Build the per-page head injection: CSP, fonts, consent boot script, canonical
  * URL, robots directive, description, and Open Graph / Twitter tags. The
  * tag set mirrors `transformHead` in `docs-src/.vitepress/config.mts` so
  * guides and API reference pages share one SEO surface.
@@ -98,13 +186,20 @@ function descriptionFor(model) {
  * @param {string} pageTitle The page's `<title>` text (already rendered).
  * @param {string} canonicalUrl Absolute URL of the page.
  * @param {string} description Meta description for the page.
+ * @param {import("typedoc").Reflection} model The page's reflection.
+ * @param {string} pageUrl The TypeDoc output-relative page URL.
+ * @param {string[]} existingScriptHashes Hashes for inline scripts in TypeDoc's rendered page.
  * @returns The HTML fragment spliced into the head.
  */
-function headHtml(pageTitle, canonicalUrl, description) {
+function headHtml(pageTitle, canonicalUrl, description, model, pageUrl, existingScriptHashes) {
     const escTitle = escapeAttribute(pageTitle);
     const escUrl = escapeAttribute(canonicalUrl);
     const escDesc = escapeAttribute(description);
+    const socialCardContext = socialCardContextFor(model, pageUrl);
+    const socialCard = escapeAttribute(socialCardFor(socialCardContext));
+    const socialCardAlt = escapeAttribute(socialCardAltFor(socialCardContext));
     return [
+        `<meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy(existingScriptHashes)}">`,
         `<link rel="preconnect" href="https://fonts.googleapis.com">`,
         `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`,
         `<link rel="stylesheet" href="${FONT_CSS}">`,
@@ -118,15 +213,15 @@ function headHtml(pageTitle, canonicalUrl, description) {
         `<meta property="og:description" content="${escDesc}">`,
         `<meta property="og:type" content="website">`,
         `<meta property="og:url" content="${escUrl}">`,
-        `<meta property="og:image" content="${SITE_URL}/social-card.png">`,
+        `<meta property="og:image" content="${socialCard}">`,
         `<meta property="og:image:width" content="1200">`,
         `<meta property="og:image:height" content="630">`,
-        `<meta property="og:image:alt" content="AniLink — typed AniList and MyAnimeList client for TypeScript">`,
+        `<meta property="og:image:alt" content="${socialCardAlt}">`,
         `<meta name="twitter:card" content="summary_large_image">`,
         `<meta name="twitter:title" content="${escTitle}">`,
         `<meta name="twitter:description" content="${escDesc}">`,
-        `<meta name="twitter:image" content="${SITE_URL}/social-card.png">`,
-        `<meta name="twitter:image:alt" content="AniLink — typed AniList and MyAnimeList client for TypeScript">`,
+        `<meta name="twitter:image" content="${socialCard}">`,
+        `<meta name="twitter:image:alt" content="${socialCardAlt}">`,
     ].join("");
 }
 
@@ -254,7 +349,14 @@ export function load(app) {
             /<link rel="canonical" href="[^"]*"\/>(?=<meta http-equiv="x-ua-compatible")/,
             ""
         );
-        const head = headHtml(pageTitle, canonicalUrl, descriptionFor(event.model));
+        const head = headHtml(
+            pageTitle,
+            canonicalUrl,
+            descriptionFor(event.model),
+            event.model,
+            event.url,
+            inlineScriptHashes(html)
+        );
         // The sentinel must be unique to this plugin's tags: TypeDoc's own
         // SitemapPlugin already emits a canonical link on index.html, so
         // keying on `rel="canonical"` would skip the whole injection there.
