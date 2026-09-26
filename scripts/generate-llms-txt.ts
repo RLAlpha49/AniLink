@@ -2,6 +2,7 @@
  * Build-time generator for `docs-src/public/llms.txt`.
  *
  * Run: `npx tsx scripts/generate-llms-txt.ts` (or `npm run docs:llms`).
+ * Check: `npm run docs:llms -- --check`.
  *
  * Derives the LLM-facing site index from the same sources the site itself
  * uses — the page inventory in `docs-src/lib/content.ts` and each page's
@@ -111,6 +112,20 @@ export function generateLlmsTxt(): string {
 // CLI entry: `npx tsx scripts/generate-llms-txt.ts`
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
     const outPath = join(ROOT, "docs-src", "public", "llms.txt");
-    writeFileSync(outPath, generateLlmsTxt(), "utf8");
-    console.log(`Wrote llms.txt to ${outPath}`);
+    const check = process.argv.includes("--check");
+    const generated = Buffer.from(generateLlmsTxt(), "utf8");
+    const generatedWindows = Buffer.from(generated.toString("utf8").replace(/\n/g, "\r\n"), "utf8");
+
+    if (check) {
+        const current = existsSync(outPath) ? readFileSync(outPath) : undefined;
+        if (current?.equals(generated) || current?.equals(generatedWindows)) {
+            console.log("llms.txt is up to date");
+        } else {
+            console.error(`llms.txt is stale or missing. Rerun 'npm run docs:llms': ${outPath}`);
+            process.exitCode = 1;
+        }
+    } else {
+        writeFileSync(outPath, generated);
+        console.log(`Wrote llms.txt to ${outPath}`);
+    }
 }

@@ -2,6 +2,7 @@
  * Build-time generator for the provider/section-branded social cards.
  *
  * Run: `npx tsx scripts/generate-social-cards.ts` (or `npm run docs:social-cards`).
+ * Check: `npm run docs:social-cards -- --check`.
  *
  * Writes one 1200x630 PNG per route context that `transformHead` in
  * `docs-src/.vitepress/config.mts` selects an image for: AniList,
@@ -503,10 +504,7 @@ function renderCard(spec: CardSpec, logo: RgbaImage): Buffer {
  */
 export function generateSocialCards(): string[] {
     const written: string[] = [];
-    const logo = renderLogo(LOGO_SIZE);
-    for (const spec of CARDS) {
-        const target = join(OUT_DIR, spec.file);
-        const png = renderCard(spec, logo);
+    for (const { target, png } of renderSocialCards()) {
         let current: Buffer | undefined;
         try {
             current = readFileSync(target);
@@ -521,12 +519,47 @@ export function generateSocialCards(): string[] {
     return written;
 }
 
+/** Render every social card without writing any files. */
+function renderSocialCards(): { target: string; png: Buffer }[] {
+    const logo = renderLogo(LOGO_SIZE);
+    return CARDS.map((spec) => ({
+        target: join(OUT_DIR, spec.file),
+        png: renderCard(spec, logo),
+    }));
+}
+
+/** Return the generated card paths whose current bytes differ or are missing. */
+function staleSocialCards(): string[] {
+    const stale: string[] = [];
+    for (const { target, png } of renderSocialCards()) {
+        let current: Buffer | undefined;
+        try {
+            current = readFileSync(target);
+        } catch {
+            // A missing card is stale and must be regenerated.
+        }
+        if (current === undefined || !current.equals(png)) stale.push(target);
+    }
+    return stale;
+}
+
 // CLI entry: `npx tsx scripts/generate-social-cards.ts`
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-    const written = generateSocialCards();
-    if (written.length === 0) {
-        console.log("Social cards already up to date in docs-src/public/");
+    if (process.argv.includes("--check")) {
+        const stale = staleSocialCards();
+        if (stale.length === 0) {
+            console.log("Social cards are up to date in docs-src/public/");
+        } else {
+            console.error("Social cards are stale. Rerun 'npm run docs:social-cards':");
+            for (const file of stale) console.error(`  ${file}`);
+            process.exitCode = 1;
+        }
     } else {
-        for (const file of written) console.log(`Wrote ${file}`);
+        const written = generateSocialCards();
+        if (written.length === 0) {
+            console.log("Social cards already up to date in docs-src/public/");
+        } else {
+            for (const file of written) console.log(`Wrote ${file}`);
+        }
     }
 }
