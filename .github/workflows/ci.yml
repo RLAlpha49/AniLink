@@ -58,6 +58,15 @@ jobs:
       - name: Check operation reference manifests are up to date
         run: npm run docs:operations -- --check
 
+      - name: Check llms.txt is up to date
+        run: npm run docs:llms -- --check
+
+      - name: Check social cards are up to date
+        run: npm run docs:social-cards -- --check
+
+      - name: Build documentation site
+        run: npm run docs:site
+
       - name: Compare package contracts against AniList schema snapshot
         run: npm run anilist:api:compare -- --strict
 
