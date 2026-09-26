@@ -13,7 +13,15 @@
  * The pure chunking + math helpers are exported for unit testing.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import {
+    existsSync,
+    mkdirSync,
+    readdirSync,
+    readFileSync,
+    statSync,
+    unlinkSync,
+    writeFileSync,
+} from "node:fs";
 import { dirname, join, normalize, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { ReferenceManifest } from "./generate-operation-reference";
@@ -431,22 +439,28 @@ export function typedocSourceFile(html: string): string | null {
  */
 function mergeTypedocSitemap(typedocRoot: string, root: string): void {
     const sitemapPath = join(root, "docs", "sitemap.xml");
-    if (!existsSync(sitemapPath)) return;
-
+    const typedocSitemapPath = join(typedocRoot, "sitemap.xml");
     const gitDates = gitLastmodMap(root);
     const entries: string[] = [];
+    let unresolvedSources = 0;
+    let lastmodCount = 0;
     for (const file of walk(typedocRoot, (n) => n.endsWith(".html"))) {
         const rel = file.slice(typedocRoot.length + 1).replaceAll("\\", "/");
         // TypeDoc's own sitemap assumes the reference is deployed at the
         // site root; here it is served under /typedoc/, so prefix the loc.
         const loc = `${SITE_URL}/typedoc/${rel}`;
         const source = typedocSourceFile(readFileSync(file, "utf8"));
+        if (source === null) unresolvedSources++;
         const lastmod = source ? gitDates.get(normalize(join(root, source))) : undefined;
+        if (lastmod !== undefined) lastmodCount++;
         entries.push(
             `    <url><loc>${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}</url>`
         );
     }
-    if (entries.length === 0) return;
+    console.log(
+        `TypeDoc sitemap lastmod coverage: ${lastmodCount}/${entries.length} URLs; ${unresolvedSources} source links unresolved; ${entries.length - lastmodCount} URLs without lastmod`
+    );
+    if (!existsSync(sitemapPath) || entries.length === 0) return;
 
     // Splice the TypeDoc entries before the closing </urlset> of the
     // VitePress-generated sitemap. The existing entries (including the
@@ -463,6 +477,10 @@ function mergeTypedocSitemap(typedocRoot: string, root: string): void {
         `<!-- typedoc-merge-start -->\n${entries.join("\n")}\n<!-- typedoc-merge-end -->\n</urlset>\n`;
     writeFileSync(sitemapPath, merged, "utf8");
     console.log(`Merged ${entries.length} TypeDoc URLs into ${sitemapPath}`);
+    if (existsSync(typedocSitemapPath)) {
+        unlinkSync(typedocSitemapPath);
+        console.log(`Removed TypeDoc's root-based sitemap at ${typedocSitemapPath}`);
+    }
 }
 
 /** Build-time entrypoint: chunk, embed, and write the index. */
