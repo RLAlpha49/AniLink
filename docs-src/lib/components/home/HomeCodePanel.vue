@@ -8,7 +8,7 @@
  * populates the highlighted HTML on mount (client-side). A plain `<pre>`
  * fallback covers the SSR/initial paint so the panel is never empty.
  */
-import { onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { Terminal } from "@lucide/vue";
 import { highlightTypeScript } from "../../useShikiHighlighter";
 
@@ -36,6 +36,25 @@ const codeSource = [
 ].join("\n");
 
 const highlightedHtml = ref("");
+const copied = ref(false);
+const copyFailed = ref(false);
+let resetTimer: ReturnType<typeof setTimeout> | undefined;
+
+async function copyCode(): Promise<void> {
+    copyFailed.value = false;
+    try {
+        await navigator.clipboard.writeText(codeSource);
+        copied.value = true;
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+            copied.value = false;
+        }, 1600);
+    } catch {
+        copyFailed.value = true;
+    }
+}
+
+onBeforeUnmount(() => clearTimeout(resetTimer));
 
 onMounted(() => {
     highlightTypeScript(codeSource)
@@ -69,6 +88,18 @@ onMounted(() => {
                 </span>
                 <span class="home-code-lang">typescript</span>
                 <span class="home-code-file">example.ts</span>
+                <button
+                    type="button"
+                    class="al-code-copy"
+                    :aria-label="copied ? 'Code copied' : 'Copy code'"
+                    :title="copied ? 'Copied' : copyFailed ? 'Copy failed' : 'Copy code'"
+                    @click="copyCode"
+                >
+                    <span class="al-code-copy-icon" aria-hidden="true">
+                        {{ copied ? "✓" : "⧉" }}
+                    </span>
+                    <span>{{ copied ? "Copied" : "Copy" }}</span>
+                </button>
             </div>
             <div class="home-code-scroll">
                 <!--
@@ -84,7 +115,7 @@ onMounted(() => {
                 ></div>
                 <!--
                     Fallback (SSR / before highlighter resolves): a plain
-                    <pre> so the panel is never empty and copy still works.
+                    <pre> so the panel is never empty while highlighting loads.
                 -->
                 <pre v-else class="home-code-body"><code>{{ codeSource }}</code></pre>
             </div>
