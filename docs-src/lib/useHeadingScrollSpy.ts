@@ -8,7 +8,7 @@
  * so the TOC can scroll in sync with the page.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import type { ComputedRef, Readonly, Ref } from "vue";
+import type { ComputedRef, Ref } from "vue";
 
 /** A heading exposed by the current documentation page. */
 export interface PageHeading {
@@ -204,7 +204,11 @@ export function selectActiveHeading(
     return active;
 }
 
-const TOP_OFFSET = 72;
+/** Threshold used to decide which headings are active during scrolling. */
+export const HEADING_DETECTION_OFFSET = 72;
+
+/** Offset used when scrolling a heading below the sticky header. */
+export const HEADING_SCROLL_OFFSET = 80;
 
 /** Track every heading visible in the reading viewport. */
 export function useHeadingScrollSpy(pageHeaders: Readonly<Ref<readonly PageHeading[]>>): {
@@ -269,7 +273,12 @@ export function useHeadingScrollSpy(pageHeaders: Readonly<Ref<readonly PageHeadi
             }
         }
 
-        const visible = selectVisibleSections(positions, scrollTop, viewportHeight, TOP_OFFSET);
+        const visible = selectVisibleSections(
+            positions,
+            scrollTop,
+            viewportHeight,
+            HEADING_DETECTION_OFFSET
+        );
         visibleIndices.value = visible.indices;
         leadIndex.value = visible.leadIndex;
         leadProgress.value = visible.leadProgress;

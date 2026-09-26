@@ -9,16 +9,10 @@
  */
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vitepress";
+import { HEADING_SCROLL_OFFSET } from "../useHeadingScrollSpy";
 import SemanticSearch from "./SemanticSearch.vue";
 
 const router = useRouter();
-
-/**
- * Offset for the sticky header so scrolled-to headings stay visible.
- * Mirrors HEADING_SCROLL_OFFSET in DocsLayout.vue so anchor targets appear
- * at the same position whether reached via the TOC or via search.
- */
-const HEADING_SCROLL_OFFSET = 80;
 
 const open = ref(false);
 /** The panel element is the focus-trap boundary. */
