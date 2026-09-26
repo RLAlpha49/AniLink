@@ -57,6 +57,8 @@ interface StubScriptElement {
 interface StubDocument {
     /** Cookie jar serialized as `name=value` pairs joined by `; `. */
     cookie: string;
+    /** Cookie assignments made by the boot script. */
+    cookieWrites: string[];
     head: { appendChild(node: StubScriptElement): void };
     createElement(): StubScriptElement;
     querySelector(): null;
@@ -98,9 +100,11 @@ function createStubStorage(): StubStorage {
 function createStubDocument(): StubDocument {
     const cookies = new Map<string, string>();
     const appendedScripts: StubScriptElement[] = [];
+    const cookieWrites: string[] = [];
     const doc: StubDocument = {
         appendedScripts,
         cookie: "",
+        cookieWrites,
         head: {
             appendChild: (node: StubScriptElement): void => {
                 appendedScripts.push(node);
@@ -112,6 +116,7 @@ function createStubDocument(): StubDocument {
     Object.defineProperty(doc, "cookie", {
         get: (): string => [...cookies].map(([name, value]) => `${name}=${value}`).join("; "),
         set: (value: string): void => {
+            cookieWrites.push(value);
             const [pair, ...attributes] = value.split(";");
             const name = pair.split("=", 1)[0].trim();
             // `name=; Max-Age=0; path=/` is the boot script's deletion form.
@@ -132,7 +137,13 @@ function createStubDocument(): StubDocument {
  * real browser resolves to `window.dataLayer` through the global scope; the
  * wrapper binds the same array under that name to reproduce it.
  */
-function runBootScript(options: { storage?: StubStorage; document?: StubDocument } = {}): {
+function runBootScript(
+    options: {
+        storage?: StubStorage;
+        document?: StubDocument;
+        navigator?: { globalPrivacyControl?: boolean };
+    } = {}
+): {
     window: BootWindow;
     dataLayer: unknown[];
     storage: StubStorage;
@@ -140,6 +151,7 @@ function runBootScript(options: { storage?: StubStorage; document?: StubDocument
 } {
     const storage = options.storage ?? createStubStorage();
     const doc = options.document ?? createStubDocument();
+    const navigator = options.navigator ?? {};
     const dataLayer: unknown[] = [];
     const window: BootWindow = { dataLayer };
     const boot = new Function(
@@ -147,14 +159,16 @@ function runBootScript(options: { storage?: StubStorage; document?: StubDocument
         "document",
         "localStorage",
         "dataLayer",
+        "navigator",
         CONSENT_BOOT_SCRIPT
     ) as (
         window: BootWindow,
         document: StubDocument,
         localStorage: StubStorage,
-        dataLayer: unknown[]
+        dataLayer: unknown[],
+        navigator: { globalPrivacyControl?: boolean }
     ) => void;
-    boot(window, doc, storage, dataLayer);
+    boot(window, doc, storage, dataLayer, navigator);
     return { window, dataLayer, storage, document: doc };
 }
 
@@ -206,6 +220,32 @@ describe("CONSENT_BOOT_SCRIPT", () => {
         expect(document.appendedScripts).toHaveLength(1);
         expect(document.appendedScripts[0]?.src).toBe(
             `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`
+        );
+    });
+
+    test("Global Privacy Control denies analytics and clears parent-domain GA cookies", () => {
+        const storage = createStubStorage();
+        storage.setItem(
+            CONSENT_STORAGE_KEY,
+            JSON.stringify({ choice: "accepted", at: Date.now() })
+        );
+        const doc = createStubDocument();
+        doc.cookie = "_ga=GA1.1.111; Domain=alpha49.com; Path=/";
+        doc.cookie = `_ga_${GA_MEASUREMENT_ID}=GS1.1.222; Domain=alpha49.com; Path=/`;
+        const { window, dataLayer, document } = runBootScript({
+            storage,
+            document: doc,
+            navigator: { globalPrivacyControl: true },
+        });
+
+        expect(window.__anilinkConsent?.accepted()).toBe(false);
+        expect(consentEntry(dataLayer, "default")?.[2]).toMatchObject({
+            analytics_storage: "denied",
+        });
+        expect(document.appendedScripts).toHaveLength(0);
+        expect(document.cookieWrites).toContain("_ga=; Max-Age=0; path=/; domain=alpha49.com");
+        expect(document.cookieWrites).toContain(
+            `_ga_${GA_MEASUREMENT_ID}=; Max-Age=0; path=/; domain=alpha49.com`
         );
     });
 

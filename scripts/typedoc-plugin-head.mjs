@@ -184,6 +184,7 @@ const CONSENT_BANNER_SCRIPT = `
 (() => {
   try {
     if (!window.__anilinkConsent) return;
+    if (window.__anilinkConsent.globalPrivacyControl?.()) return;
     const COOKIE_SVG =
       '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/>' +

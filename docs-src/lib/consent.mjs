@@ -19,6 +19,10 @@
  * build no personalization profiles, so accepting grants analytics
  * measurement only.
  *
+ * The Global Privacy Control signal overrides a previously stored
+ * acceptance. While the signal is active, analytics stays denied and the
+ * consent banner stays closed.
+ *
  * The site never fetches the gtag library from Google until the visitor
  * accepts; declining or ignoring the banner makes no third-party analytics
  * request. A stored choice expires after 12 months, after which the banner
@@ -38,6 +42,9 @@ export const CONSENT_STORAGE_KEY = "anilink-analytics-consent";
 /** How long a stored choice stays valid before the banner reappears. */
 export const CONSENT_EXPIRY_MS = 365 * 24 * 60 * 60 * 1000;
 
+/** Parent domain used by GA4's automatic cookie scope on the production docs host. */
+const GA_COOKIE_DOMAIN = "alpha49.com";
+
 /**
  * Inline boot script: the single implementation of the consent contract.
  *
@@ -54,6 +61,9 @@ export const CONSENT_EXPIRY_MS = 365 * 24 * 60 * 60 * 1000;
  * reappears and measurement stays off until the visitor chooses again.
  */
 export const CONSENT_BOOT_SCRIPT = `(() => {
+  function globalPrivacyControlEnabled() {
+    return typeof navigator !== "undefined" && navigator.globalPrivacyControl === true;
+  }
   function readChoice() {
     try {
       const raw = localStorage.getItem("${CONSENT_STORAGE_KEY}");
@@ -72,11 +82,16 @@ export const CONSENT_BOOT_SCRIPT = `(() => {
   function clearAnalyticsCookies() {
     try {
       const cookies = document.cookie ? document.cookie.split(";") : [];
+      const names = new Set();
       for (const entry of cookies) {
         const name = entry.split("=", 1)[0].trim();
         if (name.indexOf("_ga") === 0) {
-          document.cookie = name + "=; Max-Age=0; path=/";
+          names.add(name);
         }
+      }
+      for (const name of names) {
+        document.cookie = name + "=; Max-Age=0; path=/";
+        document.cookie = name + "=; Max-Age=0; path=/; domain=${GA_COOKIE_DOMAIN}";
       }
     } catch (e) {
       /* Cookie access unavailable. Nothing to clear. */
@@ -90,10 +105,11 @@ export const CONSENT_BOOT_SCRIPT = `(() => {
     document.head.appendChild(s);
   }
   function applyChoice(accepted) {
+    const granted = accepted && !globalPrivacyControlEnabled();
     try {
       localStorage.setItem(
         "${CONSENT_STORAGE_KEY}",
-        JSON.stringify({ choice: accepted ? "accepted" : "denied", at: Date.now() })
+        JSON.stringify({ choice: granted ? "accepted" : "denied", at: Date.now() })
       );
     } catch (e) {
       /* Storage unavailable. Nothing to persist. */
@@ -103,9 +119,9 @@ export const CONSENT_BOOT_SCRIPT = `(() => {
       ad_storage: "denied",
       ad_user_data: "denied",
       ad_personalization: "denied",
-      analytics_storage: accepted ? "granted" : "denied"
+      analytics_storage: granted ? "granted" : "denied"
     }]);
-    if (accepted) {
+    if (granted) {
       window.dataLayer.push(["js", new Date()]);
       window.dataLayer.push(["config", "${GA_MEASUREMENT_ID}"]);
       loadGtagLibrary();
@@ -114,12 +130,15 @@ export const CONSENT_BOOT_SCRIPT = `(() => {
     }
   }
   window.__anilinkConsent = {
-    accepted: function () { return readChoice() === "accepted"; },
-    needsChoice: function () { return readChoice() === null; },
+    accepted: function () { return !globalPrivacyControlEnabled() && readChoice() === "accepted"; },
+    needsChoice: function () { return !globalPrivacyControlEnabled() && readChoice() === null; },
+    globalPrivacyControl: globalPrivacyControlEnabled,
     set: applyChoice
   };
   try {
-    const granted = readChoice() === "accepted";
+    const gpcEnabled = globalPrivacyControlEnabled();
+    const granted = !gpcEnabled && readChoice() === "accepted";
+    if (gpcEnabled) clearAnalyticsCookies();
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag("consent", "default", {
@@ -157,6 +176,11 @@ export function consentAccepted() {
  */
 export function consentChoiceNeeded() {
     return consentApi()?.needsChoice() ?? true;
+}
+
+/** True when the browser's Global Privacy Control signal is active. */
+export function consentGlobalPrivacyControlEnabled() {
+    return consentApi()?.globalPrivacyControl?.() ?? false;
 }
 
 /**

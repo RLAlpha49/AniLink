@@ -8,6 +8,8 @@ layout: .vitepress/theme/DocsLayout.vue
 
 This page explains what the AniLink documentation site does, and does not do, with your data.
 
+Last updated: September 26, 2026.
+
 ## Analytics
 
 The site uses Google Analytics 4 to understand which pages visitors read and how they find the docs. Measurement is **off by default**:
@@ -18,6 +20,10 @@ The site uses Google Analytics 4 to understand which pages visitors read and how
 - The site stores your choice in your browser's localStorage under the `anilink-analytics-consent` key. The choice stays valid for 12 months, after which the banner reappears so you can revisit it.
 - Declining or ignoring the banner leaves measurement off. Declining later also deletes any `_ga` cookies set while consent was granted. If you had previously accepted, the already-loaded analytics library may still send cookieless, identifier-free pings after you decline. These pings set no cookies and cannot identify you across visits.
 - Accepting grants **analytics only**. The advertising signals (`ad_storage`, `ad_user_data`, `ad_personalization`) stay permanently denied because the docs run no ads and build no personalization profiles.
+- When your browser reports Global Privacy Control (`navigator.globalPrivacyControl === true`),
+  the site treats it as a refusal. GA4 stays off, the site removes `_ga` cookies, and the
+  consent banner stays closed even if localStorage contains an earlier acceptance. The site
+  does not load the analytics library while the signal is active.
 
 ## Fonts
 

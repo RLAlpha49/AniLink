@@ -28,6 +28,9 @@ export declare function consentAccepted(): boolean;
 /** True when no valid stored choice exists: none, malformed, or expired. SSR-safe. */
 export declare function consentChoiceNeeded(): boolean;
 
+/** True when the browser's Global Privacy Control signal is active. */
+export declare function consentGlobalPrivacyControlEnabled(): boolean;
+
 /**
  * Persist a choice and apply it immediately: accepting grants the analytics
  * consent field, loads the gtag library, and configures or reconfigures GA4;

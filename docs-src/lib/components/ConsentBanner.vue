@@ -17,12 +17,18 @@
  */
 import { onMounted, ref } from "vue";
 import { Cookie } from "@lucide/vue";
-import { consentChoiceNeeded, setConsent } from "../consent.mjs";
+import {
+    consentChoiceNeeded,
+    consentGlobalPrivacyControlEnabled,
+    setConsent,
+} from "../consent.mjs";
 
 const visible = ref(false);
 const settingsAvailable = ref(false);
 
 onMounted(() => {
+    if (consentGlobalPrivacyControlEnabled()) return;
+
     // Show only when no valid choice is stored: first visit, or the previous
     // choice expired (12 months) and the visitor should confirm it again.
     // Otherwise the banner stays closed and the settings button lets the
@@ -36,6 +42,10 @@ onMounted(() => {
 
 /** Reopen the banner from the settings button. */
 function openSettings(): void {
+    if (consentGlobalPrivacyControlEnabled()) {
+        settingsAvailable.value = false;
+        return;
+    }
     visible.value = true;
 }
 
