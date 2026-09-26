@@ -44,7 +44,7 @@
     "scripts": {
         "postinstall": "node -e \"const fs=require('fs');if(fs.existsSync('package-lock.json')){if(!fs.existsSync('patches/@stryker-mutator+vitest-runner+10.0.0.patch')){console.error('Required Stryker patch is missing; restore patches/@stryker-mutator+vitest-runner+10.0.0.patch before installing');process.exit(1)}require('patch-package')}\"",
         "typecheck": "tsc --noEmit",
-        "typecheck:tests": "tsc --noEmit -p tsconfig.test.json",
+        "typecheck:tests": "vue-tsc --noEmit -p tsconfig.test.json",
         "test": "vitest run",
         "test:integration": "vitest run --config vitest.integration.config.mts",
         "test:package": "node scripts/package-smoke/run.mjs",
@@ -106,13 +106,16 @@
         "@types/node": "^22.20.1",
         "@typescript-eslint/eslint-plugin": "^8.70.0",
         "@typescript-eslint/parser": "^8.70.0",
+        "@vitejs/plugin-vue": "^5.2.4",
         "@vitest/coverage-v8": "^5.0.1",
+        "@vue/test-utils": "^2.5.1",
         "conventional-changelog-conventionalcommits": "^9.3.1",
         "eslint": "^10.11.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-security": "^4.0.1",
         "fast-check": "^4.10.1",
         "graphql": "^17.0.2",
+        "happy-dom": "^20.14.5",
         "mermaid": "^12.0.0",
         "patch-package": "^8.0.1",
         "prettier": "^3.9.8",
@@ -127,7 +130,8 @@
         "unbuild": "^3.6.1",
         "vitepress": "^1.6.4",
         "vitest": "^5.0.1",
-        "vue": "^3.5.43"
+        "vue": "^3.5.43",
+        "vue-tsc": "^3.3.11"
     },
     "dependencies": {
         "axios": "^1.20.0"

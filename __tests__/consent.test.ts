@@ -1,4 +1,19 @@
+// @vitest-environment happy-dom
+
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { mount, type VueWrapper } from "@vue/test-utils";
+import { nextTick, type DefineComponent } from "vue";
+import ConsentBanner from "../docs-src/lib/components/ConsentBanner.vue";
+import HomeCodePanel from "../docs-src/lib/components/home/HomeCodePanel.vue";
+import ProviderTabs from "../docs-src/lib/components/ProviderTabs.vue";
+import SemanticSearch from "../docs-src/lib/components/SemanticSearch.vue";
+import TocMinimap from "../docs-src/lib/components/TocMinimap.vue";
+import {
+    HEADING_DETECTION_OFFSET,
+    HEADING_SCROLL_OFFSET,
+    selectVisibleSections,
+    type PageHeading,
+} from "../docs-src/lib/useHeadingScrollSpy";
 import {
     CONSENT_BOOT_SCRIPT,
     CONSENT_EXPIRY_MS,
@@ -8,6 +23,16 @@ import {
     consentChoiceNeeded,
     setConsent,
 } from "../docs-src/lib/consent.mjs";
+
+declare module "vue" {
+    export interface GlobalComponents {
+        ClientOnly: DefineComponent;
+    }
+}
+
+vi.mock("../docs-src/lib/useShikiHighlighter", () => ({
+    highlightTypeScript: vi.fn().mockResolvedValue(""),
+}));
 
 /**
  * Unit coverage for the consent-gating boot script (`CONSENT_BOOT_SCRIPT`)
@@ -282,5 +307,231 @@ describe("SSR fallbacks (window undefined)", () => {
         vi.stubGlobal("window", undefined);
         expect(() => setConsent(true)).not.toThrow();
         expect(() => setConsent(false)).not.toThrow();
+    });
+});
+
+describe("ConsentBanner.vue", () => {
+    let mountedWrapper: VueWrapper | undefined;
+
+    async function mountConsentBanner(needsChoice: boolean) {
+        const needsChoiceMock = vi.fn(() => needsChoice);
+        const setMock = vi.fn();
+        Object.defineProperty(window, "__anilinkConsent", {
+            configurable: true,
+            value: { needsChoice: needsChoiceMock, set: setMock },
+        });
+
+        const wrapper = mount(ConsentBanner, {
+            global: {
+                stubs: {
+                    ClientOnly: { template: "<div><slot /></div>" },
+                    Transition: true,
+                },
+            },
+        });
+        mountedWrapper = wrapper;
+        await nextTick();
+        return { needsChoiceMock, setMock, wrapper };
+    }
+
+    afterEach(() => {
+        mountedWrapper?.unmount();
+        mountedWrapper = undefined;
+        Reflect.deleteProperty(window, "__anilinkConsent");
+    });
+
+    test("shows the banner when a choice is needed", async () => {
+        const { needsChoiceMock, wrapper } = await mountConsentBanner(true);
+
+        expect(needsChoiceMock).toHaveBeenCalledTimes(1);
+        expect(wrapper.find('[role="region"][aria-label="Analytics consent"]').exists()).toBe(true);
+        expect(wrapper.find('button[aria-label="Analytics settings"]').exists()).toBe(false);
+    });
+
+    test("shows the settings control when a valid choice exists", async () => {
+        const { wrapper } = await mountConsentBanner(false);
+
+        expect(wrapper.find('[role="region"][aria-label="Analytics consent"]').exists()).toBe(
+            false
+        );
+        expect(wrapper.find('button[aria-label="Analytics settings"]').exists()).toBe(true);
+    });
+
+    test("accepting stores the choice and closes the banner", async () => {
+        const { setMock, wrapper } = await mountConsentBanner(true);
+
+        await wrapper.get("button.consent-accept").trigger("click");
+
+        expect(setMock).toHaveBeenCalledWith(true);
+        expect(wrapper.find('[role="region"][aria-label="Analytics consent"]').exists()).toBe(
+            false
+        );
+        expect(wrapper.find('button[aria-label="Analytics settings"]').exists()).toBe(true);
+    });
+
+    test("declining stores the choice and closes the banner", async () => {
+        const { setMock, wrapper } = await mountConsentBanner(true);
+
+        await wrapper.get("button.consent-decline").trigger("click");
+
+        expect(setMock).toHaveBeenCalledWith(false);
+        expect(wrapper.find('[role="region"][aria-label="Analytics consent"]').exists()).toBe(
+            false
+        );
+        expect(wrapper.find('button[aria-label="Analytics settings"]').exists()).toBe(true);
+    });
+
+    test("reopens the banner from the settings control", async () => {
+        const { wrapper } = await mountConsentBanner(false);
+
+        await wrapper.get('button[aria-label="Analytics settings"]').trigger("click");
+
+        expect(wrapper.find('[role="region"][aria-label="Analytics consent"]').exists()).toBe(true);
+        expect(wrapper.find('button[aria-label="Analytics settings"]').exists()).toBe(false);
+    });
+});
+
+describe("docs UI components", () => {
+    const wrappers: VueWrapper[] = [];
+
+    function track<T extends VueWrapper>(wrapper: T): T {
+        wrappers.push(wrapper);
+        return wrapper;
+    }
+
+    afterEach(() => {
+        for (const wrapper of wrappers.splice(0)) wrapper.unmount();
+        localStorage.removeItem("anilink-search-recent");
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+    });
+
+    test("ProviderTabs honors its initial provider and connects tabs to their panels", () => {
+        const wrapper = track(mount(ProviderTabs, { props: { initial: "mal" } }));
+        const tabs = wrapper.findAll('[role="tab"]');
+        const panels = wrapper.findAll('[role="tabpanel"]');
+
+        expect(tabs[0].attributes("aria-selected")).toBe("false");
+        expect(tabs[1].attributes("aria-selected")).toBe("true");
+        expect(tabs[0].attributes("tabindex")).toBe("-1");
+        expect(tabs[1].attributes("tabindex")).toBe("0");
+        expect(tabs[0].attributes("aria-controls")).toBe(panels[0].attributes("id"));
+        expect(tabs[1].attributes("aria-controls")).toBe(panels[1].attributes("id"));
+        expect(panels[0].attributes("aria-labelledby")).toBe(tabs[0].attributes("id"));
+        expect(panels[1].attributes("aria-labelledby")).toBe(tabs[1].attributes("id"));
+    });
+
+    test("ProviderTabs moves focus through the tab order with left and right wraparound", async () => {
+        const wrapper = track(mount(ProviderTabs));
+        const tabs = wrapper.findAll('[role="tab"]');
+        const firstTabFocus = vi.spyOn(tabs[0].element as HTMLButtonElement, "focus");
+        const secondTabFocus = vi.spyOn(tabs[1].element as HTMLButtonElement, "focus");
+
+        await tabs[0].trigger("keydown", { key: "ArrowRight" });
+        expect(tabs[1].attributes("aria-selected")).toBe("true");
+        expect(secondTabFocus).toHaveBeenCalledOnce();
+
+        await tabs[1].trigger("keydown", { key: "ArrowRight" });
+        expect(tabs[0].attributes("aria-selected")).toBe("true");
+        expect(firstTabFocus).toHaveBeenCalledOnce();
+
+        await tabs[0].trigger("keydown", { key: "ArrowLeft" });
+        expect(tabs[1].attributes("aria-selected")).toBe("true");
+        expect(secondTabFocus).toHaveBeenCalledTimes(2);
+    });
+
+    test("TocMinimap emits the selected heading id without a browser hash jump", async () => {
+        const tocHeaders: PageHeading[] = [{ id: "intro", title: "Introduction", level: 2 }];
+        const wrapper = track(
+            mount(TocMinimap, {
+                props: {
+                    tocHeaders,
+                    scrollProgress: 0,
+                    scrollViewport: { start: 0, end: 1 },
+                },
+            })
+        );
+
+        await wrapper.get('a[href="#intro"]').trigger("click");
+
+        expect(wrapper.emitted("navigate")).toEqual([["intro"]]);
+    });
+
+    test("TocMinimap hides the viewport indicator when there are no headings", () => {
+        const wrapper = track(
+            mount(TocMinimap, {
+                props: {
+                    tocHeaders: [],
+                    scrollProgress: 0,
+                    scrollViewport: { start: 0, end: 1 },
+                },
+            })
+        );
+
+        expect((wrapper.get(".docs-toc-indicator").element as HTMLElement).style.display).toBe(
+            "none"
+        );
+    });
+
+    test("SemanticSearch clears recent queries from the UI and localStorage", async () => {
+        localStorage.setItem("anilink-search-recent", JSON.stringify(["AniList auth", "MAL"]));
+        vi.stubGlobal(
+            "fetch",
+            vi.fn().mockResolvedValue({
+                json: async () => ({ model: "test", dim: 2, docs: [] }),
+            })
+        );
+        const wrapper = track(mount(SemanticSearch, { props: { open: true } }));
+        await nextTick();
+
+        expect(wrapper.findAll(".ss-recent-item").map((item) => item.text())).toEqual([
+            "AniList auth",
+            "MAL",
+        ]);
+        await wrapper.get(".ss-recent-clear").trigger("click");
+
+        expect(localStorage.getItem("anilink-search-recent")).toBeNull();
+        expect(wrapper.find(".ss-recent").exists()).toBe(false);
+    });
+
+    test("HomeCodePanel copies the example and announces success", async () => {
+        const writeText = vi.fn().mockResolvedValue(undefined);
+        vi.stubGlobal("navigator", { clipboard: { writeText } });
+        const wrapper = track(mount(HomeCodePanel));
+
+        await wrapper.get(".al-code-copy").trigger("click");
+        await vi.waitFor(() => expect(wrapper.get(".al-code-copy").text()).toContain("Copied"));
+
+        expect(writeText).toHaveBeenCalledOnce();
+        expect(writeText.mock.calls[0][0]).toContain("new AniLink");
+    });
+
+    test("HomeCodePanel reports when the clipboard rejects the copy request", async () => {
+        const writeText = vi.fn().mockRejectedValue(new Error("clipboard denied"));
+        vi.stubGlobal("navigator", { clipboard: { writeText } });
+        const wrapper = track(mount(HomeCodePanel));
+
+        await wrapper.get(".al-code-copy").trigger("click");
+        await vi.waitFor(() =>
+            expect(wrapper.get(".al-code-copy").attributes("title")).toBe("Copy failed")
+        );
+
+        expect(writeText).toHaveBeenCalledOnce();
+    });
+
+    test("active-heading detection keeps its 72px threshold separate from the 80px scroll offset", () => {
+        const positions = [
+            { id: "short", top: 0, bottom: 75 },
+            { id: "next", top: 75, bottom: 160 },
+        ];
+
+        expect(HEADING_DETECTION_OFFSET).toBe(72);
+        expect(HEADING_SCROLL_OFFSET).toBe(80);
+        expect(selectVisibleSections(positions, 0, 100, HEADING_DETECTION_OFFSET).indices).toEqual([
+            0, 1,
+        ]);
+        expect(selectVisibleSections(positions, 0, 100, HEADING_SCROLL_OFFSET).indices).toEqual([
+            1,
+        ]);
     });
 });

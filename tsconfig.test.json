@@ -6,6 +6,15 @@
         "skipLibCheck": true,
         "types": ["node", "vitest/globals"]
     },
-    "include": ["__tests__/**/*.ts", "src/**/*.ts", "lib/**/*.ts", "scripts/**/*.ts"],
+    "vueCompilerOptions": {
+        "strictTemplates": true
+    },
+    "include": [
+        "__tests__/**/*.ts",
+        "src/**/*.ts",
+        "lib/**/*.ts",
+        "scripts/**/*.ts",
+        "docs-src/**/*.ts"
+    ],
     "exclude": ["node_modules", "__tests__/integration/**", "docs"]
 }

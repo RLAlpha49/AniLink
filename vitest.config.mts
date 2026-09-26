@@ -6,9 +6,11 @@
  * library code, so it is excluded from coverage — while loading the shared
  * network-blocking test setup.
  */
+import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  plugins: [vue()],
   test: {
     include: ['__tests__/**/*.test.ts'],
     exclude: ['__tests__/integration/**'],
