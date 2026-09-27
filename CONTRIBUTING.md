@@ -106,7 +106,7 @@ When the strict API-drift compare fails because AniList itself changed, see [Ups
 
 ## Reporting issues
 
-Open a GitHub issue for bugs and feature requests.
+Open a GitHub issue with the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md) or the [feature request template](.github/ISSUE_TEMPLATE/feature_request.md).
 
 ## License
 
