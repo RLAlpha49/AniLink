@@ -41,7 +41,7 @@ const sourceCache = new Map<string, string>();
 function readSource(path: string): string {
     let source = sourceCache.get(path);
     if (source === undefined) {
-        source = readFileSync(path, "utf8");
+        source = readFileSync(path, "utf8").replace(/\r\n/g, "\n");
         sourceCache.set(path, source);
     }
     return source;
