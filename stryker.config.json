@@ -8,6 +8,7 @@
     "mutate": [
         "src/base/**/*.ts",
         "src/apis/graphql/anilist/Paginator.ts",
+        "src/apis/rest/mal/Paginator.ts",
         "src/apis/graphql/anilist/auth.ts",
         "src/apis/graphql/anilist/schemas/selection/**/*.ts",
         "!src/apis/graphql/anilist/schemas/selection/fieldsSelection.ts",
