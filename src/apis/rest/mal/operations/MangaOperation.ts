@@ -36,8 +36,6 @@ export class MalMangaOperation extends RestOperation {
         "num_chapters_read",
         "num_volumes_read",
         "score",
-        "start_date",
-        "finish_date",
         "comments",
         "is_rereading",
         "num_times_reread",

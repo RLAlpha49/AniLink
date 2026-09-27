@@ -272,10 +272,6 @@ export interface MalAnimeListStatusUpdate {
     num_watched_episodes?: number;
     /** The user's score out of 10. */
     score?: number;
-    /** The date the user started watching, in ISO 8601 form; MAL also accepts partial dates (`YYYY-MM` or `YYYY`). */
-    start_date?: string;
-    /** The date the user finished watching, in ISO 8601 form; MAL also accepts partial dates (`YYYY-MM` or `YYYY`). */
-    finish_date?: string;
     /** Free-form notes the user attached to the entry. */
     comments?: string;
     /** Whether the user is currently rewatching the anime. */

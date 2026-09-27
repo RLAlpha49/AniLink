@@ -216,10 +216,12 @@ describe("MyAnimeList REST list-status writes", () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
         mocks.request.mockResolvedValueOnce({ data: { status: "watching" } });
 
-        // A typo'd field name from a JavaScript caller must stay off the wire.
+        // Unsupported date fields and typos from JavaScript callers stay off the wire.
         await api.anime.updateMyListStatus({
             id: 21,
             status: "watching",
+            start_date: "2026-01-15",
+            finish_date: "2026-09-01",
             num_watched_episode: 10,
         } as unknown as Parameters<typeof api.anime.updateMyListStatus>[0]);
 
@@ -729,10 +731,12 @@ describe("MyAnimeList REST manga namespace", () => {
         const api = buildMyAnimeListApi({ accessToken: "mal-access-token" });
         mocks.request.mockResolvedValueOnce({ data: { status: "reading" } });
 
-        // A typo'd field name from a JavaScript caller must stay off the wire.
+        // Unsupported date fields and typos from JavaScript callers stay off the wire.
         await api.manga.updateMyListStatus({
             id: 1,
             status: "reading",
+            start_date: "2026-02-01",
+            finish_date: "2026-08-01",
             num_chapter_read: 10,
         } as unknown as Parameters<typeof api.manga.updateMyListStatus>[0]);
 

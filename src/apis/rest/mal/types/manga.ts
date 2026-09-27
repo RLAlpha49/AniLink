@@ -66,10 +66,6 @@ export interface MalMangaListStatusUpdate {
     num_volumes_read?: number;
     /** The user's score out of 10. */
     score?: number;
-    /** The date the user started reading, in ISO 8601 form; MAL also accepts partial dates (`YYYY-MM` or `YYYY`). */
-    start_date?: string;
-    /** The date the user finished reading, in ISO 8601 form; MAL also accepts partial dates (`YYYY-MM` or `YYYY`). */
-    finish_date?: string;
     /** Free-form notes the user attached to the entry. */
     comments?: string;
     /** Whether the user is currently rereading the manga. */

@@ -41,8 +41,6 @@ export class MalAnimeOperation extends RestOperation {
         "status",
         "num_watched_episodes",
         "score",
-        "start_date",
-        "finish_date",
         "comments",
         "is_rewatching",
         "num_times_rewatched",

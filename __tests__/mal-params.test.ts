@@ -13,8 +13,6 @@ describe("MAL param types", () => {
             status?: "watching" | "completed" | "on_hold" | "dropped" | "plan_to_watch";
             num_watched_episodes?: number;
             score?: number;
-            start_date?: string;
-            finish_date?: string;
             comments?: string;
             is_rewatching?: boolean;
             num_times_rewatched?: number;
@@ -31,8 +29,6 @@ describe("MAL param types", () => {
             num_chapters_read?: number;
             num_volumes_read?: number;
             score?: number;
-            start_date?: string;
-            finish_date?: string;
             comments?: string;
             is_rereading?: boolean;
             num_times_reread?: number;

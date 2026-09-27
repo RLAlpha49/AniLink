@@ -41,8 +41,6 @@ await aniLink.mal.anime.updateMyListStatus({
     status: "watching", // "watching" | "completed" | "on_hold" | "dropped" | "plan_to_watch"
     num_watched_episodes: 5,
     score: 8, // 0-10
-    start_date: "2026-01-15", // partial dates OK: "2026-01" or "2026"
-    finish_date: "2026-09-01",
     comments: "rewatching with a friend",
     is_rewatching: true,
     num_times_rewatched: 2,
@@ -78,8 +76,6 @@ await aniLink.mal.manga.updateMyListStatus({
     num_chapters_read: 45,
     num_volumes_read: 5,
     score: 9,
-    start_date: "2026-02-01",
-    finish_date: "2026-08-01",
     comments: "",
     is_rereading: false,
     num_times_reread: 0,

@@ -281,26 +281,24 @@ console.log(top.data[0]?.node.title, top.data[0]?.ranking.rank);
 
 Updates the authenticated user's anime list status. Calls `PATCH /anime/{id}/my_list_status` with a form-urlencoded body. This is the anime counterpart of `mal.manga.updateMyListStatus`, and MAL rejects JSON on this endpoint too.
 
-| Parameter | Type                             | Required | Description                                                                                         |
-| --------- | -------------------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `params`  | `MalAnimeListStatusUpdateParams` | yes      | `{ id, ...fields }`, the anime ID plus only the list-status fields to change, form-encoded for MAL  |
-| `options` | `MalRequestOptions`              | no       | Field selection plus transport settings, merged over the instance defaults                          |
+| Parameter | Type                             | Required | Description                                                                                        |
+| --------- | -------------------------------- | -------- | -------------------------------------------------------------------------------------------------- |
+| `params`  | `MalAnimeListStatusUpdateParams` | yes      | `{ id, ...fields }`, the anime ID plus only the list-status fields to change, form-encoded for MAL |
+| `options` | `MalRequestOptions`              | no       | Field selection plus transport settings, merged over the instance defaults                         |
 
 Every payload field is optional. Send only the ones you want to change. The `MalAnimeListStatusUpdate` fields:
 
-| Field                  | Type       | Description                                                                               |
-| ---------------------- | ---------- | ----------------------------------------------------------------------------------------- |
-| `status`               | `string`   | The watch status; one of `watching`, `completed`, `on_hold`, `dropped`, `plan_to_watch`   |
-| `num_watched_episodes` | `number`   | The number of episodes the user has watched                                               |
-| `score`                | `number`   | The user's score out of 10                                                                |
-| `start_date`           | `string`   | The date watching started, ISO 8601; MAL also accepts partial dates (`YYYY-MM` or `YYYY`) |
-| `finish_date`          | `string`   | The date watching finished, ISO 8601; partial dates accepted                              |
-| `comments`             | `string`   | Free-form notes attached to the entry                                                     |
-| `is_rewatching`        | `boolean`  | Whether the user is currently rewatching the anime                                        |
-| `num_times_rewatched`  | `number`   | The number of times the user has rewatched the anime                                      |
-| `rewatch_value`        | `number`   | The rewatch value rating (0-5)                                                            |
-| `priority`             | `number`   | The priority rating (0-2)                                                                 |
-| `tags`                 | `string[]` | User-defined tags; sent to MAL as a comma-separated string                                |
+| Field                  | Type       | Description                                                                             |
+| ---------------------- | ---------- | --------------------------------------------------------------------------------------- |
+| `status`               | `string`   | The watch status; one of `watching`, `completed`, `on_hold`, `dropped`, `plan_to_watch` |
+| `num_watched_episodes` | `number`   | The number of episodes the user has watched                                             |
+| `score`                | `number`   | The user's score out of 10                                                              |
+| `comments`             | `string`   | Free-form notes attached to the entry                                                   |
+| `is_rewatching`        | `boolean`  | Whether the user is currently rewatching the anime                                      |
+| `num_times_rewatched`  | `number`   | The number of times the user has rewatched the anime                                    |
+| `rewatch_value`        | `number`   | The rewatch value rating (0-5)                                                          |
+| `priority`             | `number`   | The priority rating (0-2)                                                               |
+| `tags`                 | `string[]` | User-defined tags; sent to MAL as a comma-separated string                              |
 
 **Auth:** requires a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
