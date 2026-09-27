@@ -21,13 +21,14 @@ export interface MalBroadcast {
 }
 
 /**
- * {@link MalAnime} is the typed portion of a MyAnimeList anime response returned by `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get`.
+ * The named fields in a MyAnimeList anime response.
  *
- * It always carries `id` and `title`; additional fields appear when requested via the `fields` request option — or, when `fields` is omitted, via the `DEFAULT_MAL_ANIME_FIELDS` fallback — and are exposed through the index signature without narrowing.
+ * This finite shape lets default field selections check coverage without
+ * broadening to the string index signature on {@link MalAnime}.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  */
-export interface MalAnime {
+export interface MalAnimeKnownFields {
     /** The MyAnimeList numeric identifier. */
     id: number;
     /** The canonical MyAnimeList title. */
@@ -50,6 +51,16 @@ export interface MalAnime {
     broadcast?: MalBroadcast;
     /** The average episode duration in seconds, when requested via the `fields` query parameter. */
     average_episode_duration?: number;
+}
+
+/**
+ * {@link MalAnime} is the typed portion of a MyAnimeList anime response returned by `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get`.
+ *
+ * It always carries `id` and `title`; additional fields appear when requested via the `fields` request option — or, when `fields` is omitted, via the `DEFAULT_MAL_ANIME_FIELDS` fallback — and are exposed through the index signature without narrowing.
+ *
+ * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
+ */
+export interface MalAnime extends MalAnimeKnownFields {
     /** Any additional fields requested by a caller remain available without narrowing. */
     [field: string]: unknown;
 }

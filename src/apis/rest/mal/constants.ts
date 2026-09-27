@@ -1,3 +1,5 @@
+import type { MalAnimeKnownFields } from "./types/anime";
+
 /**
  * {@link MAL_API_BASE_URL} is the base URL for the MyAnimeList API v2 consumed by the MAL operation classes (`MalAnimeOperation`, `MalMangaOperation`, and `MalUserOperation`).
  *
@@ -41,19 +43,23 @@ export const MAL_API_REFERENCE = "https://myanimelist.net/apiconfig/references/a
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  */
-export const DEFAULT_MAL_ANIME_FIELDS: readonly string[] = [
-    "id",
-    "title",
-    "main_picture",
-    "synopsis",
-    "status",
-    "mean",
-    "num_episodes",
-    "media_type",
-    "start_date",
-    "broadcast",
-    "average_episode_duration",
-];
+const DEFAULT_MAL_ANIME_FIELD_KEYS = {
+    id: true,
+    title: true,
+    main_picture: true,
+    synopsis: true,
+    status: true,
+    mean: true,
+    num_episodes: true,
+    media_type: true,
+    start_date: true,
+    broadcast: true,
+    average_episode_duration: true,
+} satisfies Record<keyof MalAnimeKnownFields, true>;
+
+export const DEFAULT_MAL_ANIME_FIELDS: readonly string[] = Object.keys(
+    DEFAULT_MAL_ANIME_FIELD_KEYS
+);
 
 /**
  * Formats a {@link MalRequestOptions} `fields` selector for the `fields` query
