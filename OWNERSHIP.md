@@ -10,10 +10,14 @@ reading the generator.
 
 | #   | Artifact                  | Path                                               | Role                                                                                                                             |
 | --- | ------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Schema-fragment constants | `src/apis/graphql/anilist/schemas/` (36 files)     | Handwritten selection-set fragments (`export const MediaSchema = \`...\``). The fields the client requests.                      |
+| 1   | Schema-fragment constants | `src/apis/graphql/anilist/schemas/` (36 files)     | Handwritten selection-set fragments such as `MediaSchema`. The fields the client requests.                                       |
 | 2   | Generation manifest       | `scripts/generate-interfaces.config.ts` (~50 KB)   | Pairs every generated export with its fragment or operation file, and records typing overrides (`fieldTypes`, `optionalFields`). |
 | 3   | Generated interfaces      | `src/apis/graphql/anilist/interfaces/` (68 files)  | Output of the generator. **Do not hand-edit** generated files; rerun `npm run interfaces:generate`.                              |
-| 4   | Drift-checker inventory   | `scripts/api-compare/package-inventory.ts` | Parses operation files and interface contracts to compare the package against the committed AniList schema snapshot.                     |
+| 4   | Drift-checker inventory   | `scripts/api-compare/package-inventory.ts`         | Parses operation files and interface contracts to compare the package against the committed AniList schema snapshot.             |
+
+The schema directory also contains 3 handwritten selection files under
+`schemas/selection/`. These files are not schema-fragment constants or
+generated artifacts.
 
 The generator (`scripts/generate-interfaces.ts`) reads artifacts 1 and 2,
 extracts inline documents from operation files, and writes artifact 3.
@@ -34,16 +38,15 @@ No manifest change unless the field needs a typing override (see below).
 ### Add a new operation (query or mutation)
 
 1. **Operation file** — `src/apis/graphql/anilist/query/<Name>.ts` or
-   `mutation/<Name>.ts`. Must contain an inline
-   `const query = \`...\``or`const mutation = \`...\`` template literal; the
-   generator reads this document directly and does **not** resolve imports
-   (see _Codegen invariants_ below).
-2. **Schema fragment** (`schemas/`) — if the operation introduces a new
+   `mutation/<Name>.ts`. It must bind the document to an inline `const query`
+   or `const mutation` template literal. The generator reads this document
+   directly and does **not** resolve imports (see _Codegen invariants_ below).
+1. **Schema fragment** (`schemas/`) — if the operation introduces a new
    selection shape, add a fragment constant for it.
-3. **Manifest** (`generate-interfaces.config.ts`) — add an `OutputSpec`
+1. **Manifest** (`generate-interfaces.config.ts`) — add an `OutputSpec`
    entry pairing the new response interface with its fragment or operation
    file.
-4. **Generated interfaces** — regenerate.
+1. **Generated interfaces** — regenerate.
 
 The drift checker (artifact 4) needs no change; it discovers operation files
 by walking `query/` and `mutation/`.
@@ -78,9 +81,9 @@ breaks generation. The guard in `collectOperationDocument` fails loudly in
 both write and `--check` modes (so CI catches it) with a message naming the
 file and the expected binding. See _Codegen invariants_.
 
-To restructure safely: keep an inline `const query|mutation = \`...\``binding
-in the operation file, or update the manifest's`source.operation.file` to
-point at the new location and ensure that file has the inline binding.
+To restructure safely, keep an inline `const query` or `const mutation`
+template literal in the operation file. Otherwise, update the manifest's
+`source.operation.file` to point at the new location and add the inline binding.
 
 ## Codegen invariants
 
@@ -89,29 +92,29 @@ them fails the `--check` CI gate (`npm run interfaces:generate -- --check`,
 `.github/workflows/ci.yml`) with a named error.
 
 1. **Inline document binding.** Every operation file referenced by a manifest
-   `source.operation.file` must contain an inline
-   `const query = \`...\``or`const mutation = \`...\`` template literal. The
-generator does not resolve imported constants. A file that binds the
-document to an identifier (`const query = SomeFragment`) or omits the
-binding fails `collectOperationDocument` with a message naming the file.
+   `source.operation.file` must bind its document to an inline `const query`
+   or `const mutation` template literal. The generator does not resolve
+   imported constants. A file that binds the document to an identifier
+   (`const query = SomeFragment`) or omits the binding fails
+   `collectOperationDocument` with a message naming the file.
 
-2. **`mode: "file"` ownership.** Every output in the manifest is
+1. **`mode: "file"` ownership.** Every output in the manifest is
    `mode: "file"`: the generator owns the entire output file. There are no
    `mode: "region"` outputs today. (The `region` mode, which splices a
    marker-delimited block into a handwritten file, is supported by
    `lib/interfaces-codegen/emit.ts` but unused by the current manifest.)
 
-3. **Handwritten single-source interfaces.** A small set of interface files
+1. **Handwritten single-source interfaces.** A small set of interface files
    are deliberately handwritten and have no manifest entry (no faithful
    schema-fragment or operation twin): `Stat.ts`, `Favoured.ts`, `Staff.ts`,
    `Studio.ts`. They are not regenerated; edit them directly.
 
-4. **Fragment ownership is exclusive.** A schema-fragment constant claimed by
+1. **Fragment ownership is exclusive.** A schema-fragment constant claimed by
    `source.constant` is owned by exactly one output. Two outputs claiming the
    same constant throw at generation time
    (`collectExportsByConstant` in `lib/interfaces-codegen/run.ts`).
 
-5. **Generated files are not hand-edited.** Generated interface files carry a
+1. **Generated files are not hand-edited.** Generated interface files carry a
    `@generated` header. Edits are overwritten on the next
    `npm run interfaces:generate`. Change the fragment or manifest, then
    regenerate.
@@ -123,6 +126,13 @@ binding fails `collectOperationDocument` with a message naming the file.
 | `npm run interfaces:generate`            | Write updated generated interface files.                                                                         |
 | `npm run interfaces:generate -- --check` | Exit 1 when any generated file is stale; runs in CI. Also fails when an operation file lacks the inline binding. |
 | `npm run anilist:api:compare`            | Run the drift checker (artifact 4) against the committed schema snapshot.                                        |
+
+## Change an exported error
+
+Add an error class to `src/base/AniLinkError.ts`, export it from `src/errors.ts`,
+and add it to the re-export lists in `src/anilist.ts` and `src/mal.ts`. Both
+provider entry points maintain their own lists, so update both when you add or
+remove an error export.
 
 ## Design decisions
 

@@ -101,7 +101,11 @@ console.log(`${malIds.length} mapped, ${unmapped.length} without a MAL id`);
 **Provider: MAL.** Refresh before expiry, not after the `401`. Keep the stored refresh token when MAL does not rotate it.
 
 ```typescript
-import { getMalTokenExpiry, refreshMalAccessToken, type MalTokenResponse } from "anilink-api-wrapper";
+import {
+    getMalTokenExpiry,
+    refreshMalAccessToken,
+    type MalTokenResponse,
+} from "anilink-api-wrapper";
 
 let token: MalTokenResponse = /* stored from the initial exchange */ {} as MalTokenResponse;
 
@@ -130,7 +134,8 @@ const aniLink = new AniLink({
         authToken: process.env.ANILIST_TOKEN,
         paceWithRateLimit: true,
         circuitBreaker: { threshold: 5, cooldownMs: 30_000 },
-        onCircuitOpen: ({ host, failures }) => metrics.increment("circuit.open", { host, failures }),
+        onCircuitOpen: ({ host, failures }) =>
+            metrics.increment("circuit.open", { host, failures }),
         onCircuitClose: ({ host }) => metrics.increment("circuit.close", { host }),
         onResponse: ({ durationMs }) => metrics.record("anilist", durationMs),
     },

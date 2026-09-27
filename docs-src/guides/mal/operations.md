@@ -35,10 +35,10 @@ console.log(anime.title, anime.main_picture?.large);
 
 Searches MyAnimeList anime by keyword. Calls `GET /anime` with a `q` query parameter. This is the standard keyword search.
 
-| Parameter | Type                   | Required | Description                                                                                  |
-| --------- | ---------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| `params`  | `MalAnimeSearchParams` | yes      | `{ q, limit?, offset? }`, the keyword plus the optional paging filters; `limit` caps at 100  |
-| `options` | `MalRequestOptions`    | no       | Field selection plus transport settings, merged over the instance defaults                   |
+| Parameter | Type                   | Required | Description                                                                                 |
+| --------- | ---------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| `params`  | `MalAnimeSearchParams` | yes      | `{ q, limit?, offset? }`, the keyword plus the optional paging filters; `limit` caps at 100 |
+| `options` | `MalRequestOptions`    | no       | Field selection plus transport settings, merged over the instance defaults                  |
 
 **Auth:** not required. This is a public read, same as `anime.get`.
 
@@ -83,10 +83,10 @@ console.log(user.name);
 
 Gets a MyAnimeList user profile. Calls `GET /users/{user_name}`. MyAnimeList documents only `@me` for this endpoint, so `username` accepts `@me` (case-insensitive, whitespace-tolerant) and needs an access token to resolve it. The library passes other usernames through, but MyAnimeList currently answers them with `404`.
 
-| Parameter | Type                | Required | Description                                                                      |
-| --------- | ------------------- | -------- | -------------------------------------------------------------------------------- |
-| `params`  | `MalUserGetParams`  | yes      | `{ username }`, the MyAnimeList username; MyAnimeList documents only `@me` here  |
-| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults       |
+| Parameter | Type                | Required | Description                                                                     |
+| --------- | ------------------- | -------- | ------------------------------------------------------------------------------- |
+| `params`  | `MalUserGetParams`  | yes      | `{ username }`, the MyAnimeList username; MyAnimeList documents only `@me` here |
+| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults      |
 
 **Auth:** requires an access token. MyAnimeList documents only `@me` for this endpoint; the library passes other usernames through, but MyAnimeList currently answers them with `404`.
 
@@ -108,10 +108,10 @@ console.log(user.name);
 
 Gets a user's anime list, one page at a time. Calls `GET /users/{username}/animelist`. This is the paginated read that was missing while AniList users had dedicated pagination helpers.
 
-| Parameter | Type                     | Required | Description                                                                                    |
-| --------- | ------------------------ | -------- | ---------------------------------------------------------------------------------------------- |
-| `params`  | `MalUserAnimeListParams` | yes      | `{ username, status?, sort?, limit?, offset? }`, the user name or `@me` plus the list filters  |
-| `options` | `MalRequestOptions`      | no       | Field selection plus transport settings, merged over the instance defaults                     |
+| Parameter | Type                     | Required | Description                                                                                   |
+| --------- | ------------------------ | -------- | --------------------------------------------------------------------------------------------- |
+| `params`  | `MalUserAnimeListParams` | yes      | `{ username, status?, sort?, limit?, offset? }`, the user name or `@me` plus the list filters |
+| `options` | `MalRequestOptions`      | no       | Field selection plus transport settings, merged over the instance defaults                    |
 
 **Auth:** not required for public user lists. `@me` and private lists require an access token; a client ID alone cannot resolve `@me`. Without a token, `@me` fails fast with `AniLinkAuthError` before any request is sent.
 
@@ -133,10 +133,10 @@ console.log(list.data[0]?.node.title, list.data[0]?.list_status?.score);
 
 Gets a user's manga list, one page at a time. Calls `GET /users/{username}/mangalist`. This is the manga counterpart of `user.animeList`.
 
-| Parameter | Type                     | Required | Description                                                                                    |
-| --------- | ------------------------ | -------- | ---------------------------------------------------------------------------------------------- |
-| `params`  | `MalUserMangaListParams` | yes      | `{ username, status?, sort?, limit?, offset? }`, the user name or `@me` plus the list filters  |
-| `options` | `MalRequestOptions`      | no       | Field selection plus transport settings, merged over the instance defaults                     |
+| Parameter | Type                     | Required | Description                                                                                   |
+| --------- | ------------------------ | -------- | --------------------------------------------------------------------------------------------- |
+| `params`  | `MalUserMangaListParams` | yes      | `{ username, status?, sort?, limit?, offset? }`, the user name or `@me` plus the list filters |
+| `options` | `MalRequestOptions`      | no       | Field selection plus transport settings, merged over the instance defaults                    |
 
 **Auth:** not required for public user lists. `@me` and private lists require an access token; a client ID alone cannot resolve `@me`. Without a token, `@me` fails fast with `AniLinkAuthError` before any request is sent.
 
@@ -183,10 +183,10 @@ console.log(manga.title, manga.main_picture?.large);
 
 Updates the authenticated user's manga list status. Calls `PATCH /manga/{id}/my_list_status` with a form-urlencoded body. MAL rejects JSON on this endpoint.
 
-| Parameter | Type                             | Required | Description                                                                                         |
-| --------- | -------------------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `params`  | `MalMangaListStatusUpdateParams` | yes      | `{ id, ...fields }`, the manga ID plus only the list-status fields to change, form-encoded for MAL  |
-| `options` | `MalRequestOptions`              | no       | Field selection plus transport settings, merged over the instance defaults                          |
+| Parameter | Type                             | Required | Description                                                                                        |
+| --------- | -------------------------------- | -------- | -------------------------------------------------------------------------------------------------- |
+| `params`  | `MalMangaListStatusUpdateParams` | yes      | `{ id, ...fields }`, the manga ID plus only the list-status fields to change, form-encoded for MAL |
+| `options` | `MalRequestOptions`              | no       | Field selection plus transport settings, merged over the instance defaults                         |
 
 **Auth:** requires a MAL access token from `MalCredentials.accessToken`. Without one, `AniLinkAuthError` is thrown before any request is sent.
 
@@ -231,10 +231,10 @@ await aniLink.mal.manga.deleteFromList({ id: 1 });
 
 Searches MyAnimeList manga by keyword. Calls `GET /manga` with a `q` query parameter. This is the manga counterpart of `anime.search`.
 
-| Parameter | Type                   | Required | Description                                                                                  |
-| --------- | ---------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| `params`  | `MalMangaSearchParams` | yes      | `{ q, limit?, offset? }`, the keyword plus the optional paging filters; `limit` caps at 100  |
-| `options` | `MalRequestOptions`    | no       | Field selection plus transport settings, merged over the instance defaults                   |
+| Parameter | Type                   | Required | Description                                                                                 |
+| --------- | ---------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| `params`  | `MalMangaSearchParams` | yes      | `{ q, limit?, offset? }`, the keyword plus the optional paging filters; `limit` caps at 100 |
+| `options` | `MalRequestOptions`    | no       | Field selection plus transport settings, merged over the instance defaults                  |
 
 **Auth:** not required. This is a public read, same as `manga.get`.
 
@@ -256,10 +256,10 @@ console.log(results.data[0]?.node.title);
 
 Gets one of MyAnimeList's manga ranking lists. Calls `GET /manga/ranking` with a `ranking_type` query parameter. This is the manga counterpart of `anime.ranking`.
 
-| Parameter | Type                    | Required | Description                                                                                                                             |
-| --------- | ----------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `params`  | `MalMangaRankingParams` | yes      | `{ rankingType }`, the ranking list: `all`, `manga`, `novels`, `oneshots`, `doujin`, `manhwa`, `manhua`, `bypopularity`, or `favorite`  |
-| `options` | `MalRequestOptions`     | no       | Field selection plus transport settings, merged over the instance defaults                                                              |
+| Parameter | Type                    | Required | Description                                                                                                                            |
+| --------- | ----------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `params`  | `MalMangaRankingParams` | yes      | `{ rankingType }`, the ranking list: `all`, `manga`, `novels`, `oneshots`, `doujin`, `manhwa`, `manhua`, `bypopularity`, or `favorite` |
+| `options` | `MalRequestOptions`     | no       | Field selection plus transport settings, merged over the instance defaults                                                             |
 
 **Auth:** not required. This is a public read, same as `manga.get`.
 
@@ -345,10 +345,10 @@ await aniLink.mal.anime.deleteFromList({ id: 21 });
 
 Gets the anime of one broadcast season. Calls `GET /anime/season/{year}/{season}`. This is the seasonal chart, the browsing feature third-party apps are built on.
 
-| Parameter | Type                | Required | Description                                                                                     |
-| --------- | ------------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| `params`  | `MalSeasonalParams` | yes      | `{ year, season }`, the year and the broadcast window: `winter`, `spring`, `summer`, or `fall`  |
-| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults                      |
+| Parameter | Type                | Required | Description                                                                                    |
+| --------- | ------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| `params`  | `MalSeasonalParams` | yes      | `{ year, season }`, the year and the broadcast window: `winter`, `spring`, `summer`, or `fall` |
+| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults                     |
 
 **Auth:** not required. This is a public read, same as `anime.get`.
 
@@ -370,10 +370,10 @@ console.log(season.data[0]?.node.title, season.data[0]?.node.rank);
 
 Gets one of MyAnimeList's anime ranking lists. Calls `GET /anime/ranking` with a `ranking_type` query parameter. This returns the top lists.
 
-| Parameter | Type                | Required | Description                                                                                                                       |
-| --------- | ------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `params`  | `MalRankingParams`  | yes      | `{ rankingType }`, the ranking list: `all`, `airing`, `upcoming`, `tv`, `ova`, `movie`, `special`, `bypopularity`, or `favorite`  |
-| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults                                                        |
+| Parameter | Type                | Required | Description                                                                                                                      |
+| --------- | ------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `params`  | `MalRankingParams`  | yes      | `{ rankingType }`, the ranking list: `all`, `airing`, `upcoming`, `tv`, `ova`, `movie`, `special`, `bypopularity`, or `favorite` |
+| `options` | `MalRequestOptions` | no       | Field selection plus transport settings, merged over the instance defaults                                                       |
 
 **Auth:** not required. This is a public read, same as `anime.get`.
 
@@ -439,10 +439,10 @@ console.log(boards.categories[0]?.boards[0]?.title);
 
 Gets the MyAnimeList forum topic list, one page at a time. Calls `GET /forum/topics`, filterable by board, keyword, and creator.
 
-| Parameter | Type                   | Required | Description                                                                                                                        |
-| --------- | ---------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `params`  | `MalForumTopicsParams` | no       | `{ boardId?, subboardId?, q?, topicUserName?, userName?, sort?, limit?, offset? }`, every filter is optional; `limit` caps at 100  |
-| `options` | `MalRequestOptions`    | no       | Transport settings, merged over the instance defaults                                                                              |
+| Parameter | Type                   | Required | Description                                                                                                                       |
+| --------- | ---------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `params`  | `MalForumTopicsParams` | no       | `{ boardId?, subboardId?, q?, topicUserName?, userName?, sort?, limit?, offset? }`, every filter is optional; `limit` caps at 100 |
+| `options` | `MalRequestOptions`    | no       | Transport settings, merged over the instance defaults                                                                             |
 
 **Auth:** not required. This is a public read.
 
@@ -461,10 +461,10 @@ console.log(topics.data[0]?.title);
 
 Gets one forum topic with its posts and poll. Calls `GET /forum/topic/{topic_id}`.
 
-| Parameter | Type                  | Required | Description                                                                                         |
-| --------- | --------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| `params`  | `MalForumTopicParams` | yes      | `{ id, limit?, offset? }`, the topic ID plus the optional post-paging filters; `limit` caps at 100  |
-| `options` | `MalRequestOptions`   | no       | Transport settings, merged over the instance defaults                                               |
+| Parameter | Type                  | Required | Description                                                                                        |
+| --------- | --------------------- | -------- | -------------------------------------------------------------------------------------------------- |
+| `params`  | `MalForumTopicParams` | yes      | `{ id, limit?, offset? }`, the topic ID plus the optional post-paging filters; `limit` caps at 100 |
+| `options` | `MalRequestOptions`   | no       | Transport settings, merged over the instance defaults                                              |
 
 **Auth:** not required. This is a public read.
 

@@ -103,8 +103,8 @@ for await (const page of aniLink.anilist.paginatePages(
 The eager variants (`paginate`, `paginateChunks`) collect every response before returning, so `onPage` and `onChunk` fire after the last response arrives. They do not reduce peak memory or release collected items incrementally. For true streaming and early-exit workflows, use `paginatePages`:
 
 ```typescript
-for await (const page of aniLink.anilist.paginatePages(
-    (page, perPage) => aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" })
+for await (const page of aniLink.anilist.paginatePages((page, perPage) =>
+    aniLink.anilist.query.page.medias({ page, perPage, type: "ANIME" })
 )) {
     for (const item of page.media) store.upsert(item);
 }

@@ -36,6 +36,19 @@ AniLink is a typed TypeScript wrapper for the AniList GraphQL API and the MyAnim
 | `npm run build`                          | Builds `dist/`                                                                               |
 | `npm run docs:generate`                  | Generates the API docs into `docs/`                                                          |
 
+### Live integration tests
+
+The live suites read `ANILIST_TOKEN` and `MAL_TOKEN` from the repository-root `.env` file. Each provider suite skips when its token is missing. The cross-provider suite needs both tokens.
+
+Start each provider's OAuth flow with these commands:
+
+```bash
+npm run anilist:token -- --client-id <id> --client-secret <secret> --redirect-uri <uri>
+npm run mal:token -- --client-id <id> [--client-secret <secret>]
+```
+
+The scripts write tokens to `.env`, which `.gitignore` excludes. Do not commit this file. See the [token CLI guide](scripts/tokens/README.md) for app setup and refresh commands. Run the suites with `npm run test:integration`.
+
 Run `npm run check` before you push. It runs the pull-request CI checks for source and test typechecking, lint, tests with coverage thresholds, formatting, JSDoc, facade and interface sync, strict API-drift comparisons for AniList and MyAnimeList, and the build. CI runs the packaged-distribution smoke test (`npm run test:package`) as a separate job. StrykerJS mutation tests run weekly (`npm run mutation:test`).
 
 For a faster check before you push, run `npm run check:fast`. It runs source and test typechecking, lint, and unit tests without coverage. CI requires the full `npm run check` chain for pull requests.
@@ -51,6 +64,14 @@ Upstream tracks the fix in [stryker-js#6210](https://github.com/stryker-mutator/
 The API-drift tooling in `lib/api-compare/` uses the `graphql` devDependency to parse AniList's introspection schema. Keep this dependency even though files in `src/` do not import it. The MAL contract extractor uses the TypeScript compiler API from the `typescript` devDependency. `tsc` uses the same dependency.
 
 See [OWNERSHIP.md](OWNERSHIP.md) for the response-shape code-generation pipeline and its artifacts. The file also records the project's [design decisions](OWNERSHIP.md#design-decisions). These include an ESM-only distribution, `axios` as the only runtime dependency, hooks and correlation IDs instead of a telemetry SDK, and in-memory-only state.
+
+## Documentation site
+
+The VitePress source lives in `docs-src/`. Shared pages sit at its root. Provider guides live under `docs-src/guides/anilist/` and `docs-src/guides/mal/`. The operation reference lives under `docs-src/operations/`.
+
+Register each page in `PAGES` in [`docs-src/lib/content.ts`](docs-src/lib/content.ts). The page inventory drives the sidebar and `docs-src/public/llms.txt`. Add a double-quoted `description` field to each page's frontmatter. The llms.txt generator reads that field.
+
+Run `npm run docs:generate` to rebuild the generated documentation, including `docs-src/public/llms.txt`. Run `npm run docs:dev` to preview the site. For AniList response-shape changes, follow [OWNERSHIP.md](OWNERSHIP.md).
 
 ## JSDoc contract
 

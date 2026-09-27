@@ -24,13 +24,13 @@ To collect everything instead, use the [pagination helpers](/guides/anilist/pagi
 
 Every page response includes `pageInfo`:
 
-| Field | Meaning |
-| --- | --- |
-| `total` | Total items across all pages |
+| Field         | Meaning                              |
+| ------------- | ------------------------------------ |
+| `total`       | Total items across all pages         |
 | `currentPage` | 1-based page number of this response |
-| `lastPage` | Last existing page number |
-| `hasNextPage` | Whether a following page exists |
-| `perPage` | Items per page for this response |
+| `lastPage`    | Last existing page number            |
+| `hasNextPage` | Whether a following page exists      |
+| `perPage`     | Items per page for this response     |
 
 ## Example
 

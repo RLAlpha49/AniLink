@@ -39,10 +39,10 @@ The docs load their typefaces from Google Fonts: Shippori Mincho, Zen Old Mincho
 
 The docs site also stores two strictly necessary, analytics-free preferences in localStorage:
 
-| Key                     | Purpose                                                            |
-| ----------------------- | ------------------------------------------------------------------ |
-| `anilink-docs-theme`    | Remembers your light/dark theme choice.                            |
-| `anilink-search-recent` | Stores up to five queries locally on the main docs site.           |
+| Key                     | Purpose                                                  |
+| ----------------------- | -------------------------------------------------------- |
+| `anilink-docs-theme`    | Remembers your light/dark theme choice.                  |
+| `anilink-search-recent` | Stores up to five queries locally on the main docs site. |
 
 On the main docs site, select **Clear** beside **Recent searches** to remove saved queries from localStorage. The API-reference search does not save recent queries.
 

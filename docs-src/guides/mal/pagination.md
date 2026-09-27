@@ -14,11 +14,12 @@ query parameters. Two helpers walk those endpoints for you. Both take a
 own params:
 
 ```typescript
-(page, perPage) => aniLink.mal.anime.search({
-    q: "one piece",
-    limit: perPage,
-    offset: (page - 1) * perPage,
-})
+(page, perPage) =>
+    aniLink.mal.anime.search({
+        q: "one piece",
+        limit: perPage,
+        offset: (page - 1) * perPage,
+    });
 ```
 
 The closure pattern is the whole adapter: the helpers handle the paging
@@ -77,19 +78,19 @@ fires once per page as it is yielded, the same observer contract as
 
 ## Options and clamps
 
-| Option        | Default | Clamp | Meaning                                                                                                                                                             |       |
-| ------------- | ------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |       |
-| `perPage`     | `100`   | ≤ 100 | Entries per page. Values above 100 — the most restrictive documented cap across MAL’s list endpoints — are clamped down                                             |       |
-| `startPage`   | `1`     | none  | 1-based page to start from. The closure’s offset math rotates with it: `startPage: 3` starts at `offset = 2 * perPage`                                              |       |
-| `maxPages`    | `100`   | none  | Hard cap that prevents unbounded loops                                                                                                                              |       |
-| `concurrency` | `1`     | ≤ 8   | Look-ahead requests in flight. Defaults to strictly sequential because MAL’s rate limit (~1-2 req/sec) makes look-ahead counterproductive                           |       |
-| `signal`      | none    | none  | `AbortSignal` to cancel the traversal. Aborting cancels in-flight requests immediately                                                                              |       |
-| `onPage`      | none    | none  | Per-page callback: after collection on `mal.paginate`, as each page is yielded on `mal.paginatePages`; a throwing callback is reported through `onHookError` and swallowed |
+| Option | Default | Clamp | Meaning | |
+| ------------- | ------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | |
+| `perPage` | `100` | ≤ 100 | Entries per page. Values above 100 — the most restrictive documented cap across MAL’s list endpoints — are clamped down | |
+| `startPage` | `1` | none | 1-based page to start from. The closure’s offset math rotates with it: `startPage: 3` starts at `offset = 2 * perPage` | |
+| `maxPages` | `100` | none | Hard cap that prevents unbounded loops | |
+| `concurrency` | `1` | ≤ 8 | Look-ahead requests in flight. Defaults to strictly sequential because MAL’s rate limit (~1-2 req/sec) makes look-ahead counterproductive | |
+| `signal` | none | none | `AbortSignal` to cancel the traversal. Aborting cancels in-flight requests immediately | |
+| `onPage` | none | none | Per-page callback: after collection on `mal.paginate`, as each page is yielded on `mal.paginatePages`; a throwing callback is reported through `onHookError` and swallowed |
 
 ## Which endpoints paginate
 
 Every endpoint returning `{ data, paging? }` works with both helpers. The
-one exception is `forum.topic`: it paginates posts *inside* one response
+one exception is `forum.topic`: it paginates posts _inside_ one response
 (`data.posts` with its own `paging`), not across responses. Page its posts
 with repeated `topic()` calls using the same closure pattern.
 

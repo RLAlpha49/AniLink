@@ -34,16 +34,10 @@ A path is a dot-separated field chain into the response. Stop at an object to ta
 
 ```typescript
 // Whole object: every title variant.
-const titled = await aniLink.anilist.query.media(
-    { id: 123 },
-    { fields: ["title"] }
-);
+const titled = await aniLink.anilist.query.media({ id: 123 }, { fields: ["title"] });
 
 // One leaf of it: romaji only.
-const romaji = await aniLink.anilist.query.media(
-    { id: 123 },
-    { fields: ["title.romaji"] }
-);
+const romaji = await aniLink.anilist.query.media({ id: 123 }, { fields: ["title.romaji"] });
 // romaji: { id: number; idMal: number; title: { romaji: string } }
 // The always-selected id and idMal are part of the narrowed type:
 // the composed document always sends them, so the type always has them.

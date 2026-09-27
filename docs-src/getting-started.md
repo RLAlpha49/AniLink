@@ -34,14 +34,28 @@ import { AniLink } from "anilink-api-wrapper";
 
 const aniLink = new AniLink({ mal: { accessToken: "mal-token" } });
 
-const anime = await aniLink.mal.anime.get(
-    { id: 21 },
-    { fields: ["id", "title", "main_picture"] }
-);
+const anime = await aniLink.mal.anime.get({ id: 21 }, { fields: ["id", "title", "main_picture"] });
 console.log(anime.title);
 ```
 
 The `mal` namespace has the REST operations. `anime.get` requires no token for public fields, and `user.me` requires one.
+
+## Use AniLink from CommonJS
+
+AniLink publishes ESM only. In a CommonJS project, load the package with dynamic `import()`:
+
+```javascript
+async function main() {
+    const { AniLink } = await import("anilink-api-wrapper");
+    const aniLink = new AniLink();
+    const result = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
+    console.log(result.media?.title?.romaji);
+}
+
+main();
+```
+
+You can also migrate the consuming project to ESM. Set `"type": "module"` in its `package.json` and use a static `import` statement, or use the `.mjs` file extension. AniLink does not provide a CommonJS build.
 
 ## Instance basics
 

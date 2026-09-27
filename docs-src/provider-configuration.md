@@ -38,10 +38,10 @@ When the first argument is a credentials object, the constructor rejects a secon
 
 ## Credential slots
 
-| Slot | Fields | Provider |
-| --- | --- | --- |
-| `anilist` | `authToken` plus shared transport options | AniList |
-| `mal` | `accessToken`, `refreshToken`, `clientId`, `clientSecret` plus shared transport options | MAL |
+| Slot      | Fields                                                                                  | Provider |
+| --------- | --------------------------------------------------------------------------------------- | -------- |
+| `anilist` | `authToken` plus shared transport options                                               | AniList  |
+| `mal`     | `accessToken`, `refreshToken`, `clientId`, `clientSecret` plus shared transport options | MAL      |
 
 <Callout kind="provider" label="Provider scope">
 

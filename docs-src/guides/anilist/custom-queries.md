@@ -24,20 +24,20 @@ console.log(result.Media.title.romaji);
 
 The return shape depends on how many root fields your document has:
 
-| Document shape | Return value |
-| --- | --- |
-| Single root field (`query { Media { … } }`) | The bare value of that field, e.g. `{ id, title }` |
+| Document shape                                              | Return value                                                           |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Single root field (`query { Media { … } }`)                 | The bare value of that field, e.g. `{ id, title }`                     |
 | Multiple root fields (`query { Media { … } Viewer { … } }`) | The full `{ data }` envelope, e.g. `{ data: { Media: …, Viewer: … } }` |
 
 ```typescript
 // Single root field: T is the field's value.
-const media = await aniLink.anilist.custom<{ id: number }>(
-    "query { Media(id: 1) { id } }"
-);
+const media = await aniLink.anilist.custom<{ id: number }>("query { Media(id: 1) { id } }");
 media.id; // direct access
 
 // Multi-root: T is the envelope.
-const both = await aniLink.anilist.custom<{ data: { Media: { id: number }; Viewer: { id: number } } }>(
+const both = await aniLink.anilist.custom<{
+    data: { Media: { id: number }; Viewer: { id: number } };
+}>(
     "query { Media(id: 1) { id } Viewer { id } }",
     undefined,
     { timeout: 10_000 } // optional per-request transport settings
