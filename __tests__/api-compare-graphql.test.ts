@@ -300,6 +300,27 @@ describe("runCli exit status - GraphQL path", () => {
         expect(logs).toContain("No actionable discrepancies found");
     });
 
+    it("fails strict mode for operations absent from the committed schema baseline", async () => {
+        const comparison = comparePackageToSchema({
+            schema: buildFakeSchema(),
+            operations: [],
+        });
+        const result = await runCli({
+            argv: ["compare", "--provider", "anilist", "--strict"],
+            compare: async () => comparison,
+            log: () => {},
+        });
+
+        expect(comparison.discrepancies).toContainEqual(
+            expect.objectContaining({
+                severity: "error",
+                category: "new-upstream-operation",
+                operation: "query.badThing",
+            })
+        );
+        expect(result.exitCode).toBe(1);
+    });
+
     it("fails strict mode on real contract drift", async () => {
         const result = await runCli({
             argv: ["compare", "--provider", "anilist", "--strict"],

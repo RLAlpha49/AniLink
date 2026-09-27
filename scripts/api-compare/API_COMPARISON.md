@@ -14,7 +14,7 @@ Adding a provider means adding an entry in `scripts/api-compare/providers.ts` (p
 
 It checks query and mutation coverage, operation fields, arguments, variables, response selections, and selected TypeScript contracts. The comparison works in both directions: it reports API operations that AniLink does not implement, and it reports package operations that are absent from the API schema. It also warns when a package operation is still present but deprecated. The reports identify API drift and operations that still need package support.
 
-### Commands
+### AniList commands
 
 Run the deterministic comparison against the committed schema snapshot:
 
@@ -36,7 +36,7 @@ npm run anilist:api:update-schema
 
 ### Unimplemented operations
 
-Unimplemented operations are warnings and never affect the exit status — not even in `--strict` mode. While operations are being wrapped one at a time, their absence is expected work-in-progress, not a defect; the warnings stay visible in the output and reports so coverage gaps remain discoverable, but only real contract drift (missing fields, wrong types, removed operations) fails the build.
+Unimplemented operations already present in the committed schema baseline are warnings and do not fail `--strict` mode. An operation absent from the baseline is reported as a `new-upstream-operation` error and fails strict comparisons until AniLink implements it or the team reviews and baselines it.
 
 Operations that can never be wrapped belong in `IGNORED_UNIMPLEMENTED_OPERATIONS` (`lib/api-compare/compare.ts`) instead — such as `query.Like` (AniList only serves likes through the paged `Page.likes` field) — and are never reported at all.
 

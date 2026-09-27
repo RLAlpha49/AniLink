@@ -84,11 +84,13 @@ export async function runCli(options: CliOptions): Promise<CliResult> {
         }
         const strict = options.argv.includes("--strict");
         if (strict) {
-            log("Strict mode enabled: any discrepancy will fail the comparison");
+            log("Strict mode enabled: any actionable discrepancy will fail the comparison");
         }
         const result = await (options.compare ?? runComparison)(options.argv, provider);
         const relevantDiscrepancies = result.discrepancies.filter(
-            (discrepancy) => discrepancy.category !== "unimplemented-operation"
+            (discrepancy) =>
+                discrepancy.category !== "unimplemented-operation" ||
+                discrepancy.severity === "error"
         );
         const hasErrors = strict
             ? relevantDiscrepancies.length > 0

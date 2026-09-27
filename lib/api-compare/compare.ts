@@ -20,6 +20,9 @@ import type { TypeScriptContracts, TypeScriptProperty } from "./typescript-contr
  */
 export const IGNORED_UNIMPLEMENTED_OPERATIONS = new Set(["query.Like"]);
 
+/** Unimplemented operations present in the committed AniList schema baseline. */
+const BASELINED_UNIMPLEMENTED_OPERATIONS = new Set(["query.Like"]);
+
 /** Matches a `review: YYYY-Qn` note documenting when an entry was last revisited. */
 export const REVIEW_NOTE_PATTERN = /review:\s*(\d{4}-Q[1-4])/;
 
@@ -48,9 +51,9 @@ export function findIgnoredOperationsMissingReviewNote(source: string): string[]
  *
  * It verifies each operation's root field, arguments, variable types, and
  * selection against the schema, then checks the variables/response interfaces
- * against the extracted TypeScript contracts. Schema operations the package
- * does not wrap are reported as warnings unless listed in
- * {@link IGNORED_UNIMPLEMENTED_OPERATIONS}.
+ * against the extracted TypeScript contracts. Known unimplemented operations
+ * are warnings; operations absent from the committed baseline are errors
+ * unless listed in {@link IGNORED_UNIMPLEMENTED_OPERATIONS}.
  *
  * @param input - The {@link Schema} snapshot, discovered {@link PackageOperation}s, and optional
  *   extracted {@link TypeScriptContracts}.
@@ -118,11 +121,16 @@ export function comparePackageToSchema(input: {
 
     for (const operation of unimplementedOperations) {
         if (IGNORED_UNIMPLEMENTED_OPERATIONS.has(operation)) continue;
+        const isNewUpstreamOperation = !BASELINED_UNIMPLEMENTED_OPERATIONS.has(operation);
         discrepancies.push({
-            severity: "warning",
-            category: "unimplemented-operation",
+            severity: isNewUpstreamOperation ? "error" : "warning",
+            category: isNewUpstreamOperation
+                ? "new-upstream-operation"
+                : "unimplemented-operation",
             operation,
-            message: `AniList operation ${operation} is not implemented by AniLink`,
+            message: isNewUpstreamOperation
+                ? `AniList operation ${operation} is new and is not implemented by AniLink`
+                : `AniList operation ${operation} is not implemented by AniLink`,
         });
     }
 
