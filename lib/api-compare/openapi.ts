@@ -17,15 +17,19 @@ export interface OpenApiDocument {
     components?: { schemas?: Record<string, OpenApiSchema> };
 }
 
-/** One path entry with its HTTP operations keyed by lowercase method. */
+/** One path entry with path-level parameters and HTTP operations. */
 export interface OpenApiPathItem {
-    [method: string]: OpenApiOperation | undefined;
+    parameters?: OpenApiParameter[];
+    [method: string]: OpenApiOperation | OpenApiParameter[] | undefined;
 }
 
-/** One HTTP operation: parameters plus its success response schema. */
+/** One HTTP operation: parameters, an optional request body, and its success response schema. */
 export interface OpenApiOperation {
     parameters?: OpenApiParameter[];
-    requestBody?: { content?: Record<string, { schema?: OpenApiSchema }> };
+    requestBody?: {
+        required?: boolean;
+        content?: Record<string, { schema?: OpenApiSchema }>;
+    };
     responses?: Record<string, { content?: Record<string, { schema?: OpenApiSchema }> }>;
 }
 
@@ -51,13 +55,14 @@ export interface OpenApiSchema {
     "x-optional"?: boolean;
     items?: OpenApiSchema;
     properties?: Record<string, OpenApiSchema>;
+    required?: string[];
     allOf?: OpenApiSchema[];
     enum?: unknown[];
 }
 
 /** A field contract extracted from a resolved OpenAPI schema. */
 export interface OpenApiField {
-    /** Field name as it appears in the JSON response. */
+    /** Field name as it appears in the request or response schema. */
     name: string;
     /** Normalized type: `string`, `number`, `boolean`, `array`, or `object`. */
     type: string;
@@ -65,7 +70,7 @@ export interface OpenApiField {
     optional: boolean;
 }
 
-/** A flat, resolved view of one response schema: its fields plus nested refs. */
+/** A flat, resolved view of one schema: its fields plus nested refs. */
 export interface ResolvedSchema {
     /** Fields declared on the schema itself (including `allOf` members). */
     fields: OpenApiField[];
@@ -347,7 +352,7 @@ function nestedSchemaOf(schema: OpenApiSchema): OpenApiSchema | undefined {
 }
 
 /**
- * A TypeScript contract of one provider response type, extracted from source.
+ * A TypeScript contract of one provider response or request-body type.
  *
  * Keyed by the interface names the provider's REST surface declares in its
  * `types.ts`.
@@ -361,6 +366,36 @@ export interface RestTypeContract {
     fields: Record<string, { type: string; optional: boolean; array: boolean }>;
 }
 
+/** One package request parameter expected on a mapped endpoint. */
+export interface RestRequestParameter {
+    /** Parameter name sent by the package. */
+    name: string;
+    /** OpenAPI parameter location. */
+    in: "path" | "query";
+    /** Normalized package type: `string`, `number`, `boolean`, `array`, or `object`. */
+    type: string;
+    /** Property in the extracted package params interface, when applicable. */
+    sourceProperty?: string;
+    /** Whether the package params interface allows this property to be omitted. */
+    optional?: boolean;
+}
+
+/** The package request shape expected for one mapped endpoint. */
+export interface RestEndpointRequestContract {
+    /** Query and path parameters sent by the package. */
+    parameters: RestRequestParameter[];
+    /** Extracted TypeScript interface that defines operation parameters. */
+    paramsTypeName?: string;
+    /** Common parameters documented outside the operation's OpenAPI declaration. */
+    commonParameters?: RestRequestParameter[];
+    /** Extracted TypeScript interface for a form or JSON request body. */
+    requestBodyTypeName?: string;
+    /** Content type the package sends for the request body. */
+    requestBodyContentType?: string;
+    /** Wire types for body fields whose serialization changes their input type. */
+    bodyFieldTypeOverrides?: Record<string, string>;
+}
+
 /** One package-type-to-endpoint mapping under comparison. */
 export interface RestEndpointMapping {
     /** The package interface name, e.g. `MalAnime`; omit for coverage-only
@@ -372,13 +407,15 @@ export interface RestEndpointMapping {
     method: string;
     /** Compare against the schema's `data` array items instead of the list itself. */
     dataItems?: boolean;
+    /** Expected package request contract, shared by mappings for the same endpoint. */
+    requestContract?: RestEndpointRequestContract;
 }
 
 /** The comparison input: a spec document plus the package's type contracts. */
 export interface RestContractComparisonInput {
     /** The OpenAPI document to compare against. */
     document: OpenApiDocument;
-    /** The package's response type contracts, keyed by interface name. */
+    /** The package's response and request-body contracts, keyed by interface name. */
     contracts: Record<string, RestTypeContract>;
     /** Mappings of package type to endpoint. */
     endpoints: RestEndpointMapping[];
@@ -399,11 +436,10 @@ export interface RestContractComparisonResult {
 /**
  * Compare a package's REST type contracts against an OpenAPI spec.
  *
- * Runs in both directions: every mapped package interface must match its
- * endpoint's response schema field-for-field, and every spec endpoint must
- * be mapped by some package mapping — including coverage-only mappings,
- * which omit `typeName` for void-returning methods — so unwrapped upstream
- * endpoints surface as warnings.
+ * Compares mapped response fields and request parameter/body names, types, and
+ * requiredness against the OpenAPI document. It also checks endpoint coverage so unwrapped
+ * upstream endpoints surface as warnings, including endpoints represented by
+ * coverage-only mappings that omit `typeName` for void-returning methods.
  *
  * @param input - The spec document, package contracts, and endpoint mappings.
  * @returns All discrepancies plus verified-type and endpoint-coverage counts.
@@ -413,8 +449,44 @@ export function compareRestContracts(
 ): RestContractComparisonResult {
     const discrepancies: Discrepancy[] = [];
     let verifiedTypes = 0;
+    const checkedRequestEndpoints = new Set<string>();
+    const reportedRemovedEndpoints = new Set<string>();
 
     for (const mapping of input.endpoints) {
+        const pathItem = input.document.paths[mapping.path];
+        const candidateOperation = pathItem?.[mapping.method];
+        const operation =
+            candidateOperation && !Array.isArray(candidateOperation)
+                ? candidateOperation
+                : undefined;
+        const endpoint = `${mapping.method.toUpperCase()} ${mapping.path}`;
+        if (!operation) {
+            if (!reportedRemovedEndpoints.has(endpoint)) {
+                reportedRemovedEndpoints.add(endpoint);
+                discrepancies.push({
+                    severity: "error",
+                    category: "removed-endpoint",
+                    operation: mapping.typeName ?? endpoint,
+                    apiValue: endpoint,
+                    message: `Endpoint ${endpoint} is not present in the spec`,
+                });
+            }
+            continue;
+        }
+
+        if (mapping.requestContract && operation && !checkedRequestEndpoints.has(endpoint)) {
+            checkedRequestEndpoints.add(endpoint);
+            compareRequestContract(
+                input.document,
+                pathItem!,
+                operation,
+                mapping.requestContract,
+                endpoint,
+                input.contracts,
+                discrepancies
+            );
+        }
+
         // Coverage-only mapping: the package wraps the endpoint with a
         // void-returning method, so there is no response contract to verify.
         if (!mapping.typeName) continue;
@@ -429,17 +501,6 @@ export function compareRestContracts(
             continue;
         }
 
-        const operation = input.document.paths[mapping.path]?.[mapping.method];
-        if (!operation) {
-            discrepancies.push({
-                severity: "error",
-                category: "removed-endpoint",
-                operation: mapping.typeName,
-                apiValue: `${mapping.method.toUpperCase()} ${mapping.path}`,
-                message: `Endpoint ${mapping.method.toUpperCase()} ${mapping.path} is not present in the spec`,
-            });
-            continue;
-        }
         const responseSchema = operation.responses?.["200"];
         const schema =
             responseSchema?.content?.["*/*"]?.schema ??
@@ -514,6 +575,334 @@ export function compareRestContracts(
         implementedEndpoints: implemented,
         unimplementedEndpoints: unimplemented,
     };
+}
+
+/** Compare one mapped package request shape with its OpenAPI operation. */
+function compareRequestContract(
+    document: OpenApiDocument,
+    pathItem: OpenApiPathItem,
+    operation: OpenApiOperation,
+    requestContract: RestEndpointRequestContract,
+    endpoint: string,
+    contracts: Record<string, RestTypeContract>,
+    discrepancies: Discrepancy[]
+): void {
+    const apiParameters = new Map<string, OpenApiParameter>();
+    const commonParameters = new Map(
+        (requestContract.commonParameters ?? []).map((parameter) => [
+            `${parameter.in}:${parameter.name}`,
+            parameter,
+        ])
+    );
+    for (const parameter of pathItem.parameters ?? []) {
+        apiParameters.set(`${parameter.in}:${parameter.name}`, parameter);
+    }
+    for (const parameter of operation.parameters ?? []) {
+        apiParameters.set(`${parameter.in}:${parameter.name}`, parameter);
+    }
+
+    const paramsContract = requestContract.paramsTypeName
+        ? contracts[requestContract.paramsTypeName]
+        : undefined;
+    if (requestContract.paramsTypeName && !paramsContract) {
+        discrepancies.push({
+            severity: "error",
+            category: "parameter-mismatch",
+            operation: endpoint,
+            packageValue: requestContract.paramsTypeName,
+            apiValue: "missing TypeScript parameter contract",
+            message: `No TypeScript parameter contract found for ${requestContract.paramsTypeName}`,
+        });
+    }
+
+    const bodyContract = requestContract.requestBodyTypeName
+        ? contracts[requestContract.requestBodyTypeName]
+        : undefined;
+    if (requestContract.requestBodyTypeName && !bodyContract) {
+        discrepancies.push({
+            severity: "error",
+            category: "parameter-mismatch",
+            operation: endpoint,
+            packageValue: requestContract.requestBodyTypeName,
+            apiValue: "missing TypeScript request-body contract",
+            message: `No TypeScript request-body contract found for ${requestContract.requestBodyTypeName}`,
+        });
+    }
+
+    const mappedParameterKeys = new Set<string>();
+    const mappedSourceProperties = new Set<string>();
+    for (const packageParameter of requestContract.parameters) {
+        const key = `${packageParameter.in}:${packageParameter.name}`;
+        mappedParameterKeys.add(key);
+        const sourceField = packageParameter.sourceProperty
+            ? paramsContract?.fields[packageParameter.sourceProperty]
+            : undefined;
+        if (packageParameter.sourceProperty) {
+            mappedSourceProperties.add(packageParameter.sourceProperty);
+            if (!requestContract.paramsTypeName) {
+                discrepancies.push({
+                    severity: "error",
+                    category: "parameter-mismatch",
+                    operation: endpoint,
+                    packageValue: packageParameter.sourceProperty,
+                    apiValue: "no TypeScript parameter type configured",
+                    message: `Request parameter ${packageParameter.sourceProperty} has no TypeScript params interface for ${endpoint}`,
+                });
+            } else if (paramsContract && !sourceField) {
+                discrepancies.push({
+                    severity: "error",
+                    category: "parameter-mismatch",
+                    operation: endpoint,
+                    packageValue: packageParameter.sourceProperty,
+                    apiValue: `not declared in ${requestContract.paramsTypeName}`,
+                    message: `Request parameter property ${packageParameter.sourceProperty} is not declared in ${requestContract.paramsTypeName}`,
+                });
+            }
+        }
+
+        const apiParameter = apiParameters.get(key);
+        const commonParameter = commonParameters.get(key);
+        if (!apiParameter && !commonParameter) {
+            discrepancies.push({
+                severity: "error",
+                category: "parameter-mismatch",
+                operation: endpoint,
+                packageValue: `${packageParameter.in} ${packageParameter.name}: ${packageParameter.type}`,
+                apiValue: "not declared",
+                message: `Request parameter ${packageParameter.in} ${packageParameter.name} is not declared for ${endpoint}`,
+            });
+            continue;
+        }
+
+        const extractedType = sourceField ? normalizePackageType(sourceField) : "unknown";
+        const packageType = extractedType === "unknown" ? packageParameter.type : extractedType;
+        const apiType = apiParameter?.schema
+            ? schemaFieldType(apiParameter.schema)
+            : (commonParameter?.type ?? "unknown");
+        if (
+            packageType !== "unknown" &&
+            apiType !== "unknown" &&
+            packageType !== apiType
+        ) {
+            discrepancies.push({
+                severity: "error",
+                category: "parameter-mismatch",
+                operation: endpoint,
+                packageValue: `${packageParameter.in} ${packageParameter.name}: ${packageType}`,
+                apiValue: apiParameter
+                    ? `${apiParameter.in} ${apiParameter.name}: ${apiType}`
+                    : `common ${commonParameter!.in} ${commonParameter!.name}: ${apiType}`,
+                message: `Request parameter ${packageParameter.name} is ${packageParameter.type} in the package; ${apiParameter ? "the spec" : "the common API contract"} declares ${apiType}`,
+            });
+        }
+
+        const packageParameterOptional =
+            sourceField?.optional ?? packageParameter.optional ?? true;
+        if (
+            apiParameter &&
+            isRequiredParameter(apiParameter) &&
+            packageParameterOptional
+        ) {
+            discrepancies.push({
+                severity: "error",
+                category: "parameter-mismatch",
+                operation: endpoint,
+                packageValue: `${packageParameter.in} ${packageParameter.name}: optional in the package`,
+                apiValue: `${packageParameter.in} ${packageParameter.name}: required`,
+                message: `Required request parameter ${packageParameter.name} is optional in the package contract for ${endpoint}`,
+            });
+        }
+    }
+
+    for (const apiParameter of apiParameters.values()) {
+        const key = `${apiParameter.in}:${apiParameter.name}`;
+        if (
+            !isRequiredParameter(apiParameter) ||
+            mappedParameterKeys.has(key) ||
+            commonParameters.has(key)
+        ) {
+            continue;
+        }
+        const apiType = apiParameter.schema ? schemaFieldType(apiParameter.schema) : "unknown";
+        discrepancies.push({
+            severity: "error",
+            category: "parameter-mismatch",
+            operation: endpoint,
+            packageValue: "not declared",
+            apiValue: `${apiParameter.in} ${apiParameter.name}: ${apiType} (required)`,
+            message: `Required request parameter ${apiParameter.name} is not declared by the package for ${endpoint}`,
+        });
+    }
+
+    if (!requestContract.requestBodyTypeName) {
+        if (operation.requestBody?.required) {
+            discrepancies.push({
+                severity: "error",
+                category: "parameter-mismatch",
+                operation: endpoint,
+                packageValue: "no request-body contract",
+                apiValue: "required request body",
+                message: `Required request body is not declared by the package for ${endpoint}`,
+            });
+        }
+        reportUnmappedParameterProperties(
+            paramsContract,
+            mappedSourceProperties,
+            new Set(),
+            requestContract.paramsTypeName,
+            endpoint,
+            discrepancies
+        );
+        return;
+    }
+
+    if (!bodyContract) {
+        reportUnmappedParameterProperties(
+            paramsContract,
+            mappedSourceProperties,
+            new Set(),
+            requestContract.paramsTypeName,
+            endpoint,
+            discrepancies
+        );
+        return;
+    }
+
+    const bodyContentType = requestContract.requestBodyContentType;
+    const bodyContent = bodyContentType
+        ? operation.requestBody?.content?.[bodyContentType]
+        : Object.values(operation.requestBody?.content ?? {}).find((content) => content.schema);
+    const bodySchema = bodyContent?.schema;
+    if (!bodySchema) {
+        discrepancies.push({
+            severity: "error",
+            category: "parameter-mismatch",
+            operation: endpoint,
+            packageValue: requestContract.requestBodyTypeName,
+            apiValue: bodyContentType
+                ? `no ${bodyContentType} request body schema`
+                : "no request body schema",
+            message: bodyContentType
+                ? `No ${bodyContentType} request body schema is declared for ${endpoint}`
+                : `No request body schema is declared for ${endpoint}`,
+        });
+        reportUnmappedParameterProperties(
+            paramsContract,
+            mappedSourceProperties,
+            new Set(Object.keys(bodyContract.fields)),
+            requestContract.paramsTypeName,
+            endpoint,
+            discrepancies
+        );
+        return;
+    }
+
+    const requiredBodyFields = requiredSchemaFields(document, bodySchema);
+    for (const fieldName of requiredBodyFields) {
+        const packageField = bodyContract.fields[fieldName];
+        if (packageField && !packageField.optional) continue;
+        discrepancies.push({
+            severity: "error",
+            category: "parameter-mismatch",
+            operation: endpoint,
+            sourcePath: bodyContract.sourcePath,
+            packageValue: packageField
+                ? `body.${fieldName}: optional`
+                : `body.${fieldName}: not declared`,
+            apiValue: `body.${fieldName}: required`,
+            message: `Required request-body field ${fieldName} is not required by the package contract for ${endpoint}`,
+        });
+    }
+
+    const apiFields = new Map(
+        resolveSchema(document, bodySchema).fields.map((field) => [field.name, field])
+    );
+    for (const [fieldName, field] of Object.entries(bodyContract.fields)) {
+        const apiField = apiFields.get(fieldName);
+        if (!apiField) {
+            discrepancies.push({
+                severity: "error",
+                category: "parameter-mismatch",
+                operation: endpoint,
+                sourcePath: bodyContract.sourcePath,
+                packageValue: `body.${fieldName}`,
+                apiValue: "not declared",
+                message: `Request-body field ${fieldName} is not declared for ${endpoint}`,
+            });
+            continue;
+        }
+
+        const packageType =
+            requestContract.bodyFieldTypeOverrides?.[fieldName] ?? normalizePackageType(field);
+        if (packageType !== "unknown" && packageType !== apiField.type) {
+            discrepancies.push({
+                severity: "error",
+                category: "parameter-mismatch",
+                operation: endpoint,
+                sourcePath: bodyContract.sourcePath,
+                packageValue: `body.${fieldName}: ${packageType}`,
+                apiValue: `body.${fieldName}: ${apiField.type}`,
+                message: `Request-body field ${fieldName} is ${packageType} in the package; the spec declares ${apiField.type}`,
+            });
+        }
+    }
+
+    reportUnmappedParameterProperties(
+        paramsContract,
+        mappedSourceProperties,
+        new Set(Object.keys(bodyContract.fields)),
+        requestContract.paramsTypeName,
+        endpoint,
+        discrepancies
+    );
+}
+
+function isRequiredParameter(parameter: OpenApiParameter): boolean {
+    return parameter.required === true || parameter.in === "path";
+}
+
+function reportUnmappedParameterProperties(
+    paramsContract: RestTypeContract | undefined,
+    mappedProperties: Set<string>,
+    bodyProperties: Set<string>,
+    paramsTypeName: string | undefined,
+    endpoint: string,
+    discrepancies: Discrepancy[]
+): void {
+    if (!paramsContract) return;
+    for (const propertyName of Object.keys(paramsContract.fields)) {
+        if (mappedProperties.has(propertyName) || bodyProperties.has(propertyName)) continue;
+        discrepancies.push({
+            severity: "error",
+            category: "parameter-mismatch",
+            operation: endpoint,
+            sourcePath: paramsContract.sourcePath,
+            packageValue: `parameter ${propertyName}`,
+            apiValue: "not mapped to a request parameter or body field",
+            message: `Request params property ${propertyName} in ${paramsTypeName} is not mapped for ${endpoint}`,
+        });
+    }
+}
+
+function requiredSchemaFields(document: OpenApiDocument, schema: OpenApiSchema): Set<string> {
+    const required = new Set<string>();
+    const visitedRefs = new Set<string>();
+
+    const visit = (node: OpenApiSchema): void => {
+        const target = dereferenceSchema(document, node);
+        if (target !== node) {
+            const refName = node.$ref!.split("/").pop()!;
+            if (visitedRefs.has(refName)) return;
+            visitedRefs.add(refName);
+            visit(target);
+            return;
+        }
+        for (const fieldName of target.required ?? []) required.add(fieldName);
+        for (const member of target.allOf ?? []) visit(member);
+    };
+
+    visit(schema);
+    return required;
 }
 
 /**

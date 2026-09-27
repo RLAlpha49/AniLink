@@ -31,7 +31,7 @@ AniLink is a typed TypeScript wrapper for the AniList GraphQL API and the MyAnim
 | `npm run jsdoc:check`                    | Validates the JSDoc contract                                                                 |
 | `npm run interfaces:generate -- --check` | Validates generated interfaces stay in sync with the AniList schema snapshot                 |
 | `npm run anilist:api:compare`            | Compares package contracts against the AniList schema snapshot; CI runs it with `--strict`   |
-| `npm run mal:api:compare`                | Compares the MAL response types against the MAL OpenAPI snapshot; CI runs it with `--strict` |
+| `npm run mal:api:compare`                | Compares MAL request and response contracts against the OpenAPI snapshot; CI uses `--strict` |
 | `npm run mal:api:update-schema`          | Refreshes the committed MAL OpenAPI snapshot from MAL's reference page                       |
 | `npm run build`                          | Builds `dist/`                                                                               |
 | `npm run docs:generate`                  | Generates the API docs into `docs/`                                                          |

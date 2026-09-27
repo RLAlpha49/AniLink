@@ -124,6 +124,56 @@ function buildSpec(): OpenApiDocument {
     });
 }
 
+function buildRequestSpec(bodyContentType = "application/x-www-form-urlencoded"): OpenApiDocument {
+    return validateOpenApiDocument({
+        openapi: "3.0.0",
+        paths: {
+            "/works/{work_id}": {
+                parameters: [
+                    { name: "work_id", in: "path", required: true, schema: { type: "integer" } },
+                ],
+                get: {
+                    parameters: [
+                        {
+                            name: "access_token",
+                            in: "query",
+                            required: true,
+                            schema: { type: "string" },
+                        },
+                    ],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            [bodyContentType]: {
+                                schema: {
+                                    type: "object",
+                                    required: ["enabled"],
+                                    properties: {
+                                        enabled: { type: "boolean" },
+                                        note: { type: "string" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    responses: {
+                        "200": {
+                            content: {
+                                "*/*": {
+                                    schema: {
+                                        type: "object",
+                                        properties: { id: { type: "integer" } },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    });
+}
+
 /** A contract set matching (or drifting from) the spec above. */
 function buildContracts(
     fields: Record<string, { type: string; optional: boolean; array: boolean }>,
@@ -260,6 +310,367 @@ describe("compareRestContracts", () => {
             "GET /works/season/{year}",
         ]);
         expect(result.unimplementedEndpoints).toEqual([]);
+    });
+
+    it("accepts only explicitly documented common request parameters", () => {
+        const fields = { name: "fields", in: "query" as const, type: "string" };
+        const result = compareRestContracts({
+            document: buildSpec(),
+            contracts: buildContracts({
+                id: { type: "number", optional: false, array: false },
+            }),
+            endpoints: [
+                {
+                    ...WORK_MAPPING,
+                    requestContract: {
+                        parameters: [fields, { name: "include", in: "query", type: "boolean" }],
+                        commonParameters: [fields],
+                    },
+                },
+            ],
+        });
+
+        expect(
+            result.discrepancies.filter(
+                (discrepancy) => discrepancy.category === "parameter-mismatch"
+            )
+        ).toEqual([
+            expect.objectContaining({
+                packageValue: "query include: boolean",
+                apiValue: "not declared",
+            }),
+        ]);
+    });
+
+    it("reports a removed coverage-only endpoint", () => {
+        const result = compareRestContracts({
+            document: buildSpec(),
+            contracts: {},
+            endpoints: [{ path: "/works/{work_id}", method: "delete" }],
+        });
+
+        expect(result.discrepancies).toContainEqual(
+            expect.objectContaining({
+                severity: "error",
+                category: "removed-endpoint",
+                operation: "DELETE /works/{work_id}",
+            })
+        );
+    });
+
+    it("reports required upstream parameters missing from the package request shape", () => {
+        const result = compareRestContracts({
+            document: buildRequestSpec(),
+            contracts: {
+                ...buildContracts({ id: { type: "number", optional: false, array: false } }),
+                WorkRequest: {
+                    name: "WorkRequest",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: { id: { type: "number", optional: false, array: false } },
+                },
+                RequestBody: {
+                    name: "RequestBody",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: { enabled: { type: "boolean", optional: false, array: false } },
+                },
+            },
+            endpoints: [
+                {
+                    ...WORK_MAPPING,
+                    requestContract: {
+                        paramsTypeName: "WorkRequest",
+                        parameters: [
+                            {
+                                name: "work_id",
+                                in: "path",
+                                type: "number",
+                                sourceProperty: "id",
+                            },
+                        ],
+                        requestBodyTypeName: "RequestBody",
+                        requestBodyContentType: "application/x-www-form-urlencoded",
+                    },
+                },
+            ],
+        });
+
+        expect(result.discrepancies).toContainEqual(
+            expect.objectContaining({
+                severity: "error",
+                category: "parameter-mismatch",
+                operation: "GET /works/{work_id}",
+                apiValue: "query access_token: string (required)",
+            })
+        );
+    });
+
+    it("reports a required path parameter modeled as optional", () => {
+        const result = compareRestContracts({
+            document: buildRequestSpec(),
+            contracts: {
+                ...buildContracts({ id: { type: "number", optional: false, array: false } }),
+                WorkRequest: {
+                    name: "WorkRequest",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: {
+                        id: { type: "number", optional: true, array: false },
+                        token: { type: "string", optional: false, array: false },
+                    },
+                },
+                RequestBody: {
+                    name: "RequestBody",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: { enabled: { type: "boolean", optional: false, array: false } },
+                },
+            },
+            endpoints: [
+                {
+                    ...WORK_MAPPING,
+                    requestContract: {
+                        paramsTypeName: "WorkRequest",
+                        parameters: [
+                            {
+                                name: "work_id",
+                                in: "path",
+                                type: "number",
+                                sourceProperty: "id",
+                            },
+                            {
+                                name: "access_token",
+                                in: "query",
+                                type: "string",
+                                sourceProperty: "token",
+                            },
+                        ],
+                        requestBodyTypeName: "RequestBody",
+                        requestBodyContentType: "application/x-www-form-urlencoded",
+                    },
+                },
+            ],
+        });
+
+        expect(result.discrepancies).toContainEqual(
+            expect.objectContaining({
+                severity: "error",
+                category: "parameter-mismatch",
+                packageValue: "path work_id: optional in the package",
+                apiValue: "path work_id: required",
+            })
+        );
+    });
+
+    it("reports a required request-body field modeled as optional", () => {
+        const result = compareRestContracts({
+            document: buildRequestSpec(),
+            contracts: {
+                ...buildContracts({ id: { type: "number", optional: false, array: false } }),
+                WorkRequest: {
+                    name: "WorkRequest",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: {
+                        id: { type: "number", optional: false, array: false },
+                        token: { type: "string", optional: false, array: false },
+                    },
+                },
+                RequestBody: {
+                    name: "RequestBody",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: { enabled: { type: "boolean", optional: true, array: false } },
+                },
+            },
+            endpoints: [
+                {
+                    ...WORK_MAPPING,
+                    requestContract: {
+                        paramsTypeName: "WorkRequest",
+                        parameters: [
+                            {
+                                name: "work_id",
+                                in: "path",
+                                type: "number",
+                                sourceProperty: "id",
+                            },
+                            {
+                                name: "access_token",
+                                in: "query",
+                                type: "string",
+                                sourceProperty: "token",
+                            },
+                        ],
+                        requestBodyTypeName: "RequestBody",
+                        requestBodyContentType: "application/x-www-form-urlencoded",
+                    },
+                },
+            ],
+        });
+
+        expect(result.discrepancies).toContainEqual(
+            expect.objectContaining({
+                severity: "error",
+                category: "parameter-mismatch",
+                packageValue: "body.enabled: optional",
+                apiValue: "body.enabled: required",
+            })
+        );
+    });
+
+    it("reports a required request body missing from the package contract", () => {
+        const result = compareRestContracts({
+            document: buildRequestSpec(),
+            contracts: {
+                ...buildContracts({ id: { type: "number", optional: false, array: false } }),
+                WorkRequest: {
+                    name: "WorkRequest",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: {
+                        id: { type: "number", optional: false, array: false },
+                        token: { type: "string", optional: false, array: false },
+                    },
+                },
+            },
+            endpoints: [
+                {
+                    ...WORK_MAPPING,
+                    requestContract: {
+                        paramsTypeName: "WorkRequest",
+                        parameters: [
+                            {
+                                name: "work_id",
+                                in: "path",
+                                type: "number",
+                                sourceProperty: "id",
+                            },
+                            {
+                                name: "access_token",
+                                in: "query",
+                                type: "string",
+                                sourceProperty: "token",
+                            },
+                        ],
+                    },
+                },
+            ],
+        });
+
+        expect(result.discrepancies).toContainEqual(
+            expect.objectContaining({
+                severity: "error",
+                category: "parameter-mismatch",
+                packageValue: "no request-body contract",
+                apiValue: "required request body",
+            })
+        );
+    });
+
+    it("reports request parameter fields missing from the endpoint mapping", () => {
+        const result = compareRestContracts({
+            document: buildRequestSpec(),
+            contracts: {
+                ...buildContracts({ id: { type: "number", optional: false, array: false } }),
+                WorkRequest: {
+                    name: "WorkRequest",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: {
+                        id: { type: "number", optional: false, array: false },
+                        token: { type: "string", optional: false, array: false },
+                        missing: { type: "string", optional: true, array: false },
+                    },
+                },
+                RequestBody: {
+                    name: "RequestBody",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: { enabled: { type: "boolean", optional: false, array: false } },
+                },
+            },
+            endpoints: [
+                {
+                    ...WORK_MAPPING,
+                    requestContract: {
+                        paramsTypeName: "WorkRequest",
+                        parameters: [
+                            {
+                                name: "work_id",
+                                in: "path",
+                                type: "number",
+                                sourceProperty: "id",
+                            },
+                            {
+                                name: "access_token",
+                                in: "query",
+                                type: "string",
+                                sourceProperty: "token",
+                            },
+                        ],
+                        requestBodyTypeName: "RequestBody",
+                        requestBodyContentType: "application/x-www-form-urlencoded",
+                    },
+                },
+            ],
+        });
+
+        expect(result.discrepancies).toContainEqual(
+            expect.objectContaining({
+                severity: "error",
+                category: "parameter-mismatch",
+                packageValue: "parameter missing",
+                apiValue: "not mapped to a request parameter or body field",
+            })
+        );
+    });
+
+    it("requires the configured request-body content type", () => {
+        const result = compareRestContracts({
+            document: buildRequestSpec("application/json"),
+            contracts: {
+                ...buildContracts({ id: { type: "number", optional: false, array: false } }),
+                WorkRequest: {
+                    name: "WorkRequest",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: {
+                        id: { type: "number", optional: false, array: false },
+                        token: { type: "string", optional: false, array: false },
+                    },
+                },
+                RequestBody: {
+                    name: "RequestBody",
+                    sourcePath: "src/apis/rest/provider/types.ts",
+                    fields: { enabled: { type: "boolean", optional: false, array: false } },
+                },
+            },
+            endpoints: [
+                {
+                    ...WORK_MAPPING,
+                    requestContract: {
+                        paramsTypeName: "WorkRequest",
+                        parameters: [
+                            {
+                                name: "work_id",
+                                in: "path",
+                                type: "number",
+                                sourceProperty: "id",
+                            },
+                            {
+                                name: "access_token",
+                                in: "query",
+                                type: "string",
+                                sourceProperty: "token",
+                            },
+                        ],
+                        requestBodyTypeName: "RequestBody",
+                        requestBodyContentType: "application/x-www-form-urlencoded",
+                    },
+                },
+            ],
+        });
+
+        expect(result.discrepancies).toContainEqual(
+            expect.objectContaining({
+                severity: "error",
+                category: "parameter-mismatch",
+                operation: "GET /works/{work_id}",
+                apiValue: "no application/x-www-form-urlencoded request body schema",
+            })
+        );
     });
 
     it("reports a field the upstream contract no longer declares", () => {

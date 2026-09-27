@@ -1,7 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import ts from "typescript";
-import type { RestEndpointMapping, RestTypeContract } from "../../lib/api-compare/openapi";
+import type {
+    RestEndpointMapping,
+    RestEndpointRequestContract,
+    RestTypeContract,
+} from "../../lib/api-compare/openapi";
 
 /**
  * The provider source trees whose type contracts are compared against their
@@ -14,42 +18,194 @@ const PROVIDER_SOURCE_ROOTS: Record<string, string> = {
 };
 
 /**
- * Package interfaces intentionally excluded from the contract comparison.
+ * Request option interfaces excluded from the response and request contract
+ * comparison.
  *
- * - `MalRequestOptions` and the per-operation params interfaces are request
- *   shapes, not response contracts; their query parameters are validated by
- *   the integration suite instead. Every params interface follows the
- *   `Mal<Thing>Params` naming convention, so the convention itself is the
- *   exclusion — a new params type is excluded automatically and cannot
- *   silently slip a request shape into the response-contract comparison.
- * - `MalAnimeListStatusUpdate` / `MalMangaListStatusUpdate` are form-encoded
- *   request bodies; the spec declares them inline per-operation rather than
- *   as named components, so they are verified by the live integration tests.
+ * MAL operation parameter interfaces are extracted and linked to their wire
+ * parameter names in `MAL_REQUEST_CONTRACTS`.
  */
-const EXCLUDED_TYPE_NAMES = new Set([
-    "MalRequestOptions",
-    "MalAnimeListStatusUpdate",
-    "MalMangaListStatusUpdate",
-]);
+const EXCLUDED_TYPE_NAMES = new Set(["MalRequestOptions"]);
 
 /**
- * Whether an interface is a request shape excluded from the response-contract
- * comparison: the named exclusions plus every `Mal<Thing>Params` type.
+ * Whether an interface is excluded from REST contract extraction.
  *
  * @param name - The exported interface name.
  * @returns Whether the interface is excluded from the comparison.
  */
 function isExcludedType(name: string): boolean {
-    return EXCLUDED_TYPE_NAMES.has(name) || (name.startsWith("Mal") && name.endsWith("Params"));
+    return EXCLUDED_TYPE_NAMES.has(name);
 }
 
 /**
- * The package types compared against the MAL OpenAPI spec, each mapped to the
- * endpoint whose response schema governs it.
+ * Request contracts declared for each mapped MAL endpoint.
  *
- * Adding a wrapped MAL endpoint means adding its response interface here.
+ * These describe the names/types the package sends; body types are extracted
+ * from the provider's request interfaces below.
  */
-export const MAL_ENDPOINT_MAPPINGS: RestEndpointMapping[] = [
+const MAL_REQUEST_CONTRACTS: Record<string, RestEndpointRequestContract> = {
+    "GET /anime/{anime_id}": {
+        paramsTypeName: "MalAnimeGetParams",
+        parameters: [
+            { name: "anime_id", in: "path", type: "number", sourceProperty: "id" },
+            { name: "fields", in: "query", type: "string" },
+        ],
+    },
+    "GET /anime": {
+        paramsTypeName: "MalAnimeSearchParams",
+        parameters: [
+            { name: "q", in: "query", type: "string", sourceProperty: "q" },
+            { name: "limit", in: "query", type: "number", sourceProperty: "limit" },
+            { name: "offset", in: "query", type: "number", sourceProperty: "offset" },
+            { name: "fields", in: "query", type: "string" },
+        ],
+    },
+    "GET /anime/season/{year}/{season}": {
+        paramsTypeName: "MalSeasonalParams",
+        parameters: [
+            { name: "year", in: "path", type: "number", sourceProperty: "year" },
+            { name: "season", in: "path", type: "string", sourceProperty: "season" },
+            { name: "fields", in: "query", type: "string" },
+        ],
+    },
+    "GET /anime/ranking": {
+        paramsTypeName: "MalRankingParams",
+        parameters: [
+            {
+                name: "ranking_type",
+                in: "query",
+                type: "string",
+                sourceProperty: "rankingType",
+            },
+            { name: "fields", in: "query", type: "string" },
+        ],
+    },
+    "GET /anime/suggestions": {
+        parameters: [{ name: "fields", in: "query", type: "string" }],
+    },
+    "PATCH /anime/{anime_id}/my_list_status": {
+        paramsTypeName: "MalAnimeListStatusUpdateParams",
+        parameters: [
+            { name: "anime_id", in: "path", type: "number", sourceProperty: "id" },
+            { name: "fields", in: "query", type: "string" },
+        ],
+        commonParameters: [{ name: "fields", in: "query", type: "string" }],
+        requestBodyTypeName: "MalAnimeListStatusUpdate",
+        requestBodyContentType: "application/x-www-form-urlencoded",
+        bodyFieldTypeOverrides: { tags: "string" },
+    },
+    "DELETE /anime/{anime_id}/my_list_status": {
+        paramsTypeName: "MalAnimeDeleteParams",
+        parameters: [{ name: "anime_id", in: "path", type: "number", sourceProperty: "id" }],
+    },
+    "GET /manga/{manga_id}": {
+        paramsTypeName: "MalMangaGetParams",
+        parameters: [
+            { name: "manga_id", in: "path", type: "number", sourceProperty: "id" },
+            { name: "fields", in: "query", type: "string" },
+        ],
+    },
+    "GET /manga": {
+        paramsTypeName: "MalMangaSearchParams",
+        parameters: [
+            { name: "q", in: "query", type: "string", sourceProperty: "q" },
+            { name: "limit", in: "query", type: "number", sourceProperty: "limit" },
+            { name: "offset", in: "query", type: "number", sourceProperty: "offset" },
+            { name: "fields", in: "query", type: "string" },
+        ],
+    },
+    "GET /manga/ranking": {
+        paramsTypeName: "MalMangaRankingParams",
+        parameters: [
+            {
+                name: "ranking_type",
+                in: "query",
+                type: "string",
+                sourceProperty: "rankingType",
+            },
+            { name: "fields", in: "query", type: "string" },
+        ],
+    },
+    "PATCH /manga/{manga_id}/my_list_status": {
+        paramsTypeName: "MalMangaListStatusUpdateParams",
+        parameters: [
+            { name: "manga_id", in: "path", type: "number", sourceProperty: "id" },
+            { name: "fields", in: "query", type: "string" },
+        ],
+        commonParameters: [{ name: "fields", in: "query", type: "string" }],
+        requestBodyTypeName: "MalMangaListStatusUpdate",
+        requestBodyContentType: "application/x-www-form-urlencoded",
+        bodyFieldTypeOverrides: { tags: "string" },
+    },
+    "DELETE /manga/{manga_id}/my_list_status": {
+        paramsTypeName: "MalMangaDeleteParams",
+        parameters: [{ name: "manga_id", in: "path", type: "number", sourceProperty: "id" }],
+    },
+    "GET /users/{user_name}": {
+        paramsTypeName: "MalUserGetParams",
+        parameters: [
+            { name: "user_id", in: "path", type: "string", sourceProperty: "username" },
+            { name: "fields", in: "query", type: "string" },
+        ],
+    },
+    "GET /users/{user_name}/animelist": {
+        paramsTypeName: "MalUserAnimeListParams",
+        parameters: [
+            { name: "user_name", in: "path", type: "string", sourceProperty: "username" },
+            { name: "fields", in: "query", type: "string" },
+            { name: "status", in: "query", type: "string", sourceProperty: "status" },
+            { name: "sort", in: "query", type: "string", sourceProperty: "sort" },
+            { name: "limit", in: "query", type: "number", sourceProperty: "limit" },
+            { name: "offset", in: "query", type: "number", sourceProperty: "offset" },
+        ],
+        commonParameters: [{ name: "fields", in: "query", type: "string" }],
+    },
+    "GET /users/{user_name}/mangalist": {
+        paramsTypeName: "MalUserMangaListParams",
+        parameters: [
+            { name: "user_name", in: "path", type: "string", sourceProperty: "username" },
+            { name: "fields", in: "query", type: "string" },
+            { name: "status", in: "query", type: "string", sourceProperty: "status" },
+            { name: "sort", in: "query", type: "string", sourceProperty: "sort" },
+            { name: "limit", in: "query", type: "number", sourceProperty: "limit" },
+            { name: "offset", in: "query", type: "number", sourceProperty: "offset" },
+        ],
+        commonParameters: [{ name: "fields", in: "query", type: "string" }],
+    },
+    "GET /forum/boards": { parameters: [] },
+    "GET /forum/topics": {
+        paramsTypeName: "MalForumTopicsParams",
+        parameters: [
+            { name: "board_id", in: "query", type: "number", sourceProperty: "boardId" },
+            {
+                name: "subboard_id",
+                in: "query",
+                type: "number",
+                sourceProperty: "subboardId",
+            },
+            { name: "q", in: "query", type: "string", sourceProperty: "q" },
+            {
+                name: "topic_user_name",
+                in: "query",
+                type: "string",
+                sourceProperty: "topicUserName",
+            },
+            { name: "user_name", in: "query", type: "string", sourceProperty: "userName" },
+            { name: "sort", in: "query", type: "string", sourceProperty: "sort" },
+            { name: "limit", in: "query", type: "number", sourceProperty: "limit" },
+            { name: "offset", in: "query", type: "number", sourceProperty: "offset" },
+        ],
+    },
+    "GET /forum/topic/{topic_id}": {
+        paramsTypeName: "MalForumTopicParams",
+        parameters: [
+            { name: "topic_id", in: "path", type: "number", sourceProperty: "id" },
+            { name: "limit", in: "query", type: "number", sourceProperty: "limit" },
+            { name: "offset", in: "query", type: "number", sourceProperty: "offset" },
+        ],
+    },
+};
+
+const MAL_ENDPOINT_MAPPING_ENTRIES: RestEndpointMapping[] = [
     { typeName: "MalAnime", path: "/anime/{anime_id}", method: "get" },
     { typeName: "MalAnimeSearchEntry", path: "/anime", method: "get", dataItems: true },
     { typeName: "MalAnimeSearchResponse", path: "/anime", method: "get" },
@@ -110,6 +266,40 @@ export const MAL_ENDPOINT_MAPPINGS: RestEndpointMapping[] = [
 ];
 
 /**
+ * The package types compared against the MAL OpenAPI spec, with each endpoint's
+ * request contract attached to its response mappings.
+ *
+ * Add new endpoints to the request inventory above and add their response
+ * mappings here.
+ */
+export const MAL_ENDPOINT_MAPPINGS: RestEndpointMapping[] = attachRequestContracts(
+    MAL_ENDPOINT_MAPPING_ENTRIES
+);
+
+function attachRequestContracts(mappings: RestEndpointMapping[]): RestEndpointMapping[] {
+    const endpoints = new Set<string>();
+    const mapped = mappings.map((mapping) => {
+        const endpoint = `${mapping.method.toUpperCase()} ${mapping.path}`;
+        const requestContract = MAL_REQUEST_CONTRACTS[endpoint];
+        if (!requestContract) {
+            throw new Error(`No MAL request contract configured for ${endpoint}`);
+        }
+        endpoints.add(endpoint);
+        return { ...mapping, requestContract };
+    });
+
+    const unusedContracts = Object.keys(MAL_REQUEST_CONTRACTS).filter(
+        (endpoint) => !endpoints.has(endpoint)
+    );
+    if (unusedContracts.length > 0) {
+        throw new Error(
+            `MAL request contracts have no endpoint mappings: ${unusedContracts.join(", ")}`
+        );
+    }
+    return mapped;
+}
+
+/**
  * The endpoint mappings per REST provider, keyed by the provider name used
  * in `providerConfigs`.
  *
@@ -122,9 +312,9 @@ export const REST_PROVIDER_MAPPINGS: Record<string, { endpoints: RestEndpointMap
 /**
  * Extract a provider's type contracts from its source tree.
  *
- * Walks the provider's REST source root (skipping the excluded request-shape
- * interfaces) and parses every exported interface into a flat field map,
- * mirroring the AniList contract extraction in
+ * Walks the provider's REST source root, skips request options, and parses
+ * exported response, request-parameter, and request-body interfaces into flat
+ * field maps. This mirrors the AniList contract extraction in
  * `lib/api-compare/typescript-contracts.ts`.
  *
  * @param repositoryRoot - Repository root containing the provider source tree.
@@ -162,13 +352,29 @@ function extractContracts(
 ): Record<string, RestTypeContract> {
     const file = ts.createSourceFile(sourcePath, sourceText, ts.ScriptTarget.Latest, true);
     const contracts: Record<string, RestTypeContract> = {};
+    const interfacesByName = new Map(
+        file.statements
+            .filter(ts.isInterfaceDeclaration)
+            .map((statement) => [statement.name.text, statement])
+    );
 
-    for (const statement of file.statements) {
-        if (!ts.isInterfaceDeclaration(statement)) continue;
-        if (!hasExportModifier(statement)) continue;
-        const name = statement.name.text;
-        if (isExcludedType(name)) continue;
-        const fields: RestTypeContract["fields"] = {};
+    const collectFields = (
+        statement: ts.InterfaceDeclaration,
+        fields: RestTypeContract["fields"],
+        visited = new Set<string>()
+    ): void => {
+        if (visited.has(statement.name.text)) return;
+        visited.add(statement.name.text);
+
+        for (const heritage of statement.heritageClauses ?? []) {
+            if (heritage.token !== ts.SyntaxKind.ExtendsKeyword) continue;
+            for (const type of heritage.types) {
+                if (!ts.isIdentifier(type.expression)) continue;
+                const base = interfacesByName.get(type.expression.text);
+                if (base) collectFields(base, fields, visited);
+            }
+        }
+
         for (const member of statement.members) {
             if (!ts.isPropertySignature(member)) continue;
             const propertyName =
@@ -181,6 +387,15 @@ function extractContracts(
                 array: normalized.array,
             };
         }
+    };
+
+    for (const statement of file.statements) {
+        if (!ts.isInterfaceDeclaration(statement)) continue;
+        if (!hasExportModifier(statement)) continue;
+        const name = statement.name.text;
+        if (isExcludedType(name)) continue;
+        const fields: RestTypeContract["fields"] = {};
+        collectFields(statement, fields);
         contracts[name] = { name, sourcePath, fields };
     }
     return contracts;
