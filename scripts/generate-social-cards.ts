@@ -283,22 +283,22 @@ function parsePathData(d: string): Point[] {
     let current: Point = [0, 0];
     let i = 0;
     while (i < tokens.length) {
-        const token = tokens[i];
-        if (token === "M") {
+        const command = tokens[i];
+        if (command === "M") {
             current = [Number(tokens[i + 1]), Number(tokens[i + 2])];
             if (polygon.length === 0) polygon.push(current);
             i += 3;
-        } else if (token === "C") {
+        } else if (command === "C") {
             const c1: Point = [Number(tokens[i + 1]), Number(tokens[i + 2])];
             const c2: Point = [Number(tokens[i + 3]), Number(tokens[i + 4])];
             const to: Point = [Number(tokens[i + 5]), Number(tokens[i + 6])];
             flattenCubic(current, c1, c2, to, polygon);
             current = to;
             i += 7;
-        } else if (token === "Z") {
+        } else if (command === "Z") {
             i += 1;
         } else {
-            throw new Error(`${LOGO_FILE}: unsupported path command "${token}"`);
+            throw new Error(`${LOGO_FILE}: unsupported path command "${command}"`);
         }
     }
     return polygon;
