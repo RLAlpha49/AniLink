@@ -1,0 +1,27 @@
+%% Source: docs-src/provider-configuration.md
+
+flowchart LR
+    subgraph ctor[AniLink constructor]
+        direction TB
+        pos[Positional form
+token, options]:::form
+        obj[Per-provider form
+anilist + mal slots]:::form
+    end
+
+    pos -->|forwards token + options| bpc
+    obj --> bpc[buildProviderClients]
+
+    bpc -->|anilist slot only| af[AniList factory]
+    bpc -->|mal slot only| mf[MAL factory]
+
+    af --> al[anilist surface
+uses anilist credentials]:::iso
+    mf --> mal[mal surface
+uses mal credentials]:::iso
+
+    al -.->|credentials never cross| mal
+    mal -.->|credentials never cross| al
+
+    classDef form fill:#fff2cc,stroke:#d6b656,color:#5c4a00;
+    classDef iso fill:#e1d5e7,stroke:#9673a6,color:#3b3a45;

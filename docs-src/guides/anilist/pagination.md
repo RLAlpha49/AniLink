@@ -8,9 +8,11 @@ layout: .vitepress/theme/DocsLayout.vue
 
 The three helpers use different traversal styles. Choose one based on how you want to consume the data.
 
-<Mermaid
-    :code="`flowchart LR\n    subgraph pg[paginate]\n        direction TB\n        p1[Page 1] --> p2[Page 2] --> p3[Page 3]\n    end\n    p3 --> buf1([All items buffered\nPaginateResult]):::out\n\n    subgraph pp[paginatePages]\n        direction TB\n        q1[Page 1] --> q2[Page 2] --> q3[Page 3]\n    end\n    q1 --> gen1([yield page 1]):::out\n    q2 --> gen2([yield page 2]):::out\n    q3 --> gen3([yield page 3]):::out\n    gen1 -.->|early exit| stop([break]):::out\n\n    subgraph pc[paginateChunks]\n        direction TB\n        c1[Chunk 1] --> c2[Chunk 2] --> c3[Chunk 3]\n    end\n    c3 --> buf2([All items buffered\nChunkPaginateResult]):::out\n\n    classDef out fill:#d5e8d4,stroke:#82b366,color:#2d5016;`"
-/>
+<script setup>
+import paginationHelpers from "../../diagrams/pagination-helpers.mmd?raw";
+</script>
+
+<Mermaid :code="paginationHelpers" />
 
 | Helper           | Walks                 | Returns                                       | Use when                         |
 | ---------------- | --------------------- | --------------------------------------------- | -------------------------------- |

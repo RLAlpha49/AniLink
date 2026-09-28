@@ -1,0 +1,29 @@
+%% Source: docs-src/guides/mal/authentication.md
+
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant A as Your App
+    participant MAL as MAL auth server
+    participant API as MAL API
+
+    U->>A: Start login
+    A->>A: codeVerifier = random(43-128 chars)
+    A->>A: codeChallenge = codeVerifier (plain PKCE)
+    A->>A: buildMalAuthorizationUrl(clientId, codeChallenge, state)
+    A->>U: Redirect to MAL authorize URL
+    U->>MAL: Authorize app
+    MAL->>U: Redirect to callback?code=...&state=...
+    U->>A: Arrive at callback
+    A->>A: Validate state matches
+    A->>MAL: getMalAccessToken(clientId, code, codeVerifier)
+    MAL->>MAL: Verify codeChallenge = codeVerifier
+    MAL->>A: access_token + refresh_token
+    A->>API: new AniLink({ mal: { accessToken, refreshToken, clientId } })
+    API->>A: Authenticated data
+
+    Note over A,MAL: Token expires (expires_in seconds)
+    A->>A: getMalTokenExpiry(token) < now - 60s?
+    A->>MAL: refreshMalAccessToken(clientId, refreshToken)
+    MAL->>A: New access_token (+ optional refresh_token)
+    A->>API: Continue with fresh token

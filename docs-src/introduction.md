@@ -15,9 +15,11 @@ layout: .vitepress/theme/DocsLayout.vue
 
 Both providers use the same transport layer for timeouts, retries, pacing, circuit breaking, hooks, and error normalization. Their credentials stay separate. AniLink never sends a MAL access token to AniList or an AniList bearer token to MAL.
 
-<Mermaid
-    :code="`flowchart TB\n    subgraph client[AniLink instance]\n        direction TB\n        al[anilist API\nGraphQL] --- mal[mal API\nREST]\n    end\n\n    subgraph transport[Shared transport layer]\n        direction LR\n        to[Timeouts] --- re[Retries] --- pa[Pacing] --- cb[Circuit breaker] --- ho[Hooks] --- en[Error normalization]\n    end\n\n    al --> transport\n    mal --> transport\n\n    subgraph creds[Credentials, isolated per slot]\n        alcred[anilist: authToken]:::iso\n        malcred[mal: accessToken]:::iso\n    end\n\n    al -.->|uses only| alcred\n    mal -.->|uses only| malcred\n    alcred -.->|never sent to| mal\n    malcred -.->|never sent to| al\n\n    classDef iso fill:#e1d5e7,stroke:#9673a6,color:#3b3a45;`"
-/>
+<script setup>
+import architectureOverview from "./diagrams/architecture-overview.mmd?raw";
+</script>
+
+<Mermaid :code="architectureOverview" />
 
 ## Why AniLink exists
 

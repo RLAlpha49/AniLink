@@ -1,0 +1,13 @@
+%% Source: docs-src/observability.md
+
+flowchart TD
+A[onRequestStart attempt 1] --> B{attempt result}
+B -- success --> C[onResponse]
+B -- failure --> D[onError]
+D --> E{retrying}
+E -- yes --> F[onRetry then wait] --> G[onRequestStart attempt 2]
+G --> B
+E -- no / exhausted --> H[onError final]
+A -. circuit open .-> FF[onRequestStart + onError CIRCUIT_OPEN_ERROR]:::err
+
+    classDef err stroke:#b85450;

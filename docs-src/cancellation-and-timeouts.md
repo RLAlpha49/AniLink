@@ -18,9 +18,11 @@ const aniLink = new AniLink("token", { timeout: 10_000 });
 
 Timeout failures throw `AniLinkNetworkError` with code `TIMEOUT_ERROR`. The error's `timeoutMs` field records the effective timeout duration.
 
-<Mermaid
-    :code="`flowchart TD\n    A([Request sent]) --> B{timeout elapsed?}\n    B -- yes --> T([Throw TIMEOUT_ERROR]):::err\n    B -- no --> C{AbortSignal aborted?}\n    C -- yes --> AB([Throw ABORTED_ERROR]):::err\n    C -- no --> D{Response received?}\n    D -- no --> B\n    D -- yes --> E([Return result]):::ok\n\n    F([In retry wait]) --> G{AbortSignal aborted?}\n    G -- yes --> AB\n    G -- no --> H[Continue waiting]\n    H --> F\n\n    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;\n    classDef err fill:#f8cecc,stroke:#b85450,color:#5c1a1a;`"
-/>
+<script setup>
+import cancellationAndTimeouts from "./diagrams/cancellation-and-timeouts.mmd?raw";
+</script>
+
+<Mermaid :code="cancellationAndTimeouts" />
 
 ## Cancellation with `AbortSignal`
 

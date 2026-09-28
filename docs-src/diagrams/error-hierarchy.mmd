@@ -1,0 +1,28 @@
+%% Source: docs-src/error-handling.md
+
+flowchart TB
+    base([AniLinkError
+code: varies]):::base
+
+    api[AniLinkApiError
+code: API_ERROR]:::leaf
+    gql[AniLinkGraphQLError
+code: GRAPHQL_ERROR]:::leaf
+    rest[AniLinkRestError
+code: REST_ERROR]:::leaf
+    net[AniLinkNetworkError
+code: NETWORK_ERROR / TIMEOUT_ERROR / ABORTED_ERROR / CIRCUIT_OPEN_ERROR]:::leaf
+    auth[AniLinkAuthError
+code: AUTH_ERROR]:::leaf
+    val[AniLinkValidationError
+code: VALIDATION_ERROR]:::leaf
+
+    base --> api
+    base --> gql
+    base --> rest
+    base --> net
+    base --> auth
+    base --> val
+
+    classDef base fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c,font-weight:bold;
+    classDef leaf fill:#f5f5f5,stroke:#666666,color:#333333;

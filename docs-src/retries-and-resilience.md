@@ -23,9 +23,11 @@ The transport retries transient failures with no code from you. The default poli
 
 Backoff uses **full jitter**: each wait is a random value between `0` and the computed exponential cap. This spreads concurrent retries over time. Server-directed `Retry-After` waits are not jittered.
 
-<Mermaid
-    :code="`flowchart TD\n    A([Send request]) --> B{Response}\n    B -- success --> C([Return result]):::ok\n    B -- failure --> D{Retryable?\nstatus in retryOnStatus\nor network error}\n    D -- no --> E([Throw last error]):::err\n    D -- yes --> F{Attempts left?\nattempt <= maxRetries}\n    F -- no --> E\n    F -- yes --> G{Circuit open?}\n    G -- yes --> H([Throw CIRCUIT_OPEN_ERROR]):::err\n    G -- no --> I[Compute backoff\nfull jitter]\n    I --> J{AbortSignal\naborted?}\n    J -- yes --> K([Throw ABORTED_ERROR]):::err\n    J -- no --> L[Wait nextDelayMs]\n    L --> A\n\n    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;\n    classDef err fill:#f8cecc,stroke:#b85450,color:#5c1a1a;`"
-/>
+<script setup>
+import retryFlow from "./diagrams/retry-flow.mmd?raw";
+</script>
+
+<Mermaid :code="retryFlow" />
 
 <Callout kind="caution">
 

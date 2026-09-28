@@ -35,9 +35,11 @@ Mutations and viewer-scoped queries (`viewer`, `notification`, list mutations) r
 
 AniLink provides helpers for the OAuth2 authorization-code flow. First, register an application on the [AniList developer settings](https://anilist.co/settings/developer) page to get a client ID and secret.
 
-<Mermaid
-    :code="`sequenceDiagram\n    autonumber\n    participant U as User\n    participant A as Your App\n    participant AL as AniList auth server\n    participant API as AniList API\n\n    U->>A: Start login\n    A->>A: buildAuthorizationUrl(clientId, redirect, state)\n    A->>U: Redirect to AniList authorize URL\n    U->>AL: Authorize app\n    AL->>U: Redirect to callback?code=...&state=...\n    U->>A: Arrive at callback\n    A->>A: Validate state matches\n    A->>AL: getAccessToken(clientId, secret, code, redirect)\n    AL->>A: access_token + refresh_token\n    A->>API: new AniLink(access_token)\n    API->>A: Authenticated data\n\n    Note over A,AL: Token expires (expires_in seconds)\n    A->>A: getTokenExpiry(token) < now - 60s?\n    A->>AL: refreshAccessToken(clientId, secret, refresh_token)\n    AL->>A: New access_token (+ optional refresh_token)\n    A->>API: Continue with fresh token`"
-/>
+<script setup>
+import anilistAuthenticationFlow from "../../diagrams/anilist-authentication-flow.mmd?raw";
+</script>
+
+<Mermaid :code="anilistAuthenticationFlow" />
 
 ### 1. Send the user to the authorization URL
 

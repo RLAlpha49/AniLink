@@ -8,9 +8,11 @@ layout: .vitepress/theme/DocsLayout.vue
 
 AniLink accepts credentials in two forms. Both create a client with `aniLink.anilist` and `aniLink.mal`. The positional form authenticates AniList only. The per-provider form accepts a credentials slot for each provider.
 
-<Mermaid
-    :code="`flowchart LR\n    subgraph ctor[AniLink constructor]\n        direction TB\n        pos[Positional form\ntoken, options]:::form\n        obj[Per-provider form\nanilist + mal slots]:::form\n    end\n\n    pos -->|forwards token + options| bpc\n    obj --> bpc[buildProviderClients]\n\n    bpc -->|anilist slot only| af[AniList factory]\n    bpc -->|mal slot only| mf[MAL factory]\n\n    af --> al[anilist surface\nuses anilist credentials]:::iso\n    mf --> mal[mal surface\nuses mal credentials]:::iso\n\n    al -.->|credentials never cross| mal\n    mal -.->|credentials never cross| al\n\n    classDef form fill:#fff2cc,stroke:#d6b656,color:#5c4a00;\n    classDef iso fill:#e1d5e7,stroke:#9673a6,color:#3b3a45;`"
-/>
+<script setup>
+import providerConfiguration from "./diagrams/provider-configuration.mmd?raw";
+</script>
+
+<Mermaid :code="providerConfiguration" />
 
 ## Positional form (legacy AniList)
 

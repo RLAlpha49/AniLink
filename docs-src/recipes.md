@@ -58,9 +58,11 @@ The `id` and `title` fields are always present. Other fields appear when you req
 
 **Providers: both.** Compare the titles AniList and MAL return for the same show. AniList media includes `idMal`, the MyAnimeList ID for that entry. The `crossLink` helper builds ID maps from AniList results. AniLink does **not** normalize data across providers, so titles, scores, and statuses remain provider-specific.
 
-<Mermaid
-    :code="`flowchart LR\n    A[AniLink instance\nboth providers configured]:::c\n    A -->|query.media id=21| AL[AniList\nmedia.idMal]:::al\n    AL -->|crossLink| MAP[anilistToMal\nlookup map]:::proc\n    MAP -->|malId| MAL[mal.anime.get\nmalId]:::mal\n    AL --> M[Your mapping logic\ncompare titles]:::out\n    MAL --> M\n\n    classDef c fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c;\n    classDef al fill:#d5e8d4,stroke:#82b366,color:#2d5016;\n    classDef mal fill:#e1d5e7,stroke:#9673a6,color:#3b3a45;\n    classDef proc fill:#fff2cc,stroke:#d6b656,color:#5c4a00;\n    classDef out fill:#f5f5f5,stroke:#666666,color:#333333;`"
-/>
+<script setup>
+import crossLinkCompare from "./diagrams/cross-link-compare.mmd?raw";
+</script>
+
+<Mermaid :code="crossLinkCompare" />
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";

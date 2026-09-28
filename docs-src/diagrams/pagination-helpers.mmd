@@ -1,0 +1,27 @@
+%% Source: docs-src/guides/anilist/pagination.md
+
+flowchart LR
+    subgraph pg[paginate]
+        direction TB
+        p1[Page 1] --> p2[Page 2] --> p3[Page 3]
+    end
+    p3 --> buf1([All items buffered
+PaginateResult]):::out
+
+    subgraph pp[paginatePages]
+        direction TB
+        q1[Page 1] --> q2[Page 2] --> q3[Page 3]
+    end
+    q1 --> gen1([yield page 1]):::out
+    q2 --> gen2([yield page 2]):::out
+    q3 --> gen3([yield page 3]):::out
+    gen1 -.->|early exit| stop([break]):::out
+
+    subgraph pc[paginateChunks]
+        direction TB
+        c1[Chunk 1] --> c2[Chunk 2] --> c3[Chunk 3]
+    end
+    c3 --> buf2([All items buffered
+ChunkPaginateResult]):::out
+
+    classDef out fill:#d5e8d4,stroke:#82b366,color:#2d5016;

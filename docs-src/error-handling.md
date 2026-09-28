@@ -10,9 +10,11 @@ AniLink reports normalized failures as `AniLinkError` subclasses with stable `co
 
 ## Error hierarchy
 
-<Mermaid
-    :code="`flowchart TB\n    base([AniLinkError\ncode: varies]):::base\n\n    api[AniLinkApiError\ncode: API_ERROR]:::leaf\n    gql[AniLinkGraphQLError\ncode: GRAPHQL_ERROR]:::leaf\n    rest[AniLinkRestError\ncode: REST_ERROR]:::leaf\n    net[AniLinkNetworkError\ncode: NETWORK_ERROR / TIMEOUT_ERROR / ABORTED_ERROR / CIRCUIT_OPEN_ERROR]:::leaf\n    auth[AniLinkAuthError\ncode: AUTH_ERROR]:::leaf\n    val[AniLinkValidationError\ncode: VALIDATION_ERROR]:::leaf\n\n    base --> api\n    base --> gql\n    base --> rest\n    base --> net\n    base --> auth\n    base --> val\n\n    classDef base fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c,font-weight:bold;\n    classDef leaf fill:#f5f5f5,stroke:#666666,color:#333333;`"
-/>
+<script setup>
+import errorHierarchy from "./diagrams/error-hierarchy.mmd?raw";
+</script>
+
+<Mermaid :code="errorHierarchy" />
 
 | Class                    | Code                                                                    | When it is thrown                                                                             |
 | ------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |

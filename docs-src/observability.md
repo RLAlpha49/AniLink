@@ -48,9 +48,11 @@ try {
 
 ## Firing order
 
-<Mermaid
-    :code="`flowchart TD\nA[onRequestStart attempt 1] --> B{attempt result}\nB -- success --> C[onResponse]\nB -- failure --> D[onError]\nD --> E{retrying}\nE -- yes --> F[onRetry then wait] --> G[onRequestStart attempt 2]\nG --> B\nE -- no / exhausted --> H[onError final]\nA -. circuit open .-> FF[onRequestStart + onError CIRCUIT_OPEN_ERROR]:::err\n\n    classDef err stroke:#b85450;`"
-/>
+<script setup>
+import hookFiringOrder from "./diagrams/hook-firing-order.mmd?raw";
+</script>
+
+<Mermaid :code="hookFiringOrder" />
 
 For a retryable failure, the transport calls `onRetry` when configured. Otherwise, it calls `onError` for that attempt. The transport always calls `onError` for terminal failures and circuit-open fast-fails. With an open breaker, the request fails before any network call but still emits `onRequestStart` and `onError` with code `CIRCUIT_OPEN_ERROR`. Request-volume counters and error-rate dashboards continue to include these requests.
 

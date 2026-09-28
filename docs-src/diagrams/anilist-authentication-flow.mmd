@@ -1,0 +1,26 @@
+%% Source: docs-src/guides/anilist/authentication.md
+
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant A as Your App
+    participant AL as AniList auth server
+    participant API as AniList API
+
+    U->>A: Start login
+    A->>A: buildAuthorizationUrl(clientId, redirect, state)
+    A->>U: Redirect to AniList authorize URL
+    U->>AL: Authorize app
+    AL->>U: Redirect to callback?code=...&state=...
+    U->>A: Arrive at callback
+    A->>A: Validate state matches
+    A->>AL: getAccessToken(clientId, secret, code, redirect)
+    AL->>A: access_token + refresh_token
+    A->>API: new AniLink(access_token)
+    API->>A: Authenticated data
+
+    Note over A,AL: Token expires (expires_in seconds)
+    A->>A: getTokenExpiry(token) < now - 60s?
+    A->>AL: refreshAccessToken(clientId, secret, refresh_token)
+    AL->>A: New access_token (+ optional refresh_token)
+    A->>API: Continue with fresh token

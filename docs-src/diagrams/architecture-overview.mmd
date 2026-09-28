@@ -1,0 +1,29 @@
+%% Source: docs-src/introduction.md
+
+flowchart TB
+    subgraph client[AniLink instance]
+        direction TB
+        al[anilist API
+GraphQL] --- mal[mal API
+REST]
+    end
+
+    subgraph transport[Shared transport layer]
+        direction LR
+        to[Timeouts] --- re[Retries] --- pa[Pacing] --- cb[Circuit breaker] --- ho[Hooks] --- en[Error normalization]
+    end
+
+    al --> transport
+    mal --> transport
+
+    subgraph creds[Credentials, isolated per slot]
+        alcred[anilist: authToken]:::iso
+        malcred[mal: accessToken]:::iso
+    end
+
+    al -.->|uses only| alcred
+    mal -.->|uses only| malcred
+    alcred -.->|never sent to| mal
+    malcred -.->|never sent to| al
+
+    classDef iso fill:#e1d5e7,stroke:#9673a6,color:#3b3a45;

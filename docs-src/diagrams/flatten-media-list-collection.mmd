@@ -1,0 +1,26 @@
+%% Source: docs-src/guides/anilist/helpers.md
+
+flowchart LR
+    subgraph src[mediaListCollection response]
+        direction TB
+        cg[COMPLETED group]:::grp
+        wg[WATCHING group]:::grp
+        clg[Custom list group]:::grp
+        cg --> e1[entry 1<br/>media A]:::entry
+        cg --> e2[entry 2<br/>media B]:::entry
+        wg --> e3[entry 3<br/>media C]:::entry
+        clg --> e4[entry 1<br/>media A]:::dup
+    end
+
+    src --> flat[flattenMediaListCollection]:::proc
+
+    flat --> dedup[Dedup by entry id]:::proc
+    e4 -.->|same id as entry 1| dedup
+
+    dedup --> out([FlattenedMediaListEntry array<br/>entry 1, entry 2, entry 3<br/>one flat list]):::out
+
+    classDef grp fill:#dae8fc,stroke:#6c8ebf,color:#1a3a5c;
+    classDef entry fill:#d5e8d4,stroke:#82b366,color:#2d5016;
+    classDef dup fill:#f8cecc,stroke:#b85450,color:#5c1a1a;
+    classDef proc fill:#fff2cc,stroke:#d6b656,color:#5c4a00;
+    classDef out fill:#f5f5f5,stroke:#666666,color:#333333;

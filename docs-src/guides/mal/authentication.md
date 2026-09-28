@@ -8,9 +8,11 @@ layout: .vitepress/theme/DocsLayout.vue
 
 MAL uses OAuth2 with PKCE. First, register an application at the [MAL API panel](https://myanimelist.net/apiconfig) to get a client ID.
 
-<Mermaid
-    :code="`sequenceDiagram\n    autonumber\n    participant U as User\n    participant A as Your App\n    participant MAL as MAL auth server\n    participant API as MAL API\n\n    U->>A: Start login\n    A->>A: codeVerifier = random(43-128 chars)\n    A->>A: codeChallenge = codeVerifier (plain PKCE)\n    A->>A: buildMalAuthorizationUrl(clientId, codeChallenge, state)\n    A->>U: Redirect to MAL authorize URL\n    U->>MAL: Authorize app\n    MAL->>U: Redirect to callback?code=...&state=...\n    U->>A: Arrive at callback\n    A->>A: Validate state matches\n    A->>MAL: getMalAccessToken(clientId, code, codeVerifier)\n    MAL->>MAL: Verify codeChallenge = codeVerifier\n    MAL->>A: access_token + refresh_token\n    A->>API: new AniLink({ mal: { accessToken, refreshToken, clientId } })\n    API->>A: Authenticated data\n\n    Note over A,MAL: Token expires (expires_in seconds)\n    A->>A: getMalTokenExpiry(token) < now - 60s?\n    A->>MAL: refreshMalAccessToken(clientId, refreshToken)\n    MAL->>A: New access_token (+ optional refresh_token)\n    A->>API: Continue with fresh token`"
-/>
+<script setup>
+import malAuthenticationFlow from "../../diagrams/mal-authentication-flow.mmd?raw";
+</script>
+
+<Mermaid :code="malAuthenticationFlow" />
 
 ## 1. Build the authorization URL
 

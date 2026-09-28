@@ -1,0 +1,18 @@
+%% Source: docs-src/cancellation-and-timeouts.md
+
+flowchart TD
+    A([Request sent]) --> B{timeout elapsed?}
+    B -- yes --> T([Throw TIMEOUT_ERROR]):::err
+    B -- no --> C{AbortSignal aborted?}
+    C -- yes --> AB([Throw ABORTED_ERROR]):::err
+    C -- no --> D{Response received?}
+    D -- no --> B
+    D -- yes --> E([Return result]):::ok
+
+    F([In retry wait]) --> G{AbortSignal aborted?}
+    G -- yes --> AB
+    G -- no --> H[Continue waiting]
+    H --> F
+
+    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;
+    classDef err fill:#f8cecc,stroke:#b85450,color:#5c1a1a;
