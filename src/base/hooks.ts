@@ -129,7 +129,7 @@ export const reportDiagnostic = (options: ReportDiagnosticOptions): boolean => {
 /**
  * Invokes a user-supplied lifecycle hook without letting its exceptions
  * escape into the request pipeline. A throwing hook is reported through the
- * structured {@link reportDiagnostic} path whether or not an
+ * structured {@link reportDiagnostic} path whether an
  * `onHookError` observer is configured. The hook error must not
  * crash the request, be counted as an attempt, or distort retry and error
  * classification.

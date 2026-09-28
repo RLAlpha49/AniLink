@@ -54,8 +54,8 @@ export class DeleteCustomListMutation extends AniListOperation {
     /**
      * {@link DeleteCustomListMutation.deleteCustomList} sends a mutation request to delete a custom list.
      *
-     * The response is `{ deleted: boolean }`. A `true` value means the custom list was deleted by
-     * this call; a `false` value means the list was not present (already deleted or never existed).
+     * The response is `{ deleted: boolean }`. A `true` value means this call deleted the custom
+     * list; a `false` value means the list was not present (already deleted or never existed).
      * The mutation is therefore safe to retry after a partial failure: a `false` result confirms
      * the target is gone rather than reporting an error.
      *

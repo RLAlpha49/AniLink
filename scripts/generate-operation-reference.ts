@@ -168,7 +168,7 @@ function jsdocExample(jsdoc: string): string {
     return m ? m[1].trimEnd() : "";
 }
 
-/** Extract the code body from the curated facade example markdown. */
+/** Extract the code body from the hand-written facade example markdown. */
 function facadeExampleCode(example: string): string {
     const match = /```(?:typescript|ts)?\n([\s\S]*?)```/.exec(example);
     return match?.[1].trimEnd() ?? "";
@@ -473,7 +473,7 @@ interface RawOp {
  *
  * Signature facts (name, variables type, response type) come from
  * {@link collectOperationSignatures}, the same source the facade group
- * generator renders from. Curated descriptions and examples come from the
+ * generator renders from. Hand-written descriptions and examples come from the
  * same typed prose map as facade generation. The `custom` entry is not a
  * registry operation and is still read from `custom-group.ts`.
  */

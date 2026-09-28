@@ -329,8 +329,8 @@ const CONSENT_BANNER_SCRIPT = `
 
 /** @param {import("typedoc").Application} app - The TypeDoc application. */
 export function load(app) {
-    // endPage fires per rendered page, just before the HTML is written to
-    // disk; `contents` is the final page HTML and is documented as mutable.
+    // endPage fires per rendered page, just before TypeDoc writes the HTML
+    // to disk; `contents` is the final page HTML and is documented as mutable.
     // String-splicing here avoids importing TypeDoc's JSX runtime, which
     // (see the header comment) can resolve to a second TypeDoc instance on
     // Windows and crash the render with "Should never be called".

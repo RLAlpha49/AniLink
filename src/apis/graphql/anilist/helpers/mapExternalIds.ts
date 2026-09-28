@@ -40,7 +40,7 @@ const ARM_IDS_URL = "https://arm.haglund.dev/api/v2/ids?include=anilist,myanimel
 const ARM_MAX_IDS_PER_REQUEST = 100;
 
 /**
- * Query ARM for AniList↔MyAnimeList mappings for a batch of ids.
+ * Query ARM for id mappings between AniList and MyAnimeList for a batch of ids.
  *
  * This opt-in helper makes an unauthenticated request to ARM's ID mapping
  * service through AniLink's shared transport. It is separate from `crossLink`,

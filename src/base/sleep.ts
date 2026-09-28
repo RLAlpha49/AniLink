@@ -1,5 +1,5 @@
 /**
- * Abort-aware delay primitive shared by the retry loop and rate-limit pacing.
+ * Abort-aware delay shared by the retry loop and rate-limit pacing.
  *
  * Resolves after `ms` unless the supplied `AbortSignal` fires first, in which
  * case it rejects with an `ABORTED` {@link AniLinkNetworkError} stamped with

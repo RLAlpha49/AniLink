@@ -19,7 +19,7 @@ import {
     type RestEndpointMapping,
 } from "../../lib/api-compare/openapi";
 
-/** Reduced comparison result consumed by the CLI orchestration layer. */
+/** Reduced comparison result consumed by the CLI. */
 export interface CliComparisonResult {
     /** Discrepancies that may affect the command's exit status. */
     discrepancies: Array<{ severity: string; category: string; message: string }>;
@@ -57,7 +57,7 @@ export interface CliResult {
  * Runs the comparison command and keeps process termination outside the testable core.
  *
  * @param options - Arguments, injectable operations, and output logger.
- * @returns Exit status and an error message when orchestration failed.
+ * @returns Exit status and an error message when the command failed.
  */
 export async function runCli(options: CliOptions): Promise<CliResult> {
     const log = options.log ?? console.log;
@@ -127,7 +127,7 @@ export async function runCli(options: CliOptions): Promise<CliResult> {
  * @param log - Progress logger.
  * @param compare - Optional comparison implementation used by tests or alternate
  *   runners; defaults to the real snapshot comparison.
- * @returns Exit status: `0` clean, `1` discrepancies, `2` orchestration failure.
+ * @returns Exit status: `0` clean, `1` discrepancies, `2` command failure.
  */
 async function runOpenApiComparison(
     argv: string[],

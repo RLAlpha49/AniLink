@@ -9,7 +9,7 @@
  * `NamedUnionMembers`, which maps each member to its selection-scope name:
  * the three activity discriminants via `ActivityKinds`, the notification
  * variants via `NotificationKinds`, and the `Likeable` members structurally.
- * `FieldPathInto` then offers `QualifiedFieldPath`, paths qualified by the
+ * `FieldPathInto` then produces `QualifiedFieldPath`, paths qualified by the
  * scope name (`"TextActivity.text"`), instead of the members' bare keys,
  * because a bare key like `"text"` is ambiguous across members. The same
  * scope name is a scope, not a field: it never renders as a property in the
@@ -59,7 +59,7 @@ type NotificationKindsCovers = AssertCovers<
  * The `Likeable` member map must match the `Likeable` union exactly: the
  * activity discriminants through `ActivityKinds`, the other three members
  * structurally. A member added to `Likeable` without a map entry stops being
- * selectable; a map entry without a union member offers paths the runtime
+ * selectable; a map entry without a union member adds paths the runtime
  * document cannot select. `Likeable` carries no shared `type` field (only
  * the activity members have one), so the guard asserts mutual assignability
  * against the union the map assumes instead.

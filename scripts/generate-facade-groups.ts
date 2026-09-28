@@ -4,7 +4,7 @@
  * `src/apis/graphql/anilist/facade/query-group.ts` and
  * `src/apis/graphql/anilist/facade/mutation-group.ts` are generated: every
  * member signature derives from the bound method on the operation class
- * registered in `registry.ts`, and the curated JSDoc prose (container briefs,
+ * registered in `registry.ts`, and the hand-written JSDoc prose (container briefs,
  * summaries, `@returns` prose, `@example` blocks) lives in
  * `generate-facade-groups.config.ts`.
  *
@@ -454,7 +454,7 @@ const MUTATION_THROWS_PROSE =
  * Render one facade member (JSDoc plus signature) as source lines.
  *
  * @param entry - The registry entry for the member.
- * @param doc - The curated prose for the member.
+ * @param doc - The hand-written prose for the member.
  * @param method - The derived signature facts.
  * @param indent - The member's indentation width (8 for query/mutation, 12 for page).
  * @returns The rendered source lines.
@@ -609,7 +609,7 @@ const _assertMutationParityReverse: keyof AniListMutations["mutation"] =
 /** The generated-file notice appended to both file headers. */
 const GENERATED_NOTE = ` *
  * GENERATED FILE. Do not edit by hand; regenerate with \`npm run facade:generate\`.
- * Signatures derive from the operation registry and operation classes; curated
+ * Signatures derive from the operation registry and operation classes; hand-written
  * JSDoc prose lives in scripts/generate-facade-groups.config.ts.`;
 
 /**
@@ -871,7 +871,7 @@ async function formatWithPrettier(content: string, outputPath: string): Promise<
 /**
  * Generate the formatted content of both facade group files.
  *
- * Reads the registry and operation classes, validates the curated config, and
+ * Reads the registry and operation classes, validates the hand-written config, and
  * returns Prettier-formatted output for each file without touching disk.
  *
  * @returns Repository-relative output path to formatted content.

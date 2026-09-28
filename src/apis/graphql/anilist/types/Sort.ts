@@ -276,7 +276,7 @@ export const UserStatisticSortMappings: readonly UserStatisticSort[] = [
 
 /**
  * {@link ActivitySort} is the AniList ActivitySort enum: the sort orders the activity queries
- * accept. `PINNED` surfaces pinned activities first.
+ * accept. `PINNED` puts pinned activities first.
  * @see https://docs.anilist.co/reference/enum/activitysort
  */
 export type ActivitySort = "ID" | "ID_DESC" | "PINNED";
@@ -488,7 +488,7 @@ export const StudioSortMappings: readonly StudioSort[] = [
 
 /**
  * {@link ThreadSort} is the AniList ThreadSort enum: the sort orders the thread queries
- * accept. `IS_STICKY` surfaces pinned threads first; `SEARCH_MATCH` ranks by relevance to
+ * accept. `IS_STICKY` puts pinned threads first; `SEARCH_MATCH` ranks by relevance to
  * the `search` variable.
  * @see https://docs.anilist.co/reference/enum/threadsort
  */

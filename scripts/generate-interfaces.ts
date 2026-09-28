@@ -102,8 +102,8 @@ export function hasTopLevelTemplateLiteralBinding(source: string, matchIndex: nu
  * modes so the breakage appears in CI with a named file rather than as a
  * stale-interfaces diff.
  *
- * The source is parsed with the TypeScript AST before a regex match is
- * accepted, so matches found only in comments or string literals are rejected.
+ * The guard parses the source with the TypeScript AST before accepting a regex
+ * match, so it rejects matches found only in comments or string literals.
  *
  * @param file - Repo-relative path of the operation file.
  * @returns The inline GraphQL document text.

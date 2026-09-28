@@ -87,7 +87,7 @@ export const ActivitySchema = `
 
 /**
  * {@link ActivityWithRepliesSchema} is the ActivityUnion selection with each variant's
- * `replies` included, used by the activity queries that surface reply threads.
+ * `replies` included, used by the activity queries that return reply threads.
  * @see https://docs.anilist.co/reference/union/activityunion
  */
 export const ActivityWithRepliesSchema = `

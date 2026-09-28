@@ -1366,7 +1366,7 @@ export class ResponseCache {
      * identity changes the underlying resource for every identity that can
      * read it.
      *
-     * This is the invalidation primitive behind mutation-triggered cache
+     * This is the invalidation path used by mutation-triggered cache
      * invalidation for REST writes: after a successful write, the transport
      * derives the mutated resource's base URL and drops every cached read
      * of that resource. It is also usable directly for manual bulk
@@ -1390,7 +1390,7 @@ export class ResponseCache {
         const base = queryIndex === -1 ? withoutFragment : withoutFragment.slice(0, queryIndex);
         const prefix = base.endsWith("/") && base.length > 1 ? base.slice(0, -1) : base;
 
-        // An invalidation landed, whether or not an entry matches: an
+        // An invalidation landed, whether an entry matches: an
         // in-flight read of the resource is stale even when no cached copy
         // of it existed yet.
         this.recordInvalidation((key) => ResponseCache.keyAtPrefix(key, `GET:${prefix}`, ":/?#"));
@@ -1420,7 +1420,7 @@ export class ResponseCache {
      * variables, and auth namespaces, and returns how many entries were
      * removed.
      *
-     * This is the invalidation primitive for GraphQL writes: every GraphQL
+     * This is the invalidation path for GraphQL writes: every GraphQL
      * operation of one provider is keyed at the same endpoint URL, and a
      * `mutation` document can change what many different query documents
      * return (a `SaveMediaListEntry` changes what both a `MediaList` and a
@@ -1440,7 +1440,7 @@ export class ResponseCache {
         const base = queryIndex === -1 ? withoutFragment : withoutFragment.slice(0, queryIndex);
         const prefix = base.endsWith("/") && base.length > 1 ? base.slice(0, -1) : base;
 
-        // An invalidation landed, whether or not an entry matches: an
+        // An invalidation landed, whether an entry matches: an
         // in-flight read at the endpoint is stale even when no cached copy
         // of it existed yet.
         this.recordInvalidation((key) =>
@@ -1476,7 +1476,7 @@ export class ResponseCache {
      * document selects one of the given root fields, and returns how many
      * entries were removed.
      *
-     * This is the scoped invalidation primitive for mapped GraphQL mutations
+     * This is the scoped invalidation path for mapped GraphQL mutations
      * (see {@link invalidateAfterMutation}): a mutation whose root field is
      * known to affect only certain query root fields drops exactly those
      * cached queries, leaving unrelated root fields' entries warm, instead
@@ -1504,7 +1504,7 @@ export class ResponseCache {
         const prefix = base.endsWith("/") && base.length > 1 ? base.slice(0, -1) : base;
 
         const fieldSet = new Set(rootFields);
-        // An invalidation landed, whether or not an entry matches: an
+        // An invalidation landed, whether an entry matches: an
         // in-flight read of an affected query is stale even when no cached
         // copy of it existed yet. The scope predicate mirrors the deletion
         // below: a POST entry at the URL whose document selects one of the

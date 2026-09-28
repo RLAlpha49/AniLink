@@ -254,8 +254,8 @@ function pruneSelection(
     // path extends them: `pageInfo.total` over the always-selected `pageInfo`
     // keeps the whole `pageInfo` block (a superset), so pagination metadata
     // stays available to the shared `paginate` helpers. The render loop's
-    // `isWhole` check takes priority, so the extending path's sub-paths are
-    // simply ignored for that head.
+    // `isWhole` check takes priority, so the extending path's sub-paths
+    // are ignored for that head.
     const requested = [...always, ...paths];
     for (const path of requested) {
         const segments = path.split(".");

@@ -47,8 +47,8 @@ export class DeleteReviewMutation extends AniListOperation {
     /**
      * {@link DeleteReviewMutation.deleteReview} sends a mutation request to delete a review.
      *
-     * The response is `{ deleted: boolean }`. A `true` value means the review was deleted by this
-     * call; a `false` value means the review was not present (already deleted or never existed).
+     * The response is `{ deleted: boolean }`. A `true` value means this call deleted the review;
+     * a `false` value means the review was not present (already deleted or never existed).
      * The mutation is therefore safe to retry after a partial failure: a `false` result confirms
      * the target is gone rather than reporting an error.
      *

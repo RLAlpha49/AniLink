@@ -7,7 +7,7 @@
  * binds every entry, so adding an operation touches exactly two sites: the
  * operation class and its entry in this registry. Then run
  * `npm run facade:generate` to refresh the derived group types under
- * `facade/` (curated JSDoc prose lives in
+ * `facade/` (hand-written JSDoc prose lives in
  * `scripts/generate-facade-groups.config.ts`). Whether an operation accepts
  * a `fields` selection option is declared per entry (`fieldsEnabled`), as are
  * the always-selected keys used by the facade's narrowing types. The key

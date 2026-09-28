@@ -157,7 +157,7 @@ export async function resolveCredential(
  * Resolves an optional credential the same way; absent is a valid answer.
  *
  * Providers whose apps may or may not use a client secret (MAL web vs mobile
- * type) use this so the flag simply stays unset when no source has a value.
+ * type) use this so the flag stays unset when no source has a value.
  *
  * @param flagValue - The value passed after the flag on the command line, if any.
  * @param envVar - The process environment variable name for the credential.

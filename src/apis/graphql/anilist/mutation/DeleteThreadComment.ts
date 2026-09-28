@@ -47,8 +47,8 @@ export class DeleteThreadCommentMutation extends AniListOperation {
     /**
      * {@link DeleteThreadCommentMutation.deleteThreadComment} sends a mutation request to delete a thread comment.
      *
-     * The response is `{ deleted: boolean }`. A `true` value means the comment was deleted by this
-     * call; a `false` value means the comment was not present (already deleted or never existed).
+     * The response is `{ deleted: boolean }`. A `true` value means this call deleted the comment;
+     * a `false` value means the comment was not present (already deleted or never existed).
      * The mutation is therefore safe to retry after a partial failure: a `false` result confirms
      * the target is gone rather than reporting an error.
      *

@@ -47,8 +47,8 @@ export class DeleteMediaListEntryMutation extends AniListOperation {
     /**
      * {@link DeleteMediaListEntryMutation.deleteMediaListEntry} sends a mutation request to delete a media list entry.
      *
-     * The response is `{ deleted: boolean }`. A `true` value means the entry was deleted by this
-     * call; a `false` value means the entry was not present (already deleted or never existed).
+     * The response is `{ deleted: boolean }`. A `true` value means this call deleted the entry;
+     * a `false` value means the entry was not present (already deleted or never existed).
      * The mutation is therefore safe to retry after a partial failure: a `false` result confirms
      * the target is gone rather than reporting an error.
      *

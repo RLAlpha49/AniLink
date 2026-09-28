@@ -15,7 +15,7 @@ import {
  *
  * `scripts/generate-facade-groups.ts` derives `query-group.ts` and
  * `mutation-group.ts` from the operation registry, the operation classes, and
- * the curated prose config. These tests pin the two invariants the generator
+ * the hand-written prose config. These tests pin the two invariants the generator
  * promises: the config covers exactly the registry operations, and the
  * on-disk files match what the generator would emit (the same comparison
  * `npm run facade:generate -- --check` performs in CI).

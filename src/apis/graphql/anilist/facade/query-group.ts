@@ -2,7 +2,7 @@
  * The `query` member (query + page operations) of the `AniListApi` type.
  *
  * GENERATED FILE. Do not edit by hand; regenerate with `npm run facade:generate`.
- * Signatures derive from the operation registry and operation classes; curated
+ * Signatures derive from the operation registry and operation classes; hand-written
  * JSDoc prose lives in scripts/generate-facade-groups.config.ts.
  */
 import { type RequestOptions } from "../../../../base/RequestHandler";

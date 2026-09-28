@@ -37,7 +37,7 @@ export interface CrossLinkResult<TMedia extends CrossLinkMedia = CrossLinkMedia>
 }
 
 /**
- * Build bidirectional AniList↔MyAnimeList id lookup maps from AniList media entries.
+ * Build bidirectional id lookup maps between AniList and MyAnimeList from AniList media entries.
  *
  * AniList media carries `idMal`, the MyAnimeList id of the same show or book.
  * This helper turns any batch of AniList media results into lookup maps, so a

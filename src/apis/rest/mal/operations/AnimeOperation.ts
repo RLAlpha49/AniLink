@@ -85,9 +85,9 @@ export class MalAnimeOperation extends RestOperation {
      * It calls `GET /anime` through `RestOperation.execute` with the `q` keyword
      * plus the `limit`/`offset` paging filters and returns a
      * {@link MalAnimeSearchResponse} page of `MalAnimeSearchEntry` entries
-     * shaped by {@link MalRequestOptions.fields}. The facade alias is
-     * The facade exposes this method as `MyAnimeListAnimeApi.search`. It does not
-     * require an access token.
+     * shaped by {@link MalRequestOptions.fields}. The facade exposes this
+     * method as `MyAnimeListAnimeApi.search`. It does not require an access
+     * token.
      *
      * @param params - The search inputs; a {@link MalAnimeSearchParams} carrying the keyword plus the optional paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.

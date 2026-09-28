@@ -12,8 +12,8 @@
  * page), or a short page when the response carries no `paging` node.
  *
  * This module is the second adapter over `src/base/pagination.ts` (the
- * AniList paginator is the first), which is what makes the engine's
- * provider-neutral seam real.
+ * AniList paginator is the first), so the engine now serves two providers
+ * with no provider-specific logic in it.
  */
 import { safeInvoke } from "../../../base/hooks";
 import { type DiagnosticsMode, type OnHookErrorHandler } from "../../../base/transportTypes";

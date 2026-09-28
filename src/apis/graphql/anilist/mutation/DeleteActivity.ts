@@ -46,8 +46,8 @@ export class DeleteActivityMutation extends AniListOperation {
     /**
      * {@link DeleteActivityMutation.deleteActivity} sends a mutation request to delete an activity.
      *
-     * The response is `{ deleted: boolean }`. A `true` value means the activity was deleted by
-     * this call; a `false` value means the activity was not present (already deleted or never
+     * The response is `{ deleted: boolean }`. A `true` value means this call deleted the
+     * activity; a `false` value means the activity was not present (already deleted or never
      * existed). The mutation is therefore safe to retry after a partial failure: a `false` result
      * confirms the target is gone rather than reporting an error.
      *

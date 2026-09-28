@@ -112,7 +112,7 @@ export interface WatchOptions {
     /**
      * `AbortSignal` that stops the watcher. This is the authoritative stop
      * mechanism. An abort between polls ends the generator cleanly (the
-     * `for await` loop simply finishes); an abort during an in-flight poll
+     * `for await` loop finishes); an abort during an in-flight poll
      * rejects it with the transport's `ABORTED` error, matching the rest
      * of the library. A `for await` loop's `break`/`return` also stops the
      * watcher because it happens while the generator is suspended at a
@@ -258,7 +258,7 @@ const sleepBetweenPolls = (ms: number, signal?: AbortSignal): Promise<void> =>
  * object carries only set filters. Variable validation iterates
  * `Object.entries`, which includes explicitly-`undefined` keys, so a
  * literal `{ type: undefined }` would fail the page operation's type check
- * even though the filter is simply unset.
+ * even though the filter is unset.
  *
  * @param variables - The variable object with possibly-`undefined` values.
  * @returns A new object with only the keys that carry a value.
@@ -330,7 +330,7 @@ interface PollDrain<TItem> {
  * baseline drain, which resumes from its initial page so the first real
  * poll re-scans the feed's front. The baseline poll (no `since`) marks but
  * never yields, so a burst larger than `perPage` arriving right after start
- * cannot surface pre-start items from page 2 on.
+ * cannot yield pre-start items from page 2 on.
  *
  * The returned watermark is the oldest `createdAt` this poll still had to
  * compare against: the oldest item of the last drained page (newest-first
@@ -375,7 +375,7 @@ async function drainPoll<TItem extends WatchedItem>(
         }
         // The baseline poll drains without yielding: it marks every
         // page up to the frontier (or the cap) seen so a burst larger
-        // than `perPage` right after start cannot surface pre-start
+        // than `perPage` right after start cannot yield pre-start
         // items from page 2 onward.
         if (hitSeenFrontier || items.length < perPage) break;
         if (!pageInfo.hasNextPage) break;

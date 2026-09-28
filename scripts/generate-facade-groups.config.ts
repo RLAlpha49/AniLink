@@ -1,5 +1,5 @@
 /**
- * Curated JSDoc prose for the generated AniList facade group files.
+ * Hand-written JSDoc prose for the generated AniList facade group files.
  *
  * `scripts/generate-facade-groups.ts` emits
  * `src/apis/graphql/anilist/facade/query-group.ts` and
@@ -15,7 +15,7 @@
 import type { RegistryFacadeOperationKey } from "../src/apis/graphql/anilist/registry";
 
 /**
- * Curated prose for one facade operation member.
+ * Hand-written prose for one facade operation member.
  */
 export interface FacadeOperationDoc {
     /**
@@ -69,7 +69,7 @@ export interface FacadeOperationDoc {
 }
 
 /**
- * Curated prose per operation, keyed `<category>:<name>`.
+ * Hand-written prose per operation, keyed `<category>:<name>`.
  */
 export const FACADE_OPERATION_DOCS = {
     "query:user": {
