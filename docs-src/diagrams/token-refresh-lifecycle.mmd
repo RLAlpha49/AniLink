@@ -1,0 +1,29 @@
+%% Source: docs-src/observability.md
+
+sequenceDiagram
+    autonumber
+    participant A as Caller A
+    participant B as Caller B
+    participant T as AniLink transport
+    participant P as Provider token endpoint
+
+    A->>T: request with stale token
+    T->>P: call forwarded
+    P-->>T: 401 Unauthorized
+    T->>T: open one in-flight refresh grant
+    B->>T: request (also 401)
+    T->>T: join the existing grant
+    T->>P: refresh grant
+    alt grant succeeds
+        P-->>T: new access token
+        T->>T: onTokenRefresh (once per grant)
+        T->>P: replay each request once
+        P-->>T: 200 OK
+        T-->>A: response
+        T-->>B: response
+    else grant fails
+        P-->>T: grant rejected
+        T->>T: onTokenRefreshError (once per grant)
+        T-->>A: rejects with sanitized AniLinkError
+        T-->>B: same error
+    end

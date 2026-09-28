@@ -19,6 +19,12 @@ const slim = await aniLink.anilist.query.media(
 // slim: DeepPick<MediaResponse, "id" | "title" | "averageScore" | "idMal">
 ```
 
+<script setup>
+import fieldSelection from "../../diagrams/field-selection.mmd?raw";
+</script>
+
+<Mermaid :code="fieldSelection" />
+
 `fields` and transport settings share the same trailing options argument:
 
 ```typescript

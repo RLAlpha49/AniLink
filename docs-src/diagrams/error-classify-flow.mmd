@@ -1,0 +1,24 @@
+%% Source: docs-src/error-handling.md
+
+flowchart TD
+    A([catch error]) --> B{instanceof AniLinkGraphQLError?}
+    B -->|yes| B1[graphqlErrors
+    plus partial data on error.data]:::gql
+    B -->|no| C{instanceof AniLinkApiError?}
+    C -->|yes| C1{status}
+    C1 -->|429| C2[rateLimit.reset
+    gives the quota window]:::api
+    C1 -->|other| C3[status and data]:::api
+    C -->|no| D{instanceof AniLinkAuthError?}
+    D -->|yes| D1[Token missing or rejected]:::auth
+    D -->|no| E{instanceof AniLinkNetworkError?}
+    E -->|yes| E1[code: NETWORK_ERROR,
+    TIMEOUT_ERROR, ABORTED_ERROR,
+    or CIRCUIT_OPEN_ERROR]:::net
+    E -->|no| F([rethrow]):::unknown
+
+    classDef gql fill:#dae8fc,stroke:#6c8ebf,color:#1c3a5e;
+    classDef api fill:#ffe6cc,stroke:#d79b00,color:#5e4200;
+    classDef auth fill:#f8cecc,stroke:#b85450,color:#5c1a1a;
+    classDef net fill:#fff2cc,stroke:#d6b656,color:#5e4a00;
+    classDef unknown fill:#f5f5f5,stroke:#666666,color:#333333;

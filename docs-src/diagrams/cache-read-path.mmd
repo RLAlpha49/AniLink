@@ -1,0 +1,17 @@
+%% Source: docs-src/response-cache.md
+
+flowchart TD
+    g(["get(method, url, body)"]) --> found{"Entry exists?"}
+    found -->|"no"| miss["misses++
+return undefined"]
+    found -->|"yes"| ttl{"Within TTL?"}
+    ttl -->|"yes"| hit["hits++
+deep-clone the entry (default)
+return the copy"]:::ok
+    ttl -->|"no"| exp["expirations++
+remove the entry
+return undefined"]
+    full(["set() on a full cache"]) --> ev["evictions++
+drop the least-recently-used entry"]
+
+    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;

@@ -1,0 +1,20 @@
+%% Source: docs-src/retries-and-resilience.md
+
+sequenceDiagram
+    autonumber
+    participant C as Caller
+    participant T as AniLink transport
+    participant H as Provider host
+
+    C->>T: request A
+    T->>H: send request
+    H-->>T: 200, remaining quota below rateLimitFloor
+    Note over T: records the reset deadline
+    T-->>C: response A returns immediately
+    C->>T: request B, same host
+    Note over T: waits for the reset deadline
+    Note over T: each wait capped at five minutes
+    Note over C,T: onPace fires when the wait completes
+    T->>H: send request, after the window resets
+    H-->>T: 200
+    T-->>C: response B

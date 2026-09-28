@@ -1,0 +1,12 @@
+%% Source: docs-src/guides/mal/configuration.md
+
+flowchart LR
+    A["new AniLink({ mal })"] --> B["buildMyAnimeListApi
+    resolves the MAL credentials"]
+    C["buildMyAnimeListApi(credentials)"] --> B
+    B --> M[MyAnimeListApi
+    anime, manga, user, forum]
+    A -.->|also exposes| L[aniLink.anilist
+    GraphQL operations]:::iso
+
+    classDef iso fill:#e1d5ff,stroke:#9673a6,color:#3b3a45;

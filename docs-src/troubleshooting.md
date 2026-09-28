@@ -10,6 +10,12 @@ Rows list a symptom, its cause, and a fix. Check the provider label, then find y
 
 ## 401 Unauthorized
 
+<script setup>
+import tokenRefresh401Flow from "./diagrams/token-refresh-401-flow.mmd?raw";
+</script>
+
+<Mermaid :code="tokenRefresh401Flow" />
+
 **AniList.** The token is missing, expired, or revoked. Mutations and viewer-scoped queries require a token. Public queries do not. Configure `refreshToken`, `clientId`, and `clientSecret`. AniLink refreshes automatically after a `401` and replays the request once. See [automatic refresh](/guides/anilist/authentication#_5-automatic-refresh). Otherwise, re-run the [OAuth flow](/guides/anilist/authentication) and create a new client with the fresh token. See the [token-refresh recipe](/recipes#background-token-refresh-loop).
 
 **MAL.** MAL access tokens expire by design. Configure `refreshToken` and `clientId`. AniLink refreshes automatically after a `401` and replays the request once. See [automatic refresh](/guides/mal/authentication#_4-automatic-refresh). Otherwise, call `refreshMalAccessToken` before the token expires. See the [token-refresh recipe](/recipes#background-token-refresh-loop).

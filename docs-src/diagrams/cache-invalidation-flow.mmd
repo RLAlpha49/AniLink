@@ -1,0 +1,31 @@
+%% Source: docs-src/response-cache.md
+
+flowchart TB
+    mut["Mutation completes"] --> ok{"Succeeded?"}
+    ok -->|"no"| keep["Cached entries stay
+(failed mutations never invalidate)"]
+    ok -->|"yes"| kind{"Write kind"}
+
+    kind -->|"REST write"| rest{"Final path segment is
+a numeric resource ID?"}
+    rest -->|"yes"| prefix["Drop cached GET reads matching the resource prefix
+(query string and action segment removed,
+across auth namespaces)"]
+    rest -->|"no"| none["Invalidate nothing
+(cached reads remain until TTL expires)"]
+
+    kind -->|"GraphQL mutation"| roots{"Mutation maps to
+affected root fields?"}
+    roots -->|"yes"| scoped["Drop cached queries rooted at affected fields
+(queries with unattributable roots dropped too)"]
+    roots -->|"no or uncertain"| all["Drop every cached GraphQL query at the endpoint
+(fail closed)"]
+
+    prefix --> inflight
+    scoped --> inflight
+    all --> inflight
+    inflight{"A read was in flight
+when the invalidation hit?"}
+    inflight -->|"no"| fresh["Next read fetches fresh data"]
+    inflight -->|"yes"| drop["Transport drops the stale write-back
+instead of caching it"]

@@ -1,0 +1,18 @@
+%% Source: docs-src/guides/anilist/field-selection.md
+
+flowchart TD
+    A([Operation call with a fields option]) --> B{Every path valid?}
+    B -->|"no: unknown leaf, drill into a scalar, or an empty list"| C([Throw AniLinkValidationError
+    before dispatch, listing every invalid path]):::err
+    B -->|yes| D[Compose the document
+    merge paths sharing a head
+    title.romaji + title.english become one title block]
+    D --> E[Keep always-selected keys whole
+    id, idMal, and pageInfo stay complete]
+    E --> F[Send the document]
+    F --> G([Typed result
+    DeepPick of the requested paths
+    plus the always-selected keys]):::ok
+
+    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;
+    classDef err fill:#f8cecc,stroke:#b85450,color:#5c1a1a;

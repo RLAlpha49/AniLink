@@ -1,0 +1,22 @@
+%% Source: docs-src/troubleshooting.md
+
+flowchart TD
+    a([Request returns 401]) --> cfg{"Refresh lifecycle configured?
+AniList: refreshToken + clientId + clientSecret
+MAL: refreshToken + clientId"}
+    cfg -->|"no"| surf([Surface the 401
+re-run the OAuth flow for a fresh token]):::err
+    cfg -->|"yes"| grant["Deduplicated refresh grant
+concurrent 401s share one in-flight grant"]
+    grant --> g{"Grant succeeds?"}
+    g -->|"no"| ferr([onTokenRefreshError fires once
+the sanitized error surfaces]):::err
+    g -->|"yes"| swap["Swap the new access token onto every operation
+onTokenRefresh fires once"]
+    swap --> replay["Replay the original request once"]
+    replay --> r2{"Replay succeeds?"}
+    r2 -->|"yes"| ok([Return result]):::ok
+    r2 -->|"no"| surf
+
+    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;
+    classDef err fill:#f8cecc,stroke:#b85450,color:#5c1a1a;

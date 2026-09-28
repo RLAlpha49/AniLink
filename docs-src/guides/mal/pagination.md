@@ -26,6 +26,12 @@ The helper advances through pages, detects the end of the list, and enforces
 the page guards. The closure converts `(page, perPage)` into the endpoint's
 params.
 
+<script setup>
+import malPaginationEndDetection from "../../diagrams/mal-pagination-end-detection.mmd?raw";
+</script>
+
+<Mermaid :code="malPaginationEndDetection" />
+
 | Helper              | Returns                                     | Use when                         |
 | ------------------- | ------------------------------------------- | -------------------------------- |
 | `mal.paginate`      | All items buffered in a `MalPaginateResult` | You want the complete set        |

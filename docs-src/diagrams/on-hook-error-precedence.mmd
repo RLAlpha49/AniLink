@@ -1,0 +1,17 @@
+%% Source: docs-src/observability.md
+
+flowchart TD
+    A([A lifecycle hook throws]) --> B{Per-request
+onHookError on this call?}
+    B -->|yes| O[Call that observer
+    most specific wins]:::ok
+    B -->|no| C{Slot-level onHookError
+    on this provider?}
+    C -->|yes| O
+    C -->|no| D{Client-level onHookError
+    on the credentials object?}
+    D -->|yes| O
+    D -->|no| W([console.warn
+    fallback])
+
+    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;

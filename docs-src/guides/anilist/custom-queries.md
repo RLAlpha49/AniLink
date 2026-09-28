@@ -29,6 +29,12 @@ The return shape depends on how many root fields your document has:
 | Single root field (`query { Media { … } }`)                 | The bare value of that field, e.g. `{ id, title }`                     |
 | Multiple root fields (`query { Media { … } Viewer { … } }`) | The full `{ data }` envelope, e.g. `{ data: { Media: …, Viewer: … } }` |
 
+<script setup>
+import customQueriesEnvelope from "../../diagrams/custom-queries-envelope.mmd?raw";
+</script>
+
+<Mermaid :code="customQueriesEnvelope" />
+
 ```typescript
 // Single root field: T is the field's value.
 const media = await aniLink.anilist.custom<{ id: number }>("query { Media(id: 1) { id } }");

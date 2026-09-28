@@ -25,6 +25,8 @@ Backoff uses **full jitter**: each wait is a random value between `0` and the co
 
 <script setup>
 import retryFlow from "./diagrams/retry-flow.mmd?raw";
+import circuitBreakerStates from "./diagrams/circuit-breaker-states.mmd?raw";
+import rateLimitPacing from "./diagrams/rate-limit-pacing.mmd?raw";
 </script>
 
 <Mermaid :code="retryFlow" />
@@ -74,6 +76,8 @@ Like the circuit breaker, the retry budget is shared by all operations in a prov
 
 ## Rate-limit pacing
 
+<Mermaid :code="rateLimitPacing" />
+
 Pacing is on by default. After each successful response, the transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL). If the remaining quota falls below `rateLimitFloor` (default `1`), the transport records the reset deadline and delays the next request instead of waiting for a `429`. The response that triggers pacing still returns immediately. With pacing off, a request may receive a `429` and then wait before retrying. `onPace` reports each completed wait so you can distinguish it from a stalled request. An aborted wait does not emit a full-delay event. See [Observability](/observability).
 
 ```typescript
@@ -114,6 +118,8 @@ Calling it while requests using those agents are still in flight can fail them, 
 ## Circuit breaker
 
 The circuit breaker is off by default. When disabled, the transport does no cross-request failure accounting. With `circuitBreaker: { threshold, cooldownMs }`, the transport fast-fails after `threshold` consecutive **availability failures**. It throws a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has passed since the last failure. Then the breaker lets the next request through as a probe.
+
+<Mermaid :code="circuitBreakerStates" />
 
 Only availability failures count toward the streak: network errors, timeouts, `429`s, and `5xx` responses. Caller-side errors (`4xx`) and caller-initiated aborts do not trip the breaker. A `4xx` response proves the upstream answered, so it **resets** the streak as a success would. An abort during an in-flight request also resets the streak. An abort during a pacing wait leaves a closed breaker's existing streak unchanged, but closes a reserved half-open probe. An abort during retry backoff leaves the failure state recorded for the previous attempt unchanged. A consumer-side bug that produces `404`s between occasional `500`s cannot make the breaker fast-fail healthy traffic based on a stale streak. Status-less GraphQL envelope errors neither trip nor reset the breaker because they provide no upstream-health signal (see _GraphQL envelope failures_ below).
 

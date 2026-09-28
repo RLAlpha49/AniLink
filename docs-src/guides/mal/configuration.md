@@ -59,6 +59,12 @@ buildMyAnimeListApi({ accessToken: "mal-token" });
 
 Both provide the same MAL behavior. The composed client also includes the AniList operations.
 
+<script setup>
+import malConstruction from "../../diagrams/mal-construction.mmd?raw";
+</script>
+
+<Mermaid :code="malConstruction" />
+
 ## Next steps
 
 - <Icon name="ArrowRight" :size="14" /> [MAL operations](/guides/mal/operations) documents every operation.

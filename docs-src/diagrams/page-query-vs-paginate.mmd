@@ -1,0 +1,16 @@
+%% Source: docs-src/guides/anilist/page-queries.md
+
+flowchart TD
+    A([Need a slice of an AniList collection]) --> B{Which case?}
+    B -->|you know the page number| C[query.page.*
+    resume a sync, take the top 10,
+    or run your own loop
+    pass page and perPage]
+    C --> D[Response carries the items
+    plus pageInfo: total, currentPage,
+    lastPage, hasNextPage, perPage]:::ok
+    B -->|you want every page| E[paginate or paginatePages
+    walk pageInfo for you]:::alt
+
+    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;
+    classDef alt fill:#dae8fc,stroke:#6c8ebf,color:#1c3a5e;

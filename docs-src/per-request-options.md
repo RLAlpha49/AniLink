@@ -79,6 +79,12 @@ const anime = await aniLink.mal.anime.get(
 
 Per-request options override instance defaults **shallowly**. An override replaces the full value for that key, including nested objects. For example, `retry: { maxRetries: 1 }` replaces the entire retry policy for that call. Unspecified retry fields use built-in defaults, not the instance-level policy.
 
+<script setup>
+import optionsPrecedence from "./diagrams/options-precedence.mmd?raw";
+</script>
+
+<Mermaid :code="optionsPrecedence" />
+
 ## Provider scoping
 
 Options never cross providers. A per-request `timeout` on an AniList call leaves MAL calls untouched. Both providers have a `fields` option, but they differ. AniList `fields` narrows the return type (`DeepPick<...>`, including nested paths like `title.romaji`), while MAL `fields` selects the response shape without type narrowing.

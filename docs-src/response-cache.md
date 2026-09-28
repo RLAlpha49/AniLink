@@ -91,6 +91,8 @@ The cache does not serve expired entries. It removes them on read and may remove
 
 ### Cache statistics
 
+<Mermaid :code="cacheReadPath" />
+
 `stats()` returns a frozen snapshot of the cache's current size and lifetime counters. Use the counters to tune `ttlMs` and `maxEntries`:
 
 ```typescript
@@ -116,6 +118,13 @@ Each `get()` call increments exactly one of `hits`, `misses`, or `expirations`. 
 ### Read-after-write freshness
 
 After a successful mutation, the same client invalidates cached reads the mutation may have changed. A later read fetches fresh data instead of using a pre-mutation entry for the rest of its TTL:
+
+<script setup>
+import cacheInvalidationFlow from "./diagrams/cache-invalidation-flow.mmd?raw";
+import cacheReadPath from "./diagrams/cache-read-path.mmd?raw";
+</script>
+
+<Mermaid :code="cacheInvalidationFlow" />
 
 ```typescript
 const aniLink = new AniLink({

@@ -1,0 +1,12 @@
+%% Source: docs-src/per-request-options.md
+
+flowchart TB
+    call["Operation call with trailing options"] --> req{"Key present in
+per-request options?"}
+    req -->|"yes"| per["Per-request value wins
+(shallow merge: nested objects replaced whole)"]
+    req -->|"no"| slot{"Key set on the
+provider slot?"}
+    slot -->|"yes"| slotval["Slot value applies
+(scoped to that provider only)"]
+    slot -->|"no"| built["Built-in default"]

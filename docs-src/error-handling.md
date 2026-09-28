@@ -11,6 +11,7 @@ AniLink reports normalized failures as `AniLinkError` subclasses with stable `co
 ## Error hierarchy
 
 <script setup>
+import errorClassifyFlow from "./diagrams/error-classify-flow.mmd?raw";
 import errorHierarchy from "./diagrams/error-hierarchy.mmd?raw";
 </script>
 
@@ -31,6 +32,8 @@ import errorHierarchy from "./diagrams/error-hierarchy.mmd?raw";
 `AniLinkErrorCodes` maps every code: `API_ERROR`, `GRAPHQL_ERROR`, `REST_ERROR`, `NETWORK_ERROR`, `TIMEOUT_ERROR`, `ABORTED_ERROR`, `CIRCUIT_OPEN_ERROR`, `AUTH_ERROR`, `VALIDATION_ERROR`, `UNKNOWN_ERROR`.
 
 ## Canonical catch-and-classify recipe
+
+<Mermaid :code="errorClassifyFlow" />
 
 ```typescript
 import {

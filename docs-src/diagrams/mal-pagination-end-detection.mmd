@@ -1,0 +1,20 @@
+%% Source: docs-src/guides/mal/pagination.md
+
+flowchart TD
+    req([fetchPage closure called
+with page and perPage]) --> resp["Endpoint returns
+data plus an optional paging node"]
+    resp --> p{"paging node present?"}
+    p -->|"yes"| n{"paging.next present?"}
+    n -->|"no"| end1([End of traversal
+paging.next is authoritative
+no confirmation request sent]):::ok
+    n -->|"yes"| guard{"maxPages guard reached?"}
+    p -->|"no"| short{"Fewer items than requested?"}
+    short -->|"yes"| end2([End of traversal
+short-page heuristic]):::ok
+    short -->|"no"| guard
+    guard -->|"yes"| trunc([Stop with truncated: true])
+    guard -->|"no"| req
+
+    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;

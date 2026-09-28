@@ -50,6 +50,8 @@ try {
 
 <script setup>
 import hookFiringOrder from "./diagrams/hook-firing-order.mmd?raw";
+import onHookErrorPrecedence from "./diagrams/on-hook-error-precedence.mmd?raw";
+import tokenRefreshLifecycle from "./diagrams/token-refresh-lifecycle.mmd?raw";
 </script>
 
 <Mermaid :code="hookFiringOrder" />
@@ -166,6 +168,8 @@ The full precedence chain, most specific first:
 
 When unset at every level, hook failures fall back to `console.warn`.
 
+<Mermaid :code="onHookErrorPrecedence" />
+
 On the MAL and AniList slots, slot-level `onHookError` observes request-hook failures and token-refresh events. A failed refresh grant uses the hook name `malTokenRefresh` (MAL) or `aniListTokenRefresh` (AniList). Its sanitized refresh error is available as `error.cause`, with its `status` and `code` intact. A throwing `onTokenRefresh` persistence callback uses the `onTokenRefresh` hook name. The client-level observer handles both when a slot has no observer of its own.
 
 The `stateOwner` diagnostic (below) follows the same resolution. The transport emits it through the triggering request's resolved observer. That is the per-request observer when one is set, otherwise the slot's, otherwise the client-level default.
@@ -218,6 +222,8 @@ The automatic token-refresh lifecycle (both providers) reports through two dedic
 | `onTokenRefreshError` | When a refresh grant fails           | The sanitized refresh error the awaiting caller catches (an `AniLinkError` with `status`/`code`) |
 
 Each callback fires once per grant. Concurrent `401` responses share one in-flight grant, so they produce one event rather than duplicate alerts. `onTokenRefreshError` receives the same sanitized error that the failing call rejects with. The observer and the caller's `catch` therefore see the same error:
+
+<Mermaid :code="tokenRefreshLifecycle" />
 
 ```typescript
 const aniLink = new AniLink({

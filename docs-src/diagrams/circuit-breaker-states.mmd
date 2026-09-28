@@ -1,0 +1,19 @@
+%% Source: docs-src/retries-and-resilience.md
+
+stateDiagram-v2
+    direction TB
+    [*] --> Closed: enabled via circuitBreaker
+
+    state "Closed (counting failures)" as Closed
+    state "Open (fast-fail)" as Open
+    state "Half-open (probe)" as HalfOpen
+
+    Closed --> Closed: success, 4xx, or in-flight abort resets the streak
+    Closed --> Open: threshold consecutive availability failures
+
+    Open --> Open: every request throws CIRCUIT_OPEN_ERROR
+    Open --> HalfOpen: cooldownMs elapsed since the last failure
+
+    HalfOpen --> Closed: probe succeeds, onCircuitClose
+    HalfOpen --> Closed: 4xx, envelope error, or abort closes the breaker
+    HalfOpen --> Open: availability failure reopens, cooldown doubles up to 8x

@@ -16,6 +16,12 @@ layout: .vitepress/theme/DocsLayout.vue
 
 To collect everything instead, use the [pagination helpers](/guides/anilist/pagination).
 
+<script setup>
+import pageQueryVsPaginate from "../../diagrams/page-query-vs-paginate.mmd?raw";
+</script>
+
+<Mermaid :code="pageQueryVsPaginate" />
+
 ## Available page queries
 
 `medias`, `characters`, `staffs`, `studios`, `mediaLists`, `airingSchedules`, `mediaTrends`, `notifications`, `followers`, `following`, `activities`, `activityReplies`, `threads`, `threadComments`, `reviews`, `recommendations`, `users`, `likes`.

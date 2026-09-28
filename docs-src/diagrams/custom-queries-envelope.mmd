@@ -1,0 +1,14 @@
+%% Source: docs-src/guides/anilist/custom-queries.md
+
+flowchart TD
+    A([anilist.custom document]) --> B{Root fields in the document}
+    B -->|one root field| C[Return the field's value
+    T is that value
+    media.id]
+    B -->|multiple root fields| D[Return the data envelope
+    T is the envelope
+    both.data.Media.id]
+    C --> R([Return result]):::ok
+    D --> R
+
+    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;
