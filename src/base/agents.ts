@@ -8,6 +8,10 @@
  * allocates nothing; identical custom configurations share one cached pair
  * so repeated requests reuse warm sockets instead of leaking a fresh agent
  * pair per request.
+ *
+ * {@link destroyCachedAgents} tears all of it down — cached pairs, parked
+ * pairs, and the shared default pair — and the default pair plus the
+ * `axiosClient` binding to it are rebuilt lazily on the next request.
  */
 import http from "node:http";
 import https from "node:https";
@@ -15,35 +19,71 @@ import axios from "axios";
 import { DEFAULT_REQUEST_TIMEOUT, MAX_FREE_SOCKETS, MAX_SOCKETS } from "./transportTypes";
 
 /**
- * Shared keep-alive agent for plain-HTTP requests, reused by every request
- * that does not customize socket bounds.
+ * Construction options for the shared default keep-alive agents, shared by
+ * the initial pair and every pair rebuilt after a teardown.
  */
-const defaultHttpAgent = new http.Agent({
+const DEFAULT_AGENT_OPTIONS: http.AgentOptions = {
     keepAlive: true,
     maxSockets: MAX_SOCKETS,
     maxFreeSockets: MAX_FREE_SOCKETS,
     scheduling: "lifo",
-});
+};
+
+/**
+ * Shared keep-alive agent for plain-HTTP requests, reused by every request
+ * that does not customize socket bounds. `let` rather than `const` because
+ * {@link destroyCachedAgents} destroys it and the next request rebuilds a
+ * fresh one through {@link ensureDefaultAgents}.
+ */
+let defaultHttpAgent = new http.Agent(DEFAULT_AGENT_OPTIONS);
 /**
  * Shared keep-alive agent for HTTPS requests, reused by every request that
- * does not customize socket bounds.
+ * does not customize socket bounds. Rebuilt together with
+ * {@link defaultHttpAgent} after a teardown.
  */
-const defaultHttpsAgent = new https.Agent({
-    keepAlive: true,
-    maxSockets: MAX_SOCKETS,
-    maxFreeSockets: MAX_FREE_SOCKETS,
-    scheduling: "lifo",
-});
+let defaultHttpsAgent = new https.Agent(DEFAULT_AGENT_OPTIONS);
 
 /**
  * The Axios client every transport request is dispatched through, bound
- * to the shared keep-alive agents.
+ * to the shared keep-alive agents. Rebuilt alongside the default pair
+ * after a teardown so the binding is never left pointing at destroyed
+ * agents.
  */
-const axiosClient = axios.create({
+let axiosClient = axios.create({
     timeout: DEFAULT_REQUEST_TIMEOUT,
     httpAgent: defaultHttpAgent,
     httpsAgent: defaultHttpsAgent,
 });
+
+/**
+ * Set once {@link destroyCachedAgents} has destroyed the default pair and
+ * no request has rebuilt it yet. Guards teardown against destroying the
+ * same (already destroyed) pair twice and tells {@link ensureDefaultAgents}
+ * that a rebuild is due.
+ */
+let defaultAgentsTornDown = false;
+
+/**
+ * Lazily rebuilds the default keep-alive pair and rebinds `axiosClient` to
+ * it after a {@link destroyCachedAgents} teardown. Called from
+ * {@link resolveAgents}, which runs once per dispatched request before the
+ * attempt loop reads `axiosClient`, so the first request after a teardown
+ * always sees fresh default agents; while nothing has been torn down this
+ * is a no-op, keeping the default path allocation-free.
+ */
+const ensureDefaultAgents = (): void => {
+    if (!defaultAgentsTornDown) {
+        return;
+    }
+    defaultHttpAgent = new http.Agent(DEFAULT_AGENT_OPTIONS);
+    defaultHttpsAgent = new https.Agent(DEFAULT_AGENT_OPTIONS);
+    axiosClient = axios.create({
+        timeout: DEFAULT_REQUEST_TIMEOUT,
+        httpAgent: defaultHttpAgent,
+        httpsAgent: defaultHttpsAgent,
+    });
+    defaultAgentsTornDown = false;
+};
 
 /**
  * Upper bound on the number of distinct custom agent pairs kept alive in the
@@ -129,19 +169,28 @@ const evictLruAgentPair = (): void => {
 };
 
 /**
- * Destroys every cached custom agent pair — plus every pair evicted while
- * requests may still have been in flight — and clears the cache. Intended
- * for tests and explicit teardown so long-lived processes can release the
- * keep-alive sockets held by customized agents on demand.
+ * Destroys every keep-alive agent pair the transport holds: every cached
+ * custom agent pair, every pair evicted while requests may still have been
+ * in flight, and the shared default `http`/`https` pair bound to
+ * `axiosClient`. Clears the cache so long-lived processes can release
+ * sockets on demand — including the default path's idle sockets, which
+ * would otherwise linger until the upstream keep-alive timeout closes
+ * them. Intended for tests and explicit teardown.
  *
- * **Must not be called while requests using these agents are in-flight.**
- * The agents are shared across every request with identical
- * `maxSockets`/`maxFreeSockets` bounds, so destroying them closes the
- * underlying sockets and can fail concurrent requests that are still
- * draining over those sockets. Call this only after all in-flight requests
- * have settled (for example in a shutdown hook that has awaited the final
- * request, or in test teardown after the test's assertions). Calling it
- * twice is safe (the second call iterates an empty cache).
+ * The default pair is rebuilt lazily: the next request re-creates fresh
+ * default agents and rebinds `axiosClient` to them (see
+ * {@link ensureDefaultAgents}), so the default path keeps working after a
+ * teardown without allocating anything at teardown time.
+ *
+ * **Must not be called while requests are in-flight — whether they use
+ * default or customized agents.** The agents are shared across requests
+ * with identical `maxSockets`/`maxFreeSockets` bounds, so destroying them
+ * closes the underlying sockets and can fail concurrent requests that are
+ * still draining over those sockets. Call this only after all in-flight
+ * requests have settled (for example in a shutdown hook that has awaited
+ * the final request, or in test teardown after the test's assertions).
+ * Calling it twice is safe (the second call iterates an empty cache and
+ * skips the already-destroyed default pair until a request rebuilds it).
  */
 export const destroyCachedAgents = (): void => {
     for (const pair of cachedAgentPairs.values()) {
@@ -154,6 +203,11 @@ export const destroyCachedAgents = (): void => {
         pair.httpsAgent.destroy();
     }
     parkedEvictedPairs.length = 0;
+    if (!defaultAgentsTornDown) {
+        defaultHttpAgent.destroy();
+        defaultHttpsAgent.destroy();
+        defaultAgentsTornDown = true;
+    }
 };
 
 /**
@@ -161,7 +215,8 @@ export const destroyCachedAgents = (): void => {
  *
  * When the caller leaves `maxSockets`/`maxFreeSockets` unset the shared
  * module-level agents are reused, so the default path allocates nothing and
- * every instance keeps competing for the same warm pool. Supplying either
+ * every instance keeps competing for the same warm pool — rebuilt first if
+ * {@link destroyCachedAgents} tore the previous pair down. Supplying either
  * bound constructs dedicated agents, but identical configurations now share
  * one cached agent pair (bounded by `MAX_CACHED_AGENT_PAIRS`) so
  * repeated requests with the same socket settings reuse warm sockets instead
@@ -184,6 +239,10 @@ export const resolveAgents = (
     maxSockets: number | undefined,
     maxFreeSockets: number | undefined
 ): { httpAgent: http.Agent; httpsAgent: https.Agent } => {
+    // Runs once per dispatched request (through resolveRequestOptions), so
+    // a teardown's lazy default-pair/axiosClient rebuild always happens
+    // before the attempt loop dispatches.
+    ensureDefaultAgents();
     if (maxSockets === undefined && maxFreeSockets === undefined) {
         return { httpAgent: defaultHttpAgent, httpsAgent: defaultHttpsAgent };
     }
