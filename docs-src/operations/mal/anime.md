@@ -11,7 +11,7 @@ import { data as grouped } from "./anime.data.ts";
 
 # MyAnimeList anime operations
 
-The public MyAnimeList anime operations, grouped by response domain.
+This page lists public MyAnimeList anime operations by response domain.
 
 <OperationCatalog :grouped="grouped" />
 

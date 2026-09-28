@@ -1,6 +1,6 @@
 ---
 title: MAL authentication
-description: "The MyAnimeList OAuth2 with PKCE flow: register an application, run the code exchange, and use the resulting access token."
+description: "Register a MyAnimeList application, exchange an OAuth2 authorization code with PKCE, and use the access token."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
@@ -40,7 +40,7 @@ sends the verifier again. In a browser environment, use
 `crypto.getRandomValues` for the verifier bytes and base64url-encode them
 yourself.
 
-`buildMalAuthorizationUrl(clientId, codeChallenge, state?)` takes the plain code challenge, the verifier itself. The optional `state` is your CSRF protection. Validate it on the redirect before exchanging the code.
+`buildMalAuthorizationUrl(clientId, codeChallenge, state?)` takes the plain PKCE challenge, which is the verifier itself under MAL's `plain` method. The optional `state` protects against CSRF. Validate it on the redirect before you exchange the code.
 
 ## 2. Exchange the code
 
@@ -104,18 +104,18 @@ const aniLink = new AniLink({
 
 The behavior:
 
-- **Opt-in.** Without `refreshToken` + `clientId`, there is no refresh path. The request fails with a `401` immediately, as before.
-- **Bootstrappable.** A client configured with only `refreshToken` + `clientId` but no `accessToken` refreshes on the first auth-required call instead of failing. A persisted refresh token alone is enough to construct a working client.
-- **One replay.** The client retries the original request exactly once with the new token. If the replayed request returns another `401`, your call rejects with that error. There is no retry loop.
-- **Deduplicated.** Concurrent `401`s trigger a single refresh call; every replay waits for the same new token.
-- **Rotation-safe.** A refresh response without `refresh_token` keeps the stored one, per rotation semantics.
-- **Observable.** `onTokenRefresh` fires exactly once per refresh grant with the effective `MalTokenResponse`, so you can persist the new pair. Concurrent `401`s share one grant and one callback. If the callback throws, the client reports it through `onHookError` and falls back to a console warning. It never aborts the replayed request.
-- **Failure event.** `onTokenRefreshError` fires exactly once per failed grant with the sanitized token-request error, the same error the failing call rejects with. Monitoring can distinguish "refresh recovered" from "refresh is broken" without parsing hook diagnostics. If the callback throws, the client reports it through `onHookError` and never replaces the propagated error.
-- **Fail-fast.** A failed refresh returns the sanitized token-request error. The client never replays the request with the stale token.
+- **Opt-in.** Without both `refreshToken` and `clientId`, the client does not refresh. The request fails with a `401` immediately, as before.
+- **Refresh on first use.** If `refreshToken` and `clientId` are set but `accessToken` is missing, the client refreshes on the first auth-required call. A stored refresh token and client ID are enough to construct the client.
+- **One replay.** The client retries the original request once with the new token. If that replay returns another `401`, your call rejects with that error.
+- **One refresh for concurrent requests.** Concurrent `401`s trigger a single refresh call. Each replay waits for the same new token.
+- **Rotation-safe.** If a refresh response omits `refresh_token`, the client keeps the stored token.
+- **Refresh callback.** `onTokenRefresh` fires exactly once per refresh grant with the effective `MalTokenResponse`. Use it to persist the new token pair. Concurrent `401`s share one grant and one callback. If the callback throws, AniLink reports the failure through its diagnostics policy. When AniLink emits a diagnostic, a configured `onHookError` receives it. Without an observer, only `diagnostics: "warn"` logs a warning to the console. The `"hook"` and `"silent"` modes suppress console fallback. A callback failure does not stop the replay.
+- **Refresh failure callback.** `onTokenRefreshError` fires exactly once per failed grant and receives the sanitized token-request error that the failing call rejects with. Monitoring can record failed grants without parsing hook diagnostics. If this callback throws, AniLink reports the failure through its diagnostics policy. When AniLink emits a diagnostic, a configured `onHookError` receives it. Without an observer, only `diagnostics: "warn"` logs a warning. The `"hook"` and `"silent"` modes suppress console fallback, and the token-request error still propagates.
+- **No stale-token replay.** If refresh fails, the call rejects with the sanitized token-request error. The client does not replay the request with the stale token.
 
 The refresh grant runs on the same 10-second token-request timeout as `refreshMalAccessToken`. Your MAL transport settings do not control it. Your `timeout`, hooks, pacing, and retry policy do not apply to the token request. In particular, do not add `401` to `retryOnStatus`. Automatic refresh handles `401` responses, and a retry-configured `401` would multiply requests before the refresh runs.
 
-**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. If the process exits or the callback throws between the refresh and your persistence write, the in-memory client works but your stored credentials are stale. When MAL rotates the refresh token, the stored one is permanently invalid and automatic refresh cannot recover after a restart; manual re-authorization is the only fix.
+**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. Save the new pair before the process exits. If the callback throws before saving, the client continues using the new token in memory, but your stored credentials remain stale. If MAL rotated the refresh token, the stored token is permanently invalid. The client cannot refresh after a restart, so you must authorize again.
 
 ## Constants and types
 
@@ -131,7 +131,7 @@ The refresh grant runs on the same 10-second token-request timeout as `refreshMa
 
 ## Safe state validation
 
-Generate a fresh random `state` per login attempt, store it server-side bound to the session, and compare with a timing-safe equality check before calling `getMalAccessToken`. Reject mismatches immediately.
+Generate a fresh random `state` for each login attempt. Store it on the server and bind it to the session. Before calling `getMalAccessToken`, compare the returned `state` with the stored value using a timing-safe equality check. Reject mismatches immediately.
 
 ## Next steps
 

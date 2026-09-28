@@ -11,7 +11,7 @@ import { data as grouped } from "./forum.data.ts";
 
 # MyAnimeList forum operations
 
-The public MyAnimeList forum operations, grouped by response domain.
+This page lists public MyAnimeList forum operations by response domain.
 
 <OperationCatalog :grouped="grouped" />
 

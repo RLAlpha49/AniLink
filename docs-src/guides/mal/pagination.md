@@ -9,9 +9,9 @@ layout: .vitepress/theme/DocsLayout.vue
 MyAnimeList paginates its list endpoints (`anime.search`, `anime.ranking`,
 `anime.seasonal`, `anime.suggestions`, `manga.search`, `manga.ranking`,
 `user.animeList`, `user.mangaList`, `forum.topics`) with `offset`/`limit`
-query parameters. Two helpers walk those endpoints for you. Both take a
-`fetchPage` closure that maps the traversal's page slot onto the endpoint's
-own params:
+query parameters. The `mal.paginate` and `mal.paginatePages` helpers request
+pages from these endpoints. Pass each helper a `fetchPage` closure that maps
+its `(page, perPage)` arguments to the endpoint's params:
 
 ```typescript
 (page, perPage) =>
@@ -22,9 +22,9 @@ own params:
     });
 ```
 
-The closure pattern is the whole adapter: the helpers handle the paging
-arithmetic, the end-of-list detection, and the guards, while each endpoint
-keeps its own params object.
+The helper advances through pages, detects the end of the list, and enforces
+the page guards. The closure converts `(page, perPage)` into the endpoint's
+params.
 
 | Helper              | Returns                                     | Use when                         |
 | ------------------- | ------------------------------------------- | -------------------------------- |
@@ -46,13 +46,12 @@ const result = await aniLink.mal.paginate(
 console.log(result.items.length, result.pageCount, result.truncated);
 ```
 
-The traversal stops at the first page that reports the end of the list:
-MAL's own `paging` node is authoritative when present (a node with no
-`next` URL ends the run even when the page came back full, so a full final
-page costs no extra confirmation request), with the short-page heuristic —
-a page that returns fewer items than requested — as the fallback for
-responses with no `paging` node at all. `truncated` is `true` only when
-the `maxPages` guard ended the run first.
+If a response includes a `paging` node, the helper treats `paging.next` as
+authoritative. A `paging` node without a `next` URL ends the traversal, even
+when the page is full. The helper does not send a confirmation request for
+that final page. If `paging` is absent, the helper stops when a page contains
+fewer items than requested. `truncated` is `true` only when the `maxPages`
+guard ends the traversal.
 
 ## `mal.paginatePages`
 
@@ -69,37 +68,37 @@ for await (const page of aniLink.mal.paginatePages((page, perPage) =>
 }
 ```
 
-Each yielded page is the raw list response (`{ data, paging? }`). A
-terminal page — a `paging` node with no `next` URL, or a short page when
-the response carries no `paging` node — is the visible end-of-list signal;
-`break` stops the traversal and cancels any in-flight request. `onPage`
-fires once per page as it is yielded, the same observer contract as
-`mal.paginate`, in streaming form.
+Each yielded page is the raw list response (`{ data, paging? }`). If the
+response has a `paging` node without `next`, the helper has reached the end.
+If `paging` is absent, a short page (fewer items than requested) marks the
+end. Use `break` to stop iteration. The helper cancels any in-flight request.
+`onPage` fires once for each yielded page, matching the observer behavior of
+`mal.paginate`.
 
 ## Options and clamps
 
 | Option | Default | Clamp | Meaning | |
 | ------------- | ------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | |
-| `perPage` | `100` | ≤ 100 | Entries per page. Values above 100 — the most restrictive documented cap across MAL’s list endpoints — are clamped down | |
-| `startPage` | `1` | none | 1-based page to start from. The closure’s offset math rotates with it: `startPage: 3` starts at `offset = 2 * perPage` | |
+| `perPage` | `100` | ≤ 100 | Entries per page. Values above 100, the most restrictive documented cap across MAL's list endpoints, are clamped down | |
+| `startPage` | `1` | none | 1-based page to start from. For example, `startPage: 3` sets the initial `offset` to `2 * perPage` | |
 | `maxPages` | `100` | none | Hard cap that prevents unbounded loops | |
-| `concurrency` | `1` | ≤ 8 | Look-ahead requests in flight. Defaults to strictly sequential because MAL’s rate limit (~1-2 req/sec) makes look-ahead counterproductive | |
+| `concurrency` | `1` | ≤ 8 | Look-ahead requests in flight. Requests run sequentially by default because MAL's rate limit (~1-2 req/sec) limits the benefit of look-ahead | |
 | `signal` | none | none | `AbortSignal` to cancel the traversal. Aborting cancels in-flight requests immediately | |
-| `onPage` | none | none | Per-page callback: after collection on `mal.paginate`, as each page is yielded on `mal.paginatePages`; a throwing callback is reported through `onHookError` and swallowed |
+| `onPage` | none | none | Per-page callback. On `mal.paginate`, it runs after collection. On `mal.paginatePages`, it runs as each page is yielded. AniLink reports a throwing callback through `onHookError` and swallows it. |
 
 ## Which endpoints paginate
 
 Every endpoint returning `{ data, paging? }` works with both helpers. The
-one exception is `forum.topic`: it paginates posts _inside_ one response
-(`data.posts` with its own `paging`), not across responses. Page its posts
-with repeated `topic()` calls using the same closure pattern.
+`forum.topic` endpoint is the exception. It paginates posts within one
+response (`data.posts` has its own `paging`) rather than across responses.
+To fetch more posts, call `topic()` repeatedly with the same closure pattern.
 
 ## Relation to the AniList helpers
 
-`aniLink.mal.paginate` is the sibling of the helpers in the [AniList pagination guide](/guides/anilist/pagination). Both
-run over the same shared pagination engine; the difference is the adapter:
-AniList pages with `page`/`perPage` GraphQL variables and `pageInfo.hasNextPage`,
-while MAL pages with `offset`/`limit` query parameters and the `paging.next`
-URL (with the short-page heuristic when the `paging` node is absent). The
-options mirror each other, so switching providers reads as a diff of the
-closure only.
+`aniLink.mal.paginate` uses the same pagination engine as the helpers in the
+[AniList pagination guide](/guides/anilist/pagination). The providers use
+different paging inputs. AniList passes `page` and `perPage` as GraphQL
+variables and checks `pageInfo.hasNextPage`. MAL sends `offset` and `limit`
+query parameters and checks `paging.next`. If the `paging` node is absent,
+MAL uses the short-page heuristic. The options match, so switching providers
+requires changing only the `fetchPage` closure.

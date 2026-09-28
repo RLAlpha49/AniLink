@@ -8,7 +8,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 ## Timeouts
 
-`timeout` is the milliseconds before AniLink aborts a request. The default is `30000` (30 s). `0` disables the timeout. Negative or non-finite values throw a `TypeError` when AniLink resolves the options, so the call fails fast instead of failing later.
+`timeout` sets how many milliseconds AniLink waits before aborting a request. The default is `30000` (30 s). `0` disables the timeout. AniLink throws a `TypeError` while resolving options if the value is negative or non-finite, so the call fails immediately.
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -16,7 +16,7 @@ import { AniLink } from "anilink-api-wrapper";
 const aniLink = new AniLink("token", { timeout: 10_000 });
 ```
 
-Timeout failures throw `AniLinkNetworkError` with code `TIMEOUT_ERROR`. The error carries the effective duration as `timeoutMs`, so you know which deadline expired.
+Timeout failures throw `AniLinkNetworkError` with code `TIMEOUT_ERROR`. The error's `timeoutMs` field records the effective timeout duration.
 
 <Mermaid
     :code="`flowchart TD\n    A([Request sent]) --> B{timeout elapsed?}\n    B -- yes --> T([Throw TIMEOUT_ERROR]):::err\n    B -- no --> C{AbortSignal aborted?}\n    C -- yes --> AB([Throw ABORTED_ERROR]):::err\n    C -- no --> D{Response received?}\n    D -- no --> B\n    D -- yes --> E([Return result]):::ok\n\n    F([In retry wait]) --> G{AbortSignal aborted?}\n    G -- yes --> AB\n    G -- no --> H[Continue waiting]\n    H --> F\n\n    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;\n    classDef err fill:#f8cecc,stroke:#b85450,color:#5c1a1a;`"
@@ -42,11 +42,11 @@ try {
 
 ## Abort during retry waits
 
-The retry loop checks for cancellation while a retry backoff is pending. Abort the signal during a wait and the retry loop stops immediately. The request rejects with `ABORTED_ERROR` instead of waiting out the delay.
+The retry loop checks for cancellation during backoff. If you abort the signal during a wait, the loop stops and the request rejects with `ABORTED_ERROR` without waiting for the delay to end.
 
 ## Abort during rate-limit pacing
 
-With `paceWithRateLimit` enabled, AniLink records the window-reset deadline whenever a successful response reports remaining quota below `rateLimitFloor`. The _next_ request to that host waits for the deadline before dispatching. Abort the signal during that pre-dispatch wait and the request rejects with `ABORTED_ERROR`, but the error carries `abortedDuringPacing: true`. The request never reaches the network. The flag distinguishes a cancelled pacing wait from a cancelled in-flight request:
+When `paceWithRateLimit` is enabled, AniLink records the window-reset deadline if a successful response reports remaining quota below `rateLimitFloor`. The next request to that host waits until the deadline before dispatch. If you abort the signal during this wait, the request rejects with `ABORTED_ERROR` and the error includes `abortedDuringPacing: true`. The request never reaches the network. This flag distinguishes cancellation during pacing from cancellation of an in-flight request:
 
 ```typescript
 try {
@@ -60,7 +60,7 @@ try {
 
 ## Cancelling pagination look-ahead
 
-The pagination helpers (`paginatePages`, `paginate`, `paginateChunks`) accept an optional `signal` in their options. Abort it to cancel every in-flight look-ahead page request immediately, so you spend no more rate-limit budget or bandwidth on responses you will not use:
+The pagination helpers (`paginatePages`, `paginate`, `paginateChunks`) accept an optional `signal` in their options. Abort it to cancel every in-flight look-ahead page request immediately. This prevents requests for pages you will not use from consuming rate-limit budget or bandwidth:
 
 ```typescript
 const controller = new AbortController();
@@ -77,11 +77,11 @@ for await (const page of aniLink.anilist.paginatePages(
 }
 ```
 
-Break out of a `paginatePages` loop early without passing a `signal` and the generator's `finally` block still aborts in-flight look-ahead requests, so they do not keep consuming rate-limit budget. See [Pagination](/guides/anilist/pagination) for the full options.
+If you break out of a `paginatePages` loop early without passing a `signal`, the generator's `finally` block still aborts in-flight look-ahead requests. Those requests stop consuming rate-limit budget. See [Pagination](/guides/anilist/pagination) for the full options.
 
 ## Token-request defaults
 
-OAuth token requests (both providers) use their own default timeout of 10 seconds, independent of instance transport settings. Pass `options.timeout` to the token-request helpers to override it.
+OAuth token requests for both providers use a 10-second default timeout. This timeout does not depend on instance transport settings. Pass `options.timeout` to a token-request helper to change it.
 
 ## Provider scoping
 

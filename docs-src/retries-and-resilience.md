@@ -21,7 +21,7 @@ The transport retries transient failures with no code from you. The default poli
 | `retryOnNetworkError` | `true`                      | Network and timeout failures retry               |
 | `jitter`              | `true`                      | Randomize each wait within `[0, computed delay]` |
 
-Backoff uses **full jitter**: every wait is a random value between `0` and the computed exponential cap, so concurrent clients never synchronize their retries. Server-dictated `Retry-After` waits are never jittered.
+Backoff uses **full jitter**: each wait is a random value between `0` and the computed exponential cap. This spreads concurrent retries over time. Server-directed `Retry-After` waits are not jittered.
 
 <Mermaid
     :code="`flowchart TD\n    A([Send request]) --> B{Response}\n    B -- success --> C([Return result]):::ok\n    B -- failure --> D{Retryable?\nstatus in retryOnStatus\nor network error}\n    D -- no --> E([Throw last error]):::err\n    D -- yes --> F{Attempts left?\nattempt <= maxRetries}\n    F -- no --> E\n    F -- yes --> G{Circuit open?}\n    G -- yes --> H([Throw CIRCUIT_OPEN_ERROR]):::err\n    G -- no --> I[Compute backoff\nfull jitter]\n    I --> J{AbortSignal\naborted?}\n    J -- yes --> K([Throw ABORTED_ERROR]):::err\n    J -- no --> L[Wait nextDelayMs]\n    L --> A\n\n    classDef ok fill:#d5e8d4,stroke:#82b366,color:#2d5016;\n    classDef err fill:#f8cecc,stroke:#b85450,color:#5c1a1a;`"
@@ -29,7 +29,7 @@ Backoff uses **full jitter**: every wait is a random value between `0` and the c
 
 <Callout kind="caution">
 
-The default policy **never retries** mutations unless you opt in. Retrying a non-idempotent write can duplicate its effects: a like toggled twice is a like removed.
+The default policy **never retries** mutations. Set a retry policy to opt in. Retrying a non-idempotent write can duplicate its effect. For example, sending a like toggle twice removes the like.
 
 </Callout>
 
@@ -52,11 +52,11 @@ const tuned = new AniLink("token", {
 });
 ```
 
-When a request runs out of retries, the transport throws the last error; catch it as shown in [Error handling](/error-handling).
+When a request runs out of retries, the transport throws the last error. Catch it as shown in [Error handling](/error-handling).
 
 ## Retry budget
 
-The per-call `maxRetries` bounds retries for **one** request. A workload issuing thousands of requests during a sustained outage would still multiply API call volume by up to `maxRetries + 1` indefinitely, because every failing call spends its own full retry allotment. The opt-in `retryBudget` bounds the **total** retry spend per rolling window across the client's requests:
+`maxRetries` limits retries for **one** request. During a sustained outage, a workload that issues thousands of requests can still send up to `maxRetries + 1` attempts per request. The optional `retryBudget` caps retries across all requests in a rolling window:
 
 ```typescript
 const budgeted = new AniLink("token", {
@@ -64,15 +64,15 @@ const budgeted = new AniLink("token", {
 });
 ```
 
-The budget complements the other two mechanisms: the retry policy bounds one request's retries, the circuit breaker fast-fails after consecutive failures, and the budget caps the aggregate retry spend. That cap handles chronic intermittent failures even when the breaker never trips. When the budget for the current window is exhausted, failures surface without retries until the window elapses; the window then resets and retries resume. Server-dictated delays, such as a `Retry-After` header or the rate-limit reset metadata carried by 429 responses, also surface immediately if they would still be in progress when the window ends. One window's retry spend therefore cannot be stretched across many minutes of wall-clock waits.
+The retry policy limits retries per request. The circuit breaker fast-fails after consecutive failures. The budget caps retries across requests and handles chronic intermittent failures that may not trip the breaker. When a window's budget runs out, failures surface without retries until the window ends. Retries then resume. Server-directed waits, including `Retry-After` and rate-limit reset metadata from `429` responses, also surface immediately if they would extend past the current window. A window's retry allowance cannot stretch across minutes of server-directed waits.
 
-The window is **fixed, not sliding**: it starts at the first failure after the previous window elapsed and resets completely when `windowMs` passes. A burst of failures at adjacent window edges can therefore spend up to `2 × maxRetriesPerWindow` retries within one `windowMs` of wall-clock time. Size `maxRetriesPerWindow` for that worst-case edge burst if you need a strict bound.
+The budget uses **fixed windows, not sliding windows**. A window starts with the first failure after the previous window expires and resets when `windowMs` passes. Failures near adjacent window boundaries can spend up to `2 × maxRetriesPerWindow` retries within one `windowMs` period. Set `maxRetriesPerWindow` for that worst-case burst if you need a strict bound.
 
-Like the breaker, the budget shares its state across every operation of one client (per provider client, keyed per upstream host), so the cap applies client-wide, not per operation and not per call. Budget state is in-memory only and resets on restart; see [Observability](/observability) for the `stateOwner` diagnostic that fires when cross-request state would be keyed by a per-request options object.
+Like the circuit breaker, the retry budget is shared by all operations in a provider client and keyed by upstream host. The cap applies across that client's requests, not per operation or call. The budget lives in memory and resets on restart. See [Observability](/observability) for the `stateOwner` diagnostic, which warns when per-request options split cross-request state across different keys.
 
 ## Rate-limit pacing
 
-Pacing is on by default. The transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL) of every successful response. When the reported remaining quota drops below `rateLimitFloor` (default `1`), the next attempt waits for the window to reset instead of discovering the limit via a `429`. That discovery is expensive: with pacing off, every `429` costs a wasted request plus a retry wait. Pacing avoids both by tracking the window from the response headers. The transport never holds the response that tripped the floor. Its data returns immediately, and the recorded deadline delays the next request instead. The optional `onPace` hook fires after each pacing wait completes with the wait length, so you never mistake an intentional rate-limit wait for a hung request. An aborted wait never emits a full-delay event; see [Observability](/observability).
+Pacing is on by default. After each successful response, the transport reads the `x-ratelimit-*` headers (AniList) or `X-RateLimit-*` headers (MAL). If the remaining quota falls below `rateLimitFloor` (default `1`), the transport records the reset deadline and delays the next request instead of waiting for a `429`. The response that triggers pacing still returns immediately. With pacing off, a request may receive a `429` and then wait before retrying. `onPace` reports each completed wait so you can distinguish it from a stalled request. An aborted wait does not emit a full-delay event. See [Observability](/observability).
 
 ```typescript
 // Default behavior: pacing is active with rateLimitFloor: 1.
@@ -84,21 +84,21 @@ const paced = new AniLink("token", {
 const unpaced = new AniLink("token", { paceWithRateLimit: false });
 ```
 
-`rateLimitFloor` must be a finite, non-negative integer; `0` disables floor-based pacing (the transport still honors `Retry-After` on `429` responses), and a defined-but-invalid value throws instead of being silently coerced.
+`rateLimitFloor` must be a finite, non-negative integer. A value of `0` disables floor-based pacing. The transport still honors `Retry-After` on `429` responses. A defined but invalid value throws instead of being silently coerced.
 
-A terminal `429` — one that exhausted its retries, ran with retries disabled, or surfaced for any other reason without another attempt scheduled — records the same reset deadline from its own `x-ratelimit-*` metadata, so the next request to that host waits for the window it already proved exhausted instead of dispatching immediately, eating another `429`, and repeating until the window resets on its own. The recorded deadline is clamped to the 5-minute maximum like every pacing wait: a `429` reporting a far-future reset paces in 5-minute increments, each post-clamp dispatch eating at most one more `429` before re-recording, until the window actually resets.
+A terminal `429` occurs when retries are exhausted, retries are disabled, or no further attempt is scheduled. The transport records the reset deadline from that response's `x-ratelimit-*` metadata. The next request to that host waits instead of immediately receiving another `429`. Each pacing wait is capped at five minutes. If the reported reset is farther away, the next request waits five minutes, then the transport records another deadline if it still receives a `429`.
 
 <Callout kind="warning">
 
-**Bulk traversals.** A single low-quota response pauses _every_ subsequent request to that host until the window resets, up to 5 minutes per wait. For bulk jobs (`paginate`/`paginateChunks` with default concurrency 3), this serializes throughput. Prefer `paceWithRateLimit: false` plus an explicit retry policy for bulk work, and keep pacing on for latency-sensitive user-facing calls. The tripping response itself still returns immediately; only later requests wait.
+**Bulk traversals.** A single response below the quota floor pauses every later request to that host until the window resets. Each wait is capped at five minutes. This serializes work in bulk jobs, including `paginate` and `paginateChunks` with default concurrency `3`. Prefer disabling pacing and setting an explicit retry policy for bulk jobs. Keep pacing on for latency-sensitive, user-facing calls. The response that triggered the wait still returns immediately. Only later requests wait.
 
 </Callout>
 
 ## Keep-alive agents and teardown
 
-Every request reuses shared keep-alive agents, so repeated calls use warm sockets. A call that customizes `maxSockets`/`maxFreeSockets` uses dedicated agents; identical configurations share one cached agent pair (bounded at 8 pairs, least-recently-used eviction).
+The transport reuses shared keep-alive agents across requests. Calls that customize `maxSockets` or `maxFreeSockets` use dedicated agents. Calls with identical settings share a cached pair. The cache holds at most eight pairs and evicts the least recently used pair.
 
-A pair evicted from that cache is **parked, not destroyed**. Its idle sockets linger until the server closes them or you tear down explicitly, because destroying an agent that may still carry in-flight requests would close live sockets. For long-lived processes that cycle through many distinct socket configurations, release the retained sockets on shutdown:
+An evicted pair is **parked, not destroyed**. Its idle sockets stay open until the server closes them or you call `destroyCachedAgents()`. The transport does not destroy an evicted pair because it may still carry in-flight requests, and closing those sockets could fail the requests. If a long-lived process cycles through many socket configurations, release the retained sockets on shutdown:
 
 ```typescript
 import { destroyCachedAgents } from "anilink-api-wrapper";
@@ -111,13 +111,13 @@ Calling it while requests using those agents are still in flight can fail them, 
 
 ## Circuit breaker
 
-The circuit breaker is off by default, to keep the zero-accounting fast path free of cross-request state. With `circuitBreaker: { threshold, cooldownMs }`, after `threshold` consecutive **availability failures** further requests fail fast with a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has passed since the last failure. Then the breaker lets the next request through as a probe.
+The circuit breaker is off by default. When disabled, the transport does no cross-request failure accounting. With `circuitBreaker: { threshold, cooldownMs }`, the transport fast-fails after `threshold` consecutive **availability failures**. It throws a `CIRCUIT_OPEN_ERROR` network error until `cooldownMs` has passed since the last failure. Then the breaker lets the next request through as a probe.
 
-Only availability failures count toward the streak: network errors, timeouts, `429`s, and `5xx` responses. Caller-side errors (`4xx`) and caller-initiated aborts say nothing about upstream health, so they never trip the breaker. And because such a failure proves the upstream answered, it **resets** the streak, exactly as a success would. A consumer-side bug producing 404s between scattered 500s cannot fast-fail healthy traffic on a stale streak. Status-less GraphQL envelope errors are the one exception: they reset nothing, because their entries carry no upstream-health signal in either direction (see _GraphQL envelope failures_ below).
+Only availability failures count toward the streak: network errors, timeouts, `429`s, and `5xx` responses. Caller-side errors (`4xx`) and caller-initiated aborts do not trip the breaker. A `4xx` response proves the upstream answered, so it **resets** the streak as a success would. An abort during an in-flight request also resets the streak. An abort during a pacing wait leaves a closed breaker's existing streak unchanged, but closes a reserved half-open probe. An abort during retry backoff leaves the failure state recorded for the previous attempt unchanged. A consumer-side bug that produces `404`s between occasional `500`s cannot make the breaker fast-fail healthy traffic based on a stale streak. Status-less GraphQL envelope errors neither trip nor reset the breaker because they provide no upstream-health signal (see _GraphQL envelope failures_ below).
 
 <Callout kind="tip">
 
-For production workloads, switch the circuit breaker on. It is the only mechanism that fast-fails a sustained upstream outage, so runaway retry volume and cost stop while the provider is down.
+The circuit breaker is the only mechanism that fast-fails during a sustained upstream outage. Enable it in production to limit retry traffic while the provider is down.
 
 </Callout>
 
@@ -131,19 +131,21 @@ When unset, the transport does no failure accounting across requests.
 
 ### GraphQL envelope failures
 
-AniList often reports failures as HTTP 200 with a GraphQL `errors` array rather than as an HTTP error status. The breaker counts GraphQL-level 429 and 5xx envelopes as availability failures: a sustained run trips it just like HTTP-level failures, so the breaker also covers the common AniList overload signature. GraphQL validation errors (an envelope 200 with no upstream error status) are streak-neutral: they neither trip the breaker nor reset the streak. The status-less entries may hide a server fault that omitted its status, so the error must not erase the streak other failure classes accumulated — but they carry no availability-class status either, so they must not trip the breaker on what may be a consumer-side query bug.
+AniList can report failures in an HTTP `200` response with a GraphQL `errors` array. The breaker treats GraphQL errors with a `429` or `5xx` status as availability failures, just like HTTP errors. A sustained run can trip the breaker.
 
-The same classification applies to partial-success envelopes resolved by [`allowPartialData`](/error-handling#partial-data). When the envelope's error entries carry an availability-class status, the breaker counts the attempt exactly as the strict mode's throw would, so the failure streak advances instead of resetting. A persistently degraded upstream therefore trips the breaker under the opt-in too. Partial envelopes whose error entries carry a caller-side status reset the streak like a success; partial envelopes whose entries carry no upstream status are streak-neutral, exactly like the strict mode's throw of the same error.
+GraphQL validation errors with no upstream error status are streak-neutral. They do not trip or reset the breaker. An error without a status could hide a server fault, so it must not erase earlier availability failures. But without an availability status, it must not trip the breaker for a consumer-side query bug.
+
+[`allowPartialData`](/error-handling#partial-data) uses the same classification for partial-success envelopes. If error entries carry an availability-class status, the breaker counts the attempt and advances the streak, just as strict mode does when it throws. Persistent upstream failures can therefore trip the breaker even when partial data is allowed. If entries carry a caller-side status, the breaker resets the streak as it would after a success. Entries without an upstream status leave the streak unchanged, as they do in strict mode.
 
 ### Probe outcomes
 
-After the cooldown elapses, the breaker lets one request through as a probe. A successful probe closes the breaker. A probe that fails with an availability failure re-opens it for another cooldown. A probe that fails with a caller-side error or a status-less GraphQL envelope error (or that the caller aborts) **closes** the breaker, because the upstream answered and is therefore reachable, instead of leaving the breaker stuck in the half-open state.
+After the cooldown, the breaker lets one request through as a probe. A successful probe closes the breaker. An availability failure reopens it for another cooldown. A caller-side error, a status-less GraphQL envelope error, or a caller abort **closes** the breaker instead of leaving it half-open. None of these outcomes counts as an availability failure.
 
-Each consecutive failed probe doubles the next cooldown, capped at eight times the configured `cooldownMs`, and a successful probe resets the scale. Without this backoff, an upstream that recovers just slower than `cooldownMs`, or a probe that happens to hit a still-restarting instance behind a load balancer, locks the breaker into a cycle of opening, probing, and opening again. In that cycle, exactly one request per cooldown ever reaches the upstream. With it, the breaker probes a recovering upstream on a widening schedule, and the upstream starts serving traffic after a bounded number of cooldowns instead of requiring a clean single-probe success.
+Each failed availability probe doubles the next cooldown, up to eight times the configured `cooldownMs`. A successful probe resets the multiplier. The widening schedule gives a recovering upstream more time between probes. Without it, an upstream that needs slightly longer than `cooldownMs` to recover can keep failing one probe per cooldown. The breaker closes as soon as a probe succeeds.
 
 ### Breaker lifecycle events
 
-The breaker emits `onCircuitOpen` and `onCircuitClose` hooks at state transitions so dashboards can plot trip frequency, open duration, and recovery without scraping `CIRCUIT_OPEN_ERROR` codes. See [Observability](/observability) for the event payloads.
+The breaker emits `onCircuitOpen` and `onCircuitClose` hooks when its state changes. Use them to track trip frequency, time open, and recovery without parsing `CIRCUIT_OPEN_ERROR` codes. See [Observability](/observability) for the event payloads.
 
 ```typescript
 const aniLink = new AniLink("token", {

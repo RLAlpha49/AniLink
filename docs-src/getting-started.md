@@ -25,7 +25,7 @@ const anime = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
 console.log(anime.media?.title?.romaji);
 ```
 
-You do not need a token to read public data. The `anilist` namespace has queries, page queries, mutations, pagination helpers, and `custom()`.
+You can read public AniList data without a token. The `anilist` namespace provides queries, page queries, mutations, pagination helpers, and `custom()`.
 
 ## Your first MAL lookup
 
@@ -38,7 +38,7 @@ const anime = await aniLink.mal.anime.get({ id: 21 }, { fields: ["id", "title", 
 console.log(anime.title);
 ```
 
-The `mal` namespace has the REST operations. `anime.get` requires no token for public fields, and `user.me` requires one.
+Use the `mal` namespace for REST operations. `anime.get` needs no token for public fields, but `user.me` does.
 
 ## Use AniLink from CommonJS
 
@@ -55,11 +55,11 @@ async function main() {
 main();
 ```
 
-You can also migrate the consuming project to ESM. Set `"type": "module"` in its `package.json` and use a static `import` statement, or use the `.mjs` file extension. AniLink does not provide a CommonJS build.
+To use static imports, configure the consuming project as ESM. Add `"type": "module"` to `package.json`, or use the `.mjs` file extension. AniLink does not provide a CommonJS build.
 
 ## Instance basics
 
-One `AniLink` instance gives you both providers:
+`AniLink` exposes both providers from one instance:
 
 ```typescript
 const aniLink = new AniLink({
@@ -74,7 +74,7 @@ await aniLink.anilist.query.viewer();
 await aniLink.mal.user.me();
 ```
 
-Each provider keeps its own credentials and transport settings. Nothing leaks between them. [Provider configuration](/provider-configuration) has the full rules.
+Each provider keeps separate credentials and transport settings. See [Provider configuration](/provider-configuration) for the details.
 
 ## Next steps
 

@@ -8,13 +8,13 @@ layout: .vitepress/theme/DocsLayout.vue
 
 ## `MalCredentials`
 
-| Field            | Type                                   | Purpose                                                                                                                                                                      |
-| ---------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accessToken`    | `string`                               | The MAL OAuth2 access token used by REST operations                                                                                                                          |
-| `refreshToken`   | `string`                               | Stored refresh token; with `clientId`, enables automatic refresh on `401` (and bootstraps a client that has no `accessToken`)                                                |
-| `clientId`       | `string`                               | The MAL application client ID used by OAuth helpers                                                                                                                          |
-| `clientSecret`   | `string`                               | Optional. Only for applications that require one                                                                                                                             |
-| `onTokenRefresh` | `(response: MalTokenResponse) => void` | Optional. Fires exactly once per refresh grant so you can persist the new token pair; if the callback throws, the error goes to `onHookError` and the request replays anyway |
+| Field            | Type                                   | Purpose                                                                                                                                                                                |
+| ---------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accessToken`    | `string`                               | The MAL OAuth2 access token used by REST operations                                                                                                                                    |
+| `refreshToken`   | `string`                               | Stored refresh token. With `clientId`, it enables automatic refresh on `401` and lets a client without `accessToken` bootstrap on its first auth-required call.                        |
+| `clientId`       | `string`                               | The MAL application client ID used by OAuth helpers                                                                                                                                    |
+| `clientSecret`   | `string`                               | Optional. Only for applications that require one                                                                                                                                       |
+| `onTokenRefresh` | `(response: MalTokenResponse) => void` | Optional. Fires exactly once per refresh grant so you can persist the new token pair. If the callback throws, AniLink reports the error through `onHookError` and replays the request. |
 
 You can set any shared transport option (`timeout`, `retry`, `signal`, hooks, pacing, circuit breaker) in the same slot. It is scoped to MAL only.
 
@@ -32,7 +32,7 @@ const aniLink = new AniLink({
 });
 ```
 
-With `refreshToken` and `clientId` both set, a `401` triggers an automatic refresh and a single replay. See [MAL authentication](/guides/mal/authentication#_4-automatic-refresh). A client configured with only those two fields (no `accessToken`) bootstraps itself on the first auth-required call.
+With both `refreshToken` and `clientId` set, a `401` triggers an automatic refresh and one replay. See [MAL authentication](/guides/mal/authentication#_4-automatic-refresh). A client without `accessToken` refreshes on its first auth-required call when you set those two fields.
 
 ## `buildMyAnimeListApi(credentials?)`
 
@@ -45,7 +45,7 @@ const api = buildMyAnimeListApi({ accessToken: "mal-token" });
 const anime = await api.anime.get({ id: 21 });
 ```
 
-`buildMyAnimeListApi` resolves credentials and composes the same `MyAnimeListApi` the `AniLink` client exposes under `mal`, with identical behavior and a smaller footprint.
+`buildMyAnimeListApi` resolves MAL credentials and builds a standalone `MyAnimeListApi`. The `AniLink` client uses the same builder for its `mal` property. Use it when you need only the MAL client.
 
 ## Two ways to construct
 
@@ -57,7 +57,7 @@ new AniLink({ mal: { accessToken: "mal-token" } });
 buildMyAnimeListApi({ accessToken: "mal-token" });
 ```
 
-Both produce identical MAL behavior. The difference is that the composed client also includes the AniList operations.
+Both provide the same MAL behavior. The composed client also includes the AniList operations.
 
 ## Next steps
 

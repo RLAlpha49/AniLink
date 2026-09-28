@@ -6,7 +6,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Mutations
 
-Every `aniLink.anilist.mutation.*` method requires authentication. Call one without a token and the method throws `AniLinkAuthError`. The default retry policy **never retries** mutations unless you opt in.
+Every `aniLink.anilist.mutation.*` method requires authentication. Without a token, a mutation throws `AniLinkAuthError`. The default retry policy **never retries** mutations unless you enable retries.
 
 ## Lists
 
@@ -87,7 +87,7 @@ const entry = await aniLink.anilist.mutation.saveMediaListEntry({
 
 ## Errors
 
-Mutations throw `AniLinkAuthError` (no token), `AniLinkGraphQLError` (validation failures inside HTTP 200), `AniLinkApiError` (HTTP-level failures), and `AniLinkNetworkError` (transport). [Error handling](/error-handling) covers every error type.
+Mutations throw `AniLinkAuthError` when you omit a token. They also throw `AniLinkGraphQLError` for validation failures inside an HTTP 200 response, `AniLinkApiError` for HTTP-level failures, and `AniLinkNetworkError` for transport errors. [Error handling](/error-handling) covers every error type.
 
 ## Next steps
 

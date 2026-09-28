@@ -10,8 +10,8 @@ layout: .vitepress/theme/DocsLayout.vue
 
 ## When to fetch a single known page
 
-- You already know the page number (e.g. resuming a sync).
-- You want exactly one slice of results (e.g. "top 10 trending").
+- You know the page number, for example, when resuming a sync.
+- You want one slice of results, such as the top 10 trending items.
 - You are building your own pagination loop.
 
 To collect everything instead, use the [pagination helpers](/guides/anilist/pagination).

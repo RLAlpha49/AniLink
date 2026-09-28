@@ -6,7 +6,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Complete examples
 
-The largest operations with every variable filled out. Every property below is optional unless the type says otherwise, so real calls pass only what they need.
+These examples show the largest AniList operations with every variable filled out. Every property is optional unless its type says otherwise, so pass only the values your call needs.
 
 ## query.media: all 70 variables
 
@@ -206,7 +206,7 @@ await aniLink.anilist.query.page.medias({
 
 ## Selecting fields
 
-Field-aware single-entity queries, those whose signature lists a `fields` option, accept it to request only what you need; the return type narrows to your selection plus the always-selected keys:
+Single-entity queries whose signatures include a `fields` option let you request only the fields you need. The return type includes your selection and any keys the query always selects:
 
 ```typescript
 const slim = await aniLink.anilist.query.media(

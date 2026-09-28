@@ -8,7 +8,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 ## Constructor token
 
-Pass the token positionally or in the `anilist` credential slot, whichever reads better in your code:
+Pass the token as the first argument or in the `anilist` credential slot:
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -18,7 +18,7 @@ const aniLink = new AniLink("anilist-token");
 const aniLink2 = new AniLink({ anilist: { authToken: "anilist-token" } });
 ```
 
-Multiple instances can hold different tokens, and each exposes its own `anilist` API. Use one instance per user or one per bot, whichever you prefer.
+Multiple instances can hold different tokens, and each exposes its own `anilist` API. Create a separate instance for each user or bot that needs a different token.
 
 ## Public versus authenticated operations
 
@@ -33,7 +33,7 @@ Mutations and viewer-scoped queries (`viewer`, `notification`, list mutations) r
 
 ## OAuth2 authorization-code flow
 
-AniLink ships helpers for the full flow. First, register an application on the [AniList developer settings](https://anilist.co/settings/developer) page to get a client ID and secret.
+AniLink provides helpers for the OAuth2 authorization-code flow. First, register an application on the [AniList developer settings](https://anilist.co/settings/developer) page to get a client ID and secret.
 
 <Mermaid
     :code="`sequenceDiagram\n    autonumber\n    participant U as User\n    participant A as Your App\n    participant AL as AniList auth server\n    participant API as AniList API\n\n    U->>A: Start login\n    A->>A: buildAuthorizationUrl(clientId, redirect, state)\n    A->>U: Redirect to AniList authorize URL\n    U->>AL: Authorize app\n    AL->>U: Redirect to callback?code=...&state=...\n    U->>A: Arrive at callback\n    A->>A: Validate state matches\n    A->>AL: getAccessToken(clientId, secret, code, redirect)\n    AL->>A: access_token + refresh_token\n    A->>API: new AniLink(access_token)\n    API->>A: Authenticated data\n\n    Note over A,AL: Token expires (expires_in seconds)\n    A->>A: getTokenExpiry(token) < now - 60s?\n    A->>AL: refreshAccessToken(clientId, secret, refresh_token)\n    AL->>A: New access_token (+ optional refresh_token)\n    A->>API: Continue with fresh token`"
@@ -49,7 +49,7 @@ const authorizeUrl = buildAuthorizationUrl("your-client-id", "https://example.co
 // Redirect the user to `authorizeUrl`.
 ```
 
-The third `state` parameter is optional but strongly recommended. It is your CSRF protection. Bind it to the user's session, and validate that the `state` on the redirect matches before exchanging the code.
+The third `state` parameter is optional, but use it to help prevent CSRF attacks. Bind it to the user's session and validate that the returned `state` matches before exchanging the code.
 
 ### 2. Exchange the code for a token
 
@@ -84,7 +84,7 @@ const nextRefreshToken = rotated ?? refresh_token;
 
 ### 4. Refresh proactively
 
-AniList reports the token lifetime as `expires_in` seconds. Use `getTokenExpiry` to refresh before expiry, so you do not need to wait for a `401` to learn the token has expired:
+AniList reports the token lifetime as `expires_in` seconds. Use `getTokenExpiry` to refresh before the token expires instead of waiting for a `401`:
 
 ```typescript
 import { getTokenExpiry, refreshAccessToken } from "anilink-api-wrapper";
@@ -100,7 +100,7 @@ if (Date.now() >= getTokenExpiry(tokenResponse).getTime() - 60_000) {
 
 ## 5. Automatic refresh
 
-Steps 1 to 4 leave refreshing to you. Configure `refreshToken`, `clientId`, and `clientSecret`, and the client handles refreshing. When any AniList request fails with a `401` (an HTTP-level 401, or a GraphQL envelope whose errors entry carries `status: 401`), the client automatically exchanges the stored refresh token for a fresh access token. It updates its credentials and replays the original request once.
+Steps 1 through 4 leave token refresh to your code. Set `refreshToken`, `clientId`, and `clientSecret` to let the client refresh automatically. When any AniList request fails with a `401` (an HTTP-level 401, or a GraphQL envelope whose errors entry carries `status: 401`), the client automatically exchanges the stored refresh token for a fresh access token. It updates its credentials and replays the original request once.
 
 ```typescript
 const aniLink = new AniLink({
@@ -114,13 +114,13 @@ const aniLink = new AniLink({
 });
 ```
 
-- **Opt-in.** Without the full set (`refreshToken`, `clientId`, and `clientSecret`), the client never attempts a refresh. The call fails with a `401` immediately, exactly as before. AniList's refresh grant requires the client secret, unlike MAL where it is optional, so automatic refresh stays off until all three fields are configured.
-- **Bootstrappable.** A client configured with only the refresh fields (no `authToken`) refreshes on the first auth-required call instead of failing. A persisted refresh token alone is enough to construct a working client.
-- **One replay, no loop.** A replay that fails again rejects with that error; there is no retry loop. Concurrent 401s share one refresh grant.
-- **Failure event.** `onTokenRefreshError` fires exactly once per failed grant with the sanitized token-request error. The failing call rejects with the same error, so monitoring can distinguish "refresh recovered" from "refresh is broken" without parsing hook diagnostics. If the callback throws, the client reports that through `onHookError`; the throw never replaces the propagated error.
+- **Opt-in.** The client attempts a refresh only when you set all three fields (`refreshToken`, `clientId`, and `clientSecret`). Otherwise, the call fails with a `401`. AniList requires the client secret for its refresh grant, but MAL treats it as optional.
+- **Bootstrappable.** A client with `refreshToken`, `clientId`, and `clientSecret`, but no `authToken`, refreshes on its first auth-required call. You can construct one from a stored refresh token without an access token.
+- **One replay, no loop.** A replay that fails again rejects with that error. There is no retry loop. Concurrent 401s share one refresh grant.
+- **Failure event.** `onTokenRefreshError` fires exactly once per failed grant with the sanitized token-request error. The failing call rejects with the same error. If the callback throws, the client reports the callback error through `onHookError`. The callback error does not replace the token-request error.
 - **Per-call, not per-traversal.** Refresh applies per wrapped operation call. Pages already in flight under `paginate` with `concurrency > 1` fail independently if they dispatched with the expired token. Only the failing call itself triggers the grant and replay.
 
-**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. If the process exits or the callback throws between the refresh and your persistence write, the in-memory client works but your stored credentials are stale. When AniList rotates the refresh token, the stored one becomes permanently invalid. Automatic refresh cannot recover after a restart; manual re-authorization is the only fix. The callback receives the effective token response. When AniList omits `refresh_token`, the stored one stays valid and the response carries it.
+**Persist synchronously in `onTokenRefresh`.** The client starts using the new token before your callback returns. If the process exits or the callback throws between the refresh and your persistence write, the in-memory client works but your stored credentials are stale. When AniList rotates the refresh token, the stored one becomes permanently invalid. Automatic refresh cannot recover after a restart. Re-authorize manually to resume refresh. The callback receives the effective token response. When AniList omits `refresh_token`, the stored one stays valid and the response carries it.
 
 ## Constants and types
 

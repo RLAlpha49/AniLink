@@ -6,7 +6,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Error handling
 
-AniLink throws every transport failure as an `AniLinkError` subclass with a stable `code`. Classify failures by `instanceof` or by `code`, never by parsing messages. Messages change; codes do not.
+AniLink reports normalized failures as `AniLinkError` subclasses with stable `code` values. Classify errors by `instanceof` or `code`, not by message text, which can change.
 
 ## Error hierarchy
 
@@ -68,11 +68,11 @@ try {
 
 </Callout>
 
-In practice, AniList answers `400` (invalid query or variables), `401` (invalid token), `403` (forbidden), `429` (rate limited), and `500`/`502`/`503`/`504` (server-side). MAL answers `400` (invalid fields), `401` (expired or invalid token), `404` (unknown ID), and `429` (rate limited).
+AniList can return `400` (invalid query or variables), `401` (invalid token), `403` (forbidden), `429` (rate limited), and `500`/`502`/`503`/`504` (server-side errors). MAL can return `400` (invalid fields), `401` (expired or invalid token), `404` (unknown ID), and `429` (rate limited).
 
 ## Correlation ID
 
-Every error thrown by the transport pipeline carries a `requestId` string, the same one the lifecycle hooks received for that request. Use it to join a caught failure to its full event stream (attempts, retries, pacing, rate-limit state) in your logging or metrics backend:
+Every error from the transport pipeline carries a string `requestId`. Lifecycle hooks receive the same ID for that request. Use it to match a caught error with its lifecycle events, including attempts, retries, pacing, and rate-limit state, in your logs or metrics:
 
 ```typescript
 try {
@@ -82,11 +82,11 @@ try {
 }
 ```
 
-Errors raised before any request is sent (for example, `AniLinkValidationError`, or `AniLinkAuthError` from a missing token) carry no `requestId`.
+Errors that occur before AniLink sends a request, such as an `AniLinkValidationError` or an `AniLinkAuthError` for a missing token, have no `requestId`.
 
 ## Response Content-Type
 
-`AniLinkApiError` and `AniLinkRestError` expose `contentType`, the `Content-Type` header of the failing response. REST providers such as MyAnimeList answer rate limits and gateway errors with HTML or plain text, not JSON. This field tells a structured JSON failure payload (where `data.message` is meaningful) from a non-JSON one, so you do not have to guess:
+`AniLinkApiError` and `AniLinkRestError` expose `contentType`, the `Content-Type` header of the failing response. MyAnimeList can return HTML or plain text for rate-limit and gateway errors instead of JSON. Use `contentType` to distinguish a JSON response, where `data.message` is meaningful, from a non-JSON response:
 
 ```typescript
 if (error instanceof AniLinkRestError) {
@@ -100,7 +100,7 @@ if (error instanceof AniLinkRestError) {
 
 ## Partial data
 
-GraphQL permits partial success. A document selecting several root fields can resolve most of them while one fails. By default AniLink is strict. An envelope carrying any `errors` entry throws `AniLinkGraphQLError`. The resolved portion is available on the error's `partialData` (and `data`) field, so you can recover it from the catch path:
+GraphQL responses can contain partial data when a document selects multiple root fields. By default, AniLink treats any response with an `errors` entry as a failure and throws `AniLinkGraphQLError`. The error exposes resolved data through `partialData` and `data`, so you can recover it in the catch block:
 
 ```typescript
 try {
@@ -115,7 +115,7 @@ try {
 }
 ```
 
-For multi-field documents where you want the resolved fields inline, pass `allowPartialData: true` as a per-request option. The transport then resolves with the data instead of throwing, and reports the error entries through the `onError` hook. The error it passes to the hook is the same `AniLinkGraphQLError` the strict mode would have thrown. You still see failures without a try/catch:
+For a multi-field document, pass `allowPartialData: true` as a per-request option to return resolved fields instead of throwing. AniLink reports the GraphQL errors through the `onError` hook. The hook receives the same `AniLinkGraphQLError` that strict mode would throw, so you can still observe failures without a `try/catch`:
 
 ```typescript
 const result = await aniLink.anilist.custom(
@@ -124,17 +124,17 @@ const result = await aniLink.anilist.custom(
 );
 ```
 
-Envelopes with errors and no usable `data` still throw regardless of the flag. There is nothing to return. "Usable" means a `data` object with at least one resolved (non-null) root field. An empty `data: {}` means every root field failed. So does `data: { Media: null }`, the GraphQL shape for a failed nullable root field. Both throw as the strict mode would. Typed single-root-field operations are unaffected in practice. Their documents resolve one root field, so a partial envelope for them carries either `data: null` or a lone `null` root field, and throws as before.
+Even with `allowPartialData: true`, AniLink throws if an envelope has errors but no usable `data`. Usable data contains at least one resolved, non-null root field. An empty `data: {}` means every root field failed. The same is true of `data: { Media: null }`, the GraphQL shape for a failed nullable root field. Both responses throw as they do in strict mode. Typed single-root-field operations behave the same. Each document resolves one root field, so a partial envelope contains either `data: null` or a single null root field. AniLink throws in both cases.
 
-AniLink never stores partial-success results in the [response cache](/response-cache). A later cache hit would replay the degraded data without the `onError` reporting that accompanied the original fetch, and hide the failures. Every read of a partial envelope goes back to the network (and reports its errors through `onError` again).
+AniLink does not store partial responses in the [response cache](/response-cache). A cache hit would return degraded data without the original `onError` report, hiding the errors. AniLink fetches every partial response from the network and reports its errors through `onError` again.
 
-The circuit breaker still tracks upstream health. When a partial envelope's error entries carry an availability-class status (429 or 5xx), the breaker counts the attempt exactly as the strict mode's throw would, instead of resetting the failure streak. A persistently degraded upstream trips the breaker under `allowPartialData` too. Partial envelopes whose error entries carry a caller-side status reset the streak like a success; partial envelopes whose entries carry no upstream status are streak-neutral — they neither advance nor reset the streak — which matches the strict mode's classification of the same error.
+The circuit breaker still tracks upstream health. If a partial response's error entries contain an availability status (`429` or `5xx`), the breaker counts the attempt as a failure, just as it does in strict mode, rather than resetting the failure streak. Repeated availability failures can still trip the breaker with `allowPartialData: true`. If the error entries have caller-side statuses, the breaker resets the failure streak as it would after a success. If the error entries have no upstream status, the breaker leaves the streak unchanged, matching strict mode's handling of the same errors.
 
-The resolution is terminal where the strict mode's throw is retryable. A partial envelope is never retried (the data is already in hand), so a 429-class partial error is reported once through `onError` while the strict mode would have re-dispatched the request under the retry policy. Under sustained rate limiting, a client that switches to `allowPartialData` therefore retries less and trips the breaker sooner for identical upstream conditions. The breaker accounting is identical. The retry accounting is not.
+Returning partial data ends the request even when strict mode would retry the failure. AniLink never retries a partial response because it already has the data. For a `429` partial error, `onError` runs once. Strict mode may re-dispatch the request if the retry policy allows it. Under sustained rate limiting, enabling `allowPartialData` reduces retries and can trip the breaker sooner for the same upstream failures. The breaker accounting stays the same, but the retry count changes.
 
 ## Raw error debugging
 
-Pass `exposeRawAxiosError: true` and thrown errors carry the original Axios error as `rawAxiosError` (and `cause`).
+Set `exposeRawAxiosError: true` to attach the original Axios error to thrown errors as `rawAxiosError` and `cause`.
 
 <Callout kind="tip">
 

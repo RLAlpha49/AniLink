@@ -11,7 +11,7 @@ import { data as grouped } from "./query.data.ts";
 
 # AniList query operations
 
-The public AniList GraphQL query operations, grouped by response domain.
+This page lists public AniList GraphQL query operations by response domain.
 
 <OperationCatalog :grouped="grouped" />
 

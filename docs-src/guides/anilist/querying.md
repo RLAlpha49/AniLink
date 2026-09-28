@@ -6,11 +6,11 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Querying data
 
-The query methods are grouped by domain. Every method takes a typed variables object and an optional trailing `RequestOptions`. The shape is the same everywhere, so you learn it once.
+The query methods are grouped by domain. Every method takes a typed variables object and an optional trailing `RequestOptions`.
 
 ## Selecting fields
 
-Every query returns the maximal selection by default. Field-aware queries are those whose signature lists a `fields` option. They accept it in the trailing options to request only what you need at any nesting depth. The return type narrows to exactly your selection. Plain-response queries such as `query.markdown` and `query.viewer` have no `fields` option; they always return their fixed shape:
+Every query returns the maximal selection by default. Field-aware queries are those whose signature lists a `fields` option. They accept it in the trailing options to select fields at any nesting depth. The return type includes the requested fields and any always-selected keys. Plain-response queries such as `query.markdown` and `query.viewer` have no `fields` option. They always return their fixed shape:
 
 ```typescript
 const slim = await aniLink.anilist.query.media(

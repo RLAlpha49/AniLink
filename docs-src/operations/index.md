@@ -6,7 +6,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 # Operation reference
 
-The operation reference is a generated, per-operation catalog of every public AniLink operation across both providers. `scripts/generate-operation-reference.ts` generates it from source metadata during `npm run docs:generate`, so it cannot drift from the code. Regenerate the docs and the catalog follows the source.
+This reference lists each public AniLink operation for both providers. The `scripts/generate-operation-reference.ts` script builds the per-operation catalog from source metadata during `npm run docs:generate`.
 
 ## What each operation page shows
 

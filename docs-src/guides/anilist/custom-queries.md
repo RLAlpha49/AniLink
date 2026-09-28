@@ -18,7 +18,7 @@ console.log(result.Media.title.romaji);
 
 ## Generic typing
 
-`custom<T>` types the **unwrapped** result. Declare `T` as the shape of what the document returns after unwrapping.
+`custom<T>` uses `T` as the type of the unwrapped result.
 
 ## Envelope-unwrapping rule
 

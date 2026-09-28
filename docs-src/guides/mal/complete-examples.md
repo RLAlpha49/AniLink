@@ -1,12 +1,12 @@
 ---
 title: Complete examples
-description: "Every MyAnimeList operation with its complete params object filled out."
+description: "Examples with every parameter filled in for each MyAnimeList operation."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # Complete examples
 
-This page shows every MAL operation with **every** param filled in. Every optional property below can be omitted in real calls; pass only what you need.
+The examples include every parameter for each MAL operation. Omit optional properties you do not need in your calls.
 
 ## Anime reads
 
@@ -140,7 +140,7 @@ await aniLink.mal.forum.topic({
 
 ## Trailing options
 
-Every operation accepts the same options object. It has `fields` to select the response shape, plus the transport settings shared with AniList. Operations with inputs take it after params; zero-parameter operations such as `anime.suggestions()` and `user.me()` take it as their first argument:
+All operations accept the same options object. Use `fields` to select the response shape and set transport options shared with AniList. For operations with params, pass the options object second. For zero-parameter operations such as `anime.suggestions()` and `user.me()`, pass it as the first argument:
 
 ```typescript
 await aniLink.mal.anime.get(

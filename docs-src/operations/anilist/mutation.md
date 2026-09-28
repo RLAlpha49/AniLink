@@ -11,7 +11,7 @@ import { data as grouped } from "./mutation.data.ts";
 
 # AniList mutation operations
 
-The authenticated AniList GraphQL mutation operations, grouped by response domain.
+This page lists authenticated AniList GraphQL mutation operations by response domain.
 
 <OperationCatalog :grouped="grouped" />
 

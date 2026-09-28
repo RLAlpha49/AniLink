@@ -8,7 +8,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 ## Provider-aware inferred types
 
-AniLink fully types operation variables and responses. Hover any call and the inferred shapes appear:
+AniLink infers types for operation variables and responses. Hover over a call to see the inferred shapes:
 
 ```typescript
 import { AniLink } from "anilink-api-wrapper";
@@ -45,7 +45,7 @@ try {
 }
 ```
 
-`AniLinkErrorCodes` is a const object; `AniLinkErrorCode` is its union type. Branch on `instanceof` first for class-specific fields (`status`, `rateLimit`, `graphqlErrors`, `timeoutMs`), then on `code` to handle every case.
+`AniLinkErrorCodes` is a const object, and `AniLinkErrorCode` is its union type. Check `instanceof` first to access class-specific fields (`status`, `rateLimit`, `graphqlErrors`, `timeoutMs`). Then switch on `code` to handle each error case.
 
 ## Key type exports
 
