@@ -355,11 +355,28 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
                                                 "
                                             >
                                                 <span
-                                                    v-if="p.provider === 'anilist'"
+                                                    v-if="child.provider === 'anilist'"
                                                     class="docs-provider docs-provider--icon"
-                                                    :class="p.provider"
+                                                    :class="child.provider"
                                                     ><Disc
                                                         :size="11"
+                                                        :stroke-width="2.5"
+                                                        aria-hidden="true"
+                                                /></span>
+                                                <span
+                                                    v-else-if="child.provider === 'mal'"
+                                                    class="docs-provider docs-provider--icon"
+                                                    :class="child.provider"
+                                                    ><Square
+                                                        :size="11"
+                                                        :stroke-width="2.5"
+                                                        aria-hidden="true"
+                                                /></span>
+                                                <span
+                                                    v-else
+                                                    class="docs-provider docs-provider--icon docs-provider--dot"
+                                                    ><Minus
+                                                        :size="13"
                                                         :stroke-width="2.5"
                                                         aria-hidden="true"
                                                 /></span>
