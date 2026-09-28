@@ -144,7 +144,7 @@ const getUnclampedRetryAfterDelay = (error: unknown): number | null => {
  * metadata.
  *
  * A GraphQL-envelope 429 arrives as an HTTP 200: axios resolves, the envelope
- * unwrapper throws, and the raw thrown value is the normalized error itself —
+ * unwrapper throws, and the raw thrown value is the normalized error itself;
  * no Axios error exists to carry a `Retry-After` header. The envelope's
  * `x-ratelimit-reset` header (threaded onto the error as `rateLimit.reset`)
  * is the deadline `Retry-After` would have communicated, so the delay is
@@ -342,7 +342,7 @@ export interface RetryDelayInput {
  * remaining time surfaces the failure instead of sleeping past the window
  * the budget was configured to bound.
  *
- * The window gate applies only to server-dictated delays — the only
+ * The window gate applies only to server-dictated delays, the only
  * candidate delays that can park a caller for up to a full minute per
  * retry. Client-chosen jittered backoff delays are never gated by the
  * window: they are already bounded by the policy's `maxDelayMs` cap, so they
@@ -379,8 +379,8 @@ export const computeNextRetryDelay = (input: RetryDelayInput): number | null => 
         normalized.status === 429
     ) {
         // A 429 is the only error class whose candidate delay comes from the
-        // server — via the `Retry-After` header, or via the `rateLimit.reset`
-        // metadata carried by both HTTP-level and GraphQL-envelope 429s — so
+        // server, via the `Retry-After` header or via the `rateLimit.reset`
+        // metadata carried by both HTTP-level and GraphQL-envelope 429s, so
         // it is the only delay that can be checked against the window before
         // the matrix runs. When the server-dictated delay would still be
         // sleeping after the window ends, it has outlasted the retry spend
@@ -390,7 +390,7 @@ export const computeNextRetryDelay = (input: RetryDelayInput): number | null => 
         // The comparison uses the un-clamped server-dictated deadline: the
         // clamped delay (capped at MAX_RETRY_AFTER_MS) is what the caller
         // actually sleeps, but a delay that genuinely outlasts the window
-        // must surface now — otherwise each clamped 60-second hop spends a
+        // must surface now. Otherwise each clamped 60-second hop spends a
         // budget unit and re-hits the 429, stretching one window's spend
         // across many minutes of wall-clock waits.
         const serverDictatedDelay =
@@ -407,7 +407,7 @@ export const computeNextRetryDelay = (input: RetryDelayInput): number | null => 
 
 /**
  * Whether a failure that surfaced without a retry did so because of the
- * retry-budget count gate — the failure was retryable (the per-class matrix
+ * retry-budget count gate: the failure was retryable (the per-class matrix
  * in {@link getRetryDelay} would have returned a delay), but the window's
  * retry spend was already used up.
  *
@@ -498,7 +498,7 @@ export const getRetryBudgetState = (
 
 /**
  * Returns the recorded retry-budget window for one owner without rolling
- * it forward — the read-only counterpart of {@link getRetryBudgetState} used
+ * it forward, the read-only counterpart of {@link getRetryBudgetState} used
  * by transport-state snapshots. Unlike {@link getRetryBudgetState}, reading
  * through this helper never resets `retriesUsed` or re-anchors
  * `windowEndsAt`, so snapshotting an elapsed window reports the spent state

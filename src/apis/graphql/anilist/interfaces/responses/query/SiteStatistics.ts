@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type SiteTrendConnection } from "../../SiteTrend";
 /**
- * `SiteStatisticsResponse` — site-wide statistic connections across users, anime, manga, and more.
+ * `SiteStatisticsResponse` is site-wide statistic connections across users, anime, manga, and more.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/sitestatistics

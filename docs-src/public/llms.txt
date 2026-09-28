@@ -31,7 +31,7 @@
 - [AniList authentication](https://anilink.alpha49.com/guides/anilist/authentication): Create an AniList GraphQL client token and pass it positionally or in the anilist credential slot.
 - [AniList configuration](https://anilink.alpha49.com/guides/anilist/configuration): Every AniList slot option, including timeout, retries, pacing, hooks, and exposeRawAxiosError, with types, defaults, and when to change each.
 - [Querying data](https://anilink.alpha49.com/guides/anilist/querying): The aniLink.anilist.query methods are grouped by domain. Every method takes a typed variables object and an optional trailing RequestOptions.
-- [Field selection](https://anilink.alpha49.com/guides/anilist/field-selection): Request only the fields you need from AniList operations, at any nesting depth, with response types that narrow to your selection.
+- [Field selection](https://anilink.alpha49.com/guides/anilist/field-selection): Request fields from AniList operations at any nesting depth. Response types include the requested fields and any always-selected keys.
 - [Complete examples](https://anilink.alpha49.com/guides/anilist/complete-examples): The largest AniList operations with every variable filled out.
 - [Page queries](https://anilink.alpha49.com/guides/anilist/page-queries): Fetch one known page of an AniList collection with aniLink.anilist.query.page, which adds page and perPage controls and returns pageInfo.
 - [Pagination](https://anilink.alpha49.com/guides/anilist/pagination): The three AniList pagination helpers: paginate, paginatePages, and the chunk-based paginateChunks. When to use each traversal style.
@@ -41,11 +41,11 @@
 
 ## MyAnimeList guides
 
-- [MAL authentication](https://anilink.alpha49.com/guides/mal/authentication): The MyAnimeList OAuth2 with PKCE flow: register an application, run the code exchange, and use the resulting access token.
+- [MAL authentication](https://anilink.alpha49.com/guides/mal/authentication): Register a MyAnimeList application, exchange an OAuth2 authorization code with PKCE, and use the access token.
 - [MAL configuration](https://anilink.alpha49.com/guides/mal/configuration): The mal slot fields for the access token and shared transport options, and how they map onto the REST operations.
 - [MAL operations](https://anilink.alpha49.com/guides/mal/operations): The MyAnimeList REST operations: anime and manga lookups and search, seasonal, rankings, suggestions, user lists, and the forum reads with parameter tables per operation.
 - [MAL pagination](https://anilink.alpha49.com/guides/mal/pagination): The two MyAnimeList pagination helpers: malPaginate and the streaming malPaginatePages, over the offset/limit list endpoints.
-- [Complete examples](https://anilink.alpha49.com/guides/mal/complete-examples): Every MyAnimeList operation with its complete params object filled out.
+- [Complete examples](https://anilink.alpha49.com/guides/mal/complete-examples): Examples with every parameter filled in for each MyAnimeList operation.
 
 ## Operations
 

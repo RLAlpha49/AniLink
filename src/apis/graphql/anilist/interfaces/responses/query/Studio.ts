@@ -10,7 +10,7 @@ import { type Media } from "../../Media";
 import { type CharacterResponse } from "./Character";
 import { type StaffResponse } from "./Staff";
 /**
- * `StudioResponse` — a studio with its produced media connections.
+ * `StudioResponse` is a studio with its produced media connections.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/studio

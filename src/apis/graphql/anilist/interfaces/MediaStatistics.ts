@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type Stat } from "./Stat";
 /**
- * `MediaStatistics` — the per-media-type usage statistics of a user.
+ * `MediaStatistics` is the per-media-type usage statistics of a user.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/userstatistics

@@ -154,7 +154,7 @@ describe("watchFeed engine", () => {
             signal: controller.signal,
         });
         // Baseline poll: drains both pages (3 items at perPage 2), marks
-        // everything seen, yields nothing — the step aborts right after the
+        // everything seen, yields nothing. The step aborts right after the
         // baseline poll so it completes as `done` without a second poll.
         const baseline = await step(watcher, () => controller.abort(), 0);
         expect(baseline.done).toBe(true);
@@ -203,7 +203,7 @@ describe("watchFeed engine", () => {
     test("a resumed poll that hits the seen frontier re-arms one page deeper", async () => {
         // 30 items at perPage 2: the first poll caps at page 10 (20 items
         // yielded). Between polls, two new items arrive at the front,
-        // shifting every page down — the resumed page 11 now holds
+        // shifting every page down, so the resumed page 11 now holds
         // already-seen items. The re-arm walks one page deeper each frontier
         // hit until the unseen remainder is reached.
         const feed: NotificationResponse[] = Array.from({ length: 30 }, (_, i) =>
@@ -283,7 +283,7 @@ describe("watchFeed engine", () => {
         expect(seenResetValues).toHaveLength(2);
         expect(seenResetValues[1]).not.toBe(true);
 
-        // A second watcher forwards it again on its own first poll —
+        // A second watcher forwards it again on its own first poll,
         // one-shot per watcher, not per poll. The recorded values start
         // fresh so that poll is verified independently of watcher one's.
         seenResetValues.length = 0;

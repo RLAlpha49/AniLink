@@ -32,8 +32,8 @@ export interface ProviderCredentials extends RequestOptions {
  * `onTokenRefresh`, `onTokenRefreshError`) opt a client into the automatic
  * token-refresh lifecycle (the shared `TokenRefresher`, bound to AniList's
  * grant in `apis/graphql/anilist/tokenRefresh.ts` and wired in
- * `apis/graphql/anilist/wiring.ts`): a 401 from an expired access token
- * — or a missing token on an auth-required operation — triggers one
+ * `apis/graphql/anilist/wiring.ts`): a 401 from an expired access token,
+ * or a missing token on an auth-required operation, triggers one
  * deduplicated refresh grant and a single replayed request.
  *
  * @see {@link resolveAniListCredentials}
@@ -57,7 +57,7 @@ export interface AniListCredentials extends ProviderCredentials {
     /**
      * Called when an automatic token-refresh grant fails, with the sanitized
      * refresh error the awaiting caller catches. Fires once per failed
-     * grant — concurrent 401s share one failure event.
+     * grant. Concurrent 401s share one failure event.
      */
     onTokenRefreshError?: import("../apis/graphql/anilist/tokenRefresh").AniListTokenRefreshErrorCallback;
 }
@@ -75,7 +75,7 @@ export interface AniListCredentials extends ProviderCredentials {
  * invokes it for request-hook failures, and the automatic token-refresh
  * lifecycle (the shared `TokenRefresher`, bound to MAL's grant in
  * `apis/rest/mal/tokenRefresh.ts` and wired in `apis/rest/mal/wiring.ts`)
- * consumes the same value for token-refresh observer failures — a failed
+ * consumes the same value for token-refresh observer failures. A failed
  * refresh grant is reported under the `malTokenRefresh` hook name and a
  * throwing `onTokenRefresh` callback under the `onTokenRefresh` hook name.
  * A slot-level `onHookError` therefore covers both failure classes; the
@@ -102,7 +102,7 @@ export interface MalCredentials extends ProviderCredentials {
     /**
      * Called when an automatic token-refresh grant fails, with the sanitized
      * refresh error the awaiting caller catches. Fires once per failed
-     * grant — concurrent 401s share one failure event.
+     * grant. Concurrent 401s share one failure event.
      */
     onTokenRefreshError?: import("../apis/rest/mal/tokenRefresh").MalTokenRefreshErrorCallback;
 }
@@ -111,7 +111,7 @@ export interface MalCredentials extends ProviderCredentials {
  * The per-provider credentials object accepted by the {@link AniLink} constructor.
  *
  * Each key targets exactly one provider namespace (`aniLink.anilist`,
- * `aniLink.mal`, …); credentials given under one key are never applied to
+ * `aniLink.mal`, ...); credentials given under one key are never applied to
  * another provider's requests. The optional top-level `onHookError` is a
  * client-level default applied to every provider slot that does not define
  * its own, so a single hook-error logger can be wired once instead of
@@ -157,7 +157,7 @@ export const isNonBlank = (value: string | undefined): value is string =>
  * Normalized authentication and transport settings for one provider slot.
  *
  * Credential resolvers use this shape to keep provider-specific fields out of
- * the shared operation-constructor seam while preserving provider-only auth.
+ * the shared operation constructor while retaining provider-specific auth.
  *
  * @see {@link resolveAniListCredentials}
  * @see {@link resolveMalCredentials}

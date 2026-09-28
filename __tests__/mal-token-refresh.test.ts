@@ -322,7 +322,7 @@ describe("MAL automatic token refresh", () => {
         // machine key consumers switch on, so counting grant failures as
         // `hook-failure` corrupts hook-health metrics. The diagnostic
         // carries its own `token-refresh` kind, and the observer receives
-        // the sanitized refresh error itself as the cause — the same
+        // the sanitized refresh error itself as the cause, the same
         // AniLinkError (with status/code) the caller is about to catch,
         // not a plain wrapper that hides them.
         const onHookError = vi.fn();
@@ -344,7 +344,7 @@ describe("MAL automatic token refresh", () => {
         expect((error as Error).message).toBe(
             "The MAL token refresh failed: MAL token request failed with status 400."
         );
-        // The cause is the sanitized refresh error the caller catches —
+        // The cause is the sanitized refresh error the caller catches,
         // an AniLinkApiError carrying the upstream status and code.
         const cause = (error as Error).cause;
         expect(cause).toBe(surfaced);
@@ -355,7 +355,7 @@ describe("MAL automatic token refresh", () => {
     test("does not console.warn a failed refresh grant that is rethrown to the caller", async () => {
         // The refresh failure is rethrown to the caller, who handles it
         // from the rejection. A console.warn fallback on top of the
-        // rethrow would report the same failure twice — once as noise,
+        // rethrow would report the same failure twice, once as noise,
         // once as the error the caller already catches.
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
         const api = buildMyAnimeListApi({
@@ -399,7 +399,7 @@ describe("MAL automatic token refresh", () => {
 
     test("rejects an invalid diagnostics value with a TypeError at construction", () => {
         // The refresher reads `diagnostics` straight from the credential
-        // slot, which never passes through resolveRequestOptions — so it
+        // slot, which never passes through resolveRequestOptions, so it
         // must validate through the same shared resolver or a typo like
         // "verbose" would behave as an accidental quasi-"hook" mode.
         expect(() =>

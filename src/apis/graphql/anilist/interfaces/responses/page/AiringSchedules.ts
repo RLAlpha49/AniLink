@@ -9,7 +9,7 @@
 import { type AiringScheduleResponse } from "../query/AiringSchedule";
 import { type PageInfo } from "./PageInfo";
 /**
- * `AiringSchedulesPageResponse` — a page of airing schedule entries with pagination metadata.
+ * `AiringSchedulesPageResponse` is a page of airing schedule entries with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/airingschedule

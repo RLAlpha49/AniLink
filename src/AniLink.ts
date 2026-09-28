@@ -117,7 +117,7 @@ export type { MalPage, MalPaginateOptions, MalPaginateResult } from "./apis/rest
  */
 export class AniLink {
     /**
-     * The AniList GraphQL API surface, a {@link AniListApi} composed from the
+     * The AniList GraphQL API, a {@link AniListApi} composed from the
      * query, mutation, custom, and helper groups.
      * @public
      */
@@ -142,9 +142,9 @@ export class AniLink {
      * Alternatively, pass a per-provider {@link AniLinkCredentials} object: each provider
      * owns its own credentials shape, and credentials given under one key are
      * never applied to another provider's requests.
-     * @param {string | AniLinkCredentials} [authToken] - The authentication token to use for AniList API requests, or a per-provider credentials object (`{ anilist?: …, mal?: … }`).
+     * @param {string | AniLinkCredentials} [authToken] - The authentication token to use for AniList API requests, or a per-provider credentials object (`{ anilist?: ..., mal?: ... }`).
      * @param {AniLinkOptions} [options] - Transport settings scoped to this instance: `timeout`, `signal` cancellation, automatic retries under the default policy (`retry: false` opts out), `paceWithRateLimit` pacing (on by default), opt-in `circuitBreaker` fast-fail, the `onError`/`onRetry`/`onRequestStart`/`onResponse` observability hooks, and `exposeRawAxiosError` debugging. In the legacy `(token, options)` form, these settings apply only to AniList. Configure MAL transport settings in the credentials-object form under `mal`. Options never leak between instances. Only valid when the first argument is a token string or omitted; combining a credentials object with a second argument throws, because the credentials form carries its own per-provider transport settings and a second argument would be silently dropped.
-     * @throws {TypeError} When a per-provider credentials object is combined with a second `options` argument. The credentials form carries transport settings inside each provider slot, so the second argument would be silently ignored — the constructor rejects the ambiguous call instead.
+     * @throws {TypeError} When a per-provider credentials object is combined with a second `options` argument. The credentials form carries transport settings inside each provider slot, so the second argument would be silently ignored. The constructor rejects the ambiguous call instead.
      * @public
      * @example
      * ```typescript
@@ -191,20 +191,19 @@ export class AniLink {
 
     /**
      * Returns a read-only, point-in-time snapshot of each provider client's
-     * shared transport state — the circuit-breaker scopes, retry-budget
+     * shared transport state: the circuit-breaker scopes, retry-budget
      * window, rate-limit pacing deadlines keyed through that client's
      * state owner, and (when the provider's transport options enable a
      * response cache) the cache's live entry count and lifetime
-     * hit/miss/expiration/eviction counters — so "is the breaker open right
-     * now?", "how many budget retries are spent?", "when does the pacing
-     * deadline elapse?", and "how is the cache performing?" can be answered
+     * hit/miss/expiration/eviction counters. Callers can check whether a
+     * breaker is open, how many budget retries are spent, when pacing ends,
+     * and how the cache performs
      * without pre-wiring lifecycle hooks and without holding the
      * {@link ResponseCache} instance.
      *
      * Each provider's snapshot is built by {@link snapshotTransportState},
-     * which owns the read-only contract: deep-frozen copies that never
-     * alias the live mutable state, and a build step that never mutates
-     * the state it observes. Polling on a schedule is therefore safe
+     * which owns the read-only contract. It returns deep-frozen copies that
+     * never alias or mutate the live state, so polling on a schedule is safe
      * alongside live traffic.
      *
      * @returns A frozen per-provider {@link TransportStateSnapshot} pair:

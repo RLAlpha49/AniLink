@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `Favourites` — the collections of a user's favourite anime, manga, characters, staff, and studios.
+ * `Favourites` is the collections of a user's favourite anime, manga, characters, staff, and studios.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/favourites

@@ -10,7 +10,7 @@ import { type Activity, type ActivityReply } from "./Activity";
 import { type BasicUser } from "./Basic";
 import { type Thread, type ThreadComment } from "./Thread";
 /**
- * `Likeable` — a likeable entity returned by ToggleLikeV2; narrow structurally because only activities carry a `type` discriminator.
+ * `Likeable` is a likeable entity returned by ToggleLikeV2; narrow structurally because only activities carry a `type` discriminator.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/mutation
@@ -18,7 +18,7 @@ import { type Thread, type ThreadComment } from "./Thread";
 export type Likeable = Activity | ActivityReply | Thread | ThreadComment;
 
 /**
- * `LikeableThread` — the thread fragment selected by ToggleLikeV2, including its aliased keys.
+ * `LikeableThread` is the thread fragment selected by ToggleLikeV2, including its aliased keys.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/thread
@@ -176,7 +176,7 @@ export interface LikeableThread {
 }
 
 /**
- * `LikeableThreadComment` — the thread-comment fragment selected by ToggleLikeV2 with its minimal parent thread.
+ * `LikeableThreadComment` is the thread-comment fragment selected by ToggleLikeV2 with its minimal parent thread.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/threadcomment

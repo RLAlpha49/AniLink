@@ -25,7 +25,7 @@ import {
 /**
  * `IntrospectionTypeRef` is one node of a GraphQL type reference from the
  * introspection snapshot: its kind (`SCALAR`, `OBJECT`, `NON_NULL`, `LIST`,
- * …) plus the wrapped `ofType` chain for non-null and list wrappers.
+ * and more) plus the wrapped `ofType` chain for non-null and list wrappers.
  */
 export interface IntrospectionTypeRef {
     /** GraphQL kind, e.g. `SCALAR`, `OBJECT`, `NON_NULL`, `LIST`. */
@@ -215,7 +215,7 @@ function collectSelectionPaths(nodes: SelectionNode[], prefix = ""): Set<string>
 
 /**
  * Throws when a `fieldTypes` or `optionalFields` key matches no selected
- * property — silent manifest typos would otherwise drop overrides unnoticed.
+ * property. Silent manifest typos would otherwise drop overrides unnoticed.
  */
 function validateOverrideKeys(spec: ExportSpec, nodes: SelectionNode[]): void {
     if (!spec.fieldTypes && !spec.optionalFields?.length) return;
@@ -571,8 +571,8 @@ function renderInlineLiteral(members: InlineMember[]): string {
 /**
  * Renders a sub-selection against its enclosing GraphQL object type. A single
  * interpolation whose constant generates an exported type collapses to that
- * named reference; anything else inlines recursively — always as a multiline,
- * fully documented literal — resolving each level against the corresponding
+ * named reference; anything else inlines recursively, always as a multiline,
+ * fully documented literal, resolving each level against the corresponding
  * object type from the snapshot.
  */
 function renderSubSelection(

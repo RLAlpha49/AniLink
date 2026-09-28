@@ -475,7 +475,7 @@ export class MediaQuery extends AniListOperation {
      * than `asHtml` must be set.
      * @returns The {@link MediaResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/media
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<MediaResponse, K | "id" | "idMal">`: the always-selected `id` and `idMal` are part of the narrowed type because the composed document always sends them. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<MediaResponse, K | "id" | "idMal">`: the always-selected `id` and `idMal` are part of the narrowed type because the composed document always sends them. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new MediaQuery().media({ id: 1 });

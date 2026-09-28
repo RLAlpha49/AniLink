@@ -10,7 +10,7 @@ import {
 import { AniLinkErrorCodes, AniLinkValidationError } from "../src/base/AniLinkError";
 import { describe, expect, test } from "vitest";
 
-/** Method names are validated against the public API surface at compile time. */
+/** Method names are validated against the public API at compile time. */
 type QueryMethod = keyof AniListApi["query"];
 
 const queryCases: Array<[string, QueryMethod, object | undefined, string]> = [
@@ -169,7 +169,7 @@ describe("custom() local input guards", () => {
         const client = createTestClient("comment-token");
 
         // A copied document that opens with a comment is valid GraphQL; the
-        // server accepts it, so the local guard must too — and must forward
+        // server accepts it, so the local guard must too, and must forward
         // the document verbatim, comments included.
         const document = "# fetch the viewer\nquery { Viewer { id } }";
         await client.anilist.custom(document);

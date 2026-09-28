@@ -222,7 +222,7 @@ jobs:
       # The tarball is installed into an isolated consumer project and driven
       # through its public entry point, so this job catches packaging
       # regressions (exports map, missing files, broken ESM output) that the
-      # workspace-level suites cannot see. Queries only — never mutations.
+      # workspace-level suites cannot see. This job runs queries only, never mutations.
       - name: Pack, install locally, and run live query smoke test
         if: ${{ env.ANILIST_TOKEN != '' }}
         run: npm run test:package -- --skip-build

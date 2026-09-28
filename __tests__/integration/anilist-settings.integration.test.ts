@@ -140,7 +140,7 @@ describe("AniList live integration — hook lifecycles over real requests", () =
 
             // The hook fired exactly once. AniList sends x-ratelimit-limit and
             // -remaining on 200 responses but omits -reset, and the parsed
-            // info requires all three headers — so a successful read reports
+            // info requires all three headers, so a successful read reports
             // rateLimit: undefined unless the upstream sent the full set.
             // The contract under test: the field is present exactly when the
             // headers allow parsing it, never fabricated.
@@ -305,7 +305,7 @@ describe("AniList live integration — timeout and cancellation", () => {
                             : ("other-error" as const)
                 );
                 // Either the request completed before the abort landed, or
-                // it surfaced the abort classification — never a retry storm.
+                // it surfaced the abort classification, never a retry storm.
                 expect(["resolved", "aborted", "other-error"]).toContain(outcome);
             } finally {
                 clearTimeout(timer);

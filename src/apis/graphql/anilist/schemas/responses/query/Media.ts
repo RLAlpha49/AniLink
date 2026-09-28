@@ -25,7 +25,7 @@ export const MediaStatsSchema = `
 /**
  * {@link MediaWithRelationsSchema} is the maximal media document the media queries send:
  * every media field, plus the relation connections (characters, staff, studios, related
- * media). It is the single source of truth the `fields` option prunes.
+ * media). The `fields` option prunes this document to the requested fields.
  * @see https://docs.anilist.co/reference/object/media
  */
 export const MediaWithRelationsSchema = `

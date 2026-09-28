@@ -346,7 +346,7 @@ describe("validateVariables", () => {
 
     test("redacts credential-shaped keys on class instances under a non-sensitive path", () => {
         // A class instance is not a plain object, but JSON.stringify still
-        // renders its own enumerable properties — the credential must be
+        // renders its own enumerable properties, so the credential must be
         // redacted through that path too.
         class Settings {
             apiKey = "instance-secret-value";

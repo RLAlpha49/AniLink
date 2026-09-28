@@ -9,7 +9,7 @@
 import { type ThreadResponse } from "./responses/query/Thread";
 import { type ThreadCommentResponse } from "./responses/query/ThreadComment";
 /**
- * `Thread` — an alias of ThreadResponse for readability at call sites.
+ * `Thread` is an alias of ThreadResponse for readability at call sites.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/thread
@@ -17,7 +17,7 @@ import { type ThreadCommentResponse } from "./responses/query/ThreadComment";
 export type Thread = ThreadResponse;
 
 /**
- * `ThreadComment` — an alias of ThreadCommentResponse for readability at call sites.
+ * `ThreadComment` is an alias of ThreadCommentResponse for readability at call sites.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/threadcomment

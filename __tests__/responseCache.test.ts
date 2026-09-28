@@ -287,7 +287,7 @@ describe("ResponseCache", () => {
         first.nested.value = "poisoned";
 
         // The documented trade-off: with the read-side clone disabled, a
-        // mutating caller poisons later hits — this is the behavior opting
+        // mutating caller poisons later hits. This is the behavior opting
         // in to cloneOnRead: false accepts.
         const second = cache.get<{ id: number; nested: { value: string } }>(
             "GET",
@@ -966,7 +966,7 @@ describe("extractQueryRootField", () => {
     // The extractor is fail-closed: any document it cannot confidently
     // attribute to one root field yields undefined, and an unscoped entry
     // is dropped by every scoped invalidation alongside the whole-endpoint
-    // sweeps — so a misattributed entry can never survive a mapped
+    // sweeps, so a misattributed entry can never survive a mapped
     // mutation's invalidation.
     const extract = (query: string): string | undefined => extractQueryRootField({ query });
 
@@ -997,7 +997,7 @@ describe("extractQueryRootField", () => {
     test("returns undefined for a fragment-spread root selection", () => {
         // The selected root fields live in the fragment definition, not the
         // document: the entry cannot be attributed, so it stays unscoped
-        // (fail closed — every scoped invalidation drops it).
+        // (fail closed; every scoped invalidation drops it).
         expect(extract("query { ...mediaFields }")).toBeUndefined();
     });
 
@@ -1005,13 +1005,13 @@ describe("extractQueryRootField", () => {
         // A document selecting two root fields is attributed to neither:
         // the second field's data could be changed by an invalidation keyed
         // on the first's name alone, so the entry must stay unscoped (fail
-        // closed — every scoped invalidation drops it).
+        // closed; every scoped invalidation drops it).
         expect(extract("query { Media (id: 1) { id } Viewer { id } }")).toBeUndefined();
     });
 
     test("attributes a single aliased field with arguments and sub-selection", () => {
-        // The full span of the one selection — alias, arguments,
-        // sub-selection — is consumed before the single-selection check,
+        // The full span of the one selection, alias, arguments,
+        // and sub-selection, is consumed before the single-selection check,
         // so a one-field document with a deep sub-selection still extracts.
         expect(
             extract("query { myList: MediaList (userId: 1, sort: [SCORE]) { media { id } } }")
@@ -1048,7 +1048,7 @@ describe("Root-field-scoped invalidation is fail-closed", () => {
     test("drops a fragment-spread document a mapped mutation cannot attribute", () => {
         // A fragment-spread root cannot be attributed to a root field, so
         // the entry must not survive a scoped invalidation on a
-        // technicality — the fragment may select any affected field.
+        // technicality, because the fragment may select any affected field.
         const cache = new ResponseCache({ ttlMs: 10_000 });
         prime(cache, "query { ...mediaFields }");
         expect(cache.get("POST", url, { query: "query { ...mediaFields }" }, "none")).toBeDefined();

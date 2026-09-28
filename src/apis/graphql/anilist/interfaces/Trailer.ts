@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `Trailer` — a media trailer hosted on an external site.
+ * `Trailer` is a media trailer hosted on an external site.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediatrailer

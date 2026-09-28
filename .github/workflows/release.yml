@@ -68,7 +68,7 @@ jobs:
             # job inside the run was skipped or soft-failed, so a future CI
             # edit that quietly drops a gate would still publish. Query the
             # triggering run's jobs and require every one to have completed
-            # with success — a skipped or failed job blocks the release
+            # with success. A skipped or failed job blocks the release
             # instead of hiding behind the green workflow conclusion. Every
             # job is checked rather than an expected-name list so the gate
             # survives CI restructures and also covers jobs added later.

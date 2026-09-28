@@ -3,16 +3,16 @@
  * it to `.env` as `ANILIST_TOKEN`, the key the live integration suite gates on.
  *
  * Two modes:
- *   default          — authorization-code flow in the browser
- *   --refresh        — exchange a previously stored `ANILIST_REFRESH_TOKEN`
+ *   default:    authorization-code flow in the browser
+ *   --refresh:  exchange a previously stored `ANILIST_REFRESH_TOKEN`
  *
  * The flow reuses the shipped auth helpers (`buildAuthorizationUrl`,
  * `getAccessToken`, `refreshAccessToken`) so the CLI exercises the same
  * code paths the library users will.
  *
  * AniList apps always require a client secret (create one at
- * https://anilist.co/settings/developer). Unlike MAL there is no PKCE — the
- * secret authenticates the client — and the redirect URI must match what the
+ * https://anilist.co/settings/developer). Unlike MAL there is no PKCE, the
+ * secret authenticates the client, and the redirect URI must match what the
  * app registered, so it is passed at both the authorize and exchange steps.
  *
  * Usage:

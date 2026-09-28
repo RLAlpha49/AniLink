@@ -18,7 +18,9 @@ import type {
 /**
  * {@link MalMangaOperation} is the REST operation adapter for MyAnimeList manga endpoints.
  *
- * It extends {@link RestOperation} and is composed into `MyAnimeListApi` via `buildMyAnimeListApi`, exposing {@link MalManga} through {@link MalRequestOptions} and `MyAnimeListMangaApi.get`.
+ * It extends {@link RestOperation} and is composed into `MyAnimeListApi` by
+ * `buildMyAnimeListApi`. Its `get` method returns {@link MalManga} and is
+ * exposed as `MyAnimeListMangaApi.get`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get
  */
@@ -81,8 +83,9 @@ export class MalMangaOperation extends RestOperation {
      * It calls `GET /manga` through `RestOperation.execute` with the `q` keyword
      * plus the `limit`/`offset` paging filters and returns a
      * {@link MalMangaSearchResponse} page of `MalMangaSearchEntry` entries
-     * shaped by {@link MalRequestOptions.fields}. The facade alias is
-     * `MyAnimeListMangaApi.search` and it is a public read.
+     * shaped by {@link MalRequestOptions.fields}. The facade exposes this
+     * method as `MyAnimeListMangaApi.search`. It does not require an access
+     * token.
      *
      * @param params - The search inputs; a {@link MalMangaSearchParams} carrying the keyword plus the optional paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -131,8 +134,8 @@ export class MalMangaOperation extends RestOperation {
      * It calls `GET /manga/ranking` through `RestOperation.execute` with the
      * `ranking_type` query parameter and returns a {@link MalMangaRankingResponse}
      * page of `MalMangaRankingEntry` entries shaped by
-     * {@link MalRequestOptions.fields}. The facade alias is
-     * `MyAnimeListMangaApi.ranking` and it is a public read.
+     * {@link MalRequestOptions.fields}. The facade exposes this method as
+     * `MyAnimeListMangaApi.ranking`. It does not require an access token.
      *
      * @param params - The ranking read inputs; a {@link MalMangaRankingParams} carrying the ranking list to fetch.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -171,11 +174,11 @@ export class MalMangaOperation extends RestOperation {
      * MAL's list-status endpoints require.
      *
      * MAL documents `PATCH /manga/{id}/my_list_status` with an
-     * `application/x-www-form-urlencoded` request body, not JSON. Only the
-     * known list-status fields are encoded — excess properties from
-     * JavaScript callers (typos like `num_chapter_read`) are dropped
-     * instead of being sent to MAL as silent no-op fields. Array values
-     * (`tags`) are joined into the comma-separated string MAL expects.
+     * `application/x-www-form-urlencoded` request body, not JSON. The encoder
+     * includes only known list-status fields. It drops extra JavaScript
+     * properties, such as the typo `num_chapter_read`, rather than sending
+     * fields MAL would ignore. It joins array values (`tags`) into the
+     * comma-separated string MAL expects.
      *
      * @param payload - The list-status fields to update.
      * @returns The encoded body string, safe to pass as the request `data`.
@@ -220,8 +223,8 @@ export class MalMangaOperation extends RestOperation {
         options: MalRequestOptions = {}
     ): Promise<MalMangaListStatus> {
         const { id, ...payload } = params;
-        // An empty payload would PATCH an empty form body — a no-op write.
-        // Fail fast instead of sending it to MAL.
+        // An empty payload would send an empty form body and change nothing.
+        // Reject it before sending the request to MAL.
         const hasUpdateField = MalMangaOperation.LIST_STATUS_FIELDS.some(
             (field) => payload[field] !== undefined
         );

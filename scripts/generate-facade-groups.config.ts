@@ -247,7 +247,7 @@ export const FACADE_OPERATION_DOCS = {
     "query:aniChartUser": {
         brief: "Fetches AniChart user data from the AniList API.",
         summary:
-            "`AniChartUserQuery` fetches the authenticated user's AniChart profile — `user`, `settings`, and `highlights`. Returns an {@link AniChartUserResponse}. Must be authenticated.",
+            "`AniChartUserQuery` fetches the authenticated user's AniChart profile: `user`, `settings`, and `highlights`. Returns an {@link AniChartUserResponse}. Must be authenticated.",
         returns: "A promise that resolves to the {@link AniChartUserResponse} data.",
         example:
             "```typescript\nawait aniLink.anilist.query.aniChartUser();\n```\nMust be authenticated.",
@@ -461,7 +461,7 @@ export const FACADE_OPERATION_DOCS = {
         summary:
             "`DeleteMediaListEntryMutation` deletes one of the authenticated user's list entries by entry `id`.",
         returns:
-            "A promise that resolves to a {@link DeleteMediaListEntryResponse} — `{ deleted }`, where `deleted` is `true` when the entry was deleted by this call and `false` when it was already absent.",
+            "A promise that resolves to a {@link DeleteMediaListEntryResponse} of `{ deleted }`, where `deleted` is `true` when the entry was deleted by this call and `false` when it was already absent.",
         example:
             "You cannot delete a media list entry without first fetching the entry's id. The entry's id is not the same as the mediaId. It is specific to each user and media.\n```typescript\nawait aniLink.anilist.mutation.deleteMediaListEntry({id: 1});\n```",
     },

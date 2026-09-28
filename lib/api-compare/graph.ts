@@ -15,7 +15,7 @@ import { INLINE_FRAGMENT_NAME, type SelectionNode, type VariableDefinition } fro
  *
  * Interpolated selection constants (`${Constant}`) are replaced with a
  * `...PackageSelection` spread that carries no definition, so their fields
- * stay skipped — the same behavior the pre-fragment comparison had.
+ * stay skipped, the same behavior the pre-fragment comparison had.
  *
  * @param document - Full GraphQL document text, including fragment definitions.
  * @returns The normalized {@link SelectionNode} tree of the first operation.

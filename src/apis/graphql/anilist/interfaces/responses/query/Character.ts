@@ -10,7 +10,7 @@ import { type FuzzyDate } from "../../FuzzyDate";
 import { type Image } from "../../Image";
 import { type Name } from "../../Name";
 /**
- * `CharacterResponse` — a character with their description, name, image, and media appearances.
+ * `CharacterResponse` is a character with their description, name, image, and media appearances.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/character

@@ -153,11 +153,10 @@ export type MalForumTopicSort = "recent";
 /**
  * {@link MalForumTopicsParams} is the params object of the forum topic list read.
  *
- * It carries the API's own inputs for `GET /forum/topics` — the `boardId` and
- * `subboardId` filters, the `q` keyword, the creator filters, and the `sort`
- * and paging filters — consumed by `MalForumOperation.topics` and
- * `MyAnimeListForumApi.topics` as the single params object of the unified
- * `(params, options?)` convention.
+ * It contains the `boardId` and `subboardId` filters, the `q` keyword, the
+ * creator filters, and the `sort` and paging filters for `GET /forum/topics`.
+ * `MalForumOperation.topics` and `MyAnimeListForumApi.topics` accept this
+ * object as `params`, followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_topics_get
  */
@@ -183,9 +182,8 @@ export interface MalForumTopicsParams {
 /**
  * {@link MalForumPostCreator} is the user who wrote a forum post inside a topic detail.
  *
- * It appears as `created_by` on {@link MalForumTopicPost}. MyAnimeList spells
- * the avatar field `forum_avator` — a documented upstream quirk preserved
- * verbatim.
+ * It appears as `created_by` on {@link MalForumTopicPost}. The API names the
+ * avatar field `forum_avator`; this type preserves that spelling.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_topic_get
  */
@@ -303,10 +301,10 @@ export interface MalForumTopicResponse {
 /**
  * {@link MalForumTopicParams} is the params object of the forum topic detail read.
  *
- * It carries the API's own inputs for `GET /forum/topic/{topic_id}` — the
- * topic `id` path segment plus the `limit` and `offset` post-paging filters —
- * consumed by `MalForumOperation.topic` and `MyAnimeListForumApi.topic` as
- * the single params object of the unified `(params, options?)` convention.
+ * It contains the topic `id` path parameter and the `limit` and `offset`
+ * post-paging filters for `GET /forum/topic/{topic_id}`.
+ * `MalForumOperation.topic` and `MyAnimeListForumApi.topic` accept this
+ * object as `params`, followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_topic_get
  */

@@ -9,7 +9,7 @@
 import { type ThreadCommentResponse } from "../query/ThreadComment";
 import { type PageInfo } from "./PageInfo";
 /**
- * `ThreadCommentsPageResponse` — a page of thread comments with pagination metadata.
+ * `ThreadCommentsPageResponse` is a page of thread comments with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/threadcomment

@@ -99,7 +99,7 @@ export async function loadOpenApiDocument(filePath: string): Promise<OpenApiDocu
  * Some providers (MyAnimeList among them) do not publish a standalone spec
  * URL; the reference page embeds the document inside its documentation
  * bundle. The document is located by scanning for JSON objects whose first
- * key is `"openapi"` and that parse as a document — the pages also mention
+ * key is `"openapi"` and that parse as a document. The pages also mention
  * `"openapi"` inside their JS bundles, so a plain text search is not enough.
  *
  * @param fetcher - Fetch implementation, injectable for tests.
@@ -354,7 +354,7 @@ function nestedSchemaOf(schema: OpenApiSchema): OpenApiSchema | undefined {
 /**
  * A TypeScript contract of one provider response or request-body type.
  *
- * Keyed by the interface names the provider's REST surface declares in its
+ * Keyed by the interface names the provider's REST modules declare in their
  * `types.ts`.
  */
 export interface RestTypeContract {
@@ -438,7 +438,7 @@ export interface RestContractComparisonResult {
  *
  * Compares mapped response fields and request parameter/body names, types, and
  * requiredness against the OpenAPI document. It also checks endpoint coverage so unwrapped
- * upstream endpoints surface as warnings, including endpoints represented by
+ * upstream endpoints appear as warnings, including endpoints represented by
  * coverage-only mappings that omit `typeName` for void-returning methods.
  *
  * @param input - The spec document, package contracts, and endpoint mappings.

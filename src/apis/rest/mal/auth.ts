@@ -8,12 +8,12 @@ import {
 import { MAL_AUTHORIZE_URL, MAL_TOKEN_URL } from "./constants";
 
 /**
- * The MAL facts the shared token machinery reads: the token endpoint, the
- * sanitize label, the strip rule (the replayed request authenticates with
- * the bearer token, so the client-ID header is dropped — it is only for
- * client-ID-only access to public endpoints, and keeping a stale one would
- * widen client-ID exposure to intermediaries that log request headers,
- * contradicting `resolveMalCredentials`), and the diagnostics identity.
+ * The MAL settings used by the shared token machinery: the token endpoint,
+ * error label, header to strip after refresh, and diagnostics identity.
+ * Replayed requests use the bearer token, so they do not need
+ * `X-MAL-CLIENT-ID`. That header is only for client-ID-only access to public
+ * endpoints. Keeping it could expose the client ID to intermediaries that log
+ * request headers and would conflict with `resolveMalCredentials`.
  *
  * @see https://myanimelist.net/apiconfig/references/authorization
  */
@@ -56,7 +56,7 @@ export interface MalAuthorizationCodeRequest {
     clientId: string;
     /** The authorization code returned by the redirect. */
     code: string;
-    /** The original PKCE code verifier, 43–128 RFC 7636 unreserved characters. */
+    /** The original PKCE code verifier, 43 to 128 RFC 7636 unreserved characters. */
     codeVerifier: string;
     /** An optional client secret for applications that use one. */
     clientSecret?: string;
@@ -94,7 +94,7 @@ const validateMalPkceValue = (value: string, name: string): void => {
  * It encodes the client identity and PKCE challenge from {@link MalAuthorizationCodeRequest} and returns the URL to open in a browser. MAL's authorization server currently supports only the `plain` PKCE method. Validate the `state` on redirect before exchanging the code via {@link getMalAccessToken}.
  *
  * @param clientId - The MAL application client ID from {@link MalAuthorizationCodeRequest.clientId}.
- * @param codeChallenge - The PKCE challenge for the login attempt; under MAL's `plain` method this is the verifier itself and must contain 43–128 RFC 7636 unreserved characters.
+ * @param codeChallenge - The PKCE challenge for the login attempt; under MAL's `plain` method this is the verifier itself and must contain 43 to 128 RFC 7636 unreserved characters.
  * @param state - Optional opaque CSRF state to validate on the redirect.
  * @returns The fully encoded authorization URL for the MAL OAuth flow.
  * @throws `TypeError` when `codeChallenge` is not a valid MAL PKCE verifier.
@@ -187,7 +187,7 @@ export const refreshMalAccessToken = (request: MalRefreshTokenRequest): Promise<
  * @param response - The {@link MalTokenResponse} whose `expires_in` to evaluate.
  * @param now - The current time in milliseconds since the Unix epoch.
  * @returns The moment the access token expires.
- * @throws A `TypeError` when `expires_in` is not a positive finite number — `0`, negative, `NaN`, or `Infinity` values produce an already-expired or nonsensical expiry that silently breaks proactive-refresh scheduling (and is one comparison-operator slip away from a refresh loop), so they are rejected instead.
+ * @throws A `TypeError` when `expires_in` is zero, negative, `NaN`, or infinite. These values cannot produce a valid expiry and would break proactive-refresh scheduling.
  * @example
  * ```typescript
  * const expiresAt = getMalTokenExpiry(token);

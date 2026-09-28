@@ -258,7 +258,7 @@ describe("agent cache", () => {
 
         // Drive configs 18..25: 8 more evictions (pairs 10..17 parked). The
         // 17th eviction overall (config 25's) would push the parked list to
-        // 17, overflowing the cap of 16 — so the OLDEST parked pair (config
+        // 17, overflowing the cap of 16, so the OLDEST parked pair (config
         // 1's) is destroyed first.
         for (let i = 18; i <= 25; i += 1) {
             await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {

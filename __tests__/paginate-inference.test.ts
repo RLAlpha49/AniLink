@@ -8,7 +8,7 @@ import { createTestClient, mockSendRequest } from "./helpers/mockRequestHandler"
  * The JSDoc examples on `paginate`/`paginatePages`/`paginateChunks` pass the
  * facade page methods directly as the fetch callback. These tests pin that
  * pattern: it must infer `TPage` from the callback and type `items` as the
- * page's element type — no casts.
+ * page's element type, no casts.
  */
 describe("paginate inference from facade page methods", () => {
     test("the documented paginate pattern infers items without casts", async () => {
@@ -35,7 +35,7 @@ describe("paginate inference from facade page methods", () => {
             { maxPages: 5, concurrency: 1 }
         );
 
-        // items must be the media element type — id is a number, no cast needed.
+        // items must be the media element type, so id is a number, no cast needed.
         const ids: number[] = result.items.map((media) => media.id);
         expect(ids).toEqual([1, 2]);
     });
@@ -120,7 +120,7 @@ describe("paginate inference from facade page methods", () => {
             { maxPages: 1, concurrency: 1 }
         );
 
-        // @ts-expect-error — items is never[] for a non-array key.
+        // @ts-expect-error: items is never[] for a non-array key.
         result.items.map((media) => media.id);
         expect(result.items).toEqual([]);
     });
@@ -148,7 +148,7 @@ describe("paginate inference from facade page methods", () => {
             { maxChunks: 1, concurrency: 1 }
         );
 
-        // @ts-expect-error — items is never[] for a non-array key.
+        // @ts-expect-error: items is never[] for a non-array key.
         result.items.map((list) => list.name);
         expect(result.items).toEqual([]);
     });

@@ -9,7 +9,7 @@
 import { type FuzzyDate } from "../../FuzzyDate";
 import { type Media } from "../../Media";
 /**
- * `MediaListCollectionResponse` — a chunked collection of a user's media lists.
+ * `MediaListCollectionResponse` is a chunked collection of a user's media lists.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/medialistcollection

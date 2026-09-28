@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `ExternalLinkSourceCollectionResponse` — an external link source with streaming metadata.
+ * `ExternalLinkSourceCollectionResponse` is an external link source with streaming metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediaexternallink

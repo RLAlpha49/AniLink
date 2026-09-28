@@ -2,11 +2,10 @@
  * The shared OAuth token-grant transport, expiry, auth rewrite, and
  * automatic token-refresh lifecycle.
  *
- * One coordinator implements the whole lifecycle — the 401/missing-token
- * classifier, the deduplicated in-flight grant, the auth swap, the
- * persistence and failure callbacks, the diagnostics routing, and the
- * single replay — for every OAuth provider, and the same module runs the
- * grant itself ({@link requestTokenGrant}), computes token expiry
+ * One coordinator handles every OAuth provider. It classifies 401 and
+ * missing-token errors, deduplicates in-flight grants, swaps auth, runs
+ * persistence and failure callbacks, routes diagnostics, and replays once.
+ * The same module runs the grant ({@link requestTokenGrant}), computes expiry
  * ({@link computeTokenExpiry}), and rebuilds auth material for the replay
  * ({@link rewriteAuth}). Providers contribute only data: a
  * {@link TokenGrantDescriptor} naming their token endpoint, sanitize
@@ -41,7 +40,7 @@ export interface TokenGrantResponse {
  * The provider identity a refresh coordinator reports under: the hook name
  * its grant failures are attributed to and the label interpolated into the
  * refresh-failure message. A discriminated union so the two fields cannot
- * drift apart — `"AniList"` with `"malTokenRefresh"` does not compile.
+ * drift apart: `"AniList"` with `"malTokenRefresh"` does not compile.
  *
  * @see {@link TokenGrantDescriptor.provider}
  */
@@ -83,9 +82,9 @@ const TOKEN_REQUEST_TIMEOUT_MS = 10_000;
 /**
  * Runs one form-encoded OAuth token grant through the shared transport.
  *
- * Both providers' grants — the authorization-code exchange and the refresh
- * grant — post `application/x-www-form-urlencoded` fields to the
- * descriptor's token endpoint with one policy: a short timeout, retries off
+ * Both providers send authorization-code and refresh grants as
+ * `application/x-www-form-urlencoded` fields to the descriptor's token
+ * endpoint. Both use one policy: a short timeout, retries off
  * by default because grant credentials are single-use (a retried
  * authorization code or PKCE verifier is consumed server-side, so the retry
  * is guaranteed to fail again while doubling token-endpoint traffic; a
@@ -162,7 +161,7 @@ export const refreshGrantParams = (
  * @param response - The token response to compute the expiry for.
  * @param now - The current time in milliseconds since the Unix epoch. Defaults to the time at which the helper is called.
  * @returns The moment the access token expires.
- * @throws A `TypeError` when `expires_in` is not a positive finite number — `0`, negative, `NaN`, or `Infinity` values produce an already-expired or nonsensical expiry that silently breaks proactive-refresh scheduling (and is one comparison-operator slip away from a refresh loop), so they are rejected instead.
+ * @throws A `TypeError` when `expires_in` is not a positive finite number. `0`, negative, `NaN`, or `Infinity` values produce an already-expired or nonsensical expiry that silently breaks proactive-refresh scheduling (and is one comparison-operator slip away from a refresh loop), so they are rejected instead.
  */
 export const computeTokenExpiry = (
     response: { readonly expires_in: number },
@@ -180,15 +179,12 @@ export const computeTokenExpiry = (
 /**
  * Builds the auth material an operation replays with after a refresh.
  *
- * The swap replaces the bearer token with the fresh one, preserves the
- * other headers the caller attached to structured auth (a proxy header, a
- * tracing header keeps working after the first refresh instead of
- * silently disappearing mid-lifetime), and drops the headers the
- * descriptor lists — MAL strips its client-ID header because the replayed
- * request authenticates with the bearer token and a stale client-ID
- * header would widen client-ID exposure to intermediaries that log
- * request headers. A headers object that ends up empty collapses to no
- * headers.
+ * The swap replaces the bearer token and preserves the other headers the
+ * caller attached to structured auth, such as proxy or tracing headers.
+ * It removes headers listed by the descriptor. MAL strips its client-ID
+ * header because the replay uses the bearer token; keeping the old header
+ * would expose the client ID to intermediaries that log request headers.
+ * An empty headers object becomes `undefined`.
  *
  * @param descriptor - The provider descriptor whose `stripHeaders` rule the rewrite applies.
  * @param auth - The operation's current auth material, read live at swap time so auth changed through any other path survives the replay.
@@ -312,13 +308,13 @@ export class TokenRefresher<TToken extends TokenGrantResponse> {
     /**
      * Runs one operation attempt under the automatic refresh lifecycle.
      *
-     * A 401 from the first attempt — or an {@link AniLinkAuthError} raised
+     * A 401 from the first attempt, or an {@link AniLinkAuthError} raised
      * before any request because no access token is configured, which lets
-     * a persisted refresh token bootstrap the client — triggers exactly one
+     * a persisted refresh token bootstrap the client, triggers exactly one
      * refresh (concurrent failures share the in-flight refresh) followed by
-     * a single replay with the new auth material. Any other failure — a
-     * non-401 first attempt, a failed refresh, or a replay that fails again
-     * — surfaces unchanged. A failed refresh grant is reported to
+     * a single replay with the new auth material. Any other failure, a
+     * non-401 first attempt, a failed refresh, or a replay that fails again,
+     * surfaces unchanged. A failed refresh grant is reported to
      * `onHookError` (under the coordinator's `hookName`) before the
      * sanitized error rethrows, so the grant failure is observable through
      * the same channel as every other lifecycle failure. The
@@ -350,8 +346,8 @@ export class TokenRefresher<TToken extends TokenGrantResponse> {
                 // observability entirely. Report it through the structured
                 // diagnostic emit path before rethrowing the sanitized
                 // error. The diagnostic carries its own `token-refresh`
-                // kind — a failed grant is not a hook failure, and `kind` is
-                // the machine key consumers switch on — and the observer
+                // kind: a failed grant is not a hook failure, and `kind` is
+                // the machine key consumers switch on. The observer
                 // receives the sanitized refresh error itself as the
                 // `cause`, so its `status`/`code` stay inspectable. The
                 // console fallback is skipped: the caller receives the
@@ -381,7 +377,7 @@ export class TokenRefresher<TToken extends TokenGrantResponse> {
      *
      * The auth swap and the callback run inside the shared in-flight promise
      * so concurrent 401s observe one grant, one swap, and one callback
-     * invocation — and so the swap always lands in grant order.
+     * invocation, and so the swap always lands in grant order.
      *
      * @returns The effective token response, with `refresh_token` filled in when the provider omitted it.
      */
@@ -396,8 +392,8 @@ export class TokenRefresher<TToken extends TokenGrantResponse> {
                     // reported through `onHookError`; the sanitized refresh
                     // error still propagates to every awaiting caller. The
                     // catch binds to performRefresh alone so exceptions
-                    // from the auth swap or the success callback below —
-                    // not grant failures — propagate without this
+                    // from the auth swap or the success callback below,
+                    // not grant failures, propagate without this
                     // reporting. The parameter type states the exchange
                     // seam's contract: `performRefresh` only awaits the
                     // exchange, and the exchange throws sanitized

@@ -9,7 +9,7 @@
 import { type ActivityReply } from "../../Activity";
 import { type PageInfo } from "./PageInfo";
 /**
- * `ActivityRepliesPageResponse` — a page of activity replies with pagination metadata.
+ * `ActivityRepliesPageResponse` is a page of activity replies with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/activityreply

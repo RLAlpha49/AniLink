@@ -67,8 +67,8 @@ export const DEFAULT_MAL_ANIME_FIELDS: readonly string[] = Object.keys(
  * a string passes through unchanged, and `undefined` stays `undefined` so
  * `buildQueryString` omits the parameter entirely.
  *
- * Every MAL read and list-status write funnels its field selection through
- * this one helper, so the wire format cannot drift between operations.
+ * Every MAL read and list-status write uses this helper to format the field
+ * selector the same way.
  *
  * @param fields - The field selector from the request options, when one was given.
  * @returns The comma-separated selector string, or `undefined` when no selector was given.

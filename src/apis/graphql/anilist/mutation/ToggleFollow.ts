@@ -55,7 +55,7 @@ export class ToggleFollowMutation extends AniListOperation {
      * @returns The {@link UserResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `userId` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<UserResponse, K>`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<UserResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new ToggleFollowMutation("your-token").toggleFollow({ userId: 1 });

@@ -9,7 +9,7 @@
 import { type BasicUser } from "../../Basic";
 import { type PageInfo } from "./PageInfo";
 /**
- * `LikesPageResponse` — the users who liked an entity, with pagination metadata.
+ * `LikesPageResponse` is the users who liked an entity, with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/user

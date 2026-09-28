@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type MediaStatistics } from "./MediaStatistics";
 /**
- * `Statistics` — a user's anime and manga usage statistics.
+ * `Statistics` is a user's anime and manga usage statistics.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/userstatistictypes

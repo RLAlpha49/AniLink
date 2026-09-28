@@ -6,8 +6,8 @@
  * Run `npm run facade:generate` to refresh the derived group types (composed
  * into {@link AniListApi} below). Instance wiring in `wiring.ts` is automatic
  * from the registry, and the group modules are generated from the registry
- * and carry compile-time parity asserts so the registry and the typed
- * surface cannot drift without failing `tsc`.
+ * and carry compile-time parity checks. `tsc` reports an error if the registry
+ * and group types differ.
  */
 import type { AniListCustom } from "./custom-group";
 import type { AniListQueries } from "./query-group";
@@ -37,7 +37,7 @@ export type { AniLinkErrorCode, RateLimitInfo } from "../../../../base/AniLinkEr
  *
  * Every operation method also accepts an optional trailing `options` argument
  * of this type. It is merged over the instance-level settings for that one
- * call — a field set on the per-request object wins, and unset fields keep
+ * call: a field set on the per-request object wins, and unset fields keep
  * the instance value. The nested `retry`, `circuitBreaker`, and `retryBudget`
  * objects merge field-by-field, so a per-request `{ retry: { maxRetries: 0 } }`
  * keeps the instance's other retry knobs:
@@ -80,7 +80,7 @@ export function buildAniListApi(
 }
 
 /**
- * The AniList API surface exposed at `aniLink.anilist`, composed from the
+ * The AniList API exposed at `aniLink.anilist`, composed from the
  * {@link AniListCustom}, {@link AniListQueries}, {@link AniListMutations}, and
  * {@link AniListHelpers} group types under `facade/`.
  */

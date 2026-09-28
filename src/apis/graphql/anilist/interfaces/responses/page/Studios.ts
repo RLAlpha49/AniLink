@@ -9,7 +9,7 @@
 import { type StudioResponse } from "../query/Studio";
 import { type PageInfo } from "./PageInfo";
 /**
- * `StudiosPageResponse` — a page of studios with pagination metadata.
+ * `StudiosPageResponse` is a page of studios with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/studio

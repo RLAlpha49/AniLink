@@ -1,7 +1,7 @@
 /**
  * The `query` member (query + page operations) of the `AniListApi` type.
  *
- * GENERATED FILE — do not edit by hand; regenerate with `npm run facade:generate`.
+ * GENERATED FILE. Do not edit by hand; regenerate with `npm run facade:generate`.
  * Signatures derive from the operation registry and operation classes; curated
  * JSDoc prose lives in scripts/generate-facade-groups.config.ts.
  */
@@ -92,8 +92,8 @@ import { type DeepPick, type FieldPath } from "../schemas/selection/fieldsSelect
  * `RegistryQueryKeys` and `Exclude<keyof AniListQueries["query"], "page">`
  * are the same set, and that `RegistryPageKeys` and
  * `keyof AniListQueries["query"]["page"]` are the same set. A key added or
- * removed in either place produces a type error. The registry is the source
- * of truth; this asserts the typed surface keeps pace.
+ * removed in either place produces a type error. The registry defines the
+ * available keys, and these checks verify that the facade types match them.
  */
 const _assertQueryParity: RegistryQueryKeys = null as unknown as Exclude<
     keyof AniListQueries["query"],
@@ -660,7 +660,7 @@ export type AniListQueries = {
         markdown: (variables: MarkdownVariables, options?: RequestOptions) => Promise<string>;
 
         /**
-         * `AniChartUserQuery` fetches the authenticated user's AniChart profile — `user`, `settings`, and `highlights`. Returns an {@link AniChartUserResponse}. Must be authenticated.
+         * `AniChartUserQuery` fetches the authenticated user's AniChart profile: `user`, `settings`, and `highlights`. Returns an {@link AniChartUserResponse}. Must be authenticated.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
          * @returns {Promise<AniChartUserResponse>} A promise that resolves to the {@link AniChartUserResponse} data.
          *

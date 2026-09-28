@@ -3,23 +3,22 @@
  *
  * The cache is keyed by `(method, url, serialized body)` and capped by
  * `maxEntries`. It is opt-in (off by default) and serves two kinds of reads:
- * `GET` requests, and GraphQL query documents dispatched as `POST` (the
- * AniList transport's only read shape). Mutations are never cached — neither
- * REST `POST`/`PUT`/`DELETE` calls nor GraphQL `mutation` documents. A
+ * `GET` requests and GraphQL query documents dispatched as `POST` (the
+ * AniList transport's only read shape). Mutations are never cached, including
+ * REST `POST`/`PUT`/`DELETE` calls and GraphQL `mutation` documents. A
  * successful mutation dispatched through the transport invalidates the
  * cached reads of the mutated resource (REST writes, via
  * {@link ResponseCache.deleteMatching}) or of the whole GraphQL endpoint
  * (GraphQL writes, via {@link ResponseCache.deleteAllForUrl}). Cache hits
  * are observable through the existing `onResponse` hook via a `cacheHit`
  * flag so consumers can distinguish a cached response from a network
- * round-trip, and lifetime size and hit/miss/expiration/eviction counters
- * are available through {@link ResponseCache.stats} for data-driven
- * `ttlMs`/`maxEntries` tuning.
+ * round-trip. Lifetime size and hit/miss/expiration/eviction counters are
+ * available through {@link ResponseCache.stats} to help tune `ttlMs` and
+ * `maxEntries`.
  *
- * The cache policy lives here too, not in the transport: which requests are
- * cacheable reads, how a request's auth scopes its cache key (and when the
- * cache must fail closed because the key cannot capture the credentials),
- * and what a successful mutation invalidates. The transport's pipeline
+ * This module owns the cache policy: which requests can be cached, how auth
+ * scopes each cache key (and when the key cannot safely represent the
+ * credentials), and what a successful mutation invalidates. The transport
  * calls {@link resolveCacheAuthKey} before dispatch and
  * {@link invalidateAfterMutation} after a successful write; it never
  * re-derives the rules itself.
@@ -37,7 +36,7 @@ import { safeInvoke } from "./hooks";
  * else) fail the test, so write documents stay excluded from the cache.
  *
  * This is the same deliberately lightweight shape check `CustomRequest`
- * applies to validate executable documents — not a parser. Leading `#`
+ * applies to validate executable documents, not a parser. Leading `#`
  * comment lines are stripped before the test so a copied document that
  * opens with a comment anchors at the first executable token.
  */
@@ -46,7 +45,7 @@ const GRAPHQL_QUERY_PATTERN = /^\s*(?:\{|query\b[\s\S]*\{)/;
 /**
  * Strips leading `#` comment lines and blank lines from a GraphQL document
  * so the query pattern can anchor at the first executable token. Only the
- * document head is stripped — comments between selections are untouched.
+ * document head is stripped; comments between selections are untouched.
  */
 const stripLeadingComments = (query: string): string => {
     let rest = query;
@@ -68,13 +67,13 @@ const stripLeadingComments = (query: string): string => {
  * Whether a request is a cacheable read: a `GET`, or a GraphQL-protocol
  * `POST` whose `{ query, variables }` body declares a `query` operation.
  *
- * The AniList transport dispatches every GraphQL document — queries
- * included — as a `POST`, so a `GET`-only gate would leave the cache
+ * The AniList transport dispatches every GraphQL document, including
+ * queries, as a `POST`, so a `GET`-only gate would leave the cache
  * structurally inert for the library's primary provider. Query documents
  * are safe to cache for the same reason `GET`s are: they are reads whose
- * response is fully determined by the request (the body is part of the
- * cache key). Mutations — GraphQL `mutation` documents and REST
- * `POST`/`PUT`/`DELETE` calls — stay excluded so no write is ever served
+ * response is fully determined by the request. The body is part of the
+ * cache key. Mutations, including GraphQL `mutation` documents and REST
+ * `POST`/`PUT`/`DELETE` calls, stay excluded so no write is ever served
  * from cache.
  * Internal transport helper: exported for the transport module, not part
  * of the package's public surface.
@@ -103,8 +102,8 @@ export const isCacheableRequest = (method: string, data?: object | string): bool
 };
 
 /**
- * Whether a request carries a GraphQL document body at all — a
- * GraphQL-protocol `POST` whose body is a `{ query, variables }` object —
+ * Whether a request carries a GraphQL document body at all, a
+ * GraphQL-protocol `POST` whose body is a `{ query, variables }` object,
  * regardless of whether the document declares a read or a write.
  *
  * The transport uses this to route invalidation: a GraphQL document POST
@@ -209,10 +208,10 @@ const buildCacheAuthKey = (
  *
  * The cache applies only to cacheable reads with a configured cache:
  * `GET` calls, and GraphQL query documents dispatched as `POST` (the
- * AniList transport's only read shape — every GraphQL operation is a POST,
+ * AniList transport's only read shape: every GraphQL operation is a POST,
  * so a `GET`-only gate would leave the cache inert for the primary
- * provider). Mutations — GraphQL `mutation` documents and REST
- * `POST`/`PUT`/`DELETE` calls — stay excluded. When effective credential
+ * provider). Mutations, GraphQL `mutation` documents and REST
+ * `POST`/`PUT`/`DELETE` calls, stay excluded. When effective credential
  * headers are present but not captured by the cache key (for example a
  * custom `Authorization` or `X-API-Key` header), {@link buildCacheAuthKey}
  * returns `undefined` to fail closed: the cache is skipped entirely
@@ -252,10 +251,9 @@ export const resolveCacheAuthKey = (
 
 /**
  * Extracts the first field selected inside a GraphQL document's root
- * selection set — the shared core of the query and mutation root-field
- * extractors — using the same deliberately lightweight shape checks the
- * cacheability gate applies (see {@link GRAPHQL_QUERY_PATTERN}), not a
- * parser.
+ * selection set. The query and mutation root-field extractors share this
+ * lightweight shape check with the cacheability gate
+ * (see {@link GRAPHQL_QUERY_PATTERN}); it is not a parser.
  *
  * The operation header (the `query`/`mutation` keyword, an optional
  * operation name, and an optional variable-declaration list) is skipped
@@ -267,13 +265,11 @@ export const resolveCacheAuthKey = (
  * (`myList: MediaList`) is skipped so the document is attributed to the
  * underlying field name, not the caller-chosen alias.
  *
- * The extraction is fail-closed: it returns `undefined` whenever it cannot
- * confidently attribute the document to exactly one root field — no
- * selection set, a root selection opening with a fragment spread (`query {
- * ...frag }`, whose selected root fields live in the fragment definition,
- * not the document), or a root selection containing more than one field
- * (the second field's data could be changed by an invalidation keyed on
- * the first's name alone). An unattributed entry stays unscoped, so every
+ * The extraction fails closed and returns `undefined` if the document has
+ * no selection set, starts the root selection with a fragment spread
+ * (`query { ...frag }`, whose root fields live in the fragment definition),
+ * or selects more than one root field. The second field's data could change
+ * after invalidation keyed only on the first field's name. An unattributed entry stays unscoped, so every
  * scoped invalidation drops it alongside the whole-endpoint sweeps.
  *
  * @param document - The GraphQL document with leading comments stripped.
@@ -321,16 +317,15 @@ const extractRootField = (document: string): string | undefined => {
         return undefined;
     }
     const inside = rest.slice(openBrace + 1);
-    // A fragment spread opens the root selection: the selected root fields
-    // live in the fragment definition, not the document, so the document
-    // cannot be confidently attributed — fail closed.
+    // A fragment spread opens the root selection. Its root fields live in
+    // the fragment definition, not the document, so attribution fails closed.
     if (/^\s*\.\.\./.test(inside)) {
         return undefined;
     }
     // The first selection: an optional alias prefix (`myList: MediaList`)
     // is skipped so the document is attributed to the underlying field
-    // name, then the selection's full span — optional arguments and
-    // optional sub-selection — is consumed so the check below can tell
+    // name, then the selection's full span, optional arguments and
+    // optional sub-selection, is consumed so the check below can tell
     // whether a second selection follows. Two anchored matches (not one
     // alternation with nested quantifiers) keep the security linter
     // satisfied.
@@ -402,8 +397,8 @@ const extractRootField = (document: string): string | undefined => {
     }
     // The document is attributed only when the first selection is the only
     // one: the next non-whitespace character after its span must close the
-    // root selection set. A second root selection — or anything unparseable
-    // behind the first, such as a trailing comma or a comment — fails the
+    // root selection set. A second root selection, or anything unparseable
+    // behind the first such as a trailing comma or a comment, fails the
     // attribution, because the second selection's data could be changed by
     // an invalidation keyed on the first's name alone.
     const trailing = cursor.trimStart();
@@ -414,8 +409,8 @@ const extractRootField = (document: string): string | undefined => {
 };
 
 /**
- * Extracts the root field of a GraphQL query document — the first field
- * selected inside the document's root selection set — using the same
+ * Extracts the root field of a GraphQL query document, the first field
+ * selected inside the document's root selection set, using the same
  * deliberately lightweight shape checks the cacheability gate applies (see
  * {@link GRAPHQL_QUERY_PATTERN}), not a parser. The transport records the
  * extracted field on the cache entry at write time (see
@@ -424,8 +419,8 @@ const extractRootField = (document: string): string | undefined => {
  * to the root field its document actually selects.
  *
  * The extraction is fail-closed (see {@link extractRootField}): a document
- * whose root field cannot be confidently attributed — a fragment-spread
- * root, a multi-field root selection, an unlocatable selection — yields
+ * whose root field cannot be confidently attributed, a fragment-spread
+ * root, a multi-field root selection, an unlocatable selection, yields
  * `undefined` and the entry stays unscoped, so scoped invalidations drop
  * it alongside the whole-endpoint sweeps. An aliased root field is
  * attributed to the underlying field name, not the alias.
@@ -469,7 +464,7 @@ const MUTATION_ROOT_FIELD_INVALIDATION: ReadonlyMap<string, readonly string[]> =
     // that embed the requesting user's list entry for that media
     // (`Media.mediaListEntry`), the User/Viewer documents that embed a
     // `mediaListCollection`, and the Activity queries that embed the
-    // ListActivity AniList generates from the write — the shipped schemas
+    // ListActivity AniList generates from the write. The shipped schemas
     // do not select those embeds, but `custom()` documents can, and the
     // map must not under-invalidate them.
     [
@@ -546,7 +541,7 @@ const MUTATION_ACTION_SEGMENTS = new Set(["my_list_status"]);
  *
  * - A write to a collection endpoint (`POST /anime`) or to a path with no
  * *numeric* resource id (`/users/@me/animelist`) returns `undefined`, so it
- * invalidates nothing — the mutated resource cannot be named, and dropping
+ * invalidates nothing: the mutated resource cannot be named, and dropping
  * the whole collection namespace would evict unrelated entries.
  * - A write to a plain resource URL (`PUT /resource/21`) keeps that URL as
  * the prefix, invalidating exactly the cached reads of that resource.
@@ -594,7 +589,7 @@ const deriveMutationCachePrefix = (url: string): string | undefined => {
  *   request URL (see {@link deriveMutationCachePrefix}).
  * - A GraphQL `mutation` document whose root field is mapped in
  *   {@link MUTATION_ROOT_FIELD_INVALIDATION} drops only the cached GraphQL
- *   queries at the endpoint whose root field the mutation can change — a
+ *   queries at the endpoint whose root field the mutation can change: a
  *   `SaveMediaListEntry` flushes `MediaList`/`MediaListCollection`/`Page`
  *   queries but leaves a cached `Staff` query warm. Cached queries whose
  *   document cannot be confidently attributed to a single root field are
@@ -605,8 +600,8 @@ const deriveMutationCachePrefix = (url: string): string | undefined => {
  *   {@link ResponseCache.deleteAllForUrl}), so an unmapped mutation can
  *   never under-invalidate.
  *
- * The write-ness decision comes from the request's own shape — the method,
- * protocol, and document — never from whether the request was cache-keyed.
+ * The write-ness decision comes from the request's own shape, the method,
+ * protocol, and document, never from whether the request was cache-keyed.
  * A cacheable read can legitimately fail to be cache-keyed (the fail-closed
  * path: credential headers the cache key does not capture), and such a
  * read must never be mistaken for a mutation and wipe the endpoint's
@@ -631,7 +626,7 @@ export const invalidateAfterMutation = (
         return;
     }
     // A GraphQL document POST that is not a cacheable read is a `mutation`
-    // document. The cacheable-read check — not the cache key — decides
+    // document. The cacheable-read check, not the cache key, decides
     // write-ness, so a fail-closed read (credential headers, cache skipped)
     // is never mistaken for a mutation.
     if (
@@ -664,12 +659,12 @@ export const invalidateAfterMutation = (
  * `onRequestStart`/`onResponse` hooks with `cacheHit: true` before returning
  * the cached body.
  *
- * The cache-hit hook emissions live here — with the cache policy, not in the
- * transport entry — so the read path's observability contract stays next to
+ * The cache-hit hook emissions live here, with the cache policy and not in the
+ * transport entry, so the read path's observability contract stays next to
  * the cache it reports on. The transport fires the hooks through the same
  * `safeInvoke` isolation every other emission uses; the correlation
- * `requestId` is generated lazily — only when a hook is actually configured
- * — so the cache-hit fast path of a hook-less hot loop does not pay the UUID
+ * `requestId` is generated lazily, only when a hook is actually configured,
+ * so the cache-hit fast path of a hook-less hot loop does not pay the UUID
  * generation cost on every call.
  *
  * Internal transport helper: exported for the transport module, not part
@@ -722,7 +717,7 @@ interface CacheEntry<T> {
     expiresAt: number;
     /**
      * The GraphQL document's single selected root field, for GraphQL query
-     * `POST` entries — the scoping key for root-field invalidation (see
+     * `POST` entries, the scoping key for root-field invalidation (see
      * `deleteRootFieldsForUrl`). `undefined` for `GET` entries and for
      * documents whose root field could not be confidently attributed (a
      * fragment-spread root, a multi-field selection); such entries are
@@ -759,8 +754,8 @@ const MAX_INVALIDATION_EVENTS = 64;
 export interface ResponseCacheOptions {
     /**
      * The time-to-live for cached entries, in milliseconds. Defaults to
-     * 60_000 (1 minute). `0` disables retention entirely — every `set()` is
-     * a no-op and every `get()` is a miss — so a shared cache instance can be
+     * 60_000 (1 minute). `0` disables retention entirely: every `set()` is
+     * a no-op and every `get()` is a miss, so a shared cache instance can be
      * wired in for shape-compatibility while a particular workload opts out
      * of caching without constructing a second client.
      */
@@ -772,7 +767,7 @@ export interface ResponseCacheOptions {
      * Defaults to `true`, which preserves the mutation-safety guarantee: a
      * caller that mutates the returned object cannot corrupt the cached
      * copy or affect subsequent reads. Set to `false` to skip the read-side
-     * clone — every cache hit then returns the cached object itself, so a
+     * clone: every cache hit then returns the cached object itself, so a
      * caller that mutates it poisons later hits. Disable only when cached
      * responses are treated as immutable. The write-side clone in `set()`
      * is unaffected: the cache never aliases the caller's object either
@@ -786,9 +781,9 @@ export interface ResponseCacheOptions {
  * returned by {@link ResponseCache.stats}.
  *
  * The counters are cumulative for the cache instance's lifetime and never
- * reset — `delete()`, `deleteMatching()`, `deleteAllForUrl()`, and `clear()`
+ * reset: `delete()`, `deleteMatching()`, `deleteAllForUrl()`, and `clear()`
  * drop entries but keep the counters, so a dashboard graphing hit rate over
- * time stays monotonic — while `entries` reflects the current live entry
+ * time stays monotonic, while `entries` reflects the current live entry
  * count. The snapshot is frozen: a caller cannot mutate the cache's internal
  * state through it.
  */
@@ -798,13 +793,13 @@ export interface ResponseCacheStats {
     /** How many `get()` calls returned a live entry. */
     hits: number;
     /**
-     * How many `get()` calls found no entry for the key — an absent key, or
+     * How many `get()` calls found no entry for the key, an absent key, or
      * a live entry that degraded to a miss because its payload could not
      * be cloned on read.
      */
     misses: number;
     /**
-     * How many expired entries were evicted — encountered on read, or
+     * How many expired entries were evicted, encountered on read or
      * removed by the opportunistic write-time sweep.
      */
     expirations: number;
@@ -828,11 +823,11 @@ const isPlainObject = (value: object): boolean => {
  * and removing a reference after serialization keeps duplicate sibling
  * references working like `JSON.stringify`.
  *
- * Non-plain objects (`Date`, `Map`, class instances, …) fall back to
+ * Non-plain objects (`Date`, `Map`, class instances, ...) fall back to
  * `JSON.stringify` so their native rendering (`Date` → ISO string) keeps
  * distinct values on distinct keys. A naive sorted-key walk would render
  * every one of them as `{}` and collapse different bodies onto one cache
- * entry — a wrong-answer cache hit.
+ * entry, a wrong-answer cache hit.
  */
 const stableStringify = (value: unknown, seen: Set<object> = new Set()): string => {
     if (value === null || typeof value !== "object") {
@@ -848,7 +843,7 @@ const stableStringify = (value: unknown, seen: Set<object> = new Set()): string 
         }
         if (!isPlainObject(value)) {
             // Built-ins and class instances: keep JSON.stringify's native
-            // rendering (toJSON, ISO dates, …) so distinct values stay
+            // rendering (toJSON, ISO dates, ...) so distinct values stay
             // distinct. Key-order stability does not apply to them.
             return JSON.stringify(value) ?? "undefined";
         }
@@ -881,11 +876,11 @@ const stableStringify = (value: unknown, seen: Set<object> = new Set()): string 
  *
  * **Invalidation:** entries expire after `ttlMs`, and a successful
  * non-`GET` request dispatched through the same transport automatically
- * invalidates the cached reads of what it mutated — REST writes drop the
+ * invalidates the cached reads of what it mutated: REST writes drop the
  * mutated resource's cached `GET` entries (see
  * {@link ResponseCache.deleteMatching}) and GraphQL `mutation` documents
  * drop every cached query at the endpoint (see
- * {@link ResponseCache.deleteAllForUrl}) — so a read-after-write sequence
+ * {@link ResponseCache.deleteAllForUrl}), so a read-after-write sequence
  * refetches instead of serving the pre-mutation entry. A read whose
  * network response was in flight when an invalidation affecting it landed
  * does not re-cache its stale response (see
@@ -958,12 +953,12 @@ export class ResponseCache {
 
     /**
      * Canonicalizes a URL for keying: the query string's parameters are
-     * sorted so `?a=1&b=2` and `?b=2&a=1` — the same resource — share one
+     * sorted so `?a=1&b=2` and `?b=2&a=1`, the same resource, share one
      * cache entry instead of missing each other.
      *
      * The query string is anchored at the first `?` that appears before any
      * `#`, so a `?` inside a fragment (`path#frag?x`) is never mistaken for
-     * the query delimiter — harmless for keying, but the method must stay
+     * the query delimiter. That is harmless for keying, but the method must stay
      * correct if it is ever reused for matching or allowlists.
      *
      * @param url - The request URL, possibly carrying a query string.
@@ -991,7 +986,7 @@ export class ResponseCache {
      *
      * The serialized body is SHA-256 hashed (truncated to 16 hex chars)
      * before it enters the key, so a credential-bearing GET body is never
-     * duplicated into the key string in plaintext — the key map retains
+     * duplicated into the key string in plaintext. The key map retains
      * entries for up to the TTL, outliving the error paths the rest of the
      * library scrubs. The hash is deterministic, so equal bodies still share
      * one entry and different bodies still get different entries. The URL's
@@ -1097,7 +1092,7 @@ export class ResponseCache {
 
     /**
      * Stores a response in the cache, evicting the LRU entry when the cap is
-     * is reached. Only cacheable reads are stored — `GET` requests and
+     * is reached. Only cacheable reads are stored, `GET` requests and
      * GraphQL query documents dispatched as `POST`; mutations and other
      * methods are no-ops. The value is deep-copied on write; the cache never
      * aliases the caller's object.
@@ -1105,7 +1100,7 @@ export class ResponseCache {
      * Note for direct callers: a `POST` body shaped like `{ query: "..." }`
      * is treated as a GraphQL document and cached when the document declares
      * a read. Do not use `set` for REST `POST` writes whose body merely
-     * carries a `query` field — the transport excludes those via its protocol
+     * carries a `query` field: the transport excludes those via its protocol
      * flag, but `set` itself cannot distinguish them.
      *
      * @param method - The HTTP method.
@@ -1210,7 +1205,7 @@ export class ResponseCache {
 
     /**
      * Stores a response only when no invalidation affecting the request has
-     * landed since the caller captured the generation — the write-back half
+     * landed since the caller captured the generation, the write-back half
      * of the in-flight-read guard.
      *
      * The transport captures the generation right after a cache miss (before
@@ -1237,8 +1232,8 @@ export class ResponseCache {
      * every scoped invalidation, fail-closed.
      * @returns Whether the response was actually stored: `false` when an
      * invalidation affecting the read landed while it was in flight (the
-     * stale response is dropped) or a write-side guard skipped it — the
-     * signal behind the `cacheWrite` flag on the transport's `onResponse`
+     * stale response is dropped) or a write-side guard skipped it. That is
+     * the signal behind the `cacheWrite` flag on the transport's `onResponse`
      * emission, so consumers can measure cache fill rate.
      */
     setIfFresh<T>(
@@ -1258,7 +1253,7 @@ export class ResponseCache {
 
     /**
      * Whether an invalidation affecting the given request's key landed
-     * after the caller captured the generation — the decision half of the
+     * after the caller captured the generation, the decision half of the
      * in-flight-read guard.
      *
      * The check is scoped, not global: an invalidation of one resource does
@@ -1337,8 +1332,8 @@ export class ResponseCache {
      * Removes the cached entry for the given request, if present. Use this
      * for targeted invalidation after a mutation that changes the resource
      * (for example a `POST` that updates the entity a cached `GET` returned).
-     * Only cacheable reads are tracked — `GET` requests and GraphQL query
-     * documents dispatched as `POST` — so other methods are a no-op and
+     * Only cacheable reads are tracked, `GET` requests and GraphQL query
+     * documents dispatched as `POST`, so other methods are a no-op and
      * return `false`.
      *
      * @param method - The HTTP method.
@@ -1364,8 +1359,8 @@ export class ResponseCache {
      * string and fragment stripped, so a cached read of
      * `https://host/anime/21?fields=...` is invalidated by the prefix
      * `https://host/anime/21`. The match is boundary-aware: the prefix
-     * `https://host/anime/21` does **not** match `https://host/anime/212` —
-     * the cached URL must be either exactly the prefix, continue with `/`
+     * `https://host/anime/21` does **not** match `https://host/anime/212`.
+     * The cached URL must be either exactly the prefix, continue with `/`
      * (a child path), `?` (a query string), or `#` (a fragment). Matching
      * spans every auth namespace, because a mutation performed by one
      * identity changes the underlying resource for every identity that can
@@ -1404,10 +1399,10 @@ export class ResponseCache {
         // Keys embed the canonicalized URL verbatim in
         // `${method}:${url}:${body}:${authKey}`, and only `GET` entries
         // exist, so matching the key against `GET:${prefix}` is equivalent to
-        // matching the URL — without parsing the URL back out of the key
+        // matching the URL without parsing the URL back out of the key
         // (the URL itself contains the `:` of `https://`). The character after
         // the prefix must be the key's `:` delimiter, a `/` (child path), a
-        // `?` (query string), or a `#` (fragment) — anything else (for
+        // `?` (query string), or a `#` (fragment); anything else (for
         // example `/anime/21abc`) is a different resource and must not match.
         const keyPrefix = `GET:${prefix}`;
         for (const key of this.entries.keys()) {
@@ -1420,9 +1415,9 @@ export class ResponseCache {
     }
 
     /**
-     * Removes every cached read keyed at the given URL — `GET` entries and
+     * Removes every cached read keyed at the given URL, `GET` entries and
      * GraphQL query `POST` entries alike, across query strings, documents,
-     * variables, and auth namespaces — and returns how many entries were
+     * variables, and auth namespaces, and returns how many entries were
      * removed.
      *
      * This is the invalidation primitive for GraphQL writes: every GraphQL
@@ -1458,10 +1453,10 @@ export class ResponseCache {
         // Keys embed the canonicalized URL verbatim in
         // `${method}:${url}:${body}:${authKey}`. Only `GET` and GraphQL query
         // `POST` entries exist, so matching each method prefix against the
-        // base URL — without parsing the URL back out of the key (the URL
-        // itself contains the `:` of `https://`) — reaches every entry at
+        // base URL, without parsing the URL back out of the key (the URL
+        // itself contains the `:` of `https://`), reaches every entry at
         // the URL. The character after the prefix must be the key's `:`
-        // delimiter, a `?` (query string), or a `#` (fragment) — anything else
+        // delimiter, a `?` (query string), or a `#` (fragment); anything else
         // (for example `/anime/21abc`) is a different URL and must not match.
         const methodPrefixes = [`GET:${prefix}`, `POST:${prefix}`];
         for (const key of this.entries.keys()) {
@@ -1486,13 +1481,13 @@ export class ResponseCache {
      * known to affect only certain query root fields drops exactly those
      * cached queries, leaving unrelated root fields' entries warm, instead
      * of the whole-endpoint sweep {@link deleteAllForUrl} performs. The
-     * match is against the document's single selected root field — recorded
-     * on the entry at write time (see {@link CacheEntry.rootField}) — so a
+     * match is against the document's single selected root field, recorded
+     * on the entry at write time (see {@link CacheEntry.rootField}), so a
      * query document is attributed to the root field it actually selects,
      * not to every field it mentions. Entries whose document could not be
      * confidently attributed to a single root field (fragment-spread roots,
-     * multi-field selections) are dropped too — fail-closed, like the
-     * unmapped-mutation fallback — because such a document may select data
+     * multi-field selections) are dropped too, fail-closed like the
+     * unmapped-mutation fallback, because such a document may select data
      * the affected-field match cannot see.
      *
      * @param url - The request URL whose cached reads should be considered;
@@ -1512,7 +1507,7 @@ export class ResponseCache {
         // An invalidation landed, whether or not an entry matches: an
         // in-flight read of an affected query is stale even when no cached
         // copy of it existed yet. The scope predicate mirrors the deletion
-        // below — a POST entry at the URL whose document selects one of the
+        // below: a POST entry at the URL whose document selects one of the
         // affected root fields, or whose document could not be attributed
         // to a root field at all (fail-closed: an unattributed document may
         // select anything, so it must not survive a scoped invalidation on
@@ -1590,13 +1585,13 @@ export class ResponseCache {
      * entry counts and eviction/expiration counters distinguish a too-small
      * cache (rising `evictions`) from a too-short TTL (rising
      * `expirations`), and hit-rate dashboards compute
-     * `hits / (hits + misses + expirations)` — an expired-on-read entry
+     * `hits / (hits + misses + expirations)`: an expired-on-read entry
      * counts as an expiration, not a miss, so the three counters partition
      * every `get()` call.
      *
-     * The counters are cumulative for the cache instance's lifetime —
+     * The counters are cumulative for the cache instance's lifetime:
      * `delete()`, `deleteMatching()`, `deleteAllForUrl()`, and `clear()`
-     * drop entries but never reset or increment the counters — and
+     * drop entries but never reset or increment the counters, and
      * `entries` reflects the current live entry count. The returned object
      * is frozen, so a caller cannot mutate the cache's internal state
      * through it.

@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `NextAiringEpisode` — the upcoming airing schedule entry of an anime.
+ * `NextAiringEpisode` is the upcoming airing schedule entry of an anime.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/airingschedule

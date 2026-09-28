@@ -53,7 +53,12 @@ export type MalMangaListStatusValue =
 /**
  * {@link MalMangaListStatusUpdate} is the form-urlencoded PATCH request body for updating a user's manga list status.
  *
- * Every field is optional: callers send only the fields they want to change. It is consumed by `MalMangaOperation.updateMyListStatus` and `MyAnimeListMangaApi.updateMyListStatus` against `PATCH /manga/{manga_id}/my_list_status`, which encodes it as `application/x-www-form-urlencoded` — the endpoint's only documented request format.
+ * Every field is optional. Callers send only the fields they want to change.
+ * `MalMangaOperation.updateMyListStatus` and
+ * `MyAnimeListMangaApi.updateMyListStatus` send this body to
+ * `PATCH /manga/{manga_id}/my_list_status` as
+ * `application/x-www-form-urlencoded`, the only request format documented
+ * for this endpoint.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put
  */
@@ -136,9 +141,9 @@ export type MalMangaListSort =
 /**
  * {@link MalMangaGetParams} is the params object of the manga lookup read.
  *
- * It carries the API's own inputs for `GET /manga/{id}`, consumed by
- * `MalMangaOperation.get` and `MyAnimeListMangaApi.get` as the single params
- * object of the unified `(params, options?)` convention.
+ * It contains the `id` path parameter for `GET /manga/{id}`.
+ * `MalMangaOperation.get` and `MyAnimeListMangaApi.get` accept this object as
+ * `params`, followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get
  */
@@ -165,10 +170,10 @@ export interface MalMangaListStatusUpdateParams extends MalMangaListStatusUpdate
 /**
  * {@link MalMangaDeleteParams} is the params object of the manga list-status delete.
  *
- * It carries the API's own inputs for `DELETE /manga/{id}/my_list_status`,
- * consumed by `MalMangaOperation.deleteFromList` and
- * `MyAnimeListMangaApi.deleteFromList` as the single params object of the
- * unified `(params, options?)` convention.
+ * It contains the `id` path parameter for
+ * `DELETE /manga/{id}/my_list_status`. `MalMangaOperation.deleteFromList`
+ * and `MyAnimeListMangaApi.deleteFromList` accept this object as `params`,
+ * followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_delete
  */
@@ -271,9 +276,9 @@ export interface MalMangaRankingResponse {
 /**
  * {@link MalMangaRankingParams} is the params object of the manga ranking read.
  *
- * It carries the API's own inputs for `GET /manga/ranking`, consumed by
- * `MalMangaOperation.ranking` and `MyAnimeListMangaApi.ranking` as the single
- * params object of the unified `(params, options?)` convention.
+ * It contains the `ranking_type` query parameter for `GET /manga/ranking`.
+ * `MalMangaOperation.ranking` and `MyAnimeListMangaApi.ranking` accept this
+ * object as `params`, followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_ranking_get
  */
@@ -317,10 +322,9 @@ export interface MalMangaSearchResponse {
 /**
  * {@link MalMangaSearchParams} is the params object of the manga keyword search.
  *
- * It carries the API's own inputs for `GET /manga` — the `q` keyword plus the
- * `limit` and `offset` paging filters — consumed by `MalMangaOperation.search`
- * and `MyAnimeListMangaApi.search` as the single params object of the unified
- * `(params, options?)` convention.
+ * It contains the `q` keyword and the `limit` and `offset` paging filters for
+ * `GET /manga`. `MalMangaOperation.search` and `MyAnimeListMangaApi.search`
+ * accept this object as `params`, followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_get
  */

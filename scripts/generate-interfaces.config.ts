@@ -5,7 +5,7 @@
  * Each output derives its exported types from a schema-fragment constant under
  * `src/apis/graphql/anilist/schemas/`, resolved against the committed AniList schema
  * snapshot. Adding or removing a fragment field is reflected by rerunning
- * `npm run interfaces:generate` — no interface edit required.
+ * `npm run interfaces:generate`. No interface edit is required.
  *
  * Overrides encode deliberate typing decisions that mechanical resolution
  * cannot make:
@@ -18,9 +18,9 @@
  * Every interface file under `src/apis/graphql/anilist/interfaces/` is fully generated
  * EXCEPT these deliberately handwritten single-sources (they have no faithful
  * schema-fragment or operation twin):
- * - `Stat.ts` / `Favoured.ts` — superset unions across per-slot discriminator
+ * - `Stat.ts` / `Favoured.ts`: superset unions across per-slot discriminator
  *   selections; generating one shape per slot would change the GraphQL queries.
- * - `Staff.ts` / `Studio.ts` — shared sub-shapes referenced by the supersets
+ * - `Staff.ts` / `Studio.ts`: shared sub-shapes referenced by the supersets
  *   above and by generated responses; they correspond to no single fragment.
  *
  * Operation-derived outputs (`responses/page/*`, `AniChartUserResponse`,

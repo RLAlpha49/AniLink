@@ -7,7 +7,7 @@ import type { AniListApi } from "../src/apis/graphql/anilist/facade";
  * Direct facade-group composition tests.
  *
  * The facade group modules (`query-group.ts`, `mutation-group.ts`,
- * `helpers-group.ts`, `custom-group.ts`) declare the typed public surface,
+ * helpers-group.ts`, `custom-group.ts`) declare the typed public API,
  * and `registry.ts` is the single source of truth for which operations are
  * wired. The existing suites (`queries.test.ts`, `mutations.test.ts`,
  * `page-queries.test.ts`) exercise operations transitively through the

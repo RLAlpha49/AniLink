@@ -16,7 +16,7 @@
 /* Design tokens                                                 */
 /* ============================================================ */
 
-/* Light (Sumi, 墨) — default, explicit light, and os-unresolved */
+/* Light (Sumi, 墨): default, explicit light, and unresolved os preference */
 :root,
 :root[data-theme="light"],
 :root[data-theme="os"] {
@@ -33,7 +33,7 @@
     --rd-radius: 4px;
 }
 
-/* Dark (Yoru, 夜) — explicit */
+/* Dark (Yoru, 夜): explicit */
 :root[data-theme="dark"] {
     --rd-accent: #c9a86a;
     --rd-bg: #0e1018;
@@ -47,7 +47,7 @@
     --rd-grain: rgba(232, 230, 223, 0.05);
 }
 
-/* Dark (Yoru, 夜) — os mode following the system preference */
+/* Dark (Yoru, 夜): os mode follows the system preference */
 @media (prefers-color-scheme: dark) {
     :root[data-theme="os"] {
         --rd-accent: #c9a86a;
@@ -91,7 +91,7 @@
     --color-warning-border: var(--rd-border);
     --color-background-overlay: color-mix(in srgb, var(--rd-text) 35%, transparent);
 
-    /* highlight.css code background — point both themes at the AniLink code bg */
+    /* Use the AniLink code background for both highlight.js themes. */
     --light-code-background: var(--rd-code-bg);
     --dark-code-background: var(--rd-code-bg);
     --code-background: var(--rd-code-bg);
@@ -106,7 +106,7 @@
 }
 
 /* ============================================================ */
-/* Page background — paper/night gradients + grain               */
+/* Page background: paper and night gradients with grain           */
 /* ============================================================ */
 
 body {
@@ -251,7 +251,7 @@ footer {
 }
 
 /* ============================================================ */
-/* Typography — headings, links, prose                           */
+/* Typography: headings, links, and prose                         */
 /* ============================================================ */
 
 h1,
@@ -333,7 +333,7 @@ h6 {
     font-family: "Zen Old Mincho", "Shippori Mincho", serif;
 }
 
-/* Sidebar / on-this-page section labels — small caps tracking, like .docs-nav-title */
+/* Sidebar and on-this-page labels use the .docs-nav-title styling. */
 .tsd-page-navigation .tsd-accordion-summary h3,
 .site-menu .tsd-accordion-summary h3 {
     font-family: "Zen Old Mincho", "Shippori Mincho", serif;
@@ -344,7 +344,7 @@ h6 {
     color: var(--rd-text-soft);
 }
 
-/* Links — anilist teal with a soft underline; hover lifts to the accent */
+/* Links use AniList teal with a soft underline and accent hover color. */
 a {
     color: var(--rd-anilist);
     text-decoration: underline;
@@ -627,7 +627,7 @@ code.tsd-tag {
 }
 
 /* ============================================================ */
-/* Form controls — buttons, select, search                       */
+/* Form controls: buttons, select, and search                     */
 /* ============================================================ */
 
 button {

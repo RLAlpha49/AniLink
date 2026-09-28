@@ -15,10 +15,10 @@ import { composeDocument } from "../src/apis/graphql/anilist/schemas/selection/c
 import { ActivityWithRepliesSchema } from "../src/apis/graphql/anilist/schemas/Activity";
 
 /**
- * Field-selection tests for the AniList surface.
+ * Field-selection tests for the AniList API.
  *
  * The `fields` option composes a document from only the requested selections
- * of the maximal one — at any nesting depth, with dot paths. Omitting it must
+ * of the maximal one, at any nesting depth, with dot paths. Omitting it must
  * keep the maximal document byte-identical (the api-compare gate validates
  * that document against the live schema).
  */
@@ -556,7 +556,7 @@ describe("composed documents are valid GraphQL", () => {
         const client = createTestClient("empty-fields-token");
 
         // A mutation has no always-keys, so an empty list would compose an
-        // empty selection set — invalid GraphQL. It must fail client-side.
+        // empty selection set, which is invalid GraphQL. It must fail client-side.
         await expect(
             client.anilist.mutation.saveMediaListEntry(
                 { mediaId: 21, status: "CURRENT" },
@@ -737,11 +737,11 @@ describe("FieldPath and DeepPick type helpers", () => {
         ];
         expect(valid).toHaveLength(5);
 
-        // @ts-expect-error — an unknown head is not a key of the response.
+        // @ts-expect-error: an unknown head is not a key of the response.
         const badHead: FieldPath<MediaResponse> = "nope";
-        // @ts-expect-error — a valid head with an unknown leaf.
+        // @ts-expect-error: a valid head with an unknown leaf.
         const badLeaf: FieldPath<MediaResponse> = "title.nope";
-        // @ts-expect-error — a scalar field cannot be traversed.
+        // @ts-expect-error: a scalar field cannot be traversed.
         const throughScalar: FieldPath<MediaResponse> = "episodes.deeper";
         expect([badHead, badLeaf, throughScalar]).toHaveLength(3);
     });
@@ -794,7 +794,7 @@ describe("operation classes with fields", () => {
         const romaji: string | undefined = slim.title?.romaji;
         const alwaysId: number | undefined = slim.id;
         const alwaysIdMal: number | undefined = slim.idMal;
-        // @ts-expect-error — a path not selected is absent from the narrowed type.
+        // @ts-expect-error: a path not selected is absent from the narrowed type.
         const absent: string | undefined = slim.bannerImage;
         expect([romaji, alwaysId, alwaysIdMal, absent]).toHaveLength(4);
     });
@@ -813,7 +813,7 @@ describe("operation classes with fields", () => {
         const romaji: string | undefined = slim.media?.[0]?.title?.romaji;
         // The always-selected pageInfo joins the pick.
         const total: number | undefined = slim.pageInfo?.total;
-        // @ts-expect-error — a path not selected is absent from the narrowed type.
+        // @ts-expect-error: a path not selected is absent from the narrowed type.
         const absent: string | undefined = slim.media?.[0]?.bannerImage;
         expect([romaji, total, absent]).toHaveLength(3);
     });
@@ -833,22 +833,21 @@ describe("operation classes with fields", () => {
             { fields: ["status"] }
         );
         const status: string | undefined = slim.status;
-        // @ts-expect-error — a path not selected is absent from the narrowed type.
+        // @ts-expect-error: a path not selected is absent from the narrowed type.
         const absent: number | undefined = slim.progress;
         expect([status, absent]).toHaveLength(2);
 
-        // The FieldPath bound is the maximal document's surface, so paths the
-        // document never selects are rejected at compile time — and would
-        // still be rejected at runtime by the composer.
+        // The FieldPath bound is the maximal document, so paths it never
+        // selects are rejected at compile time and at runtime by the composer.
         await expect(
-            // @ts-expect-error — media is not selected by the maximal document.
+            // @ts-expect-error: media is not selected by the maximal document.
             client.anilist.mutation.saveMediaListEntry(
                 { mediaId: 21, status: "CURRENT" },
                 { fields: ["media.title.romaji"] }
             )
         ).rejects.toThrow(AniLinkValidationError);
         await expect(
-            // @ts-expect-error — userId is not selected by the maximal document.
+            // @ts-expect-error - userId is not selected by the maximal document.
             client.anilist.mutation.saveMediaListEntry(
                 { mediaId: 21, status: "CURRENT" },
                 { fields: ["userId"] }

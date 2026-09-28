@@ -80,13 +80,13 @@ export class SaveThreadCommentMutation extends AniListOperation {
      *
      * Updates the thread comment named by `id` and returns the saved comment. The upstream
      * mutation also posts a comment on `threadId` when `id` is omitted, but
-     * {@link SaveThreadCommentVariables} requires `id`, so the typed surface is update-only.
+     * {@link SaveThreadCommentVariables} requires `id`, so this method only updates existing thread comments.
      *
      * @param variables - Values from {@link SaveThreadCommentVariables} for the mutation.
      * @returns The {@link ThreadCommentResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `threadId` is missing, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/threadcomment
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<ThreadCommentResponse, K>`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<ThreadCommentResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveThreadCommentMutation("your-token").saveThreadComment({ id: 1, threadId: 1, parentCommentId: 0, comment: "Hello, world!", locked: false, asHtml: true });

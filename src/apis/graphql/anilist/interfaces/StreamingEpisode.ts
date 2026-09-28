@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `StreamingEpisode` — a streaming episode of a media on a provider site.
+ * `StreamingEpisode` is a streaming episode of a media on a provider site.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediastreamingepisode

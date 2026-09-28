@@ -1127,8 +1127,8 @@ describe("circuit breaker", () => {
         });
         expect(mocks.request).toHaveBeenCalledTimes(2);
 
-        // Cooldown elapses; the probe answers 404 — the upstream is
-        // reachable, so the breaker closes instead of re-opening.
+        // Cooldown elapses; the probe answers 404, so the upstream is
+        // reachable and the breaker closes instead of re-opening.
         await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
         mocks.request.mockRejectedValueOnce(apiError(404));
         await expect(callSendRequest(url, "POST", { query: "query" })).rejects.toMatchObject({
@@ -1173,7 +1173,7 @@ describe("circuit breaker", () => {
         expect(mocks.request).toHaveBeenCalledTimes(2);
 
         // Cooldown elapses; the probe answers HTTP 200 with a status-less
-        // GraphQL error envelope — the upstream is reachable, so the
+        // GraphQL error envelope, so the upstream is reachable and the
         // breaker closes instead of re-opening or wedging half-open.
         await vi.advanceTimersByTimeAsync(breaker.cooldownMs);
         mocks.request.mockResolvedValueOnce({
@@ -1269,8 +1269,8 @@ describe("circuit breaker", () => {
     test("closes the breaker when the caller aborts while the probe waits on a pace deadline", async () => {
         // A caller abort carries no upstream-health signal. When the
         // reserved half-open probe is aborted during the pre-dispatch
-        // pacing wait, the breaker must close — matching the axios-cancel
-        // path, where the same abort also closes it — instead of re-opening
+        // pacing wait, the breaker must close, matching the axios-cancel
+        // path where the same abort also closes it, instead of re-opening
         // with a fresh cooldown.
         const controller = new AbortController();
         configureRequestOptions({
@@ -1282,7 +1282,7 @@ describe("circuit breaker", () => {
 
         // A successful paced response records the shared 60s reset deadline
         // for the host (failures never record pace deadlines) and returns
-        // immediately — the recorded deadline is what gates the probe below.
+        // immediately. The recorded deadline is what gates the probe below.
         mocks.request.mockResolvedValueOnce({
             data: { data: { Media: { id: 1 } } },
             headers: {
@@ -1726,7 +1726,7 @@ describe("rate-limit pacing", () => {
         expect(mocks.request).toHaveBeenCalledTimes(1);
 
         // Second call: gated on the deadline recorded from the terminal
-        // 429's own metadata — still waiting well into the 60s window.
+        // 429's own metadata, still waiting well into the 60s window.
         const second = callSendRequest(url, "POST", { query: "query" });
         second.catch(() => {});
         await vi.advanceTimersByTimeAsync(30_000);
@@ -1922,7 +1922,7 @@ describe("computeNextRetryDelay", () => {
 
     test("returns the clamped Retry-After sleep when the unclamped delay fits inside the window", () => {
         // `Retry-After: 120` against a window with 130s left: the true delay
-        // fits, so the retry proceeds — sleeping the clamped 60s maximum,
+        // fits, so the retry proceeds, sleeping the clamped 60s maximum,
         // not the full 120s.
         expect(
             computeNextRetryDelay({

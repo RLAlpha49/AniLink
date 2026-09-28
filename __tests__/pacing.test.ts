@@ -93,7 +93,7 @@ describe("recordPaceDeadline", () => {
             { ...resolvedBase, onPace },
             hookContext
         );
-        // The wait is still pending; onPace has not fired yet — it fires
+        // The wait is still pending; onPace has not fired yet. It fires
         // after the wait completes so an aborted wait never emits a
         // full-delay event.
         expect(onPace).not.toHaveBeenCalled();
@@ -175,7 +175,7 @@ describe("recordPaceDeadline", () => {
         // Re-recording host-0 refreshes its recency, so host-1 becomes the
         // least-recently-used entry.
         recordPaceDeadline(owner, "host-0.example.com", Date.now() + 60_000);
-        // Recording a 65th distinct host evicts the LRU entry — host-1,
+        // Recording a 65th distinct host evicts the LRU entry, host-1,
         // not the refreshed host-0.
         recordPaceDeadline(owner, "host-64.example.com", Date.now() + 60_000);
         expect(peekPaceDeadlines(owner)?.size).toBe(64);
@@ -339,7 +339,7 @@ describe("awaitPaceDeadline", () => {
     test("clamps an abort landing inside the stagger window to the deadline wait", async () => {
         // The sleep is deadline + stagger, so an abort can land after the
         // deadline has elapsed but before the staggered sleep settles. The
-        // aborted emission must report at most the deadline wait — never
+        // aborted emission must report at most the deadline wait, never
         // the stagger-inclusive elapsed time, which would exceed even a
         // completed wait's delayMs for the same deadline.
         const owner = {};
@@ -376,7 +376,7 @@ describe("awaitPaceDeadline", () => {
     test("resolves with the observed deadline wait, stagger excluded", async () => {
         // The caller accumulates the resolved value into its cumulative
         // pacedMs metric, so it must be the same stagger-excluded measure
-        // onPace reports — never the jittered sleep length.
+        // onPace reports, never the jittered sleep length.
         const owner = {};
         recordPaceDeadline(owner, "graphql.anilist.co", Date.now() + 10_000);
         const wait = awaitPaceDeadline(
@@ -405,7 +405,7 @@ describe("paceAfterSuccess", () => {
     test("records the deadline without waiting: the response returns immediately", async () => {
         const owner = {};
         const reset = Math.ceil((Date.now() + 3000) / 1000);
-        // Synchronous call — no await, no timer advance: the successful
+        // Synchronous call, no await, no timer advance: the successful
         // response is never held for the window reset.
         paceAfterSuccess(
             response({
@@ -418,7 +418,7 @@ describe("paceAfterSuccess", () => {
             owner,
             "graphql.anilist.co"
         );
-        // The deadline is already recorded: a subsequently dispatched request
+        // The deadline is already recorded: a request dispatched later
         // to the same host waits for it, and onPace fires only from that
         // pre-dispatch wait.
         const onPace = vi.fn();

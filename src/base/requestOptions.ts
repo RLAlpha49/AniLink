@@ -5,14 +5,14 @@
  * This module is the single source of the precedence chain, strongest first:
  * per-request (operation) options win over constructor (instance) options win
  * over library defaults. {@link mergeOptions} folds the two caller-supplied
- * layers together — a field set on the override wins, the nested policy keys
+ * layers together: a field set on the override wins, the nested policy keys
  * (`retry`, `circuitBreaker`, `retryBudget`) merge field-by-field, and
- * `retry: false`/`true` remain whole-value — and {@link resolveRequestOptions}
+ * `retry: false`/`true` remain whole-value. {@link resolveRequestOptions}
  * folds the surviving settings into the complete, validated set one request
  * pipeline runs with: it resolves the retry policy, the keep-alive agents,
  * the pacing and rate-limit-floor defaults, and forwards every hook.
- * {@link TRANSPORT_OPTION_KEYS} enumerates every {@link RequestOptions} key
- * exhaustively, so the credential seam's allowlist cannot drift from the
+ * {@link TRANSPORT_OPTION_KEYS} enumerates every {@link RequestOptions} key,
+ * so the credential allowlist cannot drift from the
  * interface it mirrors. Callers import these pieces instead of re-deriving
  * any part of the rule.
  *
@@ -45,7 +45,7 @@ import { resolveRetryPolicy } from "./retry";
 
 /**
  * The complete, validated transport settings one request pipeline runs
- * with — the output of {@link resolveRequestOptions}.
+ * with, the output of {@link resolveRequestOptions}.
  *
  * Every resilience module (error normalization, pacing, circuit breaker,
  * retry loop) reads from this shape instead of re-deriving defaults, so a
@@ -191,11 +191,11 @@ const assignDeepMergedOption = <K extends (typeof DEEP_MERGED_OPTION_KEYS)[numbe
 };
 
 /**
- * Merges per-request transport settings over the instance-level ones — the
+ * Merges per-request transport settings over the instance-level ones, the
  * two caller-supplied layers of the precedence chain documented in the module
  * header; {@link resolveRequestOptions} then applies the library defaults.
  * A field set on `overrides` wins; every other field keeps the instance
- * value. The nested configuration objects (`DEEP_MERGED_OPTION_KEYS` —
+ * value. The nested configuration objects (`DEEP_MERGED_OPTION_KEYS`:
  * `retry`, `circuitBreaker`, `retryBudget`) are merged field-by-field, so a
  * per-request `{ retry: { maxRetries: 0 } }` keeps the instance's
  * `retryOnStatus` and `baseDelayMs` instead of silently falling back to
@@ -237,8 +237,8 @@ export const mergeOptions = (
 };
 
 /**
- * Every key of {@link RequestOptions}, in one array — used by the credential
- * seam to allowlist transport fields and reject mistyped credential keys
+ * Every key of {@link RequestOptions} in one array. The credential resolver
+ * uses it to allowlist transport fields and reject mistyped credential keys
  * (for example `accesstoken` instead of `accessToken`) at client
  * construction instead of silently ignoring them.
  *

@@ -110,7 +110,7 @@ export class UpdateFavouriteOrderMutation extends AniListOperation {
      * @returns The {@link Favourites} returned by the mutation.
      * @throws Throws if no authentication token is configured, no id or order array is provided, an order array lacks its corresponding ID array, a variable has an invalid type, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/favourites
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<Favourites, K>`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<Favourites, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new UpdateFavouriteOrderMutation("your-token").updateFavouriteOrder({ animeIds: [1], mangaIds: [], characterIds: [], staffIds: [], studioIds: [], animeOrder: [1], mangaOrder: [], characterOrder: [], staffOrder: [], studioOrder: [] });

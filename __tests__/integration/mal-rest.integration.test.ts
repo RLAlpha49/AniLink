@@ -2,11 +2,11 @@ import { AniLink, AniLinkApiError } from "../../src/AniLink";
 import { beforeEach, describe, expect, test } from "vitest";
 
 /**
- * Live integration tests for the MyAnimeList REST read surface.
+ * Live integration tests for the MyAnimeList REST read API.
  *
  * These tests run real requests against https://api.myanimelist.net/v2 and are
  * therefore skipped unless `MAL_TOKEN` is set in `.env`. Only reads are
- * exercised — never list-status writes — so the authenticated account stays
+ * exercised, never list-status writes, so the authenticated account stays
  * untouched, mirroring the read-only contract of the AniList integration
  * suite.
  *
@@ -38,7 +38,7 @@ beforeEach(async () => {
 /** Well-known public ids that are stable in the MyAnimeList database. */
 const FIXTURES = {
     animeId: 21, // One Piece (also used by the unit-suite examples)
-    mangaId: 2, // Berserk — the canonical match for the "berserk" keyword
+    mangaId: 2, // Berserk, the canonical match for the "berserk" keyword
     forumTopicId: 23744, // A stable topic that carries a poll
     fields: ["id", "title", "main_picture", "num_episodes", "status"],
 };
@@ -170,8 +170,8 @@ describe("MyAnimeList live integration — reads only", () => {
         expect(topic.data.title).toBeTruthy();
         expect(topic.data.posts.length).toBeGreaterThan(0);
         expect(typeof topic.data.posts[0].body).toBe("string");
-        // The poll is a single object with `closed` — the upstream quirk the
-        // vendored spec gets wrong — so pin its live shape on this topic.
+        // The poll is a single object with `closed`, the upstream quirk the
+        // vendored spec gets wrong, so pin its live shape on this topic.
         const poll = topic.data.poll;
         expect(poll?.question).toBeTruthy();
         expect(Array.isArray(poll?.options)).toBe(true);

@@ -109,9 +109,9 @@ export class MalUserOperation extends RestOperation {
         return await this.execute<MalUser>(
             normalized === "@me" ? "/users/@me" : "/users/{username}",
             {
-                // `@me` resolves the authenticated user, which only a bearer
-                // token can identify — a client ID alone cannot — so fail fast
-                // like `me`.
+                // Only a bearer token can identify the authenticated user at
+                // `@me`; a client ID alone cannot. Reject the request early,
+                // as `me` does.
                 requiresAuth: true,
                 transportOptions,
                 // `buildQueryString` skips undefined/null values, so the
@@ -130,7 +130,13 @@ export class MalUserOperation extends RestOperation {
     /**
      * {@link MalUserOperation.animeList} gets a user's anime list, one page at a time.
      *
-     * It calls `GET /users/{username}/animelist` through `RestOperation.execute` and returns a {@link MalUserAnimeListResponse} page of `MalUserAnimeListEntry` entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListUserApi.animeList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
+     * It calls `GET /users/{username}/animelist` through
+     * `RestOperation.execute` and returns a {@link MalUserAnimeListResponse}
+     * page of `MalUserAnimeListEntry` entries shaped by
+     * {@link MalRequestOptions.fields}. The facade exposes this method as
+     * `MyAnimeListUserApi.animeList`. `username` accepts a user name or `@me`;
+     * `@me` and private lists require an access token. The `@me` check ignores
+     * case and surrounding whitespace.
      *
      * @param params - The anime-list read inputs; a {@link MalUserAnimeListParams} carrying the username plus the optional status, sort, and paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -160,8 +166,8 @@ export class MalUserOperation extends RestOperation {
         return await this.execute<MalUserAnimeListResponse>(
             normalized === "@me" ? "/users/@me/animelist" : "/users/{username}/animelist",
             {
-                // `@me` resolves the authenticated user, which only a bearer token
-                // can identify — a client ID alone cannot — so fail fast like `me`.
+                // Only a bearer token can identify the authenticated user at
+                // `@me`; a client ID alone cannot. Require one, as `me` does.
                 requiresAuth: normalized === "@me",
                 transportOptions,
                 // `buildQueryString` skips undefined/null values, so the
@@ -184,7 +190,13 @@ export class MalUserOperation extends RestOperation {
     /**
      * {@link MalUserOperation.mangaList} gets a user's manga list, one page at a time.
      *
-     * It calls `GET /users/{username}/mangalist` through `RestOperation.execute` and returns a {@link MalUserMangaListResponse} page of `MalUserMangaListEntry` entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListUserApi.mangaList` and it is a public read: `username` accepts a user name or `@me`, with `@me` and private lists requiring an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace.
+     * It calls `GET /users/{username}/mangalist` through
+     * `RestOperation.execute` and returns a {@link MalUserMangaListResponse}
+     * page of `MalUserMangaListEntry` entries shaped by
+     * {@link MalRequestOptions.fields}. The facade exposes this method as
+     * `MyAnimeListUserApi.mangaList`. `username` accepts a user name or `@me`;
+     * `@me` and private lists require an access token. The `@me` check ignores
+     * case and surrounding whitespace.
      *
      * @param params - The manga-list read inputs; a {@link MalUserMangaListParams} carrying the username plus the optional status, sort, and paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -214,8 +226,8 @@ export class MalUserOperation extends RestOperation {
         return await this.execute<MalUserMangaListResponse>(
             normalized === "@me" ? "/users/@me/mangalist" : "/users/{username}/mangalist",
             {
-                // `@me` resolves the authenticated user, which only a bearer token
-                // can identify — a client ID alone cannot — so fail fast like `me`.
+                // Only a bearer token can identify the authenticated user at
+                // `@me`; a client ID alone cannot. Require one, as `me` does.
                 requiresAuth: normalized === "@me",
                 transportOptions,
                 // `buildQueryString` skips undefined/null values, so the

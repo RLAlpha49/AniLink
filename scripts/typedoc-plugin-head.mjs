@@ -4,21 +4,21 @@ import { createHash } from "node:crypto";
  * TypeDoc plugin that reproduces the VitePress docs' `<head>` behavior for
  * the TypeDoc HTML output:
  *
- * 1. Google Fonts stylesheet — a `<link rel="stylesheet">` plus `preconnect`
+ * 1. Google Fonts stylesheet: a `<link rel="stylesheet">` plus `preconnect`
  *    hints. Why a plugin instead of `@import url(...)` in `typedoc-custom.css`:
  *    `@import` starts the font download only after the browser has downloaded
  *    and parsed the custom CSS, so first paint waits on a serialized request
  *    chain. `<link>` elements emitted here load in parallel with the CSS.
- * 2. Google Analytics 4 — consent defaults denied before anything loads;
+ * 2. Google Analytics 4: consent defaults denied before anything loads;
  *    the gtag library itself is only fetched after the visitor accepts.
  *    The boot script is shared with the VitePress site
  *    (`docs-src/lib/consent.mjs`) and defines the `window.__anilinkConsent`
  *    API; measurement only starts after the visitor accepts in the consent
  *    banner, which this plugin also injects.
- * 3. Per-page metadata — canonical URL, robots, description, and Open
+ * 3. Per-page metadata: canonical URL, robots, description, and Open
  *    Graph / Twitter tags, mirroring `transformHead` in
  *    `docs-src/.vitepress/config.mts` so the API reference pages get the
- *    same SEO surface as the guides.
+ *    same SEO tags as the guides.
  *
  * Registered from `typedoc.json` as `"./scripts/typedoc-plugin-head.mjs"`.
  * The `load` export is the TypeDoc plugin entry point.
@@ -30,19 +30,19 @@ import { createHash } from "node:crypto";
  * shell used to start it. When the two cases differ, a plugin-level
  * `import { JSX } from "typedoc"` resolves to a *second* TypeDoc module
  * instance whose `JSX.Fragment` / `JSX.Raw` marker functions fail the
- * renderer's identity checks — the renderer then invokes the marker
+ * renderer's identity checks. The renderer then invokes the marker
  * directly and it throws "Should never be called". Mutating
  * `PageEvent.contents` on the `endPage` event instead sidesteps module
- * identity entirely and keeps the plugin robust against however the CLI
+ * identity entirely and keeps the plugin working however the CLI
  * was invoked.
  */
 
-/** Site origin for canonical/OG URLs — matches `hostedBaseUrl` in typedoc.json. */
+/** Site origin for canonical/OG URLs. Matches `hostedBaseUrl` in typedoc.json. */
 const SITE_URL = "https://anilink.alpha49.com";
 
 /** Fallback description when a reflection has no comment summary. */
 const DEFAULT_DESCRIPTION =
-    "AniLink API reference — the typed TypeScript client for the AniList GraphQL and MyAnimeList REST APIs.";
+    "AniLink API reference, the typed TypeScript client for the AniList GraphQL and MyAnimeList REST APIs.";
 
 /** Rough cap for meta descriptions; crawlers truncate well past this. */
 const MAX_DESCRIPTION_LENGTH = 300;
@@ -86,7 +86,7 @@ function inlineScriptHashes(html) {
 const FONT_CSS =
     "https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700;800&family=Zen+Old+Mincho:wght@400;700;900&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap";
 
-/** Shared consent contract — the same boot script the VitePress site injects. */
+/** Shared consent contract: the same boot script the VitePress site injects. */
 const { CONSENT_BOOT_SCRIPT } = await import(`../docs-src/lib/consent.mjs`);
 
 /**
@@ -124,7 +124,7 @@ function descriptionFor(model) {
     if (!text) return DEFAULT_DESCRIPTION;
     if (text.length <= MAX_DESCRIPTION_LENGTH) return text;
     const cut = text.lastIndexOf(" ", MAX_DESCRIPTION_LENGTH);
-    return text.slice(0, cut > 0 ? cut : MAX_DESCRIPTION_LENGTH) + "…";
+    return text.slice(0, cut > 0 ? cut : MAX_DESCRIPTION_LENGTH) + "...";
 }
 
 /**
@@ -181,7 +181,7 @@ function socialCardAltFor(context) {
  * Build the per-page head injection: CSP, fonts, consent boot script, canonical
  * URL, robots directive, description, and Open Graph / Twitter tags. The
  * tag set mirrors `transformHead` in `docs-src/.vitepress/config.mts` so
- * guides and API reference pages share one SEO surface.
+ * guides and API reference pages share the same SEO tags.
  *
  * @param {string} pageTitle The page's `<title>` text (already rendered).
  * @param {string} canonicalUrl Absolute URL of the page.
@@ -265,14 +265,14 @@ function spliceBefore(html, marker, sentinel, injection) {
  * Consent banner for TypeDoc pages: same storage key, choice semantics, and
  * visual design as the VitePress banner. The click handler delegates to the
  * `window.__anilinkConsent` API defined by the shared boot script (injected
- * at `head.begin` below), so accepting and declining — including the `_ga`
- * cookie cleanup on decline — behave exactly like the VitePress site. When
+ * at `head.begin` below), so accepting and declining, including the `_ga`
+ * cookie cleanup on decline, behave exactly like the VitePress site. When
  * a valid choice is already stored, a settings button
  * (`#anilink-consent-settings`, bottom-right corner) reopens the banner
- * instead — the same reopen control the Vue component renders — so a
+ * instead, the same reopen control the Vue component renders, so a
  * previous accept or decline can always be changed. The markup mirrors the
  * Vue component's structure (consent-text / consent-actions / consent-btn
- * classes) so `typedoc-custom.css` styles both surfaces with one set of
+ * classes) so `typedoc-custom.css` styles both sites with one set of
  * rules against the shared --rd-* design tokens.
  */
 const CONSENT_BANNER_SCRIPT = `
@@ -323,7 +323,7 @@ const CONSENT_BANNER_SCRIPT = `
       document.body.append(settings);
     }
   } catch (e) {
-    /* storage unavailable — leave consent denied */
+    /* storage unavailable: leave consent denied */
   }
 })();`;
 
@@ -331,8 +331,8 @@ const CONSENT_BANNER_SCRIPT = `
 export function load(app) {
     // endPage fires per rendered page, just before the HTML is written to
     // disk; `contents` is the final page HTML and is documented as mutable.
-    // String-splicing here avoids importing TypeDoc's JSX runtime, which —
-    // see the header comment — can resolve to a second TypeDoc instance on
+    // String-splicing here avoids importing TypeDoc's JSX runtime, which
+    // (see the header comment) can resolve to a second TypeDoc instance on
     // Windows and crash the render with "Should never be called".
     app.renderer.on("endPage", (event) => {
         let html = event.contents ?? "";

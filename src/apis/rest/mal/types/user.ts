@@ -35,11 +35,10 @@ export interface MalUser {
 /**
  * {@link MalUserAnimeListParams} is the params object of the user anime-list read.
  *
- * It carries the API's own inputs for `GET /users/{user_name}/animelist` —
- * the `username` path segment plus the `status`, `sort`, `limit`, and
- * `offset` query filters — consumed by `MalUserOperation.animeList` and
- * `MyAnimeListUserApi.animeList` as the single params object of the unified
- * `(params, options?)` convention.
+ * It contains the `username` path parameter and the `status`, `sort`, `limit`,
+ * and `offset` query filters for `GET /users/{user_name}/animelist`.
+ * `MalUserOperation.animeList` and `MyAnimeListUserApi.animeList` accept this
+ * object as `params`, followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
  */
@@ -59,11 +58,10 @@ export interface MalUserAnimeListParams {
 /**
  * {@link MalUserMangaListParams} is the params object of the user manga-list read.
  *
- * It carries the API's own inputs for `GET /users/{user_name}/mangalist` —
- * the `username` path segment plus the `status`, `sort`, `limit`, and
- * `offset` query filters — consumed by `MalUserOperation.mangaList` and
- * `MyAnimeListUserApi.mangaList` as the single params object of the unified
- * `(params, options?)` convention.
+ * It contains the `username` path parameter and the `status`, `sort`, `limit`,
+ * and `offset` query filters for `GET /users/{user_name}/mangalist`.
+ * `MalUserOperation.mangaList` and `MyAnimeListUserApi.mangaList` accept this
+ * object as `params`, followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/users_user_id_mangalist_get
  */
@@ -83,11 +81,11 @@ export interface MalUserMangaListParams {
 /**
  * {@link MalUserGetParams} is the params object of the public user-profile read.
  *
- * It carries the API's own inputs for `GET /users/{user_name}`, consumed by
- * `MalUserOperation.get` and `MyAnimeListUserApi.get` as the single params
- * object of the unified `(params, options?)` convention. MyAnimeList only
- * documents `@me` for this endpoint, so `username` accepts `@me` (with the
- * same case-insensitive, whitespace-tolerant check as the user-list reads).
+ * It contains the `username` path parameter for `GET /users/{user_name}`.
+ * `MalUserOperation.get` and `MyAnimeListUserApi.get` accept this object as
+ * `params`, followed by optional `options`. MyAnimeList only documents `@me`
+ * for this endpoint. The `username` check accepts `@me` without regard to
+ * case or surrounding whitespace, matching the user-list reads.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
  */

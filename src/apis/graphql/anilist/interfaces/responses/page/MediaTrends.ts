@@ -9,7 +9,7 @@
 import { type MediaTrendResponse } from "../query/MediaTrend";
 import { type PageInfo } from "./PageInfo";
 /**
- * `MediaTrendsPageResponse` — a page of media trends with pagination metadata.
+ * `MediaTrendsPageResponse` is a page of media trends with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediatrend

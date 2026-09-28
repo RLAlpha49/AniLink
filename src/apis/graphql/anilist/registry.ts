@@ -5,7 +5,7 @@
  * facade key it is exposed under, its category, the operation class that
  * implements it, and the method to bind. {@link buildAniListWiring} instantiates and
  * binds every entry, so adding an operation touches exactly two sites: the
- * operation class and its entry in this registry — then run
+ * operation class and its entry in this registry. Then run
  * `npm run facade:generate` to refresh the derived group types under
  * `facade/` (curated JSDoc prose lives in
  * `scripts/generate-facade-groups.config.ts`). Whether an operation accepts
@@ -95,9 +95,9 @@ import { PAGE_ALWAYS } from "./schemas/selection/fieldsSelection";
 /**
  * The section of the facade an operation is exposed under.
  *
- * - `query` — single-item queries at `aniLink.anilist.query.<key>`.
- * - `page` — paginated queries at `aniLink.anilist.query.page.<key>`.
- * - `mutation` — write operations at `aniLink.anilist.mutation.<key>`.
+ * - `query`: single-item queries at `aniLink.anilist.query.<key>`.
+ * - `page`: paginated queries at `aniLink.anilist.query.page.<key>`.
+ * - `mutation`: write operations at `aniLink.anilist.mutation.<key>`.
  */
 export type OperationCategory = "query" | "page" | "mutation";
 
@@ -124,7 +124,7 @@ export type OperationConstructor = new (
  * The bound method name is always present on the entry: `op` copies the
  * facade key (the common case where the method shares the key's name) and
  * `opAs` carries an explicit override. Wiring therefore never falls
- * back to a stringly-typed `name` default — it reads the resolved
+ * back to a stringly-typed `name` default; it reads the resolved
  * {@link OperationEntry.methodName} constant directly.
  *
  * @typeParam TOperation - The operation class implementing this entry; must
@@ -242,9 +242,8 @@ type RegistryGroups = {
 };
 
 /**
- * The single source of truth for which operations exist and how they are
- * wired into the facade. Order within each group matches the declaration
- * order of the corresponding group type under `facade/`.
+ * Lists the operations and how they are wired into the facade. Entries in
+ * each group follow the declaration order of its group type under `facade/`.
  */
 export const ANILIST_OPERATION_REGISTRY = {
     query: [
@@ -371,10 +370,9 @@ export type RegistryFacadeOperationKey = {
  * {@link ANILIST_OPERATION_REGISTRY} so the registry stays the single source
  * of truth for which operations exist.
  *
- * The facade group types under `facade/` declare the matching typed surface;
- * each group module asserts bidirectional parity between this union and its
- * facade keys, so a key present in one but not the other fails `tsc` at
- * compile time, rather than only surfacing at test time.
+ * The facade group types under `facade/` declare the same keys. Each group
+ * module checks that this union and its facade keys match in both directions,
+ * so `tsc` reports a missing or extra key before tests run.
  */
 export type RegistryQueryKeys = (typeof ANILIST_OPERATION_REGISTRY)["query"][number]["name"];
 /**
@@ -390,12 +388,11 @@ export type RegistryQueryKeys = (typeof ANILIST_OPERATION_REGISTRY)["query"][num
 export type RegistryPageKeys = (typeof ANILIST_OPERATION_REGISTRY)["page"][number]["name"];
 /**
  * The literal facade keys the `mutation` registry group exposes, derived
- * from {@link ANILIST_OPERATION_REGISTRY} so the registry stays the single
- * source of truth for which operations exist.
+ * from {@link ANILIST_OPERATION_REGISTRY}, which lists the available
+ * operations.
  *
  * The `mutation-group` facade module asserts bidirectional parity between
  * this union and `keyof AniListMutations["mutation"]`, so a key present in
- * one but not the other fails `tsc` at compile time, rather than only
- * surfacing at test time.
+ * one but not the other fails `tsc` at compile time, before tests run.
  */
 export type RegistryMutationKeys = (typeof ANILIST_OPERATION_REGISTRY)["mutation"][number]["name"];

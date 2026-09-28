@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type BasicUser } from "../../Basic";
 /**
- * `AniChartUserResponse` — a user's AniChart integration data.
+ * `AniChartUserResponse` is a user's AniChart integration data.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/anichartuser

@@ -1,9 +1,9 @@
 /**
  * The AniList binding of the shared token-refresh lifecycle.
  *
- * The lifecycle itself — the grant POST, the expiry math, the auth
+ * The lifecycle itself, the grant POST, the expiry math, the auth
  * rebuild, the 401/missing-token classifier, the deduplicated in-flight
- * grant, the callbacks, and the single replay — lives in the shared
+ * grant, the callbacks, and the single replay, lives in the shared
  * module (`base/tokenRefresh.ts`). This module is the thin AniList
  * adapter: the wiring-facing option and callback types plus two builders
  * bound to the {@link ANILIST_TOKEN_GRANT} descriptor (the AniList token
@@ -24,7 +24,7 @@ import { ANILIST_TOKEN_GRANT, type AniListTokenResponse } from "./auth";
  * Callback invoked after every successful automatic AniList token refresh
  * so callers can persist the new access/refresh token pair.
  *
- * The callback fires exactly once per refresh grant — concurrent 401s share
+ * The callback fires exactly once per refresh grant. Concurrent 401s share
  * one grant and one callback invocation. The response follows AniList's
  * rotation semantics: when the token endpoint omits `refresh_token`, the
  * coordinator keeps the stored one, and the response passed to the callback
@@ -39,7 +39,7 @@ export type AniListTokenRefreshCallback = (response: AniListTokenResponse) => vo
 /**
  * Callback invoked when an automatic AniList token-refresh grant fails.
  *
- * The callback fires exactly once per failed grant — concurrent 401s share
+ * The callback fires exactly once per failed grant. Concurrent 401s share
  * one in-flight grant and one failure event. It receives the sanitized
  * refresh error (an {@link AniLinkError} carrying the upstream `status` and
  * `code`), the same error the awaiting caller catches. Exceptions thrown by
@@ -52,7 +52,7 @@ export type AniListTokenRefreshErrorCallback = (error: AniLinkError) => void;
 
 /**
  * The fields the AniList wiring passes to {@link buildAniListTokenRefresher}:
- * the shared refresh-option shape with AniList's one narrowing — the
+ * the shared refresh-option shape with AniList's one narrowing, that the
  * refresh grant requires the client secret, unlike MAL's optional one.
  *
  * @see {@link buildAniListTokenRefresher}
@@ -91,7 +91,7 @@ export const buildAniListTokenRefresher = (
  * with the fresh one. Headers on the operation's structured pre-refresh auth
  * are preserved (mirroring MAL's `buildRefreshedAuth`, which keeps everything
  * except the provider's own client-ID header): a caller who attached extra
- * headers to the auth material — a proxy header, a tracing header — keeps
+ * headers to the auth material, a proxy header or a tracing header, keeps
  * them after the first refresh instead of silently losing them mid-lifetime.
  * There is no AniList-specific header to strip: the client ID and secret
  * belong to the grant body, never to GraphQL request headers.

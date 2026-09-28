@@ -12,7 +12,11 @@ import type {
 /**
  * {@link MalForumOperation} is the REST operation adapter for the MyAnimeList forum endpoints.
  *
- * It extends {@link RestOperation} and is composed into `MyAnimeListApi` via `buildMyAnimeListApi`, exposing the public forum reads `boards`, `topics`, and `topic` for `GET /forum/boards`, `GET /forum/topics`, and `GET /forum/topic/{topic_id}`.
+ * It extends {@link RestOperation} and is composed into `MyAnimeListApi` by
+ * `buildMyAnimeListApi`. It provides the forum reads `boards`, `topics`, and
+ * `topic` for `GET /forum/boards`, `GET /forum/topics`, and
+ * `GET /forum/topic/{topic_id}`. These endpoints do not require an access
+ * token.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_boards_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_topics_get
@@ -26,9 +30,10 @@ export class MalForumOperation extends RestOperation {
      * {@link MalForumOperation.boards} gets the MyAnimeList forum board tree.
      *
      * It calls `GET /forum/boards` through `RestOperation.execute` and returns
-     * a {@link MalForumBoardsResponse} of {@link MalForumCategory} entries,
-     * each carrying its {@link MalForumBoard} and subboards. The facade alias
-     * is `MyAnimeListForumApi.boards` and it is a public read.
+     * a {@link MalForumBoardsResponse} containing {@link MalForumCategory}
+     * entries, each with {@link MalForumBoard} entries and subboards. The
+     * facade exposes this method as `MyAnimeListForumApi.boards`. It does not
+     * require an access token.
      *
      * @param options - Optional transport settings; a {@link MalRequestOptions} merged over the instance defaults.
      * @returns The forum board tree, a {@link MalForumBoardsResponse}.
@@ -57,8 +62,8 @@ export class MalForumOperation extends RestOperation {
      * `topic_user_name`/`user_name` creator filters, and the `sort` and
      * `limit`/`offset` paging filters, returning a
      * {@link MalForumTopicsResponse} page of {@link MalForumTopicSummary}
-     * entries. The facade alias is `MyAnimeListForumApi.topics` and it is a
-     * public read.
+     * entries. The facade exposes this method as `MyAnimeListForumApi.topics`.
+     * It does not require an access token.
      *
      * @param params - The topic-list read inputs; a {@link MalForumTopicsParams} carrying the optional board, keyword, creator, sort, and paging filters.
      * @param options - Optional transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -102,8 +107,9 @@ export class MalForumOperation extends RestOperation {
      * It calls `GET /forum/topic/{id}` through `RestOperation.execute` with
      * the `limit`/`offset` post-paging filters and returns a
      * {@link MalForumTopicResponse} whose `data` carries the topic's
-     * {@link MalForumTopicDetail} — title, posts, and poll. The facade alias
-     * is `MyAnimeListForumApi.topic` and it is a public read.
+     * {@link MalForumTopicDetail}, which contains the title, posts, and poll.
+     * The facade exposes this method as `MyAnimeListForumApi.topic`. It does
+     * not require an access token.
      *
      * @param params - The topic read inputs; a {@link MalForumTopicParams} carrying the topic ID plus the optional post-paging filters.
      * @param options - Optional transport settings; a {@link MalRequestOptions} merged over the instance defaults.

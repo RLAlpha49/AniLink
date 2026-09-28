@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `ScoreDistribution` — how many media fall into each 10-point score bucket.
+ * `ScoreDistribution` is how many media fall into each 10-point score bucket.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/scoredistribution
@@ -26,7 +26,7 @@ export interface ScoreDistribution {
 }
 
 /**
- * `StatusDistribution` — how many media carry each list status.
+ * `StatusDistribution` is how many media carry each list status.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/statusdistribution

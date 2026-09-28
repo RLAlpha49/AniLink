@@ -9,13 +9,13 @@ import { AniLink } from "../src/AniLink";
 import { describe, expect, test } from "vitest";
 
 /**
- * Fuzzy-date variable contracts for the AniList query surface.
+ * Fuzzy-date variable contracts for the AniList query API.
  *
  * AniList's schema types every query-side fuzzy-date argument as the
- * `FuzzyDateInt` scalar — an integer in YYYYMMDD form — while the
+ * `FuzzyDateInt` scalar, an integer in YYYYMMDD form, while the
  * list-entry mutations take the `FuzzyDateInput` object. These tests pin
  * that split: query variables accept (and forward) the integer form, the
- * validator rejects the object form on queries, and the mutation surface
+ * validator rejects the object form on queries, and the mutation API
  * keeps the object form.
  */
 
@@ -108,7 +108,7 @@ describe("fuzzy-date query variables reject the FuzzyDateInput object form", () 
             client.anilist.query.media({
                 id: 1,
                 type: "ANIME",
-                // The object form belongs to the mutation surface; the query
+                // The object form belongs to the mutation API; the query
                 // arguments are FuzzyDateInt scalars, so the validator must
                 // reject it before any request is dispatched.
                 startDate: DATE_OBJECT as never,
@@ -201,7 +201,7 @@ describe("mutation fuzzy-date variables keep the FuzzyDateInput object form", ()
             client.anilist.mutation.saveMediaListEntry({
                 mediaId: 1,
                 status: "COMPLETED",
-                // The integer form belongs to the query surface; the mutation
+                // The integer form belongs to the query API; the mutation
                 // arguments are FuzzyDateInput objects.
                 startedAt: DATE_INT as never,
             })

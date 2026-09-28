@@ -153,7 +153,7 @@ describe("resolveMalCredentials property tests", () => {
                     const options = resolved.options ?? {};
 
                     // The four provider-only fields must never appear in the
-                    // shared transport options — they stay in the `auth` slot.
+                    // shared transport options. They stay in the `auth` slot.
                     expect(options).not.toHaveProperty("accessToken");
                     expect(options).not.toHaveProperty("refreshToken");
                     expect(options).not.toHaveProperty("clientId");
@@ -223,7 +223,7 @@ describe("resolveAniListCredentials property tests", () => {
                     const options = resolved.options ?? {};
 
                     // The four refresh-lifecycle fields must never appear in
-                    // the shared transport options — they stay in the raw
+                    // the shared transport options. They stay in the raw
                     // credential slot the wiring reads.
                     expect(options).not.toHaveProperty("refreshToken");
                     expect(options).not.toHaveProperty("clientId");

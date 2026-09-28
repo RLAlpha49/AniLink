@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `MediaTagCollectionResponse` — a media tag as returned by the MediaTagCollection query.
+ * `MediaTagCollectionResponse` is a media tag as returned by the MediaTagCollection query.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediatag

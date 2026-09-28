@@ -51,7 +51,7 @@ export interface MyAnimeListAuthApi {
      *
      * @param clientId - The MyAnimeList application client ID.
      * @param codeChallenge - The PKCE challenge. With MAL's `plain` method, this is the verifier
-     * itself and must contain 43–128 RFC 7636 unreserved characters.
+     * itself and must contain 43 to 128 RFC 7636 unreserved characters.
      * @param state - Optional opaque state to validate on the redirect.
      * @returns The fully encoded authorization URL.
      * @throws `TypeError` when `codeChallenge` is not a valid MAL PKCE verifier.
@@ -456,7 +456,7 @@ export interface MyAnimeListUserApi {
     /**
      * {@link MyAnimeListUserApi.animeList} gets a user's anime list through `MalUserOperation.animeList`.
      *
-     * It is the public facade for `GET /users/{user_name}/animelist`; `username` accepts a user name or `@me`. A public list needs only `MalCredentials.clientId` (or an access token) — MAL rejects unauthenticated requests — while `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserAnimeListParams} to filter by status, sort, and page with `limit`/`offset`.
+     * It is the public facade for `GET /users/{user_name}/animelist`; `username` accepts a user name or `@me`. A public list needs only `MalCredentials.clientId` (or an access token), since MAL rejects unauthenticated requests. `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserAnimeListParams} to filter by status, sort, and page with `limit`/`offset`.
      *
      * @param params - The anime-list read inputs; a {@link MalUserAnimeListParams} carrying the username plus the optional status, sort, and paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -484,7 +484,7 @@ export interface MyAnimeListUserApi {
     /**
      * {@link MyAnimeListUserApi.mangaList} gets a user's manga list through `MalUserOperation.mangaList`.
      *
-     * It is the public facade for `GET /users/{user_name}/mangalist`; `username` accepts a user name or `@me`. A public list needs only `MalCredentials.clientId` (or an access token) — MAL rejects unauthenticated requests — while `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserMangaListParams} to filter by status, sort, and page with `limit`/`offset`.
+     * It is the public facade for `GET /users/{user_name}/mangalist`; `username` accepts a user name or `@me`. A public list needs only `MalCredentials.clientId` (or an access token), since MAL rejects unauthenticated requests. `@me` and private lists need an access token (a client ID alone cannot resolve `@me`). The `@me` check is case-insensitive and ignores surrounding whitespace. Use {@link MalUserMangaListParams} to filter by status, sort, and page with `limit`/`offset`.
      *
      * @param params - The manga-list read inputs; a {@link MalUserMangaListParams} carrying the username plus the optional status, sort, and paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -587,9 +587,19 @@ export interface MyAnimeListForumApi {
 }
 
 /**
- * {@link MyAnimeListApi} is the typed MyAnimeList REST surface exposed by `aniLink.mal`.
+ * {@link MyAnimeListApi} is the typed MyAnimeList REST API exposed by `aniLink.mal`.
  *
- * It composes {@link MyAnimeListAnimeApi}, {@link MyAnimeListMangaApi}, and {@link MyAnimeListUserApi} from `MalAnimeOperation`, `MalMangaOperation`, and `MalUserOperation` via `buildMyAnimeListApi`. Each group's member set is checked bidirectionally against the operation registry in `registry.ts` at compile time, so this file and the registry cannot drift without failing `tsc`. Read methods accept {@link MalRequestOptions} and return {@link MalAnime}, {@link MalManga}, or {@link MalUser}; the anime group additionally exposes the discovery reads `seasonal`, `ranking`, and `suggestions` for the seasonal, ranking, and suggestion endpoints, and the anime and manga groups expose `updateMyListStatus` and `deleteFromList` for the authenticated list-status write/delete endpoints. OAuth helpers `buildMalAuthorizationUrl`, `getMalAccessToken`, and `refreshMalAccessToken` supply the token for `MalCredentials`.
+ * `buildMyAnimeListApi` composes {@link MyAnimeListAnimeApi},
+ * {@link MyAnimeListMangaApi}, and {@link MyAnimeListUserApi} from
+ * `MalAnimeOperation`, `MalMangaOperation`, and `MalUserOperation`. The
+ * compiler checks each group's members against the operation registry in
+ * `registry.ts`, so adding an operation requires updating both. Read methods
+ * accept {@link MalRequestOptions} and return {@link MalAnime},
+ * {@link MalManga}, or {@link MalUser}. The anime group also provides
+ * `seasonal`, `ranking`, and `suggestions`. The anime and manga groups provide
+ * `updateMyListStatus` and `deleteFromList` for authenticated list changes.
+ * `buildMalAuthorizationUrl`, `getMalAccessToken`, and
+ * `refreshMalAccessToken` provide the OAuth token used by `MalCredentials`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2
  */

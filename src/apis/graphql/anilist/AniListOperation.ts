@@ -53,7 +53,7 @@ export type AniListVariableRequirement =
  *
  * Every field is optional: an operation declares only the variation points it
  * needs, and `execute` applies them in a fixed order so validation behaviour
- * is uniform across the whole API surface.
+ * stays consistent across all AniList operations.
  */
 export interface AniListExecuteOptions {
     /**
@@ -139,8 +139,8 @@ export abstract class AniListOperation extends BaseOperation {
      * Runs the shared validate-then-dispatch pipeline for an operation.
      *
      * Operations declare their contract as a {@link AniListExecuteOptions}
-     * object — variable-presence requirements, an optional type map, and the
-     * auth requirement — and this method applies them in a fixed order before
+     * object: variable-presence requirements, an optional type map, and the
+     * auth requirement. This method applies them in a fixed order before
      * delegating to {@link AniListOperation.request}.
      *
      * @param query - The GraphQL document to execute.

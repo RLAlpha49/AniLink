@@ -4,12 +4,11 @@ import type { SelectionAlways } from "./fieldsSelection";
 /**
  * Field-selection composition for AniList operation documents.
  *
- * The maximal document an operation sends without `fields` is the single
- * source of truth: its root field's selection is parsed into a tree, the
- * requested paths are pruned out of that tree, and the pruned tree is
- * re-rendered in place of the original selection. Everything outside the
- * root field's selection — the operation header, variable declarations, and
- * the root field's argument list — is preserved verbatim, except variable
+ * The maximal document an operation sends without `fields` provides the
+ * starting selection. Its root field's selection is parsed into a tree, the
+ * requested paths are pruned from that tree, and the result replaces the
+ * original selection. The composer preserves the operation header, variable
+ * declarations, and root field's argument list, except for variable
  * declarations the pruned document no longer references (the GraphQL spec's
  * All Variables Used rule makes servers reject those).
  *
@@ -149,8 +148,8 @@ function parseSelectionUncached(body: string): SelectionNode[] {
 /**
  * Reject inline fragments that select no fields.
  *
- * A childless fragment would re-render as an empty selection set — invalid
- * GraphQL — so a malformed maximal document fails at parse time, with the
+ * A childless fragment would re-render as an empty selection set, which is
+ * invalid GraphQL, so a malformed maximal document fails at parse time, with the
  * fragment named, instead of producing a document the server rejects with a
  * less actionable message. This also keeps the invariant the prune step
  * relies on: a childless node in a parsed tree is always a scalar field.
@@ -216,7 +215,7 @@ function renderSelection(nodes: SelectionNode[], indent: string): string {
  * @param prefix - The dot-path prefix of `nodes` inside the caller's request,
  *   used to report unknown fields with their full path.
  * @returns The pruned selection tree, in maximal-document order. Whole-head
- *   selections share nodes with the parse cache — treat the returned tree as
+ *   selections share nodes with the parse cache, so treat the returned tree as
  *   frozen; never mutate it in place.
  * @throws An {@link AniLinkValidationError} listing every unknown path.
  */
@@ -347,7 +346,7 @@ function isVariableUsed(usageScope: string, name: string): boolean {
  * reject documents that declare variables their selections never use, and
  * pruning fields orphans their variables (dropping `description` orphans
  * `$asHtml`). The declaration list is rebuilt keeping only variables that
- * still appear elsewhere in the composed document — in the root field's
+ * still appear elsewhere in the composed document, in the root field's
  * argument list or in the pruned selection.
  *
  * @param header - The operation header, up to and including the opening `{`
@@ -368,9 +367,9 @@ function pruneVariableDeclarations(header: string, document: string): string {
     const openParen = header.indexOf("(");
     if (openParen === -1 || opBrace === -1 || openParen > opBrace) return header;
 
-    // The declaration list ends at its own matching `)` — a depth scan, not
-    // `lastIndexOf(")")`, which would find the root field's argument list
-    // further down the header.
+    // The declaration list ends at its own matching `)`, found by a depth
+    // scan, not `lastIndexOf(")")`, which would find the root field's argument
+    // list further down the header.
     let parenDepth = 0;
     let closeParen = -1;
     for (let i = openParen; i < header.length; i++) {
@@ -390,7 +389,7 @@ function pruneVariableDeclarations(header: string, document: string): string {
     // Usage scope: the whole composed document minus the declaration list
     // itself, so a variable referenced only in the root field's argument
     // list (which lives in the header) still counts as used. The span is
-    // excised positionally — the declaration list's own indices — rather than
+    // excised positionally, using the declaration list's own indices, rather than
     // by first-occurrence text search, so identical text elsewhere can never
     // redirect the excision.
     const usageScope = document.slice(0, openParen) + document.slice(closeParen + 1);
@@ -419,10 +418,9 @@ function pruneVariableDeclarations(header: string, document: string): string {
 /**
  * Compose a partial GraphQL document from a maximal one.
  *
- * The maximal document stays the single source of truth: `fields` is
- * `undefined` returns the maximal document byte-identical, so the default
- * surface — which the api-compare gate validates against the live schema —
- * never changes. When `fields` is given, the root field's selection is pruned
+ * When `fields` is `undefined`, this returns the maximal document byte for
+ * byte. The api-compare gate validates that document against the live schema.
+ * When `fields` is given, the root field's selection is pruned
  * to the requested paths (plus the always-selected keys): the operation
  * header and the root field's argument list are preserved verbatim, variable
  * declarations the pruned document no longer references are dropped, and
@@ -447,7 +445,7 @@ export function composeDocument(
     if (fields === undefined) return maximalDocument;
     // `null` is not "no selection": a JS caller passing `fields: null` almost
     // certainly lost a value, and silently answering with the maximal
-    // document — the heaviest possible request — would punish them with
+    // document, the heaviest possible request, would punish them with
     // over-fetching and rate-limit cost. Reject it loudly instead.
     if (fields === null) {
         throw new AniLinkValidationError([

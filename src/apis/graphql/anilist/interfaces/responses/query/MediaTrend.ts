@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type Media } from "../../Media";
 /**
- * `MediaTrendResponse` — a daily popularity statistic for a media.
+ * `MediaTrendResponse` is a daily popularity statistic for a media.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediatrend

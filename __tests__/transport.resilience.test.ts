@@ -375,7 +375,7 @@ describe("Shared per-client state owner threaded through the provider wirings", 
     test("a breaker tripped through one AniList operation fast-fails a different operation", async () => {
         // The wiring-level regression for the shared state owner: the client
         // is built exactly as production builds it, so the breaker state must
-        // span operations — a streak recorded by `query.media` gates
+        // span operations: a streak recorded by `query.media` gates
         // `query.user` without a second HTTP attempt.
         const client = buildAniListWiring(undefined, {
             retry: false,
@@ -474,7 +474,7 @@ describe("Shared per-client state owner threaded through the provider wirings", 
             .mockResolvedValueOnce({ data: { data: { User: { id: 1 } } } });
 
         // First call: dispatches, records the 60s deadline, and returns its
-        // data immediately — the response is never held for the window.
+        // data immediately. The response is never held for the window.
         const media = client.query.media({ id: 1 });
         await expect(media).resolves.toEqual({ id: 1 });
         expect(mocks.request).toHaveBeenCalledTimes(1);
@@ -510,7 +510,7 @@ describe("Circuit accounting for partial-success envelopes", () => {
             allowPartialData: true,
         };
 
-        // Two partial envelopes whose error entries carry status 500 —
+        // Two partial envelopes whose error entries carry status 500,
         // the same upstream fault the strict mode would count.
         mocks.request.mockResolvedValueOnce({
             data: {
@@ -561,7 +561,7 @@ describe("Circuit accounting for partial-success envelopes", () => {
         // surfacing as status-less partial envelopes would otherwise erase
         // the streak other error classes accumulated), but it carries no
         // availability-class status either, so it must not advance the
-        // streak — matching the strict mode's throw of the same error.
+        // streak, matching the strict mode's throw of the same error.
         pendingOptions = {
             retry: false,
             circuitBreaker: { threshold: 2, cooldownMs: 60_000 },
@@ -633,7 +633,7 @@ describe("onResponse pacedMs stamping", () => {
 
     test("a paced request carries pacedMs matching the pacing wait on onResponse", async () => {
         // R-030: without onPace pre-wired, a paced request must still be
-        // identifiable in onResponse-based latency dashboards — the wait
+        // identifiable in onResponse-based latency dashboards. The wait
         // length is stamped as pacedMs on the emission.
         const client = buildAniListWiring(undefined, { paceWithRateLimit: true });
 
@@ -716,7 +716,7 @@ describe("onResponse pacedMs stamping", () => {
         // logical request: attempt 1 waits the recorded deadline, then
         // fails; attempt 2 finds the deadline elapsed (it was consumed by
         // attempt 1's wait) and dispatches immediately. The successful
-        // retry's onResponse must still carry attempt 1's wait — without
+        // retry's onResponse must still carry attempt 1's wait. Without
         // the cross-attempt accumulation, the paced request would look
         // unpaced in the final emission.
         const client = buildAniListWiring(undefined, {

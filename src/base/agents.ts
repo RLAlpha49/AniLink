@@ -9,9 +9,9 @@
  * so repeated requests reuse warm sockets instead of leaking a fresh agent
  * pair per request.
  *
- * {@link destroyCachedAgents} tears all of it down — cached pairs, parked
- * pairs, and the shared default pair — and the default pair plus the
- * `axiosClient` binding to it are rebuilt lazily on the next request.
+ * {@link destroyCachedAgents} destroys the cached, parked, and shared default
+ * pairs. The next request lazily rebuilds the default pair and rebinds it to
+ * `axiosClient`.
  */
 import http from "node:http";
 import https from "node:https";
@@ -102,10 +102,10 @@ const MAX_CACHED_AGENT_PAIRS = 8;
  * many distinct `maxSockets`/`maxFreeSockets` combinations would park one
  * pair per eviction (each holding two keep-alive agents and their idle
  * sockets) with nothing ever releasing them until an explicit
- * {@link destroyCachedAgents} call — unbounded socket/handle growth in a
- * long-lived process. When parking a newly evicted pair would exceed this
- * cap, the OLDEST parked pair is destroyed first, which is safe because it
- * was evicted long enough ago to have drained any in-flight requests.
+ * {@link destroyCachedAgents} call. Otherwise, sockets and handles can grow
+ * without limit in a long-lived process. If parking a newly evicted pair
+ * would exceed this cap, the oldest parked pair is destroyed first. That
+ * pair has had enough time to drain any in-flight requests.
  */
 const MAX_PARKED_EVICTED_PAIRS = 16;
 
@@ -125,7 +125,7 @@ const cachedAgentPairs = new Map<string, CachedAgentPair>();
  * evicted pair beyond the cap destroys the oldest parked pair first, so
  * the list cannot grow without bound even under unbounded
  * `maxSockets`/`maxFreeSockets` churn. A freshly evicted pair is never
- * destroyed at eviction time — only pairs evicted long enough ago to have
+ * destroyed at eviction time. Only pairs evicted long enough ago to have
  * drained their in-flight requests are eligible for destruction.
  */
 const parkedEvictedPairs: CachedAgentPair[] = [];
@@ -173,7 +173,7 @@ const evictLruAgentPair = (): void => {
  * custom agent pair, every pair evicted while requests may still have been
  * in flight, and the shared default `http`/`https` pair bound to
  * `axiosClient`. Clears the cache so long-lived processes can release
- * sockets on demand — including the default path's idle sockets, which
+ * sockets on demand, including the default path's idle sockets, which
  * would otherwise linger until the upstream keep-alive timeout closes
  * them. Intended for tests and explicit teardown.
  *
@@ -182,7 +182,7 @@ const evictLruAgentPair = (): void => {
  * {@link ensureDefaultAgents}), so the default path keeps working after a
  * teardown without allocating anything at teardown time.
  *
- * **Must not be called while requests are in-flight — whether they use
+ * **Must not be called while requests are in flight, whether they use
  * default or customized agents.** The agents are shared across requests
  * with identical `maxSockets`/`maxFreeSockets` bounds, so destroying them
  * closes the underlying sockets and can fail concurrent requests that are
@@ -213,10 +213,10 @@ export const destroyCachedAgents = (): void => {
 /**
  * Builds (or reuses) the keep-alive agents for one request's socket bounds.
  *
- * When the caller leaves `maxSockets`/`maxFreeSockets` unset the shared
- * module-level agents are reused, so the default path allocates nothing and
- * every instance keeps competing for the same warm pool — rebuilt first if
- * {@link destroyCachedAgents} tore the previous pair down. Supplying either
+ * When the caller leaves `maxSockets`/`maxFreeSockets` unset, the shared
+ * module-level agents are reused and the default path allocates nothing.
+ * {@link destroyCachedAgents} tears the pair down; the next request rebuilds
+ * it. Supplying either
  * bound constructs dedicated agents, but identical configurations now share
  * one cached agent pair (bounded by `MAX_CACHED_AGENT_PAIRS`) so
  * repeated requests with the same socket settings reuse warm sockets instead

@@ -1,8 +1,8 @@
 /**
- * Barrel for the MyAnimeList type surface, split by resource: `common`
- * holds the nodes shared across resources, and `anime`, `manga`, and `user`
- * hold their resource types. The public re-export lives in `src/mal.ts`;
- * consumers inside `src/apis/rest/mal` import from this module.
+ * Exports MyAnimeList types grouped by resource. `common` contains shared
+ * types; `anime`, `manga`, and `user` contain resource-specific types. The
+ * public re-export is in `src/mal.ts`. Code in `src/apis/rest/mal` imports
+ * from this module.
  */
 export * from "./anime";
 export * from "./common";

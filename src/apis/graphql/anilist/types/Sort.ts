@@ -411,7 +411,7 @@ export const ReviewSortMappings: readonly ReviewSort[] = [
 
 /**
  * {@link SiteTrendSort} is the AniList SiteTrendSort enum: the sort orders the per-category
- * trend connections of the site-statistics query accept (its `usersSort`/`animeSort`/…
+ * trend connections of the site-statistics query accept (its `usersSort`/`animeSort`/...
  * variables).
  * @see https://docs.anilist.co/reference/enum/sitetrendsort
  */

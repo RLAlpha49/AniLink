@@ -3,8 +3,8 @@
  * it to `.env` as `MAL_TOKEN`, the key the live integration suite gates on.
  *
  * Two modes:
- *   default          — full PKCE authorization-code flow in the browser
- *   --refresh        — exchange a previously stored `MAL_REFRESH_TOKEN`
+ *   default:    full PKCE authorization-code flow in the browser
+ *   --refresh:  exchange a previously stored `MAL_REFRESH_TOKEN`
  *
  * The flow reuses the shipped auth helpers (`buildMalAuthorizationUrl`,
  * `getMalAccessToken`, `refreshMalAccessToken`) so the CLI exercises the same
@@ -13,7 +13,7 @@
  * Web-type MAL clients (registered at myanimelist.net/apiconfig) issue a
  * Client Secret and reject secretless token exchanges with 401 invalid_client;
  * pass it via --client-secret, MAL_CLIENT_SECRET, or a stored .env entry.
- * Mobile-type clients need no secret — PKCE authenticates the client id alone.
+ * Mobile-type clients need no secret. PKCE authenticates the client id alone.
  *
  * Usage:
  *   npx tsx scripts/tokens/mal-token.ts [--client-id <id>] [--client-secret <secret>]
@@ -56,7 +56,7 @@ const CREATE_URL = "https://myanimelist.net/apiconfig";
  * Generates the PKCE pair MAL expects: a random verifier and its challenge.
  *
  * MAL's authorization server supports only the plain PKCE method, so the
- * challenge is the verifier itself — no SHA-256 step. An S256 challenge is
+ * challenge is the verifier itself, so there is no SHA-256 step. An S256 challenge is
  * accepted at the authorize step but fails the token exchange with 400.
  */
 function createPkcePair(): { verifier: string; challenge: string } {

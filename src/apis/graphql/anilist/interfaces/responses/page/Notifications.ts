@@ -9,7 +9,7 @@
 import { type NotificationResponse } from "../query/Notification";
 import { type PageInfo } from "./PageInfo";
 /**
- * `NotificationsPageResponse` — a page of notifications with pagination metadata.
+ * `NotificationsPageResponse` is a page of notifications with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion

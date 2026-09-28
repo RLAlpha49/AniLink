@@ -13,7 +13,7 @@ import { loadOperations, type OperationSection } from "../docs-src/lib/load-ops"
  * Shared output directory and manifest written once for the whole suite.
  *
  * {@link writeReferenceManifest} calls {@link generateReferenceManifest},
- * which walks the entire `src/` tree and regex-parses every `.ts` file —
+ * which walks the entire `src/` tree and regex-parses every `.ts` file,
  * expensive enough (~4 s) that regenerating per test dominated the suite.
  * Generating once at module scope and reusing the on-disk output cuts
  * the suite from ~16 s to ~4 s without changing what each test validates.

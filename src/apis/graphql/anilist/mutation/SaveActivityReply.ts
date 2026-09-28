@@ -74,13 +74,13 @@ export class SaveActivityReplyMutation extends AniListOperation {
      *
      * Updates the activity reply named by `id` and returns the saved reply. The upstream
      * mutation also creates a reply from `activityId` when `id` is omitted, but
-     * {@link SaveActivityReplyVariables} requires `id`, so the typed surface is update-only.
+     * {@link SaveActivityReplyVariables} requires `id`, so this method only updates existing activity replies.
      *
      * @param variables - Values from {@link SaveActivityReplyVariables} for the mutation.
      * @returns The {@link ActivityReply} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `text` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/activityreply
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<ActivityReply, K>`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<ActivityReply, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveActivityReplyMutation("your-token").saveActivityReply({ id: 1, text: "Hello, world!" });

@@ -9,7 +9,7 @@
 import { type BasicUser } from "../../Basic";
 import { type ThreadResponse } from "./Thread";
 /**
- * `ThreadCommentResponse` — a forum-thread comment with its thread, author, and nested replies.
+ * `ThreadCommentResponse` is a forum-thread comment with its thread, author, and nested replies.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/threadcomment

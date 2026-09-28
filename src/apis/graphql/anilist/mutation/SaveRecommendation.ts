@@ -79,7 +79,7 @@ export class SaveRecommendationMutation extends AniListOperation {
      * @returns The {@link RecommendationResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `mediaId`, `mediaRecommendationId`, or `rating` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/recommendation
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<RecommendationResponse, K>`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<RecommendationResponse, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveRecommendationMutation("your-token").saveRecommendation({ mediaId: 1, mediaRecommendationId: 2, rating: "RATE_UP" });

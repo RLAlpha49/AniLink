@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `BasicUser` — the minimal user shape embedded in likes and replies.
+ * `BasicUser` is the minimal user shape embedded in likes and replies.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/user
@@ -36,7 +36,7 @@ export interface BasicUser {
 }
 
 /**
- * `BasicThread` — the minimal thread shape embedded in notifications.
+ * `BasicThread` is the minimal thread shape embedded in notifications.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/thread
@@ -64,7 +64,7 @@ export interface BasicThread {
 }
 
 /**
- * `BasicComment` — the minimal thread-comment shape embedded in notifications.
+ * `BasicComment` is the minimal thread-comment shape embedded in notifications.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/threadcomment

@@ -2,20 +2,20 @@
  * Instance construction and namespace assembly for the AniList facade.
  *
  * The object graph is assembled from the declarative operation registry in
- * `registry.ts` — one entry per operation, keyed by its facade path. Adding
+ * `registry.ts`, one entry per operation, keyed by its facade path. Adding
  * an operation therefore touches the operation class and its registry entry,
  * then regenerates the group types under `facade/` with
  * `npm run facade:generate`. The generated facade group modules carry
- * compile-time parity asserts so the registry and the typed surface cannot
- * drift without failing `tsc`.
+ * compile-time parity checks. `tsc` reports an error if the registry and
+ * group types differ.
  *
  * Operations are constructed lazily: each facade property is a getter that
  * instantiates and binds its operation class on first access, then caches the
  * bound method so the same instance is reused on every subsequent call. All
  * operations of one client share a single per-client `stateOwner` (circuit
  * breaker / retry budget / pacing state), so failure streaks, retry budgets,
- * and rate-limit deadlines accumulate across the whole client — a deadline
- * recorded by `query.media` gates `query.user` too — while staying scoped
+ * and rate-limit deadlines accumulate across the whole client: a deadline
+ * recorded by `query.media` gates `query.user` too, while staying scoped
  * per upstream host inside the state maps. A consumer that only touches
  * `query.media` never pays the construction cost for the other registered
  * operations. Mis-wired entries (a registry key whose operation class lacks
@@ -53,7 +53,7 @@ import { buildAniListTokenRefresher, buildRefreshedAuth } from "./tokenRefresh";
  * time so a mis-wired registry entry fails fast with the exact method the
  * registry declared, rather than deferring the error to first property
  * access. The shared per-client `stateOwner` and auth/options are not
- * allocated here — only the prototype is inspected.
+ * allocated here; only the prototype is inspected.
  *
  * @param category - The registry group to validate.
  */
@@ -71,9 +71,9 @@ function validateCategoryMethods(category: OperationCategory): void {
 }
 
 /**
- * The subset of a registered operation class instance the wiring seam needs:
- * enough surface to swap refreshed auth material in place through the
- * `BaseOperation` contract. Every registered operation class (and
+ * The subset of a registered operation class instance needed to replace
+ * refreshed auth material in place through the `BaseOperation` contract.
+ * Every registered operation class (and
  * `CustomRequest`) extends `BaseOperation`, so the tracked-instance list is
  * typed without an index signature and the auth swap stays compile-checked.
  */
@@ -87,7 +87,7 @@ type OperationInstance = BaseOperation;
  * shared auth material, transport options, and shared per-client
  * `stateOwner`, binds the declared method, and caches the bound function in
  * a closure variable; every subsequent access returns the same bound
- * function — and therefore the same instance. The resilience state itself
+ * function, and therefore the same instance. The resilience state itself
  * (circuit breaker / retry budget / pacing deadlines) lives in the shared
  * per-client owner, so it spans every operation of the client, not just this
  * one.
@@ -129,7 +129,7 @@ function buildLazyGroup(
                 if (bound === undefined) {
                     // Method existence is guaranteed by `validateCategoryMethods`,
                     // which ran over the class prototype before this group was
-                    // built — bind directly without a second check.
+                    // built, so bind directly without a second check.
                     const instance = new entry.operationClass(
                         getAuth(),
                         options,
@@ -160,8 +160,8 @@ function buildLazyGroup(
  *
  * Operations are constructed lazily on first property access (see
  * `buildLazyGroup`); only the registry is validated eagerly. The
- * `custom` escape hatch is likewise constructed on first access. Every
- * operation — including `custom` — is constructed with one shared per-client
+ * A custom request is also constructed on first access. Every
+ * operation, including `custom`, is constructed with one shared per-client
  * `stateOwner`, so circuit-breaker streaks, retry budgets, and rate-limit
  * pacing deadlines span every operation of the returned client (still keyed
  * per upstream host inside the state maps). When the caller supplies a
@@ -173,13 +173,13 @@ function buildLazyGroup(
  * When the credential slot carries refresh fields, every facade method is
  * wrapped with the automatic token-refresh lifecycle (see
  * automatic refresh lifecycle); without them the facade keeps the direct bound
- * methods — zero wrapper overhead, zero behavior change.
+ * methods, with zero wrapper overhead and zero behavior change.
  *
  * @param authToken - The authentication material shared by every operation instance. A plain string is treated as a bearer token; a structured {@link RequestAuthInput} carries explicit headers for schemes such as Basic auth or a provider API key.
  * @param options - Timeout, cancellation, and debugging settings for API requests.
  * @param stateOwner - Stable per-client object keying the shared transport state (breaker, budget, pacing); when omitted, a fresh one is allocated for this client.
  * @param credentials - The raw AniList credential slot, read for the optional automatic token-refresh lifecycle fields; transport settings on the slot are ignored here because they already flow through `options`.
- * @returns The composed AniList API surface.
+ * @returns The composed AniList API.
  */
 export function buildAniListWiring(
     authToken?: RequestAuthInput,
@@ -210,7 +210,7 @@ export function buildAniListWiring(
 
     // The token-refresh lifecycle is opt-in: it activates only when the
     // refresh token, client ID, and client secret are all configured
-    // (non-blank — a whitespace-only value is treated as missing, matching
+    // (non-blank; a whitespace-only value is treated as missing, matching
     // the empty-string case and MAL's wiring). AniList's refresh grant
     // requires the client secret, unlike MAL where it is optional: without
     // the full set every 401 would trigger a doomed refresh grant instead of
@@ -320,8 +320,8 @@ export function buildAniListWiring(
     // names them), so the wrappers below narrow the facade through the
     // *public* facade contract instead of casting to the watcher's fetch
     // type: the call sites are compile-checked against `AniListApi`'s
-    // declared page operations, so a signature drift on either side fails
-    // the build instead of surfacing mid-poll.
+    // declared page operations, so a signature mismatch on either side fails
+    // the build before polling starts.
     const page = pageFacade as unknown as Pick<
         AniListApi["query"]["page"],
         "notifications" | "activities"

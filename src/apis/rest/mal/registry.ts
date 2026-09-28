@@ -3,7 +3,7 @@
  *
  * Every operation is one entry in {@link MAL_OPERATION_REGISTRY}: the facade
  * key it is exposed under, the operation class that implements it, and the
- * method to bind (always the facade key — {@link op} enforces at compile
+ * method to bind (always the facade key; {@link op} enforces at compile
  * time that the key names a real method on the class). `buildMyAnimeListApi`
  * constructs and binds every entry through one loop, so adding an operation
  * touches exactly three sites: the operation class, its entry in this
@@ -182,8 +182,8 @@ type MalRegistryGroupKeys<TGroup extends MalOperationGroup> =
  * every group's registry key union and facade `keyof` are the same set: a
  * member added to a facade interface without a registry entry (or vice
  * versa) produces a type error. The registry is the source of truth; this
- * asserts the typed surface keeps pace — the same parity mechanism AniList's
- * generated facade groups carry, extended to MAL.
+ * checks that the typed facade groups match the registry, as AniList's
+ * generated facade groups do.
  */
 const _assertAnimeParity: MalRegistryGroupKeys<"anime"> =
     null as unknown as keyof MyAnimeListAnimeApi;

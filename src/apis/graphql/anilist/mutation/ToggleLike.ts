@@ -60,7 +60,7 @@ export class ToggleLikeMutation extends AniListOperation {
      * @returns The {@link BasicUser} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `type` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/user
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<BasicUser, K>`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<BasicUser, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new ToggleLikeMutation("your-token").toggleLike({ id: 1, type: "ACTIVITY" });

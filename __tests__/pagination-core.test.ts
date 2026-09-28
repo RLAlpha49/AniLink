@@ -196,7 +196,7 @@ describe("fetchNumericWithLookAhead", () => {
         expect(result.responses).toEqual([1, 2]);
         expect(result.truncated).toBe(false);
         // The window ramps: page 1 launches alone, and consuming it (it
-        // confirmed more data) grows the window to 3 — pages 2-4 launch
+        // confirmed more data) grows the window to 3, so pages 2-4 launch
         // before page 2 reports terminal, and nothing past the window is
         // ever requested.
         expect(requested.slice(0, 3)).toEqual([1, 2, 3]);
@@ -244,7 +244,7 @@ describe("fetchNumericWithLookAhead", () => {
         // The window ramps, so page 2 (whose fetch fires the abort) only
         // launches after page 1 is consumed: the abort lands after page 2
         // settles but before page 3 is consumed, and the collected prefix
-        // returns as a partial result — not a rejection.
+        // returns as a partial result, not a rejection.
         expect(result.count).toBe(2);
         expect(result.responses).toEqual([1, 2]);
         expect(result.truncated).toBe(false);

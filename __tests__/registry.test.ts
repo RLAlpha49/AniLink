@@ -12,7 +12,7 @@ import type { AniListApi } from "../src/apis/graphql/anilist/facade";
  *
  * The registry is the single source of truth for operation wiring; these
  * tests pin its structural contract so drift between the registry, the
- * facade types, and the bound runtime surface fails loudly here.
+ * facade types, and the bound runtime API fails loudly here.
  */
 
 vi.mock("axios", async () => {

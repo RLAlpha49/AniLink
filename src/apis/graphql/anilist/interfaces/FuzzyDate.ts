@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `FuzzyDate` — a fuzzy date with optional year, month, and day components.
+ * `FuzzyDate` is a fuzzy date with optional year, month, and day components.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/fuzzydate

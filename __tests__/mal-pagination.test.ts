@@ -16,8 +16,8 @@ interface TestPage extends MalPage<{ id: number }> {
  * Build a `fetchPage` stub serving `total` items in `perPage`-sized pages,
  * recording every `(page, perPage, signal)` call. The stub mirrors MAL's
  * real contract: every page that is followed by more data carries a
- * `paging.next` URL, and the final page carries no `paging` node at all —
- * even when it comes back full — so the paginator's `paging`-aware
+ * `paging.next` URL, and the final page carries no `paging` node at all,
+ * even when it comes back full, so the paginator's `paging`-aware
  * terminal detection ends the traversal without a confirmation request.
  */
 function stubPages(total: number, perPage: number) {
@@ -112,7 +112,7 @@ describe("malPaginate", () => {
         // 500 items at perPage 100: pages 1-5 all come back full, so the
         // short-page heuristic alone cannot know the list ended. MAL's own
         // contract attaches a `paging` node with no `next` URL to the final
-        // page, and the paginator treats that as authoritative — the
+        // page, and the paginator treats that as authoritative, so the
         // traversal stops at page 5 instead of spending a sixth request on a
         // guaranteed-empty page.
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
@@ -135,7 +135,7 @@ describe("malPaginate", () => {
     test("falls back to the short-page heuristic when the paging node is absent", async () => {
         // A payload with no `paging` node at all (a malformed or stripped
         // response) must still end the traversal at its short page instead
-        // of looping forever — the heuristic remains the fallback path.
+        // of looping forever. The heuristic remains the fallback path.
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
             const data =
                 page < 3
@@ -180,7 +180,7 @@ describe("malPaginate", () => {
 
     test("ends the traversal on malformed data even when a paging.next node is present", async () => {
         // A broken payload (missing `data`) must end the traversal in every
-        // branch — a `paging.next` node must not keep the traversal
+        // branch. A `paging.next` node must not keep the traversal
         // launching pages up to the `maxPages` guard. The streaming helper
         // is the one that could loop: its terminal predicate must treat
         // malformed data as terminal.

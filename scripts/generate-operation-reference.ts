@@ -65,7 +65,7 @@ export interface ReferenceOperation {
     /** Public operation name. */
     name: string;
     /**
-     * Category within the provider surface: the AniList facade group
+     * Category within the provider's API: the AniList facade group
      * (query, page, mutation, custom) or the MAL facade namespace (anime,
      * manga, user, forum). Each category becomes one catalog page and one
      * manifest shard, exactly like the AniList category pages.
@@ -298,7 +298,7 @@ interface RawMember {
  *
  * The MAL params interfaces extend a shared payload type
  * (`MalAnimeListStatusUpdateParams extends MalAnimeListStatusUpdate` adds
- * only the `id`), so the reference must read the inherited members too —
+ * only the `id`), so the reference must read the inherited members too,
  * the same way the AniList flow reads every member of a variables
  * interface. AniList interfaces never extend, so this changes nothing for
  * them.
@@ -472,7 +472,7 @@ interface RawOp {
  * Discover the AniList operations from the shared generator metadata.
  *
  * Signature facts (name, variables type, response type) come from
- * {@link collectOperationSignatures} — the same source the facade group
+ * {@link collectOperationSignatures}, the same source the facade group
  * generator renders from. Curated descriptions and examples come from the
  * same typed prose map as facade generation. The `custom` entry is not a
  * registry operation and is still read from `custom-group.ts`.
@@ -538,7 +538,7 @@ function discoverOperationsInFile(filePath: string): RawOp[] {
  * Parameter names, in order, of the real `CustomRequest.customPage` method.
  *
  * `anilistSignature` hardcodes the normalized manifest signature (generics
- * and defaults are rewritten for the docs surface), so this list pins the
+ * and defaults are rewritten for the docs), so this list pins the
  * part that must stay identical to the source.
  */
 const CUSTOM_PAGE_SOURCE_PARAMS = ["query", "itemsKey", "variables", "options"];
@@ -548,7 +548,7 @@ const CUSTOM_PAGE_SOURCE_PARAMS = ["query", "itemsKey", "variables", "options"];
  * `CustomRequest.customPage` method.
  *
  * Without this, the generator and its committed manifests could agree with
- * each other while both drift from the actual public method — a renamed or
+ * each other while both drift from the actual public method. A renamed or
  * reordered parameter would silently ship stale docs, the exact failure
  * mode `collectOperationSignatures` exists to prevent. Parsing the method
  * here turns that drift into a loud generation failure.
@@ -795,7 +795,7 @@ function anilistAuth(op: RawOp): string {
  * generated AniList facade groups: every public MAL operation is one
  * `MyAnimeList*Api` property, and the reference reads its signature, JSDoc
  * prose, `@example`, `@see` link, and `@throws` table straight from that
- * property — no per-operation tables live here.
+ * property. No per-operation tables live here.
  */
 const MAL_FACADE_INTERFACES: Record<
     string,
@@ -813,7 +813,7 @@ const MAL_FACADE_INTERFACES: Record<
  * Every `MyAnimeList*Api` property signature is one operation; the JSDoc
  * above it carries the purpose, example, upstream link, and error table, and
  * the `params`/`options` types are resolved to their interfaces for the
- * nested request fields — the same source-driven flow the AniList half of
+ * nested request fields, the same source-driven flow the AniList half of
  * this generator uses.
  */
 function discoverMalOperations(): ReferenceOperation[] {
@@ -899,7 +899,7 @@ function buildMalOperation(
 
     // The request parameters come from the signature; each one's description
     // is its `@param` tag, and the params object resolves to its interface
-    // for the nested fields — the REST analogue of the AniList variables
+    // for the nested fields, the REST analogue of the AniList variables
     // interface read. A parameter without a `@param` tag fails the build
     // loudly instead of being published with an empty description.
     const request: ParamField[] = [];
@@ -947,8 +947,8 @@ function buildMalOperation(
         domain,
         namespace: `mal.${namespace}.${methodName}`,
         name: `${namespace}.${methodName}`,
-        // The facade namespace is the MAL category — the analogue of the
-        // AniList facade groups — so each namespace gets its own catalog
+        // The facade namespace is the MAL category, the analogue of the
+        // AniList facade groups, so each namespace gets its own catalog
         // page and manifest shard, like the AniList category pages.
         category: namespace,
         signature,
@@ -974,7 +974,7 @@ function buildMalOperation(
  *
  * TypeDoc qualifies interface pages with their defining module, so the page
  * for `MyAnimeListAnimeApi` lives at
- * `interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html` — not
+ * `interfaces/apis_rest_mal_facade.MyAnimeListAnimeApi.html`, not
  * `interfaces/MyAnimeListAnimeApi.html`.
  */
 function malTypedocInterface(namespace: string): string {
@@ -1005,7 +1005,7 @@ function jsdocParamDescription(jsdoc: string, name: string): string {
  * The facade `@throws` entries state the token contract: an
  * `AniLinkAuthError` for a missing token marks the whole operation as
  * authenticated, one conditioned on `@me` marks the `@me` path as
- * authenticated, and no auth error at all marks a public read — the REST
+ * authenticated, and no auth error at all marks a public read, the REST
  * analogue of the AniList category-based auth rule.
  *
  * @param namespace The facade namespace the operation belongs to.
@@ -1043,8 +1043,8 @@ function malAuth(
  * `fields` is read from the `MalRequestOptions` interface and the transport
  * pair from the shared `RequestOptions` base, so the documented shape
  * tracks the source types. Operations whose facade `@param options` text
- * names only transport settings — the forum reads and the list-status
- * deletes, whose endpoints take no `fields` query parameter — drop
+ * names only transport settings, the forum reads and the list-status
+ * deletes, whose endpoints take no `fields` query parameter, drop
  * `fields`.
  *
  * @param optionsDescription The `@param options` text from the facade JSDoc.
@@ -1155,7 +1155,7 @@ export function generateReferenceManifest(): ReferenceManifest {
  * provider/category shard per section.
  *
  * Delegates to {@link renderManifestFiles} so the file set the generator
- * produces is defined exactly once — the same definition `--check` and the
+ * produces is defined exactly once, the same definition `--check` and the
  * tests compare against.
  *
  * @param outPath - Destination path; parent directories are created.
@@ -1199,7 +1199,7 @@ export function buildReferenceSections(manifest: ReferenceManifest): ReferenceSe
  *
  * `generatedAt` changes on every render, so `--check` must compare only the
  * semantic content or it could never pass against committed manifests. An
- * unreadable or corrupt manifest compares as stale — the rerun the check
+ * unreadable or corrupt manifest compares as stale, so the rerun the check
  * exists to request is also the fix for a damaged file.
  *
  * @param json Minified manifest JSON (complete or section).
@@ -1217,7 +1217,7 @@ function stripGeneratedAt(json: string): string | null {
 
 /**
  * Whether the manifest already on disk matches the freshly rendered one,
- * ignoring `generatedAt` — the single comparison `--check` and the
+ * ignoring `generatedAt`, the single comparison `--check` and the
  * write-skip share so a timestamp-only regeneration never counts as a
  * change in either direction.
  *

@@ -103,10 +103,9 @@ export interface RateLimitInfo {
 /**
  * A failure returned by an upstream HTTP API.
  *
- * This is the transport-level failure for every provider: GraphQL providers
- * surface HTTP failures through it and protocol-level failures through
- * {@link AniLinkGraphQLError}; REST providers surface every non-2xx response
- * through it directly.
+ * GraphQL providers use this class for HTTP failures and
+ * {@link AniLinkGraphQLError} for protocol-level failures. REST providers
+ * use it for every non-2xx response.
  */
 export class AniLinkApiError extends AniLinkError {
     /** HTTP status returned by the upstream API. For GraphQL failures this is the upstream GraphQL error status when available, and the HTTP envelope status (`200`) otherwise. */
@@ -219,8 +218,8 @@ const extractUpstreamStatus = (errors: ReadonlyArray<GraphQLUpstreamError>): num
  * GraphQL failures and lets status-based branching and retry policies treat a
  * GraphQL-level `429`/`5xx` like its HTTP-level counterpart. The `200`
  * default is not an availability-class status: the circuit breaker treats a
- * `200`-defaulted GraphQL error as streak-neutral — it neither advances nor
- * resets the failure streak — because the envelope proves the upstream
+ * `200`-defaulted GraphQL error as streak-neutral. It neither advances nor
+ * resets the failure streak, because the envelope proves the upstream
  * answered while the status-less entries carry no upstream-health signal.
  *
  * @see {@link GraphQLUpstreamError}

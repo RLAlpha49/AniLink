@@ -60,7 +60,7 @@ export class ToggleActivityPinMutation extends AniListOperation {
     /**
      * {@link ToggleActivityPinMutation.toggleActivityPin} sends a mutation request to pin an activity.
      *
-     * Sets or clears the pinned state of the activity named by `id` — only the activity's
+     * Sets or clears the pinned state of the activity named by `id`. Only the activity's
      * owner can pin it. Returns the updated activity.
      *
      * @param variables - Values from {@link ToggleActivityPinVariables} for the mutation.

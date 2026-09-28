@@ -176,7 +176,7 @@ export class SiteStatisticsQuery extends AniListOperation {
      * @returns The {@link SiteStatisticsResponse} returned by the query.
      * @see https://docs.anilist.co/reference/object/sitestatistics
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
-     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * only. Pass `fields` to request only a subset of the response. The document is composed from the
      * corresponding selections and the return type narrows to `DeepPick<SiteStatisticsResponse, K>`. Omit
      * `fields` for the maximal selection and the full response.
      * @example

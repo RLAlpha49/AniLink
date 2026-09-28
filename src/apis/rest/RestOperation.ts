@@ -6,9 +6,9 @@ import { type HttpMethod, type RequestOptions } from "../../base/RequestHandler"
  * The declarative contract a REST operation passes to
  * `RestOperation.execute`.
  *
- * Every field except the path is optional: an operation declares only the
- * variation points it needs, and `execute` applies them in a fixed order so
- * request behaviour is uniform across the whole API surface.
+ * Every field except `path` is optional. Each operation sets only the options
+ * it needs. `execute` applies them in a fixed order so requests follow the
+ * same rules across the API.
  */
 export interface RestExecuteOptions {
     /**
@@ -59,17 +59,17 @@ export interface RestExecuteOptions {
 /**
  * Builds a URL query string from a flat record of primitive values.
  *
- * `undefined` and `null` values are skipped entirely, arrays become repeated
- * keys (the convention MyAnimeList uses for list parameters), and every value
- * is percent-encoded. An empty record produces an empty string. A plain
- * object value throws a `TypeError` instead of silently serializing as
- * `[object Object]` — a nested parameter is a caller bug, and the wrong
- * request it would produce is far harder to debug than the throw.
+ * The function skips `undefined` and `null` values, repeats keys for array
+ * values (the convention MyAnimeList uses for list parameters), and
+ * percent-encodes each value. An empty record produces an empty string. A plain
+ * object value throws a `TypeError` instead of serializing as
+ * `[object Object]`. Flatten nested parameters into primitive keys before
+ * calling this function.
  *
  * @param params - The query parameters, with flat primitive or array values.
  * @returns A query string beginning with `?`, or an empty string.
- * @throws A `TypeError` when a value is a plain object (nested parameters
- * are not supported; flatten them into primitive keys at the call site).
+ * @throws A `TypeError` when a value is a plain object. Flatten nested
+ * parameters into primitive keys before calling this function.
  */
 export const buildQueryString = (params: Record<string, unknown>): string => {
     const segments: string[] = [];
@@ -96,18 +96,16 @@ export const buildQueryString = (params: Record<string, unknown>): string => {
 };
 
 /**
- * `RestOperation` is the REST protocol layer shared by every REST-style
- * provider.
+ * REST protocol base class shared by REST providers.
  *
- * It is the REST counterpart of the AniList GraphQL protocol layer
- * (`AniListOperation`): both extend the {@link BaseOperation} transport
- * plumbing, but this class shapes plain HTTP requests instead of GraphQL
- * documents — path-based URLs with query strings, JSON bodies, and
- * verbatim response bodies (no envelope unwrapping). Failures surface as
- * `AniLinkRestError` via the shared pipeline's error normalization.
+ * Like `AniListOperation`, this class extends {@link BaseOperation} but
+ * builds plain HTTP requests instead of GraphQL documents. It creates
+ * path-based URLs, query strings, and JSON bodies, then returns response
+ * bodies without GraphQL envelope unwrapping. The shared pipeline normalizes
+ * failures as `AniLinkRestError`.
  *
- * Concrete operations declare their endpoint path, parameter interface, and a
- * thin method that calls `execute`.
+ * Concrete operations declare an endpoint path, parameter interface, and a
+ * method that calls `execute`.
  */
 export abstract class RestOperation extends BaseOperation {
     /**
@@ -119,16 +117,17 @@ export abstract class RestOperation extends BaseOperation {
     /**
      * Sends one REST call through the shared transport pipeline.
      *
-     * GET and DELETE calls pass their parameters as a query string; POST, PUT,
-     * and PATCH calls send them as a JSON body. Responses are returned verbatim
-     * — REST providers have no GraphQL-style envelope, so no unwrapping
-     * happens.
+     * GET and DELETE calls pass parameters as a query string. POST, PUT, and
+     * PATCH calls send them as a JSON body. `execute` returns response bodies
+     * verbatim because REST providers have no GraphQL-style envelope to unwrap.
      *
      * @typeParam T - The expected parsed response body.
      * @param path - The endpoint path beginning with `/` (for example `/anime/{id}`); placeholders are substituted from `pathParams` before interpolation into the URL.
      * @param options - The declarative request contract: method, auth requirement, content type, query/body/pathParams, and per-request transport settings.
      * @returns The parsed response body as-is.
-     * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set, an {@link AniLinkValidationError} when a `{placeholder}` in `path` has no matching `pathParams` entry, or a normalized {@link AniLinkError} (typically `AniLinkRestError`) when the request fails.
+     * @throws An {@link AniLinkAuthError} when `requiresAuth` is true and no token is set.
+     * @throws An {@link AniLinkValidationError} when a `{placeholder}` in `path` has no matching `pathParams` entry.
+     * @throws A normalized {@link AniLinkError} (typically `AniLinkRestError`) when the request fails.
      */
     protected async execute<T = unknown>(
         path: string,
@@ -151,8 +150,8 @@ export abstract class RestOperation extends BaseOperation {
                 // as a literally-braced URL (for example `/anime/{id}`), which
                 // every REST provider answers with a confusing 404/400.
                 // Fail fast with the missing parameter's name, plus the
-                // operation label when one is available, so the caller knows
-                // which call failed before anything is dispatched.
+                // operation label when one is available, so the caller can
+                // identify the failed call before dispatch.
                 const details = [`Missing path parameter: ${name}`];
                 const operationLabel = resolveOperationLabel(this);
                 if (operationLabel !== undefined) {

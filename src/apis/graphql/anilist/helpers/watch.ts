@@ -86,7 +86,7 @@ export interface WatchOptions {
     /**
      * Unix-second cursor: only items with `createdAt` strictly greater than
      * `since` are yielded, starting with the first poll. When omitted, the
-     * first poll establishes the baseline instead — it marks every item
+     * first poll establishes the baseline instead. It marks every item
      * currently on the first page as seen and yields nothing, so the watcher
      * reports only items created after it started.
      */
@@ -104,13 +104,13 @@ export interface WatchOptions {
      * Items requested per poll page. AniList caps this at 50; values above
      * 50 are clamped down to 50. Defaults to 50. A burst larger than
      * `perPage` items between two polls is still fully reported as long as
-     * each drained page contains at least one unseen item — the watcher
+     * each drained page contains at least one unseen item. The watcher
      * drains up to 10 pages per poll until it reaches the seen frontier.
      */
     perPage?: number;
 
     /**
-     * `AbortSignal` that stops the watcher — the authoritative stop
+     * `AbortSignal` that stops the watcher. This is the authoritative stop
      * mechanism. An abort between polls ends the generator cleanly (the
      * `for await` loop simply finishes); an abort during an in-flight poll
      * rejects it with the transport's `ABORTED` error, matching the rest
@@ -127,8 +127,8 @@ export interface WatchOptions {
      * hooks, pacing) merged over the instance-level options for every poll
      * request. The watcher's `signal` is always forwarded to the transport
      * regardless of this value. Poll requests always bypass the
-     * instance-level `responseCache` — a watcher poll whose freshness is
-     * the point must never be served a cached page — so a cache enabled on
+     * instance-level `responseCache`: a watcher poll whose freshness is
+     * the point must never be served a cached page, so a cache enabled on
      * the client never makes the watcher stale.
      */
     transportOptions?: RequestOptions;
@@ -150,8 +150,8 @@ export interface WatchNotificationsFilters {
 
     /**
      * Resets the unread notification count to 0. One-shot: forwarded on
-     * the watcher's first poll only, so the natural intent — "clear it
-     * once, now that my watcher is taking over" — does not silently
+     * the watcher's first poll only, so the natural intent, "clear it
+     * once, now that my watcher is taking over", does not silently
      * suppress the unread badge on every subsequent poll.
      */
     resetNotificationCount?: boolean;
@@ -179,7 +179,7 @@ export interface WatchActivityFilters {
 
     /**
      * Sort order forwarded as the page query's `sort` variable. Defaults to
-     * `["ID_DESC"]` (newest first) — the watcher's drain logic assumes the
+     * `["ID_DESC"]` (newest first). The watcher's drain logic assumes the
      * newest items are on the first page, so pass a different order only
      * with that caveat in mind.
      */
@@ -223,8 +223,8 @@ interface PolledPage<TItem extends WatchedItem> {
 }
 
 /**
- * Resolves after `ms`, or as soon as `signal` aborts — unlike the transport
- * layer's `sleep`, which rejects on abort. The watcher's between-poll wait
+ * Resolves after `ms`, or as soon as `signal` aborts. Unlike the transport
+ * layer's `sleep`, which rejects on abort, the watcher's between-poll wait
  * must end the loop cleanly on abort (the next loop check exits), not throw
  * out of the generator.
  *
@@ -333,7 +333,7 @@ interface PollDrain<TItem> {
  * cannot surface pre-start items from page 2 on.
  *
  * The returned watermark is the oldest `createdAt` this poll still had to
- * compare against — the oldest item of the last drained page (newest-first
+ * compare against: the oldest item of the last drained page (newest-first
  * pages put the oldest item last). Ids strictly older than it minus the
  * retention slack can no longer be re-encountered as unseen, which is what
  * keeps the seen-map bounded across polls.
@@ -484,9 +484,9 @@ async function* watchFeed<TItem extends WatchedItem>(
  * notification exactly once.
  *
  * The watcher polls `Page.notifications` (the notification feed's list
- * source — the root `Notification` query returns a single notification, not
+ * source; the root `Notification` query returns a single notification, not
  * a list) every `intervalMs`, deduplicates by `id`, and yields items created
- * after `since` — or, without a `since`, only items created after the watcher
+ * after `since`, or, without a `since`, only items created after the watcher
  * started. Each poll drains pages until it reaches the seen frontier, so a
  * burst between polls is fully reported up to the drain cap. Every poll runs
  * through the shared transport, so retry, rate-limit pacing, and the
@@ -516,8 +516,8 @@ export function watchNotifications(
     const { type, type_in, resetNotificationCount, asHtml, ...shared } = options;
     // `resetNotificationCount` is one-shot: it is forwarded on the first poll
     // only. Forwarding it on every poll would reset the unread count each
-    // time — permanently suppressing the badge for notifications the user
-    // never saw — when the natural caller intent is "clear it once, now
+    // time, permanently suppressing the badge for notifications the user
+    // never saw, when the natural caller intent is "clear it once, now
     // that my watcher is taking over". The flag is spent only after the
     // poll settles, so a first poll that never reaches the server does not
     // silently consume the one-shot.
@@ -547,10 +547,10 @@ export function watchNotifications(
 /**
  * Polls the AniList activity feed and yields each new activity exactly once.
  *
- * The watcher polls `Page.activities` (the activity feed's list source —
+ * The watcher polls `Page.activities` (the activity feed's list source;
  * the root `Activity` query returns a single activity, not a list) every
  * `intervalMs`, sorted newest-first (`ID_DESC` by default), deduplicates by
- * `id`, and yields items created after `since` — or, without a `since`, only
+ * `id`, and yields items created after `since`, or, without a `since`, only
  * items created after the watcher started. Each poll drains pages until it
  * reaches the seen frontier, so a burst between polls is fully reported up
  * to the drain cap. Every poll runs through the shared transport, so retry,
@@ -581,7 +581,7 @@ export function watchActivity(
             // ID_DESC (newest first) is the watcher's working order:
             // new items enter at the front, so page 1 is always the
             // window that contains them. A caller-provided sort
-            // overrides it — see the option's caveat.
+            // overrides it; see the option's caveat.
             dropUndefined({
                 page,
                 perPage,

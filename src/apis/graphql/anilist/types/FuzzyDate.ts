@@ -1,6 +1,6 @@
 /**
  * {@link FuzzyDateInput} is the AniList FuzzyDateInput object: a date whose unknown parts
- * are `0` rather than omitted. All three fields are required — `19980000` means "April 1998
+ * are `0` rather than omitted. All three fields are required; `19980000` means "April 1998
  * or later, day unknown". Build one with the `fuzzyDate` helper.
  * @see https://docs.anilist.co/reference/input/fuzzydateinput
  */

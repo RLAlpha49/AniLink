@@ -14,7 +14,7 @@ import { getAxiosStub } from "./helpers/axiosStub";
  * Each provider owns its own credential shape: AniList takes a bearer token
  * (plus optional transport settings), while a REST provider such as
  * MyAnimeList supplies its own credentials object. The constructor must route
- * whichever shape was given to that provider's operations only — an AniList
+ * whichever shape was given to that provider's operations only. An AniList
  * token must never leak into MAL requests and vice versa.
  */
 
@@ -128,7 +128,7 @@ describe("per-provider credential isolation", () => {
         await client.anilist.query.media({ id: 1, type: "ANIME" });
         expect(lastConfig().headers.Authorization).toBe("Bearer only-anilist");
 
-        // ...while the MAL surface stays usable: its authenticated calls fail
+        // ...while the MAL API stays usable: its authenticated calls fail
         // fast with an auth error instead of leaking the AniList token.
         await expect(client.mal.user.me()).rejects.toBeInstanceOf(AniLinkAuthError);
         expect(mocks.request).toHaveBeenCalledTimes(1);

@@ -19,7 +19,7 @@ import {
     type ThreadNotification,
 } from "../../Notification";
 /**
- * `NotificationResponse` — a single notification returned by the notification query; narrow on the literal `type` field.
+ * `NotificationResponse` is a single notification returned by the notification query; narrow on the literal `type` field.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion

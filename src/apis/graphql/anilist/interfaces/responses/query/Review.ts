@@ -9,7 +9,7 @@
 import { type BasicUser } from "../../Basic";
 import { type Media } from "../../Media";
 /**
- * `ReviewResponse` — a media review with its score, summary, and author.
+ * `ReviewResponse` is a media review with its score, summary, and author.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/review

@@ -10,7 +10,7 @@ import { type FuzzyDate } from "../../FuzzyDate";
 import { type Image } from "../../Image";
 import { type Name } from "../../Name";
 /**
- * `StaffResponse` — a staff member with their roles, characters, and media connections.
+ * `StaffResponse` is a staff member with their roles, characters, and media connections.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/staff

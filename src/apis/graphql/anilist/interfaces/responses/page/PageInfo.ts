@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `PageInfo` — pagination metadata returned by Page connections.
+ * `PageInfo` is pagination metadata returned by Page connections.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/pageinfo

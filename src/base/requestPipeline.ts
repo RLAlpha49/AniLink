@@ -93,8 +93,8 @@ let warnedOptionsKeyedState = false;
  * observer) suppresses its own emission without burning the warning for
  * later requests that would emit.
  *
- * The diagnostic is routed through the structured {@link reportDiagnostic}
- * emit path (the library's single diagnostics surface) so it lands in the
+ * The diagnostic goes through {@link reportDiagnostic}, the library's
+ * structured diagnostics path, so it reaches the
  * consumer's `onHookError` observer as a structured record, falling back to a
  * `console.warn` of the serialized record when no observer is configured.
  * The warning is fully suppressible via `diagnostics: "silent"`.
@@ -213,8 +213,8 @@ const buildHeaders = (
  *
  * GraphQL callers get envelope unwrapping by leaving `protocol` unset (or
  * `"graphql"`); REST callers pass `protocol: "rest"` and receive the parsed
- * body verbatim. HTTP failures on REST calls surface as `AniLinkRestError`;
- * GraphQL calls surface as `AniLinkApiError`.
+ * body verbatim. REST HTTP failures return as `AniLinkRestError`; GraphQL
+ * HTTP failures return as `AniLinkApiError`.
  *
  * @typeParam T - The expected response payload type.
  * @param url - The URL to send the request to.

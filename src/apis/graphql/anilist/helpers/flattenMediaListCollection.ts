@@ -41,7 +41,7 @@ export interface FlattenedMediaListEntry {
  * Flatten an AniList {@link MediaListCollectionResponse} into a single array of entries, deduplicated by id.
  *
  * AniList groups a user's list into multiple `lists` (one per status, plus any custom lists),
- * each carrying its own `entries` array. A single entry can appear in more than one group —
+ * each carrying its own `entries` array. A single entry can appear in more than one group,
  * for example, in its status list and in one or more custom lists.
  *
  * This helper walks every group, collects every list name each entry belongs to, and emits one
@@ -82,7 +82,7 @@ export function flattenMediaListCollection(
 /**
  * Insert or merge an entry into the dedup map, accumulating its list memberships.
  *
- * A malformed entry — `null`, or an object without a finite numeric `id` —
+ * A malformed entry, `null` or an object without a finite numeric `id`,
  * throws an {@link AniLinkValidationError} instead of an untyped `TypeError`
  * (a `null` entry) or silently merging unrelated rows under the key
  * `undefined` (a missing `id`) or `NaN` (a non-finite id: `Map` keys on

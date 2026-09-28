@@ -26,7 +26,7 @@ test("keeps no-token construction valid", async () => {
     const client = createTestClientWithoutToken();
 
     // A public query from the tokenless client must still reach the mocked
-    // transport with no token attached — construction alone proving nothing.
+    // transport with no token attached. Construction alone proves nothing.
     await client.anilist.query.media({ id: 1, type: "ANIME" });
 
     expect(mockSendRequest).toHaveBeenCalledTimes(1);

@@ -13,7 +13,7 @@ import { type UserTitleLanguage } from "../../../types/UserTitleLanguage";
 import { type Statistics } from "../../Statistics";
 import { type UserStats } from "../../UserStats";
 /**
- * `UserResponse` — a user with their options, list settings, favourites, statistics, and activity stats.
+ * `UserResponse` is a user with their options, list settings, favourites, statistics, and activity stats.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/user

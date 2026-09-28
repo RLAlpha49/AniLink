@@ -9,9 +9,9 @@
  * MyAnimeList, and the operation reference. The default `social-card.png` is
  * a designed asset and is intentionally left alone. `transformHead` picks
  * the file per route context, so each share preview is branded for the
- * surface it links to.
+ * page it links to.
  *
- * Cards are encoded with Node's built-in zlib alone — no image dependencies.
+ * Cards are encoded with Node's built-in zlib alone. No image dependencies.
  * Every pixel comes from fixed brand colors and pure arithmetic, and the
  * package logo is rasterized from its vector source (`docs-src/public/
  * logo.svg`) at the exact target size with anti-aliasing, so the same script
@@ -157,7 +157,7 @@ function shade(color: Rgb, factor: number): Rgb {
     ];
 }
 
-/** 0 below edge0, 1 above edge1, smooth in between — soft card edges. */
+/** 0 below edge0, 1 above edge1, smooth in between. Soft card edges. */
 function smoothstep(value: number, edge0: number, edge1: number): number {
     const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)));
     return t * t * (3 - 2 * t);
@@ -217,9 +217,9 @@ function svgFill(tag: string): Rgb {
 }
 
 /**
- * Parse the package logo SVG. The logo uses a fixed grammar — a square
+ * Parse the package logo SVG. The logo uses a fixed grammar, a square
  * viewBox, one rounded-rect tile, one circle, and filled paths with M/C/Z
- * commands — so this parser covers exactly that and throws on anything
+ * commands, so this parser covers exactly that and throws on anything
  * else, keeping `logo.svg` the single source of truth for the cards.
  *
  * @throws When the file deviates from the grammar the logo uses.
@@ -374,7 +374,7 @@ function polygonCoverage(
  * Rasterize the package logo at `size`x`size`, anti-aliased: analytic
  * signed-distance coverage for the rounded tile and circle, supersampled
  * coverage for the Bézier paths. Rendering the vector source at the exact
- * target size keeps the mark crisp at any card scale — no upscaling.
+ * target size keeps the mark crisp at any card scale. No upscaling.
  *
  * @returns The rendered RGBA logo.
  */

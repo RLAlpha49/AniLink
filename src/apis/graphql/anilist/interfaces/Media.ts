@@ -17,7 +17,7 @@ import { type Tag } from "./Tag";
 import { type Title } from "./Title";
 import { type Trailer } from "./Trailer";
 /**
- * `MediaListEntry` — the viewer's list entry for a media.
+ * `MediaListEntry` is the viewer's list entry for a media.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/medialist
@@ -35,7 +35,7 @@ export interface MediaListEntry {
 }
 
 /**
- * `Media` — a media entity without relation connections.
+ * `Media` is a media entity without relation connections.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/media

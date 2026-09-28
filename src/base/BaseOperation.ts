@@ -44,16 +44,14 @@ export const resolveOperationLabel = (operation: object): string | undefined => 
 };
 
 /**
- * Shared state and dispatch plumbing for every provider's operations.
+ * Shared state and request dispatch for every provider's operations.
  *
- * This class owns exactly what every API style has in common — the instance
- * authentication token, the resolved transport settings, and the per-request
- * option merge imported from the `requestOptions` precedence module — and
- * delegates the actual HTTP call to the provider-
- * agnostic {@link sendRequest} pipeline. Protocol-specific base classes
- * subclass it: `AniListOperation` adds GraphQL envelope handling and
- * `RestOperation` adds query-string and JSON-body handling without
- * duplicating any of the plumbing here.
+ * This class owns the instance authentication token, resolved transport
+ * settings, and per-request option merge from `requestOptions`. It delegates
+ * HTTP calls to the provider-agnostic {@link sendRequest} pipeline.
+ * Protocol-specific base classes subclass it. `AniListOperation` adds
+ * GraphQL envelope handling, and `RestOperation` adds query-string and
+ * JSON-body handling. Neither duplicates the shared code here.
  */
 export abstract class BaseOperation {
     /**
@@ -72,8 +70,8 @@ export abstract class BaseOperation {
     /**
      * The authentication token shared by all operations of an instance.
      *
-     * Mutable only through {@link BaseOperation.updateAuth} so a provider
-     * wiring seam can swap in refreshed auth material (for example the MAL
+     * Mutable only through {@link BaseOperation.updateAuth} so provider
+     * wiring can swap in refreshed auth material (for example the MAL
      * automatic token-refresh lifecycle) without rebuilding operations.
      */
     private requestAuth?: RequestAuthInput;
@@ -126,10 +124,10 @@ export abstract class BaseOperation {
     /**
      * Swaps the instance authentication material in place.
      *
-     * @internal This mutator exists for provider wiring seams that refresh
+     * @internal This mutator exists for provider wiring that refreshes
      * credentials mid-flight (the MAL automatic token-refresh lifecycle swaps
      * the stored auth on the operation instances before replaying a 401'd
-     * request). It is not part of the public API surface.
+     * request). It is not part of the public API.
      *
      * @param auth - The replacement authentication material, or `undefined` to clear it.
      */
@@ -140,12 +138,11 @@ export abstract class BaseOperation {
     /**
      * Reads the current instance authentication material.
      *
-     * @internal Companion to {@link BaseOperation.updateAuth} for wiring
-     * seams that rebuild auth from the operation's live state at swap time
+     * @internal Companion to {@link BaseOperation.updateAuth} for provider
+     * wiring that rebuilds auth from the operation's current state at swap time
      * (the MAL refresh lifecycle reads each operation's current auth before
      * applying a fresh access token, so a replay never rebuilds headers from
-     * a stale construction-time snapshot). It is not part of the public API
-     * surface.
+     * a stale construction-time snapshot). It is not part of the public API.
      *
      * @returns The current {@link RequestAuthInput}, or `undefined`.
      */
@@ -185,7 +182,7 @@ export abstract class BaseOperation {
             // The stable owner keys cross-request transport state (circuit
             // breaker, retry budget, pacing deadlines) so failure streaks
             // accumulate across requests even when each call carries fresh
-            // per-request options — across the whole client when the wiring
+            // per-request options, across the whole client when the wiring
             // shared one owner, or across this instance's requests otherwise.
             stateOwner: this.stateOwner,
         });

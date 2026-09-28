@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type ScoreDistribution, type StatusDistribution } from "./Distribution";
 /**
- * `MediaStats` — aggregate score and status distributions for a media.
+ * `MediaStats` is aggregate score and status distributions for a media.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/mediastats

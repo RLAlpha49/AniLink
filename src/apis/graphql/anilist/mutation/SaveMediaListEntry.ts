@@ -106,9 +106,10 @@ export interface SaveMediaListEntryVariables {
 }
 
 /**
- * The response surface the maximal {@link SaveMediaListEntryMutation} document
- * selects: {@link MediaListResponse} minus the keys the document never
- * requests, so {@link FieldPath} cannot promise paths the composer would reject.
+ * The response fields selected by the maximal
+ * {@link SaveMediaListEntryMutation} document: {@link MediaListResponse} minus
+ * the keys the document never requests. This keeps {@link FieldPath} from
+ * including paths the composer would reject.
  *
  * @see https://docs.anilist.co/reference/object/medialist
  */
@@ -160,7 +161,7 @@ export class SaveMediaListEntryMutation extends AniListOperation {
      * @returns The {@link MediaListResponse} returned by the mutation.
      * @throws Throws if no authentication token is configured, `mediaId` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/medialist
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<MediaListResponse, K>`, with valid paths bounded by {@link SaveMediaListEntryFields} because the document never selects `media`, `userId`, `updatedAt`, or `createdAt`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<MediaListResponse, K>`, with valid paths bounded by {@link SaveMediaListEntryFields} because the document never selects `media`, `userId`, `updatedAt`, or `createdAt`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveMediaListEntryMutation("your-token").saveMediaListEntry({ mediaId: 1, status: "COMPLETED" });

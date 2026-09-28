@@ -242,8 +242,8 @@ test("does not expose the raw Axios error by default", async () => {
 test("exposes the original Axios error when explicitly enabled", async () => {
     // No `request` object: nothing sensitive to scrub, so the raw error
     // keeps its identity. (An error carrying a `request` object always has
-    // it replaced with a marker — see the redaction tests below — because
-    // a real Node ClientRequest embeds the sent header string, including
+    // it replaced with a marker; see the redaction tests below. A real
+    // Node ClientRequest embeds the sent header string, including
     // `Authorization`, in `_header`.)
     const axiosError = {
         isAxiosError: true,
@@ -450,7 +450,7 @@ test("unwrapGraphQLResponse unwraps the single root field through the strict hel
 test("unwrapGraphQLResponse isolates a throwing onPartialData observer", () => {
     // `unwrapGraphQLResponse` is exported: a direct consumer passing a
     // throwing `onPartialData` callback must not have that throw treated
-    // as the request failure — the resolved data wins, mirroring how the
+    // as the request failure. The resolved data wins, mirroring how the
     // request pipeline routes the observer through its failure reporter.
     const envelope = { data: { Media: { id: 5 } }, errors: [{ message: "field failed" }] };
 
@@ -692,7 +692,7 @@ describe("error-context observability fields", () => {
     test("a terminal retryable failure in a spent window reports budgetExhausted", async () => {
         // A 429 is retryable under the policy; with the shared budget
         // already spent by an earlier request, the 429 surfaces with
-        // budgetExhausted: true — the chronic-exhaustion signal.
+        // budgetExhausted: true, the chronic-exhaustion signal.
         const stateOwner = {};
         const options = {
             retry: { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 },
@@ -784,7 +784,7 @@ describe("error-context observability fields", () => {
     test("retryWaitMs accumulates server-dictated waits across attempts", async () => {
         // Two 429s with Retry-After: 1, then the terminal failure: the
         // terminal report carries the accumulated wait of the first retry's
-        // server-dictated delay (the second never sleeps — it surfaces).
+        // server-dictated delay (the second never sleeps; it surfaces).
         const onError = vi.fn();
         mocks.request
             .mockRejectedValueOnce({
@@ -910,7 +910,7 @@ describe("error-context observability fields", () => {
 
         // The request went to the network (not served from cache) and was
         // not written back: a bypassed read carries no cache markers at
-        // all — no `cacheHit` (it is not a cache read) and no `cacheWrite`.
+        // all: no `cacheHit` (it is not a cache read) and no `cacheWrite`.
         // The single-root unwrap resolves the bare field value.
         expect(mocks.request).toHaveBeenCalledTimes(1);
         expect(onResponse).toHaveBeenCalledTimes(1);
@@ -1400,7 +1400,7 @@ describe("GraphQL error metadata preservation", () => {
 
     test("allowPartialData still throws when the only root field resolved to null", async () => {
         // Per GraphQL semantics, a nullable root field that errors comes
-        // back inside `data` as `null` — not as `data: null`. A single-root
+        // back inside `data` as `null`, not as `data: null`. A single-root
         // field document whose root field failed therefore carries
         // `data: { Media: null }`: one key, but nothing usable. Resolving
         // that envelope with `null` would hand the caller a value its
@@ -1700,7 +1700,7 @@ describe("response cache integration", () => {
         await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
             options,
         });
-        // Second call: cache hit — no network, but both hooks must fire.
+        // Second call: cache hit, no network, but both hooks must fire.
         await sendRequest("https://graphql.anilist.co", "GET", undefined, undefined, {
             options,
         });
@@ -1766,7 +1766,7 @@ describe("response cache integration", () => {
         expect(onError).toHaveBeenCalledTimes(1);
 
         // Second identical call: the degraded result must NOT be served from
-        // the cache — a cache hit would replay the partial data without the
+        // the cache. A cache hit would replay the partial data without the
         // onError reporting that accompanied the original fetch.
         mocks.request.mockResolvedValueOnce({
             data: { data: { User: { id: 1 }, Page: { id: 2 } } },
@@ -1790,7 +1790,7 @@ describe("response cache integration", () => {
         const options = { responseCache: cache, onResponse };
 
         // A GraphQL mutation is never cache-keyed, so its response carries
-        // no cacheHit marker at all — not a miss, just cache-unrelated.
+        // no cacheHit marker at all, not a miss, just cache-unrelated.
         await sendRequest(
             "https://graphql.anilist.co",
             "POST",
@@ -1870,7 +1870,7 @@ describe("response cache integration", () => {
         expect(mocks.request).toHaveBeenCalledTimes(1);
 
         // A header-authenticated identity's identical query read fails
-        // closed (the cache is skipped for it) — but a read must never be
+        // closed (the cache is skipped for it), but a read must never be
         // mistaken for a mutation and invalidate the endpoint's entries.
         await sendRequest(
             "https://graphql.anilist.co",
@@ -2090,7 +2090,7 @@ describe("response cache integration", () => {
             expect(mocks.request).toHaveBeenCalledTimes(1);
 
             // A GraphQL mutation document invalidates every cached read at
-            // the endpoint — including a GET entry keyed at the same URL.
+            // the endpoint, including a GET entry keyed at the same URL.
             await sendRequest(
                 "https://graphql.anilist.co",
                 "POST",
@@ -2164,7 +2164,7 @@ describe("response cache integration", () => {
             // Root-field-scoped invalidation: a SaveMediaListEntry changes
             // what MediaList/MediaListCollection/Page/Media/User/Viewer
             // queries can report (the list-entry state those documents can
-            // embed), but cannot change what a Staff query returns — that
+            // embed), but cannot change what a Staff query returns, so that
             // cached entry stays warm instead of being flushed wholesale.
             const cache = new ResponseCache({ ttlMs: 10_000 });
             const options = { responseCache: cache };
@@ -2399,7 +2399,7 @@ describe("raw error redaction", () => {
 
     test("redacts the raw ClientRequest reachable through error.request", async () => {
         // Node's ClientRequest carries `_header`: the raw request header
-        // string including `Authorization: Bearer …`. A consumer logging the
+        // string including `Authorization: Bearer ...`. A consumer logging the
         // raw error would surface it, so the clone must not share the live
         // request object.
         const fakeClientRequest = {
@@ -2583,7 +2583,7 @@ describe("diagnostics option", () => {
     });
 
     test("silent mode still routes a real hook failure to a configured onHookError", async () => {
-        // The diagnostics modes gate only the unsolicited fallback output —
+        // The diagnostics modes gate only the unsolicited fallback output,
         // never the consumer's own observer. A configured onHookError sees
         // real hook failures even in silent mode.
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});

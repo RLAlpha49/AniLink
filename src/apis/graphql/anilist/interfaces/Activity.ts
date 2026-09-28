@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type BasicUser } from "./Basic";
 /**
- * `ActivityReply` — a reply to an activity.
+ * `ActivityReply` is a reply to an activity.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/activityreply
@@ -61,7 +61,7 @@ export interface ActivityReply {
 }
 
 /**
- * `TextActivity` — a text status activity of a user.
+ * `TextActivity` is a text status activity of a user.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/textactivity
@@ -144,7 +144,7 @@ export interface TextActivity {
 }
 
 /**
- * `ListActivity` — a list update activity of a user.
+ * `ListActivity` is a list update activity of a user.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/listactivity
@@ -257,7 +257,7 @@ export interface ListActivity {
 }
 
 /**
- * `MessageActivity` — a direct message activity between two users.
+ * `MessageActivity` is a direct message activity between two users.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/messageactivity
@@ -350,7 +350,7 @@ export interface MessageActivity {
 }
 
 /**
- * `Activity` — a single activity returned by the activity query and activity mutations; narrow on the literal `type` field.
+ * `Activity` is a single activity returned by the activity query and activity mutations; narrow on the literal `type` field.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/activityunion
@@ -358,7 +358,7 @@ export interface MessageActivity {
 export type Activity = TextActivity | ListActivity | MessageActivity;
 
 /**
- * `ActivityNotification` — an activity-related notification; narrow on the literal `type` field.
+ * `ActivityNotification` is an activity-related notification; narrow on the literal `type` field.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion

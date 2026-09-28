@@ -39,7 +39,7 @@ export const GENERATED_FILE_HEADER = [
 export function renderTypeDeclaration(type: GeneratedType): string {
     const doc = [
         "/**",
-        ` * \`${type.name}\` — ${type.summary}`,
+        ` * \`${type.name}\` is ${type.summary}`,
         " *",
         " * Generated from the schema fragments; do not edit by hand.",
         ` * @see ${type.see}`,

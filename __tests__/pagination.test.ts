@@ -16,7 +16,7 @@ import type { MediaListCollectionResponse } from "../src/apis/graphql/anilist/in
 /**
  * Build a {@link PageInfo} object for tests. The default `lastPage` is large
  * enough that the paginator's lastPage launch bound never fires unless a test
- * overrides it — termination is driven by `hasNextPage` here.
+ * overrides it. Termination is driven by `hasNextPage` here.
  */
 function pageInfo(overrides: Partial<PageInfo> = {}): PageInfo {
     return {
@@ -201,7 +201,7 @@ describe("paginate", () => {
         // The window ramps, so page 2 is only scheduled after page 1 is
         // consumed; awaiting page 3's launch deterministically proves page 1
         // settled, page 2 was consumed, and page 3 is parked on the abort
-        // listener — no wall-clock sleep.
+        // listener, with no wall-clock sleep.
         await page3Launched;
         controller.abort();
 
@@ -271,7 +271,7 @@ describe("paginate", () => {
         // The window ramps, so page 2 is only scheduled after page 1 is
         // consumed; awaiting page 3's launch deterministically proves page 1
         // settled, page 2 was consumed, and page 3 is parked on the abort
-        // listener — no wall-clock sleep.
+        // listener, with no wall-clock sleep.
         await page3Launched;
         controller.abort();
 
@@ -424,7 +424,7 @@ describe("paginatePages", () => {
         // A later page settles sooner than an earlier one: page 2 parks
         // until page 3 has settled, so the settle order is deterministically
         // [1, 3, 2] without racing real timer durations. Page 1 must not
-        // park — the ramped window launches it alone, so its settle cannot
+        // park, because the ramped window launches it alone, so its settle cannot
         // depend on a sibling that has not launched yet.
         const settleGates = new Map<number, () => void>();
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
@@ -448,8 +448,8 @@ describe("paginatePages", () => {
         }
 
         // Look-ahead overlaps latency, but the consumer still sees pages in
-        // order. The window ramps — page 1 launches alone, then pages 2 and 3
-        // overlap once page 1 confirmed more data — so pages 2 and 3 are in
+        // order. The window ramps: page 1 launches alone, then pages 2 and 3
+        // overlap once page 1 confirmed more data, so pages 2 and 3 are in
         // flight together and page 2 settles after page 3.
         expect(maxObserved).toBeGreaterThanOrEqual(2);
         expect(settleOrder).not.toEqual([1, 2, 3]);
@@ -494,7 +494,7 @@ describe("paginatePages", () => {
         // Page 3 is terminal. Release pages 3 and 4 so the terminal page
         // can settle; consuming it refills the window with page 5, whose
         // gate is registered by the time page 3 is yielded. Releasing every
-        // gate then settles the terminal drain deterministically — no
+        // gate then settles the terminal drain deterministically, with no
         // wall-clock timer.
         gates[2]?.();
         gates[3]?.();
@@ -570,8 +570,8 @@ describe("paginatePages", () => {
 
         // Break without releasing pages 2 and 3: the iterator must complete
         // without awaiting the unresolved stragglers. Their gates are never
-        // released, so a return() that awaited them would hang this test —
-        // completion itself is the deterministic proof.
+        // released, so a return() that awaited them would hang this test.
+        // Completion itself is the deterministic proof.
         await expect(generator.return(undefined)).resolves.toMatchObject({ done: true });
         expect(launchedPages).toEqual([1, 2, 3]);
     });
@@ -596,7 +596,7 @@ describe("paginatePages", () => {
 
         const generator = paginatePages(fetchPage, { concurrency: 3 });
         // The window ramps: page 1 launches alone, then pages 2 and 3 fill
-        // the window once page 1 confirmed more data — but page 1 rejects
+        // the window once page 1 confirmed more data, but page 1 rejects
         // before it can confirm anything, so nothing beyond page 1 is ever
         // launched and the rejection is the deterministic proof.
         await expect(generator.next()).rejects.toThrow("page 1 failed");
@@ -750,8 +750,8 @@ describe("safeCallback error swallowing", () => {
 
     test("paginate rejects an invalid diagnostics value with a TypeError", async () => {
         // The traversal helpers read `diagnostics` straight from their own
-        // options object, which never passes through resolveRequestOptions
-        // — so they must validate through the same shared resolver.
+        // options object, which never passes through resolveRequestOptions,
+        // so they must validate through the same shared resolver.
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => ({
             pageInfo: pageInfo({ currentPage: page, hasNextPage: false }),
             media: [{ id: page }],
@@ -1121,7 +1121,7 @@ describe("paginate concurrency", () => {
     test("collects results strictly in page order even when later pages settle first", async () => {
         // A later page settles sooner: page 2 parks until page 3 settles, so
         // pages resolve deterministically out of order without real timers.
-        // Page 1 must not park — the ramped window launches it alone, so its
+        // Page 1 must not park, because the ramped window launches it alone, so its
         // settle cannot depend on a sibling that has not launched yet.
         const settleGates = new Map<number, () => void>();
         const fetchPage = vi.fn(async (page: number): Promise<TestPage> => {
@@ -1237,7 +1237,7 @@ describe("paginate concurrency", () => {
     test("paginateChunks keeps chunks in flight and collects them in chunk order", async () => {
         // An earlier chunk settles later: chunk 2 parks until chunk 3
         // settles, so chunks resolve deterministically out of order.
-        // Chunk 1 must not park — the ramped window launches it alone, so
+        // Chunk 1 must not park, because the ramped window launches it alone, so
         // its settle cannot depend on a sibling that has not launched yet.
         const settleGates = new Map<number, () => void>();
         const fetchChunk = vi.fn(async (chunk: number): Promise<TestChunk> => {

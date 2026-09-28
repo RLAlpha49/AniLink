@@ -40,17 +40,16 @@ type ProviderClientMap = {
 };
 
 export interface ProviderClients extends ProviderClientMap {
-    /** The per-provider state owners the clients key their shared transport state through. */
+    /** Per-provider state owners that key shared transport state. */
     stateOwners: Record<ProviderId, object>;
     /**
-     * The per-provider response caches resolved from each slot's transport
-     * options, when enabled — the instances {@link AniLink}'s transport-state
-     * snapshot reads the cache counters through, so a consumer wiring the
-     * cache through a credentials slot (where the instance is constructed
-     * for them) still reaches `stats()` via `getTransportState()`. Optional
-     * so external `ProviderClients` consumers (custom registries, test
-     * doubles) constructed before the field existed keep compiling; a
-     * missing value reads as no cache in the snapshot.
+     * Per-provider response caches resolved from each slot's transport
+     * options, when enabled. {@link AniLink}'s transport-state snapshot reads
+     * their counters, so consumers can call `getTransportState()` even when
+     * a credentials slot constructed the cache for them. This field is
+     * optional for compatibility with external `ProviderClients` consumers
+     * such as custom registries and test doubles created before its addition.
+     * A missing value means the snapshot has no cache.
      */
     responseCaches?: Record<ProviderId, ResponseCache | undefined>;
 }
@@ -93,12 +92,11 @@ const buildAniListClient: ProviderFactory<AniListCredentials, AniListApi> = (
     stateOwner
 ) => {
     const resolved = resolveAniListCredentials(credentials);
-    // The raw slot rides along so the wiring can read the automatic
+    // Pass the raw credential slot to wiring so it can read the automatic
     // token-refresh fields (`refreshToken`, `clientId`, `clientSecret`,
-    // `onTokenRefresh`) the resolver strips from the transport options —
-    // the same raw-slot flow `buildMyAnimeListApi` uses for MAL. The options
-    // precedence is repeated by the cache lookup through the resolver
-    // registered alongside this factory.
+    // `onTokenRefresh`) that the resolver removes from transport options.
+    // `buildMyAnimeListApi` follows the same pattern. The cache lookup uses
+    // this factory's resolver to apply the same option precedence.
     return buildAniListApi(
         resolved.auth,
         resolved.options ?? legacyOptions,
@@ -114,9 +112,11 @@ const buildMalClient: ProviderFactory<MalCredentials, MyAnimeListApi> = (
 ) => buildMyAnimeListApi(credentials, stateOwner);
 
 /**
- * {@link PROVIDER_FACTORIES} is the provider factory registry used by the composition seam.
+ * {@link PROVIDER_FACTORIES} is the factory registry used to build provider clients.
  *
- * Each callable factory carries its credential resolver and declares whether it accepts legacy transport options. {@link ProviderId} and the provider properties in {@link ProviderClients} derive from this registry.
+ * Each factory carries its credential resolver and states whether it accepts
+ * legacy transport options. {@link ProviderId} and the provider properties
+ * in {@link ProviderClients} derive from this registry.
  *
  * @see {@link ProviderId}
  * @see {@link buildProviderClients}

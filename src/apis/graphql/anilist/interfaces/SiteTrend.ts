@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `SiteTrend` — a daily AniList activity statistic.
+ * `SiteTrend` is a daily AniList activity statistic.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/sitetrend
@@ -31,7 +31,7 @@ export interface SiteTrend {
 }
 
 /**
- * `SiteTrendConnection` — a paginated connection of site trends.
+ * `SiteTrendConnection` is a paginated connection of site trends.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/sitetrendconnection

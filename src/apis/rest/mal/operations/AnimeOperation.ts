@@ -86,7 +86,8 @@ export class MalAnimeOperation extends RestOperation {
      * plus the `limit`/`offset` paging filters and returns a
      * {@link MalAnimeSearchResponse} page of `MalAnimeSearchEntry` entries
      * shaped by {@link MalRequestOptions.fields}. The facade alias is
-     * `MyAnimeListAnimeApi.search` and it is a public read.
+     * The facade exposes this method as `MyAnimeListAnimeApi.search`. It does not
+     * require an access token.
      *
      * @param params - The search inputs; a {@link MalAnimeSearchParams} carrying the keyword plus the optional paging filters.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -132,7 +133,11 @@ export class MalAnimeOperation extends RestOperation {
     /**
      * {@link MalAnimeOperation.seasonal} gets the anime of one broadcast season.
      *
-     * It calls `GET /anime/season/{year}/{season}` through `RestOperation.execute` and returns a {@link MalSeasonalAnimeResponse} page of `MalSeasonalAnime` entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.seasonal` and it is a public read.
+     * It calls `GET /anime/season/{year}/{season}` through
+     * `RestOperation.execute` and returns a {@link MalSeasonalAnimeResponse} page
+     * of `MalSeasonalAnime` entries shaped by {@link MalRequestOptions.fields}.
+     * The facade exposes this method as `MyAnimeListAnimeApi.seasonal`. It does
+     * not require an access token.
      *
      * @param params - The seasonal read inputs; a {@link MalSeasonalParams} carrying the year and broadcast window.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -167,7 +172,11 @@ export class MalAnimeOperation extends RestOperation {
     /**
      * {@link MalAnimeOperation.ranking} gets one of MyAnimeList's anime ranking lists.
      *
-     * It calls `GET /anime/ranking` through `RestOperation.execute` with the `ranking_type` query parameter and returns a {@link MalAnimeRankingResponse} page of `MalRankingEntry` entries shaped by {@link MalRequestOptions.fields}. The facade alias is `MyAnimeListAnimeApi.ranking` and it is a public read.
+     * It calls `GET /anime/ranking` through `RestOperation.execute` with the
+     * `ranking_type` query parameter and returns a {@link MalAnimeRankingResponse}
+     * page of `MalRankingEntry` entries shaped by {@link MalRequestOptions.fields}.
+     * The facade exposes this method as `MyAnimeListAnimeApi.ranking`. It does
+     * not require an access token.
      *
      * @param params - The ranking read inputs; a {@link MalRankingParams} carrying the ranking list to fetch.
      * @param options - Optional field selection and transport settings; a {@link MalRequestOptions} merged over the instance defaults.
@@ -237,11 +246,11 @@ export class MalAnimeOperation extends RestOperation {
      * MAL's list-status endpoints require.
      *
      * MAL documents `PATCH /anime/{id}/my_list_status` with an
-     * `application/x-www-form-urlencoded` request body, not JSON. Only the
-     * known list-status fields are encoded — excess properties from
-     * JavaScript callers (typos like `num_watched_episode`) are dropped
-     * instead of being sent to MAL as silent no-op fields. Array values
-     * (`tags`) are joined into the comma-separated string MAL expects.
+     * `application/x-www-form-urlencoded` request body, not JSON. The encoder
+     * includes only known list-status fields. It drops extra JavaScript
+     * properties, such as the typo `num_watched_episode`, rather than sending
+     * fields MAL would ignore. It joins array values (`tags`) into the
+     * comma-separated string MAL expects.
      *
      * @param payload - The list-status fields to update.
      * @returns The encoded body string, safe to pass as the request `data`.
@@ -286,8 +295,8 @@ export class MalAnimeOperation extends RestOperation {
         options: MalRequestOptions = {}
     ): Promise<MalAnimeListStatus> {
         const { id, ...payload } = params;
-        // An empty payload would PATCH an empty form body — a no-op write.
-        // Fail fast instead of sending it to MAL.
+        // An empty payload would send an empty form body and change nothing.
+        // Reject it before sending the request to MAL.
         const hasUpdateField = MalAnimeOperation.LIST_STATUS_FIELDS.some(
             (field) => payload[field] !== undefined
         );

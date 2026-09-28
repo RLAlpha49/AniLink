@@ -56,9 +56,9 @@ const redactAxiosError = (error: AxiosError): AxiosError => {
         const scrubbed: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(headers)) {
             if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-                // Nested per-method header map (`{ common, get, post, … }`):
+                // Nested per-method header map (`{ common, get, post, ... }`):
                 // recurse so a bearer token inside `common.authorization` or
-                // `get.authorization` is redacted, not just top-level keys.
+                // `get.authorization` is redacted along with top-level keys.
                 scrubbed[key] = redactHeaders(value as Record<string, unknown>);
             } else {
                 scrubbed[key] = SENSITIVE_HEADER_KEYS.test(key) ? "[REDACTED]" : value;
@@ -71,7 +71,7 @@ const redactAxiosError = (error: AxiosError): AxiosError => {
         const headers = source.headers;
         if (isHeaderMap(headers)) {
             // Axios stores headers either as a flat map or as a per-method map
-            // (`{ common, get, post, … }`). Redact both shapes.
+            // (`{ common, get, post, ... }`). Redact both shapes.
             cloned.headers = redactHeaders(headers);
         }
         if (source.data !== undefined) {
@@ -91,8 +91,8 @@ const redactAxiosError = (error: AxiosError): AxiosError => {
     const clonedRecord = cloned as unknown as Record<string, unknown>;
     if (requestNeedsRedaction) {
         // The raw Node `ClientRequest` carries `_header`: the verbatim
-        // request header string including `Authorization: Bearer …`. It is
-        // replaced with a marker instead of cloned — the live object must
+        // request header string including `Authorization: Bearer ...`. It is
+        // replaced with a marker instead of cloned. The live object must
         // never be shared with the consumer's diagnostics.
         clonedRecord.request = "[REDACTED]";
     }
@@ -251,7 +251,7 @@ export const stampRequestId = (error: AniLinkError, requestId: string | undefine
 
 /**
  * Normalizes any value thrown during a request into the {@link AniLinkError}
- * taxonomy — the single funnel every transport failure flows through.
+ * taxonomy, the single funnel every transport failure flows through.
  *
  * Already-normalized errors pass through with a missing `requestId` stamped;
  * Axios errors are classified into {@link AniLinkApiError} (or

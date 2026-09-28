@@ -1,8 +1,7 @@
 /**
  * MyAnimeList provider barrel.
  *
- * This subpath is the canonical import point for the MAL REST surface and its
- * provider-owned OAuth helpers.
+ * This subpath exports the MAL REST API and its OAuth helpers.
  */
 export { AniLink } from "./AniLink";
 export {

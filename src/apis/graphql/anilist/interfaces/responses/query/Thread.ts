@@ -9,7 +9,7 @@
 import { type BasicUser } from "../../Basic";
 import { type Media } from "../../Media";
 /**
- * `ThreadResponse` — a forum thread with its body, categories, and participants.
+ * `ThreadResponse` is a forum thread with its body, categories, and participants.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/thread

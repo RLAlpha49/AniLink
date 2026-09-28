@@ -16,7 +16,7 @@ vi.mock("axios", async () => {
  * `vi.resetModules()` re-runs the `vi.mock("axios")` factory, which builds
  * and stashes a NEW stub. The fresh RequestHandler serves requests from
  * that new stub, so every test must re-fetch the active stub via
- * `getAxiosStub()` and wire its `request` implementation there — never
+ * `getAxiosStub()` and wire its `request` implementation there, never
  * through a module-scope constant captured before the reset.
  */
 const importFreshRequestHandler = async () => {
@@ -27,8 +27,8 @@ const importFreshRequestHandler = async () => {
 /**
  * Wires the default success response onto the currently-stashed stub. The
  * axios mock factory runs lazily on the first import of the mocked module,
- * so the stub only exists after `importFreshRequestHandler` has re-run it —
- * never call this from `beforeEach`.
+ * so the stub only exists after `importFreshRequestHandler` has re-run it.
+ * Never call this from `beforeEach`.
  */
 const primeActiveStub = () => {
     getAxiosStub().request.mockImplementation(async () => ({
@@ -234,7 +234,7 @@ describe("options-keyed transport state warning", () => {
     test("a silent first request does not consume the one-shot warning for later warn-mode requests", async () => {
         // The one-shot gate must only mark the warning as spent when
         // something was actually emitted. A first triggering request in
-        // `silent` mode suppresses its own emission — it must not also
+        // `silent` mode suppresses its own emission, so it must not also
         // permanently suppress the warning for every later `warn`-mode
         // request, or a mixed-mode client silently loses the only notice
         // that its transport state is keyed per request.
@@ -258,7 +258,7 @@ describe("options-keyed transport state warning", () => {
         });
         expect(warn).not.toHaveBeenCalled();
 
-        // Second trigger: default warn mode still emits — the silent
+        // Second trigger: default warn mode still emits. The silent
         // first request did not burn the one-shot.
         await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
             requiresAuth: false,
@@ -279,7 +279,7 @@ describe("options-keyed transport state warning", () => {
     test("a silent-mode first request with an observer does not consume the one-shot warning", async () => {
         // The gap the other one-shot tests miss: silent mode with an observer
         // configured. The observer is present, so a re-derived "would emit"
-        // gate consumes the one-shot — but reportDiagnostic's own routing
+        // gate consumes the one-shot, but reportDiagnostic's own routing
         // suppresses the observer (silent mode, no rawError) and the console
         // (not warn mode), so nothing is emitted. The one-shot must stay
         // available for a later request that would actually emit, or a
@@ -300,7 +300,7 @@ describe("options-keyed transport state warning", () => {
             circuitBreaker: { threshold: 2, cooldownMs: 1_000 },
         } as const;
 
-        // First trigger: silent mode with an observer emits nothing — the
+        // First trigger: silent mode with an observer emits nothing. The
         // state-owner record is unsolicited output, and silent mode gates
         // exactly that, observer or not.
         await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
@@ -310,7 +310,7 @@ describe("options-keyed transport state warning", () => {
         expect(warn).not.toHaveBeenCalled();
         expect(onHookError).not.toHaveBeenCalledWith("stateOwner", expect.anything());
 
-        // Second trigger: default warn mode still emits — the silent first
+        // Second trigger: default warn mode still emits. The silent first
         // request did not burn the one-shot.
         await sendRequest("https://graphql.anilist.co", "POST", { query: "query" }, undefined, {
             requiresAuth: false,

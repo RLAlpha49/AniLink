@@ -3,12 +3,11 @@
  *
  * Owns the public snapshot types and the single {@link snapshotTransportState}
  * builder that composes them from the three resilience state maps (circuit
- * breaker, retry budget, rate-limit pacing). The snapshot answers the
- * monitoring questions the lifecycle hooks cannot — "is the breaker open
- * right now?", "how many budget retries are spent?", "when does the pacing
- * deadline elapse?" — without pre-wiring any hook and without mutating the
- * state it observes: it reads through the dedicated `peek*` helpers, which
- * never create state entries, roll the retry-budget window, clear stale
+ * breaker, retry budget, rate-limit pacing). It answers questions lifecycle
+ * hooks cannot, such as "is the breaker open right now?", "how many budget
+ * retries are spent?", and "when does the pacing deadline elapse?" The
+ * dedicated `peek*` helpers read state without mutating it. They never create
+ * state entries, roll the retry-budget window, clear stale
  * pacing deadlines, or refresh circuit-scope LRU recency.
  */
 import { peekCircuitStates } from "./circuitBreaker";
@@ -52,8 +51,8 @@ export interface RetryBudgetSnapshot {
 /**
  * A frozen copy of one host-scoped rate-limit pacing deadline, as exposed by
  * {@link snapshotTransportState}. The `deadlineMs` field is the epoch
- * millisecond at which the recorded window resets — the same value the next
- * dispatch to `host` waits for.
+ * millisecond at which the recorded window resets. It is the same value the next dispatch to
+ * `host` waits for.
  */
 export interface PaceDeadlineSnapshot {
     /** The upstream host the pacing deadline applies to. */
@@ -89,7 +88,7 @@ export interface TransportStateSnapshot {
      * transport options enable a {@link ResponseCache}: the live entry count
      * and the lifetime hit/miss/expiration/eviction counters, so cache
      * tuning (`ttlMs`/`maxEntries`) is data-driven through the same facade
-     * surface as the breaker/budget/pacing state — without holding the
+     * surface as the breaker/budget/pacing state, without holding the
      * `ResponseCache` instance (which a consumer wiring the cache through a
      * provider credentials slot never held).
      */
@@ -98,15 +97,15 @@ export interface TransportStateSnapshot {
 
 /**
  * Builds a deep-frozen, point-in-time copy of one state owner's transport
- * state — circuit-breaker scopes, retry-budget window, and rate-limit pacing
- * deadlines — for monitoring and introspection.
+ * state, circuit-breaker scopes, retry-budget window, and rate-limit pacing
+ * deadlines, for monitoring and introspection.
  *
  * The snapshot is strictly read-only in both directions: it never aliases the
  * live mutable state (consumers get frozen copies), and building it never
  * mutates the state it observes. Reading does not create a circuit-state
  * entry for an unseen host, does not roll an elapsed retry-budget window
  * forward (a spent window is reported as spent), and does not clear a stale
- * pacing deadline — so polling `getTransportState` on a schedule is safe
+ * pacing deadline. Polling `getTransportState` on a schedule is safe
  * alongside live traffic.
  *
  * @param owner - The stable per-client state owner threaded through the

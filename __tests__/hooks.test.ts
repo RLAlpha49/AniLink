@@ -288,7 +288,7 @@ describe("reportDiagnostic", () => {
         ).toBe(true);
 
         // Silent mode with an observer: the state-owner record is
-        // unsolicited, so the observer is gated — nothing emitted.
+        // unsolicited, so the observer is gated. Nothing is emitted.
         expect(
             reportDiagnostic({
                 kind: "state-owner",

@@ -1,7 +1,7 @@
 /**
  * The `mutation` member of the `AniListApi` type.
  *
- * GENERATED FILE — do not edit by hand; regenerate with `npm run facade:generate`.
+ * GENERATED FILE. Do not edit by hand; regenerate with `npm run facade:generate`.
  * Signatures derive from the operation registry and operation classes; curated
  * JSDoc prose lives in scripts/generate-facade-groups.config.ts.
  */
@@ -63,7 +63,8 @@ import { type DeleteResult } from "../types/DeleteResult";
  * operation registry. The bidirectional type assertion ensures that
  * `RegistryMutationKeys` and `keyof AniListMutations["mutation"]` are the
  * same set: a key added or removed in either place produces a type error. The
- * registry is the source of truth; this asserts the typed surface keeps pace.
+ * registry defines the available keys; this checks that the facade type
+ * declares the same keys.
  */
 const _assertMutationParity: RegistryMutationKeys =
     null as unknown as keyof AniListMutations["mutation"];
@@ -217,7 +218,7 @@ export type AniListMutations = {
          * `DeleteMediaListEntryMutation` deletes one of the authenticated user's list entries by entry `id`.
          * @param {DeleteMediaListEntryVariables} variables - The {@link DeleteMediaListEntryVariables} for the mutation.
          * @param options - Optional per-request transport settings ({@link RequestOptions}) merged over the instance-level ones for this call only.
-         * @returns {Promise<DeleteMediaListEntryResponse>} A promise that resolves to a {@link DeleteMediaListEntryResponse} — `{ deleted }`, where `deleted` is `true` when the entry was deleted by this call and `false` when it was already absent.
+         * @returns {Promise<DeleteMediaListEntryResponse>} A promise that resolves to a {@link DeleteMediaListEntryResponse} of `{ deleted }`, where `deleted` is `true` when the entry was deleted by this call and `false` when it was already absent.
          * @throws If the client is unauthenticated, variables fail validation, or the request fails.
          *
          * @example

@@ -70,10 +70,10 @@ export interface UnwrapOptions {
      * least one resolved root field, plus errors) resolves with the data
      * instead of throwing: the resolved fields are returned and the error
      * entries are surfaced through `onPartialData` so the failures stay
-     * observable. Envelopes with errors and no usable `data` — `data:
+     * observable. Envelopes with errors and no usable `data`, `data:
      * null`, a non-object, or an object where every root field failed
      * (including one whose only entries resolved to `null`, the GraphQL
-     * shape for a failed nullable root field) — still throw regardless of
+     * shape for a failed nullable root field), still throw regardless of
      * this flag.
      */
     allowPartialData?: boolean;
@@ -90,7 +90,7 @@ export interface UnwrapOptions {
 
 /**
  * Whether a partial-success envelope carries at least one resolved root
- * field — the "usable data" gate for `allowPartialData`.
+ * field, the "usable data" gate for `allowPartialData`.
  *
  * Per GraphQL semantics, a nullable root field that errors comes back
  * inside `data` as `null` (not as `data: null`), so key presence alone
@@ -119,12 +119,12 @@ const hasResolvedRootField = (data: object): boolean => {
  * This is the tolerant wrapper around {@link unwrapSingleRootField} used by
  * the request pipeline. Documents with exactly one root field resolve to the
  * bare field value; documents with multiple root fields (or none) are returned
- * as the full envelope unchanged. All shipped operations are single-root-field,
- * so consumers of typed operations always receive the bare value; only custom
- * multi-field documents surface the envelope shape.
+ * as the full envelope unchanged. All shipped operations use one root field,
+ * so typed operations return the bare value. Custom documents with multiple
+ * root fields return the envelope.
  *
  * An envelope carrying a non-empty `errors` array (an HTTP 200 GraphQL
- * failure) throws an `AniLinkGraphQLError` instead of returning data —
+ * failure) throws an `AniLinkGraphQLError` instead of returning data,
  * unless `options.allowPartialData` is set and the envelope also carries a
  * non-null `data` object, in which case the data is returned and the error
  * entries are reported through `options.onPartialData` with the same
@@ -161,8 +161,8 @@ export const unwrapGraphQLResponse = <T>(
         // consumers get the resolved fields inline without losing
         // observability. "Usable" means a non-null object with at least one
         // resolved (non-null) root field: an empty `data: {}` means every
-        // root field failed, and so does `data: { Media: null }` — the
-        // GraphQL shape for a failed nullable root field — so there is
+        // root field failed, and so does `data: { Media: null }`, the
+        // GraphQL shape for a failed nullable root field, so there is
         // nothing to return and the envelope throws; returning the raw
         // envelope as `T` would hand the caller a shape its types do not
         // predict (or a bare `null` indistinguishable from a legitimate

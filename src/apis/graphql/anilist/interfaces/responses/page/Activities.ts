@@ -9,7 +9,7 @@
 import { type Activity } from "../../Activity";
 import { type PageInfo } from "./PageInfo";
 /**
- * `ActivitiesPageResponse` — a page of activities with pagination metadata.
+ * `ActivitiesPageResponse` is a page of activities with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/activityunion

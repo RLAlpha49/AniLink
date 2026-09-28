@@ -64,24 +64,22 @@ export interface ReportDiagnosticOptions {
      * The raw thrown value when the diagnostic reports a throwing hook, so
      * the observer can inspect the original error. Attached as the `cause`
      * of the `Error` handed to `onHookError`. A diagnostic carrying a
-     * `rawError` always reaches a configured observer — the diagnostics
-     * modes gate only the unsolicited fallback output, never the
-     * consumer's own observer.
+     * `rawError` always reaches a configured observer. Diagnostics modes
+     * control only unsolicited fallback output, not the consumer's observer.
      */
     rawError?: unknown;
     /**
      * Whether the reported failure is rethrown to the caller after the
      * diagnostic is emitted. When `true`, the `console.warn` fallback is
-     * skipped entirely: the caller receives the failure once, as the
-     * rejection they already handle, instead of twice — once as console
-     * noise and once as the error. A configured observer still receives
-     * the diagnostic in every mode.
+     * skipped entirely. The caller receives the failure as a rejection,
+     * without a duplicate console warning. A configured observer still
+     * receives the diagnostic in every mode.
      */
     rethrown?: boolean;
 }
 
 /**
- * The single emit path for the library's unsolicited diagnostics — the
+ * The single emit path for the library's unsolicited diagnostics: the
  * hook-failure fallback and the `stateOwner` keying warning. Both produce a
  * structured {@link AniLinkDiagnostic} record so platform log collectors get
  * filterable `source`/`kind`/`hookName`/`requestId` fields instead of prose.
@@ -92,18 +90,15 @@ export interface ReportDiagnosticOptions {
  * `onHookError` when configured, falling back to a `console.warn` of the
  * JSON-serialized record. One exception: a diagnostic carrying a
  * `rawError` (a real hook failure) always reaches a configured observer,
- * in every mode — the consumer asked to observe hook failures, so the
- * modes only control the fallback, never the observer itself. A throwing
- * observer is swallowed — a broken logger must never break the request
- * pipeline.
+ * in every mode. The modes control only the fallback. Exceptions from an
+ * observer are caught so a broken logger cannot break the request pipeline.
  *
  * @param options - The diagnostic to emit and how to route it.
  * @returns Whether an emission actually happened: `true` when a configured
  * observer was invoked or the record reached the console, `false` when the
- * configuration suppressed the diagnostic entirely. One-shot emitters key
- * on this result instead of re-deriving the routing — a duplicate of this
- * function's truth can drift from it (a silent-mode trigger with an
- * observer once consumed a one-shot warning while emitting nothing).
+ * configuration suppressed the diagnostic. One-shot emitters use this
+ * result instead of reimplementing the routing, avoiding mismatches such as
+ * consuming a silent-mode warning without emitting it.
  */
 export const reportDiagnostic = (options: ReportDiagnosticOptions): boolean => {
     const { kind, hookName, message, requestId, onHookError, diagnostics, rawError, rethrown } =
@@ -134,13 +129,13 @@ export const reportDiagnostic = (options: ReportDiagnosticOptions): boolean => {
 /**
  * Invokes a user-supplied lifecycle hook without letting its exceptions
  * escape into the request pipeline. A throwing hook is reported through the
- * structured {@link reportDiagnostic} emit path — whether or not an
- * `onHookError` observer is configured — and otherwise ignored: it must not
+ * structured {@link reportDiagnostic} path whether or not an
+ * `onHookError` observer is configured. The hook error must not
  * crash the request, be counted as an attempt, or distort retry and error
  * classification.
  *
- * Routing the observer path through {@link reportDiagnostic} too keeps one
- * diagnostic contract: the `Error` handed to `onHookError` always carries
+ * The observer path also uses {@link reportDiagnostic}, so the `Error`
+ * handed to `onHookError` always carries
  * the structured {@link AniLinkDiagnostic} record (with the raw thrown
  * value as its `cause` when one exists), so an observer never has to handle
  * both a bare user error and a structured record.

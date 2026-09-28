@@ -19,7 +19,7 @@ export interface FieldNode {
     children: SelectionNode[];
     /**
      * Set when this field originates from a bare `${Constant}` interpolation
-     * of a single-field constant, enabling named-type-reference emission.
+     * of a single-field constant, so the renderer can emit a named type reference.
      */
     sourceConstant?: string;
 }

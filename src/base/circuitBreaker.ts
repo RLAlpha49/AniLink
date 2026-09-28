@@ -26,13 +26,13 @@ import { safeInvoke } from "./hooks";
 import { stampRequestId } from "./errors";
 
 /**
- * Shared circuit-breaker state, keyed first by a stable per-client owner —
+ * Shared circuit-breaker state, keyed first by a stable per-client owner,
  * the `SendRequestOptions.stateOwner` object when supplied (the
  * per-client shared owner threaded through the provider wiring, so streaks
  * accumulate across every operation of one client) and otherwise the
  * `circuitBreaker` configuration object itself, which stays identical
  * across requests when the caller reuses one transport-settings object (the
- * instance-level pattern) — and then by the upstream host (so one provider's
+ * instance-level pattern), and then by the upstream host (so one provider's
  * outage cannot fast-fail another provider's requests on a multi-API client).
  * Only populated when a request opts in via `circuitBreaker`; disabled
  * configurations allocate nothing.
@@ -46,8 +46,7 @@ const circuitStates = new WeakMap<object, Map<string, CircuitState>>();
  * consecutive availability-failure streak, when the breaker opened (epoch
  * milliseconds, `null` while closed), whether the single post-cooldown
  * probe is currently reserved, and how many consecutive probes have failed
- * (which scales the next cooldown, so a recovering-but-slow upstream is
- * probed on a widening schedule instead of being starved).
+
  */
 export interface CircuitState {
     /** Consecutive availability failures since the last success. */
@@ -74,8 +73,8 @@ const MAX_PROBE_BACKOFF_EXPONENT = 3;
  * After the first trip the cooldown is the configured `cooldownMs` itself.
  * Each consecutive failed probe doubles it (capped at
  * `2 ** MAX_PROBE_BACKOFF_EXPONENT` times the configured value), so a
- * recovering-but-slow upstream — one that needs several cooldowns before
- * it can serve a probe — is retried on a widening schedule instead of
+ * recovering-but-slow upstream, one that needs several cooldowns before
+ * it can serve a probe, is retried on a widening schedule instead of
  * being probed at exactly one request per cooldown forever. A successful
  * probe resets the scale via {@link recordCircuitSuccess}.
  *
@@ -92,7 +91,7 @@ const scaledCooldownMs = (
 };
 
 /**
- * Classifies a normalized failure as an availability failure — the only
+ * Classifies a normalized failure as an availability failure, the only
  * class that may advance the circuit breaker's failure streak.
  *
  * Availability failures are transport-level conditions that indicate the
@@ -120,7 +119,7 @@ export const isAvailabilityFailure = (error: AniLinkError): boolean => {
 };
 
 /**
- * Classifies a normalized failure as streak-neutral — the class that
+ * Classifies a normalized failure as streak-neutral, the class that
  * leaves the circuit breaker's failure streak untouched, neither advancing
  * it like an availability failure nor resetting it like a
  * reachability-proving caller-side error.
@@ -128,15 +127,15 @@ export const isAvailabilityFailure = (error: AniLinkError): boolean => {
  * A GraphQL envelope error whose entries carry no upstream status (the
  * common AniList envelope shape, where `status` falls back to the HTTP `200`
  * envelope default) is ambiguous: it may be a server fault that omitted its
- * status, so it must not reset the streak — a sustained outage manifesting
+ * status, so it must not reset the streak. A sustained outage manifesting
  * as status-less envelope errors would otherwise erase whatever streak
- * other error classes accumulated — but it carries no availability-class
+ * other error classes accumulated. But it carries no availability-class
  * status either, so it must not advance the streak and trip the breaker on
  * what may be a consumer-side query bug. The one exception is the reserved
  * half-open probe, which a neutral failure still settles by closing (see
- * {@link recordCircuitFailure}): the upstream answered the probe with an
- * HTTP 200 envelope, so it is reachable, and an unsettled probe would wedge
- * the breaker in half-open forever.
+ * {@link recordCircuitFailure}). The upstream answered the probe with an
+ * HTTP 200 envelope, so it is reachable. Without that result, the breaker
+ * would stay half-open indefinitely.
  *
  * @param error - The normalized failure from the request pipeline.
  * @returns Whether the failure leaves the breaker streak untouched.
@@ -226,8 +225,8 @@ export const getCircuitState = (owner: object, scope: string): CircuitState => {
 };
 
 /**
- * Computes the cooldown remaining on an open breaker — the milliseconds
- * until the next half-open probe may dispatch — for the circuit fast-fail
+ * Computes the cooldown remaining on an open breaker, the milliseconds
+ * until the next half-open probe may dispatch, for the circuit fast-fail
  * error context (see {@link checkCircuitOpen}). While a probe is pending
  * (`probeInFlight`), no cooldown applies: the next request fast-fails
  * until the probe settles, so the remaining wait is not a cooldown number
@@ -259,7 +258,7 @@ export const circuitCooldownRemainingMs = (
 
 /**
  * Returns the breaker scopes recorded for one owner without creating or
- * refreshing anything — the read-only counterpart of {@link getCircuitState}
+ * refreshing anything, the read-only counterpart of {@link getCircuitState}
  * used by transport-state snapshots. Unlike {@link getCircuitState},
  * calling this with an owner that has no recorded state allocates nothing,
  * never fabricates an entry for an unseen host, and does not refresh scope
@@ -362,18 +361,18 @@ export const recordCircuitSuccess = (
  * budget is exhausted. Only availability failures (see
  * {@link isAvailabilityFailure}) count: network errors, timeouts, 429s, and
  * 5xx responses. Caller-side errors (4xx) and caller-initiated aborts say
- * nothing about upstream health, so they never advance the streak — and
+ * nothing about upstream health, so they never advance the streak. And
  * because such a failure proves the upstream answered, it resets the streak
  * like a success would: a stale 500-streak cannot trip the breaker after
  * interleaved caller-side errors. Status-less GraphQL envelope errors are
  * the exception (see {@link isStreakNeutralFailure}): they reset nothing,
  * so a sustained outage that manifests as status-less envelope errors can
  * no longer erase the streak other error classes accumulated. When such a
- * failure — including a streak-neutral one — is the reserved post-cooldown
+ * failure, including a streak-neutral one, is the reserved post-cooldown
  * probe, the breaker closes (the upstream answered, so it is reachable)
  * instead of wedging the half-open state. When an *availability* failure is the reserved post-cooldown probe,
  * it clears the half-open state and re-opens the breaker immediately so the
- * next request fast-fails until the cooldown elapses again — and the
+ * next request fast-fails until the cooldown elapses again. The
  * failed probe advances the probe-failure counter, which scales the next
  * cooldown (see {@link scaledCooldownMs}) so repeated probe failures back
  * off instead of starving the half-open state at one request per cooldown.
@@ -403,12 +402,12 @@ export const recordCircuitFailure = (
         // A status-less GraphQL envelope error is streak-neutral: with no
         // upstream status it proves neither an unhealthy upstream (so it
         // must not advance the streak) nor a healthy one (so it must not
-        // reset the streak either — resetting would let a sustained outage
+        // reset the streak either. Resetting would let a sustained outage
         // that manifests as status-less envelope errors erase the streak
         // other error classes accumulated). The half-open probe is the one
         // exception: the upstream answered the probe with an HTTP 200
         // envelope, so it is reachable, and the probe must settle by closing
-        // instead of wedging the breaker in half-open forever.
+        // instead of leaving the breaker half-open indefinitely.
         if (isStreakNeutralFailure(normalized) && !circuit.probeInFlight) {
             return;
         }
@@ -416,7 +415,7 @@ export const recordCircuitFailure = (
         // reachable: the availability-failure streak resets, exactly as it
         // would on a success. If this was the reserved half-open probe,
         // closing the breaker (emitting onCircuitClose) is part of that
-        // reset instead of leaving it wedged.
+        // reset instead of leaving it stuck.
         recordCircuitSuccess(circuit, resolved, hookContext, host);
         return;
     }

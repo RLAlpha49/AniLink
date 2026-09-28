@@ -9,7 +9,7 @@ import { AniLinkValidationError } from "../src/base/AniLinkError";
 import { ANILIST_OPERATION_REGISTRY } from "../src/apis/graphql/anilist/registry";
 import { describe, expect, test } from "vitest";
 
-/** Method names are validated against the public API surface at compile time. */
+/** Method names are validated against the public API at compile time. */
 type MutationMethod = keyof AniListApi["mutation"];
 
 describe("AniList mutations without remote side effects", () => {

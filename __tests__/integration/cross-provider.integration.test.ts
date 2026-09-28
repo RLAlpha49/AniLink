@@ -48,7 +48,7 @@ const client = () =>
 
 /** Well-known stable fixtures across both providers. */
 const FIXTURES = {
-    anilistMediaId: 1, // Cowboy Bebop — AniList id 1 maps to MAL id 1 (Cowboy Bebop)
+    anilistMediaId: 1, // Cowboy Bebop. AniList id 1 maps to MAL id 1 (Cowboy Bebop)
     anilistUserId: 542244, // Alpha49
     malAnimeId: 1, // Cowboy Bebop on MAL
     animeType: "ANIME" as const,
@@ -298,7 +298,7 @@ describe("cross-provider live integration — combined settings on one client", 
             const aniLink = client();
 
             // The AniList read misses; the MAL read on the same client must
-            // still succeed — errors never leak across provider slots.
+            // still succeed. Errors never leak across provider slots.
             await expect(
                 aniLink.anilist.query.media({ id: 999_999_999, type: FIXTURES.animeType })
             ).rejects.toThrowError(AniLinkApiError);

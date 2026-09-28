@@ -8,14 +8,14 @@ import { describe, expect, test } from "vitest";
 
 /**
  * The facade pagination helpers must accept the same fetcher callbacks as
- * the exported `paginate`/`paginatePages`/`paginateChunks` functions —
+ * the exported `paginate`/`paginatePages`/`paginateChunks` functions,
  * including the third `signal` parameter that lets a traversal forward its
  * abort signal into each page request.
  *
  * These tests are compile-time contracts: each callback declares the
  * three-parameter signature. If the facade's `PageFetcher`/`ChunkFetcher`
  * types drop the `signal` parameter, the callbacks fail to assign and the
- * suite does not compile — which is exactly the regression to catch.
+ * suite does not compile, which is exactly the regression to catch.
  */
 
 /** A terminal one-page response in the shape the transport returns post-unwrap. */
@@ -117,7 +117,7 @@ describe("facade pagination fetchers accept the traversal signal", () => {
 
         const fetchPage: DocumentedPageFetcher = (page, perPage, signal) => {
             // Capture the signal the traversal hands the fetcher while
-            // the traversal is still live — the bridge is disposed
+            // the traversal is still live. The bridge is disposed
             // (aborted) once the traversal completes, so the live state
             // must be observed mid-flight, not after the await returns.
             capturedDuringRequest = signal;
@@ -136,7 +136,7 @@ describe("facade pagination fetchers accept the traversal signal", () => {
         // HTTP request instead of only stopping new launches. The paginator
         // bridges the consumer's signal through an internal controller (so
         // it can dispose the bridge), so the per-request options carry the
-        // bridged signal — assert presence and abort propagation, not
+        // bridged signal, so assert presence and abort propagation, not
         // instance identity.
         expect(capturedDuringRequest).toBeInstanceOf(AbortSignal);
         expect(abortedAtCaptureTime).toBe(false);

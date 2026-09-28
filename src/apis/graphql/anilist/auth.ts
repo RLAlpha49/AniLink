@@ -15,7 +15,7 @@ export const ANILIST_AUTHORIZE_URL = "https://anilist.co/api/v2/oauth/authorize"
 /**
  * The AniList facts the shared token machinery reads: the token endpoint,
  * the sanitize label, the strip rule (AniList drops no request headers on
- * replay — the client ID and secret belong to the grant body, never to
+ * replay; the client ID and secret belong to the grant body, never to
  * GraphQL request headers), and the diagnostics identity.
  *
  * @see https://docs.anilist.co/reference/api
@@ -167,7 +167,7 @@ export const refreshAccessToken = async (
  * @param response - The token response to compute the expiry for.
  * @param now - The current time in milliseconds since the Unix epoch. Defaults to the time at which the helper is called.
  * @returns The moment the access token expires.
- * @throws A `TypeError` when `expires_in` is not a positive finite number — `0`, negative, `NaN`, or `Infinity` values produce an already-expired or nonsensical expiry that silently breaks proactive-refresh scheduling (and is one comparison-operator slip away from a refresh loop), so they are rejected instead.
+ * @throws A `TypeError` when `expires_in` is not a positive finite number. `0`, negative, `NaN`, or `Infinity` values produce an already-expired or nonsensical expiry that silently breaks proactive-refresh scheduling (and is one comparison-operator slip away from a refresh loop), so they are rejected instead.
  * @example
  * ```typescript
  * const token = await getAccessToken("1234", "secret", "code-from-redirect");

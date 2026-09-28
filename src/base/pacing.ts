@@ -5,9 +5,9 @@
  * owner and then by upstream host, the deadline recorder, the pre-dispatch
  * deadline awaiter, and the post-success deadline recording. When a
  * successful response reports the remaining quota below the configured
- * floor, the reset deadline is recorded — the response itself returns
- * immediately — so every subsequently dispatched request to the same host
- * waits for it *before* it is sent. The per-owner host map is LRU-bounded so
+ * floor, the reset deadline is recorded and the response returns
+ * immediately. Every later request to the same host waits for that deadline
+ * before dispatch. The per-owner host map is LRU-bounded so
  * a caller dispatching to many distinct hosts cannot grow it without bound,
  * each wait wakes with a small random stagger so requests queued on one
  * window reset do not fire as a synchronized burst, and a wait aborted
@@ -35,16 +35,16 @@ import { sleep } from "./sleep";
  * wiring, so deadlines gate every operation of one client) and then by
  * upstream host. When a successful response reports the remaining quota
  * below {@link ResolvedRequestOptions.rateLimitFloor}, the reset deadline is
- * recorded here so every subsequently dispatched request to the same host
- * waits for the window to reset *before* it is sent. A terminal 429 records
+ * recorded here so every later request to the same host waits for the
+ * window to reset before dispatch. A terminal 429 records
  * the same deadline from the error's own rate-limit metadata (see
  * {@link paceAfterTerminalRateLimit}), so the window a failed request proved
  * exhausted gates the next request too. This is the only
- * pacing mechanism: it gates concurrent/sequential requests that do not
- * share one {@link executeWithRetry} call too, not just the response that
+ * pacing mechanism. It gates concurrent and sequential requests that do not
+ * share one {@link executeWithRetry} call, not only the response that
  * observed the low quota. The per-owner host map is LRU-bounded by
- * `MAX_PACE_SCOPES_PER_OWNER` — mirroring the `circuitStates` cap, which
- * faces the identical dynamic-host exposure — so a caller dispatching to
+ * `MAX_PACE_SCOPES_PER_OWNER`, matching the `circuitStates` cap, because
+ * both maps face the same dynamic-host exposure. A caller dispatching to
  * many distinct hosts cannot grow it without bound.
  */
 const paceDeadlines = new WeakMap<object, Map<string, number>>();
@@ -115,7 +115,7 @@ const sleepForPacing = async (
  * deadline further in the future replaces an earlier one; a deadline at or
  * before now is cleared so a healthy window does not stall subsequent
  * requests, unless a later active deadline is already recorded for the
- * host — a stale report never clears a still-pending deadline. Recording
+ * host. A stale report never clears a still-pending deadline. Recording
  * an existing host refreshes its recency in the
  * per-owner map, and once an owner tracks more hosts than the LRU cap
  * allows, the least-recently-used host's deadline is evicted so
@@ -135,7 +135,7 @@ export const recordPaceDeadline = (owner: object, host: string, deadlineMs: numb
     const existing = scopes.get(host);
     if (deadlineMs <= now) {
         // A stale incoming deadline clears the host only when no active
-        // deadline is recorded or the recorded one is stale too — a later
+        // deadline is recorded or the recorded one is stale too. A later
         // active deadline survives a stale report, so one already-reset
         // window cannot un-record a still-pending one.
         if (existing === undefined || existing <= now) {
@@ -169,20 +169,18 @@ export const recordPaceDeadline = (owner: object, host: string, deadlineMs: numb
  * wait so requests queued on one window reset wake spread across a short
  * interval instead of firing at the identical millisecond; the `onPace`
  * payload reports the true deadline wait, not the staggered sleep, so
- * pacing metrics stay comparable. Emits `onPace` once for the wait — the only
- * `onPace` emission point, so the wait is reported exactly where it happens
- * — so an intentional rate-limit wait stays distinguishable from a hung
- * request in hook-based metrics. A wait aborted partway through emits
+ * pacing metrics stay comparable. Emits `onPace` once for each wait, keeping
+ * an intentional rate-limit wait distinct from a hung request in hook-based
+ * metrics. A wait aborted partway through emits
  * `onPace` with the elapsed portion of the deadline wait (clamped, so an
  * abort landing inside the stagger window never reports more than the
  * deadline wait itself) and `aborted: true` before surfacing as a pacing
  * abort (`abortedDuringPacing`), so a cancelled wait stays distinguishable
  * both from a cancelled in-flight request and from no pacing at all.
  *
- * Returns the deadline wait actually observed — the elapsed portion of the
- * deadline wait, stagger excluded — so the caller's cumulative pacing
- * metrics (`pacedMs`) report the same stagger-excluded measure `onPace`
- * does; `0` when no wait was needed.
+ * Returns the observed portion of the deadline wait, excluding the stagger,
+ * so the caller's cumulative pacing metrics (`pacedMs`) match the measure
+ * `onPace` reports. Returns `0` when no wait was needed.
  *
  * @param owner - The caller's stable transport-settings object, when known.
  * @param host - The upstream host the request is dispatched to.
@@ -231,10 +229,10 @@ export const awaitPaceDeadline = async (
             error.code === AniLinkErrorCodes.ABORTED &&
             error.abortedDuringPacing === true
         ) {
-            // An aborted wait reports the observed partial wait — clamped
+            // An aborted wait reports the observed partial wait, clamped
             // to the deadline wait so an abort landing inside the stagger
             // window never reports more than the deadline itself, and never
-            // the full deadline — so pacing time is not over-counted, and
+            // the full deadline. So pacing time is not over-counted, and
             // the `aborted` flag distinguishes a cancelled wait from a
             // completed one without watching `onError`.
             const elapsedMs = Math.min(Date.now() - waitStartedAt, delayMs);
@@ -257,8 +255,8 @@ export const awaitPaceDeadline = async (
 /**
  * Records the rate-limit reset deadline after a successful response when
  * the reported remaining quota drops below the configured floor. The
- * successful response itself returns immediately — its data is never held
- * for the window reset — and the recorded deadline paces the next request
+ * successful response itself returns immediately; its data is never held
+ * for the window reset, and the recorded deadline paces the next request
  * to the same host via {@link awaitPaceDeadline}.
  *
  * @param response - The successful response carrying the rate-limit headers.
@@ -288,9 +286,9 @@ export const paceAfterSuccess = (
 };
 
 /**
- * Records the rate-limit reset deadline from a terminal 429 — one that
+ * Records the rate-limit reset deadline from a terminal 429, one that
  * exhausted its retry budget, ran with retries disabled, or surfaced for
- * any other reason without another attempt scheduled — so the next request
+ * any other reason without another attempt scheduled, so the next request
  * to the same host waits for the window it already proved exhausted instead
  * of dispatching immediately, eating another 429, and repeating until the
  * window resets on its own.
@@ -300,7 +298,7 @@ export const paceAfterSuccess = (
  * GraphQL-envelope 429s), so this is the failure-path counterpart of
  * {@link paceAfterSuccess}: the same `MAX_PACE_WAIT_MS` clamp, the same
  * {@link recordPaceDeadline} recorder. A 429 without rate-limit metadata
- * records nothing — there is no reset deadline to wait for.
+ * records nothing; there is no reset deadline to wait for.
  *
  * @param normalized - The terminal normalized failure from the request pipeline.
  * @param resolved - The resolved request options carrying the pacing flag.
@@ -331,7 +329,7 @@ export const paceAfterTerminalRateLimit = (
 
 /**
  * Returns the recorded rate-limit pacing deadlines for one owner without
- * waiting for them or clearing stale entries — the read-only counterpart of
+ * waiting for them or clearing stale entries, the read-only counterpart of
  * {@link awaitPaceDeadline} used by transport-state snapshots. Reading
  * through this helper never mutates the deadline map: a stale
  * (already-elapsed) deadline is reported as-is instead of being cleared,

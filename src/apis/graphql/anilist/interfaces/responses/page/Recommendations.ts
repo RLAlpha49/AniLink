@@ -9,7 +9,7 @@
 import { type RecommendationResponse } from "../query/Recommendation";
 import { type PageInfo } from "./PageInfo";
 /**
- * `RecommendationsPageResponse` — a page of media recommendations with pagination metadata.
+ * `RecommendationsPageResponse` is a page of media recommendations with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/recommendation

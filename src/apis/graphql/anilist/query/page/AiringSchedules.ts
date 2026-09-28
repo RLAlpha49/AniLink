@@ -179,7 +179,7 @@ export class AiringSchedulesQuery extends AniListOperation {
      * @returns The {@link AiringSchedulesPageResponse} for the requested page, with pagination metadata.
      * @see https://docs.anilist.co/reference/object/airingschedule
      * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call
-     * only. Pass `fields` to request only a subset of the response — the document is composed from the
+     * only. Pass `fields` to request only a subset of the response. The document is composed from the
      * corresponding selections and the return type narrows to `DeepPick<AiringSchedulesPageResponse, K | "pageInfo">`:
      * the always-selected `pageInfo` is part of the narrowed type because the composed document always sends
      * it. Omit `fields` for the maximal selection and the full response.

@@ -19,7 +19,7 @@ import {
  * are rejected.
  *
  * Leading `#` comment lines and whitespace are stripped before the test, so
- * a copied document that opens with a comment (`# fetch viewer\nquery { … }`)
+ * a copied document that opens with a comment (`# fetch viewer\nquery { ... }`)
  * validates locally exactly as the server would accept it.
  *
  * This is a deliberately lightweight guard, not a parser: it catches empty
@@ -34,9 +34,9 @@ const GRAPHQL_OPERATION_PATTERN = /^\s*(?:\{|(?:query|mutation)\b[\s\S]*\{)/;
  * an executable `query` document that declares the standard AniList `Page`
  * wrapper. The document must open with the `query` keyword (a paginated
  * traversal is always a read), select the `Page` root field, and reference
- * the `$page`/`$perPage` variables the traversal feeds — the same lightweight
- * structural guard as {@link GRAPHQL_OPERATION_PATTERN}, not a parser. Full
- * syntax validation is left to the AniList API.
+ * the `$page`/`$perPage` variables the traversal feeds. This is the same
+ * lightweight structural guard as {@link GRAPHQL_OPERATION_PATTERN}, not a
+ * parser. Full syntax validation is left to the AniList API.
  */
 const GRAPHQL_PAGE_QUERY_PATTERN = /^\s*query\b[\s\S]*\bPage\s*\(/;
 
@@ -47,7 +47,7 @@ const CUSTOM_PAGE_VALIDATION_MESSAGE =
 /**
  * Strips leading `#` comment lines and blank lines from a GraphQL document
  * so the operation pattern can anchor at the first executable token. Only
- * the document head is stripped — comments between selections are untouched
+ * the document head is stripped. Comments between selections are untouched
  * and remain the server's concern.
  */
 const stripLeadingComments = (query: string): string => {
@@ -71,9 +71,8 @@ const stripLeadingComments = (query: string): string => {
  * pagination traversal controls plus per-request transport settings for
  * the page fetches.
  *
- * Named so the paginated escape hatch's public signature stays a single
- * reference instead of an inlined intersection at every call site (the
- * method, the facade property, and the generated operation reference).
+ * This named type keeps the method, facade property, and generated operation
+ * reference on one shared signature instead of repeating an intersection.
  *
  * @see https://docs.anilist.co/reference/object/page
  */
@@ -88,9 +87,8 @@ export interface CustomPageOptions extends PaginateOptions {
 }
 
 /**
- * `CustomRequest` sends caller-authored GraphQL documents to AniList — the
- * escape hatch for queries and mutations the typed operation surface does
- * not cover.
+ * `CustomRequest` sends caller-authored GraphQL documents to AniList for
+ * queries and mutations without a typed operation.
  *
  * @see https://docs.anilist.co/reference/query
  * @see https://docs.anilist.co/reference/mutation
@@ -102,7 +100,7 @@ export class CustomRequest extends AniListOperation {
      * The response follows the same unwrapping rule as every other operation:
      * a document with a single root field resolves to the bare field value,
      * while a document with multiple root fields resolves to the full
-     * `{ data }` envelope. Annotate `T` with the shape you expect — the bare
+     * `{ data }` envelope. Annotate `T` with the shape you expect: the bare
      * value for single-root-field documents, or the envelope type itself when
      * the document selects several root fields:
      *
@@ -141,16 +139,16 @@ export class CustomRequest extends AniListOperation {
     }
 
     /**
-     * `customPage` walks a caller-authored `Page` document through the shared
-     * pagination engine — the paginated escape hatch for collections whose
-     * field combination the generated page operations do not expose.
+     * `customPage` paginates a caller-authored `Page` document through the
+     * shared engine. Use it for collections whose field combination the
+     * generated page operations do not expose.
      *
      * The document must declare the standard AniList `Page` wrapper with
      * `$page`/`$perPage` `Int` variables and select `pageInfo { hasNextPage }`
      * (the engine's terminal flag) plus an items array under a key of your
      * choosing. Because `Page` is the document's single root field, the
      * response unwraps to the bare `Page` object, so `TPage` is the `Page`
-     * selection's shape — not an envelope:
+     * selection's shape, not an envelope:
      *
      * ```typescript
      * const result = await aniLink.anilist.customPage(
@@ -208,7 +206,7 @@ export class CustomRequest extends AniListOperation {
             throw new AniLinkValidationError([CUSTOM_PAGE_VALIDATION_MESSAGE]);
         }
         // One normalization pass feeds every structural check, so a leading
-        // comment can neither satisfy nor spoil any of them — and the
+        // comment can neither satisfy nor spoil any of them, and the
         // variable checks are word-boundary matches, so `$pageLimit` (or a
         // `# $page` comment) cannot masquerade as the `$page` the
         // traversal feeds.

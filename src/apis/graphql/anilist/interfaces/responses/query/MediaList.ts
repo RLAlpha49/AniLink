@@ -9,7 +9,7 @@
 import { type FuzzyDate } from "../../FuzzyDate";
 import { type Media } from "../../Media";
 /**
- * `MediaListResponse` — a user's list entry for a media, including the media itself.
+ * `MediaListResponse` is a user's list entry for a media, including the media itself.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/medialist

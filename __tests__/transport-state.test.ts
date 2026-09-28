@@ -12,8 +12,8 @@ import { getAxiosStub, makeAxiosResponseError as apiError } from "./helpers/axio
 /**
  * Transport-state snapshot suite (R-029).
  *
- * Drives the real composition — {@link AniLink} → provider wiring →
- * `sendRequest` → the shared Axios instance — with only axios doubled, then
+ * Drives the real composition ({@link AniLink} to provider wiring to
+ * `sendRequest` to the shared Axios instance) with only axios doubled, then
  * asserts the `getTransportState` snapshot reflects the driven breaker,
  * budget, and pacing state, is deep-frozen, and never mutates the state it
  * observes.
@@ -271,7 +271,7 @@ describe("AniLink#getTransportState", () => {
         expect(Object.isFrozen(first.anilist)).toBe(true);
         // The per-provider wrapper object is frozen too, matching the
         // documented "every nested object and array is deep-frozen"
-        // contract — a consumer cannot swap a provider's snapshot out.
+        // contract, so a consumer cannot swap a provider's snapshot out.
         expect(Object.isFrozen(first)).toBe(true);
         expect(Object.isFrozen(second)).toBe(true);
     });

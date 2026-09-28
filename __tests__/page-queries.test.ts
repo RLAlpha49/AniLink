@@ -12,13 +12,13 @@ import {
 } from "./helpers/mockRequestHandler";
 import { describe, expect, test } from "vitest";
 
-/** Method names are validated against the public API surface at compile time. */
+/** Method names are validated against the public API at compile time. */
 type PageMethod = keyof AniListApi["query"]["page"];
 
 /**
  * Narrows a table-driven page method to the plain call shape the unwrap
  * tests use. The facade members are overloaded intersections (the `fields`
- * surface); this one documented cast replaces per-call-site double casts.
+ * overloads); this one documented cast replaces per-call-site double casts.
  */
 const asPageMethod = (
     client: { anilist: AniListApi },
@@ -293,7 +293,7 @@ describe("page operations unwrap the Page root field directly", () => {
 
             // The table drives every page method through one call shape; the
             // single documented cast narrows the overloaded facade member to
-            // that shape (the overloads exist for the `fields` surface).
+            // that shape (the overloads exist for the `fields` option).
             const call = asPageMethod(client, method);
             const result = await call(variables);
 

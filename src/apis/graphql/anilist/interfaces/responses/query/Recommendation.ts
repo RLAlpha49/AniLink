@@ -9,7 +9,7 @@
 import { type BasicUser } from "../../Basic";
 import { type Media } from "../../Media";
 /**
- * `RecommendationResponse` — a media recommendation with its rating and author.
+ * `RecommendationResponse` is a media recommendation with its rating and author.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/recommendation

@@ -9,7 +9,7 @@
 import { type ThreadResponse } from "../query/Thread";
 import { type PageInfo } from "./PageInfo";
 /**
- * `ThreadsPageResponse` — a page of forum threads with pagination metadata.
+ * `ThreadsPageResponse` is a page of forum threads with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/thread

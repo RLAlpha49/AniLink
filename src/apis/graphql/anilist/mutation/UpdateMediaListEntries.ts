@@ -126,14 +126,14 @@ export class UpdateMediaListEntriesMutation extends AniListOperation {
     /**
      * {@link UpdateMediaListEntriesMutation.updateMediaListEntries} sends a mutation request to update media list entries.
      *
-     * Applies the same changes to every entry in `ids` in one request — useful for bulk status
-     * or score updates. Returns one updated entry per id.
+     * Applies the same changes to every entry in `ids` in one request, which is useful for
+     * bulk status or score updates. Returns one updated entry per id.
      *
      * @param variables - Values from {@link UpdateMediaListEntriesVariables} for the mutation.
      * @returns The updated {@link MediaListResponse} entries returned by the mutation.
      * @throws Throws if no authentication token is configured, `ids` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/object/medialist
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<MediaListResponse, K>[]` (one narrowed entry per id). Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<MediaListResponse, K>[]` (one narrowed entry per id). Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new UpdateMediaListEntriesMutation("your-token").updateMediaListEntries({ ids: [1], status: "CURRENT", progress: 1 });

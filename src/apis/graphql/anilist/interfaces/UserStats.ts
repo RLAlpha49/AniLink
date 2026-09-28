@@ -11,7 +11,7 @@ import { type ScoreDistribution, type StatusDistribution } from "./Distribution"
 import { type Favoured } from "./Favoured";
 import { type ListScores } from "./ListScores";
 /**
- * `UserStats` — a user's aggregate activity stats, distributions, list scores, and favoured overviews.
+ * `UserStats` is a user's aggregate activity stats, distributions, list scores, and favoured overviews.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/userstats

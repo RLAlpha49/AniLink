@@ -3,7 +3,7 @@ import type { FuzzyDateOptions } from "./fuzzyDate";
 /**
  * Build an AniList `FuzzyDateInt` from optional year, month, and day parts.
  *
- * AniList's query arguments type fuzzy dates as the `FuzzyDateInt` scalar —
+ * AniList's query arguments type fuzzy dates as the `FuzzyDateInt` scalar,
  * an integer in `YYYYMMDD` form (for example `19980401`), unlike the
  * `FuzzyDateInput` object the list-entry mutations take. This helper packs
  * optional date parts into that integer, filling each omitted part with
@@ -11,7 +11,7 @@ import type { FuzzyDateOptions } from "./fuzzyDate";
  * `19980000`, `fuzzyDateInt({ year: 1998, month: 4 })` is `19980400`, and
  * `fuzzyDateInt()` is `0` (the all-zero date).
  *
- * Use it for the `FuzzyDateInt` filter variables of the query operations —
+ * Use it for the `FuzzyDateInt` filter variables of the query operations:
  * `startDate`/`endDate` on `query.media` and `page.medias`, and
  * `startedAt`/`completedAt` on `query.mediaList`,
  * `query.mediaListCollection`, and `page.mediaLists`; use `fuzzyDate` for
@@ -26,7 +26,7 @@ import type { FuzzyDateOptions } from "./fuzzyDate";
  * // 20240415
  *
  * const yearOnly = fuzzyDateInt({ year: 2024 });
- * // 20240000 — omitted parts become 0
+ * // 20240000. Omitted parts become 0.
  *
  * const page = await aniLink.anilist.query.page.medias({
  *   page: 1,

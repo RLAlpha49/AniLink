@@ -65,7 +65,7 @@ describe("facade group generation", () => {
 
     test("generated narrowing unions carry the class-side always-keys", async () => {
         // The always-keys are parsed from each operation class's
-        // composeDocument argument — the single source of truth — so the
+        // composeDocument argument, the single source of truth, so the
         // generated unions must carry exactly those keys: the entity
         // constants, the shared page constant, and nothing for an
         // always-key-less query.
@@ -110,7 +110,7 @@ describe("facade group generation", () => {
 
     test("parseRegistrySource throws when an op call shape is not covered by the entry regex", () => {
         // A fifth argument (or any call shape the entry regex does not cover)
-        // would silently drop the entry from generation — a wrong public
+        // would silently drop the entry from generation, a wrong public
         // facade with no error. The count guard must fail loudly instead.
         const fake = [
             "export const ANILIST_OPERATION_REGISTRY = {",
@@ -126,8 +126,8 @@ describe("facade group generation", () => {
 
     test("generation throws when a fields operation's FieldPath bound is not recognized", async () => {
         // A bound the strict regex cannot capture (here: a union) must fail
-        // generation loudly. The silent alternative — falling back to the
-        // wide response bound — would emit a facade promising paths the
+        // generation loudly. The silent alternative, falling back to the
+        // wide response bound, would emit a facade promising paths the
         // composer rejects, the exact drift this generator exists to
         // prevent. The generator runs in a subprocess so its module-level
         // source cache cannot serve the pre-mutation file text.

@@ -1,6 +1,6 @@
 /**
  * {@link MediaFormat} is the AniList MediaFormat enum: the release format of a media
- * (episode count and medium follow from it — a `TV` series has episodes, a `MANGA` has chapters).
+ * (episode count and medium follow from it; a `TV` series has episodes, a `MANGA` has chapters).
  * @see https://docs.anilist.co/reference/enum/mediaformat
  */
 export type MediaFormat =

@@ -9,7 +9,7 @@
 import { type ReviewResponse } from "../query/Review";
 import { type PageInfo } from "./PageInfo";
 /**
- * `ReviewsPageResponse` — a page of media reviews with pagination metadata.
+ * `ReviewsPageResponse` is a page of media reviews with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/review

@@ -17,8 +17,8 @@ import { getAxiosStub, makeAxiosResponseError } from "./helpers/axiosStub";
  *
  * Unlike the facade suites (which replace `sendRequest` wholesale through
  * `helpers/mockRequestHandler`) and the transport suites (which call
- * `sendRequest` directly), this file drives the real composition —
- * {@link AniLink} → operation classes → `sendRequest` → the shared Axios instance —
+ * `sendRequest` directly), this file drives the real composition
+ * ({@link AniLink} to operation classes to `sendRequest` to the shared Axios instance)
  * with only axios itself doubled. Header construction, envelope unwrapping,
  * and error normalization are therefore exercised exactly as production wires
  * them, without needing a live token.
@@ -214,7 +214,7 @@ describe("client-level onHookError wiring", () => {
 describe("response cache stats through the transport-state snapshot", () => {
     test("a cache wired through a credentials slot surfaces in getTransportState", async () => {
         // A consumer wiring the cache through a credentials slot never holds
-        // the ResponseCache instance — the registry resolves it and the
+        // the ResponseCache instance. The registry resolves it and the
         // transport-state snapshot reads the counters through it.
         const client = new AniLink({
             anilist: {

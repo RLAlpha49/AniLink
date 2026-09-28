@@ -2,8 +2,8 @@
  * Shared plumbing for the per-provider token CLI scripts (`mal-token.ts`,
  * `anilist-token.ts`, and future providers with wrappable auth).
  *
- * Each provider script keeps only its flow-specific pieces — how the
- * authorize URL is built, how the code is exchanged — and gets the rest from
+ * Each provider script keeps only its flow-specific pieces, how the
+ * authorize URL is built and how the code is exchanged, and gets the rest from
  * here: `.env` parsing and upserting, flag parsing, credential resolution,
  * the paste-the-redirect prompt, and the entry-point guard. Adding a provider
  * with OAuth auth means adding a thin script, not another copy of this file.
@@ -250,8 +250,8 @@ export function extractState(pasted: string): string | undefined {
  * Prompts for the pasted redirect URL and returns the authorization code.
  *
  * When `expectedState` is passed, the pasted redirect's `state` parameter
- * must match it — the CSRF check the library's own docs prescribe — so the
- * full redirect URL is required, not just the `code=...` fragment.
+ * must match it, as required by the library's CSRF guidance, so the
+ * full redirect URL is required rather than only the `code=...` fragment.
  *
  * Iterating the interface ends on EOF, so a closed stdin (Ctrl+Z, piped
  * input) fails with a message instead of leaving a pending prompt behind.

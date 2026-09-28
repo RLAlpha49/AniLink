@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `ActivityHistory` — a daily activity history entry of a user.
+ * `ActivityHistory` is a daily activity history entry of a user.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/useractivityhistory

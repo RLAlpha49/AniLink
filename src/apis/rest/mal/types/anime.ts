@@ -56,7 +56,10 @@ export interface MalAnimeKnownFields {
 /**
  * {@link MalAnime} is the typed portion of a MyAnimeList anime response returned by `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get`.
  *
- * It always carries `id` and `title`; additional fields appear when requested via the `fields` request option — or, when `fields` is omitted, via the `DEFAULT_MAL_ANIME_FIELDS` fallback — and are exposed through the index signature without narrowing.
+ * It always carries `id` and `title`. Requested fields appear through the
+ * `fields` request option. If `fields` is omitted, the
+ * `DEFAULT_MAL_ANIME_FIELDS` fallback selects them. The index signature keeps
+ * additional fields accessible without narrowing.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  */
@@ -231,10 +234,10 @@ export interface MalAnimeSearchResponse {
 /**
  * {@link MalAnimeSearchParams} is the params object of the anime keyword search.
  *
- * It carries the API's own inputs for `GET /anime` — the `q` keyword plus the
- * `limit` and `offset` paging filters — consumed by `MalAnimeOperation.search`
- * and `MyAnimeListAnimeApi.search` as the single params object of the unified
- * `(params, options?)` convention.
+ * It contains the `q` keyword and the `limit` and `offset` paging filters for
+ * `GET /anime`. `MalAnimeOperation.search` and
+ * `MyAnimeListAnimeApi.search` accept this object as `params`, followed by
+ * optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_get
  */
@@ -261,7 +264,12 @@ export type MalAnimeListStatusValue =
 /**
  * {@link MalAnimeListStatusUpdate} is the form-urlencoded PATCH request body for updating a user's anime list status.
  *
- * Every field is optional: callers send only the fields they want to change. It is consumed by `MalAnimeOperation.updateMyListStatus` and `MyAnimeListAnimeApi.updateMyListStatus` against `PATCH /anime/{anime_id}/my_list_status`, which encodes it as `application/x-www-form-urlencoded` — the endpoint's only documented request format.
+ * Every field is optional. Callers send only the fields they want to change.
+ * `MalAnimeOperation.updateMyListStatus` and
+ * `MyAnimeListAnimeApi.updateMyListStatus` send this body to
+ * `PATCH /anime/{anime_id}/my_list_status` as
+ * `application/x-www-form-urlencoded`, the only request format documented
+ * for this endpoint.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put
  */
@@ -289,7 +297,12 @@ export interface MalAnimeListStatusUpdate {
 /**
  * {@link MalAnimeListStatus} is the response returned by MyAnimeList for a user's anime list status.
  *
- * It is the shape returned by `MalAnimeOperation.updateMyListStatus` and `MyAnimeListAnimeApi.updateMyListStatus` from `PATCH /anime/{anime_id}/my_list_status`. MyAnimeList returns `tags` as an array of strings and reports the episode count as `num_episodes_watched` (the request field is `num_watched_episodes` — a documented MAL asymmetry); the server-managed `updated_at` timestamp is included when set.
+ * `MalAnimeOperation.updateMyListStatus` and
+ * `MyAnimeListAnimeApi.updateMyListStatus` return this shape from
+ * `PATCH /anime/{anime_id}/my_list_status`. MyAnimeList returns `tags` as an
+ * array of strings. The response uses `num_episodes_watched`, while the
+ * request uses `num_watched_episodes`. MAL may also return the server-managed
+ * `updated_at` timestamp.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_put
  */
@@ -340,9 +353,9 @@ export type MalAnimeListSort =
 /**
  * {@link MalAnimeGetParams} is the params object of the anime lookup read.
  *
- * It carries the API's own inputs for `GET /anime/{id}`, consumed by
- * `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get` as the single params
- * object of the unified `(params, options?)` convention.
+ * It contains the `id` path parameter for `GET /anime/{id}`.
+ * `MalAnimeOperation.get` and `MyAnimeListAnimeApi.get` accept this object as
+ * `params`, followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  */
@@ -354,9 +367,10 @@ export interface MalAnimeGetParams {
 /**
  * {@link MalSeasonalParams} is the params object of the seasonal anime read.
  *
- * It carries the API's own inputs for `GET /anime/season/{year}/{season}`,
- * consumed by `MalAnimeOperation.seasonal` and `MyAnimeListAnimeApi.seasonal`
- * as the single params object of the unified `(params, options?)` convention.
+ * It contains the `year` and `season` path parameters for
+ * `GET /anime/season/{year}/{season}`. `MalAnimeOperation.seasonal` and
+ * `MyAnimeListAnimeApi.seasonal` accept this object as `params`, followed by
+ * optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
  */
@@ -370,9 +384,9 @@ export interface MalSeasonalParams {
 /**
  * {@link MalRankingParams} is the params object of the anime ranking read.
  *
- * It carries the API's own inputs for `GET /anime/ranking`, consumed by
- * `MalAnimeOperation.ranking` and `MyAnimeListAnimeApi.ranking` as the single
- * params object of the unified `(params, options?)` convention.
+ * It contains the `ranking_type` query parameter for `GET /anime/ranking`.
+ * `MalAnimeOperation.ranking` and `MyAnimeListAnimeApi.ranking` accept this
+ * object as `params`, followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_ranking_get
  */
@@ -399,10 +413,10 @@ export interface MalAnimeListStatusUpdateParams extends MalAnimeListStatusUpdate
 /**
  * {@link MalAnimeDeleteParams} is the params object of the anime list-status delete.
  *
- * It carries the API's own inputs for `DELETE /anime/{id}/my_list_status`,
- * consumed by `MalAnimeOperation.deleteFromList` and
- * `MyAnimeListAnimeApi.deleteFromList` as the single params object of the
- * unified `(params, options?)` convention.
+ * It contains the `id` path parameter for
+ * `DELETE /anime/{id}/my_list_status`. `MalAnimeOperation.deleteFromList`
+ * and `MyAnimeListAnimeApi.deleteFromList` accept this object as `params`,
+ * followed by optional `options`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/anime_anime_id_my_list_status_delete
  */

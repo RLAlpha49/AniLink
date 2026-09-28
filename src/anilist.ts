@@ -1,5 +1,5 @@
 /**
- * AniList provider surface.
+ * AniList provider exports.
  *
  * This barrel is the canonical import point for everything AniList-specific:
  * the composed facade type, the transport options shared by every provider,

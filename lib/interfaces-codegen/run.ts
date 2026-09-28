@@ -57,7 +57,7 @@ export interface BuildInput {
 /**
  * Computes the final file contents keyed by output path. Throws with a precise
  * message when a selection cannot be resolved against the snapshot, so drift
- * surfaces at generation time instead of at compile time.
+ * appears at generation time instead of at compile time.
  *
  * @param input - The complete {@link BuildInput}: fragments, operations,
  *   snapshot, outputs, and on-disk state.

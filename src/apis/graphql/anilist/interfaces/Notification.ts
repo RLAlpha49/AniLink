@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 import { type BasicComment, type BasicThread, type BasicUser } from "./Basic";
 /**
- * `ThreadNotification` — a thread-comment notification; narrow on the literal `type` field.
+ * `ThreadNotification` is a thread-comment notification; narrow on the literal `type` field.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
@@ -65,7 +65,7 @@ export interface ThreadNotification {
 }
 
 /**
- * `AiringNotification` — an episode-airing notification; `type` is always "AIRING".
+ * `AiringNotification` is an episode-airing notification; `type` is always "AIRING".
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
@@ -138,7 +138,7 @@ export interface AiringNotification {
 }
 
 /**
- * `FollowingNotification` — a new-follower notification; `type` is always "FOLLOWING".
+ * `FollowingNotification` is a new-follower notification; `type` is always "FOLLOWING".
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
@@ -176,7 +176,7 @@ export interface FollowingNotification {
 }
 
 /**
- * `ActivityMessageNotification` — a direct-message notification; `type` is always "ACTIVITY_MESSAGE".
+ * `ActivityMessageNotification` is a direct-message notification; `type` is always "ACTIVITY_MESSAGE".
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
@@ -344,7 +344,7 @@ export interface ActivityMessageNotification {
 }
 
 /**
- * `ThreadLikeNotification` — a thread-like notification; `type` is always "THREAD_LIKE".
+ * `ThreadLikeNotification` is a thread-like notification; `type` is always "THREAD_LIKE".
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
@@ -392,7 +392,7 @@ export interface ThreadLikeNotification {
 }
 
 /**
- * `RelatedMediaAdditionNotification` — a media-added-to-list notification; `type` is always "RELATED_MEDIA_ADDITION".
+ * `RelatedMediaAdditionNotification` is a media-added-to-list notification; `type` is always "RELATED_MEDIA_ADDITION".
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
@@ -460,7 +460,7 @@ export interface RelatedMediaAdditionNotification {
 }
 
 /**
- * `MediaDataChangeNotification` — a media data-change notification; `type` is always "MEDIA_DATA_CHANGE".
+ * `MediaDataChangeNotification` is a media data-change notification; `type` is always "MEDIA_DATA_CHANGE".
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
@@ -533,7 +533,7 @@ export interface MediaDataChangeNotification {
 }
 
 /**
- * `MediaMergeNotification` — a media-merge notification; `type` is always "MEDIA_MERGE".
+ * `MediaMergeNotification` is a media-merge notification; `type` is always "MEDIA_MERGE".
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion
@@ -611,7 +611,7 @@ export interface MediaMergeNotification {
 }
 
 /**
- * `MediaDeletionNotification` — a media-deletion notification; `type` is always "MEDIA_DELETION".
+ * `MediaDeletionNotification` is a media-deletion notification; `type` is always "MEDIA_DELETION".
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/union/notificationunion

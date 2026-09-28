@@ -116,11 +116,11 @@ if (malId !== undefined) {
 
 ### `CrossLinkResult` shape
 
-| Field          | Type                          | Description                                                                                                |
-| -------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `anilistToMal` | `ReadonlyMap<number, number>` | Maps AniList media id to MyAnimeList id for entries that carry one                                         |
-| `malToAnilist` | `ReadonlyMap<number, number>` | Maps MAL IDs to AniList media IDs. The last entry wins for duplicates.                                     |
-| `unmapped`     | `TMedia[]`                    | The input entries that carry no `idMal`, in input order                                                    |
+| Field          | Type                          | Description                                                            |
+| -------------- | ----------------------------- | ---------------------------------------------------------------------- |
+| `anilistToMal` | `ReadonlyMap<number, number>` | Maps AniList media id to MyAnimeList id for entries that carry one     |
+| `malToAnilist` | `ReadonlyMap<number, number>` | Maps MAL IDs to AniList media IDs. The last entry wins for duplicates. |
+| `unmapped`     | `TMedia[]`                    | The input entries that carry no `idMal`, in input order                |
 
 The helper is pure and makes no requests. Pass it the `media` array from a `page.medias` response, a one-element array containing a `query.media` result, or an array of `Media`-shaped entries with `id` and `idMal`. See the [cross-provider workflow recipe](/recipes) for the full flow.
 

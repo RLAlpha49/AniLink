@@ -9,15 +9,15 @@
  * `NamedUnionMembers`, which maps each member to its selection-scope name:
  * the three activity discriminants via `ActivityKinds`, the notification
  * variants via `NotificationKinds`, and the `Likeable` members structurally.
- * `FieldPathInto` then offers `QualifiedFieldPath` — paths qualified by the
- * scope name (`"TextActivity.text"`) — instead of the members' bare keys,
+ * `FieldPathInto` then offers `QualifiedFieldPath`, paths qualified by the
+ * scope name (`"TextActivity.text"`), instead of the members' bare keys,
  * because a bare key like `"text"` is ambiguous across members. The same
  * scope name is a scope, not a field: it never renders as a property in the
  * composed document, and `DeepPickUnion` re-bases paths that continue past it
  * onto the member's own fields.
  *
- * Worked example — `"notifications.ActivityMentionNotification.activity.TextActivity.id"`
- * on a page query: `Page.notifications` resolves to the notification union;
+ * Worked example: `"notifications.ActivityMentionNotification.activity.TextActivity.id"`
+ * on a page query. `Page.notifications` resolves to the notification union;
  * `ActivityMentionNotification` selects that member's scope; its `activity`
  * field is the activity union, so `TextActivity` selects that member's
  * scope; `id` is then an ordinary field of `TextActivity`. The composed
@@ -33,13 +33,12 @@ import type { NotificationResponse } from "../../interfaces/responses/query/Noti
 import type { Thread, ThreadComment } from "../../interfaces/Thread";
 
 /**
- * Compile-time drift guards for the selection-scope maps below.
+ * Compile-time checks for the selection-scope maps below.
  *
- * The maps hand-duplicate knowledge that also lives in the generated
- * interfaces; these asserts make disagreement a build failure instead of a
- * silent capability gap (a member missing from a map simply stops being
- * offered by `FieldPath`, with no error anywhere). Each guard holds only
- * while the map's values exactly cover the union's `type` values.
+ * The maps repeat information from the generated interfaces. These checks
+ * make a mismatch a build failure. Without them, a missing map member would
+ * disappear from `FieldPath` without an error. Each check requires the map's
+ * values to match the union's `type` values exactly.
  */
 type AssertCovers<Values extends string, Expected extends Values> = [Expected] extends [Values]
     ? [Values] extends [Expected]
@@ -73,7 +72,7 @@ type LikeableMembersCover = [Likeable] extends [Activity | ActivityReply | Threa
 
 // The guards are type-level only; these bindings exist so a violation fails
 // with the guard's name in the error message instead of an unused-type hint.
-// The underscore prefix matches the repo's unused-vars ignore pattern.
+// The repo's unused-vars rule ignores names with an underscore prefix.
 const _activityKindsCovers: ActivityKindsCovers = true;
 const _notificationKindsCovers: NotificationKindsCovers = true;
 const _likeableMembersCover: LikeableMembersCover = true;
@@ -86,10 +85,10 @@ const _likeableMembersCover: LikeableMembersCover = true;
  * any other call) and, for media, `idMal`. Entities whose response has no
  * `id` (e.g. `MediaTrend`, `SiteStatistics`) pass an empty list.
  *
- * The `_ALWAYS` constants typed by this alias are the single source of truth
- * for the always-keys: the operation class passes its constant to the
- * composer at runtime, and the facade generator parses the same constant
- * for the {@link DeepPick} narrowing, so the two can never drift.
+ * This alias types the `_ALWAYS` constants that define these keys. Operation
+ * classes pass each constant to the composer at runtime, and the facade
+ * generator parses the same constant for {@link DeepPick} narrowing, so both
+ * use the same keys.
  *
  * @see https://docs.anilist.co/reference/query
  */
@@ -118,7 +117,7 @@ type ActivityKinds = {
 };
 
 /**
- * The notification scope map; guarded against drift from the generated
+ * The notification scope map; checked against the generated
  * `NotificationResponse` union by the compile-time guards above.
  */
 type NotificationKinds = {
@@ -172,7 +171,7 @@ type DiscriminatedUnionMembers<T> =
 
 /**
  * Likeable also contains objects without a discriminant, so match that union
- * exactly. The member map is guarded against drift from the generated
+ * exactly. The member map is checked against the generated
  * `Likeable` union by the compile-time guards above.
  */
 type NamedUnionMembers<T> = [Likeable] extends [T]
@@ -195,7 +194,7 @@ type UnwrapArray<T> = T extends readonly (infer E)[] ? E : T;
  * `"title.romaji"`, `"tags.name"`, `"media.title.romaji"` on page queries.
  * Every segment is checked against the response type: arrays are unwrapped
  * (so `"media.title"` addresses the media element's shape), object fields
- * drill into their own keys, and scalar fields terminate the path — an
+ * drill into their own keys, and scalar fields terminate the path. An
  * unknown key or a step through a scalar is a compile-time error. The
  * composer validates paths again at runtime, so JavaScript callers get the
  * same rejections as `AniLinkValidationError`s.
@@ -245,7 +244,7 @@ type QualifiedFieldPath<Members> = [Members] extends [never]
       }[keyof Members & string];
 
 /**
- * The `fields` option accepted by operations with a selection surface.
+ * The `fields` option accepted by operations that support field selection.
  *
  * `fields` lists the response paths the caller wants; the operation composes
  * its document from the corresponding selections and the return type narrows
@@ -261,10 +260,10 @@ export type FieldsSelection<Response> = {
  * The return type of the implementation signature every `fields` operation
  * method carries.
  *
- * The public surface is the three-overload pattern: the default call returns
+ * The public overloads work as follows: the default call returns
  * the full response, a call with `fields: undefined` (the conditional-value
  * pattern) also returns the full response, and a call with `fields` narrows
- * to `DeepPick<Response, K | Always>` — the always-selected keys join the
+ * to `DeepPick<Response, K | Always>`. The always-selected keys join the
  * pick because the composed document always sends them. This alias types the
  * implementation signature's return (the fourth, non-public member of that
  * pattern) so the operation classes share one declaration instead of
@@ -301,7 +300,7 @@ type AnyFieldsSelection = {
  * Split a per-call options object into its `fields` selection and the
  * remaining transport options.
  *
- * Every operation with a selection surface calls this once instead of
+ * Every operation that supports field selection calls this once instead of
  * hand-destructuring, so the normalization (`null` rejected by the composer,
  * `undefined` meaning maximal) lives in exactly one place.
  *
@@ -367,7 +366,7 @@ type DeepPickResponse<Response, K extends string> = Response extends readonly (i
  * without adding a wrapper property. The result is a union: the member(s)
  * whose fields were selected contribute their picked shape, and every other
  * member contributes an empty object. Read a selected field by narrowing
- * first — either on the field's presence (`"text" in result`) or, when the
+ * first, either on the field's presence (`"text" in result`) or, when the
  * `type` discriminant is selected on every member, on it
  * (`result.type === "TEXT"`):
  *

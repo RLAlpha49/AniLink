@@ -4,8 +4,8 @@
  * project, and runs a real-usage smoke test against the live AniList API.
  *
  * Pipeline:
- *   1. `npm run build` — produce `dist/`
- *   2. `npm pack`      — produce the publishable `.tgz`
+ *   1. `npm run build` produces `dist/`
+ *   2. `npm pack` produces the publishable `.tgz`
  *   3. Scaffold a throwaway project in a temp dir with the tarball installed
  *   4. Execute `consumer-smoke.mjs` there with plain `node`
  *

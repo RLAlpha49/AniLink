@@ -54,8 +54,8 @@ function collectSchemaConstants(): Record<string, string> {
  * initializer is a template literal, rejecting matches found only in comments
  * or string literals.
  *
- * The binding may appear at module top level or nested inside a method body —
- * every operation file in this repo declares its document inside the public
+ * The binding may appear at module top level or nested inside a method body.
+ * Every operation file in this repo declares its document inside the public
  * operation method, so restricting the search to `sourceFile.statements` would
  * reject every file. The whole syntax tree is therefore walked.
  *
@@ -99,7 +99,7 @@ export function hasTopLevelTemplateLiteralBinding(source: string, matchIndex: nu
  * to an imported constant (`const query = SomeFragment`) or renames the
  * binding away from `query`/`mutation` therefore breaks generation silently
  * unless this guard rejects it. The check runs in both write and `--check`
- * modes so the breakage surfaces in CI with a named file rather than as a
+ * modes so the breakage appears in CI with a named file rather than as a
  * stale-interfaces diff.
  *
  * The source is parsed with the TypeScript AST before a regex match is

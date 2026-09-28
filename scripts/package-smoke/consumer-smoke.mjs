@@ -2,7 +2,7 @@
  * Real-usage smoke test for the packaged `anilink-api-wrapper` tarball.
  *
  * This file is copied into an isolated consumer project that installs the
- * packed `.tgz`, then executed with plain `node` — no tsx, no vitest, no
+ * packed `.tgz`, then executed with plain `node`: no tsx, no vitest, no
  * workspace source. It proves the published artifact (ESM entry, exports map,
  * bundled code) works end-to-end against the live AniList API.
  *

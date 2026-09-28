@@ -5,8 +5,8 @@
  * Check: `npm run docs:llms -- --check`.
  *
  * Derives the LLM-facing site index from the same sources the site itself
- * uses — the page inventory in `docs-src/lib/content.ts` and each page's
- * frontmatter `description` — so the index cannot drift from the pages it
+ * uses, the page inventory in `docs-src/lib/content.ts` and each page's
+ * frontmatter `description`, so the index cannot drift from the pages it
  * lists. Regenerate via `npm run docs:generate` whenever pages or
  * frontmatter change so the committed file stays current.
  */

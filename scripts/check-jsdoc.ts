@@ -588,7 +588,7 @@ export async function checkMalOperationSource(source: string, file: string): Pro
 }
 
 /**
- * Validate exported declarations in the MAL surface outside the facade and
+ * Validate exported declarations in the MAL source outside the facade and
  * operations modules.
  *
  * @param source - Source text of the module.
@@ -608,7 +608,7 @@ export async function checkMalExportSource(source: string, file: string): Promis
 }
 
 /**
- * Validate exported declarations in the provider-composition surface.
+ * Validate exported declarations in the provider-composition modules.
  *
  * @param source - Source text of the module.
  * @param file - Repository-relative file name used in diagnostics.
@@ -630,7 +630,7 @@ export async function checkProviderSource(source: string, file: string): Promise
 }
 
 /**
- * Check exported declarations for JSDoc and a `@see` link the surface allows.
+ * Check exported declarations for JSDoc and a `@see` link the validator allows.
  *
  * @param source - Source text of the module.
  * @param file - Repository-relative file name used in diagnostics.
@@ -710,7 +710,7 @@ export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssu
         issues.push(...(await checkTypeSource(source, relative(projectRoot, file))));
     }
 
-    // MyAnimeList REST surface: the facade module carries the operation
+    // MyAnimeList REST modules: the facade module carries the operation
     // properties, the operations modules carry the classes and methods, and
     // every remaining module is checked for documented exports.
     for (const file of await collectTypeScriptFiles(join(sourceRoot, "apis/rest/mal"))) {
@@ -726,7 +726,7 @@ export async function checkJsdoc(projectRoot = process.cwd()): Promise<JsdocIssu
         }
     }
 
-    // Provider-composition surface: documented exports with provider or
+    // Provider-composition modules: documented exports with provider or
     // internal `@see` links.
     for (const file of await collectTypeScriptFiles(join(sourceRoot, "providers"))) {
         const source = await readFile(file, "utf8");
@@ -885,7 +885,7 @@ async function requireApiReference(
 }
 
 /**
- * Like {@link requireApiReference}, but for provider surfaces whose `@see`
+ * Like {@link requireApiReference}, but for provider modules whose `@see`
  * links may target either provider's reference pages or internal symbols.
  *
  * @param issues - Diagnostics accumulator for the module.
@@ -918,7 +918,7 @@ async function requireProviderReference(
 }
 
 /**
- * Like {@link requireApiReference}, but additionally enforces that the `@see`
+ * Like {@link requireApiReference}, but also enforces that the `@see`
  * link points at the specific reference page mapped for the operation (see the
  * `operationReferences` field in scripts/reference-pages.json) when one exists.
  * Operations without a specific page mapping may still link to the generic

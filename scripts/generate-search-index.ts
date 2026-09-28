@@ -3,9 +3,9 @@
  *
  * Run: `npx tsx scripts/generate-search-index.ts` (or `npm run docs:search-index`).
  *
- * Reads the three doc surfaces — hand-written guides (docs-src markdown), the
+ * Reads the three doc sources, hand-written guides (docs-src markdown), the
  * generated operation reference (`lib/operation-reference/operations.json`), and
- * the TypeDoc API reference (`docs/typedoc` HTML) — chunks each into
+ * the TypeDoc API reference (`docs/typedoc` HTML). It chunks each into
  * `SearchDoc` entries, embeds every chunk with `Xenova/bge-small-en-v1.5`, and
  * writes `docs/search-index.json`. The browser loads the same model id and
  * ranks query embeddings against this index with cosine similarity.
@@ -52,7 +52,7 @@ function slugify(heading: string): string {
         .replace(/\s+/g, "-");
 }
 
-/** Strip YAML frontmatter (leading `---` ... `---` block). CRLF-robust. */
+/** Strip YAML frontmatter (leading `---` ... `---` block). Handles CRLF. */
 function stripFrontmatter(md: string): string {
     const m = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(md);
     return m ? md.slice(m[0].length) : md;
@@ -65,7 +65,7 @@ function truncate(text: string, max = 500): string {
         .replace(/\s+/g, " ")
         .trim();
     if (clean.length <= max) return clean;
-    return clean.slice(0, clean.lastIndexOf(" ", max)) + "…";
+    return clean.slice(0, clean.lastIndexOf(" ", max)) + "...";
 }
 
 /** Remove HTML tags, including an incomplete tag at the end of the input. */
@@ -192,7 +192,7 @@ export function chunkOperations(manifest: ReferenceManifest): SearchDoc[] {
  * @returns Zero or one chunk.
  */
 export function chunkTypedoc(html: string, url: string): SearchDoc[] {
-    // Extract the H1 title, allowing for nested tags (e.g. <code> inside <h1>).
+    // Extract the H1 title, including nested tags (e.g. <code> inside <h1>).
     // Strip the nested tags after extracting so "Class Foo<code>Abstract</code>"
     // becomes "Class Foo Abstract".
     const titleMatch = /<div class="tsd-page-title">[\s\S]*?<h1>([\s\S]*?)<\/h1>/.exec(html);
@@ -359,7 +359,7 @@ export function shouldIndexGuideMarkdown(relativePath: string): boolean {
     );
 }
 
-/** Site origin for sitemap URLs — matches `hostname` in the VitePress config. */
+/** Site origin for sitemap URLs. Matches `hostname` in the VitePress config. */
 const SITE_URL = "https://anilink.alpha49.com";
 
 /**
@@ -368,7 +368,7 @@ const SITE_URL = "https://anilink.alpha49.com";
  * `docs-src/.vitepress/config.mts`, scoped to the TypeDoc source tree).
  *
  * Returns an empty map when git is unavailable or the build runs outside a
- * repository — callers then omit lastmod rather than guessing.
+ * repository. Callers then omit lastmod rather than guessing.
  */
 function gitLastmodMap(root: string): Map<string, string> {
     const map = new Map<string, string>();
@@ -425,7 +425,7 @@ export function typedocSourceFile(html: string): string | null {
 /**
  * Merge the TypeDoc API reference pages into the VitePress sitemap at
  * `docs/sitemap.xml`. VitePress only knows its own routes, so the API
- * reference — which lives under `/typedoc/` in the deployed site — would
+ * reference, which lives under `/typedoc/` in the deployed site, would
  * otherwise be invisible to crawlers. Runs after `docs:site` in the
  * `docs:generate` chain, when both outputs exist.
  *
@@ -494,7 +494,7 @@ async function main(): Promise<void> {
 
     const docs: SearchDoc[] = [];
 
-    // 1. Guides — skip .vitepress, lib, node_modules.
+    // 1. Guides: skip .vitepress, lib, node_modules.
     const docsSrc = join(ROOT, "docs-src");
     if (existsSync(docsSrc)) {
         for (const file of walk(docsSrc, (n) => n.endsWith(".md"))) {
@@ -519,7 +519,7 @@ async function main(): Promise<void> {
     const typedocRoot = join(ROOT, "docs", "typedoc");
     if (existsSync(typedocRoot)) {
         docs.push(...indexTypedoc(typedocRoot, ROOT));
-        // Also surface the API reference pages to crawlers: VitePress's
+        // Also add the API reference pages to the sitemap for crawlers. VitePress's
         // sitemap covers only its own routes, so the TypeDoc URLs are
         // appended here, after both builds have run in `docs:generate`.
         mergeTypedocSitemap(typedocRoot, ROOT);

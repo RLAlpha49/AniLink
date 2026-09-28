@@ -39,9 +39,9 @@ describe("composeDocument structure failures", () => {
 
     test("rejects an inline fragment that selects no fields", () => {
         // `... on TextActivity {` closed on the very next line would re-render
-        // as an empty selection set — invalid GraphQL — so the parser fails at
-        // parse time, naming the fragment, instead of shipping a document the
-        // server rejects with a less actionable message.
+        // as an empty selection set, which is invalid GraphQL, so the parser
+        // fails at parse time, naming the fragment, instead of shipping a
+        // document the server rejects with a less actionable message.
         const malformed = [
             "query { Media (id: $id) {",
             "  ... on TextActivity {",
@@ -121,8 +121,8 @@ describe("composeDocument structure failures", () => {
     test("structure failures do not claim the request variables are invalid", () => {
         // A document-structure failure (unparseable line, unlocatable root
         // selection) has nothing to do with the caller's variables; the
-        // generic `AniLinkValidationError` prefix — "Request variables are
-        // invalid" — would send them hunting through variables they never
+        // generic `AniLinkValidationError` prefix, "Request variables are
+        // invalid", would send them hunting through variables they never
         // misused. The structure errors carry their own prefix.
         const malformed = ["query { Media (id: $id) {", "  title { romaji }", "}", "}"].join("\n");
         expect(() => composeDocument(malformed, ["title"], [])).toThrow(

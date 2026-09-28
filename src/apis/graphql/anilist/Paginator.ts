@@ -96,7 +96,7 @@ const CHUNK_DEFAULTS: PaginationDefaults = {
 };
 
 /**
- * Keys of `T` whose value is a readonly array — the items field of a page or
+ * Keys of `T` whose value is a readonly array: the items field of a page or
  * chunk response. {@link PageInfo} and `hasNextChunk` are never arrays, so they are
  * excluded automatically.
  */
@@ -160,7 +160,7 @@ export interface PaginateOptions {
      * streaming hook: because the eager helpers collect every response before
      * returning, this callback does **not** reduce peak memory or release
      * collected items incrementally. For true streaming, early-exit, or
-     * memory-bounded workflows, use {@link paginatePages} instead — it yields
+     * memory-bounded workflows, use {@link paginatePages} instead. It yields
      * each page as it arrives and lets the consumer `break` or `return` to
      * stop the traversal. The callback receives the page's `pageInfo` and
      * items array; the full `PaginateResult` is still returned for callers
@@ -233,7 +233,7 @@ export interface ChunkPaginateOptions {
      * streaming hook: because the eager helpers collect every response before
      * returning, this callback does **not** reduce peak memory or release
      * collected items incrementally. For true streaming, early-exit, or
-     * memory-bounded workflows, use {@link paginatePages} instead — it yields
+     * memory-bounded workflows, use {@link paginatePages} instead. It yields
      * each page as it arrives and lets the consumer `break` or `return` to
      * stop the traversal. The callback receives the chunk's `hasNextChunk`
      * flag and items array; the full `ChunkPaginateResult` is still returned
@@ -320,8 +320,8 @@ function extractHasMore(response: unknown): boolean {
  * Iterate {@link PageInfo}-based pages until `hasNextPage` is false or `maxPages` is reached.
  *
  * The helper calls `fetchPage(page, perPage)` for each page, extracts the items
- * array at `itemsKey`, and stops when AniList reports no further pages — either
- * `hasNextPage: false` or a `pageInfo.lastPage` the traversal has reached — or
+ * array at `itemsKey`, and stops when AniList reports no further pages, either
+ * `hasNextPage: false` or a `pageInfo.lastPage` the traversal has reached, or
  * when the `maxPages` guard fires. The guard prevents accidental unbounded
  * fetch loops.
  * Pass `concurrency` to keep multiple page requests in flight at once; results
@@ -377,7 +377,7 @@ export async function paginate<TPage extends { pageInfo: PageInfo }, K extends s
         const pages: Array<{ pageInfo: PageInfo; items: ArrayElement<TPage, K>[] }> = [];
         for (const response of responses) {
             // A missing key (a typo'd `itemsKey` reads `undefined`) is a caller
-            // mistake and must fail loudly — a silent empty result is the
+            // mistake and must fail loudly. A silent empty result is the
             // hardest failure to debug in a pagination API where empty is a
             // normal outcome. A present non-array value (e.g. `pageInfo`) is
             // the documented `never[]` case: `ArrayElement` collapses the
@@ -409,7 +409,7 @@ export async function paginate<TPage extends { pageInfo: PageInfo }, K extends s
  * `hasNextPage` is false, the smallest received `pageInfo.lastPage` is reached,
  * or `maxPages` is reached. When the `lastPage` bound ends the traversal while
  * the last yielded page still reports `hasNextPage: true`, the generator ends
- * without a truncation flag — that page's `pageInfo` (`hasNextPage: true` with
+ * without a truncation flag. That page's `pageInfo` (`hasNextPage: true` with
  * `currentPage` at `lastPage`) is the visible signal of the short read.
  *
  * Use this for streaming or early-exit workflows where collecting every item
@@ -525,7 +525,7 @@ export async function paginateChunks<TChunk extends { hasNextChunk: boolean }, K
         const chunks: Array<{ hasNextChunk: boolean; items: ArrayElement<TChunk, K>[] }> = [];
         for (const response of responses) {
             // A missing key (a typo'd `itemsKey` reads `undefined`) is a caller
-            // mistake and must fail loudly — a silent empty result is the
+            // mistake and must fail loudly. A silent empty result is the
             // hardest failure to debug in a pagination API where empty is a
             // normal outcome. A present non-array value (e.g. `hasNextChunk`) is
             // the documented `never[]` case: `ArrayElement` collapses the

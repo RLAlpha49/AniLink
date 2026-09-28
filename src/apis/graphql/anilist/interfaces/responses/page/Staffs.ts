@@ -9,7 +9,7 @@
 import { type StaffResponse } from "../query/Staff";
 import { type PageInfo } from "./PageInfo";
 /**
- * `StaffsPageResponse` — a page of staff members with pagination metadata.
+ * `StaffsPageResponse` is a page of staff members with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/staff

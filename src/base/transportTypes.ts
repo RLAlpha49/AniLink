@@ -1,5 +1,5 @@
 /**
- * Public type and constant surface for the shared transport.
+ * Public types and constants for the shared transport.
  *
  * This module owns the transport's exported option/hook type declarations,
  * the small, dependency-free default constants (`DEFAULT_REQUEST_TIMEOUT`,
@@ -41,7 +41,7 @@ export const MAX_SOCKETS = 20;
 
 /**
  * Per-window cap on the total retry spend across every request dispatched
- * through operations sharing one state owner — per client as wired by the
+ * through operations sharing one state owner, per client as wired by the
  * provider facades, so the cap spans all of a client's operations, not
  * just one. The host-level keying inside the state maps keeps providers
  * isolated from each other.
@@ -51,13 +51,13 @@ export const MAX_SOCKETS = 20;
  * still multiply API call volume by up to `maxRetries + 1` indefinitely.
  * This budget bounds the *total* retry spend per rolling window; when it is
  * exhausted, failures surface without retries until the window elapses.
- * Server-dictated delays — a `Retry-After` header, or the `rateLimit.reset`
- * metadata carried by both HTTP-level and GraphQL-envelope 429s — longer
+ * Server-dictated delays, a `Retry-After` header or the `rateLimit.reset`
+ * metadata carried by both HTTP-level and GraphQL-envelope 429s, longer
  * than the window's remaining time also surface immediately: without that
  * gate, a provider returning `Retry-After: 60` on every 429 could spend
  * each budget unit on a full minute of wall-clock wait and stretch one
  * window's retry spend across many minutes, so the budget bounds the retry
- * spend in time, not just the retry count. The gate compares the true
+ * spend over time, not only the retry count. The gate compares the true
  * (un-clamped) reset deadline, so a rate-limit window that genuinely
  * outlasts the budget window surfaces on the first 429 instead of hopping
  * through repeated clamped 60-second waits.
@@ -99,7 +99,7 @@ export interface RetryPolicy {
 /**
  * HTTP methods the shared transport accepts.
  *
- * GraphQL providers use `POST` only; REST providers additionally use `GET`,
+ * GraphQL providers use `POST` only; REST providers also use `GET`,
  * `PUT`, `PATCH`, and `DELETE`. The union is shared so hooks and error
  * contexts stay provider-agnostic.
  *
@@ -159,8 +159,8 @@ export interface RequestErrorContext {
     /**
      * Total time this logical request has spent waiting between attempts
      * (retry backoff and server-dictated delays), accumulated across its
-     * attempts. Present only when a wait occurred — the same
-     * optional-presence convention as `pacedMs` on `onResponse` — so a
+     * attempts. Present only when a wait occurred, the same
+     * optional-presence convention as `pacedMs` on `onResponse`, so a
      * request that failed after several server-dictated 429 delays stays
      * distinguishable from a fast validation failure in error dashboards
      * without joining `onRetry` events per `requestId`.
@@ -168,8 +168,8 @@ export interface RequestErrorContext {
     retryWaitMs?: number;
     /**
      * Whether the failure surfaced because the per-window retry budget was
-     * exhausted — the failure was retryable, but the window's retry spend
-     * was already spent — as opposed to a failure that was never retryable.
+     * exhausted: the failure was retryable, but the window's retry spend
+     * was already spent, as opposed to a failure that was never retryable.
      * Present only on the terminal `onError` report of a budget-gated
      * failure, so hook-based monitoring can detect chronic budget
      * exhaustion (the condition the budget exists to surface) without
@@ -185,7 +185,7 @@ export interface RequestErrorContext {
     /**
      * Cooldown remaining on the open circuit breaker, in milliseconds,
      * present on `CIRCUIT_OPEN_ERROR` error contexts while the breaker is
-     * open and no probe is pending — the answer to "when can I retry?" in
+     * open and no probe is pending, the answer to "when can I retry?" in
      * the structured payload instead of the message prose.
      */
     retryAfterMs?: number;
@@ -237,7 +237,7 @@ export type OnRequestStartHandler = (context: RequestContext) => void;
  * after a cache miss, `cacheHit` is `false`. Responses unrelated to the
  * cache (mutations, cache-less clients) carry no `cacheHit` at all. When the
  * request waited for rate-limit pacing before dispatch, `pacedMs` carries
- * the total time spent waiting across the request's attempts — cumulative,
+ * the total time spent waiting across the request's attempts, cumulative,
  * so on a retried request it can exceed the final attempt's `durationMs`
  * (which measures only that attempt); requests that never waited carry no
  * `pacedMs` at all.
@@ -258,7 +258,7 @@ export type OnResponseHandler = (
  * A callback invoked when proactive rate-limit pacing delays the next request
  * after a successful attempt, with the pacing wait in `delayMs`. Fires after
  * a completed wait, before the request dispatches, and for a wait aborted
- * partway through — an aborted wait reports the elapsed portion in `delayMs`
+ * partway through: an aborted wait reports the elapsed portion in `delayMs`
  * with `aborted: true`, so observers can distinguish a cancelled pacing wait
  * from no pacing at all without watching `onError`.
  *
@@ -283,7 +283,7 @@ export type OnPaceHandler = (
 export type OnHookErrorHandler = (hookName: string, error: unknown) => void;
 
 /**
- * The structured record every library diagnostic is emitted through — the
+ * The structured record every library diagnostic is emitted through, the
  * shape `reportDiagnostic` hands to {@link OnHookErrorHandler} observers and
  * serializes into the `console.warn` fallback. Machine-readable fields
  * (`source`, `kind`, `requestId`) replace prose parsing so platform log
@@ -318,7 +318,7 @@ export interface AniLinkDiagnostic {
  *
  * The modes gate only unsolicited fallback output. A diagnostic carrying a
  * real failure (a throwing hook, a failed MAL refresh grant) always reaches
- * a configured observer in every mode — the consumer asked to observe
+ * a configured observer in every mode. The consumer asked to observe
  * failures, so the mode never silences the observer itself.
  *
  * @see {@link RequestOptions.diagnostics}
@@ -329,9 +329,9 @@ export type DiagnosticsMode = "warn" | "hook" | "silent";
  * Resolves a caller-supplied diagnostics mode, defaulting to `"warn"` and
  * throwing on any other value.
  *
- * Every entry path for the option — per-request options
+ * Every entry path for the option, per-request options
  * ({@link RequestOptions.diagnostics}), the MAL refresh lifecycle, and the
- * pagination helpers — validates through this one helper so a typo like
+ * pagination helpers, validates through this one helper so a typo like
  * `"verbose"` fails fast with the received value in the message, matching
  * the fail-fast convention of `resolveRequestOptions`, instead of behaving
  * as an accidental quasi-`"hook"` mode deep inside the emit path.
@@ -528,10 +528,10 @@ export interface RequestOptions {
      * error entries are reported through the `onError` hook (with the
      * normalized `AniLinkGraphQLError` as the hook's error argument) so
      * failures stay observable. Envelopes with errors and no usable `data`
-     * still throw — "usable" means at least one resolved (non-null) root
+     * still throw. "Usable" means at least one resolved (non-null) root
      * field, so `data: {}` and `data: { Media: null }` (the GraphQL shape for
-     * a failed nullable root field) both throw. The resolution is terminal —
-     * the data is returned, never retried — but availability-class partial
+     * a failed nullable root field) both throw. The resolution is terminal:
+     * the data is returned, never retried. But availability-class partial
      * errors (429/5xx) still advance the circuit breaker exactly as the
      * strict mode's throw would. Off by default: every operation keeps the
      * strict all-or-nothing behavior unless the caller opts in per request.
@@ -544,8 +544,8 @@ export interface RequestOptions {
      * set, cacheable reads are cached by `(method, url, serialized body)`
      * for the cache's TTL window so repeated identical reads skip the network
      * round-trip entirely. Cacheable reads are `GET` requests and GraphQL
-     * query documents (which the transport dispatches as `POST`); mutations
-     * — GraphQL `mutation` documents and REST `POST`/`PUT`/`DELETE` calls —
+     * query documents (which the transport dispatches as `POST`); mutations,
+     * GraphQL `mutation` documents and REST `POST`/`PUT`/`DELETE` calls,
      * are never cached. Off by default; pass a `ResponseCache` instance to
      * enable.
      *
@@ -563,8 +563,8 @@ export interface RequestOptions {
     /**
      * Skip the {@link RequestOptions.responseCache} for this one request: the
      * read goes to the network even when a fresh cached entry exists, and the
-     * response is not written back. For reads whose freshness is the point —
-     * a watcher poll, a manual refresh — a cache hit would silently serve
+     * response is not written back. For reads whose freshness is the point,
+     * a watcher poll or a manual refresh, a cache hit would silently serve
      * stale data. The instance-level cache still applies to every other
      * request. Defaults to `false`.
      *

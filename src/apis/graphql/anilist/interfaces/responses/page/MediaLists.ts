@@ -9,7 +9,7 @@
 import { type MediaListResponse } from "../query/MediaList";
 import { type PageInfo } from "./PageInfo";
 /**
- * `MediaListsPageResponse` — a page of media list entries with pagination metadata.
+ * `MediaListsPageResponse` is a page of media list entries with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/medialist

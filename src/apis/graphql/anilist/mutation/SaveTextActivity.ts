@@ -68,13 +68,13 @@ export class SaveTextActivityMutation extends AniListOperation {
      *
      * Updates the text activity named by `id` and returns the saved activity. The upstream
      * mutation also creates a new activity when `id` is omitted, but
-     * {@link SaveTextActivityVariables} requires `id`, so the typed surface is update-only.
+     * {@link SaveTextActivityVariables} requires `id`, so this method only updates existing text activities.
      *
      * @param variables - Values from {@link SaveTextActivityVariables} for the mutation.
      * @returns The {@link Activity} returned by the mutation.
      * @throws Throws if no authentication token is configured, `id` or `text` is missing or invalid, or the mutation request fails.
      * @see https://docs.anilist.co/reference/union/activityunion
-     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response — the document is composed from the corresponding selections and the return type narrows to `DeepPick<TextActivity, K>`. Omit `fields` for the maximal selection and the full response.
+     * @param options - Optional {@link RequestOptions} merged over the instance-level settings for this call only. Pass `fields` to request only a subset of the response. The document is composed from the corresponding selections and the return type narrows to `DeepPick<TextActivity, K>`. Omit `fields` for the maximal selection and the full response.
      * @example
      * ```typescript
      * const result = await new SaveTextActivityMutation("your-token").saveTextActivity({ id: 1, text: "Hello, world!" });

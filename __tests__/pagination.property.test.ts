@@ -17,7 +17,7 @@ import { microtaskLatency } from "./helpers/microtaskLatency";
  * Build a {@link PageInfo} object for tests. The default `lastPage` is beyond
  * any page the arbitraries can reach (`startPage` and `maxPages` are each
  * capped at 1000, so the highest page is 1999), so the paginator's lastPage
- * launch bound never fires unless a test overrides it — termination is driven
+ * launch bound never fires unless a test overrides it. Termination is driven
  * by `hasNextPage` here.
  */
 function pageInfo(overrides: Partial<PageInfo> = {}): PageInfo {
@@ -90,7 +90,7 @@ const chunkOptionsArb = fc.record({
 /**
  * Resolve a numeric option the same way `Paginator.resolvePositiveInt` does, so
  * tests can predict the effective value without re-implementing the clamping.
- * Invalid values throw here too — the property tests assert the traversal
+ * Invalid values throw here too. The property tests assert the traversal
  * throws for exactly the same inputs.
  */
 function resolvePositiveInt(value: number | undefined, fallback: number): number {

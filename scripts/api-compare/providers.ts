@@ -2,7 +2,7 @@
  * Per-provider configuration for the schema-comparison pipeline.
  *
  * Adding a new provider means adding an entry here (plus a schema snapshot at
- * `schemaPath`) — no changes to the CLI or comparison core are required.
+ * `schemaPath`). No changes to the CLI or comparison core are required.
  */
 export interface ProviderConfig {
     /** CLI identifier used with the `--provider` flag. */

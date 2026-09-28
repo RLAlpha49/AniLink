@@ -47,8 +47,8 @@ const isObjectMapping = (mapping: unknown): mapping is { readonly [key: string]:
  * `pass`, `session`, `otp`, and `bearer` alternatives match as fragments so
  * prefixed shapes like `sessionId` or `passphrase` are covered; none of
  * them collide with real AniList variable names (verified against the
- * full shipped variable set — `pinned` and `private` are the near-misses
- * this pattern deliberately leaves alone).
+ * full shipped variable set. The pattern deliberately leaves `pinned` and
+ * `private` alone because they are near-matches.
  */
 const SENSITIVE_KEY_PATTERN =
     /token|secret|password|authorization|cookie|credential|api[-_]?key|pass|session|otp|bearer/i;
@@ -75,7 +75,7 @@ const isPlainObject = (value: object): boolean => {
  * Class instances are rebuilt too: `JSON.stringify` renders their own
  * enumerable properties, so a credential on an instance under a
  * non-sensitive path would otherwise survive redaction. Built-ins whose
- * string form carries no nested keys (`Date`, `Map`, `RegExp`, …) pass
+ * string form carries no nested keys (`Date`, `Map`, `RegExp`, ...) pass
  * through unchanged and keep their native rendering.
  *
  * @param key - The property name (or bracketed index) the value sits under.

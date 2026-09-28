@@ -23,7 +23,7 @@ import { type Tag } from "../../Tag";
 import { type Title } from "../../Title";
 import { type Trailer } from "../../Trailer";
 /**
- * `MediaResponse` — the full media entity including relation, character, staff, and studio connections.
+ * `MediaResponse` is the full media entity including relation, character, staff, and studio connections.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/media

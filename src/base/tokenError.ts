@@ -24,17 +24,16 @@ import {
  * Token request bodies carry `client_secret`, authorization `code`, and
  * `refresh_token` values, so the original Axios error is deliberately
  * discarded: the returned error carries only a safe message (prefixed with
- * `label` so logs identify the failing token exchange), a stable code, and —
- * for HTTP failures — the upstream response body, which contains no
- * credentials.
+ * `label` so logs identify the failing token exchange), a stable code, and,
+ * for HTTP failures, the upstream response body, which contains no credentials.
  *
  * Errors already normalized by the shared pipeline carry only safe fields
  * (message, stable code, upstream response body), so they pass through with
  * their specific classification intact; API failures are relabeled with the
  * `label` prefix so logs still identify the failing token exchange. A *new*
  * error is constructed for the relabel path (carrying the original as
- * `cause` when the original carries no raw Axios error — a raw error on
- * the cause chain would let cause-walking loggers reach the token grant's
+ * `cause` when the original carries no raw Axios error. A raw error on the
+ * cause chain would let cause-walking loggers reach the token grant's
  * credentials) instead of mutating the existing instance's `message` in
  * place, so consumers comparing messages across the same error instance
  * are not surprised by mid-flight mutation.
@@ -51,11 +50,11 @@ export const sanitizeTokenError = (error: unknown, label: string): AniLinkError 
             requestId: error.requestId,
         });
         // The relabeled error carries the original as `cause` for
-        // debugging — but only when the original itself carries no raw
+        // debugging, but only when the original itself carries no raw
         // Axios error. A cause-walking logger (pino, etc.) would otherwise
         // reach the raw error's request config, which holds the token
-        // grant's `client_secret` and `refresh_token` — exactly the leak
-        // this sanitizer exists to close.
+        // grant's `client_secret` and `refresh_token`, which is the leak
+        // this sanitizer prevents.
         if (error.rawAxiosError === undefined) {
             relabeled.cause = error;
         }

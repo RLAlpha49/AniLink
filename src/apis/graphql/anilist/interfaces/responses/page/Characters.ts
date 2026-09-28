@@ -9,7 +9,7 @@
 import { type CharacterResponse } from "../query/Character";
 import { type PageInfo } from "./PageInfo";
 /**
- * `CharactersPageResponse` — a page of characters with pagination metadata.
+ * `CharactersPageResponse` is a page of characters with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/character

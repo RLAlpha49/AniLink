@@ -11,7 +11,7 @@ import {
 
 /**
  * {@link StatisticsAnimeSchema} is the anime half of a user's `statistics`: the totals
- * plus one per-category breakdown (formats, genres, voice actors, …), each paginated
+ * plus one per-category breakdown (formats, genres, voice actors, ...), each paginated
  * and sortable through its own variables.
  * @see https://docs.anilist.co/reference/object/userstatistics
  */
@@ -87,7 +87,7 @@ export const StatisticsAnimeSchema = `
 
 /**
  * {@link StatisticsMangaSchema} is the manga half of a user's `statistics`: the totals
- * plus one per-category breakdown (formats, genres, staff, …), each paginated and
+ * plus one per-category breakdown (formats, genres, staff, ...), each paginated and
  * sortable through its own variables.
  * @see https://docs.anilist.co/reference/object/userstatistics
  */
@@ -167,8 +167,8 @@ export const StatisticsSchema = `
 
 /**
  * {@link UserSchema} is the maximal user document the user queries send: profile, options,
- * favourites, both statistics blocks, and the aggregate `stats` section. It is the
- * single source of truth the `fields` option prunes.
+ * favourites, both statistics blocks, and the aggregate `stats` section. The
+ * `fields` option prunes this document to the requested fields.
  * @see https://docs.anilist.co/reference/object/user
  */
 export const UserSchema = `

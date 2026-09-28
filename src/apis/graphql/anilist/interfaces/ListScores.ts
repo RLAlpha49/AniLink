@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `ListScores` — the mean score and score deviation of a user's list.
+ * `ListScores` is the mean score and score deviation of a user's list.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/listscorestats

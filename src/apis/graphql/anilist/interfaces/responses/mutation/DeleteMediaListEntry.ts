@@ -8,7 +8,7 @@
 // Content between the generation markers is produced by scripts/generate-interfaces.ts; do not edit by hand.
 
 /**
- * `DeleteMediaListEntryResponse` — the payload returned after deleting a media list entry.
+ * `DeleteMediaListEntryResponse` is the payload returned after deleting a media list entry.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/deleted

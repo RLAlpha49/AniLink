@@ -9,7 +9,7 @@ import type { CustomRequest } from "../CustomRequest";
 export type AniListCustom = {
     /**
      * {@link AniListCustom.custom} sends a caller-authored GraphQL query or mutation document to AniList.
-     * Use it as an escape hatch when no typed operation fits: the `query` string is sent
+     * Use it when no typed operation fits. The `query` string is sent
      * verbatim and the `variables` argument is forwarded as-is. A document with a single
      * root field resolves to the bare field value; a document with multiple root fields
      * resolves to the full `{ data }` envelope.
@@ -32,9 +32,9 @@ export type AniListCustom = {
     custom: CustomRequest["custom"];
 
     /**
-     * {@link AniListCustom.customPage} walks a caller-authored `Page` document through the shared
-     * pagination engine — the paginated escape hatch for collections whose field combination the
-     * generated page operations do not expose. The document must declare the standard AniList
+     * {@link AniListCustom.customPage} paginates a caller-authored `Page` document through the
+     * shared engine. Use it for collections whose field combination the generated page operations
+     * do not expose. The document must declare the standard AniList
      * `Page` wrapper with `$page`/`$perPage` `Int` variables and select `pageInfo { hasNextPage }`
      * plus an items array; the traversal reuses every engine guard (`perPage` clamping, the
      * `maxPages` bound, look-ahead `concurrency`, `AbortSignal` forwarding, the `lastPage`

@@ -84,7 +84,7 @@ export interface Discrepancy {
 }
 
 /**
- * `ComparisonResult` is the outcome of comparing the package surface
+ * `ComparisonResult` is the outcome of comparing the package's exported API
  * against the provider schema: every finding plus the coverage lists.
  */
 export interface ComparisonResult {
@@ -104,6 +104,6 @@ export interface ComparisonResult {
 
 /**
  * `Schema` is the committed GraphQL introspection snapshot the package is
- * compared against — an {@link IntrospectionQuery} as returned by introspection.
+ * compared against, an {@link IntrospectionQuery} as returned by introspection.
  */
 export type Schema = IntrospectionQuery;

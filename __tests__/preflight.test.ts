@@ -6,8 +6,8 @@ import { preflightCredentials } from "./integration/preflight";
  * Unit tests for the credential preflight contract.
  *
  * The live integration suite is skipped entirely when `ANILIST_TOKEN` is
- * unset, so the `preflightCredentials` helper — which collapses a
- * present-but-invalid token into a single diagnostic — would otherwise go
+ * unset, so the `preflightCredentials` helper, which collapses a
+ * present-but-invalid token into a single diagnostic, would otherwise go
  * untested in every environment without the secret. These tests exercise the
  * contract against a stubbed client so the diagnostic message and the
  * pass-through behavior are verified without a live token.

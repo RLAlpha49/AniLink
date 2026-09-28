@@ -128,8 +128,8 @@ export interface OperationSignature {
  * The single shared metadata source for generators: the facade group
  * generator renders its members from these facts, and the operation-reference
  * generator consumes them instead of re-parsing the generated facade source
- * with regexes — so a formatting change in one generator can never silently
- * break the other's discovery.
+ * with regexes. A formatting change in one generator can therefore never
+ * silently break the other's discovery.
  *
  * @returns One signature per registry entry, in declaration order.
  * @throws {Error} When a class method cannot be found or parsed.
@@ -206,7 +206,8 @@ export function parseRegistrySource(registrySource: string): ParsedRegistryEntry
         // Count guard: every op/opAs call in the block must be parsed. A call
         // shape the regex does not cover (e.g. an options object the
         // fieldsEnabled regex does not match) would otherwise be silently
-        // dropped from generation — a wrong public facade with no error.
+        // dropped from generation, producing a wrong public facade with no
+        // error.
         const rawCalls = categoryMatch[1].match(/\b(?:opAs|op)\(/g) ?? [];
         if (parsed.length !== rawCalls.length) {
             throw new Error(
@@ -323,12 +324,12 @@ function loadMethodInfo(entry: RegistryEntry): MethodInfo {
     // The narrowing overload may bound its `FieldPath` by a narrower type than
     // the response (e.g. a document-bounded alias omitting keys the maximal
     // document never selects). When the bound equals the response element
-    // type — the un-bounded case every other operation has — store `null` so
+    // type, the un-bounded case every other operation has, store `null` so
     // the facade keeps emitting `FieldPath<Response>` unchanged. A bound the
     // strict regex cannot capture (a union, a qualified name, different
     // spacing) must throw rather than fall back to the wide response bound:
     // the silent fallback would emit a facade promising paths the composer
-    // rejects — the exact drift this generator exists to prevent.
+    // rejects, which is the exact drift this generator exists to prevent.
     const responseType = signature[2].trim();
     const fieldPathMatch = new RegExp(
         `async\\s+${escapeRegExp(entry.methodName)}<K extends FieldPath<(\\w+)>>`
@@ -514,7 +515,7 @@ function renderMember(
             // default call returns the full response, a call with `fields:
             // undefined` (the conditional pattern) also returns the full
             // response, and a call with `fields` narrows to `DeepPick<Response,
-            // K | Always>` — the always-selected keys join the pick because the
+            // K | Always>`. The always-selected keys join the pick because the
             // composed document always sends them. Array responses keep their
             // element-wise pick. The narrowing overload's `FieldPath` bound is
             // the class's own bound when it declares one beyond the response
@@ -577,8 +578,8 @@ const QUERY_PARITY_BLOCK = `/**
  * \`RegistryQueryKeys\` and \`Exclude<keyof AniListQueries["query"], "page">\`
  * are the same set, and that \`RegistryPageKeys\` and
  * \`keyof AniListQueries["query"]["page"]\` are the same set. A key added or
- * removed in either place produces a type error. The registry is the source
- * of truth; this asserts the typed surface keeps pace.
+ * removed in either place produces a type error. The registry defines the
+ * available keys, and these checks verify that the facade types match them.
  */
 const _assertQueryParity: RegistryQueryKeys = null as unknown as Exclude<
     keyof AniListQueries["query"],
@@ -597,7 +598,8 @@ const MUTATION_PARITY_BLOCK = `/**
  * operation registry. The bidirectional type assertion ensures that
  * \`RegistryMutationKeys\` and \`keyof AniListMutations["mutation"]\` are the
  * same set: a key added or removed in either place produces a type error. The
- * registry is the source of truth; this asserts the typed surface keeps pace.
+ * registry defines the available keys; this checks that the facade type
+ * declares the same keys.
  */
 const _assertMutationParity: RegistryMutationKeys =
     null as unknown as keyof AniListMutations["mutation"];
@@ -606,7 +608,7 @@ const _assertMutationParityReverse: keyof AniListMutations["mutation"] =
 
 /** The generated-file notice appended to both file headers. */
 const GENERATED_NOTE = ` *
- * GENERATED FILE — do not edit by hand; regenerate with \`npm run facade:generate\`.
+ * GENERATED FILE. Do not edit by hand; regenerate with \`npm run facade:generate\`.
  * Signatures derive from the operation registry and operation classes; curated
  * JSDoc prose lives in scripts/generate-facade-groups.config.ts.`;
 

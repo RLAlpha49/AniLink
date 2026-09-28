@@ -9,7 +9,7 @@
 import { type UserResponse } from "../query/User";
 import { type PageInfo } from "./PageInfo";
 /**
- * `FollowingsPageResponse` — a page of followed users with pagination metadata.
+ * `FollowingsPageResponse` is a page of followed users with pagination metadata.
  *
  * Generated from the schema fragments; do not edit by hand.
  * @see https://docs.anilist.co/reference/object/user

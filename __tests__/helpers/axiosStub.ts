@@ -2,7 +2,7 @@ import type { AxiosError, AxiosResponse, AxiosStatic } from "axios";
 import { vi } from "vitest";
 
 /**
- * A faithful, shared double of the axios surface `RequestHandler` consumes.
+ * A faithful, shared double of the axios API `RequestHandler` consumes.
  *
  * The transport suites previously assembled this shape inline per file and the
  * copies drifted (different `isCancel` predicates, different default

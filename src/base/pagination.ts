@@ -7,8 +7,8 @@
  * traversals through), the look-ahead request driver that overlaps
  * round-trip latency while collecting results strictly in entry order, and
  * the streaming page generator that yields the same traversal one page at
- * a time. Schema-specific contracts — what a page looks like, where the
- * "more data available" flag lives, and per-page size caps — stay with each
+ * a time. Schema-specific contracts, what a page looks like, where the
+ * "more data available" flag lives, and per-page size caps, stay with each
  * provider.
  *
  * The driver is numeric: every traversal is scheduled by entry number.
@@ -46,9 +46,9 @@ export interface LookAheadResult<TEntry> {
     count: number;
 
     /**
-     * Whether the traversal stopped early — at the `maxEntries` guard, or at
+     * Whether the traversal stopped early, at the `maxEntries` guard or at
      * a launch bound a received entry reported while that entry still
-     * reported more data — so a short read is not mistaken for a clean end.
+     * reported more data, so a short read is not mistaken for a clean end.
      */
     truncated: boolean;
 }
@@ -58,7 +58,7 @@ export interface LookAheadResult<TEntry> {
  *
  * A defined value that is not a finite, positive integer (for example
  * `perPage: -5`, `NaN`, `0`, or `2.7`) is a caller bug and throws a
- * `TypeError` instead of silently coercing to the fallback — a negative
+ * `TypeError` instead of silently coercing to the fallback. A negative
  * `maxPages` typo silently becoming a 100-page traversal is far harder to
  * debug than a thrown error at the call site. This matches the
  * fail-fast convention of `resolveAgents` and `resolveRequestOptions`.
@@ -113,8 +113,8 @@ export function resolveCappedInt(
  * of the providers' public option interfaces (`PaginateOptions`,
  * `ChunkPaginateOptions`, `MalPaginateOptions`) in one structural shape, so
  * every public options type is assignable without the engine importing
- * provider types. Both naming shapes — `perPage`/`startPage`/`maxPages` and
- * `perChunk`/`startChunk`/`maxChunks` — are carried; the
+ * provider types. Both naming shapes, `perPage`/`startPage`/`maxPages` and
+ * `perChunk`/`startChunk`/`maxChunks`, are carried; the
  * {@link PaginationDefaults.naming} discriminator selects which to read.
  */
 export interface PaginationOptionsInput {
@@ -160,10 +160,10 @@ export interface PaginationDefaults {
 /**
  * The traversal options {@link resolvePaginationOptions} returns: every
  * numeric option resolved (defaults applied, caps enforced) plus the
- * diagnostics mode. Signal bridging deliberately stays with the call site —
+ * diagnostics mode. Signal bridging deliberately stays with the call site:
  * eager traversals bridge through {@link bridgeAbortSignal} and dispose in
  * a `finally` block, while streaming traversals let the engine's generator
- * own the bridge — because traversal lifetimes differ.
+ * own the bridge, because traversal lifetimes differ.
  *
  * @see {@link resolvePaginationOptions}
  */
@@ -295,8 +295,8 @@ export function bridgeAbortSignal(external: AbortSignal | undefined): AbortBridg
  * but-unconsumed requests so round-trip latency overlaps instead of stacking,
  * while results are appended strictly in entry order no matter when each
  * request settles. Scheduling stops as soon as an entry reports "no more data"
- * (per the caller-supplied `extractHasMore`), at the `maxEntries` guard, or —
- * when `extractBound` is supplied — at the smallest launch bound a received
+ * (per the caller-supplied `extractHasMore`), at the `maxEntries` guard, or,
+ * when `extractBound` is supplied, at the smallest launch bound a received
  * entry reported; `truncated` mirrors the sequential semantics.
  *
  * Because the window runs ahead of consumption, up to `concurrency - 1`
@@ -306,7 +306,7 @@ export function bridgeAbortSignal(external: AbortSignal | undefined): AbortBridg
  *
  * When the optional `signal` is aborted, any in-flight requests are settled
  * (their payloads discarded) and the entries collected so far are returned as
- * a partial result with `truncated: false` — the abort is not propagated as a
+ * a partial result with `truncated: false`. The abort is not propagated as a
  * rejection.
  *
  * @typeParam TEntry - The raw response shape of a single page or chunk.
@@ -344,8 +344,8 @@ export async function fetchWithLookAhead<TEntry>(
 }
 
 /**
- * Read the terminal-page bound a fetched page reports — AniList's
- * `pageInfo.lastPage` — so numeric look-ahead scheduling can stop launching
+ * Read the terminal-page bound a fetched page reports, AniList's
+ * `pageInfo.lastPage`, so numeric look-ahead scheduling can stop launching
  * pages the server has already said do not exist. AniList page traversals
  * pass this as the look-ahead driver's `extractBound`; chunk traversals
  * supply no bound reader. Returns `undefined` when
@@ -419,7 +419,7 @@ export async function fetchNumericWithLookAhead<TEntry>(
     let truncated = false;
     // Optional terminal-page bound reader. Chunk traversals share this
     // driver and their entries carry no page numbers, so they omit it and
-    // the bound below stays `Infinity` forever — page semantics belong to
+    // the bound below stays `Infinity` forever. Page semantics belong to
     // the callers that know their entries are pages.
     const readBound = extractBound ?? ((): number | undefined => undefined);
     // Smallest positive bound observed on a received entry; `Infinity` until
@@ -462,7 +462,7 @@ export async function fetchNumericWithLookAhead<TEntry>(
             // empty the window (the maxEntries and concurrency gates always
             // leave launched ahead of count). Exiting there while the last
             // consumed entry still reports more data means the bound cut the
-            // traversal short — surface that like any other truncation
+            // traversal short. Report that as truncation
             // instead of a silent clean end.
             if (count > 0 && extractHasMore(responses[count - 1])) {
                 truncated = true;
@@ -513,7 +513,7 @@ export async function fetchNumericWithLookAhead<TEntry>(
 /**
  * Options controlling a {@link streamNumericPages} traversal.
  *
- * Every field is the provider-resolved value — defaults applied, caps
+ * Every field is the provider-resolved value, defaults applied and caps
  * enforced. The provider adapters own those rules; the engine only
  * consumes the results.
  *
@@ -543,8 +543,8 @@ export interface StreamNumericPagesOptions {
  * the full `concurrency` only after a yielded page is confirmed
  * non-terminal, so a single-page traversal costs one request. Scheduling
  * stops as soon as a fetched page is terminal per the caller-supplied
- * `isTerminalPage`, at the `maxPages` guard, or — when `extractBound` is
- * supplied — beyond the smallest launch bound a received page reported;
+ * `isTerminalPage`, at the `maxPages` guard, or, when `extractBound` is
+ * supplied, beyond the smallest launch bound a received page reported;
  * already-launched stragglers are drained and their payloads discarded. On
  * early exit (`break`/`return` by the consumer), the `finally` block
  * disposes the abort bridge so unconsumed in-flight requests are cancelled
@@ -647,7 +647,7 @@ export async function* streamNumericPages<TPage>(
                 // The consumed page confirmed more data exists: the launch
                 // window has earned its full size. Refill before yielding so
                 // the look-ahead pages are already in flight when the
-                // consumer receives this one — the same head start a
+                // consumer receives this one, the same head start a
                 // cold-filled window provided, so an early-exiting consumer
                 // still has its stragglers cancelled by the bridge dispose.
                 // The refill leaves one slot for the post-yield pass, so the

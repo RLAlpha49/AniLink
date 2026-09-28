@@ -41,9 +41,9 @@ vi.mock("../docs-src/lib/useShikiHighlighter", () => ({
  *
  * The boot script is authored as a string so the VitePress config and the
  * TypeDoc plugin can inline it into `<head>`. The suite evaluates that exact
- * string in a stubbed browser environment — a `new Function` wrapper over
+ * string in a stubbed browser environment, a `new Function` wrapper over
  * mock `window`, `document`, and `localStorage` objects, with no new
- * dependencies — so the tests exercise the same code visitors' browsers
+ * dependencies, so the tests exercise the same code visitors' browsers
  * run, not a re-implementation.
  */
 
@@ -66,13 +66,13 @@ interface StubDocument {
     appendedScripts: StubScriptElement[];
 }
 
-/** In-memory localStorage double — the boot script reads and writes one key. */
+/** In-memory localStorage double. The boot script reads and writes one key. */
 interface StubStorage {
     getItem(key: string): string | null;
     setItem(key: string, value: string): void;
 }
 
-/** A dataLayer entry — a real array (applyChoice) or an Arguments object (gtag). */
+/** A dataLayer entry, a real array (applyChoice) or an Arguments object (gtag). */
 type DataLayerEntry = { [index: number]: unknown };
 
 /** The `window.__anilinkConsent` API the boot script defines. */

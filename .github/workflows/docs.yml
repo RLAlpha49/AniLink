@@ -51,11 +51,11 @@ jobs:
       # workflow_run triggers cannot filter by path, so the old push-trigger
       # path filter is enforced here: a master push that touched nothing
       # docs-relevant skips the deploy instead of rebuilding the site. The
-      # compare covers the complete pushed commit range — the CI run's check
-      # suite records the push's before/after SHAs — so a docs change in any
-      # pushed commit, not just the tip, triggers a deploy. A range or
-      # compare that cannot be resolved fails open — the old filter would
-      # have deployed if the paths matched.
+      # compare covers the complete pushed commit range. The CI run's check
+      # suite records the push's before and after SHAs, so a docs change in
+      # any pushed commit, not only the tip, triggers a deploy. If the range
+      # or compare cannot be resolved, the workflow deploys. The old filter
+      # also deployed when the paths matched.
       - name: Check for docs-relevant changes
         id: docs_changes
         if: ${{ github.event_name == 'workflow_run' }}
@@ -66,11 +66,11 @@ jobs:
           CHECK_SUITE_URL: ${{ github.event.workflow_run.check_suite_url }}
         run: |
           relevant_paths='^src/|^docs-src/|^scripts/generate-operation-reference\.ts$|^scripts/generate-search-index\.ts$|^scripts/generate-llms-txt\.ts$|^scripts/generate-interfaces\.ts$|^scripts/typedoc-plugin-head\.mjs$|^typedoc\.json$|^typedoc-custom\.css$|^typedoc-header\.js$|^package(-lock)?\.json$|^README\.md$|^\.github/workflows/docs\.yml$'
-          # The CI run's check suite records the push's before/after SHAs, so
-          # the compare covers every commit in the push, not just the tip.
+          # The CI run's check suite records the push's before and after SHAs,
+          # so the compare covers every commit in the push, not only the tip.
           # A missing suite or an all-zero "before" (first push to the ref)
           # has no usable range: fail open and deploy, as the old push-event
-          # path filter would have.
+          # path filter also would have deployed.
           if ! range="$(gh api "$CHECK_SUITE_URL" \
             --jq 'if .before and .before != "0000000000000000000000000000000000000000" then .before + "..." + .after else empty end' 2>/dev/null)" \
             || [ -z "$range" ]; then

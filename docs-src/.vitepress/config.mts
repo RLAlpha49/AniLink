@@ -45,7 +45,7 @@ function contentSecurityPolicy(scriptHashes: string[]): string {
         "frame-src 'none'",
         `script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com ${scriptHashes.join(" ")}`,
         // Vite injects development CSS, and Mermaid creates SVG styles at runtime.
-        // Keep script execution restricted while allowing those trusted style sources.
+        // Keep script execution restricted; those style sources are trusted.
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "style-src-attr 'unsafe-inline'",
         "font-src 'self' https://fonts.gstatic.com",

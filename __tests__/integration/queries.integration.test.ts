@@ -5,8 +5,8 @@ import { preflightCredentials } from "./preflight";
  * Live integration tests for every AniList query operation.
  *
  * These tests run real requests against https://graphql.anilist.co and are
- * therefore skipped unless `ANILIST_TOKEN` is set. Only queries are exercised —
- * never mutations — so the authenticated account stays read-only.
+ * therefore skipped unless `ANILIST_TOKEN` is set. Only queries are exercised,
+ * never mutations, so the authenticated account stays read-only.
  *
  * Run with: `npm run test:integration`
  */
@@ -476,7 +476,7 @@ describe("AniList live integration — transport behaviour", () => {
                 // GraphQL envelope carrying an `errors` array plus partial
                 // `data`. Axios rejects before unwrapping, so the pipeline
                 // normalizes it to AniLinkApiError while keeping the full
-                // upstream envelope on `.data` — including the "Not Found."
+                // upstream envelope on `.data`, including the "Not Found."
                 // message and the partial `{ Media: null }` payload.
                 const promise = client().anilist.query.media({
                     id: NONEXISTENT_MEDIA_ID,
