@@ -208,7 +208,9 @@ export class AniLink {
      * alongside live traffic.
      *
      * @returns A frozen per-provider {@link TransportStateSnapshot} pair:
-     * `{ anilist: {...}, mal: {...} }`.
+     * `{ anilist: {...}, mal: {...} }`. Each snapshot carries `capturedAt`,
+     * the epoch-millisecond build time, so a polled snapshot self-describes
+     * when it was taken.
      * @example
      * ```typescript
      * const aniLink = new AniLink("token", {

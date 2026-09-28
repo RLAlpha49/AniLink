@@ -71,9 +71,13 @@ export interface PaceDeadlineSnapshot {
  * perturb transport behavior through it.
  *
  * The snapshot is a point-in-time copy, not a live view: fields reflect the
- * values observed when the snapshot was taken.
+ * values observed when the snapshot was taken, and `capturedAt` stamps that
+ * moment so a polling consumer can judge staleness without recording
+ * receipt time itself.
  */
 export interface TransportStateSnapshot {
+    /** Epoch milliseconds at which the snapshot was built, set once at build time. */
+    capturedAt: number;
     /** Frozen per-host circuit-breaker records, one per host the client has sent breaker-tracked traffic to. */
     circuit: readonly CircuitStateSnapshot[];
     /** Frozen retry-budget record, present only when the client has a recorded budget window. */
@@ -112,7 +116,7 @@ export interface TransportStateSnapshot {
  * is enabled, contributing the frozen `responseCache` counters to the
  * snapshot.
  * @returns A deep-frozen {@link TransportStateSnapshot} of the owner's
- * recorded state.
+ * recorded state, stamped with the build time in `capturedAt`.
  * @example
  * ```typescript
  * const state = aniLink.getTransportState();
@@ -147,6 +151,7 @@ export const snapshotTransportState = (
             : Array.from(deadlines, ([host, deadlineMs]) => Object.freeze({ host, deadlineMs }));
 
     return Object.freeze({
+        capturedAt: Date.now(),
         circuit: Object.freeze(circuit),
         ...(budget !== undefined
             ? {

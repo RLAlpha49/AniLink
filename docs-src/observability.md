@@ -262,7 +262,26 @@ if (state.anilist.responseCache) {
 
 The snapshot is read-only in both directions. The library deep-freezes every nested object and array, so mutating one throws in strict mode instead of silently succeeding. The copies never alias the live mutable state, so a consumer cannot change transport behavior through the snapshot. Building it never mutates the state it observes either. It creates no circuit entry for an unseen host, reports an elapsed retry-budget window as spent instead of rolling it forward, and leaves a stale pacing deadline in place. Polling `getTransportState()` on a schedule is therefore safe alongside live traffic.
 
-Each call returns a fresh, point-in-time copy; fields reflect the values observed when the snapshot was taken. `circuit` and `paceDeadlines` list one entry per host the client has recorded state for; `retryBudget` is present only when the client has a recorded budget window; `responseCache` is present only when the provider's transport options enable a [`ResponseCache`](/response-cache) — it carries the cache's live entry count and its lifetime hit/miss/expiration/eviction counters (the same snapshot `ResponseCache#stats()` returns), so cache tuning is data-driven through the facade even when the cache was wired through a provider credentials slot and the instance was constructed for you. The `mal` key carries the same shape for the MyAnimeList client, and the two providers' states are always isolated from each other.
+Each call returns a fresh, point-in-time copy; fields reflect the values observed when the snapshot was taken, and `capturedAt` stamps that moment (epoch milliseconds, set once when the snapshot is built) so a polling consumer can judge staleness without recording receipt time itself. `circuit` and `paceDeadlines` list one entry per host the client has recorded state for; `retryBudget` is present only when the client has a recorded budget window; `responseCache` is present only when the provider's transport options enable a [`ResponseCache`](/response-cache) — it carries the cache's live entry count and its lifetime hit/miss/expiration/eviction counters (the same snapshot `ResponseCache#stats()` returns), so cache tuning is data-driven through the facade even when the cache was wired through a provider credentials slot and the instance was constructed for you. The `mal` key carries the same shape for the MyAnimeList client, and the two providers' states are always isolated from each other.
+
+### Composing your own clients
+
+`getTransportState()` is the facade shortcut over the `snapshotTransportState` builder the package also exports. If you compose clients yourself with `buildProviderClients(...)` instead of the `AniLink` class, the snapshot stays reachable through the returned `stateOwners` entry: the registry creates one state owner per provider and wires that provider's circuit-breaker, retry-budget, and pacing state through it, so the owner is the key you pass to `snapshotTransportState`.
+
+```typescript
+import { buildProviderClients, snapshotTransportState } from "anilink-api-wrapper";
+
+const clients = buildProviderClients({ anilist: { authToken: "anilist-token" } });
+
+// The AniList client keys its shared transport state through this owner:
+const anilistState = snapshotTransportState(
+    clients.stateOwners.anilist,
+    clients.responseCaches?.anilist // optional: adds the responseCache counters
+);
+console.log(anilistState.capturedAt, anilistState.circuit.length);
+```
+
+The facade performs exactly this per provider inside `getTransportState()` — `snapshotTransportState(stateOwners.<provider>, responseCaches?.<provider>)` — so both paths return the same frozen `TransportStateSnapshot` shape.
 
 ## Next steps
 
