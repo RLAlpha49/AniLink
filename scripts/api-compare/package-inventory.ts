@@ -132,7 +132,7 @@ const NON_CONTRACT_TYPE_NAMES = new Set([
 /**
  * Resolves the response contract type name for an operation source.
  *
- * Operations traditionally import a dedicated `<Name>Response` interface; when
+ * Operations usually import a dedicated `<Name>Response` interface; when
  * no such import exists (page operations returning unions or shared shapes),
  * fall back to the method's declared `Promise<T>` return type so contract
  * comparisons still run against the imported type.

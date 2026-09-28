@@ -92,7 +92,8 @@ export const buildAniListTokenRefresher = (
  * are preserved (mirroring MAL's `buildRefreshedAuth`, which keeps everything
  * except the provider's own client-ID header): a caller who attached extra
  * headers to the auth material, a proxy header or a tracing header, keeps
- * them after the first refresh instead of silently losing them mid-lifetime.
+ * them after the first refresh instead of losing them for the rest of the
+ * token's lifetime.
  * There is no AniList-specific header to strip: the client ID and secret
  * belong to the grant body, never to GraphQL request headers.
  *

@@ -126,7 +126,7 @@ export class AniLink {
     /** The MyAnimeList REST API methods, a {@link MyAnimeListApi} exposed under the `mal` namespace. */
     public mal: MyAnimeListApi;
 
-    /** The per-provider state owners the clients key their shared transport state (breaker, budget, pacing) through. */
+    /** The per-provider state owners that hold each client's shared transport state (breaker, budget, pacing). */
     private stateOwners: { anilist: object; mal: object };
 
     /** The per-provider response caches resolved from the transport options, when enabled, for the cache-stats snapshot. */
@@ -198,7 +198,7 @@ export class AniLink {
      * hit/miss/expiration/eviction counters. Callers can check whether a
      * breaker is open, how many budget retries are spent, when pacing ends,
      * and how the cache performs
-     * without pre-wiring lifecycle hooks and without holding the
+     * without wiring lifecycle hooks and without holding the
      * {@link ResponseCache} instance.
      *
      * Each provider's snapshot is built by {@link snapshotTransportState},
@@ -208,8 +208,8 @@ export class AniLink {
      *
      * @returns A frozen per-provider {@link TransportStateSnapshot} pair:
      * `{ anilist: {...}, mal: {...} }`. Each snapshot carries `capturedAt`,
-     * the epoch-millisecond build time, so a polled snapshot self-describes
-     * when it was taken.
+     * the epoch-millisecond build time, so a polled snapshot records when
+     * it was taken.
      * @example
      * ```typescript
      * const aniLink = new AniLink("token", {
@@ -238,8 +238,8 @@ export class AniLink {
      */
     public getTransportState(): { anilist: TransportStateSnapshot; mal: TransportStateSnapshot } {
         // The caches field is normalized to a full pair in the constructor,
-        // so the snapshot reads never see `undefined`; the local keeps the
-        // narrowing inside this method.
+        // so the snapshot reads never see `undefined`; the local variable
+        // keeps the narrowing inside this method.
         const caches = this.responseCaches ?? { anilist: undefined, mal: undefined };
         return Object.freeze({
             anilist: snapshotTransportState(this.stateOwners.anilist, caches.anilist),

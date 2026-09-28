@@ -5,7 +5,7 @@
  * signal continuation through the optional `paging.next` URL, with a short
  * page (fewer items returned than requested) as the heuristic when the
  * `paging` node is absent. These helpers adapt that contract to the engine's
- * numeric driver: the caller-supplied `fetchPage` closure maps the
+ * numeric driver. The caller-supplied `fetchPage` closure maps the
  * traversal's `(page, perPage)` slot arithmetic onto `offset`/`limit`, and
  * the traversal stops at the first page that reports the end of the list:
  * a `paging` node with no `next` URL (authoritative even on a full final
@@ -45,8 +45,8 @@ const DEFAULT_MAX_PAGES = 100;
 
 /**
  * Default look-ahead `concurrency` for the MAL pagination helpers. MAL's
- * rate limit (~1-2 requests per second) makes look-ahead windows
- * counterproductive: sequential fetches respect the limit without pacing
+ * rate limit of 1 to 2 requests per second makes look-ahead windows
+ * counterproductive. Sequential fetches respect the limit without pacing
  * machinery, so the default is strictly sequential. Pass a higher
  * `concurrency` only for endpoints known to tolerate bursts.
  */
@@ -103,8 +103,8 @@ export interface MalPaginateOptions {
     perPage?: number;
 
     /**
-     * 1-based page number to start from. The closure's offset math rotates
-     * with it: `startPage: 3` starts at `offset = 2 * perPage`. Defaults to 1.
+     * 1-based page number to start from. The closure's offset math follows
+     * the start page: `startPage: 3` starts at `offset = 2 * perPage`. Defaults to 1.
      */
     startPage?: number;
 
@@ -122,7 +122,7 @@ export interface MalPaginateOptions {
      * the list (a `paging` node with no `next` URL, or a short page when the
      * response carries no `paging` node), and every existing guard
      * (`maxPages`, `perPage` clamping) still applies. Defaults to `1`
-     * (strictly sequential) because MAL's rate limit of ~1-2 requests per
+     * (strictly sequential) because MAL's rate limit of 1 to 2 requests per
      * second makes look-ahead counterproductive; values above 8 are
      * clamped down to 8.
      */

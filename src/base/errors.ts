@@ -38,7 +38,7 @@ const redactAxiosError = (error: AxiosError): AxiosError => {
     const response = error.response as Record<string, unknown> | undefined;
     const isHeaderMap = (value: unknown): value is Record<string, unknown> =>
         value !== null && typeof value === "object" && !Array.isArray(value);
-    // Clone only when something actually needs redacting, so errors with
+    // Clone only when something needs redacting, so errors with
     // no sensitive material keep their original identity.
     const configNeedsRedaction =
         config !== undefined &&

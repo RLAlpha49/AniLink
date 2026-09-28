@@ -321,8 +321,8 @@ describe("buildProviderClients stateOwners", () => {
         expect(clients.stateOwners.mal).toBeInstanceOf(Object);
         expect(clients.stateOwners.anilist).not.toBe(clients.stateOwners.mal);
 
-        // The owners are the objects the clients actually key state
-        // through: driving AniList traffic records breaker state under the
+        // The owners are the objects the clients key state through:
+        // driving AniList traffic records breaker state under the
         // anilist owner only.
         mocks.request.mockRejectedValue(apiError(500));
         const media = clients.anilist.query.media({ id: 1 });

@@ -41,8 +41,8 @@ export interface CrossLinkResult<TMedia extends CrossLinkMedia = CrossLinkMedia>
  *
  * AniList media carries `idMal`, the MyAnimeList id of the same show or book.
  * This helper turns any batch of AniList media results into lookup maps, so a
- * cross-provider workflow becomes two map lookups instead of a hand-rolled
- * mapping: find the MAL id with `anilistToMal`, then call
+ * cross-provider workflow becomes two map lookups instead of a mapping written
+ * by hand: find the MAL id with `anilistToMal`, then call
  * `aniLink.mal.anime.get(malId)` (or `mal.manga.get`) with the result.
  * Entries without a MAL id are collected in `unmapped` instead of being
  * silently dropped.

@@ -42,7 +42,7 @@ export interface LookAheadResult<TEntry> {
     /** Responses ordered by entry number. */
     responses: TEntry[];
 
-    /** Number of entries actually fetched. */
+    /** Number of entries fetched. */
     count: number;
 
     /**
@@ -142,7 +142,7 @@ export interface PaginationOptionsInput {
  * options against, plus the public naming shape (`"page"` reads
  * `perPage`/`startPage`/`maxPages`, `"chunk"` reads
  * `perChunk`/`startChunk`/`maxChunks`) so a validation error names the
- * option the caller actually passed.
+ * option the caller passed.
  */
 export interface PaginationDefaults {
     /** Which public naming shape the traversal's options use. */
@@ -160,7 +160,7 @@ export interface PaginationDefaults {
 /**
  * The traversal options {@link resolvePaginationOptions} returns: every
  * numeric option resolved (defaults applied, caps enforced) plus the
- * diagnostics mode. Signal bridging deliberately stays with the call site:
+ * diagnostics mode. Signal bridging stays with the call site:
  * eager traversals bridge through {@link bridgeAbortSignal} and dispose in
  * a `finally` block, while streaming traversals let the engine's generator
  * own the bridge, because traversal lifetimes differ.
@@ -201,7 +201,7 @@ export function resolvePaginationOptions(
     defaults: PaginationDefaults
 ): ResolvedPaginationOptions {
     // The public option names follow the traversal's naming shape so a
-    // validation error names the option the caller actually passed
+    // validation error names the option the caller passed
     // (`perChunk: -1`, not a generic "option").
     const perEntryName = defaults.naming === "page" ? "perPage" : "perChunk";
     const startName = defaults.naming === "page" ? "startPage" : "startChunk";
@@ -498,7 +498,7 @@ export async function fetchNumericWithLookAhead<TEntry>(
         }
         // The consumed entry confirmed more data exists: the launch window
         // has earned its full size, and every refill from here on behaves
-        // exactly as a cold-filled window would.
+        // the same as a cold-filled window.
         windowSize = concurrency;
         if (count >= maxEntries) {
             await Promise.allSettled(pending.slice(count));
@@ -651,7 +651,7 @@ export async function* streamNumericPages<TPage>(
                 // cold-filled window provided, so an early-exiting consumer
                 // still has its stragglers cancelled by the bridge dispose.
                 // The refill leaves one slot for the post-yield pass, so the
-                // steady state matches the cold-filled engine exactly.
+                // steady state matches the cold-filled engine.
                 windowSize = concurrency;
                 launchWindow(concurrency - 1);
             }

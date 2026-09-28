@@ -58,7 +58,7 @@ export const MAX_SOCKETS = 20;
  * each budget unit on a full minute of wall-clock wait and stretch one
  * window's retry spend across many minutes, so the budget bounds the retry
  * spend over time, not only the retry count. The gate compares the true
- * (un-clamped) reset deadline, so a rate-limit window that genuinely
+ * (un-clamped) reset deadline, so a rate-limit window that
  * outlasts the budget window surfaces on the first 429 instead of hopping
  * through repeated clamped 60-second waits.
  *
@@ -532,7 +532,7 @@ export interface RequestOptions {
      * field, so `data: {}` and `data: { Media: null }` (the GraphQL shape for
      * a failed nullable root field) both throw. The resolution is terminal:
      * the data is returned, never retried. But availability-class partial
-     * errors (429/5xx) still advance the circuit breaker exactly as the
+     * errors (429/5xx) still advance the circuit breaker the same way the
      * strict mode's throw would. Off by default: every operation keeps the
      * strict all-or-nothing behavior unless the caller opts in per request.
      *

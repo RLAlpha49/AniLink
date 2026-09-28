@@ -47,7 +47,7 @@ const isObjectMapping = (mapping: unknown): mapping is { readonly [key: string]:
  * `pass`, `session`, `otp`, and `bearer` alternatives match as fragments so
  * prefixed shapes like `sessionId` or `passphrase` are covered; none of
  * them collide with real AniList variable names (verified against the
- * full shipped variable set. The pattern deliberately leaves `pinned` and
+ * full shipped variable set. The pattern leaves `pinned` and
  * `private` alone because they are near-matches.
  */
 const SENSITIVE_KEY_PATTERN =

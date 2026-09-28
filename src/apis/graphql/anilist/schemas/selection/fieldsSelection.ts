@@ -60,7 +60,7 @@ type NotificationKindsCovers = AssertCovers<
  * activity discriminants through `ActivityKinds`, the other three members
  * structurally. A member added to `Likeable` without a map entry stops being
  * selectable; a map entry without a union member adds paths the runtime
- * document cannot select. `Likeable` carries no shared `type` field (only
+ * document cannot select. `Likeable` has no shared `type` field (only
  * the activity members have one), so the guard asserts mutual assignability
  * against the union the map assumes instead.
  */
@@ -258,7 +258,7 @@ export type FieldsSelection<Response> = {
 
 /**
  * The return type of the implementation signature every `fields` operation
- * method carries.
+ * method has.
  *
  * The public overloads work as follows: the default call returns
  * the full response, a call with `fields: undefined` (the conditional-value
@@ -302,7 +302,7 @@ type AnyFieldsSelection = {
  *
  * Every operation that supports field selection calls this once instead of
  * hand-destructuring, so the normalization (`null` rejected by the composer,
- * `undefined` meaning maximal) lives in exactly one place.
+ * `undefined` meaning maximal) is done in exactly one place.
  *
  * @param options - The per-call options object, or `undefined`.
  * @returns The `fields` value and the transport options without it.

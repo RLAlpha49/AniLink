@@ -5,8 +5,8 @@ import { createAxiosStub, makeAxiosCancelError, makeAxiosResponseError } from ".
  * Meta-tests guarding the shared axios double against fixture drift.
  *
  * The transport suites run against this stub instead of real axios, so any
- * gap between the stub's members and the members `RequestHandler` actually
- * consumes would let regressions slip through green suites. These tests pin
+ * gap between the stub's members and the members `RequestHandler` consumes
+ * would let regressions slip through green suites. These tests pin
  * the stub's contract explicitly; when axios grows new consumed members,
  * extend both the stub and this file together.
  */

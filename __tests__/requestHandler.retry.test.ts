@@ -390,7 +390,7 @@ describe("backoff jitter", () => {
             expect(delay).toBeGreaterThanOrEqual(0);
             expect(delay).toBeLessThanOrEqual(rawCap);
         });
-        // Full jitter must actually vary, not collapse to a constant delay.
+        // Full jitter must vary, not collapse to a constant delay.
         expect(new Set(delays).size).toBeGreaterThan(2);
     });
 });
@@ -1353,8 +1353,8 @@ describe("circuit breaker", () => {
     });
 
     test("scales the cooldown after each consecutive failed probe", async () => {
-        // A failed probe must not simply restart the configured cooldown:
-        // each consecutive failed probe doubles the next cooldown (capped
+        // A failed probe must not reset to the configured cooldown: each
+        // consecutive failed probe doubles the next cooldown (capped
         // at 8x), so a recovering-but-slow upstream is probed on a widening
         // schedule instead of being starved at one request per cooldown.
         mocks.request.mockRejectedValue(apiError(500));
@@ -1904,8 +1904,8 @@ describe("computeNextRetryDelay", () => {
 
     test("returns null when an unclamped Retry-After outlasts the remaining budget window", () => {
         // `Retry-After: 120` clamps to 60s for the sleep the caller would
-        // actually take, but the true server-dictated 120s delay outlasts a
-        // window with 90s left: surface instead of burning a budget unit
+        // take, but the true server-dictated 120s delay outlasts a window
+        // with 90s left: return the error instead of burning a budget unit
         // on each clamped 60-second hop back into the 429.
         expect(
             computeNextRetryDelay({
@@ -1939,7 +1939,7 @@ describe("computeNextRetryDelay", () => {
 
     test("returns null when the budget window has already elapsed", () => {
         // Remaining time is negative, so any positive server-dictated delay
-        // outlasts the window: surface instead of sleeping past it.
+        // outlasts the window: return the error instead of sleeping past it.
         expect(
             computeNextRetryDelay({
                 normalized: new AniLinkApiError(429, {}),
@@ -2181,7 +2181,7 @@ describe("computeNextRetryDelay", () => {
 
     test("returns null when an HTTP-level 429 rateLimit reset outlasts the budget window", () => {
         // The window gate must consult the rateLimit-derived delay for
-        // HTTP-level 429s too, not only GraphQL-envelope ones.
+        // HTTP-level 429s as well as GraphQL-envelope ones.
         const error = new AniLinkApiError(429, undefined, undefined, {
             rateLimit: { limit: 90, remaining: 0, reset: Math.floor(Date.now() / 1000) + 120 },
         });

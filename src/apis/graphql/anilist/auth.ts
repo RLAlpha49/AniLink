@@ -167,7 +167,7 @@ export const refreshAccessToken = async (
  * @param response - The token response to compute the expiry for.
  * @param now - The current time in milliseconds since the Unix epoch. Defaults to the time at which the helper is called.
  * @returns The moment the access token expires.
- * @throws A `TypeError` when `expires_in` is not a positive finite number. `0`, negative, `NaN`, or `Infinity` values produce an already-expired or nonsensical expiry that silently breaks proactive-refresh scheduling (and is one comparison-operator slip away from a refresh loop), so they are rejected instead.
+ * @throws A `TypeError` when `expires_in` is not a positive finite number. `0`, negative, `NaN`, or `Infinity` values produce an already-expired or nonsensical expiry that breaks proactive-refresh scheduling without any visible error (and is one comparison-operator slip away from a refresh loop), so they are rejected instead.
  * @example
  * ```typescript
  * const token = await getAccessToken("1234", "secret", "code-from-redirect");

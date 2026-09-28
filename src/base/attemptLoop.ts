@@ -61,7 +61,7 @@ export interface ExecuteModifiers {
     /**
      * The cache write-back for a successful attempt, executed inside the
      * attempt loop after the response resolves and before the `onResponse`
-     * emission, returning whether the response was actually stored. The
+     * emission, returning whether the response was stored. The
      * transport's `sendRequest` builds it from the cache policy (the
      * in-flight generation guard and partial-success exclusion) so the
      * emission can carry `cacheWrite: true` exactly when the cache filled.
@@ -114,7 +114,7 @@ export interface ExecuteOutcome<T> {
  * participates in circuit-breaker accounting. An availability-class error
  * (429/5xx) advances the streak just as strict mode does, rather than letting
  * the success path reset it. A persistently degraded upstream that always
- * fails one root field therefore trips the breaker in both modes. A
+ * fails one root field trips the breaker in both modes. A
  * status-less envelope error is streak-neutral (see
  * `isStreakNeutralFailure`), so the resolved partial success neither
  * advances nor resets the streak, again matching the strict mode's throw of
@@ -328,7 +328,7 @@ export const executeWithRetry = async <T>(
             const rateLimit = getRateLimitInfo(response.headers as Record<string, unknown>);
             // The attempt's wall-clock duration is captured when the HTTP
             // response arrives, before the envelope unwrap and cache
-            // write-back clone. Thus durationMs measures the network attempt
+            // write-back clone. So durationMs measures the network attempt
             // only, matching the pre-extraction emission point.
             const attemptDurationMs = Date.now() - startedAt;
             // The onResponse facts shared by every emission below: the
@@ -372,7 +372,7 @@ export const executeWithRetry = async <T>(
             const { result, resolvedPartial, partialError, partialBreakerError } = outcome;
             // The cache write-back runs inside the attempt loop, after the
             // envelope resolves, so the onResponse emission can report
-            // whether the cache actually filled. This is the third cache
+            // whether the cache filled. This is the third cache
             // outcome
             // alongside hit and miss. A `false` return (a fail-closed read,
             // a partial-success envelope, an invalidation-guarded drop)
@@ -404,7 +404,7 @@ export const executeWithRetry = async <T>(
             }
             if (partialBreakerError !== undefined) {
                 // The partial envelope's error entries participate in
-                // breaker accounting exactly as strict mode does. It uses
+                // breaker accounting the same way strict mode does. It uses
                 // the same normalized error and probe bookkeeping. A failed
                 // half-open probe re-opens with a
                 // scaled cooldown; a status-less envelope error is

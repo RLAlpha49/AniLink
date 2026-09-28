@@ -148,7 +148,7 @@ export abstract class RestOperation extends BaseOperation {
             if (value === undefined) {
                 // A placeholder with no value would otherwise reach the wire
                 // as a literally-braced URL (for example `/anime/{id}`), which
-                // every REST provider answers with a confusing 404/400.
+                // every REST provider answers with a 404/400.
                 // Fail fast with the missing parameter's name, plus the
                 // operation label when one is available, so the caller can
                 // identify the failed call before dispatch.

@@ -53,7 +53,7 @@ interface StubScriptElement {
     src: string;
 }
 
-/** Minimal document surface the boot script touches. */
+/** Minimal document members the boot script touches. */
 interface StubDocument {
     /** Cookie jar serialized as `name=value` pairs joined by `; `. */
     cookie: string;

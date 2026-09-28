@@ -68,7 +68,7 @@ export interface ReferenceOperation {
      * Category within the provider's API: the AniList facade group
      * (query, page, mutation, custom) or the MAL facade namespace (anime,
      * manga, user, forum). Each category becomes one catalog page and one
-     * manifest shard, exactly like the AniList category pages.
+     * manifest shard, the same as the AniList category pages.
      */
     category: "query" | "mutation" | "page" | "custom" | "anime" | "manga" | "user" | "forum";
     /** Signature line. */
@@ -192,7 +192,7 @@ function jsdocSeeUrls(jsdoc: string): string[] {
  *
  * MAL facade JSDoc documents every thrown error class with its condition
  * (`@throws `AniLinkRestError` for a non-success MyAnimeList response.`), so
- * the reference reads the error table straight from the facade instead of
+ * the reference reads the error table from the facade instead of
  * re-deriving it per operation like the AniList flow does.
  *
  * @param jsdoc JSDoc block text.
@@ -791,10 +791,10 @@ function anilistAuth(op: RawOp): string {
 /**
  * The MAL facade interface that owns each namespace.
  *
- * The facade is the single source of truth for the catalog, exactly like the
+ * The facade is the single source of truth for the catalog, the same as the
  * generated AniList facade groups: every public MAL operation is one
  * `MyAnimeList*Api` property, and the reference reads its signature, JSDoc
- * prose, `@example`, `@see` link, and `@throws` table straight from that
+ * prose, `@example`, `@see` link, and `@throws` table from that
  * property. No per-operation tables live here.
  */
 const MAL_FACADE_INTERFACES: Record<

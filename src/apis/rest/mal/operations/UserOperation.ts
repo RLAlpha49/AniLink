@@ -14,7 +14,7 @@ import type {
 /**
  * {@link MalUserOperation} is the REST operation adapter for the MyAnimeList user endpoints.
  *
- * It extends {@link RestOperation} and is composed into `MyAnimeListApi` via `buildMyAnimeListApi`, exposing {@link MalUser} through {@link MalRequestOptions} and `MyAnimeListUserApi.me`, plus the paginated user-list reads `animeList` and `mangaList` for `GET /users/{user_name}/animelist` and `GET /users/{user_name}/mangalist`.
+ * It extends {@link RestOperation} and is composed into `MyAnimeListApi` via `buildMyAnimeListApi`, exposing {@link MalUser} through {@link MalRequestOptions} and `MyAnimeListUserApi.me`. The paginated user-list reads `animeList` and `mangaList` cover `GET /users/{user_name}/animelist` and `GET /users/{user_name}/mangalist`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
@@ -25,8 +25,8 @@ export class MalUserOperation extends RestOperation {
     protected readonly baseUrl = MAL_API_BASE_URL;
 
     /**
-     * Normalizes a `username` argument for the `@me` check: trimmed and
-     * lowercased, so `@ME` and `" @me "` resolve the authenticated user too.
+     * Normalizes a `username` argument for the `@me` check by trimming and
+     * lowercasing it, so `@ME` and `" @me "` resolve the authenticated user too.
      */
     private static normalizeUsername(username: string): string {
         return username.trim().toLowerCase();
@@ -34,9 +34,9 @@ export class MalUserOperation extends RestOperation {
 
     /**
      * Validates a normalized username before it is interpolated into a URL
-     * path: an empty string would produce a malformed `/users//animelist`
-     * path, so it fails fast with a clear client-side message instead of a
-     * confusing upstream 404 or URL-parse error.
+     * path. An empty string would produce a malformed `/users//animelist`
+     * path, so it fails fast with a clear client-side message instead of an
+     * upstream 404 or URL-parse error.
      *
      * @param normalized - The trimmed, lowercased username.
      * @throws An {@link AniLinkValidationError} when the username is empty.
@@ -119,7 +119,7 @@ export class MalUserOperation extends RestOperation {
                 query: {
                     fields: formatMalFields(fields),
                 },
-                // The trimmed username, not the raw argument: surrounding
+                // The trimmed username, not the raw argument. Surrounding
                 // whitespace would otherwise be percent-encoded into the
                 // path and answered with a 404.
                 pathParams: normalized === "@me" ? undefined : { username: normalized },
@@ -179,7 +179,7 @@ export class MalUserOperation extends RestOperation {
                     limit,
                     offset,
                 },
-                // The trimmed username, not the raw argument: surrounding
+                // The trimmed username, not the raw argument. Surrounding
                 // whitespace would otherwise be percent-encoded into the
                 // path and answered with a 404.
                 pathParams: normalized === "@me" ? undefined : { username: normalized },
@@ -239,7 +239,7 @@ export class MalUserOperation extends RestOperation {
                     limit,
                     offset,
                 },
-                // The trimmed username, not the raw argument: surrounding
+                // The trimmed username, not the raw argument. Surrounding
                 // whitespace would otherwise be percent-encoded into the
                 // path and answered with a 404.
                 pathParams: normalized === "@me" ? undefined : { username: normalized },

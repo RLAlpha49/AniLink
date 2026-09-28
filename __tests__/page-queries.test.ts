@@ -244,7 +244,7 @@ describe("page operations return paginated envelopes", () => {
  * The `pageCases` table above verifies the variable contract and that the
  * query string contains `Page`. These tests go one step further: each page
  * operation must unwrap the `Page` root field and return the `{ pageInfo,
- * <items> }` envelope directly, not only when driven through `paginate`.
+ * <items> }` envelope on a direct call, with no `paginate` driver involved.
  * A regression in a single page operation's root-field selection fails a
  * test that names the broken operation.
  */

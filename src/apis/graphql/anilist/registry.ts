@@ -367,8 +367,8 @@ export type RegistryFacadeOperationKey = {
 
 /**
  * The literal facade keys the `query` registry group exposes, derived from
- * {@link ANILIST_OPERATION_REGISTRY} so the registry stays the single source
- * of truth for which operations exist.
+ * {@link ANILIST_OPERATION_REGISTRY} so the registry is the one place that
+ * lists which operations exist.
  *
  * The facade group types under `facade/` declare the same keys. Each group
  * module checks that this union and its facade keys match in both directions,
@@ -377,8 +377,8 @@ export type RegistryFacadeOperationKey = {
 export type RegistryQueryKeys = (typeof ANILIST_OPERATION_REGISTRY)["query"][number]["name"];
 /**
  * The literal facade keys the `page` registry group exposes, derived from
- * {@link ANILIST_OPERATION_REGISTRY} so the registry stays the single source
- * of truth for which operations exist.
+ * {@link ANILIST_OPERATION_REGISTRY} so the registry is the one place that
+ * lists which operations exist.
  *
  * The `query-group` facade module asserts bidirectional parity between this
  * union and `keyof AniListQueries["query"]["page"]`, so a key present in

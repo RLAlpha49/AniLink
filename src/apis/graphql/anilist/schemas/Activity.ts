@@ -278,7 +278,7 @@ export const MessageActivitySchema = `
 /**
  * {@link ActivityNotificationSchema} is the activity-notification selection: the shared
  * fields of every activity-variant notification, with the triggering activity and its
- * acting user expanded.
+ * acting user included as nested selections.
  * @see https://docs.anilist.co/reference/union/notificationunion
  */
 export const ActivityNotificationSchema = `

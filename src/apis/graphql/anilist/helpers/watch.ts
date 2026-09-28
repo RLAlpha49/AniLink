@@ -5,8 +5,8 @@
  * workflows. These helpers compose the typed page operations
  * (`query.page.notifications`, `query.page.activities`) with the shared
  * transport (retry, pacing, circuit breaker) into an async generator that
- * yields each feed item exactly once, newest detections first poll and
- * oldest item yielded first within a poll. All watcher state (the seen-id
+ * yields each feed item once. Within a poll, items are detected newest
+ * first and yielded oldest first. All watcher state (the seen-id
  * set) is in-memory and per-watcher, consistent with the library's
  * recorded design decision that all state is in-memory.
  */
@@ -110,13 +110,13 @@ export interface WatchOptions {
     perPage?: number;
 
     /**
-     * `AbortSignal` that stops the watcher. This is the authoritative stop
-     * mechanism. An abort between polls ends the generator cleanly (the
+     * `AbortSignal` that stops the watcher. This is the primary way to stop
+     * it. An abort between polls ends the generator cleanly (the
      * `for await` loop finishes); an abort during an in-flight poll
      * rejects it with the transport's `ABORTED` error, matching the rest
      * of the library. A `for await` loop's `break`/`return` also stops the
      * watcher because it happens while the generator is suspended at a
-     * yield; a watcher abandoned by any other consumer shape keeps polling
+     * yield; a watcher abandoned in any other way keeps polling
      * until its `signal` aborts, so always pass one for long-running
      * watchers.
      */
@@ -127,9 +127,9 @@ export interface WatchOptions {
      * hooks, pacing) merged over the instance-level options for every poll
      * request. The watcher's `signal` is always forwarded to the transport
      * regardless of this value. Poll requests always bypass the
-     * instance-level `responseCache`: a watcher poll whose freshness is
-     * the point must never be served a cached page, so a cache enabled on
-     * the client never makes the watcher stale.
+     * instance-level `responseCache`: each poll needs current data, so it
+     * must never be served a cached page, and a cache enabled on the
+     * client never makes the watcher stale.
      */
     transportOptions?: RequestOptions;
 }
@@ -150,9 +150,9 @@ export interface WatchNotificationsFilters {
 
     /**
      * Resets the unread notification count to 0. One-shot: forwarded on
-     * the watcher's first poll only, so the natural intent, "clear it
-     * once, now that my watcher is taking over", does not silently
-     * suppress the unread badge on every subsequent poll.
+     * the watcher's first poll only. The caller intent is "clear it once,
+     * now that my watcher is taking over", so the flag must not suppress
+     * the unread badge on every subsequent poll.
      */
     resetNotificationCount?: boolean;
 
@@ -293,7 +293,7 @@ interface WatchPollContext<TItem extends WatchedItem> {
     readonly signal: AbortSignal | undefined;
     /** The seen-id map: item id → `createdAt`, pruned between polls. */
     readonly seen: Map<number, number>;
-    /** Whether the first poll still owes the baseline (mark-seen, yield-nothing) drain. */
+    /** Whether the first poll still has the baseline drain (mark seen, yield nothing) pending. */
     baselinePending: boolean;
     /** The page the next poll starts at; above 1 only after a cap-limited drain. */
     resumeFromPage: number;
@@ -324,8 +324,8 @@ interface PollDrain<TItem> {
  * the activity watcher enforces `ID_DESC`): the drain stops at the first
  * page containing an already-seen item, which is the frontier marker when
  * new items arrive at the front. A resumed poll that hits the frontier on
- * its first page re-arms one page deeper so a shifted remainder is never
- * stranded behind the seen frontier; a drain that ends at the page cap
+ * its first page resumes one page deeper so a shifted remainder is never
+ * left behind the seen frontier; a drain that ends at the page cap
  * resumes from the page after the cap on the next poll, except after a
  * baseline drain, which resumes from its initial page so the first real
  * poll re-scans the feed's front. The baseline poll (no `since`) marks but
@@ -386,15 +386,15 @@ async function drainPoll<TItem extends WatchedItem>(
     if (drainedToCap) {
         // The baseline marked the capped pages seen without yielding:
         // resume from this drain's initial page so the first real poll
-        // re-scans the feed's front instead of leaping past the cap and
+        // re-scans the feed's front instead of skipping past the cap and
         // missing items that arrived there after the baseline snapshot.
         ctx.resumeFromPage = baselineDrain ? startPage : page;
     } else if (resuming && hitSeenFrontier && page === startPage && lastDrainedHasNext) {
         // The resumed page was already seen and the feed continues:
         // new items shifted the feed down between the capped poll and
         // this one, so the unseen remainder now sits one page deeper.
-        // Re-arm the resume instead of resetting to 1, which would
-        // strand the remainder behind the seen frontier forever.
+        // Resume one page deeper instead of resetting to 1, which would
+        // leave the remainder behind the seen frontier forever.
         ctx.resumeFromPage = startPage + 1;
     }
     ctx.baselinePending = false;
@@ -517,10 +517,10 @@ export function watchNotifications(
     // `resetNotificationCount` is one-shot: it is forwarded on the first poll
     // only. Forwarding it on every poll would reset the unread count each
     // time, permanently suppressing the badge for notifications the user
-    // never saw, when the natural caller intent is "clear it once, now
-    // that my watcher is taking over". The flag is spent only after the
-    // poll settles, so a first poll that never reaches the server does not
-    // silently consume the one-shot.
+    // never saw. The caller intent is "clear it once, now that my watcher
+    // is taking over". The flag is consumed only after the poll completes,
+    // so a first poll that never reaches the server does not waste the
+    // one-shot.
     let resetPending = resetNotificationCount === true;
     return watchFeed<NotificationResponse>(async (page, perPage, signal) => {
         const resetNow = resetPending;
@@ -533,10 +533,10 @@ export function watchNotifications(
                 resetNotificationCount: resetNow,
                 asHtml,
             }),
-            // Poll requests always bypass the response cache: a watcher
-            // poll whose freshness is the point must never be served a
-            // cached page, so a cache enabled on the client cannot make
-            // the watcher stale.
+            // Poll requests always bypass the response cache: each poll
+            // needs current data and must never be served a cached page,
+            // so a cache enabled on the client cannot make the watcher
+            // stale.
             { ...shared.transportOptions, signal, bypassResponseCache: true }
         );
         resetPending = false;
@@ -578,7 +578,7 @@ export function watchActivity(
     const { userId, messengerId, mediaId, type, isFollowing, sort, ...shared } = options;
     return watchFeed<Activity>(async (page, perPage, signal) => {
         const response = await fetch(
-            // ID_DESC (newest first) is the watcher's working order:
+            // ID_DESC (newest first) is the order the watcher needs:
             // new items enter at the front, so page 1 is always the
             // window that contains them. A caller-provided sort
             // overrides it; see the option's caveat.
@@ -592,10 +592,10 @@ export function watchActivity(
                 isFollowing,
                 sort: sort ?? ["ID_DESC"],
             }),
-            // Poll requests always bypass the response cache: a watcher
-            // poll whose freshness is the point must never be served a
-            // cached page, so a cache enabled on the client cannot make
-            // the watcher stale.
+            // Poll requests always bypass the response cache: each poll
+            // needs current data and must never be served a cached page,
+            // so a cache enabled on the client cannot make the watcher
+            // stale.
             { ...shared.transportOptions, signal, bypassResponseCache: true }
         );
         return { pageInfo: response.pageInfo, items: response.activities };

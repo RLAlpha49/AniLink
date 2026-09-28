@@ -412,7 +412,7 @@ export const recordCircuitFailure = (
             return;
         }
         // The upstream answered with a caller-side error, so it is
-        // reachable: the availability-failure streak resets, exactly as it
+        // reachable: the availability-failure streak resets, the same as it
         // would on a success. If this was the reserved half-open probe,
         // closing the breaker (emitting onCircuitClose) is part of that
         // reset instead of leaving it stuck.

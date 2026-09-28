@@ -56,10 +56,10 @@ const FIELD_LINE_PATTERN =
  * Parse a GraphQL selection body into a tree of `SelectionNode`s.
  *
  * Tracks brace depth so nested selections attach to their parent field.
- * Blank lines are skipped. Lines that carry no field (lone closing braces)
+ * Blank lines are skipped. Lines with no field (lone closing braces)
  * only pop the stack. Any other unrecognized line is a hard error: the
- * maximal documents this composer serves are generated in one-field-per-line
- * format, and silently dropping a line would corrupt every composed document
+ * maximal documents this composer parses are generated in one-field-per-line
+ * format, and a dropped line would corrupt every composed document
  * built from it.
  *
  * @param body - The selection text to parse (e.g. a root field's selection).
@@ -85,8 +85,8 @@ function parseSelectionUncached(body: string): SelectionNode[] {
         const closeCount = (line.match(/\}/g) ?? []).length;
 
         // A line that opens and closes a selection in place (`title { romaji }`)
-        // would pop the stack before its own field is attached, silently
-        // rendering the field as a scalar and dropping its children. The
+        // would pop the stack before its own field is attached, rendering
+        // the field as a scalar and dropping its children. The
         // maximal documents are strictly one-field-per-line, so reject the
         // shape instead of mis-parsing it.
         if (closeCount > 0 && line.includes("{")) {
@@ -200,7 +200,7 @@ function renderSelection(nodes: SelectionNode[], indent: string): string {
  * that continues prunes the sub-tree recursively. Paths sharing a head merge
  * into one selection of that head. Paths are validated against the tree as
  * they walk: an unknown segment fails with every other invalid path listed,
- * reported with the full caller-provided path (not just the failing segment).
+ * reported with the full caller-provided path, not only the failing segment.
  *
  * Union members are addressed by type-qualified paths: a first segment that
  * names an inline fragment's type condition (`"TextActivity.text"`) selects
@@ -235,8 +235,8 @@ function pruneSelection(
 
     // Always-keys are validated separately from the caller's paths: a bad
     // entry is a library bug (the operation class's always-keys constant),
-    // and blaming the caller's `fields` list would send them hunting through
-    // paths they never wrote.
+    // and blaming the caller's `fields` list would point them at paths
+    // they never wrote.
     for (const path of always) {
         const segments = path.split(".");
         if (!byName.has(segments[0])) {
@@ -359,8 +359,8 @@ function isVariableUsed(usageScope: string, name: string): boolean {
 function pruneVariableDeclarations(header: string, document: string): string {
     // The declaration list opens before the operation definition's opening
     // brace; a paren after that brace is the root field's argument list, not
-    // declarations. Treating root args as declarations would excise them
-    // from the usage scope and silently strip the root field's arguments
+    // declarations. Treating root args as declarations would remove them
+    // from the usage scope and strip the root field's arguments
     // from every composed document (no current maximal document declares
     // zero variables, but nothing else guards the shape).
     const opBrace = header.indexOf("{");
@@ -388,10 +388,10 @@ function pruneVariableDeclarations(header: string, document: string): string {
     const declarations = header.slice(openParen + 1, closeParen).split(",");
     // Usage scope: the whole composed document minus the declaration list
     // itself, so a variable referenced only in the root field's argument
-    // list (which lives in the header) still counts as used. The span is
-    // excised positionally, using the declaration list's own indices, rather than
-    // by first-occurrence text search, so identical text elsewhere can never
-    // redirect the excision.
+    // list (which is part of the header) still counts as used. The span is
+    // removed by position, using the declaration list's own indices, rather
+    // than by first-occurrence text search, so identical text elsewhere can
+    // never redirect the removal.
     const usageScope = document.slice(0, openParen) + document.slice(closeParen + 1);
     const kept = declarations.filter((declaration) => {
         const nameMatch = /\$([A-Za-z0-9_]+)/.exec(declaration);
@@ -443,10 +443,10 @@ export function composeDocument(
     always: SelectionAlways
 ): string {
     if (fields === undefined) return maximalDocument;
-    // `null` is not "no selection": a JS caller passing `fields: null` almost
-    // certainly lost a value, and silently answering with the maximal
-    // document, the heaviest possible request, would punish them with
-    // over-fetching and rate-limit cost. Reject it loudly instead.
+    // `null` is not "no selection": a JS caller passing `fields: null` most
+    // likely lost a value, and answering with the maximal document, the
+    // largest request this library sends, would over-fetch and count
+    // against their rate limit. Reject it with an error instead.
     if (fields === null) {
         throw new AniLinkValidationError([
             "`fields` must be an array of response paths, not `null`. Omit it for the maximal selection.",
@@ -454,7 +454,8 @@ export function composeDocument(
     }
     // A non-array `fields` (e.g. a bare string from a JS caller) would
     // otherwise be spread character-by-character into the path walk and
-    // rejected with a baffling "Unknown field(s): i, d" message.
+    // rejected with an "Unknown field(s): i, d" message that lists the
+    // string's characters as fields.
     if (!Array.isArray(fields)) {
         throw new AniLinkValidationError([
             "`fields` must be an array of response paths. Omit it for the maximal selection.",
@@ -466,8 +467,8 @@ export function composeDocument(
     // matching `}`, which a depth scan finds (the document's last `}` closes
     // the operation, not the root field). A document whose structure cannot be
     // located while `fields` is set is a generated-code bug, not a caller
-    // mistake: silently returning the maximal document would ignore the
-    // caller's selection and over-fetch, so fail loudly instead.
+    // mistake: returning the maximal document would ignore the caller's
+    // selection and over-fetch, so fail with an error instead.
     const opOpen = maximalDocument.indexOf("{");
     if (opOpen === -1) {
         throw new AniLinkValidationError(

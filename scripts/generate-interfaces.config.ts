@@ -27,7 +27,7 @@
  * `ExternalLinkSourceCollectionResponse`, `MediaTagCollectionResponse`,
  * `DeleteMediaListEntryResponse`, and the `Thread` aliases) are generated from
  * the operation files' inline documents, so they always mirror what the client
- * actually sends.
+ * sends.
  */
 import type { OutputSpec } from "../lib/interfaces-codegen/run";
 import { ANILIST_PROVIDER_CONFIG, type ProviderGenerationConfig } from "./provider-config";

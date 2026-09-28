@@ -96,7 +96,7 @@ const validateMalPkceValue = (value: string, name: string): void => {
  * @param clientId - The MAL application client ID from {@link MalAuthorizationCodeRequest.clientId}.
  * @param codeChallenge - The PKCE challenge for the login attempt; under MAL's `plain` method this is the verifier itself and must contain 43 to 128 RFC 7636 unreserved characters.
  * @param state - Optional opaque CSRF state to validate on the redirect.
- * @returns The fully encoded authorization URL for the MAL OAuth flow.
+ * @returns The encoded authorization URL for the MAL OAuth flow.
  * @throws `TypeError` when `codeChallenge` is not a valid MAL PKCE verifier.
  * @example
  * ```typescript

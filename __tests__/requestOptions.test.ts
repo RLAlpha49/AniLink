@@ -6,8 +6,8 @@ import { AniLink } from "../src/AniLink";
  *
  * These tests exercise the real operation-base merge logic and the real
  * `sendRequest` pipeline against a stubbed Axios layer, so they prove that a
- * per-call options object reaches the transport merged over the instance-level
- * settings, not just that arguments are passed through.
+ * per-call options object is merged over the instance-level settings before
+ * it reaches the transport.
  */
 
 const mocks = vi.hoisted(() => {

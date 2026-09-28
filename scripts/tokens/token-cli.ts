@@ -112,7 +112,7 @@ export async function saveEnvEntry(key: string, value: string): Promise<void> {
  *
  * Used for values the script itself previously persisted (client ids, refresh
  * tokens) rather than user-provided ones, so a stale process environment
- * cannot shadow what the last run actually saved.
+ * cannot shadow what the last run saved.
  *
  * @param key - The `.env` key to read.
  * @returns The stored value, or `undefined` when the key is absent.

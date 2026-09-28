@@ -83,7 +83,7 @@ export const buildMalTokenRefresher = (
  * Builds the auth material the operations replay with after a refresh.
  *
  * The token swap replaces the bearer token, preserves the other headers,
- * and drops the `X-MAL-CLIENT-ID` header: the replayed request
+ * and drops the `X-MAL-CLIENT-ID` header, because the replayed request
  * authenticates with the bearer token. The client-ID header is only for
  * client-ID-only access to public endpoints. Keeping it could expose the
  * client ID to intermediaries that log request headers and would conflict

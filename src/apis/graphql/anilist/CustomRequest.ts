@@ -22,7 +22,7 @@ import {
  * a copied document that opens with a comment (`# fetch viewer\nquery { ... }`)
  * validates locally exactly as the server would accept it.
  *
- * This is a deliberately lightweight guard, not a parser: it catches empty
+ * This is a lightweight guard, not a parser: it catches empty
  * payloads and non-documents locally so the most obvious mistakes fail fast
  * instead of as remote 400 responses. Full syntax validation is left to the
  * AniList API.

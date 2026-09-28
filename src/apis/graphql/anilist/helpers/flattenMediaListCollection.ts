@@ -87,7 +87,7 @@ export function flattenMediaListCollection(
  * (a `null` entry) or silently merging unrelated rows under the key
  * `undefined` (a missing `id`) or `NaN` (a non-finite id: `Map` keys on
  * SameValueZero, so every `NaN`-id entry would collapse into one shared
- * row). This matches the guard convention of the sister helper
+ * row). This matches the guard convention of the sibling helper
  * `crossLink`, which validates with `typeof` checks before dereferencing.
  *
  * @throws An {@link AniLinkValidationError} when the entry is not an object

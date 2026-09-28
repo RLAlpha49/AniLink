@@ -66,7 +66,7 @@ export function buildMyAnimeListApi(
     // missing, like an empty string. Without both values, each facade member
     // remains a directly bound method with no wrapper or behavior change.
     // Values are trimmed before use so a credential copied with trailing
-    // whitespace still authenticates (matching the AniList wiring).
+    // whitespace still authenticates, matching the AniList wiring.
     const refresher =
         isNonBlank(credentials?.refreshToken) && isNonBlank(credentials?.clientId)
             ? buildMalTokenRefresher({
@@ -79,7 +79,7 @@ export function buildMyAnimeListApi(
                   diagnostics: credentials.diagnostics,
                   applyAccessToken: (accessToken) => {
                       // Every registered operation was constructed above, so
-                      // the swap reaches the whole client: the fresh auth
+                      // the swap reaches the whole client. The fresh auth
                       // material is moved onto each instance inside the
                       // deduplicated grant, and the original request is
                       // replayed once against it.

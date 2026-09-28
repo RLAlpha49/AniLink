@@ -116,7 +116,7 @@ const getRetryAfterDelay = (error: unknown): number | null => {
  * `Retry-After: 120` against a window with 90s left surfaces immediately
  * instead of retrying into a clamped 60-second hop that re-hits the 429 and
  * spends another budget unit. The clamped value remains what the caller
- * actually sleeps (see {@link getRetryDelay}).
+ * sleeps (see {@link getRetryDelay}).
  *
  * @param error - The raw thrown value, for `Retry-After` extraction.
  * @returns The un-clamped delay in milliseconds, or `null` when the raw
@@ -174,7 +174,7 @@ const getRateLimitResetDelay = (error: AniLinkApiError): number | null => {
  * Unlike {@link getRateLimitResetDelay}, the deadline is not capped at
  * {@link MAX_RETRY_AFTER_MS}: the retry-budget window gate must compare the
  * *true* reset deadline against the window's remaining time, so a reset
- * that genuinely outlasts the window surfaces immediately instead of
+ * that outlasts the window surfaces immediately instead of
  * retrying into repeated clamped 60-second hops that each spend a budget
  * unit.
  *
@@ -198,7 +198,7 @@ const getUnclampedRateLimitResetDelay = (error: AniLinkApiError): number | null 
  * This is the single source of the server-dictated delay: both the
  * retry-budget window gate in {@link computeNextRetryDelay} and the
  * per-error-class matrix in {@link getRetryDelay} call it, so the gate can
- * never disagree with the delay actually slept.
+ * never disagree with the delay slept.
  *
  * @param error - The normalized 429.
  * @param rawError - The raw thrown value, for `Retry-After` extraction.
@@ -349,7 +349,7 @@ export interface RetryDelayInput {
  * cannot stretch one window's retry spend across many minutes of
  * wall-clock waits. The gate compares the *un-clamped* server-dictated
  * deadline (see `getUnclampedRetryAfterDelay` and
- * `getUnclampedRateLimitResetDelay`): a delay that genuinely outlasts
+ * `getUnclampedRateLimitResetDelay`): a delay that outlasts
  * the window surfaces immediately, instead of retrying into repeated
  * clamped 60-second hops that each spend a budget unit. Like the count gate,
  * the window gate requires both halves of the budget (the live state and
@@ -389,7 +389,7 @@ export const computeNextRetryDelay = (input: RetryDelayInput): number | null => 
         //
         // The comparison uses the un-clamped server-dictated deadline: the
         // clamped delay (capped at MAX_RETRY_AFTER_MS) is what the caller
-        // actually sleeps, but a delay that genuinely outlasts the window
+        // sleeps, but a delay that outlasts the window
         // must surface now. Otherwise each clamped 60-second hop spends a
         // budget unit and re-hits the 429, stretching one window's spend
         // across many minutes of wall-clock waits.
@@ -467,7 +467,7 @@ const retryBudgetStates = new WeakMap<object, RetryBudgetState>();
  * The window is **fixed**, not sliding: it is anchored to the first failure
  * after the previous window elapsed, and resets completely when
  * `windowEndsAt` passes. A burst of failures at adjacent window edges can
- * therefore spend up to `2 x maxRetriesPerWindow` retries within one
+ * spend up to `2 x maxRetriesPerWindow` retries within one
  * `windowMs` of wall-clock time (the tail of one window plus the head of
  * the next). This is the documented trade-off for the O(1) single-counter
  * accounting; consumers that need a strict sliding-window bound should size

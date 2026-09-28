@@ -87,7 +87,7 @@ const TOKEN_REQUEST_TIMEOUT_MS = 10_000;
  * endpoint. Both use one policy: a short timeout, retries off
  * by default because grant credentials are single-use (a retried
  * authorization code or PKCE verifier is consumed server-side, so the retry
- * is guaranteed to fail again while doubling token-endpoint traffic; a
+ * fails again while doubling token-endpoint traffic; a
  * caller opts back in with an explicit `retry` policy), and
  * `exposeRawAxiosError` forced off because the request body carries
  * `client_secret`, authorization `code`, and `refresh_token` values.

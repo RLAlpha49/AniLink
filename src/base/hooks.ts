@@ -94,7 +94,7 @@ export interface ReportDiagnosticOptions {
  * observer are caught so a broken logger cannot break the request pipeline.
  *
  * @param options - The diagnostic to emit and how to route it.
- * @returns Whether an emission actually happened: `true` when a configured
+ * @returns Whether an emission happened: `true` when a configured
  * observer was invoked or the record reached the console, `false` when the
  * configuration suppressed the diagnostic. One-shot emitters use this
  * result instead of reimplementing the routing, avoiding mismatches such as

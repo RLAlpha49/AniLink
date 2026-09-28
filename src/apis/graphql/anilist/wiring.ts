@@ -89,7 +89,7 @@ type OperationInstance = BaseOperation;
  * a closure variable; every subsequent access returns the same bound
  * function, and therefore the same instance. The resilience state itself
  * (circuit breaker / retry budget / pacing deadlines) lives in the shared
- * per-client owner, so it spans every operation of the client, not just this
+ * per-client owner, so it spans every operation of the client, not only this
  * one.
  *
  * The auth material is read through the `getAuth` accessor at

@@ -574,7 +574,7 @@ function renderImports(imports: Map<string, string[]>): string[] {
 /** The compile-time parity assert block emitted into `query-group.ts`. */
 const QUERY_PARITY_BLOCK = `/**
  * Compile-time exhaustiveness check between this facade group and the
- * operation registry. The bidirectional type assertions ensure that
+ * operation registry. The bidirectional type assertions check that
  * \`RegistryQueryKeys\` and \`Exclude<keyof AniListQueries["query"], "page">\`
  * are the same set, and that \`RegistryPageKeys\` and
  * \`keyof AniListQueries["query"]["page"]\` are the same set. A key added or
@@ -595,7 +595,7 @@ const _assertPageParityReverse: keyof AniListQueries["query"]["page"] =
 /** The compile-time parity assert block emitted into `mutation-group.ts`. */
 const MUTATION_PARITY_BLOCK = `/**
  * Compile-time exhaustiveness check between this facade group and the
- * operation registry. The bidirectional type assertion ensures that
+ * operation registry. The bidirectional type assertion checks that
  * \`RegistryMutationKeys\` and \`keyof AniListMutations["mutation"]\` are the
  * same set: a key added or removed in either place produces a type error. The
  * registry defines the available keys; this checks that the facade type

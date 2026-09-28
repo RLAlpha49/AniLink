@@ -60,7 +60,7 @@ import { type DeleteResult } from "../types/DeleteResult";
 
 /**
  * Compile-time exhaustiveness check between this facade group and the
- * operation registry. The bidirectional type assertion ensures that
+ * operation registry. The bidirectional type assertion checks that
  * `RegistryMutationKeys` and `keyof AniListMutations["mutation"]` are the
  * same set: a key added or removed in either place produces a type error. The
  * registry defines the available keys; this checks that the facade type

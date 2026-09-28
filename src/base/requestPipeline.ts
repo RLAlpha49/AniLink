@@ -88,7 +88,7 @@ let warnedOptionsKeyedState = false;
  * breaker/budget never engage, and recorded rate-limit pacing deadlines never
  * gate later requests. One warning per process avoids log spam.
  *
- * The one-shot is consumed only when an emission actually happened: a
+ * The one-shot is consumed only when an emission happened: a
  * first trigger under `diagnostics: "silent"` (or `"hook"` with no
  * observer) suppresses its own emission without burning the warning for
  * later requests that would emit.
@@ -110,7 +110,7 @@ const warnOptionsKeyedState = (
     if (warnedOptionsKeyedState) {
         return;
     }
-    // The one-shot is consumed only when reportDiagnostic actually emitted:
+    // The one-shot is consumed only when reportDiagnostic emitted:
     // it alone owns the routing truth (observer presence, mode, rawError),
     // so a trigger whose configuration suppresses the emission (silent
     // mode, or hook mode with no observer) leaves the warning available

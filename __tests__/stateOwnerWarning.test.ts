@@ -233,7 +233,7 @@ describe("options-keyed transport state warning", () => {
 
     test("a silent first request does not consume the one-shot warning for later warn-mode requests", async () => {
         // The one-shot gate must only mark the warning as spent when
-        // something was actually emitted. A first triggering request in
+        // something was emitted. A first triggering request in
         // `silent` mode suppresses its own emission, so it must not also
         // permanently suppress the warning for every later `warn`-mode
         // request, or a mixed-mode client silently loses the only notice
@@ -282,7 +282,7 @@ describe("options-keyed transport state warning", () => {
         // gate consumes the one-shot, but reportDiagnostic's own routing
         // suppresses the observer (silent mode, no rawError) and the console
         // (not warn mode), so nothing is emitted. The one-shot must stay
-        // available for a later request that would actually emit, or a
+        // available for a later request that would emit, or a
         // mixed-mode client silently loses the only notice that its
         // transport state is keyed per request.
         const { sendRequest } = await importFreshRequestHandler();
@@ -323,7 +323,7 @@ describe("options-keyed transport state warning", () => {
     test("a hook-mode first request without an observer does not consume the one-shot warning", async () => {
         // Same rule for `hook` mode with no observer configured: nothing
         // was emitted, so the one-shot stays available for a later
-        // request that would actually emit.
+        // request that would emit.
         const { sendRequest } = await importFreshRequestHandler();
         primeActiveStub();
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});

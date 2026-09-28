@@ -5,7 +5,7 @@ import { type Studio } from "./Studio";
 /**
  * {@link Stat} is one row of a user's per-category media statistics: how many entries of
  * one format, status, score, length, year, genre, tag, country, voice actor, staff
- * member, or studio the user has, with the mean score. It is the superset union of
+ * member, or studio the user has, with the mean score. It is the union of
  * AniList's per-category `User*Statistic` rows, so only the field matching the row's
  * category is present. `MediaStatistics` uses it for every breakdown field.
  * @see https://docs.anilist.co/reference/object/userstatistics

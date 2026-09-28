@@ -78,7 +78,7 @@ export interface AniListCredentials extends ProviderCredentials {
  * consumes the same value for token-refresh observer failures. A failed
  * refresh grant is reported under the `malTokenRefresh` hook name and a
  * throwing `onTokenRefresh` callback under the `onTokenRefresh` hook name.
- * A slot-level `onHookError` therefore covers both failure classes; the
+ * A slot-level `onHookError` covers both failure classes; the
  * client-level `onHookError` on {@link AniLinkCredentials} covers them only
  * when the slot defines no observer of its own.
  *
@@ -140,7 +140,7 @@ export interface AniLinkCredentials extends ProviderCredentialSlots {
 
 /**
  * Whether a credential string is configured: a non-empty string whose
- * whitespace-only values count as missing, exactly like the empty string.
+ * whitespace-only values count as missing, the same as the empty string.
  *
  * Both provider wirings apply this same rule when deciding whether the
  * automatic token-refresh lifecycle activates, so a whitespace-only

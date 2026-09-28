@@ -35,7 +35,7 @@ import { safeInvoke } from "./hooks";
  * with the `query` keyword. Documents opening with `mutation` (or anything
  * else) fail the test, so write documents stay excluded from the cache.
  *
- * This is the same deliberately lightweight shape check `CustomRequest`
+ * This is the same lightweight shape check `CustomRequest`
  * applies to validate executable documents, not a parser. Leading `#`
  * comment lines are stripped before the test so a copied document that
  * opens with a comment anchors at the first executable token.
@@ -76,7 +76,7 @@ const stripLeadingComments = (query: string): string => {
  * `POST`/`PUT`/`DELETE` calls, stay excluded so no write is ever served
  * from cache.
  * Internal transport helper: exported for the transport module, not part
- * of the package's public surface.
+ * of the package's public API.
  * @param method - The HTTP method of the request.
  * @param data - The request body, when present.
  * @returns `true` when the request is a cacheable read.
@@ -110,12 +110,12 @@ export const isCacheableRequest = (method: string, data?: object | string): bool
  * that is not a cacheable read (see {@link isCacheableRequest}) is a
  * `mutation` document, and a successful one invalidates every cached
  * GraphQL query at the endpoint (see {@link ResponseCache.deleteAllForUrl}).
- * REST `POST` bodies that merely happen to carry a `query` field (for
+ * REST `POST` bodies that happen to carry a `query` field (for
  * example a search request) never reach this check through the transport:
  * the caller marks them with the REST protocol first.
  *
  * Internal transport helper: exported for the transport module, not part
- * of the package's public surface.
+ * of the package's public API.
  *
  * @param method - The HTTP method of the request.
  * @param data - The request body, when present.
@@ -176,7 +176,7 @@ const buildAuthCacheKey = (token: string | undefined): string =>
  * not captured by the key, so two different identities would collapse to
  * the same `"none"` namespace and cross-contaminate. In that case the cache
  * is skipped (fail-closed) instead of risking a cross-identity disclosure.
- * This also ensures an unused `auth.token` is never hashed when a custom
+ * An unused `auth.token` is also never hashed when a custom
  * `Authorization` header takes precedence over the bearer token.
  *
  * @param hasBearerToken - Whether a bearer token was supplied via `auth.token`.
@@ -273,8 +273,8 @@ export const resolveCacheAuthKey = (
  * scoped invalidation drops it alongside the whole-endpoint sweeps.
  *
  * @param document - The GraphQL document with leading comments stripped.
- * @returns The document's root field name, or `undefined` when it cannot
- * be attributed confidently.
+ * @returns The document's root field name, or `undefined` when the root
+ * field cannot be determined.
  */
 const extractRootField = (document: string): string | undefined => {
     // Skip the operation header: the keyword, an optional name, and an
@@ -306,8 +306,7 @@ const extractRootField = (document: string): string | undefined => {
             }
         }
         if (end === -1) {
-            // Unbalanced declarations: not a confidently attributable
-            // document.
+            // Unbalanced declarations: root-field attribution fails.
             return undefined;
         }
         rest = rest.slice(end);
@@ -365,7 +364,7 @@ const extractRootField = (document: string): string | undefined => {
             }
         }
         if (end === -1) {
-            // Unbalanced arguments: not a confidently attributable document.
+            // Unbalanced arguments: root-field attribution fails.
             return undefined;
         }
         cursor = cursor.slice(end);
@@ -389,8 +388,7 @@ const extractRootField = (document: string): string | undefined => {
             }
         }
         if (end === -1) {
-            // Unbalanced sub-selection: not a confidently attributable
-            // document.
+            // Unbalanced sub-selection: root-field attribution fails.
             return undefined;
         }
         cursor = cursor.slice(end);
@@ -411,26 +409,26 @@ const extractRootField = (document: string): string | undefined => {
 /**
  * Extracts the root field of a GraphQL query document, the first field
  * selected inside the document's root selection set, using the same
- * deliberately lightweight shape checks the cacheability gate applies (see
+ * lightweight shape checks the cacheability gate applies (see
  * {@link GRAPHQL_QUERY_PATTERN}), not a parser. The transport records the
  * extracted field on the cache entry at write time (see
  * {@link ResponseCache.setIfFresh}) so root-field-scoped invalidation (see
  * {@link ResponseCache.deleteRootFieldsForUrl}) can attribute the entry
- * to the root field its document actually selects.
+ * to the root field its document selects.
  *
  * The extraction is fail-closed (see {@link extractRootField}): a document
- * whose root field cannot be confidently attributed, a fragment-spread
+ * whose root field cannot be attributed, a fragment-spread
  * root, a multi-field root selection, an unlocatable selection, yields
  * `undefined` and the entry stays unscoped, so scoped invalidations drop
  * it alongside the whole-endpoint sweeps. An aliased root field is
  * attributed to the underlying field name, not the alias.
  *
  * Internal transport helper: exported for the transport module, not part
- * of the package's public surface.
+ * of the package's public API.
  *
  * @param data - The request body carrying the `{ query, variables }` document.
- * @returns The query's root field name, or `undefined` when the document
- * does not expose one confidently.
+ * @returns The query's root field name, or `undefined` when the root
+ * field cannot be determined.
  */
 export const extractQueryRootField = (data: object | string | undefined): string | undefined => {
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
@@ -592,7 +590,7 @@ const deriveMutationCachePrefix = (url: string): string | undefined => {
  *   queries at the endpoint whose root field the mutation can change: a
  *   `SaveMediaListEntry` flushes `MediaList`/`MediaListCollection`/`Page`
  *   queries but leaves a cached `Staff` query warm. Cached queries whose
- *   document cannot be confidently attributed to a single root field are
+ *   document cannot be attributed to a single root field are
  *   dropped by every scoped invalidation (see
  *   {@link ResponseCache.deleteRootFieldsForUrl}), fail-closed. A
  *   mutation not in the map (including any future upstream mutation)
@@ -663,12 +661,12 @@ export const invalidateAfterMutation = (
  * transport entry, so the read path's observability contract stays next to
  * the cache it reports on. The transport fires the hooks through the same
  * `safeInvoke` isolation every other emission uses; the correlation
- * `requestId` is generated lazily, only when a hook is actually configured,
+ * `requestId` is generated lazily, only when a hook is configured,
  * so the cache-hit fast path of a hook-less hot loop does not pay the UUID
  * generation cost on every call.
  *
  * Internal transport helper: exported for the transport module, not part
- * of the package's public surface.
+ * of the package's public API.
  *
  * @param resolved - The resolved request options, carrying the cache and hooks.
  * @param method - The HTTP method.
@@ -719,7 +717,7 @@ interface CacheEntry<T> {
      * The GraphQL document's single selected root field, for GraphQL query
      * `POST` entries, the scoping key for root-field invalidation (see
      * `deleteRootFieldsForUrl`). `undefined` for `GET` entries and for
-     * documents whose root field could not be confidently attributed (a
+     * documents whose root field could not be attributed (a
      * fragment-spread root, a multi-field selection); such entries are
      * dropped by every scoped invalidation, fail-closed.
      */
@@ -871,8 +869,8 @@ const stableStringify = (value: unknown, seen: Set<object> = new Set()): string 
  * cannot corrupt the cached copy or affect subsequent reads. Consumers
  * that treat cached responses as immutable can disable the read-side clone
  * with `cloneOnRead: false` (see {@link ResponseCacheOptions.cloneOnRead});
- * the write-side clone in {@link ResponseCache.set} still guarantees the
- * cache never aliases the caller's object.
+ * the write-side clone in {@link ResponseCache.set} still keeps the
+ * cache from aliasing the caller's object.
  *
  * **Invalidation:** entries expire after `ttlMs`, and a successful
  * non-`GET` request dispatched through the same transport automatically
@@ -1067,7 +1065,7 @@ export class ResponseCache {
         this.entries.set(key, entry);
         if (!this.cloneOnRead) {
             // Opt-out: return the cached object itself. The write-side clone
-            // in set() still guarantees the cache never aliases the
+            // in set() still keeps the cache from aliasing the
             // caller's object; the caller must not mutate the returned value.
             this.hits += 1;
             return entry.data as T;
@@ -1099,7 +1097,7 @@ export class ResponseCache {
      *
      * Note for direct callers: a `POST` body shaped like `{ query: "..." }`
      * is treated as a GraphQL document and cached when the document declares
-     * a read. Do not use `set` for REST `POST` writes whose body merely
+     * a read. Do not use `set` for REST `POST` writes whose body only
      * carries a `query` field: the transport excludes those via its protocol
      * flag, but `set` itself cannot distinguish them.
      *
@@ -1134,7 +1132,7 @@ export class ResponseCache {
      * @param response - The response body to cache.
      * @param rootField - The GraphQL document's single selected root field,
      * when the caller knows it (the transport extracts it for query reads).
-     * @returns Whether the response was actually stored: `false` when a
+     * @returns Whether the response was stored: `false` when a
      * write-side guard skipped it (not cacheable, `ttlMs: 0`, or an
      * uncloneable payload).
      */
@@ -1148,7 +1146,7 @@ export class ResponseCache {
     ): boolean {
         if (!isCacheableRequest(method, data)) return false;
         // `ttlMs: 0` is the explicit "do not retain" configuration: storing
-        // an already-expired entry would make `get()` a guaranteed miss while
+        // an already-expired entry would make `get()` miss every time while
         // still paying the clone and eviction bookkeeping, so skip the write
         // entirely.
         if (this.ttlMs === 0) return false;
@@ -1230,7 +1228,7 @@ export class ResponseCache {
      * the read was in flight are matched against the read's own root field;
      * an unattributed document (`undefined`) is treated as affected by
      * every scoped invalidation, fail-closed.
-     * @returns Whether the response was actually stored: `false` when an
+     * @returns Whether the response was stored: `false` when an
      * invalidation affecting the read landed while it was in flight (the
      * stale response is dropped) or a write-side guard skipped it. That is
      * the signal behind the `cacheWrite` flag on the transport's `onResponse`
@@ -1426,7 +1424,7 @@ export class ResponseCache {
      * return (a `SaveMediaListEntry` changes what both a `MediaList` and a
      * `MediaListCollection` query report), so no finer-grained prefix than
      * the endpoint can be derived. Dropping the endpoint's cached queries is
-     * deliberately conservative: the next reads refetch fresh data instead
+     * conservative: the next reads refetch fresh data instead
      * of serving pre-mutation entries for the rest of the TTL.
      *
      * @param url - The request URL whose cached reads should be dropped;
@@ -1483,9 +1481,9 @@ export class ResponseCache {
      * of the whole-endpoint sweep {@link deleteAllForUrl} performs. The
      * match is against the document's single selected root field, recorded
      * on the entry at write time (see {@link CacheEntry.rootField}), so a
-     * query document is attributed to the root field it actually selects,
+     * query document is attributed to the root field it selects,
      * not to every field it mentions. Entries whose document could not be
-     * confidently attributed to a single root field (fragment-spread roots,
+     * attributed to a single root field (fragment-spread roots,
      * multi-field selections) are dropped too, fail-closed like the
      * unmapped-mutation fallback, because such a document may select data
      * the affected-field match cannot see.

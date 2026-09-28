@@ -22,7 +22,7 @@ import {
  * subclass with a context-prefixed message.
  *
  * Token request bodies carry `client_secret`, authorization `code`, and
- * `refresh_token` values, so the original Axios error is deliberately
+ * `refresh_token` values, so the original Axios error is
  * discarded: the returned error carries only a safe message (prefixed with
  * `label` so logs identify the failing token exchange), a stable code, and,
  * for HTTP failures, the upstream response body, which contains no credentials.

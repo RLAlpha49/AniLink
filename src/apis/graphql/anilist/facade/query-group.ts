@@ -88,7 +88,7 @@ import { type DeepPick, type FieldPath } from "../schemas/selection/fieldsSelect
 
 /**
  * Compile-time exhaustiveness check between this facade group and the
- * operation registry. The bidirectional type assertions ensure that
+ * operation registry. The bidirectional type assertions check that
  * `RegistryQueryKeys` and `Exclude<keyof AniListQueries["query"], "page">`
  * are the same set, and that `RegistryPageKeys` and
  * `keyof AniListQueries["query"]["page"]` are the same set. A key added or

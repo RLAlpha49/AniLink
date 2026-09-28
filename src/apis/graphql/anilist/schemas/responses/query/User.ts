@@ -155,7 +155,7 @@ export const StatisticsMangaSchema = `
 
 /**
  * {@link StatisticsSchema} is the wrapped `statistics` block of a user response: the
- * anime and manga halves side by side, each interpolated from its own fragment.
+ * anime and manga halves, each interpolated from its own fragment.
  * @see https://docs.anilist.co/reference/object/userstatistictypes
  */
 export const StatisticsSchema = `

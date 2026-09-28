@@ -102,7 +102,7 @@ function escapeAttribute(value) {
 /**
  * Derive the meta description from a reflection's comment summary: join the
  * plain-text parts of the summary, collapse whitespace, and truncate on a
- * word boundary. Falls back to a sensible default when the reflection has
+ * word boundary. Falls back to a default description when the reflection has
  * no comment.
  *
  * @param {import("typedoc").Reflection} model The page's reflection.
@@ -266,7 +266,7 @@ function spliceBefore(html, marker, sentinel, injection) {
  * visual design as the VitePress banner. The click handler delegates to the
  * `window.__anilinkConsent` API defined by the shared boot script (injected
  * at `head.begin` below), so accepting and declining, including the `_ga`
- * cookie cleanup on decline, behave exactly like the VitePress site. When
+ * cookie cleanup on decline, behave like the VitePress site. When
  * a valid choice is already stored, a settings button
  * (`#anilink-consent-settings`, bottom-right corner) reopens the banner
  * instead, the same reopen control the Vue component renders, so a
@@ -343,7 +343,7 @@ export function load(app) {
         // URL (e.g. `classes/AniLink.AniLink.html`).
         const canonicalUrl = new URL(`typedoc/${event.url}`, `${SITE_URL}/`).toString();
         // TypeDoc's own SitemapPlugin emits a canonical for index.html that
-        // assumes a root deployment; the reference actually lives under
+        // assumes a root deployment; the reference lives under
         // /typedoc/, so drop that link to avoid two conflicting canonicals.
         html = html.replace(
             /<link rel="canonical" href="[^"]*"\/>(?=<meta http-equiv="x-ua-compatible")/,

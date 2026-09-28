@@ -69,7 +69,7 @@ describe("MyAnimeList live integration — field selectors", () => {
             expect(fromArray.id).toBe(FIXTURES.animeId);
             expect(fromString.id).toBe(FIXTURES.animeId);
             expect(fromArray.title).toBe(fromString.title);
-            // The requested fields must actually be present in the payload.
+            // The requested fields must be present in the payload.
             expect(fromArray.main_picture?.large ?? fromArray.main_picture?.medium).toBeTruthy();
             expect(typeof fromArray.num_episodes).toBe("number");
             expect(typeof fromArray.status).toBe("string");

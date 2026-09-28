@@ -53,7 +53,7 @@ export interface MyAnimeListAuthApi {
      * @param codeChallenge - The PKCE challenge. With MAL's `plain` method, this is the verifier
      * itself and must contain 43 to 128 RFC 7636 unreserved characters.
      * @param state - Optional opaque state to validate on the redirect.
-     * @returns The fully encoded authorization URL.
+     * @returns The encoded authorization URL.
      * @throws `TypeError` when `codeChallenge` is not a valid MAL PKCE verifier.
      * @example
      * ```typescript
@@ -84,7 +84,7 @@ export interface MyAnimeListAuthApi {
 /**
  * {@link MyAnimeListAnimeApi} is the anime group exposed by {@link MyAnimeListApi} under `aniLink.mal.anime`.
  *
- * It is the facade boundary for MyAnimeList anime reads and list-status writes: `get` delegates to `MalAnimeOperation` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}, the discovery reads `seasonal`, `ranking`, and `suggestions` cover the seasonal, ranking, and suggestion endpoints, and `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /anime/{id}/my_list_status` endpoints.
+ * It is the facade boundary for MyAnimeList anime reads and list-status writes. `get` delegates to `MalAnimeOperation` and returns a {@link MalAnime} shaped by {@link MalRequestOptions.fields}. The discovery reads `seasonal`, `ranking`, and `suggestions` cover the seasonal, ranking, and suggestion endpoints. `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /anime/{id}/my_list_status` endpoints.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_anime_id_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/anime/operation/anime_season_year_season_get
@@ -267,7 +267,7 @@ export interface MyAnimeListAnimeApi {
 /**
  * {@link MyAnimeListMangaApi} is the manga group exposed by {@link MyAnimeListApi} under `aniLink.mal.manga`.
  *
- * It is the facade boundary for MyAnimeList manga reads and list-status writes: `get` delegates to `MalMangaOperation` and returns a {@link MalManga} shaped by {@link MalRequestOptions.fields}, while `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /manga/{id}/my_list_status` endpoints.
+ * It is the facade boundary for MyAnimeList manga reads and list-status writes. `get` delegates to `MalMangaOperation` and returns a {@link MalManga} shaped by {@link MalRequestOptions.fields}. `updateMyListStatus` and `deleteFromList` cover the authenticated `PATCH` and `DELETE /manga/{id}/my_list_status` endpoints.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/manga/operation/manga_manga_id_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-mangalist/operation/manga_manga_id_my_list_status_put
@@ -399,7 +399,7 @@ export interface MyAnimeListMangaApi {
 /**
  * {@link MyAnimeListUserApi} is the user group exposed by {@link MyAnimeListApi} under `aniLink.mal.user`.
  *
- * It is the facade boundary for the MyAnimeList user reads: `me` delegates to `MalUserOperation` and returns a {@link MalUser} shaped by {@link MalRequestOptions.fields}, while the paginated user-list reads `animeList` and `mangaList` cover `GET /users/{user_name}/animelist` and `GET /users/{user_name}/mangalist`.
+ * It is the facade boundary for the MyAnimeList user reads. `me` delegates to `MalUserOperation` and returns a {@link MalUser} shaped by {@link MalRequestOptions.fields}. The paginated user-list reads `animeList` and `mangaList` cover `GET /users/{user_name}/animelist` and `GET /users/{user_name}/mangalist`.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/users/operation/users_user_id_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/user-animelist/operation/users_user_id_animelist_get
@@ -513,7 +513,7 @@ export interface MyAnimeListUserApi {
 /**
  * {@link MyAnimeListForumApi} is the forum group exposed by {@link MyAnimeListApi} under `aniLink.mal.forum`.
  *
- * It is the facade boundary for the MyAnimeList forum reads: `boards` delegates to `MalForumOperation` and returns the {@link MalForumBoardsResponse} board tree, `topics` covers the filterable `GET /forum/topics` topic list, and `topic` covers `GET /forum/topic/{topic_id}` with its posts and poll.
+ * It is the facade boundary for the MyAnimeList forum reads. `boards` delegates to `MalForumOperation` and returns the {@link MalForumBoardsResponse} board tree. `topics` covers the filterable `GET /forum/topics` topic list, and `topic` covers `GET /forum/topic/{topic_id}` with its posts and poll.
  *
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_boards_get
  * @see https://myanimelist.net/apiconfig/references/api/v2#tag/forum/operation/forum_topics_get
@@ -615,8 +615,8 @@ export interface MyAnimeListApi {
     /** Forum operations via {@link MyAnimeListForumApi} and `MalForumOperation`. */
     forum: MyAnimeListForumApi;
     /**
-     * {@link malPaginate} walks MyAnimeList list pages until a short page or the
-     * `maxPages` guard is reached, collecting every item across pages.
+     * {@link malPaginate} fetches MyAnimeList list pages until a short page or
+     * the `maxPages` guard is reached, collecting every item across pages.
      * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal`; return the raw MAL list response (`{ data, paging? }`).
      * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, and `onPage` controls; a `MalPaginateOptions`.
      * @returns The collected items, per-page snapshots, page count, and whether the guard truncated the run; a `MalPaginateResult`.
@@ -639,7 +639,7 @@ export interface MyAnimeListApi {
      * `malPaginatePages` is an async generator yielding each MyAnimeList list
      * page until a short page or the `maxPages` guard is reached. The
      * `onPage` callback (when configured) fires once per page as it is
-     * yielded, mirroring `mal.paginate`'s observer contract in streaming form.
+     * yielded, matching `mal.paginate`'s observer contract.
      * @param fetchPage - Callback that fetches a single page given its 1-based number, `perPage`, and the traversal's `AbortSignal`; return the raw MAL list response (`{ data, paging? }`).
      * @param options - Optional `perPage`, `startPage`, `maxPages`, `concurrency`, `signal`, `onPage`, `onHookError`, and `diagnostics` controls; a `MalPaginateOptions`.
      * @returns An async generator yielding each raw MAL list page in turn.

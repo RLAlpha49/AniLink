@@ -108,7 +108,7 @@ describe("AniList automatic token refresh", () => {
         // envelope with a GraphQL errors entry carrying `status: 401`. The
         // refresher classifies through AniLinkGraphQLError.status, which
         // reflects the upstream GraphQL error status. This test pins that
-        // the lifecycle actually fires for the envelope form, not just the
+        // the lifecycle fires for the envelope form as well as the
         // HTTP-level 401.
         const api = buildAniListApi("expired-access-token", undefined, undefined, {
             authToken: "expired-access-token",

@@ -64,8 +64,8 @@ const safeCallback = <T>(
  * Default look-ahead `concurrency` for the pagination helpers. A small window
  * overlaps round-trip latency by default so the common traversal does not pay
  * full stacked latency, while the engine's `MAX_CONCURRENCY` clamp and the
- * `maxPages`/`maxChunks` guards still bound the blast radius. Pass
- * `concurrency: 1` for strictly sequential fetches.
+ * `maxPages`/`maxChunks` guards still bound how far the traversal can run.
+ * Pass `concurrency: 1` for strictly sequential fetches.
  */
 const DEFAULT_CONCURRENCY = 3;
 
@@ -377,9 +377,9 @@ export async function paginate<TPage extends { pageInfo: PageInfo }, K extends s
         const pages: Array<{ pageInfo: PageInfo; items: ArrayElement<TPage, K>[] }> = [];
         for (const response of responses) {
             // A missing key (a typo'd `itemsKey` reads `undefined`) is a caller
-            // mistake and must fail loudly. A silent empty result is the
-            // hardest failure to debug in a pagination API where empty is a
-            // normal outcome. A present non-array value (e.g. `pageInfo`) is
+            // mistake and must throw. A silent empty result is the hardest
+            // failure to debug in a pagination API where empty is a normal
+            // outcome. A present non-array value (e.g. `pageInfo`) is
             // the documented `never[]` case: `ArrayElement` collapses the
             // item type to `never` at compile time, so at runtime it collects
             // nothing instead of spreading a non-iterable.
@@ -410,7 +410,7 @@ export async function paginate<TPage extends { pageInfo: PageInfo }, K extends s
  * or `maxPages` is reached. When the `lastPage` bound ends the traversal while
  * the last yielded page still reports `hasNextPage: true`, the generator ends
  * without a truncation flag. That page's `pageInfo` (`hasNextPage: true` with
- * `currentPage` at `lastPage`) is the visible signal of the short read.
+ * `currentPage` at `lastPage`) is how the caller can see the short read.
  *
  * Use this for streaming or early-exit workflows where collecting every item
  * into memory is unnecessary. The `maxPages` guard still prevents unbounded
@@ -418,7 +418,7 @@ export async function paginate<TPage extends { pageInfo: PageInfo }, K extends s
  * keeps a small look-ahead window of `concurrency` in-flight page requests so
  * round-trip latency overlaps while pages are still yielded strictly in page
  * order; on early exit (`break`/`return` by the consumer), a terminal page,
- * or the `maxPages` guard, already-launched stragglers are drained and their
+ * or the `maxPages` guard, requests already in flight are drained and their
  * payloads discarded.
  *
  * The default `maxPages` of 100 means an unconstrained traversal can issue up
@@ -452,8 +452,8 @@ export async function* paginatePages<TPage extends { pageInfo: PageInfo }>(
 
     // The streaming traversal runs on the shared engine: the launch window,
     // the terminal-page drain, the abort bridging, and the early-exit
-    // cancellation live once for every provider. AniList contributes only
-    // its terminal predicate (`pageInfo.hasNextPage: false`) and its
+    // cancellation are implemented once for every provider. AniList supplies
+    // only its terminal predicate (`pageInfo.hasNextPage: false`) and its
     // launch-bound reader (`pageInfo.lastPage`).
     yield* streamNumericPages(
         fetchPage,
@@ -525,9 +525,9 @@ export async function paginateChunks<TChunk extends { hasNextChunk: boolean }, K
         const chunks: Array<{ hasNextChunk: boolean; items: ArrayElement<TChunk, K>[] }> = [];
         for (const response of responses) {
             // A missing key (a typo'd `itemsKey` reads `undefined`) is a caller
-            // mistake and must fail loudly. A silent empty result is the
-            // hardest failure to debug in a pagination API where empty is a
-            // normal outcome. A present non-array value (e.g. `hasNextChunk`) is
+            // mistake and must throw. A silent empty result is the hardest
+            // failure to debug in a pagination API where empty is a normal
+            // outcome. A present non-array value (e.g. `hasNextChunk`) is
             // the documented `never[]` case: `ArrayElement` collapses the
             // item type to `never` at compile time, so at runtime it collects
             // nothing instead of spreading a non-iterable.

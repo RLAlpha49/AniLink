@@ -13,7 +13,7 @@ import { preflightCredentials } from "./integration/preflight";
  * pass-through behavior are verified without a live token.
  */
 
-/** Builds a minimal stub of the `AniLink` client surface the preflight uses. */
+/** Builds a minimal stub of the `AniLink` client members the preflight uses. */
 const stubClient = (viewer: () => Promise<unknown>): unknown => ({
     anilist: { query: { viewer } },
 });

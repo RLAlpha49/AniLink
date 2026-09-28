@@ -276,7 +276,7 @@ const transportContractCases: Array<{
 describe("mutation transport contracts", () => {
     test("every shipped mutation module has a contract row", () => {
         // Compare against the registry (the single source of truth) so adding
-        // a shipped mutation without a contract row here actually fails.
+        // a shipped mutation without a contract row here fails.
         const registryMutationNames = ANILIST_OPERATION_REGISTRY.mutation.map(
             (entry) => entry.name
         );

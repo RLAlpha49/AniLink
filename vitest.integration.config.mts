@@ -19,11 +19,11 @@ export default defineConfig(({ mode }) => {
             // (server-dictated 429 delays); AniList's window is a full minute.
             // The budget therefore covers one window reset plus the request.
             testTimeout: 90_000,
-            // The live suites pace themselves with a per-test delay to stay
-            // under the providers' rate ceilings. Running test files in
-            // parallel multiplies the request rate by the file count and
-            // trips 429s (plus the pacing waits they induce), so the files
-            // run sequentially to keep one shared request rhythm.
+            // The live suites insert a per-test delay to stay under the
+            // providers' rate limits. Running test files in parallel
+            // multiplies the request rate by the file count and trips
+            // 429s (plus the pacing waits they induce), so the files
+            // run sequentially to share one request rate.
             fileParallelism: false,
         },
     };

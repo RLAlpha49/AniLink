@@ -5,7 +5,7 @@ import { type Studio } from "./Studio";
 /**
  * {@link Favoured} is one row of a user's favoured-entity overviews: how much of a genre,
  * tag, staff member, studio, year, or format the user consumed, with the mean score.
- * It is the superset union of AniList's per-category stat rows (GenreStats, TagStats,
+ * It is the union of AniList's per-category stat rows (GenreStats, TagStats,
  * …), so only the field matching the row's category is present.
  * @see https://docs.anilist.co/reference/object/userstats
  */

@@ -12,7 +12,7 @@
  * registry and those typed group interfaces from drifting without failing
  * `tsc`.
  *
- * The entry shape mirrors the AniList registry in
+ * The entry shape matches the AniList registry in
  * `../../graphql/anilist/registry.ts`, minus two AniList-only pieces: the
  * `fieldsEnabled` flag (it only drives AniList's facade-group codegen, which
  * MAL has no counterpart for) and the eager runtime method validation
@@ -49,7 +49,7 @@ export type MalOperationGroup = "anime" | "manga" | "user" | "forum";
  * Constraining the return type to {@link BaseOperation} (rather than
  * `unknown`) lets the wiring track constructed instances for the
  * token-refresh lifecycle without a cast, and makes the compiler enforce
- * the contract at registry-definition time: an operation class that does
+ * the contract at registry-definition time. An operation class that does
  * not extend `BaseOperation` fails typecheck here instead of silently
  * losing `updateAuth`/`getAuth` at runtime.
  *
@@ -79,7 +79,7 @@ export interface MalOperationEntry<
     TName extends string = string,
 > {
     /**
-     * The facade key the bound method is exposed under (e.g. `"seasonal"`).
+     * The facade key the bound method is exposed under (for example `"seasonal"`).
      * Carried as a literal so the registry can derive exhaustive key unions
      * for compile-time parity checks against the facade group interfaces.
      */
@@ -131,7 +131,7 @@ type MalRegistryGroups = {
  * The single source of truth for which MyAnimeList operations exist and how
  * they are wired into the facade. `buildMyAnimeListApi` constructs and binds
  * every entry through one loop, and the parity asserts below keep the group
- * interfaces in `facade.ts` in step with these keys.
+ * interfaces in `facade.ts` aligned with these keys.
  *
  * Order within each group matches the declaration order of the
  * corresponding group interface in `facade.ts`.
@@ -179,7 +179,7 @@ type MalRegistryGroupKeys<TGroup extends MalOperationGroup> =
 /**
  * Compile-time exhaustiveness checks between each registry group and its
  * facade group interface. The bidirectional type assertions ensure that
- * every group's registry key union and facade `keyof` are the same set: a
+ * every group's registry key union and facade `keyof` are the same set. A
  * member added to a facade interface without a registry entry (or vice
  * versa) produces a type error. The registry is the source of truth; this
  * checks that the typed facade groups match the registry, as AniList's

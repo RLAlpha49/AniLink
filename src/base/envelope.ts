@@ -174,8 +174,8 @@ export const unwrapGraphQLResponse = <T>(
             typeof data === "object" &&
             hasResolvedRootField(data)
         ) {
-            // A throwing observer is isolated exactly like a throwing
-            // lifecycle hook: the resolved data wins, and the observer
+            // A throwing observer is isolated the same way a throwing
+            // lifecycle hook is: the resolved data wins, and the observer
             // failure never becomes the request's failure.
             try {
                 options.onPartialData?.(error);
