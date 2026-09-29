@@ -162,15 +162,13 @@ jobs:
           done
 
       # Full history: the sitemap lastmod stamps come from each page's last
-      # git commit date, which a depth-1 clone cannot provide. The ref is
-      # the exact commit CI tested (workflow_run context), not whatever
-      # master points at when this job starts.
+      # git commit date, which a depth-1 clone cannot provide.
       - name: Check out source
         if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.sha }}
 
       - name: Set up Node.js
         if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
@@ -189,7 +187,7 @@ jobs:
       # layout, so the cache must not survive it. The key is derived from
       # hashFiles so it cannot drift from the pinned constants.
       - name: Cache embedding model
-        if: ${{ steps.docs_changes.outputs.relevant != 'false' }}
+        if: ${{ steps.docs_changes.outputs.relevant != 'false' && (github.event_name == 'workflow_run' || github.ref == 'refs/heads/master') }}
         uses: actions/cache@v6
         with:
           path: .models
