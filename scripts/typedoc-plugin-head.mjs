@@ -77,7 +77,7 @@ function contentSecurityPolicy(existingScriptHashes) {
 
 /** Hash every inline script already present in the rendered TypeDoc page. */
 function inlineScriptHashes(html) {
-    const hashes = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    const hashes = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
         .filter((match) => !/\bsrc\s*=/.test(match[1]))
         .map((match) => cspHash(match[2]));
     return [...new Set(hashes)];

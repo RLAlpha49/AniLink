@@ -63,7 +63,7 @@ function inlineScriptForId(html: string, id: string): string | undefined {
 }
 
 function inlineScriptHashes(html: string): string[] {
-    const hashes = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
+    const hashes = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
         .filter((match) => !/\bsrc\s*=/.test(match[1]))
         .map((match) => cspHash(match[2]));
     return [...new Set(hashes)];
