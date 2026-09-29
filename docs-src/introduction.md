@@ -10,7 +10,7 @@ layout: .vitepress/theme/DocsLayout.vue
 
 | Provider          | Protocol | Namespace         | What it includes                                                                                                                                                                             |
 | ----------------- | -------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AniList           | GraphQL  | `aniLink.anilist` | Queries, page queries, mutations, pagination helpers, `custom()`, data helpers                                                                                                               |
+| AniList           | GraphQL  | `aniLink.anilist` | Queries, page queries, mutations, pagination helpers, `custom()` and `customPage()`, data helpers, `watch` polling watchers                                                                  |
 | MyAnimeList (MAL) | REST     | `aniLink.mal`     | Anime and manga lookups, discovery reads (`seasonal`, `ranking`, `suggestions`), paginated user-list reads (`user.animeList`, `user.mangaList`), list-status updates and removals, `user.me` |
 
 Both providers use the same transport layer for timeouts, retries, pacing, circuit breaking, hooks, and error normalization. Their credentials stay separate. AniLink never sends a MAL access token to AniList or an AniList bearer token to MAL.

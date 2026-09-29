@@ -36,8 +36,9 @@
 - [Page queries](https://anilink.alpha49.com/guides/anilist/page-queries): Fetch one known page of an AniList collection with aniLink.anilist.query.page, which adds page and perPage controls and returns pageInfo.
 - [Pagination](https://anilink.alpha49.com/guides/anilist/pagination): The three AniList pagination helpers: paginate, paginatePages, and the chunk-based paginateChunks. When to use each traversal style.
 - [Mutations](https://anilink.alpha49.com/guides/anilist/mutations): The aniLink.anilist.mutation operations require a token, and the default retry policy never retries them.
-- [Custom queries](https://anilink.alpha49.com/guides/anilist/custom-queries): Send a GraphQL document you write yourself with anilist.custom for field combinations the typed operations do not expose.
-- [Helpers](https://anilink.alpha49.com/guides/anilist/helpers): The four AniList data helpers as client methods on the anilist namespace: fuzzyDate, fuzzyDateInt, flattenMediaListCollection, and crossLink.
+- [Custom queries](https://anilink.alpha49.com/guides/anilist/custom-queries): Send a GraphQL document you write yourself with anilist.custom and anilist.customPage for field combinations the typed operations do not expose.
+- [Helpers](https://anilink.alpha49.com/guides/anilist/helpers): The five AniList data helpers as client methods on the anilist namespace: fuzzyDate, fuzzyDateInt, flattenMediaListCollection, crossLink, and mapExternalIds.
+- [Watchers](https://anilink.alpha49.com/guides/anilist/watchers): The anilist.watch polling helpers: watch.notifications and watch.activity as async generators with dedupe, cursors, and abort support.
 
 ## MyAnimeList guides
 

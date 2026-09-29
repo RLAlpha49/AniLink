@@ -1,0 +1,16 @@
+%% Source: docs-src/guides/anilist/watchers.md
+
+flowchart TB
+    start([Watcher starts]) --> first{since set?}
+    first -->|no| baseline[Baseline poll: mark first page seen, yield nothing]
+    first -->|yes| poll
+    baseline --> wait
+    poll[Drain pages to seen frontier<br/>max 10 pages per poll] --> fresh[Collect unseen items<br/>newest first]
+    fresh --> yield([Yield items<br/>oldest first]):::out
+    yield --> prune[Prune seen ids<br/>to ~3 polls lookback]
+    prune --> wait[Wait intervalMs]
+    wait --> aborted{signal aborted?}
+    aborted -->|yes| stop([Generator ends]):::out
+    aborted -->|no| poll
+
+    classDef out fill:#d5e8d4,stroke:#82b366,color:#2d5016;

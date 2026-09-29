@@ -195,6 +195,13 @@ export const PAGES: DocPage[] = [
         section: "anilist",
     },
     {
+        path: "/guides/anilist/watchers",
+        title: "Watchers",
+        summary: "Polling watchers for the notification and activity feeds.",
+        provider: "anilist",
+        section: "anilist",
+    },
+    {
         path: "/guides/mal/authentication",
         title: "MAL authentication",
         summary: "PKCE OAuth2 flow for MyAnimeList.",

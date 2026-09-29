@@ -100,6 +100,10 @@ for await (const page of aniLink.anilist.paginatePages(
 }
 ```
 
+## Custom Page documents
+
+`customPage` runs the same engine over a caller-authored `Page` document, for collections whose field combination the generated page operations do not expose. See the [custom queries guide](/guides/anilist/custom-queries) for the document contract.
+
 ## Incremental consumption
 
 The eager variants (`paginate`, `paginateChunks`) collect every response before returning, so `onPage` and `onChunk` fire after the last response arrives. They do not reduce peak memory or release collected items incrementally. To process pages as they arrive or stop early, use `paginatePages`:

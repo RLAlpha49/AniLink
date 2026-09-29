@@ -25,7 +25,7 @@ const anime = await aniLink.anilist.query.media({ id: 21, type: "ANIME" });
 console.log(anime.media?.title?.romaji);
 ```
 
-You can read public AniList data without a token. The `anilist` namespace provides queries, page queries, mutations, pagination helpers, and `custom()`.
+You can read public AniList data without a token. The `anilist` namespace provides queries, page queries, mutations, pagination helpers, `custom()` and `customPage()`, data helpers, and the `watch` polling watchers.
 
 ## Your first MAL lookup
 

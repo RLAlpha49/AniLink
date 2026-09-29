@@ -1,12 +1,12 @@
 ---
 title: AniList helpers
-description: "The four AniList data helpers as client methods on the anilist namespace: fuzzyDate, fuzzyDateInt, flattenMediaListCollection, and crossLink."
+description: "The five AniList data helpers as client methods on the anilist namespace: fuzzyDate, fuzzyDateInt, flattenMediaListCollection, crossLink, and mapExternalIds."
 layout: .vitepress/theme/DocsLayout.vue
 ---
 
 # AniList helpers
 
-The `anilist` namespace exposes four data helpers: `aniLink.anilist.fuzzyDate`, `aniLink.anilist.fuzzyDateInt`, `aniLink.anilist.flattenMediaListCollection`, and `aniLink.anilist.crossLink`. Call each helper on the client rather than importing it separately.
+The `anilist` namespace exposes five data helpers: `aniLink.anilist.fuzzyDate`, `aniLink.anilist.fuzzyDateInt`, `aniLink.anilist.flattenMediaListCollection`, `aniLink.anilist.crossLink`, and `aniLink.anilist.mapExternalIds`. Call each helper on the client rather than importing it separately.
 
 ## `fuzzyDate`
 
@@ -126,8 +126,39 @@ if (malId !== undefined) {
 
 The helper is pure and makes no requests. Pass it the `media` array from a `page.medias` response, a one-element array containing a `query.media` result, or an array of `Media`-shaped entries with `id` and `idMal`. See the [cross-provider workflow recipe](/recipes) for the full flow.
 
+## `mapExternalIds`
+
+`crossLink` needs AniList media you already fetched. `mapExternalIds` works the other way around: it queries [ARM](https://arm.haglund.dev/), the AniList/MAL id-mapping service, for a batch of ids from either source. Use it when you have ids but no media, or when you need MAL-to-AniList mappings without fetching AniList pages first.
+
+```typescript
+const aniLink = new AniLink({
+    anilist: { authToken: "anilist-token" },
+    mal: { accessToken: "mal-token" },
+});
+
+const result = await aniLink.anilist.mapExternalIds("anilist", [21, 22]);
+const malId = result.anilistToMal.get(21);
+
+if (malId !== undefined) {
+    const malAnime = await aniLink.mal.anime.get({ id: malId }, { fields: ["id", "title"] });
+}
+```
+
+The first argument is the source of the input ids, `"anilist"` or `"myanimelist"`. The request is unauthenticated and AniList credentials are never sent to ARM. Ids are sent in batches of 100, so large inputs make one request per 100 ids. An empty `ids` array returns empty maps without a request.
+
+### `MapExternalIdsResult` shape
+
+| Field          | Type                          | Description                                                     |
+| -------------- | ----------------------------- | --------------------------------------------------------------- |
+| `anilistToMal` | `ReadonlyMap<number, number>` | AniList media id to MyAnimeList id, for mapped entries          |
+| `malToAnilist` | `ReadonlyMap<number, number>` | MyAnimeList id to AniList media id, for mapped entries          |
+| `unmapped`     | `readonly number[]`           | Input ids without a mapping to the other source, in input order |
+
+The helper runs through the AniList slot's shared transport, so retries, pacing, and per-call `RequestOptions` (timeout, cancellation, hooks) apply. Pass them as the third argument.
+
 ## Next steps
 
 - <Icon name="ArrowRight" :size="14" /> [Pagination](/guides/anilist/pagination) covers `paginateChunks` for large collections.
 - <Icon name="ArrowRight" :size="14" /> [Cross-provider workflow recipe](/recipes) shows `crossLink` feeding `mal.anime.get`.
+- <Icon name="ArrowRight" :size="14" /> [Watchers](/guides/anilist/watchers) covers the polling notification and activity watchers.
 - <Icon name="ArrowRight" :size="14" /> [Query operation reference](/operations/anilist/query#lists) documents the `mediaListCollection` response shape.

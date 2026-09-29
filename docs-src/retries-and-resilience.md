@@ -113,7 +113,11 @@ import { destroyCachedAgents } from "anilink-api-wrapper";
 destroyCachedAgents();
 ```
 
-Calling it while requests using those agents are still in flight can fail them, so only tear down after the last request has settled.
+`destroyCachedAgents()` destroys every keep-alive agent pair the transport holds: every cached custom pair, every parked evicted pair, and the shared default `http`/`https` pair. Without the call, the default pair's idle sockets linger until the upstream keep-alive timeout closes them.
+
+The default pair is rebuilt lazily: the next request re-creates fresh default agents and rebinds the internal client to them, so the default path keeps working after a teardown without allocating anything at teardown time. Calling `destroyCachedAgents()` twice is safe; the second call clears an empty cache and skips the already-destroyed default pair until a request rebuilds it.
+
+Calling it while requests are still in flight, whether they use default or customized agents, can fail them, so only tear down after the last request has settled.
 
 ## Circuit breaker
 
