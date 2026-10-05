@@ -101,6 +101,30 @@ export function dequantizeVector(doc) {
     return out;
 }
 
+const keywordTextCache = new WeakMap();
+
+function getNormalizedKeywordText(doc) {
+    let cached = keywordTextCache.get(doc);
+    if (!cached) {
+        cached = {
+            title: doc.title.toLowerCase(),
+            text: (doc.title + " " + doc.text).toLowerCase(),
+        };
+        keywordTextCache.set(doc, cached);
+    }
+    return cached;
+}
+
+function keywordScoreWithTerms(doc, terms) {
+    const { title, text } = getNormalizedKeywordText(doc);
+    let score = 0;
+    for (const term of terms) {
+        if (title.includes(term)) score += TITLE_MATCH_WEIGHT;
+        if (text.includes(term)) score += BODY_MATCH_WEIGHT;
+    }
+    return score;
+}
+
 /**
  * Score query terms with a title weight of 3 and a body weight of 1.
  * A title match also occurs in the combined title and body text, so it adds 4.
@@ -110,15 +134,8 @@ export function dequantizeVector(doc) {
  * @returns The sum of the title and body weights for all matching terms.
  */
 export function keywordScore(doc, query) {
-    const title = doc.title.toLowerCase();
-    const text = (doc.title + " " + doc.text).toLowerCase();
     const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-    let score = 0;
-    for (const term of terms) {
-        if (title.includes(term)) score += TITLE_MATCH_WEIGHT;
-        if (text.includes(term)) score += BODY_MATCH_WEIGHT;
-    }
-    return score;
+    return keywordScoreWithTerms(doc, terms);
 }
 
 /**
@@ -133,13 +150,14 @@ export function keywordScore(doc, query) {
  * @returns Matching docs ordered by descending keyword score.
  */
 export function keywordResults(index, query, limit = DEFAULT_RESULT_LIMIT) {
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
     return index
         .map((doc) => ({
             url: doc.url,
             title: doc.title,
             text: doc.text,
             source: doc.source,
-            score: keywordScore(doc, query),
+            score: keywordScoreWithTerms(doc, terms),
             matchedBy: "keyword",
         }))
         .filter((result) => result.score > 0)
