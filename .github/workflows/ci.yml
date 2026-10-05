@@ -67,6 +67,15 @@ jobs:
       - name: Build documentation site
         run: npm run docs:site
 
+      - name: Cache embedding model
+        uses: actions/cache@v6
+        with:
+          path: .models
+          key: embedding-model-${{ hashFiles('docs-src/lib/search-rank.ts') }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Generate semantic search index
+        run: npm run docs:search-index
+
       - name: Compare package contracts against AniList schema snapshot
         run: npm run anilist:api:compare -- --strict
 
