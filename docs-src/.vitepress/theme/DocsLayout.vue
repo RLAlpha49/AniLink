@@ -43,12 +43,51 @@ const sidebarOpen = ref(false);
 /** Element to restore focus to when the drawer closes. */
 let lastFocused: HTMLElement | null = null;
 
+/** Original inert states for elements outside the open drawer. */
+const backgroundInert = new Map<HTMLElement, boolean>();
+
+function setSidebarBackgroundInert(isInert: boolean): void {
+    if (typeof document === "undefined") return;
+
+    if (!isInert) {
+        for (const [element, wasInert] of backgroundInert) {
+            element.inert = wasInert;
+        }
+        backgroundInert.clear();
+        return;
+    }
+
+    const drawer = document.getElementById("docs-rail");
+    if (!drawer) return;
+
+    let branch: HTMLElement = drawer;
+    while (branch.parentElement) {
+        const parent = branch.parentElement;
+        for (const sibling of parent.children) {
+            if (
+                sibling === branch ||
+                !(sibling instanceof HTMLElement) ||
+                sibling.classList.contains("docs-rail-scrim")
+            ) {
+                continue;
+            }
+            if (!backgroundInert.has(sibling)) {
+                backgroundInert.set(sibling, sibling.inert);
+            }
+            sibling.inert = true;
+        }
+        if (parent === document.body) break;
+        branch = parent;
+    }
+}
+
 /** Close the drawer and hand focus back to the toggle button. */
 function closeSidebar(): void {
     if (!sidebarOpen.value) return;
     sidebarOpen.value = false;
-    lastFocused?.focus();
+    const focusTarget = lastFocused;
     lastFocused = null;
+    nextTick(() => focusTarget?.focus());
 }
 
 /** Open the drawer, remembering the toggle so focus can return to it. */
@@ -68,15 +107,60 @@ function toggleSidebar(): void {
     });
 }
 
-/** Close the drawer when Escape is pressed while it is open. */
+/** Keep keyboard focus in the drawer and close it on Escape. */
 function onSidebarKeydown(e: KeyboardEvent): void {
     if (e.key === "Escape") {
         closeSidebar();
+        return;
+    }
+    if (e.key !== "Tab") return;
+
+    const drawer = document.getElementById("docs-rail");
+    if (!drawer) return;
+
+    const focusableElements = Array.from(
+        drawer.querySelectorAll<HTMLElement>(
+            [
+                "a[href]",
+                "area[href]",
+                "button:not(:disabled)",
+                'input:not(:disabled):not([type="hidden"])',
+                "select:not(:disabled)",
+                "textarea:not(:disabled)",
+                "iframe",
+                "object",
+                "embed",
+                '[contenteditable="true"]',
+                "[tabindex]",
+            ].join(",")
+        )
+    ).filter((element) => element.tabIndex >= 0);
+
+    if (focusableElements.length === 0) {
+        e.preventDefault();
+        drawer.focus();
+        return;
+    }
+
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+
+    if (!drawer.contains(activeElement) || activeElement === drawer) {
+        e.preventDefault();
+        (e.shiftKey ? lastFocusable : firstFocusable).focus();
+    } else if (e.shiftKey && activeElement === firstFocusable) {
+        e.preventDefault();
+        lastFocusable.focus();
+    } else if (!e.shiftKey && activeElement === lastFocusable) {
+        e.preventDefault();
+        firstFocusable.focus();
     }
 }
 
-// Listen for Escape only while the drawer is open.
+// Handle drawer keyboard input and isolate the page only while it is open.
 watch(sidebarOpen, (isOpen) => {
+    setSidebarBackgroundInert(isOpen);
     if (typeof window === "undefined") return;
     if (isOpen) {
         window.addEventListener("keydown", onSidebarKeydown);
@@ -196,6 +280,7 @@ const {
 } = useHeadingScrollSpy(pageHeaders);
 
 onBeforeUnmount(() => {
+    setSidebarBackgroundInert(false);
     if (typeof window !== "undefined") {
         window.removeEventListener("keydown", onSidebarKeydown);
     }
@@ -291,7 +376,15 @@ const pager = computed(() => (current.value ? neighborsOf(current.value.path) : 
             ></div>
 
             <div class="docs-columns">
-                <aside id="docs-rail" class="docs-rail" :class="{ 'is-open': sidebarOpen }">
+                <aside
+                    id="docs-rail"
+                    class="docs-rail"
+                    :class="{ 'is-open': sidebarOpen }"
+                    :role="sidebarOpen ? 'dialog' : undefined"
+                    :aria-modal="sidebarOpen ? 'true' : undefined"
+                    :aria-label="sidebarOpen ? 'Documentation navigation' : undefined"
+                    tabindex="-1"
+                >
                     <nav class="docs-nav" aria-label="Documentation">
                         <div v-for="group in NAV_GROUPS" :key="group.title" class="docs-nav-group">
                             <p class="docs-nav-title">{{ group.title }}</p>
