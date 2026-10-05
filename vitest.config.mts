@@ -14,8 +14,13 @@ export default defineConfig({
     fsModuleCache: true,
     coverage: {
       provider: 'v8',
-      include: ['src/**', 'scripts/check-jsdoc.ts'],
-      exclude: ['node_modules/**', 'dist/**', 'docs-src/**'],
+      include: [
+        'src/**',
+        'scripts/check-jsdoc.ts',
+        'docs-src/lib/consent.mjs',
+        'docs-src/lib/search-rank.ts'
+      ],
+      exclude: ['node_modules/**', 'dist/**', 'docs-src/.vitepress/**', 'docs-src/operations/**'],
       reporter: ['text', 'lcov', 'json-summary'],
       thresholds: {
         statements: 90,
