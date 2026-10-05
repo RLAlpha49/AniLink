@@ -291,7 +291,12 @@ void emit;
             <kbd class="ss-kbd" aria-hidden="true">↵</kbd>
         </div>
 
-        <div v-if="statusText" class="ss-status" :class="{ 'is-error': semanticError }">
+        <div
+            class="ss-status"
+            role="status"
+            aria-live="polite"
+            :class="{ 'is-error': semanticError }"
+        >
             <span v-if="anyLoading" class="ss-dot" aria-hidden="true"></span>
             <Sparkles
                 v-else-if="semanticReady && !semanticError"
