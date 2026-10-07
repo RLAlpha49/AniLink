@@ -15,6 +15,7 @@ import {
     type RequestAuth,
     type RequestAuthInput,
     type RequestOptions,
+    type RetrySafety,
 } from "./transportTypes";
 import { resolveRequestOptions } from "./requestOptions";
 import {
@@ -45,6 +46,8 @@ export interface SendRequestOptions {
     options?: RequestOptions;
     /** Optional operation name included in missing-token auth errors. */
     operation?: string;
+    /** Operation-level retry safety, independent of the HTTP method. Defaults to `safe` for direct callers. */
+    retrySafety?: RetrySafety;
     /**
      * The wire protocol of the request, which selects response interpretation
      * and error classification explicitly instead of inferring it from
@@ -244,6 +247,7 @@ export const sendRequest = async <T = unknown>(
         requiresAuth = false,
         options,
         operation,
+        retrySafety,
         protocol,
         contentType,
         stateOwner,
@@ -315,6 +319,7 @@ export const sendRequest = async <T = unknown>(
             cacheMiss: cacheAuthKey !== undefined,
             authGuard,
             writeBack,
+            retrySafety,
         }
     );
 

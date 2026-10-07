@@ -12,10 +12,10 @@ import { defineBuildConfig } from "unbuild";
  *
  * All three entries share the same module graph, so Rollup deduplicates the
  * shared chunks; the subpath barrels exist so consumers can scope imports
- * to one provider. `axios` (the sole runtime dependency) stays external
- * automatically via unbuild's package.json inference; `inlineDependencies:
- * false` keeps it that way. `rollup.emitCJS: false` ensures no CommonJS
- * output is produced.
+ * to one provider. The `graphql` parser used for retry-safety classification
+ * is inlined because it is a development dependency; `axios` stays external
+ * through unbuild's package.json inference. `rollup.emitCJS: false` ensures
+ * no CommonJS output is produced.
  */
 export default defineBuildConfig({
     entries: ["./src/AniLink", "./src/anilist", "./src/mal"],
@@ -23,7 +23,7 @@ export default defineBuildConfig({
     declaration: "compatible",
     rollup: {
         emitCJS: false,
-        inlineDependencies: false,
+        inlineDependencies: ["graphql"],
         esbuild: {
             target: "ES2024",
         },

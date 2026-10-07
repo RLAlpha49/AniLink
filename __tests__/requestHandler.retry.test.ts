@@ -7,7 +7,11 @@ import {
     AniLinkValidationError,
 } from "../src/base/AniLinkError";
 import { type RequestOptions, sendRequest } from "../src/base/RequestHandler";
-import { computeNextRetryDelay } from "../src/base/retry";
+import { computeNextRetryDelay, resolveRetryPolicy } from "../src/base/retry";
+import {
+    AniListOperation,
+    type AniListRequestOptions,
+} from "../src/apis/graphql/anilist/AniListOperation";
 import {
     getAxiosStub,
     makeAxiosCancelError,
@@ -22,6 +26,12 @@ vi.mock("axios", async () => {
 });
 
 const mocks = getAxiosStub();
+
+class RetrySafetyTestOperation extends AniListOperation {
+    public send(query: string, options: AniListRequestOptions = {}): Promise<unknown> {
+        return this.request(query, undefined, options);
+    }
+}
 
 // Transport settings are passed per request since the global
 // `configureRequestOptions` setter was removed.
@@ -202,6 +212,118 @@ describe("retry with backoff", () => {
             callSendRequest("https://graphql.anilist.co", "POST", { query: "query" })
         ).rejects.toMatchObject({ code: "ABORTED_ERROR" });
         expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("operation retry safety", () => {
+    const query = "query { Media(id: 1) { id } }";
+    const mutation = "mutation { SaveMedia }";
+    const retry = { maxRetries: 1, baseDelayMs: 1, maxDelayMs: 1, jitter: false };
+
+    test("retries a GraphQL query after a 5xx response", async () => {
+        mocks.request
+            .mockRejectedValueOnce(apiError(500))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        configureRequestOptions({ retry });
+
+        const promise = new RetrySafetyTestOperation(undefined, pendingOptions).send(query);
+        await vi.advanceTimersByTimeAsync(1);
+
+        await expect(promise).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("does not retry a GraphQL mutation after a 5xx response by default", async () => {
+        mocks.request.mockRejectedValueOnce(apiError(500));
+        configureRequestOptions({ retry });
+
+        await expect(
+            new RetrySafetyTestOperation(undefined, pendingOptions).send(mutation)
+        ).rejects.toBeInstanceOf(AniLinkApiError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+
+    test("does not retry a GraphQL mutation after a network error by default", async () => {
+        mocks.request.mockRejectedValueOnce({
+            isAxiosError: true,
+            code: "ERR_NETWORK",
+            message: "socket hang up",
+        });
+        configureRequestOptions({ retry });
+
+        await expect(
+            new RetrySafetyTestOperation(undefined, pendingOptions).send(mutation)
+        ).rejects.toBeInstanceOf(AniLinkNetworkError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+
+    test("still retries a mutation after a 429 response", async () => {
+        mocks.request
+            .mockRejectedValueOnce(apiError(429, { "retry-after": "0" }))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        configureRequestOptions({ retry });
+
+        const promise = new RetrySafetyTestOperation(undefined, pendingOptions).send(mutation);
+        await vi.advanceTimersByTimeAsync(0);
+
+        await expect(promise).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("allows an explicit per-operation safe override for a mutation", async () => {
+        mocks.request
+            .mockRejectedValueOnce(apiError(500))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        configureRequestOptions({ retry });
+
+        const promise = new RetrySafetyTestOperation(undefined, pendingOptions).send(mutation, {
+            retrySafety: "safe",
+        });
+        await vi.advanceTimersByTimeAsync(1);
+
+        await expect(promise).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("allows retrying unsafe operations when enabled in the retry policy", async () => {
+        mocks.request
+            .mockRejectedValueOnce(apiError(500))
+            .mockResolvedValueOnce({ data: { data: { Media: { id: 1 } } } });
+        configureRequestOptions({ retry: { ...retry, retryUnsafeOperations: true } });
+
+        const promise = new RetrySafetyTestOperation(undefined, pendingOptions).send(mutation);
+        await vi.advanceTimersByTimeAsync(1);
+
+        await expect(promise).resolves.toEqual({ id: 1 });
+        expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    test("sends malformed GraphQL documents without retrying ambiguous failures", async () => {
+        mocks.request.mockRejectedValueOnce(apiError(500));
+        configureRequestOptions({ retry });
+
+        await expect(
+            new RetrySafetyTestOperation(undefined, pendingOptions).send("mutation {")
+        ).rejects.toBeInstanceOf(AniLinkApiError);
+        expect(mocks.request).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("retry policy delay validation", () => {
+    test.each([
+        ["fractional base delay", { baseDelayMs: 0.5 }],
+        ["fractional maximum delay", { maxDelayMs: 0.5 }],
+        ["base delay beyond the timer limit", { baseDelayMs: 2_147_483_648 }],
+        ["maximum delay beyond the timer limit", { maxDelayMs: 2_147_483_648 }],
+    ])("rejects a %s", (_description, override) => {
+        expect(() => resolveRetryPolicy(override)).toThrow(TypeError);
+    });
+
+    test("accepts zero and the maximum supported timer delay", () => {
+        expect(resolveRetryPolicy({ baseDelayMs: 0, maxDelayMs: 2_147_483_647 })).toMatchObject({
+            baseDelayMs: 0,
+            maxDelayMs: 2_147_483_647,
+        });
     });
 });
 

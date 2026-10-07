@@ -1,5 +1,6 @@
+import { parse } from "graphql/language";
 import { BaseOperation } from "../../../base/BaseOperation";
-import { type RequestOptions } from "../../../base/RequestHandler";
+import { type RequestOptions, type RetrySafety } from "../../../base/RequestHandler";
 import {
     type VariableTypeMappings,
     requireVariables,
@@ -24,6 +25,8 @@ export interface AniListRequestOptions {
     requiresAuth?: boolean;
     /** Optional human-readable operation name included in missing-token auth errors. Defaults to the concrete operation class name. */
     operation?: string;
+    /** Operation-level retry safety. When omitted, the GraphQL document determines it. */
+    retrySafety?: RetrySafety;
     /** Per-request transport settings merged over the instance-level ones. A field set here wins; unset fields keep the instance value. */
     transportOptions?: RequestOptions;
 }
@@ -69,6 +72,12 @@ export interface AniListExecuteOptions {
     readonly mappings?: VariableTypeMappings;
 
     /**
+     * Operation-level retry safety. When omitted, `execute` resolves it from
+     * the GraphQL operation definitions, not from the HTTP method.
+     */
+    readonly retrySafety?: RetrySafety;
+
+    /**
      * Whether the operation requires an authentication token. Defaults to
      * `false` (public queries).
      */
@@ -88,6 +97,34 @@ export interface AniListExecuteOptions {
  * once here and imported everywhere it is needed.
  */
 export const ANILIST_GRAPHQL_URL = "https://graphql.anilist.co";
+
+/**
+ * Resolves retry safety from GraphQL operation definitions. Queries are safe
+ * to replay; mutations and documents that cannot be classified are unsafe.
+ * Parsing failures are treated as unsafe so the request still reaches the
+ * existing remote validation path without being replayed after an ambiguous
+ * failure.
+ *
+ * @param document - The GraphQL document being dispatched.
+ * @returns The document's operation-level retry safety.
+ */
+const resolveGraphQLRetrySafety = (document: string): RetrySafety => {
+    try {
+        let hasOperation = false;
+        for (const definition of parse(document).definitions) {
+            if (definition.kind !== "OperationDefinition") {
+                continue;
+            }
+            hasOperation = true;
+            if (definition.operation !== "query") {
+                return "unsafe";
+            }
+        }
+        return hasOperation ? "safe" : "unsafe";
+    } catch {
+        return "unsafe";
+    }
+};
 
 /**
  * `AniListOperation` is the GraphQL protocol layer for the AniList provider:
@@ -126,11 +163,12 @@ export abstract class AniListOperation extends BaseOperation {
         variables?: unknown,
         options: AniListRequestOptions = {}
     ): Promise<T> {
-        const { requiresAuth, operation, transportOptions } = options;
+        const { requiresAuth, operation, retrySafety, transportOptions } = options;
         const data = variables === undefined ? { query } : { query, variables };
         return await this.dispatch<T>(this.graphqlUrl, "POST", data, {
             requiresAuth,
             operation,
+            retrySafety: retrySafety ?? resolveGraphQLRetrySafety(query),
             transportOptions,
         });
     }
@@ -156,7 +194,7 @@ export abstract class AniListOperation extends BaseOperation {
         variables: object | undefined,
         options: AniListExecuteOptions
     ): Promise<T> {
-        const { requirements, mappings, requiresAuth, transportOptions } = options;
+        const { requirements, mappings, requiresAuth, retrySafety, transportOptions } = options;
 
         // Requirements are evaluated against an empty object when the caller
         // omitted the variables object entirely, so an operation declaring
@@ -175,6 +213,10 @@ export abstract class AniListOperation extends BaseOperation {
             validateVariables(variables, mappings);
         }
 
-        return await this.request<T>(query, variables, { requiresAuth, transportOptions });
+        return await this.request<T>(query, variables, {
+            requiresAuth,
+            retrySafety,
+            transportOptions,
+        });
     }
 }

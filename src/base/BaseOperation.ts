@@ -3,6 +3,7 @@ import {
     type RequestOptions,
     sendRequest,
     type HttpMethod,
+    type RetrySafety,
 } from "./RequestHandler";
 import { mergeOptions } from "./requestOptions";
 
@@ -19,6 +20,8 @@ export interface DispatchOptions {
     requiresAuth?: boolean;
     /** Human-readable operation name included in missing-token auth errors. Defaults to the concrete subclass name. */
     operation?: string;
+    /** Operation-level retry safety, passed independently of the HTTP method. */
+    retrySafety?: RetrySafety;
     /** Per-request {@link RequestOptions} merged over the instance-level ones. A field set here wins; unset fields keep the instance value. */
     transportOptions?: RequestOptions;
     /** Optional `Content-Type` header override for non-GraphQL endpoints. This is purely a header concern; response interpretation is controlled by `protocol`. When `protocol` is omitted, a set `contentType` implies the `"rest"` protocol. */
@@ -172,13 +175,15 @@ export abstract class BaseOperation {
         data?: object | string,
         options: DispatchOptions = {}
     ): Promise<T> {
-        const { requiresAuth, operation, transportOptions, contentType, protocol } = options;
+        const { requiresAuth, operation, retrySafety, transportOptions, contentType, protocol } =
+            options;
         return await sendRequest<T>(url, method, data, this.requestAuth, {
             requiresAuth: requiresAuth || undefined,
             options: mergeOptions(this.resolvedOptions, transportOptions),
             operation: operation ?? resolveOperationLabel(this),
             contentType,
             protocol,
+            retrySafety,
             // The stable owner keys cross-request transport state (circuit
             // breaker, retry budget, pacing deadlines) so failure streaks
             // accumulate across requests even when each call carries fresh

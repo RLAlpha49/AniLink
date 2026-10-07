@@ -1,6 +1,6 @@
 import { BaseOperation, resolveOperationLabel } from "../../base/BaseOperation";
 import { AniLinkValidationError } from "../../base/AniLinkError";
-import { type HttpMethod, type RequestOptions } from "../../base/RequestHandler";
+import { type HttpMethod, type RequestOptions, type RetrySafety } from "../../base/RequestHandler";
 
 /**
  * The declarative contract a REST operation passes to
@@ -15,6 +15,13 @@ export interface RestExecuteOptions {
      * The HTTP method for the call. Defaults to `"GET"`.
      */
     readonly method?: HttpMethod;
+
+    /**
+     * Whether replay can safely repeat this operation's effects. This is
+     * independent of the HTTP method and defaults to `safe` for compatibility.
+     * Mark non-idempotent operations `unsafe`.
+     */
+    readonly retrySafety?: RetrySafety;
 
     /**
      * Whether the operation requires an authentication token. Defaults to
@@ -135,6 +142,7 @@ export abstract class RestOperation extends BaseOperation {
     ): Promise<T> {
         const {
             method = "GET",
+            retrySafety = "safe",
             requiresAuth = false,
             contentType,
             query,
@@ -172,6 +180,7 @@ export abstract class RestOperation extends BaseOperation {
 
         return await this.dispatch<T>(url, method, carriesBody ? body : undefined, {
             requiresAuth,
+            retrySafety,
             transportOptions,
             contentType: effectiveContentType,
             protocol: "rest",

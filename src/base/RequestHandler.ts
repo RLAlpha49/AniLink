@@ -11,6 +11,7 @@ export { DEFAULT_REQUEST_TIMEOUT, MAX_FREE_SOCKETS, MAX_SOCKETS } from "./transp
 export type {
     RetryBudget,
     RetryPolicy,
+    RetrySafety,
     HttpMethod,
     RequestAuth,
     RequestAuthInput,

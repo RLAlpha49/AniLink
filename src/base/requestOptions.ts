@@ -115,7 +115,8 @@ export interface ResolvedRequestOptions {
  *
  * @param options - Optional transport configuration.
  * @returns The fully resolved options.
- * @throws A `TypeError` when `timeout` is negative or not finite.
+ * @throws A `TypeError` when `timeout` is negative or not finite, or when retry
+ * policy values do not satisfy their runtime bounds.
  */
 export const resolveRequestOptions = (options: RequestOptions = {}): ResolvedRequestOptions => {
     const timeout = options.timeout ?? DEFAULT_REQUEST_TIMEOUT;
@@ -135,6 +136,7 @@ export const resolveRequestOptions = (options: RequestOptions = {}): ResolvedReq
         );
     }
 
+    const retry = resolveRetryPolicy(options.retry);
     const agents = resolveAgents(options.maxSockets, options.maxFreeSockets);
 
     const diagnostics = resolveDiagnosticsMode(options.diagnostics);
@@ -143,7 +145,7 @@ export const resolveRequestOptions = (options: RequestOptions = {}): ResolvedReq
         timeout,
         signal: options.signal,
         exposeRawAxiosError: options.exposeRawAxiosError ?? false,
-        retry: resolveRetryPolicy(options.retry),
+        retry,
         paceWithRateLimit: options.paceWithRateLimit ?? true,
         rateLimitFloor,
         circuitBreaker: options.circuitBreaker,

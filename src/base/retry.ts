@@ -21,19 +21,54 @@ import {
     AniLinkGraphQLError,
     AniLinkNetworkError,
 } from "./AniLinkError";
-import type { RetryBudget, RetryPolicy } from "./transportTypes";
+import type { RetryBudget, RetryPolicy, RetrySafety } from "./transportTypes";
 
 /** The maximum time a `Retry-After` header may delay a retry. */
 const MAX_RETRY_AFTER_MS = 60_000;
+/** The largest delay Node timers can represent without changing behavior. */
+const MAX_TIMER_DELAY_MS = 2_147_483_647;
 
-const DEFAULT_RETRY_POLICY: Required<Pick<RetryPolicy, "jitter">> & RetryPolicy = {
+const DEFAULT_RETRY_POLICY: Required<Pick<RetryPolicy, "jitter" | "retryUnsafeOperations">> &
+    RetryPolicy = {
     maxRetries: 3,
     baseDelayMs: 250,
     maxDelayMs: 5_000,
     retryOnStatus: [429, 500, 502, 503, 504],
     retryOnNetworkError: true,
+    retryUnsafeOperations: false,
     jitter: true,
 };
+
+const validateRetryPolicy = (policy: RetryPolicy): void => {
+    if (
+        !Number.isFinite(policy.maxRetries) ||
+        !Number.isInteger(policy.maxRetries) ||
+        policy.maxRetries < 0
+    ) {
+        throw new TypeError("retry.maxRetries must be a finite non-negative integer");
+    }
+
+    for (const [name, delay] of [
+        ["baseDelayMs", policy.baseDelayMs],
+        ["maxDelayMs", policy.maxDelayMs],
+    ] as const) {
+        if (!Number.isSafeInteger(delay) || delay < 0 || delay > MAX_TIMER_DELAY_MS) {
+            throw new TypeError(
+                `retry.${name} must be a safe integer between 0 and ${MAX_TIMER_DELAY_MS}`
+            );
+        }
+    }
+};
+
+const shouldSuppressUnsafeRetry = (
+    error: AniLinkError,
+    policy: RetryPolicy,
+    retrySafety: RetrySafety | undefined
+): boolean =>
+    retrySafety === "unsafe" &&
+    policy.retryUnsafeOperations !== true &&
+    (error instanceof AniLinkNetworkError ||
+        (error instanceof AniLinkApiError && error.status >= 500 && error.status < 600));
 
 /**
  * Merges a caller's partial retry setting over the built-in default policy.
@@ -42,10 +77,12 @@ const DEFAULT_RETRY_POLICY: Required<Pick<RetryPolicy, "jitter">> & RetryPolicy 
  * a copy of the defaults; a partial object fills only the fields it sets,
  * with `undefined`-valued fields dropped so they cannot shadow a default.
  * The returned {@link RetryPolicy} is always complete, so the retry loop
- * never branches on missing fields.
+ * never branches on missing fields. Numeric retry limits and delays are
+ * validated after the defaults and overrides are merged.
  *
  * @param retry - The caller's retry setting: disabled, default, or a partial policy.
  * @returns The complete policy, or `null` when retries are disabled.
+ * @throws A `TypeError` when retry counts or delay values are outside their bounds.
  */
 export const resolveRetryPolicy = (
     retry: boolean | Partial<RetryPolicy> | undefined
@@ -62,7 +99,9 @@ export const resolveRetryPolicy = (
             (filtered as Record<string, unknown>)[key] = value;
         }
     }
-    return { ...DEFAULT_RETRY_POLICY, ...filtered };
+    const policy = { ...DEFAULT_RETRY_POLICY, ...filtered };
+    validateRetryPolicy(policy);
+    return policy;
 };
 
 /**
@@ -322,6 +361,8 @@ export interface RetryDelayInput {
     attempt: number;
     /** The active retry policy, or `null` when retries are disabled. */
     policy: RetryPolicy | null;
+    /** Operation-level retry safety; omitted direct transport calls retain safe-operation behavior. */
+    retrySafety?: RetrySafety;
     /** The live retry-budget window, when a budget is configured. */
     budgetState: RetryBudgetState | undefined;
     /** The configured budget, when one is set. */
@@ -332,15 +373,14 @@ export interface RetryDelayInput {
 
 /**
  * Computes the delay before the next retry, or `null` when the request must
- * surface the failure instead. Four gates run before the per-error-class
- * matrix in {@link getRetryDelay}: a failed half-open probe surfaces
- * immediately (retrying would fast-fail against the still-open breaker), a
- * disabled policy never retries, an exhausted retry budget surfaces the
- * failure without spending another retry, and a server-dictated delay (a
+ * surface the failure instead. Before the per-error-class matrix in
+ * {@link getRetryDelay}, a failed half-open probe surfaces immediately,
+ * disabled policies never retry, and unsafe operations stop on ambiguous
+ * network or 5xx failures unless explicitly enabled. An exhausted retry
+ * budget also stops the retry, as does a server-dictated delay (a
  * `Retry-After` header, or the `rateLimit.reset` metadata carried by both
  * HTTP-level and GraphQL-envelope 429s) longer than the budget window's
- * remaining time surfaces the failure instead of sleeping past the window
- * the budget was configured to bound.
+ * remaining time.
  *
  * The window gate applies only to server-dictated delays, the only
  * candidate delays that can park a caller for up to a full minute per
@@ -360,8 +400,12 @@ export interface RetryDelayInput {
  * @returns The delay in milliseconds, or `null` to stop retrying.
  */
 export const computeNextRetryDelay = (input: RetryDelayInput): number | null => {
-    const { normalized, rawError, attempt, policy, budgetState, budget, wasProbe } = input;
+    const { normalized, rawError, attempt, policy, budgetState, budget, wasProbe, retrySafety } =
+        input;
     if (wasProbe || policy === null) {
+        return null;
+    }
+    if (shouldSuppressUnsafeRetry(normalized, policy, retrySafety)) {
         return null;
     }
     if (
@@ -412,22 +456,26 @@ export const computeNextRetryDelay = (input: RetryDelayInput): number | null => 
  * retry spend was already used up.
  *
  * This is the precise condition behind the `budgetExhausted` fact on the
- * terminal `onError` report: `computeNextRetryDelay` returns `null` for four
- * disjoint reasons (a failed probe, a disabled policy, the budget gate, and
- * a non-retryable error class), and only the budget gate should carry the
- * flag. A never-retryable failure (a validation error, an auth error, a
- * status-less GraphQL envelope) that happens to land while the shared
- * budget is spent must not be miscounted as chronic budget exhaustion.
+ * terminal `onError` report: `computeNextRetryDelay` can return `null` for
+ * several reasons (a failed probe, a disabled policy, an unsafe operation,
+ * the budget gate, or a non-retryable error class), and only the budget gate
+ * should carry the flag. A never-retryable failure (a validation error, an
+ * auth error, a status-less GraphQL envelope) that happens to land while the
+ * shared budget is spent must not be miscounted as chronic budget exhaustion.
  *
  * @param input - The same decision inputs {@link computeNextRetryDelay}
  * received for the failed attempt.
  * @returns `true` when the budget count gate is what surfaced the failure.
  */
 export const isBudgetGatedFailure = (input: RetryDelayInput): boolean => {
-    const { normalized, rawError, attempt, policy, budgetState, budget, wasProbe } = input;
+    const { normalized, rawError, attempt, policy, budgetState, budget, wasProbe, retrySafety } =
+        input;
     // A probe failure or a disabled policy surfaces for its own reason,
     // never the budget's; without both budget halves there is no budget gate.
     if (wasProbe || policy === null) {
+        return false;
+    }
+    if (shouldSuppressUnsafeRetry(normalized, policy, retrySafety)) {
         return false;
     }
     if (budgetState === undefined || budget === undefined) {

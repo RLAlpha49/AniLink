@@ -108,6 +108,7 @@ export class ToggleLikeV2Mutation extends AniListOperation {
             ],
             mappings: ToggleLikeV2Mappings,
             requiresAuth: true,
+            retrySafety: "unsafe",
             transportOptions,
         });
     }

@@ -14,7 +14,7 @@
 import { randomUUID } from "node:crypto";
 import type { AxiosResponse } from "axios";
 import { AniLinkAuthError, AniLinkGraphQLError } from "./AniLinkError";
-import type { HttpMethod } from "./transportTypes";
+import type { HttpMethod, RetrySafety } from "./transportTypes";
 import type { ResolvedRequestOptions } from "./requestOptions";
 import { axiosClient } from "./agents";
 import { unwrapGraphQLResponse } from "./envelope";
@@ -51,6 +51,8 @@ export interface ExecuteOptions {
 export interface ExecuteModifiers {
     /** Whether the response body is returned verbatim (REST) instead of unwrapped (GraphQL). */
     rawPassthrough?: boolean;
+    /** Operation-level retry safety, independent of its HTTP method. Defaults to `safe` for direct transport calls. */
+    retrySafety?: RetrySafety;
     /**
      * Whether this request was a cacheable read that missed the response
      * cache: its network-served onResponse emission then carries
@@ -193,7 +195,13 @@ export const executeWithRetry = async <T>(
     stateOwner: object | undefined,
     modifiers: ExecuteModifiers = {}
 ): Promise<ExecuteOutcome<T>> => {
-    const { rawPassthrough = false, cacheMiss = false, writeBack, authGuard } = modifiers;
+    const {
+        rawPassthrough = false,
+        retrySafety = "safe",
+        cacheMiss = false,
+        writeBack,
+        authGuard,
+    } = modifiers;
     const { url, method, data, headers } = options;
     const policy = resolved.retry;
     // Correlation ID joining every lifecycle hook emission for this logical
@@ -452,6 +460,7 @@ export const executeWithRetry = async <T>(
                 rawError: error,
                 attempt,
                 policy,
+                retrySafety,
                 budgetState,
                 budget: resolved.retryBudget,
                 wasProbe,

@@ -72,6 +72,14 @@ export interface RetryBudget {
 }
 
 /**
+ * Operation-level classification for whether replay can safely repeat an
+ * operation's effects.
+ *
+ * @see {@link RetryPolicy.retryUnsafeOperations}
+ */
+export type RetrySafety = "safe" | "unsafe";
+
+/**
  * Retry policy for transient transport failures.
  *
  * Delays between retries use exponential backoff with full jitter by default:
@@ -92,6 +100,8 @@ export interface RetryPolicy {
     retryOnStatus: readonly number[];
     /** Whether network and timeout failures trigger a retry. */
     retryOnNetworkError: boolean;
+    /** Whether unsafe operations may retry after ambiguous network or 5xx failures. Defaults to `false`. */
+    retryUnsafeOperations?: boolean;
     /** Whether to apply full jitter to computed backoff delays. Defaults to `true`. */
     jitter?: boolean;
 }
@@ -405,9 +415,11 @@ export interface RequestOptions {
     /**
      * Automatic retries for transient failures. Defaults to the built-in
      * policy (`maxRetries: 3`, jittered exponential backoff over HTTP `429`
-     * and `5xx` responses plus network and timeout errors). Pass `false` to
-     * opt out and send every request exactly once, or pass a partial policy
-     * to tune individual knobs on top of the defaults.
+     * and `5xx` responses plus network and timeout errors). Unsafe operations
+     * do not retry after ambiguous network or `5xx` failures unless the
+     * policy sets `retryUnsafeOperations: true`. Pass `false` to opt out and
+     * send every request exactly once, or pass a partial policy to tune
+     * individual knobs on top of the defaults.
      */
     retry?: boolean | Partial<RetryPolicy>;
     /**
