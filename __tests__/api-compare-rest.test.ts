@@ -70,6 +70,7 @@ function buildSpec(): OpenApiDocument {
                 },
                 WorkBase: {
                     type: "object",
+                    required: ["id", "title"],
                     properties: {
                         id: { type: "integer", nullable: false },
                         title: { type: "string", nullable: false },
@@ -97,6 +98,7 @@ function buildSpec(): OpenApiDocument {
                                     type: "array",
                                     items: {
                                         type: "object",
+                                        required: ["node"],
                                         properties: {
                                             node: { $ref: "#/components/schemas/WorkForDetails" },
                                         },
@@ -162,6 +164,7 @@ function buildRequestSpec(bodyContentType = "application/x-www-form-urlencoded")
                                 "*/*": {
                                     schema: {
                                         type: "object",
+                                        required: ["id"],
                                         properties: { id: { type: "integer" } },
                                     },
                                 },
@@ -290,6 +293,50 @@ describe("openapi.writeOpenApiDocument", () => {
 });
 
 describe("compareRestContracts", () => {
+    it("reports a mismatch between required upstream fields and optional package fields", () => {
+        const document = validateOpenApiDocument({
+            openapi: "3.0.0",
+            paths: {
+                "/works/{work_id}": {
+                    get: {
+                        responses: {
+                            "200": {
+                                content: {
+                                    "*/*": { schema: { $ref: "#/components/schemas/Work" } },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            components: {
+                schemas: {
+                    Work: {
+                        type: "object",
+                        required: ["id"],
+                        properties: { id: { type: "integer", nullable: false } },
+                    },
+                },
+            },
+        });
+        const result = compareRestContracts({
+            document,
+            contracts: buildContracts({
+                id: { type: "number", optional: true, array: false },
+            }),
+            endpoints: [WORK_MAPPING],
+        });
+
+        expect(result.discrepancies).toContainEqual(
+            expect.objectContaining({
+                severity: "error",
+                category: "field-optionality-mismatch",
+                packageValue: "id: optional",
+                apiValue: "id: required",
+            })
+        );
+    });
+
     it("passes when every package field exists on the spec with a matching type", () => {
         const result = compareRestContracts({
             document: buildSpec(),
@@ -902,6 +949,7 @@ describe("compareRestContracts", () => {
                 schemas: {
                     Topic: {
                         type: "object",
+                        required: ["id", "posts"],
                         properties: {
                             id: { type: "integer", nullable: false },
                             posts: {

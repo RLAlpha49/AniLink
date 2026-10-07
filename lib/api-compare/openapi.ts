@@ -66,8 +66,10 @@ export interface OpenApiField {
     name: string;
     /** Normalized type: `string`, `number`, `boolean`, `array`, or `object`. */
     type: string;
-    /** Whether the field may be absent from a response. */
+    /** Whether the containing object schema does not list this field as required. */
     optional: boolean;
+    /** Whether the field schema declares `nullable: true`, independent of omission. */
+    nullable: boolean;
 }
 
 /** A flat, resolved view of one schema: its fields plus nested refs. */
@@ -273,6 +275,7 @@ export function resolveSchema(
     const nested: Record<string, ResolvedSchema> = {};
     const seen = new Set<string>();
     const visitedRefs = inheritedRefs ?? new Set<string>();
+    const requiredFields = requiredSchemaFields(document, schema);
 
     const visit = (node: OpenApiSchema): void => {
         const target = dereferenceSchema(document, node);
@@ -292,7 +295,8 @@ export function resolveSchema(
             fields.push({
                 name,
                 type: schemaFieldType(property),
-                optional: isOptionalField(property),
+                optional: !requiredFields.has(name),
+                nullable: property.nullable === true,
             });
             if (schemaFieldType(property) === "object" || schemaFieldType(property) === "array") {
                 const nestedSchema = nestedSchemaOf(property);
@@ -319,21 +323,6 @@ function schemaFieldType(schema: OpenApiSchema): string {
     if (schema.type === "boolean") return "boolean";
     if (schema.type === "string") return "string";
     return "object";
-}
-
-/**
- * Determine whether a property may be absent from a response.
- *
- * A field is optional when it is explicitly nullable, marked `x-optional`
- * (MAL's convention for fields the API may omit), or has no `type`/`$ref`
- * declaration at all.
- *
- * @param schema - The property schema.
- * @returns Whether the field is optional.
- */
-function isOptionalField(schema: OpenApiSchema): boolean {
-    if (schema.nullable === true || schema["x-optional"] === true) return true;
-    return schema.type === undefined && schema.$ref === undefined;
 }
 
 /**
@@ -554,6 +543,19 @@ export function compareRestContracts(
                     packageValue: `${fieldName}: ${packageType}`,
                     apiValue: `${fieldName}: ${specField.type}`,
                     message: `Field ${fieldName} is ${packageType} in ${mapping.typeName}; the spec declares ${specField.type}`,
+                });
+            }
+            const packageRequiredness = field.optional ? "optional" : "required";
+            const apiRequiredness = specField.optional ? "optional" : "required";
+            if (field.optional !== specField.optional) {
+                discrepancies.push({
+                    severity: "error",
+                    category: "field-optionality-mismatch",
+                    operation: mapping.typeName,
+                    sourcePath: contract.sourcePath,
+                    packageValue: `${fieldName}: ${packageRequiredness}`,
+                    apiValue: `${fieldName}: ${apiRequiredness}`,
+                    message: `Field ${fieldName} is ${packageRequiredness} in ${mapping.typeName}; the spec declares it ${apiRequiredness}`,
                 });
             }
         }
