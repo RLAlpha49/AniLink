@@ -2,7 +2,7 @@
 .github/copilot-instructions.md
 .github/skills
 .gitignore
-.vscode
+.mcp.json
 AGENTS.md
 TODO.md
 .env*
