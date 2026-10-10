@@ -293,6 +293,91 @@ describe("openapi.writeOpenApiDocument", () => {
 });
 
 describe("compareRestContracts", () => {
+    it("skips response optionality checks but still checks field types when the spec omits required metadata", () => {
+        const document = validateOpenApiDocument({
+            openapi: "3.0.0",
+            paths: {
+                "/works/{work_id}": {
+                    get: {
+                        responses: {
+                            "200": {
+                                content: {
+                                    "*/*": { schema: { $ref: "#/components/schemas/Work" } },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            components: {
+                schemas: {
+                    Work: {
+                        type: "object",
+                        properties: { id: { type: "integer" } },
+                    },
+                },
+            },
+        });
+        const result = compareRestContracts({
+            document,
+            contracts: buildContracts({
+                id: { type: "string", optional: false, array: false },
+            }),
+            endpoints: [WORK_MAPPING],
+        });
+
+        expect(result.discrepancies).toEqual([
+            expect.objectContaining({
+                category: "field-type-mismatch",
+                packageValue: "id: string",
+                apiValue: "id: number",
+            }),
+        ]);
+    });
+
+    it("reports response optionality mismatches when the spec defines an empty required list", () => {
+        const document = validateOpenApiDocument({
+            openapi: "3.0.0",
+            paths: {
+                "/works/{work_id}": {
+                    get: {
+                        responses: {
+                            "200": {
+                                content: {
+                                    "*/*": { schema: { $ref: "#/components/schemas/Work" } },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            components: {
+                schemas: {
+                    Work: {
+                        type: "object",
+                        required: [],
+                        properties: { id: { type: "integer" } },
+                    },
+                },
+            },
+        });
+        const result = compareRestContracts({
+            document,
+            contracts: buildContracts({
+                id: { type: "number", optional: false, array: false },
+            }),
+            endpoints: [WORK_MAPPING],
+        });
+
+        expect(result.discrepancies).toContainEqual(
+            expect.objectContaining({
+                category: "field-optionality-mismatch",
+                packageValue: "id: required",
+                apiValue: "id: optional",
+            })
+        );
+    });
+
     it("reports a mismatch between required upstream fields and optional package fields", () => {
         const document = validateOpenApiDocument({
             openapi: "3.0.0",

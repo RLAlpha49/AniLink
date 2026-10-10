@@ -66,8 +66,10 @@ export interface OpenApiField {
     name: string;
     /** Normalized type: `string`, `number`, `boolean`, `array`, or `object`. */
     type: string;
-    /** Whether the containing object schema does not list this field as required. */
+    /** Whether the containing object schema omits this field from `required`. */
     optional: boolean;
+    /** Whether the containing schema declares required-field metadata. */
+    requirednessKnown: boolean;
     /** Whether the field schema declares `nullable: true`, independent of omission. */
     nullable: boolean;
 }
@@ -276,6 +278,7 @@ export function resolveSchema(
     const seen = new Set<string>();
     const visitedRefs = inheritedRefs ?? new Set<string>();
     const requiredFields = requiredSchemaFields(document, schema);
+    const requirednessKnown = declaresRequiredFields(document, schema);
 
     const visit = (node: OpenApiSchema): void => {
         const target = dereferenceSchema(document, node);
@@ -296,6 +299,7 @@ export function resolveSchema(
                 name,
                 type: schemaFieldType(property),
                 optional: !requiredFields.has(name),
+                requirednessKnown,
                 nullable: property.nullable === true,
             });
             if (schemaFieldType(property) === "object" || schemaFieldType(property) === "array") {
@@ -547,7 +551,7 @@ export function compareRestContracts(
             }
             const packageRequiredness = field.optional ? "optional" : "required";
             const apiRequiredness = specField.optional ? "optional" : "required";
-            if (field.optional !== specField.optional) {
+            if (specField.requirednessKnown && field.optional !== specField.optional) {
                 discrepancies.push({
                     severity: "error",
                     category: "field-optionality-mismatch",
@@ -681,11 +685,7 @@ function compareRequestContract(
         const apiType = apiParameter?.schema
             ? schemaFieldType(apiParameter.schema)
             : (commonParameter?.type ?? "unknown");
-        if (
-            packageType !== "unknown" &&
-            apiType !== "unknown" &&
-            packageType !== apiType
-        ) {
+        if (packageType !== "unknown" && apiType !== "unknown" && packageType !== apiType) {
             discrepancies.push({
                 severity: "error",
                 category: "parameter-mismatch",
@@ -698,13 +698,8 @@ function compareRequestContract(
             });
         }
 
-        const packageParameterOptional =
-            sourceField?.optional ?? packageParameter.optional ?? true;
-        if (
-            apiParameter &&
-            isRequiredParameter(apiParameter) &&
-            packageParameterOptional
-        ) {
+        const packageParameterOptional = sourceField?.optional ?? packageParameter.optional ?? true;
+        if (apiParameter && isRequiredParameter(apiParameter) && packageParameterOptional) {
             discrepancies.push({
                 severity: "error",
                 category: "parameter-mismatch",
@@ -884,6 +879,26 @@ function reportUnmappedParameterProperties(
             message: `Request params property ${propertyName} in ${paramsTypeName} is not mapped for ${endpoint}`,
         });
     }
+}
+
+function declaresRequiredFields(document: OpenApiDocument, schema: OpenApiSchema): boolean {
+    const visitedRefs = new Set<string>();
+
+    const visit = (node: OpenApiSchema): boolean => {
+        const target = dereferenceSchema(document, node);
+        if (target !== node) {
+            const refName = node.$ref!.split("/").pop()!;
+            if (visitedRefs.has(refName)) return false;
+            visitedRefs.add(refName);
+            return visit(target);
+        }
+        if (Object.keys(target.properties ?? {}).length > 0 && target.required !== undefined) {
+            return true;
+        }
+        return (target.allOf ?? []).some(visit);
+    };
+
+    return visit(schema);
 }
 
 function requiredSchemaFields(document: OpenApiDocument, schema: OpenApiSchema): Set<string> {
